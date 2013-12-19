@@ -69,6 +69,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 
 @SuppressWarnings("nls")
@@ -272,6 +273,60 @@ public class TestODataIntegration extends BaseResourceTest {
 	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
 	        response = request.get(String.class);
 	        assertEquals(500, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test public void testCompositeKeyUpdates() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+			@Override
+			public boolean supportsCompareCriteriaEquals() {
+				return true;
+			}
+		};
+		hc.addUpdate("DELETE FROM x WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
+		hc.addUpdate("UPDATE x SET c = 5 WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
+		es.addTranslator("x", hc);
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("m");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+			mmd.addSourceMapping("x", "x", null);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a',b='b')"));
+	        ClientResponse<String> response = request.delete(String.class);
+	        assertEquals(200, response.getStatus());
+
+	        //partial key
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')"));
+	        response = request.delete(String.class);
+	        assertEquals(404, response.getStatus());
+	        
+	        //partial key
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a',a='b')"));
+	        response = request.delete(String.class);
+	        assertEquals(404, response.getStatus());
+	        
+	        //not supported
+	        //request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a',b='b')/c/$value"));
+	        //request.body("text/plain", "5");
+	        //response = request.put(String.class);
+	        
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a',b='b')"));
+	        request.body("application/json", "{\"c\":5}");
+	        response = request.put(String.class);
+	        assertEquals(200, response.getStatus());
 		} finally {
 			es.stop();
 		}

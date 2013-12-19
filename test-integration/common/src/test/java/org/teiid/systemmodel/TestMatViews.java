@@ -45,12 +45,12 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
-import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 @SuppressWarnings("nls")

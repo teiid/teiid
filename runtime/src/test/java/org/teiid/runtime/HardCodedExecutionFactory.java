@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.jdbc;
+package org.teiid.runtime;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -125,6 +125,10 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 
 	public void addData(String key, List<? extends List<?>> list) {
 		this.dataMap.put(key, list);
+	}
+	
+	public void addUpdate(String key, int[] counts) {
+		this.updateMap.put(key, counts);
 	}
 	
 }

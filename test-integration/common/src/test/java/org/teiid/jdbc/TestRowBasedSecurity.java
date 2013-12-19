@@ -48,6 +48,7 @@ import org.teiid.metadata.Table.Type;
 import org.teiid.runtime.DoNothingSecurityHelper;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 

@@ -52,7 +52,6 @@ import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ConnectionProfile;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
@@ -60,6 +59,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 

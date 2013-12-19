@@ -33,11 +33,11 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.jdbc.AbstractQueryTest;
-import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings({"nls"})
