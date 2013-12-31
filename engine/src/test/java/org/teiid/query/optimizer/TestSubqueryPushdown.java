@@ -1168,5 +1168,20 @@ public class TestSubqueryPushdown {
                                       new String[] {"SELECT g_0.IntKey FROM BQT1.SmallA AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         assertEquals(5, plan.getDescriptionProperties().getProperties().size());
     }
+    
+    @Test public void testCorrelatedGroupingExpression() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+
+    	ProcessorPlan plan = TestOptimizer.helpPlan("select intkey, (select avg(intkey) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla group by intkey", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {"SELECT g_0.IntKey, (SELECT AVG(g_1.IntKey) FROM BQT1.SmallB AS g_1 WHERE g_1.IntKey = g_0.IntKey) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
 
 }

@@ -256,9 +256,9 @@ public final class RuleCollapseSource implements OptimizerRule {
 	        SymbolMap symbolMap = (SymbolMap) groupNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
 	      
 	        //map back to expression form
-	        ExpressionMappingVisitor.mapExpressions(query.getOrderBy(), symbolMap.asMap());
-	        ExpressionMappingVisitor.mapExpressions(query.getSelect(), symbolMap.asMap()); 
-	        ExpressionMappingVisitor.mapExpressions(query.getHaving(), symbolMap.asMap()); 
+	        ExpressionMappingVisitor.mapExpressions(query.getOrderBy(), symbolMap.asMap(), true);
+	        ExpressionMappingVisitor.mapExpressions(query.getSelect(), symbolMap.asMap(), true); 
+	        ExpressionMappingVisitor.mapExpressions(query.getHaving(), symbolMap.asMap(), true);
 	
 	        if (!CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) {
 				//if group by expressions are not support, add an inline view to compensate
@@ -737,12 +737,12 @@ public final class RuleCollapseSource implements OptimizerRule {
 		    ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
 		    outerQuery.setGroupBy(groupBy);
 	    }
-	    ExpressionMappingVisitor.mapExpressions(having, expressionMap);
+	    ExpressionMappingVisitor.mapExpressions(having, expressionMap, true);
 	    outerQuery.setHaving(having);
-	    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
+	    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap, true);
 	    outerQuery.setOrderBy(orderBy);
 	    outerQuery.setLimit(limit);
-	    ExpressionMappingVisitor.mapExpressions(select, expressionMap);
+	    ExpressionMappingVisitor.mapExpressions(select, expressionMap, true);
 	    outerQuery.setSelect(select);
 	    outerQuery.setOption(query.getOption());
 	    query = outerQuery;
