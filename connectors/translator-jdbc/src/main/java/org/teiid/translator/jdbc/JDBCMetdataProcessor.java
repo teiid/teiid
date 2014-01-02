@@ -104,12 +104,19 @@ public class JDBCMetdataProcessor {
 		}
 		
 		if (widenUnsingedTypes) {
-			ResultSet rs = metadata.getTypeInfo();
-			while (rs.next()) {
-				String name = rs.getString(1);
-				boolean unsigned = rs.getBoolean(10);
-				if (unsigned) {
-					unsignedTypes.add(name);
+			ResultSet rs = null;
+			try {
+				rs = metadata.getTypeInfo();
+			} catch (SQLException e) {
+				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11021));
+			}
+			if (rs != null) {
+				while (rs.next()) {
+					String name = rs.getString(1);
+					boolean unsigned = rs.getBoolean(10);
+					if (unsigned) {
+						unsignedTypes.add(name);
+					}
 				}
 			}
 		}
