@@ -16,6 +16,7 @@
         <module name="org.infinispan.client.hotrod"/>
         <module name="org.infinispan.cachestore.remote"/>
         <module name="org.jboss.as.clustering.infinispan"/>
-        <module name="org.jboss.modules"/>        
+        <module name="org.jboss.modules"/>  
+        <module name="org.jboss.marshalling"/>      
     </dependencies>
 </module>
