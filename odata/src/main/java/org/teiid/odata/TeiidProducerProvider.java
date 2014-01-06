@@ -63,7 +63,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 		String vdbName = null;
 		int version = 1;
 		String uri = uriInfo.getBaseUri().getRawPath();
-		int idx = uri.indexOf("/odata/");
+		int idx = uri.indexOf("/odata/"); //$NON-NLS-1$
 		int endIdx = uri.indexOf('/', idx+7);
 		if (endIdx == -1) {
 			vdbName = uri.substring(idx+7);
@@ -85,24 +85,29 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 		
 		VDBKey key = new VDBKey(vdbName, version);
 		SoftReference<LocalClient> ref = this.clientMap.get(key);
-		if (ref == null || ref.get() == null) {
-			LocalClient client = new LocalClient(vdbName, version, getInitParameters());
+		LocalClient client = null;
+		if (ref != null) {
+			client = ref.get();
+		}
+		if (client == null) {
+			client = new LocalClient(vdbName, version, getInitParameters());
 			if (!this.listenerRegistered) {
 				synchronized(this) {
-					ConnectionImpl connection = null;
-					try {
-						connection = client.getConnection();
-						LocalServerConnection lsc = (LocalServerConnection)connection.getServerConnection();
-						lsc.addListener(this);
-						this.listenerRegistered = true;
-					} catch (SQLException e) {
-						this.listenerRegistered = false;
-						LogManager.logDetail(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014)); 
-					} finally {
-						if (connection != null) {
-							try {
-								connection.close();
-							} catch (SQLException e) {
+					if (!this.listenerRegistered) {
+						ConnectionImpl connection = null;
+						try {
+							connection = client.getConnection();
+							LocalServerConnection lsc = (LocalServerConnection)connection.getServerConnection();
+							lsc.addListener(this);
+							this.listenerRegistered = true;
+						} catch (SQLException e) {
+							LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014)); 
+						} finally {
+							if (connection != null) {
+								try {
+									connection.close();
+								} catch (SQLException e) {
+								}
 							}
 						}
 					}
@@ -111,7 +116,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 			ref = new SoftReference<LocalClient>(client);
 			this.clientMap.put(key, ref);
 		}		
-		return new TeiidProducer(ref.get());
+		return new TeiidProducer(client);
 	}
 	
 	Properties getInitParameters() {
