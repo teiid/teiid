@@ -317,7 +317,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		
 		if (entityKey.getKeyType() == OEntityKey.KeyType.SINGLE) {
 			if (pk.getColumns().size() != 1) {
-				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014, table.getFullName(), entityKey));
+				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, table.getFullName(), entityKey));
 			}	
 			Column column = table.getPrimaryKey().getColumns().get(0);
 			return new CompareCriteria(new ElementSymbol(column.getName(), entityGroup), CompareCriteria.EQ, new Constant(entityKey.asSingleValue()));
@@ -327,7 +327,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		List<Criteria> critList = new ArrayList<Criteria>();
 		Set<NamedValue<?>> keys = entityKey.asComplexValue();
 		if (pk.getColumns().size() != keys.size()) {
-			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014, table.getFullName(), entityKey));
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, table.getFullName(), entityKey));
 		}
 		for (NamedValue<?> key : keys) {
 			Column column = findColumn(table, key.getName());

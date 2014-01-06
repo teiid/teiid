@@ -88,7 +88,7 @@ public class LocalClient implements Client {
 	private static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
 	static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
 
-	private MetadataStore metadataStore;
+	private volatile MetadataStore metadataStore;
 	private String vdbName;
 	private int vdbVersion;
 	private int batchSize;
@@ -96,7 +96,6 @@ public class LocalClient implements Client {
 	private String transportName;
 	private String connectionString;
 	private EdmDataServices edmMetaData;
-	private long lastLookup = -1L;
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
 
@@ -129,7 +128,7 @@ public class LocalClient implements Client {
 		this.driver = driver;
 	}
 
-	private ConnectionImpl getConnection() throws SQLException {
+	ConnectionImpl getConnection() throws SQLException {
 		return driver.connect(this.connectionString, null);
 	}
 
@@ -193,10 +192,8 @@ public class LocalClient implements Client {
 
 	@Override
 	public MetadataStore getMetadataStore() {
-		MetadataStore store = null;
 		ConnectionImpl connection = null;
-		long currentTime = System.currentTimeMillis();
-		if (this.metadataStore == null || this.lastLookup == -1 || currentTime-this.lastLookup > this.cacheTime) {
+		if (this.metadataStore == null) {
 			try {
 				connection = getConnection();
 				LocalServerConnection lsc = (LocalServerConnection)connection.getServerConnection();
@@ -204,7 +201,7 @@ public class LocalClient implements Client {
 				if (vdb == null) {
 					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16001, this.vdbName, this.vdbVersion));
 				}
-				store = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
+				this.metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 			} catch (SQLException e) {
 				throw new ServerErrorException(e.getMessage(),e);
 			} finally {
@@ -216,13 +213,6 @@ public class LocalClient implements Client {
 					}
 				}
 			}
-		}
-
-		// this is check if the vdb has reloaded between calls. Hopefully the above look up is not expensive and by doing
-		// object id match we can figure out there has been change in vdb load
-		if (this.metadataStore == null || this.metadataStore != store) {
-			this.metadataStore = store;
-			this.edmMetaData = null;
 		}
 		return this.metadataStore;
 	}

@@ -144,6 +144,15 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				protected ClientServiceRegistry getClientServiceRegistry(String name) {
 					return services;
 				}
+				
+				@Override
+				public void addListener(VDBLifeCycleListener listener) {
+					EmbeddedServer.this.repo.addListener(listener);
+				}
+				@Override
+				public void removeListener(VDBLifeCycleListener listener) {
+					EmbeddedServer.this.repo.removeListener(listener);
+				}
 			};
 			conn.getWorkContext().setConnectionProfile(this);
 			return conn;

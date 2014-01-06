@@ -211,7 +211,8 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     			
 		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
+    	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
+	 	this.csr.registerClientService(VDBRepository.class, getVdbRepository(), LogConstants.CTX_DQP);    	
 	}
 
 	@Override
