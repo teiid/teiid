@@ -25,6 +25,7 @@ package org.teiid.query.tempdata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -46,6 +47,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
@@ -373,8 +375,19 @@ public class TempTableDataManager implements ProcessorDataManager {
 				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30230, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30230, matViewName));
 			}
 			List<?> ids = metadata.getElementIDsInKey(pk);
-			if (ids.size() > 1) {
-				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30231, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30231, matViewName));
+			Constant key = (Constant)proc.getParameter(3).getExpression();
+			Object initialValue = key.getValue();
+			SPParameter keyOther = proc.getParameter(4);
+			Object[] otherCols = null;
+			int length = 1;
+			if (keyOther != null) {
+				otherCols = ((ArrayImpl) ((Constant)keyOther.getExpression()).getValue()).getValues();
+				if (otherCols != null) {
+					length += otherCols.length;
+				}
+			}
+			if (ids.size() != length) {
+				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30231, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30231, matViewName, ids.size(), length));
 			}
 			final String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
@@ -385,14 +398,25 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (!tempTable.isUpdatable()) {
 				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30232, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30232, matViewName));
 			}
-			Constant key = (Constant)proc.getParameter(3).getExpression();
-			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, key));
-			Object id = ids.iterator().next();
-			String targetTypeName = metadata.getElementType(id);
-			final Object value = DataTypeManager.transformValue(key.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
+			Iterator<?> iter = ids.iterator();
+			final Object[] params = new Object[length];
+			StringBuilder criteria = new StringBuilder();
+			for (int i = 0; i < length; i++) {
+				Object id = iter.next();
+				String targetTypeName = metadata.getElementType(id);
+				Object value = i==0?initialValue:otherCols[i-1];
+				value = DataTypeManager.transformValue(value, DataTypeManager.getDataTypeClass(targetTypeName));
+				params[i] = value;
+				if (i != 0) {
+					criteria.append(" AND "); //$NON-NLS-1$
+				}
+				criteria.append(metadata.getFullName(id)).append(" = ?"); //$NON-NLS-1$
+			}
+			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, Arrays.toString(params)));
+			
 			String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
-				metadata.getFullName(id) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
-			final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, value);
+				criteria.toString() + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; 
+			final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, params);
 			final TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			return new ProxyTupleSource() {
 
@@ -404,7 +428,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					boolean delete = false;
 					if (tuple == null) {
 						delete = true;
-						tuple = Arrays.asList(value);
+						tuple = Arrays.asList(params);
 					} else {
 						tuple = new ArrayList<Object>(tuple); //ensure the list is serializable 
 					}
