@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -44,6 +46,8 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.processor.BatchCollector;
@@ -81,11 +85,13 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		private ProcessorDataManager dataMgr;
 		TupleSource ts;
 		private List<? extends Expression> output;
+		private String schema;
 
-		private SimpleProcessorPlan(Query command, FunctionDescriptor fd, List<? extends Expression> output) {
+		private SimpleProcessorPlan(Query command, String schema, FunctionDescriptor fd, List<? extends Expression> output) {
 			this.command = command;
 			this.fd = fd;
 			this.output = output;
+			this.schema = schema;
 		}
 		
 		@Override
@@ -98,7 +104,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		@Override
 		public void open() throws TeiidComponentException, TeiidProcessingException {
 			RegisterRequestParameter parameterObject = new RegisterRequestParameter();
-			ts = dataMgr.registerRequest(getContext(), command, fd.getSchema(), parameterObject);
+			ts = dataMgr.registerRequest(getContext(), command, schema, parameterObject);
 		}
 
 		@Override
@@ -139,7 +145,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 
 		@Override
 		public ProcessorPlan clone() {
-			return new SimpleProcessorPlan(command, fd, output);
+			return new SimpleProcessorPlan(command, schema, fd, output);
 		}
 	}
 
@@ -356,9 +362,35 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	protected Object evaluatePushdown(Function function, List<?> tuple,
 			Object[] values) throws TeiidComponentException, TeiidProcessingException {
 		final FunctionDescriptor fd = function.getFunctionDescriptor();
-	    if (fd.getMethod() == null || !CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, fd.getMethod().getParent(), context.getMetadata(), context.getQueryProcessorFactory().getCapabiltiesFinder())) {
-	    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, function.getFunctionDescriptor().getFullName()));
+	    if (fd.getMethod() == null) {
+	    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
 	    }
+	    String schema = null;
+	    if (fd.getMethod().getParent() == null || !fd.getMethod().getParent().isPhysical()) {
+	    	//find a suitable target
+	    	//TODO: do better than a linear search
+	    	VDBMetaData vdb = this.context.getVdb();
+	    	CapabilitiesFinder capabiltiesFinder = this.context.getQueryProcessorFactory().getCapabiltiesFinder();
+	    	for (ModelMetaData mmd : vdb.getModelMetaDatas().values()) {
+	    		if (!mmd.isSource()) {
+	    			continue;
+	    		}
+	    		SourceCapabilities caps = capabiltiesFinder.findCapabilities(mmd.getName());
+    			if (caps.supportsCapability(Capability.SELECT_WITHOUT_FROM) && caps.supportsFunction(fd.getMethod().getFullName())) {
+    				schema = mmd.getName();
+    				break;
+    			}
+	    	}
+	    	if (schema == null) {
+	    		throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
+	    	}
+	    } else {
+	    	if (!CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, fd.getMethod().getParent(), context.getMetadata(), context.getQueryProcessorFactory().getCapabiltiesFinder())) {
+		    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
+	    	}
+	    	schema = fd.getSchema();
+	    }
+	    
 		ScalarSubquery ss = null;
 		if (functionState != null) {
 			ss = functionState.get(function);
@@ -373,7 +405,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	    	command.setSelect(select);
 		    Function f = new Function(function.getName(), functionArgs);
 		    f.setType(function.getType());
-		    f.setFunctionDescriptor(function.getFunctionDescriptor());
+		    f.setFunctionDescriptor(fd);
 	    	select.addSymbol(f);
 	    	ss = new ScalarSubquery(command);
 	    	SymbolMap correlatedReferences = new SymbolMap();
@@ -384,7 +416,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		    	}
 	    		command.setCorrelatedReferences(correlatedReferences);
 	    	}
-	    	command.setProcessorPlan(new SimpleProcessorPlan(command, fd, Arrays.asList(new Constant(null, fd.getReturnType()))));
+	    	command.setProcessorPlan(new SimpleProcessorPlan(command, schema, fd, Arrays.asList(new Constant(null, fd.getReturnType()))));
 		} else {
 			((Function)((ExpressionSymbol)ss.getCommand().getProjectedSymbols().get(0)).getExpression()).setArgs(functionArgs);
 		}

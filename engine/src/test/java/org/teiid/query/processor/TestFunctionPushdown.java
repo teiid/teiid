@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import java.util.Arrays;
@@ -46,6 +47,7 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -93,6 +95,7 @@ public class TestFunctionPushdown {
 		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
 		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
 		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+		bsc.setFunctionSupport("x.otherFunc", true);
 		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
         
 		CommandContext cc = TestProcessor.createCommandContext();
@@ -156,6 +159,66 @@ public class TestFunctionPushdown {
         dataManager.addData("SELECT func(0) FROM g1", new List[] {Arrays.asList(1), Arrays.asList(1)});
         
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(1), Arrays.asList(1)});
+	}
+	
+	@Test public void testSimpleFunctionPushdown1() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
+		
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+		bsc.setFunctionSupport("parseDate_", true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+		String sql = "select parseDate_('2011-11-11')"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT parsedate_('2011-11-11')", new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        cc.setDQPWorkContext(RealMetadataFactory.buildWorkContext(tm));
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        
+		sql = "select misc.namespace.func('2011-11-11')"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT parseDate_('2011-11-11')", new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        try {
+        	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        	fail();
+        } catch (TeiidProcessingException e) {
+        	//not supported by any source
+        }
 	}
 
 	@Test public void testMustPushdownOverMultipleSourcesWithView() throws Exception {

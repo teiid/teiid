@@ -29,6 +29,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionLibrary;
@@ -230,7 +231,8 @@ public class CapabilitiesUtil {
     public static boolean supportsScalarFunction(Object modelID, Function function, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
         
-        if (metadata.isVirtualModel(modelID) || function.getFunctionDescriptor().getMethod().getPushdown() == PushDown.CANNOT_PUSHDOWN){
+		FunctionMethod method = function.getFunctionDescriptor().getMethod();
+		if (metadata.isVirtualModel(modelID) || method.getPushdown() == PushDown.CANNOT_PUSHDOWN){
             return false;
         }
 
@@ -239,8 +241,9 @@ public class CapabilitiesUtil {
         //capabilities check is only valid for non-schema scoped functions
         //technically the other functions are scoped to SYS or their function model, but that's 
         //not formally part of their metadata yet
-        Schema schema = function.getFunctionDescriptor().getMethod().getParent();
-        String fullName = function.getFunctionDescriptor().getMethod().getFullName();
+        Schema schema = method.getParent();
+        //TODO: this call should be functionDescriptor.getFullName - but legacy function models are parsed without setting the parent model as the schema
+        String fullName = method.getFullName();
         if (schema == null || !schema.isPhysical()) {
             // Find capabilities
         	
