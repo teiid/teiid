@@ -170,7 +170,7 @@ public class TeiidProducer implements ODataProducer {
 		if (updateCount  == 1) {
 			visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		    OEntityKey entityKey = visitor.buildEntityKey(entitySet, entity);
-		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "created entity = ", entitySetName, " with key=", entityKey.asSingleValue()); //$NON-NLS-1$ //$NON-NLS-2$
+		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "created entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		    return getEntity(context, entitySetName, entityKey, EntityQueryInfo.newBuilder().build());
 		}
 		return null;
@@ -191,8 +191,13 @@ public class TeiidProducer implements ODataProducer {
 
 		List<SQLParam> parameters = visitor.getParameters();
 		int deleteCount =  this.client.executeUpdate(query, parameters);
-		if (deleteCount > 0) {
-			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.asSingleValue()); //$NON-NLS-1$ //$NON-NLS-2$
+		if (deleteCount == 0) {
+			LogManager.log(MessageLevel.INFO, LogConstants.CTX_ODATA, null, "no entity to delete in = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		} else if (deleteCount == 1) {
+			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			//TODO: should this be an exception (a little too late, may need validation that we are dealing with a single entity first)
+			LogManager.log(MessageLevel.WARNING, LogConstants.CTX_ODATA, null, "deleted multiple entities = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -208,7 +213,7 @@ public class TeiidProducer implements ODataProducer {
 	public void updateEntity(ODataContext context, String entitySetName, OEntity entity) {
 		int updateCount = update(entitySetName, entity);
 		if (updateCount > 0) {
-			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "updated entity = ", entitySetName, " with key=", entity.getEntityKey().asSingleValue()); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "updated entity = ", entitySetName, " with key=", entity.getEntityKey().toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 

@@ -21,7 +21,7 @@
  */
 package org.teiid.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -312,7 +312,12 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	}
 
 	private Criteria buildEntityKeyCriteria(Table table, GroupSymbol entityGroup, OEntityKey entityKey) {
+		KeyRecord pk = table.getPrimaryKey();
+		
 		if (entityKey.getKeyType() == OEntityKey.KeyType.SINGLE) {
+			if (pk.getColumns().size() != 1) {
+				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, table.getFullName(), entityKey));
+			}	
 			Column column = table.getPrimaryKey().getColumns().get(0);
 			return new CompareCriteria(new ElementSymbol(column.getName(), entityGroup), CompareCriteria.EQ, new Constant(entityKey.asSingleValue()));
 		}
@@ -320,16 +325,15 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		// complex (multi-keyed)
 		List<Criteria> critList = new ArrayList<Criteria>();
 		Set<NamedValue<?>> keys = entityKey.asComplexValue();
+		if (pk.getColumns().size() != keys.size()) {
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, table.getFullName(), entityKey));
+		}
 		for (NamedValue<?> key : keys) {
 			Column column = findColumn(table, key.getName());
 			critList.add(new CompareCriteria(new ElementSymbol(column.getName(), entityGroup), CompareCriteria.EQ, new Constant(key.getValue())));
 		}
 	
-		Criteria crit = critList.get(0);
-		for (int i = 1; i < critList.size(); i++) {
-			crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
-		}
-		return crit;
+		return new CompoundCriteria(CompoundCriteria.AND, critList);
 	}
 
 	private Select buildSelectColumns(HashMap<String, Boolean> selectColumns, Table table, GroupSymbol group) {

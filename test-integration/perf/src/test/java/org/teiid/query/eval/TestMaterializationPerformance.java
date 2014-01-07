@@ -32,9 +32,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.jdbc.AbstractQueryTest;
-import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.runtime.HardCodedExecutionFactory;
 
 @SuppressWarnings({"nls"})
 public class TestMaterializationPerformance extends AbstractQueryTest {
