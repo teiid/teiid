@@ -22,8 +22,6 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -47,7 +45,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 import org.teiid.translator.SourceSystemFunctions;
@@ -464,13 +462,23 @@ public class CapabilitiesUtil {
 	 */
 	static boolean checkElementsAreSearchable(List<? extends LanguageObject> objs, QueryMetadataInterface metadata, int searchableType) 
 	throws QueryMetadataException, TeiidComponentException {
-	    Collection<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-	    ElementCollectorVisitor.getElements(objs, elements);
-	    for (ElementSymbol elementSymbol : elements) {
-	        if (!metadata.elementSupports(elementSymbol.getMetadataID(), searchableType)) {
-	        	return false;
-	        }                
-	    }
+		if (objs != null) {
+		    for (LanguageObject lo : objs) {
+		    	if (lo instanceof OrderByItem) {
+		    		lo = ((OrderByItem)lo).getSymbol();
+		    	}
+		    	if (!(lo instanceof Expression)) {
+		    		continue;
+		    	}
+	    		lo = SymbolMap.getExpression((Expression)lo);
+		    	if (!(lo instanceof ElementSymbol)) {
+		    		continue;
+		    	}
+		        if (!metadata.elementSupports(((ElementSymbol)lo).getMetadataID(), searchableType)) {
+		        	return false;
+		        }                
+		    }
+		}
 	    return true;
 	}
 	

@@ -259,7 +259,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         
         // Check capabilities of the elements
         try {
-            checkElementsAreSearchable(obj, SupportConstants.Element.SEARCHABLE_COMPARE);                                
+            checkElementsAreSearchable(obj.getLeftExpression(), SupportConstants.Element.SEARCHABLE_COMPARE);                                
+            checkElementsAreSearchable(obj.getRightExpression(), SupportConstants.Element.SEARCHABLE_COMPARE);
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {
@@ -373,7 +374,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
         // Check capabilities of the elements
         try {
-            checkElementsAreSearchable(obj, SupportConstants.Element.SEARCHABLE_LIKE);
+            checkElementsAreSearchable(obj.getLeftExpression(), SupportConstants.Element.SEARCHABLE_LIKE);
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {
@@ -529,7 +530,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 return;
             }
             // Check capabilities of the elements
-            checkElementsAreSearchable(crit, SupportConstants.Element.SEARCHABLE_COMPARE);                        
+            checkElementsAreSearchable(crit.getExpression(), SupportConstants.Element.SEARCHABLE_COMPARE);                        
                  
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));

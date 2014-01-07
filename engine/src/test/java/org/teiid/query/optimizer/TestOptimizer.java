@@ -6098,7 +6098,7 @@ public class TestOptimizer {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
         
-    @Test public void testDontPushConvertObject() {
+    @Test public void testPushConvertObject() throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -6112,28 +6112,13 @@ public class TestOptimizer {
             "SELECT intkey from bqt1.smalla WHERE stringkey = convert(objectvalue, string)",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT stringkey, objectvalue, intkey FROM bqt1.smalla"}, //$NON-NLS-1$
-            SHOULD_SUCCEED );
+            new String[] {"SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.StringKey = convert(BQT1.SmallA.ObjectValue, string)"}, //$NON-NLS-1$
+            ComparisonMode.EXACT_COMMAND_STRING );
 
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            1,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });                                    
+        checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
     
-    @Test public void testDontPushConvertClobToString() {
+    @Test public void testPushConvertClobToString() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -6147,25 +6132,10 @@ public class TestOptimizer {
             "SELECT ClobValue from LOB.LobTbl WHERE convert(ClobValue, string) = ?",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT ClobValue FROM LOB.LobTbl"}, //$NON-NLS-1$
+            new String[] {"SELECT LOB.LobTbl.ClobValue FROM LOB.LobTbl WHERE convert(LOB.LobTbl.ClobValue, string) = ?"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
 
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            1,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });                                    
+        checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }
     
     @Test public void testSelectIntoWithDistinct() throws Exception {
