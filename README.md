@@ -19,6 +19,6 @@ Enter the following:
 
 	$ git clone https://github.com/<yourname>/teiid.git
 	$ cd teiid
-	$ mvn clean install -P release
+	$ mvn clean install -P release -s settings.xml
 	
 you can find the deployment artifacts in the "teiid/build/target" directory once the build is completed.
