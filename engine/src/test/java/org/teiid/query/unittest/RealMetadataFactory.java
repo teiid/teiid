@@ -337,11 +337,16 @@ public class RealMetadataFactory {
 	}
     
 	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, FunctionTree... functionModels) {
-		return createTransformationMetadata(metadataStore, vdbName, null, functionModels);
+		CompositeMetadataStore cms = null;
+		if (metadataStore instanceof CompositeMetadataStore) {
+			cms = (CompositeMetadataStore)metadataStore;
+		} else {
+			cms = new CompositeMetadataStore(metadataStore);
+		}
+		return createTransformationMetadata(cms, vdbName, null, functionModels);
 	}
 	
-	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, Properties vdbProperties, FunctionTree... functionModels) {
-		CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
+	public static TransformationMetadata createTransformationMetadata(CompositeMetadataStore store, String vdbName, Properties vdbProperties, FunctionTree... functionModels) {
     	VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
@@ -350,7 +355,7 @@ public class RealMetadataFactory {
     	}
     	List<FunctionTree> udfs = new ArrayList<FunctionTree>();
     	udfs.addAll(Arrays.asList(functionModels));
-    	for (Schema schema : metadataStore.getSchemas().values()) {
+    	for (Schema schema : store.getSchemas().values()) {
 			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 			if (!schema.getFunctions().isEmpty()) {
 				udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
@@ -2739,8 +2744,26 @@ public class RealMetadataFactory {
 	}
 	
 	public static TransformationMetadata fromDDL(String ddl, String vdbName, String modelName) throws Exception {
-		MetadataFactory mf = TestDDLParser.helpParse(ddl, modelName);
-		TransformationMetadata tm = createTransformationMetadata(mf.asMetadataStore(), vdbName);
+		return fromDDL(vdbName, new DDLHolder(modelName, ddl));
+	}	
+	
+	public static class DDLHolder {
+		String name;
+		String ddl;
+		public DDLHolder(String name, String ddl) {
+			this.name = name;
+			this.ddl = ddl;
+		}
+	}
+	
+	public static TransformationMetadata fromDDL(String vdbName, DDLHolder... schemas) throws Exception {
+		CompositeMetadataStore cms = new CompositeMetadataStore(Collections.EMPTY_LIST);
+		for (DDLHolder schema : schemas) {
+			MetadataFactory mf = TestDDLParser.helpParse(schema.ddl, schema.name);
+			cms.merge(mf.asMetadataStore());
+		}
+		
+		TransformationMetadata tm = createTransformationMetadata(cms, vdbName);
     	ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
     	if (report.hasItems()) {
     		throw new RuntimeException(report.getFailureMessage());

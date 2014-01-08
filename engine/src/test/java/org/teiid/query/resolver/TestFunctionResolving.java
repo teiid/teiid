@@ -40,6 +40,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
 
 @SuppressWarnings("nls")
 public class TestFunctionResolving {
@@ -184,6 +185,25 @@ public class TestFunctionResolving {
 		assertEquals(1, func.getArgs().length);
 		
 		assertEquals("2", Evaluator.evaluate(func));
+    }
+    
+    @Test public void testAmbiguousUDF() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "create foreign function f () returns string"),
+    			new DDLHolder("z", "create foreign function f () returns string"));    	
+
+    	String sql = "f()";
+    	Function func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+    	
+    	try {
+    		ResolverVisitor.resolveLanguageObject(func, tm);
+    		fail();
+    	} catch(QueryResolverException e) {
+    		
+    	}
+    	
+    	sql = "z.f()";
+    	func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+    	ResolverVisitor.resolveLanguageObject(func, tm);
     }
     
 }

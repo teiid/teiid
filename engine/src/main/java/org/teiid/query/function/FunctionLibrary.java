@@ -23,6 +23,7 @@
 package org.teiid.query.function;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -31,6 +32,7 @@ import java.util.TreeSet;
 
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.metadata.FunctionMethod;
@@ -195,6 +197,41 @@ public class FunctionLibrary {
         }
 
         return descriptor;
+	}
+	
+	/**
+	 * Find a function descriptor given a name and the types of the arguments.
+	 * This method matches based on case-insensitive function name and
+     * an exact match of the number and types of parameter arguments.
+     * @param name Name of the function to resolve
+     * @param types Array of classes representing the types
+     * @return Descriptor if found, null if not found
+	 */
+	public List<FunctionDescriptor> findAllFunctions(String name, Class<?>[] types) {
+        // First look in system functions
+        FunctionDescriptor descriptor = systemFunctions.getFunction(name, types);
+
+        // If that fails, check the user defined functions
+        if(descriptor == null && this.userFunctions != null) {
+        	List<FunctionDescriptor> result = new LinkedList<FunctionDescriptor>();
+        	for (FunctionTree tree: this.userFunctions) {
+        		descriptor = tree.getFunction(name, types);
+        		if (descriptor != null) {
+        			//pushdown function takes presedence 
+        			//TODO: there may be multiple translators contributing functions with the same name / types
+        			//need "conformed" logic so that the right pushdown can occur
+        			if (descriptor.getMethod().getParent() == null || CoreConstants.SYSTEM_MODEL.equals(descriptor.getMethod().getParent().getName())) {
+        				return Arrays.asList(descriptor);
+        			}
+        			result.add(descriptor);
+        		}
+        	}
+        	return result;
+        }
+        if (descriptor != null) {
+        	return Arrays.asList(descriptor);
+        }
+        return Collections.emptyList();
 	}
 
 	/**
