@@ -715,7 +715,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         //we use an array to represent multiple comparision attributes,
         //but we don't want that to inhibit pushdown as we'll account for that later
         //in criteria processing
-        final EvaluatableVisitor ev = new EvaluatableVisitor(modelID, metadata);
+        final EvaluatableVisitor ev = new EvaluatableVisitor(modelID, metadata, capFinder);
         PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.POST_ORDER, false) {
         	@Override
         	public void visit(DependentSetCriteria obj1) {

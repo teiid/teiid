@@ -419,6 +419,10 @@ public class CapabilitiesUtil {
         if (modelID.equals(modelID1)) {
             return true;
         }
+        
+        if (capFinder == null) {
+        	return false;
+        }
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);

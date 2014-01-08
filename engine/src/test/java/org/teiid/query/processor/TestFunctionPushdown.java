@@ -47,6 +47,7 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -95,7 +96,6 @@ public class TestFunctionPushdown {
 		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
 		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
 		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
-		bsc.setFunctionSupport("x.otherFunc", true);
 		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
         
 		CommandContext cc = TestProcessor.createCommandContext();
@@ -219,6 +219,59 @@ public class TestFunctionPushdown {
         } catch (TeiidProcessingException e) {
         	//not supported by any source
         }
+	}
+	
+	@Test public void testSimpleFunctionPushdown2() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "CREATE FOREIGN FUNCTION func(a object, b object) RETURNS string;"), 
+				new DDLHolder("z", "CREATE FOREIGN FUNCTION func1(a object, b object) RETURNS string; create foreign table g1 (e1 object)"));
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+        String sql = "select e1 from g1 where func(1, 1) = '2'"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT z.g1.e1 FROM z.g1 WHERE func(1, 1) = '2'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT func(1, 1)", new List[] {Arrays.asList("hello world")});
+    	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {});
+    	
+    	sql = "select e1 from g1 where func1(1, 1) = '2'"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT z.g1.e1 FROM z.g1 WHERE func1(1, 1) = '2'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT g1.e1 FROM g1 WHERE func1(1, 1) = '2'", new List[] {Arrays.asList("hello world")});
+    	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("hello world")});
 	}
 
 	@Test public void testMustPushdownOverMultipleSourcesWithView() throws Exception {

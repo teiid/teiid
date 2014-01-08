@@ -78,9 +78,10 @@ public class EvaluatableVisitor extends LanguageVisitor {
 		
 	}
 	
-	public EvaluatableVisitor(Object modelId, QueryMetadataInterface metadata) {
+	public EvaluatableVisitor(Object modelId, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
 		this.modelId = modelId;
 		this.metadata = metadata;
+		this.capFinder = capFinder;
 	}
 	    
     public void visit(Function obj) {
