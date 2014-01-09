@@ -47,6 +47,8 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	private boolean dB2ForI;
 	
+	private boolean supportsCommonTableExpressions = true;
+	
 	public DB2ExecutionFactory() {
 	}
 	
@@ -129,9 +131,14 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		return true;
 	}
 	
+	public void setSupportsCommonTableExpressions(boolean supportsCommonTableExpressions) {
+		this.supportsCommonTableExpressions = supportsCommonTableExpressions;
+	}
+
+	@TranslatorProperty(display="Supports Common Table Expressions", description="Supports Common Table Expressions",advanced=true)
 	@Override
 	public boolean supportsCommonTableExpressions() {
-		return true;
+		return supportsCommonTableExpressions;
 	}
 	
 	@Override

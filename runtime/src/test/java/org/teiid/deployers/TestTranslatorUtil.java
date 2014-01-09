@@ -21,8 +21,7 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -52,6 +51,14 @@ public class TestTranslatorUtil {
 		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
 		
 		assertEquals("correctly-assigned", my.getMyProperty());
+		
+		assertNull(my.other());
+		
+		tm.addProperty("other", "foo");
+		tm.setExecutionFactoryClass(MyTranslator.class);
+		my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
+		
+		assertEquals("foo", my.other());
 	}
 	
 	@Test
@@ -92,6 +99,7 @@ public class TestTranslatorUtil {
 	@Translator(name="my-translator")
 	public static class MyTranslator extends ExecutionFactory<Object, Object> {
 		String mine;
+		String other;
 		
 		@TranslatorProperty(display="my-property", required=true)
 		public String getMyProperty() {
@@ -100,6 +108,15 @@ public class TestTranslatorUtil {
 		
 		public void setMyProperty(String value) {
 			this.mine = value;
+		}
+		
+		@TranslatorProperty(display="other")
+		public String other() {
+			return other;
+		}
+		
+		public void setOther(String other) {
+			this.other = other;
 		}
 	}
 	
