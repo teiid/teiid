@@ -68,6 +68,7 @@ connect
 /subsystem=teiid/translator=mongodb:add(module=org.jboss.teiid.translator.mongodb)
 /subsystem=teiid/translator=cassandra:add(module=org.jboss.teiid.translator.cassandra)
 /subsystem=teiid/translator=accumulo:add(module=org.jboss.teiid.translator.accumulo)
+/subsystem=teiid/translator=solr:add(module=org.jboss.teiid.translator.solr)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)

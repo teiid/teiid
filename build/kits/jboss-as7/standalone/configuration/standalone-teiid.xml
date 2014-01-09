@@ -279,6 +279,9 @@
                 <resource-adapter id="accumulo">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.accumulo"/>
                 </resource-adapter>
+                <resource-adapter id="solr">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.solr"/>
+                </resource-adapter>
             </resource-adapters>        
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
@@ -368,6 +371,7 @@
             <translator name="cassandra" module="org.jboss.teiid.translator.cassandra"/>
 	        <translator name="simpledb" module="org.jboss.teiid.translator.simpledb"/>
             <translator name="accumulo" module="org.jboss.teiid.translator.accumulo"/>
+            <translator name="solr" module="org.jboss.teiid.translator.solr"/>
         </subsystem>        
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <bounded-queue-thread-pool name="teiid-async">

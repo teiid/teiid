@@ -122,5 +122,7 @@
     <module>translator-simpledb</module>
     <module>translator-accumulo</module>
     <module>connector-accumulo</module>
+    <module>translator-solr</module>
+    <module>connector-solr</module>
   </modules>
 </project>
