@@ -19,9 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.jboss.teiid.translator.solr;
+package org.teiid.translator.solr;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -245,8 +246,9 @@ public class TestTeiidLanguageToSolr {
 	 
 	@Test
 	public void testDateField() throws Exception {
-		assertEquals("fl=name,purchasedate&q=purchasedate:2014-01-06T11-52-07:000-0600",
-				getSolrTranslation("select name,purchasedate from example where purchasedate = {ts '2014-01-06 11:52:07'}"));
+		assertTrue(getSolrTranslation(
+				"select name,purchasedate from example where purchasedate = {ts '2014-01-06 11:52:07'}")
+				.startsWith("fl=name,purchasedate&q=purchasedate:2014-01-06T11-52-07:000-"));
 	}
 
 }
