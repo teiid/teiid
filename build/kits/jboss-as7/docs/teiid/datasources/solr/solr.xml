@@ -1,0 +1,29 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="solr">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.solr"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.solr.SolrManagedConnectionFactory" 
+                        jndi-name="java:/solrDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-solr-ds">
+                        
+                      <!-- URL to the SOLR server; include core name at end too -->
+                      <config-property name="url"> http://localhost:8983/solr/</config-property>
+                      
+                      <!-- Name of the core -->
+                      <config-property name="CoreName">collection1</config-property>
+                      <!-- 
+                      <config-property name="SoTimeout">10000</config-property>
+                      <config-property name="ConnTimeout">10000</config-property>
+                      <config-property name="MaxConns">10</config-property>
+                      <config-property name="MaxRetries">3</config-property>
+                      -->
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

@@ -63,6 +63,9 @@
         <version.hadoop-core>0.20.2</version.hadoop-core>
         <version.thrift>0.9.1</version.thrift>
         <version.zookeeper>3.4.5</version.zookeeper>
+        <version.accumulo>1.5.0</version.accumulo>
+        <version.solr>4.6.0</version.solr>
+        <version.noggit>0.5</version.noggit>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>

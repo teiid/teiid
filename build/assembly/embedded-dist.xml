@@ -108,6 +108,8 @@
             <include>org.jboss.teiid.connectors:google-api</include>
             <include>org.jboss.teiid.connectors:translator-mongodb</include>
             <include>org.jboss.teiid.connectors:mongodb-api</include>
+            <include>org.jboss.teiid.connectors:translator-accumulo</include>
+            <include>org.jboss.teiid.connectors:translator-solr</include>
         </includes>
 
         <binaries>        
@@ -164,6 +166,8 @@
             <include>org.jboss.teiid.connectors:connector-mongodb</include>
             <include>org.jboss.teiid.connectors:connector-cassandra</include>
     		<include>org.jboss.teiid.connectors:connector-simpledb</include>
+            <include>org.jboss.teiid.connectors:connector-accumulo</include>
+            <include>org.jboss.teiid.connectors:connector-solr</include>
         </includes>
 
         <binaries>        

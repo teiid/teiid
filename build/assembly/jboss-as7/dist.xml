@@ -438,6 +438,32 @@
             <include>org.jboss.teiid.connectors:connector-accumulo</include>
         </includes>
 
+        <binaries>
+            <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>
+            <includeDependencies>true</includeDependencies>
+            <unpack>true</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/accumulo/main</outputDirectory>
+            <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>    
+    
+    <!-- Apache SOLR Connector-->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-solr</include>
+        </includes>
+
         <binaries>   
           <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
@@ -450,10 +476,10 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-            <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/accumulo/main</outputDirectory>
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/solr/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
-    </moduleSet>    
+    </moduleSet>       
     
     <!-- **************************************************************************
                         These are built in translators  
@@ -909,7 +935,34 @@
           <fileMode>0644</fileMode>
         </binaries>
       </moduleSet>
-      
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-solr</include>
+        </includes>
+
+        <binaries>
+            <includeDependencies>true</includeDependencies>
+            <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <outputDirectory>modules/system/layers/base/org/apache/solr/main</outputDirectory>
+                    <includes>
+                        <include>org.apache.solr:solr-solrj</include>
+                        <include>org.noggit:noggit</include>
+                    </includes>
+                    <useProjectArtifact>false</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/solr/main</outputDirectory>
+            <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet> 
     <moduleSet>
         <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
@@ -918,59 +971,56 @@
             <include>org.jboss.teiid.connectors:translator-accumulo</include>
         </includes>
 
-        <binaries>        
-          <includeDependencies>false</includeDependencies>
-          <unpack>false</unpack>
+        <binaries>
+            <includeDependencies>false</includeDependencies>
+            <unpack>false</unpack>
             <dependencySets>
-                
-             <dependencySet>
-               <outputDirectory>modules/system/layers/base/org/apache/hadoop/core/main</outputDirectory>
-               <includes>
-                 <include>org.apache.hadoop:hadoop-core</include>
-               </includes>
-               <useProjectArtifact>false</useProjectArtifact>
-               <unpack>false</unpack>
-               <useTransitiveDependencies>true</useTransitiveDependencies>
-               <useDefaultExcludes>true</useDefaultExcludes>
-             </dependencySet>
-             <dependencySet>
-               <outputDirectory>modules/system/layers/base/org/apache/zookeeper/main</outputDirectory>
-               <includes>
-                 <include>org.apache.zookeeper:zookeeper</include>
-               </includes>
-               <useProjectArtifact>false</useProjectArtifact>
-               <unpack>false</unpack>
-               <useTransitiveDependencies>true</useTransitiveDependencies>
-               <useDefaultExcludes>true</useDefaultExcludes>
-             </dependencySet>
-             <dependencySet>
-               <outputDirectory>modules/system/layers/base/org/apache/thrift/main</outputDirectory>
-               <includes>
-                 <include>org.apache.thrift:libthrift</include>
-               </includes>
-               <useProjectArtifact>false</useProjectArtifact>
-               <unpack>false</unpack>
-               <useTransitiveDependencies>true</useTransitiveDependencies>
-               <useDefaultExcludes>true</useDefaultExcludes>
-             </dependencySet>                          
-             <dependencySet>
-               <outputDirectory>modules/system/layers/base/org/apache/accumulo/main</outputDirectory>
-               <includes>
-                 <include>org.apache.accumulo:accumulo-core</include>
-                 <include>org.apache.accumulo:accumulo-fate</include>
-                 <include>org.apache.accumulo:accumulo-trace</include>
-               </includes>
-               <useProjectArtifact>false</useProjectArtifact>
-               <unpack>false</unpack>
-               <useTransitiveDependencies>true</useTransitiveDependencies>
-               <useDefaultExcludes>true</useDefaultExcludes>
-             </dependencySet>             
-                
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/accumulo/main</outputDirectory>
-          <fileMode>0644</fileMode>
+                <dependencySet>
+                    <outputDirectory>modules/system/layers/base/org/apache/hadoop/core/main</outputDirectory>
+                    <includes>
+                        <include>org.apache.hadoop:hadoop-core</include>
+                    </includes>
+                    <useProjectArtifact>false</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+                <dependencySet>
+                    <outputDirectory>modules/system/layers/base/org/apache/zookeeper/main</outputDirectory>
+                    <includes>
+                        <include>org.apache.zookeeper:zookeeper</include>
+                    </includes>
+                    <useProjectArtifact>false</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+                <dependencySet>
+                    <outputDirectory>modules/system/layers/base/org/apache/thrift/main</outputDirectory>
+                    <includes>
+                        <include>org.apache.thrift:libthrift</include>
+                    </includes>
+                    <useProjectArtifact>false</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+                <dependencySet>
+                    <outputDirectory>modules/system/layers/base/org/apache/accumulo/main</outputDirectory>
+                    <includes>
+                        <include>org.apache.accumulo:accumulo-core</include>
+                        <include>org.apache.accumulo:accumulo-fate</include>
+                        <include>org.apache.accumulo:accumulo-trace</include>
+                    </includes>
+                    <useProjectArtifact>false</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/accumulo/main</outputDirectory>
+            <fileMode>0644</fileMode>
         </binaries>
-      
     </moduleSet>      
             
     </moduleSets>  

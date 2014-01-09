@@ -1,0 +1,7 @@
+/subsystem=resource-adapters/resource-adapter=accumulo/connection-definitions=teiid:add(jndi-name=${jndi.name}, class-name=org.teiid.resource.adapter.accumulo.AccumuloManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=accumulo/connection-definitions=teiid/config-properties=ZooKeeperServerList:add(value=${ZooKeeperServerList})
+/subsystem=resource-adapters/resource-adapter=accumulo/connection-definitions=teiid/config-properties=Username:add(value=${username})
+/subsystem=resource-adapters/resource-adapter=accumulo/connection-definitions=teiid/config-properties=Password:add(value=${password})
+/subsystem=resource-adapters/resource-adapter=accumulo/connection-definitions=teiid/config-properties=InstanceName:add(value=${InstanceName})
+/subsystem=resource-adapters/resource-adapter=accumulo/connection-definitions=teiid/config-properties=Roles:add(value=${roles})
+/subsystem=resource-adapters/resource-adapter=accumulo:activate
