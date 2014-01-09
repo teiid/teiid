@@ -43,6 +43,10 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	Map<String, List<? extends List<?>>> dataMap = new HashMap<String, List<? extends List<?>>>();
 	Map<String, int[]> updateMap = new HashMap<String, int[]>();
 	
+	public HardCodedExecutionFactory() {
+		setSourceRequired(false);
+	}
+	
 	@Override
 	public ResultSetExecution createResultSetExecution(
 			final QueryExpression command, ExecutionContext executionContext,
@@ -118,11 +122,6 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 		};
 	}
 	
-	@Override
-	public boolean isSourceRequired() {
-		return false;
-	}
-
 	public void addData(String key, List<? extends List<?>> list) {
 		this.dataMap.put(key, list);
 	}
