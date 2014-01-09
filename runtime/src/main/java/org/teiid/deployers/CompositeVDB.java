@@ -261,7 +261,7 @@ public class CompositeVDB {
 		
 		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
 		QueryMetadataInterface qmi = metadata;
-        Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(vdb);
+        Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(mergedVDB);
         if(multiSourceModels != null && !multiSourceModels.isEmpty()) {
             qmi = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
         }

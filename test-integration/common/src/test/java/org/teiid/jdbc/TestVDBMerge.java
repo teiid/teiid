@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
+import org.teiid.runtime.HardCodedExecutionFactory;
 
 
 @SuppressWarnings("nls")
@@ -114,5 +115,27 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
     	this.internalConnection = server.createConnection("jdbc:teiid:role-3");
     	    	
     	execute("select * from vw"); //$NON-NLS-1$
+    }
+    
+    @Test public void testMergeWithMultiSource() throws Exception {
+    	HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+    	hc.addData("SELECT tbl.col FROM tbl", Arrays.asList(Arrays.asList("a")));
+    	server.addTranslator("hc", hc);
+		server.deployVDB(new ByteArrayInputStream(new String("<vdb name=\"ms-base\" version=\"1\">"
+				+ "<model name=\"myschema\"><source name=\"a\" translator-name=\"hc\"/><source name=\"b\" translator-name=\"hc\"/>"
+				+ "<metadata type = \"DDL\"><![CDATA[CREATE foreign table tbl (col string);]]></metadata></model>"
+				+ "</vdb>").getBytes()));
+    	this.internalConnection = server.createConnection("jdbc:teiid:ms-base");
+    	
+		execute("select * from tbl"); //$NON-NLS-1$
+    	assertRowCount(2);
+    	
+    	server.deployVDB(new ByteArrayInputStream(new String("<vdb name=\"ms-2\" version=\"1\">"
+				+ "<import-vdb name=\"ms-base\" version=\"1\"/>"
+				+ "</vdb>").getBytes()));
+    	this.internalConnection = server.createConnection("jdbc:teiid:ms-2");
+    	
+    	execute("select * from tbl"); //$NON-NLS-1$
+    	assertRowCount(2);
     }
 }
