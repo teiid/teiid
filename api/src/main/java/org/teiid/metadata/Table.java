@@ -34,6 +34,7 @@ import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 
 public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiable {
 
+	public static final int UNKNOWN_CARDINALITY = -1;
 	private static final long serialVersionUID = 4891356771125218672L;
 
 	public enum Type {
@@ -59,8 +60,8 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	}
     
     static final int asInt(long f) {
-		if (f == -1 || f < 0) {
-    		return -1;
+		if (f == UNKNOWN_CARDINALITY || f < 0) {
+    		return UNKNOWN_CARDINALITY;
     	} else if (f <= Integer.MAX_VALUE) {
     		return (int)f;
     	}
@@ -69,13 +70,13 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	}
 	
 	static final float asFloat(int i) {
-		if (i >= -1) {
+		if (i >= UNKNOWN_CARDINALITY) {
     		return i;
     	}
     	return Float.intBitsToFloat(i & 0x7fffffff);
 	}
 
-	private volatile int cardinality = -1;
+	private volatile int cardinality = UNKNOWN_CARDINALITY;
     private Type tableType;
     private boolean isVirtual;
     private boolean isSystem;
@@ -124,7 +125,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	}
 
     public int getCardinality() {
-    	if (cardinality >= -1) {
+    	if (cardinality >= UNKNOWN_CARDINALITY) {
     		return cardinality;
     	}
     	return Integer.MAX_VALUE;

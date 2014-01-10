@@ -49,6 +49,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -876,6 +877,31 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     				return TypeFacility.RUNTIME_NAMES.STRING;
     			}
     			return super.getRuntimeType(type, typeName, precision);
+    		}
+    		
+    		@Override
+    		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
+    	        PreparedStatement stmt = null;
+    	        ResultSet rs = null;
+		        try {
+		            stmt = conn.prepareStatement("select num_rows from ALL_TABLES where owner = ? AND table_name = ?");  //$NON-NLS-1$
+		            stmt.setString(1, schema);
+		            stmt.setString(2, name);
+		            rs = stmt.executeQuery();
+		            if(rs.next()) {
+		            	int cardinality = rs.getInt(1);
+		            	if (!rs.wasNull()) {
+		            		table.setCardinality(cardinality);
+		            	}
+		            }
+		        } finally { 
+		            if(rs != null) {
+		                rs.close();
+		            }
+		            if(stmt != null) {
+		                stmt.close();
+		            }
+		        }
     		}
     	};
     }

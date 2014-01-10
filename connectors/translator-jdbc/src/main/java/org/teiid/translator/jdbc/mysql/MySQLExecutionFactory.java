@@ -22,7 +22,11 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -30,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
+import org.teiid.metadata.Table;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -37,6 +42,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
@@ -384,5 +390,40 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public String getHibernateDialectClassName() {
     	return "org.hibernate.dialect.MySQLDialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+    	return new JDBCMetdataProcessor() {
+    		@Override
+    		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
+    	        PreparedStatement stmt = null;
+    	        ResultSet rs = null;
+		        try {
+		            stmt = conn.prepareStatement("SELECT cardinality FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema = ? AND table_name = ?");  //$NON-NLS-1$
+		            if (catalog != null && schema == null) {
+		            	//mysql jdbc reports the schema as the catalog
+		            	stmt.setString(1, catalog);
+		            } else {
+		            	stmt.setString(1, schema);
+		            }
+		            stmt.setString(2, name);
+		            rs = stmt.executeQuery();
+		            if(rs.next()) {
+		            	int cardinality = rs.getInt(1);
+		            	if (!rs.wasNull()) {
+		            		table.setCardinality(cardinality);
+		            	}
+		            }
+		        } finally { 
+		            if(rs != null) {
+		                rs.close();
+		            }
+		            if(stmt != null) {
+		                stmt.close();
+		            }
+		        }
+    		}
+    	};
     }
 }

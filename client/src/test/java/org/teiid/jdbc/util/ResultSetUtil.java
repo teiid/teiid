@@ -23,6 +23,7 @@
 package org.teiid.jdbc.util;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Method;
@@ -45,6 +46,12 @@ public class ResultSetUtil {
     private static final String NULL = "<null>"; //$NON-NLS-1$
     private static final String MORE = "$ ";
 
+    public static void printResultSet(ResultSet rs) throws SQLException, IOException {
+    	PrintWriter pw = new PrintWriter(System.out);
+    	printResultSet(rs, 100, true, pw);
+    	pw.close();
+    }
+    
     /**
      * Prints the ResultSet (and optionally the ResultSetMetaData) to a stream. If you're using the stream from getPrintStream(),
      * then you can also compare data with expected results.

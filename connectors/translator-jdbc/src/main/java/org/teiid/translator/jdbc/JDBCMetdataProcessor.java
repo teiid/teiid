@@ -94,6 +94,9 @@ public class JDBCMetdataProcessor {
 	
 	private int excludedTables;
 	
+	private boolean useAnyIndexCardinality;
+	private boolean importStatistics;
+	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException {
 		DatabaseMetaData metadata = conn.getMetaData();
@@ -131,9 +134,30 @@ public class JDBCMetdataProcessor {
 			getIndexes(metadataFactory, metadata, tables, false);
 		}
 		
+		if (importStatistics) {
+			for (TableInfo tableInfo : tables) {
+				if (tableInfo.table.getCardinality() == Table.UNKNOWN_CARDINALITY) {
+					getTableStatistics(conn, tableInfo.catalog, tableInfo.schema, tableInfo.name, tableInfo.table);
+				}
+			}
+		}
+		
 		if (importProcedures) {
 			getProcedures(metadataFactory, metadata);
 		}
+		
+	}
+
+	/**
+	 * 
+	 * @param conn
+	 * @param catalog
+	 * @param schema
+	 * @param name
+	 * @param table
+	 * @throws SQLException 
+	 */
+	protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
 		
 	}
 
@@ -526,13 +550,19 @@ public class JDBCMetdataProcessor {
 			short savedOrdinalPosition = Short.MAX_VALUE;
 			boolean nonUnique = false;
 			boolean valid = true;
+			boolean cardinalitySet = false;
 			while (indexInfo.next()) {
 				short type = indexInfo.getShort(7);
 				if (type == DatabaseMetaData.tableIndexStatistic) {
 					tableInfo.table.setCardinality(indexInfo.getInt(11));
+					cardinalitySet = true;
 					continue;
 				}
 				short ordinalPosition = indexInfo.getShort(8);
+				if (useAnyIndexCardinality && !cardinalitySet) {
+					int cardinality = indexInfo.getInt(11);
+					tableInfo.table.setCardinality(Math.max(cardinality, tableInfo.table.getCardinality()));
+				}
 				if (ordinalPosition <= savedOrdinalPosition) {
 					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)) {
 						metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
@@ -652,6 +682,14 @@ public class JDBCMetdataProcessor {
 	
 	public void setUseQualifiedName(boolean useQualifiedName) {
 		this.useQualifiedName = useQualifiedName;
+	}
+	
+	public void setUseAnyIndexCardinality(boolean useAnyIndexCardinality) {
+		this.useAnyIndexCardinality = useAnyIndexCardinality;
+	}
+	
+	public void setImportStatistics(boolean importStatistics) {
+		this.importStatistics = importStatistics;
 	}
 	
 }
