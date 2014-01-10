@@ -26,8 +26,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +115,6 @@ public class DQPCore implements DQP {
     private int currentlyActivePlans;
     private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
-    LinkedHashSet<RequestID> bufferFullPlans = new LinkedHashSet<RequestID>();
     private int maxWaitingPlans = 0;
 	private AuthorizationValidator authorizationValidator;
 	
@@ -289,19 +286,6 @@ public class DQPCore implements DQP {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 		            LogManager.logDetail(LogConstants.CTX_DQP, workItem.requestID, "Queuing plan, since max plans has been reached.");  //$NON-NLS-1$
 		        }  
-				while (!bufferFullPlans.isEmpty()) {
-	        		Iterator<RequestID> id = bufferFullPlans.iterator();
-	        		RequestID bufferFull = id.next();
-	        		id.remove();
-					RequestWorkItem bufferFullWorkItem = safeGetWorkItem(bufferFull);
-					if (bufferFullWorkItem != null) {
-						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				            LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Restarting plan with full buffer, since there is a pending active plan.");  //$NON-NLS-1$
-				        }
-						bufferFullWorkItem.moreWork();
-						break;
-					}
-	        	}
 				waitingPlans.add(workItem);
 				maxWaitingPlans = Math.max(this.maxWaitingPlans, waitingPlans.size());
 			}
@@ -348,7 +332,6 @@ public class DQPCore implements DQP {
         	}
         	workItem.active = false;
     		currentlyActivePlans--;
-    		bufferFullPlans.remove(workItem.requestID);
 			if (!waitingPlans.isEmpty()) {
 				RequestWorkItem work = waitingPlans.remove();
 				startActivePlan(work, true);
@@ -368,7 +351,6 @@ public class DQPCore implements DQP {
     		if (item.useCallingThread || item.getDqpWorkContext().getSession().isEmbedded()) {
     			return false;
     		}
-    		this.bufferFullPlans.add(item.requestID);
 		}
     	return true;
     }

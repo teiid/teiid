@@ -326,8 +326,6 @@ public class TestDQPCore {
 	        }
         }
         
-        assertTrue(this.core.bufferFullPlans.isEmpty());
-        
         //insensitive should not block
         reqMsg.setCursorType(ResultSet.TYPE_SCROLL_INSENSITIVE);
         
