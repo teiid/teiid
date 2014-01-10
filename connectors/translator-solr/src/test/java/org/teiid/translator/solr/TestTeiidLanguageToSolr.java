@@ -37,8 +37,6 @@ import org.teiid.language.Select;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.solr.SolrExecutionFactory;
-import org.teiid.translator.solr.SolrSQLHierarchyVistor;
 
 @SuppressWarnings("nls")
 public class TestTeiidLanguageToSolr {
@@ -61,7 +59,7 @@ public class TestTeiidLanguageToSolr {
 
 	private String getSolrTranslation(String sql) throws IOException, Exception {
 		Select select = (Select) getCommand(sql);
-		SolrSQLHierarchyVistor visitor = new SolrSQLHierarchyVistor(this.utility.createRuntimeMetadata());
+		SolrSQLHierarchyVistor visitor = new SolrSQLHierarchyVistor(this.utility.createRuntimeMetadata(), this.translator);
 		visitor.visit(select);
 		String cmd =  visitor.getSolrQuery().toString();
 		return URLDecoder.decode(cmd, "UTF-8");
@@ -250,5 +248,17 @@ public class TestTeiidLanguageToSolr {
 				"select name,purchasedate from example where purchasedate = {ts '2014-01-06 11:52:07'}")
 				.startsWith("fl=name,purchasedate&q=purchasedate:2014-01-06T11-52-07:000-"));
 	}
+	
+	@Test
+	public void testFunction() throws Exception {
+		assertEquals("fl=name,sum(popularity,1)&sort=popularity asc&q=*:*",
+				getSolrTranslation("select name,popularity+1 from example order by popularity ASC"));		
+	}
+	
+	@Test
+	public void testNestedFunction() throws Exception {
+		assertEquals("fl=name,div(sum(popularity,1),2)&sort=popularity asc&q=*:*",
+				getSolrTranslation("select name,(popularity+1)/2 as x from example order by popularity ASC"));		
+	}	
 
 }

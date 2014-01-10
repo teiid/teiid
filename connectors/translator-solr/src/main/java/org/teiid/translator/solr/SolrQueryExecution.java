@@ -57,7 +57,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 			this.expectedTypes = ((QueryExpression)command).getColumnTypes();
 		}
 		
-		this.visitor = new SolrSQLHierarchyVistor(metadata);
+		this.visitor = new SolrSQLHierarchyVistor(metadata, this.executionFactory);
 		this.visitor.visitNode(command);
 	}
 
@@ -101,7 +101,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 			this.offset++;
 			
 			// if we are at the end of the current cursor set, then get next ones.
-			if (!this.resultsItr.hasNext()) {
+			if (!this.resultsItr.hasNext() && !this.visitor.isLimitInUse()) {
 				nextBatch();
 			}
 			return row;

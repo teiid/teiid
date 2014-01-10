@@ -22,6 +22,7 @@
 package org.teiid.translator.solr;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -60,26 +61,37 @@ public class SolrUpdateExecution implements UpdateExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-		if (this.command instanceof Insert) {
-			Insert insert = (Insert)this.command;
-			performInsert(insert);
+		if (this.command instanceof BatchedUpdates) {
+			List<Command> commands = ((BatchedUpdates)this.command).getUpdateCommands();
+			for (Command cmd:commands) {
+				process(cmd);
+			}
 		}
 		else {
-			if (this.command instanceof Update) {
-				Update update = (Update)this.command;
-				performUpdate(update);
-			}
-			else if (this.command instanceof Delete) {
-				Delete delete = (Delete)this.command;
-				performUpdate(delete);
-			}
+			process(this.command);
+		}
+	}
+	
+	private void process(Command cmd) throws TranslatorException {
+		if (cmd instanceof Insert) {
+			performInsert((Insert)cmd);
+		} 
+		else if (cmd instanceof Update) {
+			performUpdate((Update)cmd);
+		} 
+		else if (cmd instanceof Delete) {
+			performUpdate((Delete)cmd);
 		}
 	}
 
-	private void performUpdate(Delete obj) throws TranslatorException{
+	private void performUpdate(Delete obj) throws TranslatorException {
 		Table table = obj.getTable().getMetadataObject();
 		KeyRecord pk = table.getPrimaryKey();
 		final String id = pk.getColumns().get(0).getName();
+
+		if (obj.getParameterValues() != null) {
+			throw new TranslatorException(SolrPlugin.Event.TEIID20008, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20008));
+		}
 		
 		SolrQueryExecution query = new SolrQueryExecution(ef, obj, this.executionContext, this.metadata, this.connection);
 		query.execute();
@@ -107,6 +119,11 @@ public class SolrUpdateExecution implements UpdateExecution {
 	 * @throws TranslatorException
 	 */
 	private void performUpdate(final Update obj) throws TranslatorException {
+		
+		if (obj.getParameterValues() != null) {
+			throw new TranslatorException(SolrPlugin.Event.TEIID20009, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20009));
+		}
+		
 		SolrQueryExecution query = new SolrQueryExecution(ef, obj, this.executionContext, this.metadata, this.connection);
 		query.execute();
 		
@@ -144,46 +161,77 @@ public class SolrUpdateExecution implements UpdateExecution {
 	}
 
 	private void performInsert(Insert insert) throws TranslatorException {
-		// build insert
-		final UpdateRequest request = new UpdateRequest();
-		SolrInputDocument doc = new SolrInputDocument();
-		List<ColumnReference> columns = insert.getColumns();
-		List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();
-		for (int i = 0; i < columns.size(); i++) {
-			Column column = columns.get(i).getMetadataObject();			
-			Object value = values.get(i);
-			if (value instanceof Literal) {
-				doc.addField(column.getName(), ((Literal)value).getValue());
+		// build insert			
+		List<ColumnReference> columns = insert.getColumns();		
+		if (insert.getParameterValues() == null) {
+			final UpdateRequest request = new UpdateRequest();
+			SolrInputDocument doc = new SolrInputDocument();
+			List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();
+			for (int i = 0; i < columns.size(); i++) {
+				Column column = columns.get(i).getMetadataObject();			
+				Object value = values.get(i);
+				if (value instanceof Literal) {
+					doc.addField(column.getName(), ((Literal)value).getValue());
+				}
+				else {
+					throw new TranslatorException(SolrPlugin.Event.TEIID20002, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20002));
+				}				
 			}
-			else {
-				throw new TranslatorException(SolrPlugin.Event.TEIID20002, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20002));
-			}				
-		}
-		request.add(doc);
-		
-		// check if the row already exists
-        Select q = buildSelectQuery(insert);		
-		SolrQueryExecution query = new SolrQueryExecution(ef, q, this.executionContext, this.metadata, this.connection);
-		query.execute();
-		query.walkDocuments(new SolrDocumentCallback() {
-			@Override
-			public void walk(SolrDocument doc) {
-				request.clear();
+			this.updateCount++;
+			request.add(doc);
+			
+			// check if the row already exists
+	        Select q = buildSelectQuery(insert);		
+			SolrQueryExecution query = new SolrQueryExecution(ef, q, this.executionContext, this.metadata, this.connection);
+			query.execute();
+			query.walkDocuments(new SolrDocumentCallback() {
+				@Override
+				public void walk(SolrDocument doc) {
+					request.clear();
+				}
+			});			
+			
+			if (request.getDocuments().isEmpty()){
+				throw new TranslatorException(SolrPlugin.Event.TEIID20007, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20007));			
 			}
-		});		
-		
-		if (request.getDocuments().isEmpty()){
-			throw new TranslatorException(SolrPlugin.Event.TEIID20007, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20007));			
-		}
-		
-		// write the mutation
-		UpdateResponse response = this.connection.update(request);
-		if (response.getStatus() == 0) {
-			this.updateCount = 1;
+			
+			// write the mutation
+			UpdateResponse response = this.connection.update(request);
+			if (response.getStatus() != 0) {
+				throw new TranslatorException(SolrPlugin.Event.TEIID20003, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20003, response.getStatus()));
+			}			
 		}
 		else {
-			throw new TranslatorException(SolrPlugin.Event.TEIID20003, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20003, response.getStatus()));
-		}
+			UpdateRequest request = new UpdateRequest();
+			int batchSize = 1024;
+			// bulk insert; should help 
+			Iterator<? extends List<?>> args = insert.getParameterValues();
+			while (args.hasNext()) {
+				List<?> arg = args.next();
+				SolrInputDocument doc = new SolrInputDocument();
+				for (int i = 0; i < columns.size(); i++) {
+					Column column = columns.get(i).getMetadataObject();			
+					doc.addField(column.getName(), arg.get(i));
+				}
+				this.updateCount++;
+				request.add(doc);
+				
+				if ((this.updateCount%batchSize) == 0) {
+					UpdateResponse response = this.connection.update(request);
+					if (response.getStatus() != 0) {
+						throw new TranslatorException(SolrPlugin.Event.TEIID20003, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20003, response.getStatus()));
+					}
+					request = new UpdateRequest();
+				}
+			}
+			if (!request.getDocuments().isEmpty()) {
+				// write the mutation
+				UpdateResponse response = this.connection.update(request);
+				if (response.getStatus() != 0) {
+					throw new TranslatorException(SolrPlugin.Event.TEIID20003, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20003, response.getStatus()));
+				}
+			}
+		}		
 	}
 
 	private Select buildSelectQuery(Insert insert) throws TranslatorException {
