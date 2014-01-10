@@ -40,6 +40,8 @@ public class SolrPlugin {
     	TEIID20004,
     	TEIID20005,
     	TEIID20006,
-    	TEIID20007
+    	TEIID20007,
+    	TEIID20008,
+    	TEIID20009
     }
 }

@@ -37,8 +37,8 @@ import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.jdbc.FunctionModifier;
 
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
@@ -46,28 +46,28 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private RuntimeMetadata metadata;
 	protected StringBuilder buffer = new StringBuilder();
 	private List<String> fieldNameList = new ArrayList<String>();
-	protected Stack<Object> onGoingExpression  = new Stack<Object>();
+	protected Stack<String> onGoingExpression  = new Stack<String>();
 	private boolean limitInUse;
 	private SolrQuery query = new SolrQuery();
+	private SolrExecutionFactory ef;
 
-	public SolrSQLHierarchyVistor(RuntimeMetadata metadata) {
+	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
+		this.ef = ef;
 	}
 
 	@Override
 	public void visit(DerivedColumn obj) {
 		visitNode(obj.getExpression());
-		if (obj.getExpression() instanceof ColumnReference) {
-			Column c = (Column)this.onGoingExpression.pop();
-			query.addField(c.getName());
-			fieldNameList.add(c.getName());
-		}
+		String expr = this.onGoingExpression.pop();
+		query.addField(expr);
+		fieldNameList.add(expr);
 	}
 
 	
 	@Override
 	public void visit(ColumnReference obj) {
-		this.onGoingExpression.push(obj.getMetadataObject());
+		this.onGoingExpression.push(obj.getMetadataObject().getName());
 	}
 
 	/**
@@ -84,39 +84,39 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(Comparison obj) {
 		visitNode(obj.getLeftExpression());
-		Column lhs = (Column)this.onGoingExpression.pop();
+		String lhs = this.onGoingExpression.pop();
 		
 		visitNode(obj.getRightExpression());
-		Object rhs = this.onGoingExpression.pop();
+		String rhs = this.onGoingExpression.pop();
 		
 		if (lhs != null) {
 			switch (obj.getOperator()) {
 			case EQ:
-				buffer.append(lhs.getName()).append(":").append(rhs.toString()); //$NON-NLS-1$
+				buffer.append(lhs).append(":").append(rhs); //$NON-NLS-1$
 				break;
 			case NE:
 				buffer.append(Reserved.NOT).append(Tokens.SPACE);
-				buffer.append(lhs.getName()).append(Tokens.COLON).append(rhs.toString());
+				buffer.append(lhs).append(Tokens.COLON).append(rhs);
 				break;
 			case LE:
-				buffer.append(lhs.getName()).append(":[* TO"); //$NON-NLS-1$
-				buffer.append(Tokens.SPACE).append(rhs.toString()).append(Tokens.RSBRACE);  
+				buffer.append(lhs).append(":[* TO"); //$NON-NLS-1$
+				buffer.append(Tokens.SPACE).append(rhs).append(Tokens.RSBRACE);  
 				break;
 			case LT:
-				buffer.append(lhs.getName()).append(":[* TO"); //$NON-NLS-1$
-				buffer.append(Tokens.SPACE).append(rhs.toString()).append(Tokens.RSBRACE);
+				buffer.append(lhs).append(":[* TO"); //$NON-NLS-1$
+				buffer.append(Tokens.SPACE).append(rhs).append(Tokens.RSBRACE);
 				buffer.append(Tokens.SPACE).append(Reserved.AND).append(Tokens.SPACE); 
-				buffer.append(Reserved.NOT).append(Tokens.SPACE).append(lhs.getName());
-				buffer.append(Tokens.COLON).append(rhs.toString());
+				buffer.append(Reserved.NOT).append(Tokens.SPACE).append(lhs);
+				buffer.append(Tokens.COLON).append(rhs);
 				break;
 			case GE:
-				buffer.append(lhs.getName()).append(":[").append(rhs.toString()).append(" TO *]");//$NON-NLS-1$ //$NON-NLS-2$
+				buffer.append(lhs).append(":[").append(rhs).append(" TO *]");//$NON-NLS-1$ //$NON-NLS-2$
 				break;
 			case GT:
-				buffer.append(lhs.getName()).append(":[").append(rhs.toString()); //$NON-NLS-1$
+				buffer.append(lhs).append(":[").append(rhs); //$NON-NLS-1$
 				buffer.append(" TO *]").append(Tokens.SPACE).append(Reserved.AND).append(Tokens.SPACE); //$NON-NLS-1$
-				buffer.append(Reserved.NOT).append(Tokens.SPACE).append(lhs.getName());
-				buffer.append(Tokens.COLON).append(rhs.toString());
+				buffer.append(Reserved.NOT).append(Tokens.SPACE).append(lhs);
+				buffer.append(Tokens.COLON).append(rhs);
 				break;
 			}
 		}
@@ -153,7 +153,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(In obj) {
 		visitNode(obj.getLeftExpression());
-		Column lhs = (Column)this.onGoingExpression.pop();
+		String lhs = this.onGoingExpression.pop();
 		
 		visitNodes(obj.getRightExpressions());
 		
@@ -162,12 +162,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
 		
 		//start solr expression
-		buffer.append(lhs.getName()).append(Tokens.COLON).append(Tokens.LPAREN);
+		buffer.append(lhs).append(Tokens.COLON).append(Tokens.LPAREN);
 		
 		int i = obj.getRightExpressions().size();
 		while(i-- > 0) {
 			//append rhs side as we iterates
-			buffer.append(onGoingExpression.pop().toString());
+			buffer.append(onGoingExpression.pop());
 			
 			if(i > 0) {				
 				buffer.append(Tokens.SPACE).append(Reserved.OR).append(Tokens.SPACE);
@@ -184,15 +184,15 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(Like obj) {
 		visitNode(obj.getLeftExpression());
-		Column lhs = (Column)this.onGoingExpression.pop();
+		String lhs = this.onGoingExpression.pop();
 		
 		visitNode(obj.getRightExpression());
-		Object rhs = this.onGoingExpression.pop();
+		String rhs = this.onGoingExpression.pop();
 		
 		if (obj.isNegated()){
 			buffer.append(Reserved.NOT).append(Tokens.SPACE);
 		}
-		buffer.append(lhs.getName()).append(Tokens.COLON).append(formatSolrQuery(rhs.toString()));
+		buffer.append(lhs).append(Tokens.COLON).append(formatSolrQuery(rhs));
 	}
 
 	@Override
@@ -203,7 +203,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             Class<?> type = obj.getType();
             Object val = obj.getValue();
             if(Number.class.isAssignableFrom(type)) {
-            	this.onGoingExpression.push(val);
+            	this.onGoingExpression.push(String.valueOf(val));
             } 
             else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
             	this.onGoingExpression.push(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
@@ -246,8 +246,29 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(SortSpecification obj) {
 		visitNode(obj.getExpression());
-		Column c = (Column)this.onGoingExpression.pop();
-		this.query.addSort(c.getName(), obj.getOrdering() == SortSpecification.Ordering.ASC?SolrQuery.ORDER.asc:SolrQuery.ORDER.desc);
+		String expr = this.onGoingExpression.pop();
+		this.query.addSort(expr, obj.getOrdering() == SortSpecification.Ordering.ASC?SolrQuery.ORDER.asc:SolrQuery.ORDER.desc);
+	}
+	
+	@Override
+	public void visit(Function obj) {
+		FunctionModifier funcModifier = this.ef.getFunctionModifiers().get(obj.getName());
+		if (funcModifier != null) {
+			funcModifier.translate(obj);
+		}
+			
+		StringBuilder sb = new StringBuilder();
+		visitNodes(obj.getParameters());
+		for (int i = 0; i < obj.getParameters().size(); i++) {
+			sb.insert(0,this.onGoingExpression.pop());
+			if (i < obj.getParameters().size()-1) {
+				sb.insert(0,Tokens.COMMA);
+			}
+		}
+		sb.insert(0,Tokens.LPAREN);
+		sb.insert(0,obj.getName());
+		sb.append(Tokens.RPAREN);
+		this.onGoingExpression.push(sb.toString());
 	}
 	
 	private String formatSolrQuery(String solrQuery) {

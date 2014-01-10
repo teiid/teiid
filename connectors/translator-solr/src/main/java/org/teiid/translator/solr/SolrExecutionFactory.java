@@ -209,4 +209,14 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	public boolean supportsOrderByUnrelated(){
 		return true;
 	}
+	
+	@Override
+	public boolean supportsSelectExpression() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsBulkUpdate() {
+		return true;
+	}
 }

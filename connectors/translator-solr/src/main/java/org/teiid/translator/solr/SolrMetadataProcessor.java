@@ -30,6 +30,8 @@ import org.apache.solr.client.solrj.response.LukeResponse;
 import org.apache.solr.client.solrj.response.LukeResponse.FieldInfo;
 import org.apache.solr.common.luke.FieldFlag;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
@@ -52,13 +54,16 @@ public class SolrMetadataProcessor {
 			EnumSet<FieldFlag> flags = field.getFlags();
 			if ((!name.startsWith("_") && !name.endsWith("_")) || name.startsWith("*") || name.endsWith("*")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 				if (flags.contains(FieldFlag.INDEXED) && flags.contains(FieldFlag.STORED)) {
+					Column column = null;
 					// array type
 					if (flags.contains(FieldFlag.MULTI_VALUED)) {
-						metadataFactory.addColumn(field.getName(), resolveType(field.getType())+"[]", table); //$NON-NLS-1$
+						column = metadataFactory.addColumn(field.getName(), resolveType(field.getType())+"[]", table); //$NON-NLS-1$
 					}
 					else {
-						metadataFactory.addColumn(field.getName(), resolveType(field.getType()), table);	
+						column = metadataFactory.addColumn(field.getName(), resolveType(field.getType()), table);	
 					}
+					column.setUpdatable(true);
+					column.setSearchType(SearchType.Searchable);
 						
 					// create primary key; and unique keys
 					if (field.getDistinct() > 0) {
