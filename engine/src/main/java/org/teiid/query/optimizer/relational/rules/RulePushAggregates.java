@@ -149,14 +149,18 @@ public class RulePushAggregates implements
 			                    if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
 			                        continue;
 			                    }
-		            			addGroupBy(child, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, false, stagedGroupingSymbols.isEmpty());
+		            			addGroupBy(child, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, false, stagedGroupingSymbols.isEmpty() && containsNullDependent(aggregates));
 	            			} else if (groupNode.getFirstChild() == access 
 	            					&& RuleRaiseAccess.canRaiseOverGroupBy(groupNode, child, aggregates, metadata, capFinder, analysisRecord, false)
-	            					&& canFilterEmpty(metadata, capFinder, aggregates, child)) {
-	            				addEmptyFilter(aggregates, groupNode, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(child, metadata));
+	            					&& canFilterEmpty(metadata, capFinder, child, groupingExpressions)) {
+	            				if (groupingExpressions.isEmpty()) {
+	            					addEmptyFilter(aggregates, groupNode, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(child, metadata));
+	            				}
 	            				FrameUtil.convertNode(groupNode.getParent(), null, null, ((SymbolMap)groupNode.getProperty(Info.SYMBOL_MAP)).inserseMapping(), metadata, false);
 	            				RuleRaiseAccess.performRaise(null, access, access.getParent());
-	            				RuleRaiseAccess.performRaise(null, access, access.getParent());
+	            				if (groupingExpressions.isEmpty() && RuleRaiseAccess.canRaiseOverSelect(access, metadata, capFinder, access.getParent(), null)) {
+	            					RuleRaiseAccess.performRaise(null, access, access.getParent());
+	            				}
 	            			}
 	            		}
             			//TODO: consider pushing aggregate in general
@@ -280,7 +284,7 @@ public class RulePushAggregates implements
 		Iterator<Boolean> pushdownIterator = pushdownList.iterator();
 		boolean first = true;
 		for (PlanNode planNode : unionChildren) {
-			addUnionGroupBy(groupingExpressions, aggregates, parentMap, metadata, capFinder, group, first, planNode, !pushdownIterator.next());
+			addUnionGroupBy(groupingExpressions, aggregates, parentMap, metadata, capFinder, group, first, planNode, !pushdownIterator.next(), false);
 			first = false;
 		}
 		
@@ -401,7 +405,7 @@ public class RulePushAggregates implements
 		for (PlanNode planNode : unionChildren) {
 			addUnionGroupBy(groupingExpressions, aggregates,
 					parentMap, metadata, capFinder, group, first,
-					planNode, false);
+					planNode, false, true);
 			first = false;
 		}
 		List<Expression> symbols = (List<Expression>) NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
@@ -466,7 +470,7 @@ public class RulePushAggregates implements
 			List<Expression> groupingExpressions,
 			LinkedHashSet<AggregateSymbol> aggregates, SymbolMap parentMap,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-			GroupSymbol group, boolean first, PlanNode planNode, boolean viewOnly)
+			GroupSymbol group, boolean first, PlanNode planNode, boolean viewOnly, boolean partitioned)
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException, QueryResolverException {
 		List<Expression> groupingColumns = LanguageObject.Util.deepClone(groupingExpressions, Expression.class);
@@ -537,7 +541,7 @@ public class RulePushAggregates implements
 		view.addAsParent(projectPlanNode);
 		
 		if (!viewOnly) {
-			addGroupBy(view, groupingColumns, aggregates, metadata, projectPlanNode.getParent(), capFinder, true, groupingColumns.isEmpty() || containsNullDependent(aggregates));
+			addGroupBy(view, groupingColumns, aggregates, metadata, projectPlanNode.getParent(), capFinder, true, groupingColumns.isEmpty() && (partitioned || containsNullDependent(aggregates)));
 		}
 	}
 	
@@ -563,17 +567,15 @@ public class RulePushAggregates implements
 		if (!result) {
 			return false;
 		}
-		if ((!groupingExpressions.isEmpty() || containsNullDependent(aggregates)) && !canFilterEmpty(metadata, capFinder, aggregates, planNode)) {
+		if (containsNullDependent(aggregates) && !canFilterEmpty(metadata, capFinder, planNode, groupingExpressions)) {
 			return false;
 		}
 		return true;
 	}
 
-	private boolean containsNullDependent(Set<AggregateSymbol> aggregates) {
+	private boolean containsNullDependent(Collection<AggregateSymbol> aggregates) {
 		for (AggregateSymbol aggregateSymbol : aggregates) {
-			if (aggregateSymbol.getAggregateFunction() == Type.COUNT) {
-				return true;
-			}
+			//we don't consider count here as we dealing with the original aggregates, not the mapped expressions 
 			if (aggregateSymbol.getFunctionDescriptor() != null && aggregateSymbol.getFunctionDescriptor().isNullDependent()) {
 				return true;
 			}
@@ -582,21 +584,15 @@ public class RulePushAggregates implements
 	}
 
 	private boolean canFilterEmpty(QueryMetadataInterface metadata,
-			CapabilitiesFinder capFinder, Set<AggregateSymbol> aggregates,
-			PlanNode planNode) throws QueryMetadataException,
+			CapabilitiesFinder capFinder, PlanNode planNode, List<Expression> groupingExpressions) throws QueryMetadataException,
 			TeiidComponentException {
-		Object modelId = RuleRaiseAccess.getModelIDFromAccess(planNode, metadata);
-		if (CapabilitiesUtil.supports(Capability.CRITERIA_ISNULL, modelId, metadata, capFinder) && CapabilitiesUtil.supports(Capability.CRITERIA_NOT, modelId, metadata, capFinder)) {
-			for (AggregateSymbol as : aggregates) {
-				if (as.getAggregateFunction() != AggregateSymbol.Type.COUNT) {
-					if (as.getAggregateFunction() == AggregateSymbol.Type.COUNT && as.getFunctionDescriptor().isNullDependent()) {
-						continue;
-					}
-					return true;
-				}
-			}
+		if (!groupingExpressions.isEmpty()) {
+			return true;
 		}
-		return (CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_ORDERED, modelId, metadata, capFinder) && CapabilitiesUtil.supports(Capability.QUERY_AGGREGATES_COUNT_STAR, modelId, metadata, capFinder));
+		Object modelId = RuleRaiseAccess.getModelIDFromAccess(planNode, metadata);
+		return (/*CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_ORDERED, modelId, metadata, capFinder) 
+				&&*/ CapabilitiesUtil.supports(Capability.QUERY_AGGREGATES_COUNT_STAR, modelId, metadata, capFinder)
+				/*&& CapabilitiesUtil.supports(Capability.QUERY_HAVING, modelId, metadata, capFinder)*/);
 	}
     
 	/**
@@ -751,7 +747,7 @@ public class RulePushAggregates implements
             if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
                 continue;
             }
-            addGroupBy(planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, true, stagedGroupingSymbols.isEmpty());
+            addGroupBy(planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, true, stagedGroupingSymbols.isEmpty() && containsNullDependent(aggregates));
         }
     }
 
@@ -765,11 +761,12 @@ public class RulePushAggregates implements
 		PlanNode stageGroup = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
 		child.addAsParent(stageGroup);
 		aggregates = new LinkedHashSet<AggregateSymbol>(aggregates);
-		Map<Expression, ElementSymbol> reverseMapping = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, context, idGenerator).inserseMapping();
 		if (filterEmpty) {
 		    // if the source has no rows we need to insert a select node with criteria
 		    addEmptyFilter(aggregates, stageGroup, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(NodeEditor.findNodePreOrder(child, NodeConstants.Types.ACCESS), metadata));
 		}
+		Map<Expression, ElementSymbol> reverseMapping = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, context, idGenerator).inserseMapping();
+		
 		GroupSymbol newGroup = reverseMapping.values().iterator().next().getGroupSymbol();
 		PlanNode node = stageGroup.getParent();
 		while (node != endNode) {
@@ -795,8 +792,8 @@ public class RulePushAggregates implements
 	        	accessNode.getGroups().clear();
 	        	accessNode.getGroups().addAll(stageGroup.getGroups());
 	            RuleRaiseAccess.performRaise(null, accessNode, stageGroup);
-	            if (filterEmpty) {
-	            	RuleRaiseAccess.performRaise(null, stageGroup.getParent(), stageGroup.getParent().getParent());
+	            if (filterEmpty && RuleRaiseAccess.canRaiseOverSelect(accessNode, metadata, capFinder, accessNode.getParent(), null)) {
+	            	RuleRaiseAccess.performRaise(null, accessNode, accessNode.getParent());
 	            }
 			}
         }
@@ -805,25 +802,9 @@ public class RulePushAggregates implements
 	private void addEmptyFilter(Collection<AggregateSymbol> aggregates,
 			PlanNode stageGroup, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, Object modelId) throws QueryMetadataException, TeiidComponentException {
 		PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-		Criteria crit = null;
-		if (CapabilitiesUtil.supports(Capability.CRITERIA_ISNULL, modelId, metadata, capFinder) && CapabilitiesUtil.supports(Capability.CRITERIA_NOT, modelId, metadata, capFinder)) {
-			for (AggregateSymbol aggregateSymbol : aggregates) {
-				if (aggregateSymbol.getAggregateFunction() != AggregateSymbol.Type.COUNT) {
-					if (aggregateSymbol.getAggregateFunction() == AggregateSymbol.Type.COUNT && aggregateSymbol.getFunctionDescriptor().isNullDependent()) {
-						continue;
-					}
-					IsNullCriteria inc = new IsNullCriteria((Expression) aggregateSymbol.clone());
-					inc.setNegated(true);
-					crit = inc;
-					break;
-				}
-			}
-		} 
-		if (crit == null) {
-		    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); 
-		    aggregates.add(count); //consider the count aggregate for the push down call below
-		    crit = new CompareCriteria(count, CompareCriteria.GT, new Constant(new Integer(0)));
-		}
+	    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); 
+	    aggregates.add(count); //consider the count aggregate for the push down call below
+	    Criteria crit = new CompareCriteria(count, CompareCriteria.GT, new Constant(new Integer(0)));
 		selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
 		selectNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
 		stageGroup.addAsParent(selectNode);
@@ -1086,7 +1067,10 @@ public class RulePushAggregates implements
                 nestedAggregates.add(sumSqAgg);
             } else {
                 //AGG(X) -> AGG(AGG(X))
-                newExpression = new AggregateSymbol(aggFunction.name(), false, partitionAgg); 
+                newExpression = new AggregateSymbol(aggFunction.name(), false, partitionAgg);
+                if (partitionAgg.getFunctionDescriptor() != null) {
+                	((AggregateSymbol)newExpression).setFunctionDescriptor(partitionAgg.getFunctionDescriptor().clone());
+                }
                 nestedAggregates.add(partitionAgg);
             }
 

@@ -70,7 +70,7 @@ public class TestAggregatePushdown {
         
         String sql = "SELECT a12.intkey AS REGION_NBR, SUM(a11.intnum) AS WJXBFS1 FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey WHERE a11.stringkey = 0 GROUP BY a12.intkey"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT SUM(a11.intnum) FROM bqt1.smalla AS a11 WHERE a11.stringkey = '0' HAVING SUM(a11.intnum) IS NOT NULL", "SELECT a12.intkey FROM bqt2.smalla AS a12 WHERE a12.stringkey = '0'"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT SUM(g_0.IntNum) FROM BQT1.SmallA AS g_0 WHERE g_0.StringKey = '0'", "SELECT g_0.IntKey FROM BQT2.SmallA AS g_0 WHERE g_0.StringKey = '0'"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -940,7 +940,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1, count(*) filter (where e3) from (select e1, e2, e3 from pm1.g1 union all select e1, e2, e3 from pm1.g2) y group by e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1 HAVING COUNT(*) > 0", "SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g2 AS g_0 GROUP BY g_0.e1 HAVING COUNT(*) > 0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1", "SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g2 AS g_0 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -994,7 +994,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(g_0.e2) FROM pm1.g2 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", "SELECT MAX(g_0.e2) FROM pm1.g1 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT MAX(g_0.e2) FROM pm1.g2 AS g_0", "SELECT MAX(g_0.e2) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -1049,35 +1049,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), count(*) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(g_0.e2), COUNT(*) FROM pm1.g1 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", "SELECT g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            1,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            1       // UnionAll
-        }); 
-    }
-    
-    @Test public void testPushDownOverUnionMixed1() throws Exception {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getAggregateCapabilities();
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        BasicSourceCapabilities caps1 = getAggregateCapabilities();
-        caps1.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, false);
-        capFinder.addCapabilities("pm2", caps1); //$NON-NLS-1$
-        
-        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), count(*) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(g_0.e2), COUNT(*) FROM pm2.g2 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", "SELECT MAX(g_0.e2), COUNT(*) FROM pm1.g1 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT g_0.e2 FROM pm2.g2 AS g_0", "SELECT MAX(g_0.e2), COUNT(*) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -1220,7 +1192,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select count(*) from (select e1, e2, 1 as part from pm1.g1 union all select e1, e2, 2 as part from pm1.g2) z group by e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT g_0.e1, COUNT(*) FROM pm1.g1 AS g_0 GROUP BY g_0.e1 HAVING COUNT(*) > 0", "SELECT g_0.e1, COUNT(*) FROM pm1.g2 AS g_0 GROUP BY g_0.e1 HAVING COUNT(*) > 0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT g_0.e1, COUNT(*) FROM pm1.g1 AS g_0 GROUP BY g_0.e1", "SELECT g_0.e1, COUNT(*) FROM pm1.g2 AS g_0 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
