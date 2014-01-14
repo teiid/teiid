@@ -55,7 +55,7 @@ public class JDBCMetdataProcessor {
 	/**
 	 * A holder for table records that keeps track of catalog and schema information.
 	 */
-	static class TableInfo {
+	public static class TableInfo {
 		private String catalog;
 		private String schema;
 		private String name;
@@ -161,7 +161,7 @@ public class JDBCMetdataProcessor {
 		
 	}
 
-	private void getProcedures(MetadataFactory metadataFactory,
+	protected void getProcedures(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing procedures"); //$NON-NLS-1$
 		ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
@@ -244,7 +244,7 @@ public class JDBCMetdataProcessor {
 		return sqlType;
 	}
 	
-	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
+	protected Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
@@ -371,7 +371,7 @@ public class JDBCMetdataProcessor {
 		column.setLength(columnSize);
 		column.setNativeType(typeName);
 		column.setRadix(columns.getInt(10));
-		column.setNullType(NullType.values()[columns.getShort(11)]);
+		column.setNullType(NullType.values()[columns.getInt(11)]);
 		column.setUpdatable(true);
 		String remarks = columns.getString(12);
 		column.setAnnotation(remarks);
@@ -417,7 +417,7 @@ public class JDBCMetdataProcessor {
 		return name;
 	}
 
-	private void getPrimaryKeys(MetadataFactory metadataFactory,
+	protected void getPrimaryKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables)
 			throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing primary keys"); //$NON-NLS-1$
@@ -446,7 +446,7 @@ public class JDBCMetdataProcessor {
 		}
 	}
 	
-	private void getForeignKeys(MetadataFactory metadataFactory,
+	protected void getForeignKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
@@ -540,7 +540,7 @@ public class JDBCMetdataProcessor {
 		return true;
 	}	
 
-	void getIndexes(MetadataFactory metadataFactory,
+	public void getIndexes(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
@@ -613,6 +613,11 @@ public class JDBCMetdataProcessor {
 	public void setTableNamePattern(String tableNamePattern) {
 		this.tableNamePattern = tableNamePattern;
 	}
+	
+	
+	protected String[] getTableTypes() {
+		return this.tableTypes;
+	}	
 
 	public void setTableTypes(String[] tableTypes) {
 		this.tableTypes = tableTypes;
@@ -642,9 +647,17 @@ public class JDBCMetdataProcessor {
 		this.importApproximateIndexes = importApproximateIndexes;
 	}
 
+	/**
+	 * @deprecated
+	 * @see #setWidenUnsignedTypes
+	 */
 	public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
 		this.widenUnsingedTypes = widenUnsingedTypes;
 	}
+	
+	public void setWidenUnsignedTypes(boolean widenUnsignedTypes) {
+		this.widenUnsingedTypes = widenUnsignedTypes;
+	}	
 	
 	public void setQuoteNameInSource(boolean quoteIdentifiers) {
 		this.quoteNameInSource = quoteIdentifiers;

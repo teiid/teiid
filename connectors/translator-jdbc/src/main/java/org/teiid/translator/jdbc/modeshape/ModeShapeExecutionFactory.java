@@ -22,7 +22,8 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
 import java.sql.Date;
 import java.sql.Time;
@@ -46,6 +47,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 /** 
  * Translator class for accessing the ModeShape JCR repository.  
  */
@@ -251,5 +253,9 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSetQueryOrderBy() {
     	return false;
     }
+	
+	protected JDBCMetdataProcessor createMetadataProcessor() {
+		return new ModeShapeJDBCMetdataProcessor();
+	}
         
 }
