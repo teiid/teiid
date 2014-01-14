@@ -25,9 +25,12 @@ package org.teiid.translator.object.metadata;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 import javax.script.ScriptException;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -38,6 +41,7 @@ import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.ObjectPlugin;
 
 
 /**
@@ -81,7 +85,7 @@ public class JavaBeanMetadataProcessor {
 		table.setProperty(ENTITYCLASS, entity.getName());
 		
 		String columnName = tableName + OBJECT_COL_SUFFIX;
-		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table); //$NON-NLS-1$
+		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, true); //$NON-NLS-1$
 		Map<String, Method> methods;
 		try {
 			methods = engine.getMethodMap(entity);
@@ -89,21 +93,33 @@ public class JavaBeanMetadataProcessor {
 			throw new MetadataException(e);
 		}
 		
-		Method pkMethod = null;
-		if (pkField != null) {
-			pkMethod = methods.get(pkField);
-			if (pkMethod != null) {
-				addColumn(mf, entity, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, table);
-			} else {
-				//TODO: warning/error?
-			}
-		}
-		
+        Method pkMethod = null;
+        if (pkField != null) {
+                pkMethod = methods.get(pkField);
+                if (pkMethod != null) {
+                    addColumn(mf, entity, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, table, true);
+                } else {
+                	// add a column so the PKey can be created, but make it not selectable
+                    addColumn(mf, entity, java.lang.String.class, pkField, pkField, SearchType.Searchable, table, false);
+
+                }
+                             
+    			String pkName = "PK_" + pkField.toUpperCase();
+                ArrayList<String> x = new ArrayList<String>(1) ;
+                x.add(pkField);
+                mf.addPrimaryKey(pkName, x , table);
+
+         } else {
+ 			// warn if no pk is defined
+ 			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, tableName));				
+         }
+			
 		//we have to filter the duplicate names, isFoo vs. foo
 		Map<Method, String> methodsToAdd = new LinkedHashMap<Method, String>();
 		for (Map.Entry<String, Method> entry : methods.entrySet()) {
 			String name = methodsToAdd.get(entry.getValue());
 			if (name == null || name.length() > entry.getKey().length()) {
+				// dont create a column for the already created PKkey
 				if (entry.getValue() == pkMethod 
 						|| entry.getValue().getDeclaringClass() == Object.class
 						|| entry.getValue().getName().equals("toString") //$NON-NLS-1$
@@ -116,8 +132,9 @@ public class JavaBeanMetadataProcessor {
 		}
 		
 		for (Map.Entry<Method, String> entry : methodsToAdd.entrySet()) {
-			addColumn(mf, entity, entry.getKey().getReturnType(), entry.getValue(), entry.getValue(), SearchType.Unsearchable, table);
+			addColumn(mf, entity, entry.getKey().getReturnType(), entry.getValue(), entry.getValue(), SearchType.Unsearchable, table, true);			
 		}
+				
 		return table;
 	}
 	
@@ -145,7 +162,7 @@ public class JavaBeanMetadataProcessor {
 		return this.isUpdatable;
 	}
 
-	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable) {
+	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable) {
 		Column c = entityTable.getColumnByName(attributeName);
 		if (c != null) {
 			//TODO: there should be a log here
@@ -158,6 +175,7 @@ public class JavaBeanMetadataProcessor {
 		c.setUpdatable(isUpdateable(entity, attributeName));
 		c.setSearchType(searchType);
 		c.setNativeType(type.getName());
+		c.setSelectable(selectable);
 		if (type.isPrimitive()) {
 			c.setNullType(NullType.No_Nulls);
 		}

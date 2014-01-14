@@ -91,12 +91,6 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 			ObjectConnection connection, ExecutionContext executionContext)
 			throws TranslatorException {
 
-//		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-//		try {
-//			Thread.currentThread().setContextClassLoader(
-//					
-//					(executionContext.getCommandContext() != null ? executionContext.getCommandContext().getVDBClassLoader() : this.getClass().getClassLoader() ) );
-
 			if (supportsLuceneSearching()) {
 				Class<?> type = connection.getType(cacheName);
 				return LuceneSearch.performSearch(command, type, cacheName,
@@ -104,10 +98,6 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 			}
 
 			return super.search(command, cacheName, connection, executionContext);
-
-//		} finally {
-//			Thread.currentThread().setContextClassLoader(cl);
-//		}
 	}
 	
 }

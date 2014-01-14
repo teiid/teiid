@@ -102,6 +102,8 @@ public class TestObjectExecutionFactory {
 		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(1).getNullType());
 		//name
 		assertEquals("string", physicalTable.getColumns().get(2).getRuntimeType());
+		
+		assertEquals(1, physicalTable.getAllKeys().size());
 	}	
 
 }
