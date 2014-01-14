@@ -308,7 +308,7 @@ public class TestMultiSourcePlanToProcessConverter {
             Arrays.asList("y", "b"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
-        dataMgr.addData("SELECT MAX(g_0.a) FROM MultiModel.Phys AS g_0 HAVING MAX(g_0.a) IS NOT NULL", //$NON-NLS-1$
+        dataMgr.addData("SELECT MAX(g_0.a) FROM MultiModel.Phys AS g_0", //$NON-NLS-1$
                         new List<?>[] {
                             Arrays.asList("y")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
@@ -340,7 +340,7 @@ public class TestMultiSourcePlanToProcessConverter {
             Arrays.asList("y"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
-        dataMgr.addData("SELECT MAX(g_0.a) FROM MultiModel.Phys AS g_0 HAVING MAX(g_0.a) IS NOT NULL", //$NON-NLS-1$
+        dataMgr.addData("SELECT MAX(g_0.a) FROM MultiModel.Phys AS g_0", //$NON-NLS-1$
                         new List<?>[] {
                             Arrays.asList("y")}); 
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());

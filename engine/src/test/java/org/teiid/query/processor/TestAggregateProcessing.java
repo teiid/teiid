@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -267,11 +268,11 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g1 AS g_0 GROUP BY g_0.e1 HAVING MAX(g_0.e2) IS NOT NULL", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g1 AS g_0 GROUP BY g_0.e1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("a", Integer.valueOf(2), Integer.valueOf(1)), //$NON-NLS-1$
     			});
-    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g2 AS g_0 GROUP BY g_0.e1 HAVING MAX(g_0.e2) IS NOT NULL", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g2 AS g_0 GROUP BY g_0.e1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("a", Integer.valueOf(3), Integer.valueOf(2)), //$NON-NLS-1$
     			});
@@ -303,12 +304,12 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", bac); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT g_0.e1, g_0.e2, COUNT(*), MAX(g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1, g_0.e2 HAVING MAX(g_0.e3) IS NOT NULL", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, g_0.e2, COUNT(*), MAX(g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1, g_0.e2", //$NON-NLS-1$ 
     			new List[] {
-    				Arrays.asList("2", Integer.valueOf(2), Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
+    				Arrays.asList("2", Integer.valueOf(2), Integer.valueOf(2), null), //$NON-NLS-1$
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
     			});
-    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT convert(g_0.e2, string) AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1 HAVING MAX(v_0.c_2) IS NOT NULL", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT convert(g_0.e2, string) AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(4), Boolean.FALSE), //$NON-NLS-1$
     			});
@@ -317,7 +318,7 @@ public class TestAggregateProcessing {
     	
     	List[] expected = new List[] { 
                 Arrays.asList(Integer.valueOf(7), Boolean.TRUE),
-                Arrays.asList(Integer.valueOf(2), Boolean.FALSE),
+                Arrays.asList(Integer.valueOf(2), null),
             };    
     	
     	helpProcess(plan, dataManager, expected);
@@ -335,7 +336,7 @@ public class TestAggregateProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
-        dataManager.addData("SELECT MAX(g_0.e2), COUNT(*), COUNT(g_0.e2), SUM(power(g_0.e2, 2)), SUM(g_0.e2) FROM pm2.g2 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
+        dataManager.addData("SELECT MAX(g_0.e2), COUNT(*), COUNT(g_0.e2), SUM(power(g_0.e2, 2)), SUM(g_0.e2) FROM pm2.g2 AS g_0", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
         
         List[] expected = new List[] {
     		Arrays.asList(5, 8, 2.1147629234082532, 5.366666666666666),
@@ -534,6 +535,39 @@ public class TestAggregateProcessing {
 		
 	}
 	
+	public static class CustomSum implements UserDefinedAggregate<Integer> {
+		
+		private boolean isNull = true;
+		private int result;
+		
+		public void addInput(Integer... vals) {
+			isNull = false;
+			for (Integer i : vals) {
+				if (i == null) {
+					result += 0;
+					continue;
+				}
+				result += i;
+			}
+		}
+		
+		@Override
+		public Integer getResult(org.teiid.CommandContext commandContext) {
+			if (isNull) {
+				return null;
+			}
+			return result;
+		}
+
+		@Override
+		public void reset() {
+			isNull = true;
+			result = 0;
+		}
+		
+	}
+	
+	
 	public static class LongSumAll implements UserDefinedAggregate<Long> {
 		
 		private boolean isNull = true;
@@ -565,7 +599,7 @@ public class TestAggregateProcessing {
 	@Test public void testUserDefined() throws Exception {
 		MetadataStore ms = RealMetadataFactory.example1Store();
 		Schema s = ms.getSchemas().get("PM1");
-		AggregateAttributes aa = addAgg(s, "myagg", SumAll.class, DataTypeManager.DefaultDataTypes.INTEGER);
+		AggregateAttributes aa = addAgg(s, "myagg", SumAll.class, DataTypeManager.DefaultDataTypes.INTEGER).getAggregateAttributes();
 		addAgg(s, "myagg2", LongSumAll.class, DataTypeManager.DefaultDataTypes.LONG);
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
 
@@ -607,7 +641,7 @@ public class TestAggregateProcessing {
 		helpProcess(plan, dataManager, expected);
 	}
 
-	private AggregateAttributes addAgg(Schema s, String name, Class<?> clazz, String returns) {
+	private FunctionMethod addAgg(Schema s, String name, Class<?> clazz, String returns) {
 		FunctionMethod fm = new FunctionMethod();
 		fm.setName(name);
 		fm.setInvocationClass(clazz.getName());
@@ -625,8 +659,112 @@ public class TestAggregateProcessing {
 		AggregateAttributes aa = new AggregateAttributes();
 		fm.setAggregateAttributes(aa);
 		s.getFunctions().put(fm.getName(), fm);
-		return aa;
+		return fm;
 	}
+	
+    @Test public void testNullDependentAggParitioned() throws Exception {
+    	MetadataStore ms = RealMetadataFactory.example1Store();
+		Schema s = ms.getSchemas().get("PM1");
+		FunctionMethod fm = addAgg(s, "myagg", SumAll.class, DataTypeManager.DefaultDataTypes.INTEGER);
+		fm.setNullOnNull(false);
+		fm.getAggregateAttributes().setDecomposable(true);
+		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
+
+        final String userSql = "SELECT myagg(e2), source_name FROM (select e2, 'a' as source_name from pm1.g1 union all select e2, 'b' from pm2.g1) x group by source_name"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setFunctionSupport("myagg", true);
+		ProcessorPlan plan = TestOptimizer.helpPlan(userSql, metadata, new String[] {"SELECT myagg(ALL v_0.c_1), v_0.c_0 FROM (SELECT 'a' AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0", 
+				"SELECT myagg(ALL v_0.c_1), v_0.c_0 FROM (SELECT 'b' AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0) AS v_0 GROUP BY v_0.c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
+		
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                1       // UnionAll
+            });
+    }
+    
+    @Test public void testNullDependentAgg() throws Exception {
+    	MetadataStore ms = RealMetadataFactory.example1Store();
+		Schema s = ms.getSchemas().get("PM1");
+		FunctionMethod fm = addAgg(s, "myagg", SumAll.class, DataTypeManager.DefaultDataTypes.INTEGER);
+		fm.setNullOnNull(false);
+		fm.getAggregateAttributes().setDecomposable(true);
+		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
+
+        final String userSql = "SELECT myagg(e2) FROM (select e2, e1 as source_name from pm1.g1 union all select e2, e1 from pm2.g1) x"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setFunctionSupport("myagg", true);
+		ProcessorPlan plan = TestOptimizer.helpPlan(userSql, metadata, new String[] {"SELECT myagg(ALL g_0.e2) FROM pm1.g1 AS g_0 HAVING COUNT(*) > 0", 
+				"SELECT myagg(ALL g_0.e2) FROM pm2.g1 AS g_0 HAVING COUNT(*) > 0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
+		
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                1,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                1       // UnionAll
+            });
+    }
+
+    @Test public void testNullDependentAgg1() throws Exception {
+    	MetadataStore ms = RealMetadataFactory.example1Store();
+		Schema s = ms.getSchemas().get("PM1");
+		FunctionMethod fm = addAgg(s, "myagg", CustomSum.class, DataTypeManager.DefaultDataTypes.STRING);
+		fm.setNullOnNull(false);
+		fm.getAggregateAttributes().setDecomposable(true);
+		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
+
+        final String userSql = "SELECT myagg(e2) FROM (select e2, e1 as source_name from pm1.g1 union all select e2, e1 from pm2.g1) x"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setFunctionSupport("myagg", true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
+		ProcessorPlan plan = TestOptimizer.helpPlan(userSql, metadata, new String[] {"SELECT COUNT(*), myagg(ALL g_0.e2) FROM pm2.g1 AS g_0", "SELECT COUNT(*), myagg(ALL g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
+		
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                1,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                3,      // Project
+                2,      // Select
+                0,      // Sort
+                1       // UnionAll
+            });
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+		
+		dataManager.addData("SELECT COUNT(*), myagg(ALL g_0.e2) FROM pm1.g1 AS g_0", new List<?>[] {Arrays.asList(0, null)});
+		dataManager.addData("SELECT COUNT(*), myagg(ALL g_0.e2) FROM pm2.g1 AS g_0", new List<?>[] {Arrays.asList(0, null)});
+		
+		//if we don't filter the nulls, then we'd get 0
+		helpProcess(plan, dataManager, new List[] {Collections.singletonList(null)});
+    }
 	
 	@Test public void testMultiCount() throws Exception {
 		// Create query
