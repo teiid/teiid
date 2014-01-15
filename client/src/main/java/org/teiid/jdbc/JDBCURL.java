@@ -24,6 +24,7 @@ package org.teiid.jdbc;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -209,10 +210,14 @@ public class JDBCURL {
                 Map.Entry entry = (Map.Entry)i.next();
                 if (entry.getValue() instanceof String) {
                     // get only the string properties, because a non-string property could not have been set on the url.
-                    buf.append(';')
-                       .append(entry.getKey())
-                       .append('=')
-                       .append(entry.getValue());
+                    try {
+						buf.append(';')
+						   .append(entry.getKey())
+						   .append('=')
+						   .append(URLEncoder.encode((String)entry.getValue(), "UTF-8")); //$NON-NLS-1$
+					} catch (UnsupportedEncodingException e) {
+						buf.append(entry.getValue());
+					}
                 }
             }
             urlString = buf.toString();

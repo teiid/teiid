@@ -114,10 +114,15 @@ public class TeiidDataSource extends BaseDataSource {
      */
     private boolean encryptRequests;
     
-    private final TeiidDriver driver = new TeiidDriver();
+    private final TeiidDriver driver;
     
 	public TeiidDataSource() {
+		this.driver = new TeiidDriver();
     }
+	
+	TeiidDataSource(TeiidDriver driver) {
+		this.driver = driver;
+	}
 
     // --------------------------------------------------------------------------------------------
     //                             H E L P E R   M E T H O D S
@@ -246,14 +251,14 @@ public class TeiidDataSource extends BaseDataSource {
     	if (getServerName() == null) {
     		super.validateProperties(userName, password);
 	        final Properties props = buildEmbeddedProperties(userName, password);	 
-	        String url = new JDBCURL(getDatabaseName(), null, props).getJDBCURL();
+	        String url = new JDBCURL(getDatabaseName(), null, null).getJDBCURL();
 	        return driver.connect(url, props);    		    		
     	}
     	
     	// if not proceed with socket connection.
         validateProperties(userName,password);
-        
-        return driver.connect(buildURL().getJDBCURL(), null);
+        final Properties props = buildProperties(userName, password);
+        return driver.connect(new JDBCURL(this.getDatabaseName(), buildServerURL(), null).getJDBCURL(), props);
     }
     
 	private Properties buildEmbeddedProperties(final String userName, final String password) {
