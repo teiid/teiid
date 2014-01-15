@@ -71,6 +71,7 @@ public class JDBCMetdataProcessor {
 	
 	private boolean importProcedures;
 	private boolean importKeys = true;
+	private boolean importForeignKeys = true;
 	private boolean importIndexes;
 	private String procedureNamePattern;
 	protected boolean useFullSchemaName = true;	
@@ -129,7 +130,9 @@ public class JDBCMetdataProcessor {
 		if (importKeys) {
 			getPrimaryKeys(metadataFactory, metadata, tables);
 			getIndexes(metadataFactory, metadata, tables, !importIndexes);
-			getForeignKeys(metadataFactory, metadata, tables, tableMap);
+			if (importForeignKeys) {
+				getForeignKeys(metadataFactory, metadata, tables, tableMap);
+			}
 		} else if (importIndexes) {
 			getIndexes(metadataFactory, metadata, tables, false);
 		}
@@ -220,7 +223,7 @@ public class JDBCMetdataProcessor {
 				record.setLength(columns.getInt(9));
 				record.setScale(columns.getInt(10));
 				record.setRadix(columns.getInt(11));
-				record.setNullType(NullType.values()[columns.getShort(12)]);
+				record.setNullType(NullType.values()[columns.getInt(12)]);
 				record.setAnnotation(columns.getString(13));
 			}
 		}
@@ -244,7 +247,7 @@ public class JDBCMetdataProcessor {
 		return sqlType;
 	}
 	
-	protected Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
+	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
@@ -446,7 +449,7 @@ public class JDBCMetdataProcessor {
 		}
 	}
 	
-	protected void getForeignKeys(MetadataFactory metadataFactory,
+	private void getForeignKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
@@ -613,8 +616,7 @@ public class JDBCMetdataProcessor {
 	public void setTableNamePattern(String tableNamePattern) {
 		this.tableNamePattern = tableNamePattern;
 	}
-	
-	
+		
 	protected String[] getTableTypes() {
 		return this.tableTypes;
 	}	
@@ -662,6 +664,10 @@ public class JDBCMetdataProcessor {
 	public void setQuoteNameInSource(boolean quoteIdentifiers) {
 		this.quoteNameInSource = quoteIdentifiers;
 	}
+	
+	public void setImportForeignKeys(boolean importForeignKeys) {
+		this.importForeignKeys = importForeignKeys;
+	}	
 
 	// Importer specific properties
 	public void setCatalog(String catalog) {
