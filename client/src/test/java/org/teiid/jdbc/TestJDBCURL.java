@@ -45,11 +45,11 @@ public class TestJDBCURL extends TestCase {
     }
        
     public void testJDBCURLWithProperties() {
-        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1;configFile=testdata/bqt/dqp_stmt_e2e.xmi;disableLocalTxn=true;autoFailover=false"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=%25xyz;password=***;logLevel=1;configFile=testdata/bqt/dqp_stmt_e2e.xmi;disableLocalTxn=true;autoFailover=false"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
         expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        expectedProperties.setProperty("user", "xyz"); //$NON-NLS-1$ //$NON-NLS-2$
+        expectedProperties.setProperty("user", "%xyz"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty("password", "***"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty("logLevel", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         expectedProperties.setProperty("configFile", "testdata/bqt/dqp_stmt_e2e.xmi"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -59,6 +59,7 @@ public class TestJDBCURL extends TestCase {
         assertEquals("bqt", url.getVDBName()); //$NON-NLS-1$
         assertEquals("mm://localhost:12345", url.getConnectionURL()); //$NON-NLS-1$
         assertEquals(expectedProperties, url.getProperties());
+        assertTrue(url.getJDBCURL().contains("user=%25xyz"));
     }
     
     public void testJDBCURLWithoutProperties() {

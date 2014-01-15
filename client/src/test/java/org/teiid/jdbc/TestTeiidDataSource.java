@@ -30,6 +30,8 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.core.util.UnitTestUtil;
 
@@ -709,4 +711,33 @@ public class TestTeiidDataSource extends TestCase {
             // this is expected!
         }
     }
+    
+    public void testUrlEncodedProperties() throws SQLException {
+    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
+    	TeiidDataSource tds = new TeiidDataSource(td);
+    	tds.setDatabaseName("y");
+    	tds.setUser("%25user");
+    	tds.setServerName("x");
+    	tds.getConnection();
+    	
+        ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
+    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+    	Properties p = argument.getValue();
+    	assertEquals("%25user", p.getProperty(BaseDataSource.USER_NAME));
+    }
+    
+    public void testGetConnectionWithUser() throws SQLException {
+    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
+    	TeiidDataSource tds = new TeiidDataSource(td);
+    	tds.setDatabaseName("y");
+    	tds.setUser("%25user");
+    	tds.setServerName("x");
+    	tds.getConnection("user", "password");
+    	
+        ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
+    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+    	Properties p = argument.getValue();
+    	assertEquals("user", p.getProperty(BaseDataSource.USER_NAME));
+    }
+    
 }
