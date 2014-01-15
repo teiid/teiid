@@ -1307,5 +1307,29 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan("select FIRST_VALUE(e1) OVER (ORDER BY e2) from pm1.g2", metadata, null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT FIRST_VALUE(ALL g_0.e1) OVER (ORDER BY g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
-    }    
+    }  
+    
+    @Test public void testHavingPushdown() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_HAVING, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from pm1.g2 having min(e2) > 1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0, MIN(g_0.e2) AS c_1 FROM pm1.g2 AS g_0) AS v_0 WHERE v_0.c_1 > 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+    }
+    
+    @Test public void testHavingPushdown1() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_HAVING, false);
+        caps.setFunctionSupport("concat", true);
+        caps.setFunctionSupport("convert", true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from pm1.g2 group by e1 having min(e2) || e1 > '1'", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0, MIN(g_0.e2) AS c_1, g_0.e1 AS c_2 FROM pm1.g2 AS g_0 GROUP BY g_0.e1) AS v_0 WHERE concat(convert(v_0.c_1, string), v_0.c_2) > '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+    }
 }

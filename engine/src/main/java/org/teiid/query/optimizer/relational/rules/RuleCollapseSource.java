@@ -260,6 +260,57 @@ public final class RuleCollapseSource implements OptimizerRule {
 	        ExpressionMappingVisitor.mapExpressions(query.getSelect(), symbolMap.asMap(), true); 
 	        ExpressionMappingVisitor.mapExpressions(query.getHaving(), symbolMap.asMap(), true);
 	
+	        if (query.getHaving() != null && !CapabilitiesUtil.supports(Capability.QUERY_HAVING, modelID, metadata, capFinder)) {
+	        	Select sel = query.getSelect();
+	    		GroupBy groupBy = query.getGroupBy();
+	    	    Criteria having = query.getHaving();
+	    	    query.setHaving(null);
+	    	    OrderBy orderBy = query.getOrderBy();
+	    	    query.setOrderBy(null);
+	    	    Limit limit = query.getLimit();
+	    	    query.setLimit(null);
+	    	    Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
+    	        aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(having, true));
+    	        Set<Expression> expr = new HashSet<Expression>();
+    	        for (Expression ex : sel.getProjectedSymbols()) {
+    	        	Expression selectExpression = SymbolMap.getExpression(ex);
+    	        	aggs.remove(selectExpression);
+    	        	expr.add(selectExpression);
+    	        }
+    	        int originalSelect = sel.getSymbols().size();
+    	        sel.addSymbols(aggs);
+    	        if (groupBy != null) {
+	    	        for (Expression ex : groupBy.getSymbols()) {
+	    	        	ex = SymbolMap.getExpression(ex);
+	    	        	if (expr.add(ex)) {
+	    	        		sel.addSymbol(ex);
+	    	        	}
+	    	        }
+    	        }
+	    	    Query outerQuery = null;
+	    	    try {
+	    	        outerQuery = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), query, metadata, query.getSelect().getProjectedSymbols()); //$NON-NLS-1$
+	    	    } catch (TeiidException err) {
+	    	         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30257, err);
+	    	    }
+	    	    Iterator<Expression> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
+	    	    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
+	    	    for (Expression symbol : query.getSelect().getProjectedSymbols()) {
+	    	    	//need to unwrap on both sides as the select expression could be aliased
+	    	    	//TODO: could add an option to createInlineViewQuery to disable alias creation
+	    	        expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
+	    	    }
+	    	    ExpressionMappingVisitor.mapExpressions(having, expressionMap, true);
+	    	    outerQuery.setCriteria(having);
+	    	    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap, true);
+	    	    outerQuery.setOrderBy(orderBy);
+	    	    outerQuery.setLimit(limit);
+	    	    ExpressionMappingVisitor.mapExpressions(select, expressionMap, true);
+	    	    outerQuery.getSelect().setSymbols(outerQuery.getSelect().getProjectedSymbols().subList(0, originalSelect));
+	    	    outerQuery.setOption(query.getOption());
+	    	    query = outerQuery;
+
+	        }
 	        if (!CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) {
 				//if group by expressions are not support, add an inline view to compensate
 				query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, false);

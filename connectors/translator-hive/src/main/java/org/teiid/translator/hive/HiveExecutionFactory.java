@@ -21,14 +21,7 @@
  */
 package org.teiid.translator.hive;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -387,5 +380,10 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     	attr.setAnalytic(true);
     	method.setAggregateAttributes(attr);
     	return method;
+    }
+    
+    @Override
+    public boolean supportsHaving() {
+    	return false; //only having with group by
     }
 }
