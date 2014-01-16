@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
+  	<parent>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-parent</artifactId>
+        <version>8.7.0.Alpha1-SNAPSHOT</version>    
+	</parent>
+  
+      <modelVersion>4.0.0</modelVersion>
+
+      <groupId>${groupId}</groupId>
+      <artifactId>${artifactId}</artifactId>
+      <!--version>${version}</version-->
+      <packaging>jar</packaging>
+      
+      <name>A custom translator</name>
+      <url>http://www.jboss.org/teiid</url>
+
+      <dependencies>
+            <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-api</artifactId>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-common-core</artifactId>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.resource</groupId>
+                <artifactId>connector-api</artifactId>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>3.8.1</version>
+              <scope>test</scope>
+            </dependency>
+      </dependencies>  
+  
+</project>
