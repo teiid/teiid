@@ -71,6 +71,7 @@ public class JDBCMetdataProcessor {
 	
 	private boolean importProcedures;
 	private boolean importKeys = true;
+	private boolean importForeignKeys = true;
 	private boolean importIndexes;
 	private String procedureNamePattern;
 	protected boolean useFullSchemaName = true;	
@@ -96,6 +97,8 @@ public class JDBCMetdataProcessor {
 	
 	private boolean useAnyIndexCardinality;
 	private boolean importStatistics;
+	
+	private String columnNamePattern;
 	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException {
@@ -129,7 +132,9 @@ public class JDBCMetdataProcessor {
 		if (importKeys) {
 			getPrimaryKeys(metadataFactory, metadata, tables);
 			getIndexes(metadataFactory, metadata, tables, !importIndexes);
-			getForeignKeys(metadataFactory, metadata, tables, tableMap);
+			if (importForeignKeys) {
+				getForeignKeys(metadataFactory, metadata, tables, tableMap);
+			}
 		} else if (importIndexes) {
 			getIndexes(metadataFactory, metadata, tables, false);
 		}
@@ -220,7 +225,7 @@ public class JDBCMetdataProcessor {
 				record.setLength(columns.getInt(9));
 				record.setScale(columns.getInt(10));
 				record.setRadix(columns.getInt(11));
-				record.setNullType(NullType.values()[columns.getShort(12)]);
+				record.setNullType(NullType.values()[columns.getInt(12)]);
 				record.setAnnotation(columns.getString(13));
 			}
 		}
@@ -318,11 +323,11 @@ public class JDBCMetdataProcessor {
 			|| (singleSchema && tableNamePattern == null && 
 					(excludeTables == null //getting all from a single schema 
 					|| tableMap.size()/2 > Math.sqrt(tableMap.size()/2 + excludedTables)))) {  //not excluding enough from a single schema
-			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
+			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
 			processColumns(metadataFactory, tableMap, columns);
 		} else {
 			for (TableInfo ti : new LinkedHashSet<TableInfo>(tableMap.values())) {
-				ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, null);
+				ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, columnNamePattern);
 				processColumns(metadataFactory, tableMap, columns);
 			}
 		}
@@ -371,7 +376,7 @@ public class JDBCMetdataProcessor {
 		column.setLength(columnSize);
 		column.setNativeType(typeName);
 		column.setRadix(columns.getInt(10));
-		column.setNullType(NullType.values()[columns.getShort(11)]);
+		column.setNullType(NullType.values()[columns.getInt(11)]);
 		column.setUpdatable(true);
 		String remarks = columns.getString(12);
 		column.setAnnotation(remarks);
@@ -617,6 +622,10 @@ public class JDBCMetdataProcessor {
 	public void setTableTypes(String[] tableTypes) {
 		this.tableTypes = tableTypes;
 	}
+	
+	public String[] getTableTypes() {
+		return tableTypes;
+	}
 
 	public void setUseFullSchemaName(boolean useFullSchemaName) {
 		this.useFullSchemaName = useFullSchemaName;
@@ -642,9 +651,17 @@ public class JDBCMetdataProcessor {
 		this.importApproximateIndexes = importApproximateIndexes;
 	}
 
+	/**
+	 * @deprecated
+	 * @see #setWidenUnsignedTypes
+	 */
 	public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
 		this.widenUnsingedTypes = widenUnsingedTypes;
 	}
+	
+	public void setWidenUnsignedTypes(boolean widenUnsignedTypes) {
+		this.widenUnsingedTypes = widenUnsignedTypes;
+	}	
 	
 	public void setQuoteNameInSource(boolean quoteIdentifiers) {
 		this.quoteNameInSource = quoteIdentifiers;
@@ -690,6 +707,14 @@ public class JDBCMetdataProcessor {
 	
 	public void setImportStatistics(boolean importStatistics) {
 		this.importStatistics = importStatistics;
+	}
+	
+	public void setImportForeignKeys(boolean importForeignKeys) {
+		this.importForeignKeys = importForeignKeys;
+	}
+	
+	protected void setColumnNamePattern(String columnNamePattern) {
+		this.columnNamePattern = columnNamePattern;
 	}
 	
 }

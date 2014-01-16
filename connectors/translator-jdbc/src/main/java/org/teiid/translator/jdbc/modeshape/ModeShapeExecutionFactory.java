@@ -46,6 +46,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 /** 
  * Translator class for accessing the ModeShape JCR repository.  
  */
@@ -251,5 +252,9 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSetQueryOrderBy() {
     	return false;
     }
+	
+	protected JDBCMetdataProcessor createMetadataProcessor() {
+		return new ModeShapeJDBCMetdataProcessor();
+	}
         
 }
