@@ -3033,10 +3033,7 @@ public class TestParser {
         
         Select select = new Select();
         select.addSymbol(new ElementSymbol("x.a")); //$NON-NLS-1$
-        
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
+
         helpTest("exec proc1('param1')", "EXEC proc1('param1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
@@ -5132,7 +5129,7 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         ArrayTable tt = new ArrayTable();
-        tt.setArrayValue(new Constant(null, DataTypeManager.DefaultDataClasses.OBJECT));
+        tt.setArrayValue(new Constant(null, DataTypeManager.DefaultDataClasses.NULL));
         List<TableFunctionReference.ProjectedColumn> columns = new ArrayList<TableFunctionReference.ProjectedColumn>();
         columns.add(new TableFunctionReference.ProjectedColumn("x", "string"));
         columns.add(new TableFunctionReference.ProjectedColumn("y", "date"));
@@ -5237,7 +5234,7 @@ public class TestParser {
     	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
     	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
     	Block b = new Block();
-    	b.setExceptionGroup("g");
+    	b.setExceptionGroup("e");
     	b.addStatement(cmdStmt);
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt, true);
