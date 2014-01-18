@@ -130,6 +130,12 @@ public class TestHiveExecutionFactory {
         helpTestVisitor(bqt, input, output);    	
     }
     
+    @Test
+    public void testGroupByOrderBy() throws Exception {
+        String input = "SELECT intkey FROM BQT1.SmallA group by intkey order by intkey"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA GROUP BY SmallA.IntKey ORDER BY IntKey"; 
+        helpTestVisitor(bqt, input, output);    	
+    }
     
     public static TransformationMetadata exampleBQT() {
     	MetadataStore metadataStore = new MetadataStore();

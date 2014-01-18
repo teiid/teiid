@@ -165,5 +165,20 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         buffer.append("X__"); //$NON-NLS-1$
-    }    
+    }
+    
+    @Override
+    public void visit(Select obj) {
+    	if (obj.getGroupBy() != null && obj.getOrderBy() != null) {
+    		//hive does not like order by with a group by using the full column references
+    		//this should be fine even with joins as the engine should alias the select columns 
+			for (SortSpecification spec : obj.getOrderBy().getSortSpecifications()) {
+				if (spec.getExpression() instanceof ColumnReference) {
+					ColumnReference cr = (ColumnReference)spec.getExpression();
+					cr.setTable(null);
+				}
+			}
+    	}
+    	super.visit(obj);
+    }
 }
