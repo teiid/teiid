@@ -72,7 +72,7 @@ public class AccumuloMetadataProcessor {
 				
 				Text previousRow = null;
 				Table table = null;
-				Scanner scanner = connector.createScanner(tableName, new Authorizations());
+				Scanner scanner = connector.createScanner(tableName, new Authorizations(this.conn.getAuthorizations()));
 				for (Entry<Key, Value> entry : scanner) {
 					Key key = entry.getKey();
 					Text cf = key.getColumnFamily();
