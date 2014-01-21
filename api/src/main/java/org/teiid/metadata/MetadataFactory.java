@@ -824,4 +824,10 @@ public class MetadataFactory implements Serializable {
 		this.grants.add(new Grant(role, pmd));
 	}
 
+	public void addFunction(FunctionMethod functionMethod) {
+		functionMethod.setParent(this.schema);
+		setUUID(functionMethod);
+		this.schema.addFunction(functionMethod);
+	}
+
 }

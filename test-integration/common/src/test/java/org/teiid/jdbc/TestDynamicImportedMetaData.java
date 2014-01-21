@@ -22,30 +22,35 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
+import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
 import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 
 
@@ -225,4 +230,34 @@ public class TestDynamicImportedMetaData {
     	assertEquals("symbol", columns.get(0).getName());
     	assertEquals("price", columns.get(1).getName());
     }    
+    
+    @Test public void testImportFunction() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty(NativeMetadataRepository.IMPORT_PUSHDOWN_FUNCTIONS, Boolean.TRUE.toString());
+    	
+    	mf = createMetadataFactory("test", importProperties);
+    	NativeMetadataRepository nmr = new NativeMetadataRepository();
+    	OracleExecutionFactory oef = new OracleExecutionFactory();
+    	oef.start();
+    	DataSource ds = Mockito.mock(DataSource.class);
+    	    	
+    	Mockito.stub(ds.getConnection()).toReturn(conn);
+    	
+    	nmr.loadMetadata(mf, oef, ds);
+    	
+    	Map<String, FunctionMethod> functions = mf.asMetadataStore().getSchemas().get("TEST").getFunctions();
+    	
+    	assertEquals(14, functions.size());
+    }
 }
