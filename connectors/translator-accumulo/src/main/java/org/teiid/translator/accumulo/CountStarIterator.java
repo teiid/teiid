@@ -22,6 +22,7 @@
 package org.teiid.translator.accumulo;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 
@@ -37,9 +38,11 @@ import org.apache.accumulo.core.iterators.WrappingIterator;
  */
 public class CountStarIterator extends WrappingIterator {
 	public static final String ALIAS = "alias"; //$NON-NLS-1$
+	public static final String ENCODING = "ENCODING"; //$NON-NLS-1$
 	private Key topKey;
 	private Value topValue;
 	private String alias;
+	private Charset encoding = Charset.defaultCharset();
 	
 	@Override
 	public void init(SortedKeyValueIterator<Key, Value> source,
@@ -47,6 +50,7 @@ public class CountStarIterator extends WrappingIterator {
 			throws IOException {
 		super.init(source, options, env);
 		this.alias = options.get(ALIAS);
+		this.encoding = Charset.forName(options.get(ENCODING));
 	}
 	
 	@Override
@@ -82,7 +86,7 @@ public class CountStarIterator extends WrappingIterator {
 				getSource().next();
 			}
 			this.topKey = new Key("1", this.alias, this.alias);//$NON-NLS-1$
-			this.topValue = new Value(AccumuloDataTypeManager.convertToAccumuloType(Long.valueOf(count)));
+			this.topValue = new Value(AccumuloDataTypeManager.convertToAccumuloType(Long.valueOf(count), this.encoding));
 		}
 	}
 	

@@ -50,7 +50,12 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	private int aliasIdx = 0;
 	private int iteratorPriority = 2;
 	private boolean doScanEvaluation = false;
+	private AccumuloExecutionFactory ef;
     
+	public AccumuloQueryVisitor(AccumuloExecutionFactory ef) {
+		this.ef = ef;
+	}
+	
 	public List<Range> getRanges(){
 		return this.ranges;
 	}
@@ -82,14 +87,14 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
         visitNode(obj.getLimit());
         
         if (this.doScanEvaluation) {
-        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.scanTable.getColumns());
+        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.scanTable.getColumns(), this.ef.getEncoding());
         	options.put(EvaluatorIterator.QUERYSTRING, SQLStringVisitor.getSQLString(obj.getWhere()));
         	IteratorSetting it = new IteratorSetting(1, EvaluatorIterator.class, options);
         	this.scanIterators.add(it);
         }
         
         if (this.selectColumns.size() < this.scanTable.getColumns().size()) {
-        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.selectColumns);
+        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.selectColumns, this.ef.getEncoding());
         	IteratorSetting it = new IteratorSetting(iteratorPriority++, LimitProjectionIterator.class, options);
         	this.scanIterators.add(it);
         }
@@ -227,6 +232,7 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		if (obj.getName().equals(AggregateFunction.COUNT)) {
 			HashMap<String, String> options = new HashMap<String, String>();
 			options.put(CountStarIterator.ALIAS, this.currentAlias);
+			options.put(CountStarIterator.ENCODING, this.ef.getEncoding());
 			IteratorSetting it = new IteratorSetting(this.iteratorPriority++, CountStarIterator.class, options);
 			
 			// expression expects a column
@@ -268,10 +274,11 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		this.scanTable = obj.getMetadataObject();
 	}
 	
-	private static HashMap<String, String> buildTableMetadata(String tableName, List<Column> columns) {
+	private static HashMap<String, String> buildTableMetadata(String tableName, List<Column> columns, String encoding) {
         HashMap<String, String> options = new HashMap<String, String>();
         options.put(EvaluatorIterator.COLUMNS_COUNT, String.valueOf(columns.size()));
         options.put(EvaluatorIterator.TABLENAME, tableName);
+        options.put(EvaluatorIterator.ENCODING, encoding);
         
         for (int i = 0; i < columns.size(); i++) {
         	Column column = columns.get(i);

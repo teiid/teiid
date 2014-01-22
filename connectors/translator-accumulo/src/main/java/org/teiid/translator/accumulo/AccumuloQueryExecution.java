@@ -66,7 +66,7 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 		this.aef = aef;
 		this.connection = connection;
 		this.expectedColumnTypes = command.getColumnTypes();
-		this.visitor = new AccumuloQueryVisitor();
+		this.visitor = new AccumuloQueryVisitor(this.aef);
 		this.visitor.visitNode(command);
 		
 		if (!visitor.exceptions.isEmpty()) {
@@ -191,10 +191,10 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 				String colName = SQLStringVisitor.getRecordName(column);
 				byte[] value = values.get(colName);
 				if (colName.equals(AccumuloMetadataProcessor.ROWID)) {
-					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i]));
+					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i], this.aef.getChasetEncoding()));
 				}
 				else {
-					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i]));
+					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i], this.aef.getChasetEncoding()));
 				}
 			}
 			return list;

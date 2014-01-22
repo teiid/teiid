@@ -122,7 +122,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 	private void performUpdate(Update update) throws TranslatorException, TableNotFoundException, MutationsRejectedException {
 		Table table = update.getTable().getMetadataObject();
 		
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
+		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor(this.aef);
 		visitor.visitNode(update.getWhere());
 		if (!visitor.exceptions.isEmpty()) {
 			throw visitor.exceptions.get(0);
@@ -182,7 +182,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 	
 	private void performDelete(Delete delete) throws TableNotFoundException, MutationsRejectedException, TranslatorException {
 		Table table = delete.getTable().getMetadataObject();
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
+		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor(this.aef);
 		visitor.visitNode(delete.getWhere());
 		if (!visitor.exceptions.isEmpty()) {
 			throw visitor.exceptions.get(0);
@@ -223,7 +223,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			if (rowId.equalsIgnoreCase(AccumuloMetadataProcessor.ROWID)) {
 				Object value = values.get(i);
 				if (value instanceof Literal) {
-					return AccumuloDataTypeManager.convertToAccumuloType(((Literal)value).getValue());
+					return AccumuloDataTypeManager.convertToAccumuloType(((Literal)value).getValue(), this.aef.getChasetEncoding());
 				}
 				throw new TranslatorException(AccumuloPlugin.Event.TEIID19001, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19001));
 			}
@@ -246,10 +246,10 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		Mutation mutation = new Mutation(rowid);
 		valuePattern = valuePattern.substring(1, valuePattern.length()-1); // remove the curleys
 		if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.VALUE.name())) {
-			columnValue = AccumuloDataTypeManager.convertToAccumuloType(value);
+			columnValue = AccumuloDataTypeManager.convertToAccumuloType(value, this.aef.getChasetEncoding());
 		}
 		else if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.CQ.name())) {
-			columnQualifier = AccumuloDataTypeManager.convertToAccumuloType(value);
+			columnQualifier = AccumuloDataTypeManager.convertToAccumuloType(value, this.aef.getChasetEncoding());
 		}
 		mutation.put(columnFamilty, columnQualifier, columnValue);
 		return mutation;

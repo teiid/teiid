@@ -22,6 +22,7 @@
 package org.teiid.translator.accumulo;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,10 +62,11 @@ public class EvaluatorIterator extends RowFilter{
 	public static final String VALUE_IN = "VALUE_IN"; //$NON-NLS-1$
 	public static final String DATA_TYPE = "DATA_TYPE"; //$NON-NLS-1$
 	public static final String TABLENAME = "TABLENAME";//$NON-NLS-1$
+	public static final String ENCODING = "ENCODING";//$NON-NLS-1$
 	
 	private Criteria criteria;
 	private Evaluator evaluator;
-	
+	private Charset encoding = Charset.defaultCharset();
 	private Collection<ElementSymbol> elementsInExpression;
 	private ExpressionUtil util = new ExpressionUtil();
 	
@@ -74,6 +76,7 @@ public class EvaluatorIterator extends RowFilter{
 			throws IOException {
 		super.init(source, options, env);
 		
+		this.encoding = Charset.forName(options.get(ENCODING));
 		String query = options.get(QUERYSTRING);
 		QueryParser parser = QueryParser.getQueryParser();
 		try {
@@ -137,7 +140,7 @@ public class EvaluatorIterator extends RowFilter{
 		for (Expression expr: this.util.getElementMap().keySet()) {
 			if (this.elementsInExpression.contains(expr)) {
 				Integer position = this.util.getElementMap().get(expr);
-				tuple.set(position, AccumuloDataTypeManager.convertFromAccumuloType((byte[])tuple.get(position), expr.getType()));
+				tuple.set(position, AccumuloDataTypeManager.convertFromAccumuloType((byte[])tuple.get(position), expr.getType(), this.encoding));
 			}
 		}
 		

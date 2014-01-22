@@ -99,7 +99,7 @@ public class TestAccumuloQueryVisitor {
 	}
 
 	private AccumuloQueryVisitor buildVisitor(Command cmd) throws TranslatorException {
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
+		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor(this.translator);
 		visitor.visitNode(cmd);
 		if (!visitor.exceptions.isEmpty()) {
 			throw visitor.exceptions.get(0);
