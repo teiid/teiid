@@ -21,6 +21,7 @@
  */
 package org.teiid.jboss;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +33,9 @@ import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.metadata.property.PropertyReplacer;
+import org.jboss.metadata.property.PropertyReplacers;
+import org.jboss.metadata.property.PropertyResolver;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
@@ -40,6 +44,7 @@ import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -102,7 +107,10 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 	private VDBMetaData parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit, DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
 		try {
 			VDBMetadataParser.validate(file.openStream());
-			VDBMetaData vdb = VDBMetadataParser.unmarshell(file.openStream());
+            PropertyResolver propertyResolver = deploymentUnit.getAttachment(org.jboss.as.ee.metadata.property.Attachments.FINAL_PROPERTY_RESOLVER);
+            PropertyReplacer replacer = PropertyReplacers.resolvingReplacer(propertyResolver);
+            String vdbContents = replacer.replaceProperties(ObjectConverterUtil.convertToString(file.openStream()));
+			VDBMetaData vdb = VDBMetadataParser.unmarshell(new ByteArrayInputStream(vdbContents.getBytes("UTF-8"))); //$NON-NLS-1$
 			ServiceController<?> sc = phaseContext.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
 			ObjectSerializer serializer = ObjectSerializer.class.cast(sc.getValue());
 			if (serializer.buildVdbXml(vdb).exists()) {
