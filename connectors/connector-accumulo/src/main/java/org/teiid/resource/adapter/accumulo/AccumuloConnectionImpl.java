@@ -33,6 +33,7 @@ import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.impl.ConnectorImpl;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
+import org.apache.accumulo.core.security.Authorizations;
 import org.teiid.core.util.StringUtil;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.ConnectionContext;
@@ -80,7 +81,10 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
 	}
 
 	@Override
-	public String[] getAuthorizations() {
-		return roles;
+	public Authorizations getAuthorizations() {
+		if (roles != null && roles.length > 0) {
+			return new Authorizations(roles);
+		}
+		return new Authorizations();
 	}
 }

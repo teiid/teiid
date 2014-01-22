@@ -30,7 +30,6 @@ import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.io.Text;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -72,7 +71,7 @@ public class AccumuloMetadataProcessor {
 				
 				Text previousRow = null;
 				Table table = null;
-				Scanner scanner = connector.createScanner(tableName, new Authorizations(this.conn.getAuthorizations()));
+				Scanner scanner = connector.createScanner(tableName, this.conn.getAuthorizations());
 				for (Entry<Key, Value> entry : scanner) {
 					Key key = entry.getKey();
 					Text cf = key.getColumnFamily();
@@ -100,8 +99,9 @@ public class AccumuloMetadataProcessor {
 					}
 				}
 				scanner.close();
-				table.setSupportsUpdate(true);
-				
+				if (table != null) {
+					table.setSupportsUpdate(true);
+				}
 			} catch (TableNotFoundException e) {
 				continue;
 			}

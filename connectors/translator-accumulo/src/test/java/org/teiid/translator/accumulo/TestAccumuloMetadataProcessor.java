@@ -35,6 +35,7 @@ import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.security.Authorizations;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -81,6 +82,7 @@ public class TestAccumuloMetadataProcessor {
 	public void testDefaultImportPropertiesMetadata() throws Exception {
 		AccumuloConnection conn = Mockito.mock(AccumuloConnection.class);
 		Mockito.stub(conn.getInstance()).toReturn(connector);
+		Mockito.stub(conn.getAuthorizations()).toReturn(new Authorizations("public"));
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "accumulo", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
 		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor(mf,conn);
 		processor.processMetadata();
@@ -114,6 +116,7 @@ public class TestAccumuloMetadataProcessor {
 		
 		AccumuloConnection conn = Mockito.mock(AccumuloConnection.class);
 		Mockito.stub(conn.getInstance()).toReturn(connector);
+		Mockito.stub(conn.getAuthorizations()).toReturn(new Authorizations("public"));
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "accumulo", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
 		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor(mf,conn);
 		processor.processMetadata();
