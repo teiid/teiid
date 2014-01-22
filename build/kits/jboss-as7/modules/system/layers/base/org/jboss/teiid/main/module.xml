@@ -41,7 +41,9 @@
         <module name="asm.asm"/>
         <module name="org.infinispan"/>
         <module name="org.jboss.marshalling"/>
-        <module name="org.jboss.marshalling.river"/>        
+        <module name="org.jboss.marshalling.river"/> 
+        <module name="org.jboss.as.ee"/>
+        <module name="org.jboss.metadata"/>       
         <!-- These dependencies here for ra.xml description -->
         <module name="org.jboss.as.connector"/>
         <module name="org.jboss.ironjacamar.api"/>

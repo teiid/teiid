@@ -166,7 +166,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(36, translators.size());
+		assertEquals(38, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -345,8 +345,8 @@ public class IntegrationTestDeployment {
 	
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
-		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"infinispan", "file", "teiid-local", "teiid", 
-				"salesforce", "ldap", "webservice", "h2", "google", "mongodb", "cassandra"}));
+		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
+				"accumulo", "infinispan", "file", "cassandra", "salesforce", "mongodb", "solr", "webservice", "simpledb", "h2"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
 		assertEquals(vals, templates);
@@ -608,4 +608,34 @@ public class IntegrationTestDeployment {
 		}
 	}
 
+	@Test
+	public void testSystemPropertiesInVDBXML() throws Exception{
+		String vdbName = "test";
+		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+				"<vdb name=\"test\" version=\"1\">\n" + 
+				"    <property name=\"UseConnectorMetadata\" value=\"${teiid.vdb.UseConnectorMetadata:none}\" />\n" + 
+				"    <model name=\"loopy\">\n" + 
+				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
+				"    </model>\n" + 
+				"</vdb>";
+		
+		Collection<?> vdbs = admin.getVDBs();
+		assertTrue(vdbs.isEmpty());
+		
+		JavaArchive jar = getLoopyArchive();
+		admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
+		
+		// normal load
+		admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		
+		VDB vdb = admin.getVDB(vdbName, 1);
+		String value = vdb.getPropertyValue("UseConnectorMetadata");
+
+		// see the arquillian.zml file in resources in the JVM proeprties section for the expected value
+		assertEquals("custom", value);
+		
+		admin.undeploy("loopy.jar");
+		admin.undeploy("test-vdb.xml");
+	}
 }
