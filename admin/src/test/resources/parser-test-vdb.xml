@@ -19,7 +19,7 @@
     <translator name="oracleOverride" type="oracle" description="hello world">
         <property name="my-property" value="my-value"></property>
     </translator>
-    <data-role name="roleOne" any-authenticated="false" allow-create-temporary-tables="true">
+    <data-role name="roleOne" any-authenticated="false" grant-all="true" allow-create-temporary-tables="true">
         <description>roleOne described</description>
         <permission>
             <resource-name>myTable.T1</resource-name>

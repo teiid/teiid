@@ -187,6 +187,7 @@ public class VDBMetadataParser {
 		Properties props = getAttributes(reader);
 		policy.setName(props.getProperty(Element.NAME.getLocalName()));
 		policy.setAnyAuthenticated(Boolean.parseBoolean(props.getProperty(Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName())));
+		policy.setGrantAll(Boolean.parseBoolean(props.getProperty(Element.DATA_ROLE_GRANT_ALL_ATTR.getLocalName())));
 		policy.setAllowCreateTemporaryTables(Boolean.parseBoolean(props.getProperty(Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName())));
 		
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
@@ -393,6 +394,7 @@ public class VDBMetadataParser {
 	    TRANSLATOR("translator"),
 	    DATA_ROLE("data-role"),
 	    DATA_ROLE_ANY_ATHENTICATED_ATTR("any-authenticated"),
+	    DATA_ROLE_GRANT_ALL_ATTR("grant-all"),
 	    DATA_ROLE_ALLOW_TEMP_TABLES_ATTR("allow-create-temporary-tables"),
 	    PERMISSION("permission"),
 	    RESOURCE_NAME("resource-name"),
@@ -514,6 +516,7 @@ public class VDBMetadataParser {
 		
 		writeAttribute(writer, Element.NAME.getLocalName(), dp.getName());
 		writeAttribute(writer, Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName(), String.valueOf(dp.isAnyAuthenticated()));
+		writeAttribute(writer, Element.DATA_ROLE_GRANT_ALL_ATTR.getLocalName(), String.valueOf(dp.isGrantAll()));
 		writeAttribute(writer, Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
 
 		writeElement(writer, Element.DESCRIPTION, dp.getDescription());

@@ -112,6 +112,7 @@ public class TestVDBMetaData {
 		assertTrue(roles.size() == 1);
 		
 		DataPolicyMetadata role = vdb.getDataPolicyMap().get("roleOne"); //$NON-NLS-1$
+		assertTrue(role.isGrantAll());
 		assertTrue(role.isAllowCreateTemporaryTables());
 		assertEquals("roleOne described", role.getDescription()); //$NON-NLS-1$
 		assertNotNull(role.getMappedRoleNames());
@@ -197,6 +198,8 @@ public class TestVDBMetaData {
 		roleOne.setName("roleOne"); //$NON-NLS-1$
 		roleOne.setDescription("roleOne described"); //$NON-NLS-1$
 		roleOne.setAllowCreateTemporaryTables(true);
+		roleOne.setGrantAll(true);
+		
 		PermissionMetaData perm1 = new PermissionMetaData();
 		perm1.setResourceName("myTable.T1"); //$NON-NLS-1$
 		perm1.setAllowRead(true);

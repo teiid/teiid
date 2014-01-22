@@ -337,6 +337,13 @@
                 "description" : "Indicates if the role is mapped to any authenticated user",
                 "required" : false
             },
+            "grant-all" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "BOOLEAN"
+                },
+                "description" : "Indicates if the role grants all permissions",
+                "required" : false
+            },
             "data-permissions" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "LIST"

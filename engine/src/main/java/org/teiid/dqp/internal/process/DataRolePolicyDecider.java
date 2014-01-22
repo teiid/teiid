@@ -57,6 +57,10 @@ public class DataRolePolicyDecider implements PolicyDecider {
 				boolean isFalse = false;
 				for (int j = 0; j < policyCount; j++) {
 					DataPolicyMetadata policy = (DataPolicyMetadata)policies.get(j);
+					if (policy.isGrantAll()) {
+						resources.clear();
+						return resources;
+					}
 					Boolean allows = policy.allows(resource, action);
 					if (allows != null) {
 						if (allows) {
@@ -89,7 +93,9 @@ public class DataRolePolicyDecider implements PolicyDecider {
 		Boolean result = null;
     	for(DataPolicy p:commandContext.getAllowedDataPolicies().values()) {
 			DataPolicyMetadata policy = (DataPolicyMetadata)p;
-			
+			if (policy.isGrantAll()) {
+				return true;
+			}
 			if (policy.isAllowCreateTemporaryTables() != null) {
 				if (policy.isAllowCreateTemporaryTables()) {
 					return true;

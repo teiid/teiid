@@ -62,6 +62,7 @@ import org.teiid.security.SecurityHelper;
  * This class serves as the primary implementation of the Session Service.
  */
 public class SessionServiceImpl implements SessionService {
+	public static final String SECURITY_DOMAIN_PROPERTY = "security-domain"; //$NON-NLS-1$
 	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
@@ -138,28 +139,34 @@ public class SessionServiceImpl implements SessionService {
         if (vdbName != null) {
         	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
         	vdb = getActiveVDB(vdbName, vdbVersion);
+        	securityDomain = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);
+        	if (securityDomain != null) {
+        		domains = Arrays.asList(securityDomain);
+        	}
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
              throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
         }
         
-        if (domains!= null && !domains.isEmpty() && authenticate) {
-	        // Authenticate user...
-	        // if not authenticated, this method throws exception
-            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
-
-        	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
-        	TeiidLoginContext membership = null;
-        	if (onlyAllowPassthrough) {
-                membership = passThroughLogin(userName, domains);
-        	} else {
-	        	membership = authenticate(userName, credentials, applicationName, domains);
+        if (domains!= null && !domains.isEmpty()) {
+        	if (authenticate) {
+		        // Authenticate user...
+		        // if not authenticated, this method throws exception
+	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
+	
+	        	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
+	        	TeiidLoginContext membership = null;
+	        	if (onlyAllowPassthrough) {
+	                membership = passThroughLogin(userName, domains);
+	        	} else {
+		        	membership = authenticate(userName, credentials, applicationName, domains);
+	        	}
+		        userName = membership.getUserName();
+		        securityDomain = membership.getSecurityDomain();
+		        securityContext = membership.getSecurityContext();
+		        subject = membership.getSubject();
         	}
-	        userName = membership.getUserName();
-	        securityDomain = membership.getSecurityDomain();
-	        securityContext = membership.getSecurityContext();
-	        subject = membership.getSubject();
         } else {
         	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"No Security Domain configured for Teiid for authentication"}); //$NON-NLS-1$
         }

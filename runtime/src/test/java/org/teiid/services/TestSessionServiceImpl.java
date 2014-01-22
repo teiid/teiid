@@ -3,6 +3,7 @@ package org.teiid.services;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
 
@@ -10,9 +11,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.VDB.Status;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.net.TeiidURL;
 import org.teiid.security.Credentials;
 
 @SuppressWarnings("nls")
@@ -27,7 +30,7 @@ public class TestSessionServiceImpl {
 					Credentials credentials, String applicationName,
 					List<String> domains)
 					throws LoginException {
-				return null;
+				return new TeiidLoginContext(userName, null, domains.iterator().next(), null);
 			}
 		};
 	}
@@ -133,7 +136,25 @@ public class TestSessionServiceImpl {
 		}
 	}	
 	
-    public void testBaseUsername() throws Exception {
+	@Test public void testSecurityDomain() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
+		
+		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		
+		ssi.setVDBRepository(repo);
+		
+		Properties properties = new Properties();
+		properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
+		SessionMetadata s = ssi.createSession("x", new Credentials(new char[] {'y'}), "z", properties, true);
+		assertEquals("domain", s.getSecurityDomain());
+	}	
+	
+    @Test public void testBaseUsername() throws Exception {
         
         assertEquals("foo@bar.com", SessionServiceImpl.getBaseUsername("foo\\@bar.com@foo")); //$NON-NLS-1$ //$NON-NLS-2$
         

@@ -884,6 +884,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String MAPPED_ROLE_NAMES = "mapped-role-names"; //$NON-NLS-1$
 		private static final String ALLOW_CREATE_TEMP_TABLES = "allow-create-temp-tables"; //$NON-NLS-1$
 		private static final String ANY_AUTHENTICATED = "any-authenticated"; //$NON-NLS-1$
+		private static final String GRANT_ALL = "grant-all"; //$NON-NLS-1$
 		private static final String POLICY_DESCRIPTION = "policy-description"; //$NON-NLS-1$
 		
 		public static DataPolicyMetadataMapper INSTANCE = new DataPolicyMetadataMapper();
@@ -901,6 +902,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				node.get(ALLOW_CREATE_TEMP_TABLES).set(policy.isAllowCreateTemporaryTables());
 			}
 			node.get(ANY_AUTHENTICATED).set(policy.isAnyAuthenticated());
+			if (policy.isGrantAll()) {
+				node.get(GRANT_ALL).set(policy.isGrantAll());
+			}
 			
 			//DATA_PERMISSIONS
 			List<DataPolicy.DataPermission> permissions = policy.getPermissions();
@@ -938,6 +942,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.has(ANY_AUTHENTICATED)) {
 				policy.setAnyAuthenticated(node.get(ANY_AUTHENTICATED).asBoolean());
 			}
+			if (node.has(GRANT_ALL)) {
+				policy.setGrantAll(node.get(GRANT_ALL).asBoolean());
+			}
 			
 			//DATA_PERMISSIONS
 			if (node.get(DATA_PERMISSIONS).isDefined()) {
@@ -965,6 +972,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, POLICY_DESCRIPTION, ModelType.STRING, false);
 			addAttribute(node, ALLOW_CREATE_TEMP_TABLES, ModelType.BOOLEAN, false);
 			addAttribute(node, ANY_AUTHENTICATED, ModelType.BOOLEAN, false);
+			addAttribute(node, GRANT_ALL, ModelType.BOOLEAN, false);
 			
 			ModelNode permissions = node.get(DATA_PERMISSIONS);
 			permissions.get(TYPE).set(ModelType.LIST);
@@ -988,6 +996,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					new SimpleAttributeDefinition(POLICY_DESCRIPTION, ModelType.STRING, true),
 					new SimpleAttributeDefinition(ALLOW_CREATE_TEMP_TABLES, ModelType.BOOLEAN, true),
 					new SimpleAttributeDefinition(ANY_AUTHENTICATED, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(GRANT_ALL, ModelType.BOOLEAN, true),
 					dataPermisstions,
 					roleNames
 			}).build();

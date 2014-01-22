@@ -52,6 +52,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     
     private Set<String> hasRowPermissions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
+	private boolean grantAll;
+
 	@Override
     public String getName() {
         return name;
@@ -473,6 +475,15 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		this.anyAuthenticated = anyAuthenticated;
 	}
     
+    @Override
+    public boolean isGrantAll() {
+    	return this.grantAll;
+    }
+    
+    public void setGrantAll(boolean grantAll) {
+		this.grantAll = grantAll;
+	}
+    
     public DataPolicyMetadata clone() {
     	DataPolicyMetadata clone = new DataPolicyMetadata();
     	clone.allowCreateTemporaryTables = this.allowCreateTemporaryTables;
@@ -483,6 +494,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     	clone.languagePermissions = new HashMap<String, DataPolicyMetadata.PermissionMetaData>(this.languagePermissions);
     	clone.mappedRoleNames = this.mappedRoleNames; //direct reference to preserve updates
     	clone.name = this.name;
+    	clone.grantAll = this.grantAll;
     	clone.permissions = new TreeMap<String, PermissionMetaData>(String.CASE_INSENSITIVE_ORDER);
     	clone.permissions.putAll(this.permissions);
     	return clone;

@@ -365,5 +365,10 @@ public class TestAuthorizationValidationVisitor {
         helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), examplePolicyBQT()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    
+    @Test public void testGrantAll() throws Exception {
+    	DataPolicyMetadata svc = new DataPolicyMetadata();
+    	svc.setGrantAll(true);
+        helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("select * from xmltest.doc1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }
