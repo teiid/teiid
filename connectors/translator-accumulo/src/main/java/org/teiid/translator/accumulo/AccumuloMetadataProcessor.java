@@ -81,14 +81,14 @@ public class AccumuloMetadataProcessor {
 						previousRow = row;
 						if (mf.getSchema().getTable(tableName) == null) {
 							table = mf.addTable(tableName);
-							Column column = mf.addColumn(AccumuloMetadataProcessor.ROWID, TypeFacility.RUNTIME_NAMES.VARBINARY, table);
+							Column column = mf.addColumn(AccumuloMetadataProcessor.ROWID, TypeFacility.RUNTIME_NAMES.STRING, table);
 							column.setSearchType(SearchType.All_Except_Like);
 							mf.addPrimaryKey("PK0", Arrays.asList(AccumuloMetadataProcessor.ROWID), table); //$NON-NLS-1$
 						}
 						else {
 							table = mf.getSchema().getTable(tableName);
 						}
-						Column column = mf.addColumn(buildColumnName(cf, cq, row), TypeFacility.RUNTIME_NAMES.VARBINARY, table); 
+						Column column = mf.addColumn(buildColumnName(cf, cq, row), TypeFacility.RUNTIME_NAMES.STRING, table);
 						column.setSearchType(SearchType.All_Except_Like);
 						column.setProperty(CF, cf.toString());
 						column.setProperty(CQ, cq.toString());
