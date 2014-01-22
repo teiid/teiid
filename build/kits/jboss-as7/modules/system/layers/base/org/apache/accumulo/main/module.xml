@@ -10,6 +10,7 @@
         <module name="javax.api"/>
         <module name="org.slf4j"/>
         <module name="org.apache.log4j"/>
+        <module name="org.apache.commons.io"/>
         <module name="org.apache.commons.configuration"/>
         <module name="org.apache.commons.logging"/>
         <module name="org.apache.zookeeper" />
