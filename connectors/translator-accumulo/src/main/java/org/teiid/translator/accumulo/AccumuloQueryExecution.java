@@ -79,13 +79,10 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 		try {
 			Connector connector = this.connection.getInstance();
 			Authorizations auths = new Authorizations();
-			if (this.connection.getAuthorizations() != null) {
-				auths = new Authorizations(this.connection.getAuthorizations());
-			}
 			List<Range> ranges = this.visitor.getRanges();
 			Table scanTable = this.visitor.getScanTable();			
 			List<IteratorSetting> scanIterators = visitor.scanIterators();
-			this.results = runQuery(this.aef, connector, auths, ranges, scanTable, scanIterators);
+			this.results = runQuery(this.aef, connector, this.connection.getAuthorizations(), ranges, scanTable, scanIterators);
 		} catch (TableNotFoundException e) {
 			// Teiid will not let the query come this far with out validating metadata for given table
 			// so table in user's mind exists, it may be not be in the Accumulo, which should be treated as

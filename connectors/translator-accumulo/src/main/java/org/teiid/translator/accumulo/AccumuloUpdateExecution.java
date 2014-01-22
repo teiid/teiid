@@ -36,7 +36,6 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.io.Text;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -129,17 +128,11 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			throw visitor.exceptions.get(0);
 		}
 		
-
-		Authorizations auths = new Authorizations();
-		if (this.connection.getAuthorizations() != null) {
-			auths = new Authorizations(this.connection.getAuthorizations());
-		}
-		
 		Connector connector = this.connection.getInstance();
 		BatchWriter writer = createBatchWriter(table, connector);	        	
 		
 		Text prevRow = null;
-		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), auths, visitor.getRanges(), table, visitor.scanIterators());
+		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), this.connection.getAuthorizations(), visitor.getRanges(), table, visitor.scanIterators());
 		while (results.hasNext()) {
 			Key key = results.next().getKey();
 			Text rowId = key.getRow();
@@ -195,12 +188,6 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			throw visitor.exceptions.get(0);
 		}
 		
-
-		Authorizations auths = new Authorizations();
-		if (this.connection.getAuthorizations() != null) {
-			auths = new Authorizations(this.connection.getAuthorizations());
-		}
-
 		/*
 		// To get the update count I am taking longer route..
 		Connector connector = this.connection.getInstance();
@@ -213,7 +200,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		Text prevRow = null;
 		Connector connector = this.connection.getInstance();
 		BatchWriter writer = createBatchWriter(table, connector);
-		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), auths, visitor.getRanges(), table, null);
+		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), this.connection.getAuthorizations(), visitor.getRanges(), table, null);
 		while (results.hasNext()) {
 			Key key = results.next().getKey();
 			Text rowId = key.getRow();
