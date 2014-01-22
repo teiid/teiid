@@ -99,7 +99,7 @@ public class TestAccumuloMetadataProcessor {
 		assertEquals(4, columns.size());
 		assertNotNull(customer.getColumnByName("rowid"));
 		assertNotNull(customer.getColumnByName("Customer:CompanyName"));
-		assertEquals("varbinary",customer.getColumnByName("Customer:CompanyName").getDatatype().getName());
+		assertEquals("string",customer.getColumnByName("Customer:CompanyName").getDatatype().getName());
 
 		Column column = customer.getColumnByName("Customer:CompanyName");
 		assertEquals("Customer",column.getProperty(AccumuloMetadataProcessor.CF, false));
@@ -132,7 +132,7 @@ public class TestAccumuloMetadataProcessor {
 		assertEquals(4, columns.size());
 		assertNotNull(customer.getColumnByName("rowid"));
 		assertNotNull(customer.getColumnByName("CompanyName"));
-		assertEquals("varbinary",customer.getColumnByName("CompanyName").getDatatype().getName());
+		assertEquals("string",customer.getColumnByName("CompanyName").getDatatype().getName());
 
 		Column column = customer.getColumnByName("CompanyName");
 		assertEquals("Customer",column.getProperty(AccumuloMetadataProcessor.CF, false));

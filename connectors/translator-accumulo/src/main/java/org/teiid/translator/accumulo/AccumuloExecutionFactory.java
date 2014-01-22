@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.accumulo;
 
+import java.nio.charset.Charset;
+
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.Command;
@@ -39,6 +41,7 @@ import org.teiid.translator.UpdateExecution;
 @Translator(name="accumulo", description="Accumulo Translator, reads and writes the data to Accumulo Key/Value store")
 public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory, AccumuloConnection> {
 	private int queryThreadsCount = 10;
+	private Charset encoding = Charset.defaultCharset();
 	
 	public AccumuloExecutionFactory() {
 		setSourceRequiredForMetadata(true);
@@ -75,6 +78,19 @@ public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory
 		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor(metadataFactory, conn);
 		processor.processMetadata();
 	}
+	
+	@TranslatorProperty(display="Encoding", description="Character Encoding to use for reading and saving text based data", advanced=true)
+	public String getEncoding() {
+		return this.encoding.name();
+	}
+	
+	Charset getChasetEncoding() {
+		return this.encoding;
+	}	
+
+	public void setEncoding(String encoding) {
+		this.encoding = Charset.forName(encoding);
+	}	
 	
 	@Override
 	public boolean supportsAggregatesCountStar() {

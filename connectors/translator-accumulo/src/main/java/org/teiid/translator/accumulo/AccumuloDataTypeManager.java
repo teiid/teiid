@@ -24,6 +24,7 @@ package org.teiid.translator.accumulo;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.util.Arrays;
 
@@ -39,7 +40,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 public class AccumuloDataTypeManager {
 	public static byte[] EMPTY_BYTES = new byte[0];
 	
-	public static byte[] convertToAccumuloType(Object value) {
+	public static byte[] convertToAccumuloType(Object value, Charset encoding) {
 		if (value == null) {
 			return EMPTY_BYTES;
 		}
@@ -53,7 +54,7 @@ public class AccumuloDataTypeManager {
 			else if (value instanceof Object[] ) {
 				throw new TeiidRuntimeException(AccumuloPlugin.Event.TEIID19003, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19003));
 			}
-			return ((String)DataTypeManager.transformValue(value, String.class)).getBytes();
+			return ((String)DataTypeManager.transformValue(value, String.class)).getBytes(encoding);
 		} catch (TransformationException e) {
 			throw new TeiidRuntimeException(e);
 		} catch (TeiidException e) {
@@ -62,21 +63,14 @@ public class AccumuloDataTypeManager {
 			throw new TeiidRuntimeException(e);
 		}
 	}
-	
-	public static String convertToStringType(Object value) throws TransformationException {
-		if (value == null) {
-			return null;
-		}
-		return ((String)DataTypeManager.transformValue(value, String.class));
-	}
-	
-	public static Object convertFromAccumuloType(final byte[] value, final Class<?> expectedType) {
+		
+	public static Object convertFromAccumuloType(final byte[] value, final Class<?> expectedType, final Charset encoding) {
 		if (value == null || Arrays.equals(value, EMPTY_BYTES)) {
 			return null;
 		}
 		
 		if (expectedType.isAssignableFrom(String.class)) {
-			return new String(value);
+			return new String(value, encoding);
 		}
 		
 		try {
@@ -90,7 +84,7 @@ public class AccumuloDataTypeManager {
 				}));
 			}
 			else if (DataTypeManager.isTransformable(String.class, expectedType)) {
-				return DataTypeManager.transformValue(new String(value), expectedType);
+				return DataTypeManager.transformValue(new String(value, encoding), expectedType);
 			}
 			else {
 				throw new TeiidRuntimeException(AccumuloPlugin.Event.TEIID19004, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19004, expectedType.getName()));
