@@ -87,6 +87,12 @@ public class TestHiveExecutionFactory {
         helpTestVisitor(bqt, input, output);
     }
     
+    @Test public void testTimeLiterals() throws Exception {
+        String input = "SELECT {ts '1999-01-01 11:11:11'}, {d '2000-02-02'}, {t '00:00:00'} FROM BQT1.SMALLA A"; 
+        String output = "SELECT '1999-01-01 11:11:11.0', '2000-02-02', '1970-01-01 00:00:00.0' FROM SmallA A"; 
+        helpTestVisitor(bqt, input, output);
+    }
+    
     @Test
     public void testEqualityJoinCriteria() throws Exception {
         String input = "SELECT A.intkey FROM BQT1.SMALLA A JOIN BQT1.SmallB B on A.intkey=B.intkey"; 

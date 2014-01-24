@@ -289,7 +289,7 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public String translateLiteralDate(java.sql.Date dateValue) {
-        return formatDateValue(dateValue);
+        return '\'' + formatDateValue(dateValue) + '\'';
     }
 
     @Override
@@ -297,12 +297,12 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     	if (!hasTimeType()) {
     		return translateLiteralTimestamp(new Timestamp(timeValue.getTime()));
     	}
-        return formatDateValue(timeValue);
+    	return '\'' + formatDateValue(timeValue) + '\'';
     }
 
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return formatDateValue(timestampValue);
+        return '\'' + formatDateValue(timestampValue) + '\'';
     }
 
     @Override
