@@ -173,6 +173,7 @@ public class QueryResolver {
 		    	ResolverVisitor.resolveLanguageObject(elementSymbol, metadata);
 		    	elementSymbol.setIsExternalReference(true);
 		    	if (!positional) {
+		    		symbolMap.put(new ElementSymbol("INPUT" + Symbol.SEPARATOR + name), elementSymbol.clone());
 		    		symbolMap.put(new ElementSymbol(BINDING_GROUP + Symbol.SEPARATOR + name), elementSymbol.clone());
 		    		elementSymbol.setShortName(name);
 		    	}

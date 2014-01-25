@@ -799,6 +799,16 @@ public class TestResolver {
             new String[] { "pm1.g1.e1", "pm1.g2.e2" } ); //$NON-NLS-1$
             
     }
+    
+    @Test public void testResolveInputParameters() throws Exception {
+        List bindings = new ArrayList();
+        bindings.add("pm1.g2.e1 as x"); //$NON-NLS-1$
+        
+        Query resolvedQuery = (Query) helpResolveWithBindings("SELECT pm1.g1.e1, input.x FROM pm1.g1", metadata, bindings); //$NON-NLS-1$
+
+        helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
+        assertEquals("SELECT pm1.g1.e1, pm1.g2.e1 AS x FROM pm1.g1", resolvedQuery.toString());
+    }
 
     @Test public void testResolveParametersInsert() throws Exception {
     	List<String> bindings = Arrays.asList("pm1.g2.e1"); //$NON-NLS-1$
