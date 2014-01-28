@@ -1332,4 +1332,14 @@ public class TestAggregatePushdown {
             new String[]{"SELECT v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0, MIN(g_0.e2) AS c_1, g_0.e1 AS c_2 FROM pm1.g2 AS g_0 GROUP BY g_0.e1) AS v_0 WHERE concat(convert(v_0.c_1, string), v_0.c_2) > '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
     }
+    
+    @Test public void testJoinOr() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        TestOptimizer.helpPlan("SELECT A.e1 FROM pm1.g1 A, (select e2 from pm2.g1) B WHERE A.e2 = 1 OR B.e2 IS NULL GROUP BY A.e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT g_0.e2 FROM pm2.g1 AS g_0", "SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0 GROUP BY g_0.e2, g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); 
+    }
 }

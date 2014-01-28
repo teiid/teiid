@@ -875,24 +875,34 @@ public class RulePushAggregates implements
         PlanNode result = planNode;
         while (parentJoin != groupNode) {
             if (parentJoin.getType() != NodeConstants.Types.JOIN
-                || parentJoin.hasCollectionProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA)
                 || ((JoinType)parentJoin.getProperty(NodeConstants.Info.JOIN_TYPE)).isOuter()) {
                 return null;
             }
-            //we move the target up if the filtered expressions introduce outside groups
-            if (planNode == parentJoin.getFirstChild()) {
-                if (parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS)
-                		&& filterExpressions(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), true)) {
-                	result = parentJoin;
-                	groups = result.getGroups();
+            
+        	if (!parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS) || !parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)) {
+        		List<Criteria> criteria = (List<Criteria>)parentJoin.getProperty(Info.JOIN_CRITERIA);
+	        	if (!findStagedGroupingExpressions(groups, criteria, stagedGroupingSymbols)) {
+	        		return null;
+	        	}
+        	} else {
+                List<Criteria> criteria = (List<Criteria>)parentJoin.getProperty(Info.NON_EQUI_JOIN_CRITERIA);
+            	if (!findStagedGroupingExpressions(groups, criteria, stagedGroupingSymbols)) {
+            		return null;
+            	}
+            	
+                //we move the target up if the filtered expressions introduce outside groups
+                if (planNode == parentJoin.getFirstChild()) {
+                    if (filterExpressions(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), true)) {
+                    	result = parentJoin;
+                    	groups = result.getGroups();
+                    }
+                } else {
+                    if (filterExpressions(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), true)) {
+                    	result = parentJoin;
+                    	groups = result.getGroups();
+                    }
                 }
-            } else {
-                if (parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)
-                		&& filterExpressions(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), true)) {
-                	result = parentJoin;
-                	groups = result.getGroups();
-                }
-            }
+        	}
 
             planNode = parentJoin;
             parentJoin = parentJoin.getParent();
@@ -903,6 +913,21 @@ public class RulePushAggregates implements
         }
         return result;
     }
+
+	private boolean findStagedGroupingExpressions(Set<GroupSymbol> groups,
+			List<Criteria> criteria, Set<Expression> stagedGroupingExpressions) {
+		if (criteria != null && !criteria.isEmpty()) {
+			Set<Expression> subExpressions = new HashSet<Expression>();
+			filterExpressions(subExpressions, groups, criteria, false);
+			for (Expression ses : subExpressions) {
+				if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ses.getType()))) {
+					return false; //need better subexpression logic, as just the element symbol is non-comparable
+				}
+			}
+			stagedGroupingExpressions.addAll(subExpressions);
+		}
+		return true;
+	}
 
     /**
      * @return true if the filtered expressions contain outside groups
