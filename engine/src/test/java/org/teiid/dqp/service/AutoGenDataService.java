@@ -104,7 +104,7 @@ public class AutoGenDataService extends ConnectorManager{
     public ConnectorWork registerRequest(AtomicRequestMessage message)
     		throws TeiidComponentException {
         List projectedSymbols = (message.getCommand()).getProjectedSymbols(); 
-        List[] results = createResults(projectedSymbols);
+        List[] results = createResults(projectedSymbols, rows, useIntCounter);
         if (RelationalNodeUtil.isUpdate(message.getCommand())) {
         	results = new List[] {Arrays.asList(1)};
         }
@@ -190,16 +190,16 @@ public class AutoGenDataService extends ConnectorManager{
 		return closeCount;
 	}
     
-    private List[] createResults(List symbols) {
-        List[] rows = new List[this.rows];
+    public static List[] createResults(List symbols, int rowCount, boolean useIntCounter) {
+        List[] rows = new List[rowCount];
 
-        for(int i=0; i<this.rows; i++) {        
+        for(int i=0; i<rowCount; i++) {        
             List row = new ArrayList();        
             Iterator iter = symbols.iterator();
             while(iter.hasNext()) {
                 Expression symbol = (Expression) iter.next();
                 Class type = symbol.getType();
-                row.add( getValue(type, i) );
+                row.add( getValue(type, i, useIntCounter) );
             }
             rows[i] = row;
         }   
@@ -228,7 +228,7 @@ public class AutoGenDataService extends ConnectorManager{
     private static final java.sql.Time TIME_VAL = new java.sql.Time(0);
     private static final java.sql.Timestamp TIMESTAMP_VAL = new java.sql.Timestamp(0);
     
-    private Object getValue(Class<?> type, int row) {
+    static Object getValue(Class<?> type, int row, boolean useIntCounter) {
         if(type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
             return STRING_VAL;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.INTEGER)) {
