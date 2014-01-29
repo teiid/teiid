@@ -43,7 +43,6 @@ import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.FunctionForm;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.GroupInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -595,8 +594,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    // Function did not resolve - determine reason and throw exception
 	    if(fds.isEmpty()) {
-	        FunctionForm form = library.findFunctionForm(function.getName(), args.length);
-	        if(form == null) {
+	        if(!library.hasFunctionMethod(function.getName(), args.length)) {
 	            // Unknown function form
 	             throw new QueryResolverException(QueryPlugin.Event.TEIID30068, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30068, function));
 	        }

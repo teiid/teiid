@@ -34,9 +34,9 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.source.SystemSource;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -54,8 +54,7 @@ public class TestFunctionTree {
         
         Collection<String> categories = ft.getCategories();
         for (String category : categories) {
-            Collection<FunctionForm> functions = ft.getFunctionForms(category);
-            assertTrue(functions.size() > 0);
+            assertTrue(ft.getFunctionsInCategory(category).size() > 0);
         }        
     }
     
@@ -159,7 +158,7 @@ public class TestFunctionTree {
     	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
     	Mockito.stub(fms.getFunctionMethods()).toReturn(list);
     	FunctionTree ft = new FunctionTree("foo", fms);
-    	assertEquals(1, ft.getFunctionForms(FunctionCategoryConstants.MISCELLANEOUS).size());
+    	assertEquals(1, ft.getFunctionsInCategory(FunctionCategoryConstants.MISCELLANEOUS).size());
     }
     
     @Test public void testVarbinary() throws Exception {

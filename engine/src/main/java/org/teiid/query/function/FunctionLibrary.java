@@ -35,10 +35,14 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
+import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
@@ -137,21 +141,18 @@ public class FunctionLibrary {
     }
 
     /**
-     * Get all function forms in a category, sorted by name, then # of args, then names of args.
+     * Get all function in a category.
      * @param category Category name
-     * @return List of {@link FunctionForm}s in a category
+     * @return List of {@link FunctionMethod}s in a category
      */
-    public List<FunctionForm> getFunctionForms(String category) {
-        List<FunctionForm> forms = new ArrayList<FunctionForm>();
-        forms.addAll(systemFunctions.getFunctionForms(category));
+    public List<FunctionMethod> getFunctionsInCategory(String category) {
+        List<FunctionMethod> forms = new ArrayList<FunctionMethod>();
+        forms.addAll(systemFunctions.getFunctionsInCategory(category));
         if (this.userFunctions != null) {
 	        for (FunctionTree tree: this.userFunctions) {
-	        	forms.addAll(tree.getFunctionForms(category));
+	        	forms.addAll(tree.getFunctionsInCategory(category));
 	        }
         }
-
-        // Sort alphabetically
-        Collections.sort(forms);
         return forms;
     }
 
@@ -161,17 +162,20 @@ public class FunctionLibrary {
      * @param numArgs Number of arguments
      * @return Corresponding form or null if not found
      */
-    public FunctionForm findFunctionForm(String name, int numArgs) {
-        FunctionForm form = systemFunctions.findFunctionForm(name, numArgs);
-        if(form == null && this.userFunctions != null) {
+    public boolean hasFunctionMethod(String name, int numArgs) {
+        List<FunctionMethod> methods = systemFunctions.findFunctionMethods(name, numArgs);
+        if (!methods.isEmpty()) {
+        	return true;
+        }
+        if(this.userFunctions != null) {
         	for (FunctionTree tree: this.userFunctions) {
-        		form = tree.findFunctionForm(name, numArgs);
-        		if (form != null) {
-        			break;
+        		methods = tree.findFunctionMethods(name, numArgs);
+        		if (!methods.isEmpty()) {
+        			return true;
         		}
         	}
         }
-        return form;
+        return false;
     }
 
 	/**
@@ -436,5 +440,89 @@ public class FunctionLibrary {
         String funcName = function.getName();
         
         return args.length == 2 && (funcName.equalsIgnoreCase(FunctionLibrary.CONVERT) || funcName.equalsIgnoreCase(FunctionLibrary.CAST));
+    }
+    
+    /**
+     * Return a list of the most general forms of built-in aggregate functions.
+     * <br/>count(*) - is not included
+     * <br/>textagg - is not included due to its non standard syntax
+     * 
+     * @param includeAnalytic - true to include analytic functions that must be windowed
+     * @return
+     */
+    public List<FunctionMethod> getBuiltInAggregateFunctions(boolean includeAnalytic) {
+    	ArrayList<FunctionMethod> result = new ArrayList<FunctionMethod>();
+    	for (Type type : AggregateSymbol.Type.values()) {
+			AggregateAttributes aa = new AggregateAttributes();
+    		String returnType = null;
+    		String[] argTypes = null;
+    		aa.setAllowsDistinct(true);
+    		switch (type) {
+    		case USER_DEFINED:
+    			continue;
+			case DENSE_RANK:
+			case RANK:
+			case ROW_NUMBER:
+				if (!includeAnalytic) {
+					continue;
+				}
+				aa.setAllowsDistinct(false);
+				aa.setAnalytic(true);
+				returnType = DataTypeManager.DefaultDataTypes.INTEGER;
+				argTypes = new String[] {};
+				break;
+			case ANY:
+			case SOME:
+			case EVERY:
+				returnType = DataTypeManager.DefaultDataTypes.BOOLEAN;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.BOOLEAN};
+				break;
+			case COUNT:
+				returnType = DataTypeManager.DefaultDataTypes.INTEGER;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				break;
+			case MAX:
+			case MIN:
+			case AVG:
+			case SUM:
+				returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				break;
+			case STDDEV_POP:
+			case STDDEV_SAMP:
+			case VAR_POP:
+			case VAR_SAMP:
+				returnType = DataTypeManager.DefaultDataTypes.DOUBLE;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.DOUBLE};
+				break;
+			case STRING_AGG:
+				returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				aa.setAllowsOrderBy(true);
+				break;
+			case ARRAY_AGG:
+				returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+				argTypes = new String[] {DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT))};
+				aa.setAllowsOrderBy(true);
+				aa.setAllowsDistinct(false);
+				break;
+			case JSONARRAY_AGG:
+				returnType = DataTypeManager.DefaultDataTypes.CLOB;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				aa.setAllowsOrderBy(true);
+				aa.setAllowsDistinct(false);
+				break;
+			case XMLAGG:
+				returnType = DataTypeManager.DefaultDataTypes.XML;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.XML};
+				aa.setAllowsOrderBy(true);
+				aa.setAllowsDistinct(false);
+				break;
+    		}
+			FunctionMethod fm = FunctionMethod.createFunctionMethod(type.name(), type.name(), FunctionCategoryConstants.AGGREGATE, returnType, argTypes);
+			fm.setAggregateAttributes(aa);
+    		result.add(fm);
+    	}
+    	return result;
     }
 }

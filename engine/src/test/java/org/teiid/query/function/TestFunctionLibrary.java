@@ -32,7 +32,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -203,10 +202,7 @@ public class TestFunctionLibrary {
 	}	
 	
 	private void helpFindForm(String fname, int numArgs) {
-		FunctionForm form = library.findFunctionForm(fname, numArgs);
-        assertNotNull("Failed to find function '" + fname + "' with " + numArgs + " args", form); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        assertEquals("Function names do not match: ", fname.toUpperCase(), form.getName().toUpperCase());             //$NON-NLS-1$
-        assertEquals("Arg lengths do not match: ", numArgs, form.getArgNames().size()); //$NON-NLS-1$
+		assertTrue(library.hasFunctionMethod(fname, numArgs));
 	}
 
 	private void helpInvokeMethod(String fname, Object[] inputs, Object expectedOutput) {
@@ -500,22 +496,6 @@ public class TestFunctionLibrary {
 				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }) }
 			);
 	}
-
-    // Walk through all functions by metadata 
-    @Test public void testEnumerateForms() {
-        Collection<String> categories = library.getFunctionCategories();
-        for (String category : categories) {
-            //System.out.println("Category: " + category);
-            
-            Collection<FunctionForm> functions = library.getFunctionForms(category);
-            for (FunctionForm form : functions) {
-                //System.out.println("\tFunction: " + form.getDisplayString());                
-                
-                // Lookup this form
-                helpFindForm(form.getName(), form.getArgNames().size());
-            }            
-        }        
-    }
 
 	@Test public void testFindForm1() { 
 		helpFindForm("convert", 2); //$NON-NLS-1$

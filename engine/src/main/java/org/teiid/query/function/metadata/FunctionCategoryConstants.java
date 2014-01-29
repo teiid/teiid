@@ -74,5 +74,7 @@ public interface FunctionCategoryConstants {
      * "Security" functions check authentication or authorization information
      */
     public static final String SECURITY = "Security"; //$NON-NLS-1$ 
+    
+    public static final String AGGREGATE = "Aggregatee"; //$NON-NLS-1$
 
 }
