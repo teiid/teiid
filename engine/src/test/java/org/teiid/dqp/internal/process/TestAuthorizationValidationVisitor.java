@@ -159,6 +159,7 @@ public class TestAuthorizationValidationVisitor {
     	
     	svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
     	svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g2")); //$NON-NLS-1$
+    	svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g1")); //$NON-NLS-1$
     	svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm2.g1")); //$NON-NLS-1$
         
     	// pm2.g2
@@ -240,6 +241,27 @@ public class TestAuthorizationValidationVisitor {
     
     @Test public void testEverythingAccessible() throws Exception {
         helpTest("SELECT e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc1); //$NON-NLS-1$
+    }
+    
+    @Test public void testAccessibleCombination() throws Exception {
+    	DataPolicyMetadata svc = new DataPolicyMetadata();
+    	svc.setName("test"); //$NON-NLS-1$
+    	
+    	svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
+    	PermissionMetaData p = addResource(DataPolicy.PermissionType.READ, "pm1.g1");
+    	p.setAllowRead(false);
+    	svc.addPermission(p); //$NON-NLS-1$
+    	
+    	DataPolicyMetadata svc1 = new DataPolicyMetadata();
+    	svc1.setName("test1"); //$NON-NLS-1$
+    	
+    	svc1.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
+    	
+        helpTest("SELECT e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), svc, svc1); //$NON-NLS-1$
+        
+        svc1.addPermission(p);
+
+        helpTest("SELECT e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {"pm1.g1.e1", "pm1.g1"}, RealMetadataFactory.example1VDB(), svc, svc1); //$NON-NLS-1$
     }
     
     @Test public void testEverythingAccessible1() throws Exception {
