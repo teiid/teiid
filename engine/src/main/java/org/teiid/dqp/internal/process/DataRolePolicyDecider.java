@@ -50,11 +50,16 @@ public class DataRolePolicyDecider implements PolicyDecider {
 		}
 		List<DataPolicy> policies = new ArrayList<DataPolicy>(commandContext.getAllowedDataPolicies().values());
 		int policyCount = policies.size();
+		boolean[] exclude = new boolean[policyCount];
 		outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
 			String resource = iter.next();
+			Arrays.fill(exclude, false);
+			int excludeCount = 0;
 			while (resource.length() > 0) {
-				boolean isFalse = false;
 				for (int j = 0; j < policyCount; j++) {
+					if (exclude[j]) {
+						continue;
+					}
 					DataPolicyMetadata policy = (DataPolicyMetadata)policies.get(j);
 					Boolean allows = policy.allows(resource, action);
 					if (allows != null) {
@@ -62,10 +67,11 @@ public class DataRolePolicyDecider implements PolicyDecider {
 							iter.remove();
 							continue outer;
 						}
-						isFalse = true;
+						exclude[j] = true;
+						excludeCount++;
 					}
 				}
-				if (isFalse || action == PermissionType.LANGUAGE) {
+				if (excludeCount == policyCount || action == PermissionType.LANGUAGE) {
 					break; //don't check less specific permissions
 				}
 				resource = resource.substring(0, Math.max(0, resource.lastIndexOf('.')));
