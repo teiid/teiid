@@ -21,9 +21,7 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +57,7 @@ public class TestCompositeVDB {
 		
 	}
 
-	static CompositeVDB createCompositeVDB(MetadataStore metadataStore,	String vdbName) throws VirtualDatabaseException {
+	public static CompositeVDB createCompositeVDB(MetadataStore metadataStore,	String vdbName) throws VirtualDatabaseException {
 		VDBMetaData vdbMetaData = createVDBMetadata(metadataStore, vdbName);
     	vdbMetaData.addAttchment(Foo.class, new Foo());
     	ConnectorManagerRepository cmr = new ConnectorManagerRepository();

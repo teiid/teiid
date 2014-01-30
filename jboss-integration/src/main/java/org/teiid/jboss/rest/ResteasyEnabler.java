@@ -146,6 +146,9 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
+			if (schema == null) {
+				continue; //OTHER type, which does not have a corresponding Teiid schema
+			}
 			Collection<Procedure> procedures = schema.getProcedures().values();
 			for (Procedure procedure:procedures) {
 				String uri = procedure.getProperty(REST_NAMESPACE+"URI", false); //$NON-NLS-1$
