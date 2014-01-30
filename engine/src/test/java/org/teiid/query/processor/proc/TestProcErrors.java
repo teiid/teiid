@@ -22,10 +22,8 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.teiid.query.processor.proc.TestProcedureProcessor.getProcedurePlan;
-import static org.teiid.query.processor.proc.TestProcedureProcessor.helpTestProcess;
+import static org.junit.Assert.*;
+import static org.teiid.query.processor.proc.TestProcedureProcessor.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -61,7 +59,7 @@ public class TestProcErrors {
     		TestProcedureResolving.createMetadata(ddl);
     		fail();
     	} catch (RuntimeException e) {
-    		assertEquals("TEIID31080 View test.vproc validation error: TEIID31120 An exception may only be chained to another exception. e is not valid.", e.getMessage());
+    		assertEquals("TEIID31080 test.vproc validation error: TEIID31120 An exception may only be chained to another exception. e is not valid.", e.getMessage());
     	}
     }
 

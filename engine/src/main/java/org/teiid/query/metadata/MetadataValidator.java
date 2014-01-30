@@ -325,7 +325,7 @@ public class MetadataValidator {
     		}
 			if(resolverReport != null && resolverReport.hasItems()) {
 				for (ValidatorFailure v:resolverReport.getItems()) {
-					log(report, model, v.getStatus() == ValidatorFailure.Status.ERROR?Severity.ERROR:Severity.WARNING, v.getMessage());
+					log(report, model, v.getStatus() == ValidatorFailure.Status.ERROR?Severity.ERROR:Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), v.getMessage()));
 				}
 			}
 		} catch (TeiidException e) {

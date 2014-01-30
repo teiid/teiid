@@ -160,6 +160,15 @@ public class TestMetadataValidator {
 		assertFalse(printError(report), report.hasItems());			
 	}
 	
+	@Test public void testProcMetadataValidationError() throws Exception {
+		String ddl = "create virtual procedure proc1(IN e1 varchar) RETURNS (e1 integer, e2 varchar(12)) AS begin create local temporary table x (e1 integer, e2 varchar not null); insert into x (e1) values (1); select * from x; end;";
+		buildModel("vm1", false, this.vdb, this.store, ddl);
+		buildTransformationMetadata();
+		ValidatorReport report = new ValidatorReport();
+		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
+		assertEquals("TEIID31080 vm1.proc1 validation error: Element x.e2 of x is neither nullable nor has a default value. A value must be specified in the insert.", report.getItems().iterator().next().toString());			
+	}
+	
 	@Test public void testResolveTempMetadata() throws Exception {
 		String ddl = "create virtual procedure proc1() RETURNS (e1 integer, e2 varchar(12)) AS begin create local temporary table x (e1 integer, e2 varchar); select * from x; end;" +
 		"create view z (e1 integer, e2 varchar(12)) AS select x.* from (exec proc1()) as X, (exec proc1()) as Y; ";
