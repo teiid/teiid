@@ -51,4 +51,4 @@ mmuuid:cff745c0-baa2-1e21-b812-969c8fc8b016|||unsignedShort|false|java.lang.Shor
 mmuuid:badcbd80-ba63-1e21-b812-969c8fc8b016|||unsignedLong|false|java.lang.Long|8|unsignedInt|unsignedInt||19|10|long|0|Searchable|false|UserDefined|Atomic
 mmuuid:54b98780-ba14-1e21-b812-969c8fc8b016|||nonNegativeInteger|false|java.math.BigInteger|2147483647|unsignedLong|unsignedLong||2147483647|10|biginteger|0|Searchable|false|UserDefined|Atomic
 mmuuid:327093c0-ba88-1e21-b812-969c8fc8b016|||unsignedInt|false|java.lang.Integer|4|unsignedShort|unsignedShort||10|10|integer|0|Searchable|false|UserDefined|Atomic
-mmuuid:182fd511-1a3e-447a-a6ea-72569d6a22ec|||base64Binary|false|org.teiid.core.types.BinaryType|8192|varbinary|varbinary||0||varbinary|0|Searchable||Basic|Atomic
+mmuuid:606b7f4f-08a2-4072-86e2-9915f3952c7d|||base64Binary|false|org.teiid.core.types.BinaryType|8192|varbinary|varbinary||0||varbinary|0|Searchable||Basic|Atomic
