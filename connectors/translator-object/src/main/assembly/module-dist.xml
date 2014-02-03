@@ -1,0 +1,31 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>module-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+  <fileSets>
+    <fileSet>
+        <directory>src/main/module/</directory>
+        <outputDirectory>.</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+    <fileSet>
+        <directory>target</directory>
+        <outputDirectory>org/jboss/teiid/translator/object/main</outputDirectory>      
+        <includes>
+          <include>translator-object-${project.version}.jar</include>
+        </includes>   
+    </fileSet>
+  </fileSets>
+  
+</assembly>
