@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.translator.simpledb.api">
+    <resources>
+        <resource-root path="simpledb-api-${project.version}.jar" />
+	<resource-root path="aws-java-sdk-1.5.7.jar" />
+        <!-- Insert resources here -->
+    </resources>
+
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" />
+	<module name="org.apache.commons.logging" />
+	<module name="org.apache.httpcomponents" />
+	<module name="org.apache.commons.codec" />
+    </dependencies>
+</module>
