@@ -19,13 +19,27 @@
           <include>**/*</include>
         </includes>   
     </fileSet>    
-    <fileSet>
-        <directory>target</directory>
-        <outputDirectory>org/jboss/teiid/translator/solr/main</outputDirectory>      
-        <includes>
-          <include>translator-solr-${project.version}.jar</include>
-        </includes>   
-    </fileSet>
   </fileSets>
+  
+  <dependencySets>
+     <dependencySet>
+         <outputDirectory>org/apache/solr/main</outputDirectory>
+         <includes>
+             <include>org.apache.solr:solr-solrj</include>
+             <include>org.noggit:noggit</include>
+         </includes>
+         <useProjectArtifact>false</useProjectArtifact>
+         <unpack>false</unpack>
+         <useTransitiveDependencies>true</useTransitiveDependencies>
+         <useDefaultExcludes>true</useDefaultExcludes>
+     </dependencySet>
+     <dependencySet>
+     <outputDirectory>org/jboss/teiid/translator/solr/main</outputDirectory>
+         <useTransitiveDependencies>false</useTransitiveDependencies>
+         <includes>
+             <include>org.jboss.teiid.connectors:translator-solr</include>
+         </includes>
+     </dependencySet>
+  </dependencySets>
   
 </assembly>

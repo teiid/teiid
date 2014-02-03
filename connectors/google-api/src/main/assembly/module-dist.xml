@@ -19,13 +19,13 @@
           <include>**/*</include>
         </includes>   
     </fileSet>    
-    <fileSet>
-        <directory>target</directory>
-        <outputDirectory>org/jboss/teiid/translator/google/api/main</outputDirectory>      
-        <includes>
-          <include>google-api-${project.version}.jar</include>
-        </includes>   
-    </fileSet>
   </fileSets>
+  
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>org/jboss/teiid/translator/google/api/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+    </dependencySet>
+  </dependencySets>
   
 </assembly>

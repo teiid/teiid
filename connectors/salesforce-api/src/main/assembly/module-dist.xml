@@ -19,13 +19,13 @@
           <include>**/*</include>
         </includes>   
     </fileSet>    
-    <fileSet>
-        <directory>target</directory>
-        <outputDirectory>org/jboss/teiid/translator/salesforce/api/main</outputDirectory>      
-        <includes>
-          <include>salesforce-api-${project.version}.jar</include>
-        </includes>   
-    </fileSet>
   </fileSets>
+  
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>org/jboss/teiid/translator/salesforce/api/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+    </dependencySet>
+  </dependencySets>
   
 </assembly>
