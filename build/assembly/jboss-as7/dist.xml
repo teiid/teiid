@@ -498,7 +498,7 @@
           <outputDirectory>modules/system/layers/base/</outputDirectory>
           <attachmentClassifier>module-dist</attachmentClassifier>
           <fileMode>0644</fileMode>
-          <directoryMode>0644</directoryMode>
+          <directoryMode>0755</directoryMode>
         </binaries>
       
     </moduleSet>
