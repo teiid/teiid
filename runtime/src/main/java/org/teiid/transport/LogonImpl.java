@@ -88,6 +88,15 @@ public class LogonImpl implements ILogon {
         String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
         // user may be null if using trustedToken to log on
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
+        
+        // if a user is not speified on the URL for the role information then by default
+        // use krb5 user name. Note that security-domain need not challenge for credential 
+        // in this case as krb5 auth is already occurred. This is just role association
+        String krb5User = connProps.getProperty("kerberosServicePrincipleName"); //$NON-NLS-1$
+        if (krb5ServiceTicket != null &&  krb5User != null) {
+        	user = krb5User;
+        }
+        
         // password may be null if using trustedToken to log on
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);
 		Credentials credential = null;
