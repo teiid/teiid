@@ -51,7 +51,7 @@ public class ODataTypeManager {
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.DATE, EdmSimpleType.DATETIME);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIME,  EdmSimpleType.TIME);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,  EdmSimpleType.DATETIME);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.OBJECT,  EdmSimpleType.BINARY);
+		teiidkeyed.put(DataTypeManager.DefaultDataTypes.OBJECT,  EdmSimpleType.BINARY); //currently problematic
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BLOB, EdmSimpleType.BINARY);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.CLOB, EdmSimpleType.BINARY);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML, EdmSimpleType.BINARY);

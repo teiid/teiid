@@ -29,6 +29,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -75,7 +76,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private Table resultEntityTable; // this is the original entity table for results
 	private FromClause fromCluse = null;
 	private HashMap<String, GroupSymbol> assosiatedTables = new HashMap<String, GroupSymbol>();
-	private HashMap<String, Boolean> projectedColumns = new HashMap<String, Boolean>();
+	private LinkedHashMap<String, Boolean> projectedColumns = new LinkedHashMap<String, Boolean>();
 	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
 	private AtomicInteger groupCount = new AtomicInteger(1);
 	private boolean distinct = false;
@@ -971,7 +972,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		return this.orderBy;
 	}
 	
-	HashMap<String, Boolean> getProjectedColumns(){
+	LinkedHashMap<String, Boolean> getProjectedColumns(){
 		return this.projectedColumns;
 	}
 	
