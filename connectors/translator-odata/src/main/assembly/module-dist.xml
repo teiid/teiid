@@ -19,13 +19,17 @@
           <include>**/*</include>
         </includes>   
     </fileSet>    
-    <fileSet>
-        <directory>target</directory>
-        <outputDirectory>org/jboss/teiid/translator/odata/main</outputDirectory>      
-        <includes>
-          <include>translator-odata-${project.version}.jar</include>
-        </includes>   
-    </fileSet>
   </fileSets>
+  
+  <dependencySets>
+      <dependencySet>
+          <outputDirectory>org/jboss/teiid/translator/odata/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-odata</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>
+  
   
 </assembly>

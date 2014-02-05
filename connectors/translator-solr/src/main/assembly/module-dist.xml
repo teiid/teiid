@@ -34,7 +34,7 @@
          <useDefaultExcludes>true</useDefaultExcludes>
      </dependencySet>
      <dependencySet>
-     <outputDirectory>org/jboss/teiid/translator/solr/main</outputDirectory>
+         <outputDirectory>org/jboss/teiid/translator/solr/main</outputDirectory>
          <useTransitiveDependencies>false</useTransitiveDependencies>
          <includes>
              <include>org.jboss.teiid.connectors:translator-solr</include>
