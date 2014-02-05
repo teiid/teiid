@@ -29,6 +29,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.symbol.Constant;
@@ -38,8 +39,9 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
 
-
+@SuppressWarnings("nls")
 public class TestFunctionResolving {
 
     @Test public void testResolveBadConvert() throws Exception {
@@ -165,6 +167,25 @@ public class TestFunctionResolving {
     @Test(expected=QueryResolverException.class) public void testStringAggWrongArgs() throws Exception {
     	String sql = "string_agg(pm1.g1.e1)"; //$NON-NLS-1$
     	getExpression(sql);
+    }
+    
+    @Test public void testAmbiguousUDF() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "create foreign function f () returns string"),
+    			new DDLHolder("z", "create foreign function f () returns string"));    	
+
+    	String sql = "f()";
+    	Function func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+    	
+    	try {
+    		ResolverVisitor.resolveLanguageObject(func, tm);
+    		fail();
+    	} catch(QueryResolverException e) {
+    		
+    	}
+    	
+    	sql = "z.f()";
+    	func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+    	ResolverVisitor.resolveLanguageObject(func, tm);
     }
     
 }

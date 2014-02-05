@@ -25,6 +25,7 @@ package org.teiid.query.resolver.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -586,10 +587,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	
 	    // Attempt to get exact match of function for this signature
-	    FunctionDescriptor fd = findWithImplicitConversions(library, function, args, types, hasArgWithoutType);
+	    List<FunctionDescriptor> fds = findWithImplicitConversions(library, function, args, types, hasArgWithoutType);
 	    
 	    // Function did not resolve - determine reason and throw exception
-	    if(fd == null) {
+	    if(fds.isEmpty()) {
 	        FunctionForm form = library.findFunctionForm(function.getName(), args.length);
 	        if(form == null) {
 	            // Unknown function form
@@ -602,7 +603,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	        // Known function form - unable to find implicit conversions
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30070, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30070, function));
 	    }
-	    
+	    if (fds.size() > 1) {
+        	throw new QueryResolverException(QueryPlugin.Event.TEIID31150, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31150, function));
+	    }
+	    FunctionDescriptor fd = fds.get(0);
 	    if (fd.getMethod().isVarArgs() 
 	    		&& fd.getTypes().length == types.length 
 	    		&& library.isVarArgArrayParam(fd.getMethod(), types, types.length - 1, fd.getTypes()[types.length - 1])) {
@@ -652,14 +656,14 @@ public class ResolverVisitor extends LanguageVisitor {
 	 * @throws TeiidComponentException 
 	 * @since 4.3
 	 */
-	private FunctionDescriptor findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException {
+	private List<FunctionDescriptor> findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException {
 	    
 	    // Try to find implicit conversion path to still perform this function
 	    FunctionDescriptor[] conversions;
 		try {
 			conversions = library.determineNecessaryConversions(function.getName(), function.getType(), args, types, hasArgWithoutType);
 		} catch (InvalidFunctionException e) {
-			return null;
+			return Collections.emptyList();
 		}
 		Class<?>[] newSignature = types;
 	    
@@ -686,7 +690,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	
 	    // Now resolve using the new signature to get the function's descriptor
-	    return library.findFunction(function.getName(), newSignature);
+	    return library.findAllFunctions(function.getName(), newSignature);
 	}
 
 	/**
