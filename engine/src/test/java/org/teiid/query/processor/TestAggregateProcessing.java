@@ -50,6 +50,7 @@ import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.resolver.TestResolver;
@@ -670,11 +671,11 @@ public class TestAggregateProcessing {
 		fm.getAggregateAttributes().setDecomposable(true);
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
 
-        final String userSql = "SELECT myagg(e2), source_name FROM (select e2, 'a' as source_name from pm1.g1 union all select e2, 'b' from pm2.g1) x group by source_name"; //$NON-NLS-1$
+        final String userSql = "SELECT myagg(ALL e2), source_name FROM (select e2, 'a' as source_name from pm1.g1 union all select e2, 'b' from pm2.g1) x group by source_name"; //$NON-NLS-1$
         BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
         caps.setFunctionSupport("myagg", true);
-		ProcessorPlan plan = TestOptimizer.helpPlan(userSql, metadata, new String[] {"SELECT myagg(ALL v_0.c_1), v_0.c_0 FROM (SELECT 'a' AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0", 
-				"SELECT myagg(ALL v_0.c_1), v_0.c_0 FROM (SELECT 'b' AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0) AS v_0 GROUP BY v_0.c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
+		ProcessorPlan plan = TestOptimizer.helpPlan(userSql, metadata, new String[] {"SELECT myagg(ALL v_0.c_0), v_0.c_1 FROM (SELECT g_0.e2 AS c_0, 'a' AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_1",
+				"SELECT myagg(ALL v_0.c_0), v_0.c_1 FROM (SELECT g_0.e2 AS c_0, 'b' AS c_1 FROM pm2.g1 AS g_0) AS v_0 GROUP BY v_0.c_1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
 		
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
@@ -702,7 +703,7 @@ public class TestAggregateProcessing {
 		fm.getAggregateAttributes().setDecomposable(true);
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
 
-        final String userSql = "SELECT myagg(e2) FROM (select e2, e1 as source_name from pm1.g1 union all select e2, e1 from pm2.g1) x"; //$NON-NLS-1$
+        final String userSql = "SELECT myagg(ALL e2) FROM (select e2, e1 as source_name from pm1.g1 union all select e2, e1 from pm2.g1) x"; //$NON-NLS-1$
         BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
         caps.setFunctionSupport("myagg", true);
 		ProcessorPlan plan = TestOptimizer.helpPlan(userSql, metadata, new String[] {"SELECT myagg(ALL g_0.e2) FROM pm1.g1 AS g_0 HAVING COUNT(*) > 0", 
@@ -734,7 +735,7 @@ public class TestAggregateProcessing {
 		fm.getAggregateAttributes().setDecomposable(true);
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
 
-        final String userSql = "SELECT myagg(e2) FROM (select e2, e1 as source_name from pm1.g1 union all select e2, e1 from pm2.g1) x"; //$NON-NLS-1$
+        final String userSql = "SELECT myagg(ALL e2) FROM (select e2, e1 as source_name from pm1.g1 union all select e2, e1 from pm2.g1) x"; //$NON-NLS-1$
         BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
         caps.setFunctionSupport("myagg", true);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
