@@ -19,13 +19,17 @@
           <include>**/*</include>
         </includes>   
     </fileSet>    
-    <fileSet>
-        <directory>target</directory>
-        <outputDirectory>org/jboss/teiid/translator/ldap/main</outputDirectory>      
-        <includes>
-          <include>translator-ldap-${project.version}.jar</include>
-        </includes>   
-    </fileSet>
   </fileSets>
+  
+  <dependencySets>
+      <dependencySet>
+          <outputDirectory>org/jboss/teiid/translator/ldap/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-ldap</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>
+  
   
 </assembly>

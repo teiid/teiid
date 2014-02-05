@@ -19,13 +19,17 @@
           <include>**/*</include>
         </includes>   
     </fileSet>    
-    <fileSet>
-        <directory>target</directory>
-        <outputDirectory>org/jboss/teiid/translator/loopback/main</outputDirectory>      
-        <includes>
-          <include>translator-loopback-${project.version}.jar</include>
-        </includes>   
-    </fileSet>
   </fileSets>
   
+  <dependencySets>
+      <dependencySet>
+          <outputDirectory>org/jboss/teiid/translator/loopback/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-loopback</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>
+
+
 </assembly>
