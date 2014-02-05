@@ -24,6 +24,7 @@ package org.teiid.resource.adapter.cassandra;
 
 import javax.resource.ResourceException;
 
+import org.apache.cassandra.db.KeyspaceNotDefinedException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -77,8 +78,18 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	}
 
 	@Override
-	public KeyspaceMetadata keyspaceInfo() {
-		return metadata.getKeyspace(config.getKeyspace());
+	public KeyspaceMetadata keyspaceInfo() throws KeyspaceNotDefinedException {
+		String keyspace = config.getKeyspace();
+		KeyspaceMetadata result = metadata.getKeyspace(keyspace);
+		if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 2) == '"') {
+			//try unquoted
+			keyspace = keyspace.substring(1, keyspace.length() - 1);
+			result = metadata.getKeyspace(keyspace);
+		}
+		if (result == null) {
+			throw new KeyspaceNotDefinedException(keyspace);
+		}
+		return result;
 	}
-
+	
 }

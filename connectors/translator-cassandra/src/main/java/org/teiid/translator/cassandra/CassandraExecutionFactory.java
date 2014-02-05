@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.apache.cassandra.db.KeyspaceNotDefinedException;
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -54,6 +55,10 @@ import org.teiid.translator.cassandra.metadata.CassandraMetadataProcessor;
 public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactory, CassandraConnection> {
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CassandraExecutionFactory.class);
 
+	public static enum Event implements BundleUtil.Event {
+		TEIID22000
+	}
+	
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -96,8 +101,13 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory,
 			CassandraConnection conn) throws TranslatorException {
-			CassandraMetadataProcessor processor = new CassandraMetadataProcessor(metadataFactory, conn.keyspaceInfo());
-			processor.processMetadata();
+		CassandraMetadataProcessor processor;
+		try {
+			processor = new CassandraMetadataProcessor(metadataFactory, conn.keyspaceInfo());
+		} catch (KeyspaceNotDefinedException e) {
+			throw new TranslatorException(Event.TEIID22000, e, UTIL.gs(Event.TEIID22000));
+		}
+		processor.processMetadata();
 	}
 
 	@Override
