@@ -367,25 +367,18 @@ public class ODataEntitySchemaBuilder {
 		return names;
 	}
 	
-	static boolean sameColumnSet(KeyRecord recordOne, KeyRecord recordTwo) {
+	static boolean sameColumnSet(KeyRecord recordOne, ForeignKey recordTwo) {
 		
 		if (recordOne == null || recordTwo == null) {
 			return false;
 		}
 		
-		List<Column> setOne = recordOne.getColumns();
-		List<Column> setTwo = recordTwo.getColumns();
-		
-		if (setOne.size() != setTwo.size()) {
-			return false;
-		}
-		for (int i = 0; i < setOne.size(); i++) {
-			Column one = setOne.get(i);
-			Column two = setTwo.get(i);
-			if (!one.getName().equals(two.getName())) {
-				return false;
+		KeyRecord pk = recordTwo.getPrimaryKey();
+		for (ForeignKey fk : pk.getParent().getForeignKeys()) {
+			if (fk.getPrimaryKey().equals(recordOne)) {
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 }

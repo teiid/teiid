@@ -31,7 +31,14 @@ import org.jboss.resteasy.spi.NotFoundException;
 import org.odata4j.expression.*;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.Table;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -78,7 +85,7 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 	private QueryCommand buildSubquery(Expression projected) {
 		Criteria criteria = null;
     	for (ForeignKey fk:this.childTable.getForeignKeys()) {
-    		if (fk.getReferenceTableName().equals(this.parent.getName())) {
+    		if (fk.getPrimaryKey().getParent().equals(this.parent)) {
 				List<String> refColumns = fk.getReferenceColumns();
 				if (refColumns == null) {
 					refColumns = ODataSQLBuilder.getColumnNames(childTable.getPrimaryKey().getColumns());

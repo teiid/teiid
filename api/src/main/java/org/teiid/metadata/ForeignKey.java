@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -66,8 +67,27 @@ public class ForeignKey extends KeyRecord {
      */
     public void setPrimaryKey(KeyRecord primaryKey) {
 		this.primaryKey = primaryKey;
+		if (this.primaryKey != null) {
+			this.referenceColumns = new ArrayList<String>();
+			for (Column c : primaryKey.getColumns()) {
+				this.referenceColumns.add(c.getName());
+			}
+			if (primaryKey.getParent() != null) {
+				this.referenceTableName = primaryKey.getParent().getName();
+			}
+			this.uniqueKeyID = primaryKey.getUUID();
+		} else {
+			this.referenceColumns = null;
+			this.referenceTableName = null;
+			this.uniqueKeyID = null;
+		}
 	}
 
+    /**
+     * WARNING prior to validation this method will return a potentially fully-qualified name
+     * after resolving it will return an unqualified name
+     * @return
+     */
 	public String getReferenceTableName() {
 		if (referenceTableName == null && primaryKey != null) {
 			referenceTableName = primaryKey.getParent().getName();

@@ -211,7 +211,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			if (record == null) {
 				// if PK is not available there MUST at least one unique key
 				record = resultEntityTable.getUniqueKeys().get(0);
-			}			
+			}
 			// provide implicit ordering for cursor logic
 			for (Column column:record.getColumns()) {
 				OrderByExpression expr = org.odata4j.expression.Expression.orderBy(org.odata4j.expression.Expression.simpleProperty(column.getName()), Direction.ASCENDING);

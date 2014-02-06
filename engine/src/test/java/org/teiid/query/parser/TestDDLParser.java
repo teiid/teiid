@@ -345,7 +345,7 @@ public class TestDDLParser {
 		Table table = s.getSchema("model2").getTable("G2");
 		ForeignKey fk = table.getForeignKeys().get(0);
 		assertEquals(fk.getColumns(), table.getColumns());
-		assertEquals("model.G1", fk.getReferenceTableName());
+		assertEquals("G1", fk.getReferenceTableName());
 		
 		assertEquals(fk.getPrimaryKey().getColumns(), s.getSchema("model").getTable("G1").getColumns());
 	}	
