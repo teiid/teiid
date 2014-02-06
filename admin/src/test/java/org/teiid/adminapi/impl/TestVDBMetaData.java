@@ -21,12 +21,7 @@
  */
 package org.teiid.adminapi.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -276,5 +271,6 @@ public class TestVDBMetaData {
 		assertTrue(clone.isXmlDeployment());
 		assertEquals(1, vdb.getVDBImports().size());
 		assertNotSame(clone.getModelMetaDatas(), vdb.getModelMetaDatas());
+		//assertNotSame(clone.getDataPolicyMap(), vdb.getDataPolicyMap());
 	}
 }
