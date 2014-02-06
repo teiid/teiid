@@ -49,7 +49,7 @@ public class TestResteasyEnabler {
 		model.setModelType(Type.OTHER);
 		vdb.getVDB().addModel(model);
 		
-		resteasyEnabler.finishedDeployment("x", 1, vdb, false);
+		resteasyEnabler.finishedDeployment("x", 1, vdb);
 	}
 	
 }
