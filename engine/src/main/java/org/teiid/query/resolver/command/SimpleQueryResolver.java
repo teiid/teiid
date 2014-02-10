@@ -170,7 +170,6 @@ public class SimpleQueryResolver implements CommandResolver {
             qre.addUnresolvedSymbol(new UnresolvedSymbolDescription(allInGroupSymbol.toString(), msg));
             throw qre;
         }
-        GroupSymbol gs = allInGroupSymbol.getGroup();
         allInGroupSymbol.setGroup(groupSymbols.get(0).clone());
         return groupSymbols.get(0);
     }

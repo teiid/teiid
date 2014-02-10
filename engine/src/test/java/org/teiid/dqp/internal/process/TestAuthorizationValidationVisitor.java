@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,11 +37,12 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
-import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
@@ -63,8 +65,8 @@ public class TestAuthorizationValidationVisitor {
     
     @Before public void setup() {
     	context = new CommandContext();
-    	context.setSession(new SessionMetadata());
     	context.setDQPWorkContext(new DQPWorkContext());
+    	context.setSession(context.getDQPWorkContext().getSession());
     }
     
     @BeforeClass static public void oneTimeSetup() {
@@ -189,15 +191,7 @@ public class TestAuthorizationValidationVisitor {
         Command command = parser.parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
         
-        vdb.addAttchment(QueryMetadataInterface.class, metadata);
-        
-        HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
-        for (DataPolicyMetadata dataPolicyMetadata : roles) {
-            policies.put(dataPolicyMetadata.getName(), dataPolicyMetadata);
-		}
-        this.context.getDQPWorkContext().setPolicies(policies);
-        DataRolePolicyDecider dataRolePolicyDecider = new DataRolePolicyDecider();
-        dataRolePolicyDecider.setAllowFunctionCallsByDefault(false);
+        DataRolePolicyDecider dataRolePolicyDecider = createPolicyDecider(metadata, vdb, roles);
         AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(dataRolePolicyDecider, context); //$NON-NLS-1$
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if(report.hasItems()) {
@@ -219,6 +213,24 @@ public class TestAuthorizationValidationVisitor {
             fail("Expected inaccessible objects, but got none.");                 //$NON-NLS-1$
         }
     }
+
+	private DataRolePolicyDecider createPolicyDecider(
+			QueryMetadataInterface metadata, VDBMetaData vdb,
+			DataPolicyMetadata... roles) {
+		vdb.addAttchment(QueryMetadataInterface.class, metadata);
+        
+        HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
+        for (DataPolicyMetadata dataPolicyMetadata : roles) {
+            policies.put(dataPolicyMetadata.getName(), dataPolicyMetadata);
+		}
+        vdb.setDataPolicies(new ArrayList<DataPolicy>(policies.values()));
+        this.context.getDQPWorkContext().setPolicies(policies);
+        this.context.getSession().setVdb(vdb);
+        this.context.setMetadata(metadata);
+        DataRolePolicyDecider dataRolePolicyDecider = new DataRolePolicyDecider();
+        dataRolePolicyDecider.setAllowFunctionCallsByDefault(false);
+		return dataRolePolicyDecider;
+	}
     
     @Test public void testProcRelational() throws Exception {
     	helpTest("select * from sp1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc1); //$NON-NLS-1$
@@ -392,5 +404,51 @@ public class TestAuthorizationValidationVisitor {
     	svc.setGrantAll(true);
         helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
         helpTest("select * from xmltest.doc1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testPruneSelectAll() throws Exception {
+    	String sql = "select * from pm1.g1";
+    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    	
+    	DataPolicyMetadata svc = new DataPolicyMetadata();
+    	svc.setName("test"); //$NON-NLS-1$
+    	
+    	svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
+    	PermissionMetaData p = addResource(DataPolicy.PermissionType.READ, "pm1.g1.e1");
+    	p.setAllowRead(false);
+    	svc.addPermission(p); //$NON-NLS-1$
+    	
+    	DataRolePolicyDecider dataRolePolicyDecider = createPolicyDecider(metadata, RealMetadataFactory.example1VDB(), svc);
+    	
+    	DefaultAuthorizationValidator dav = new DefaultAuthorizationValidator();
+    	dav.setPolicyDecider(dataRolePolicyDecider);
+    	this.context.setSessionVariable(DefaultAuthorizationValidator.IGNORE_UNAUTHORIZED_ASTERISK, "true"); 
+    	
+    	QueryParser parser = QueryParser.getQueryParser();
+        Command command = parser.parseCommand(sql);
+        QueryResolver.resolveCommand(command, metadata);
+        
+        assertEquals(4, command.getProjectedSymbols().size());
+        
+    	boolean modified = dav.validate(new String[] {}, command, metadata, this.context, CommandType.USER);
+    	assertTrue(modified);
+    	
+    	assertEquals(3, command.getProjectedSymbols().size());
+    	
+    	p = addResource(DataPolicy.PermissionType.READ, "pm1.g1");
+    	p.setAllowRead(false);
+    	svc.addPermission(p); //$NON-NLS-1$
+    	
+        command = parser.parseCommand(sql);
+        QueryResolver.resolveCommand(command, metadata);
+        
+        assertEquals(4, command.getProjectedSymbols().size());
+        
+        try {
+        	dav.validate(new String[] {}, command, metadata, this.context, CommandType.USER);
+        	fail();
+        } catch (QueryValidatorException e) {
+        	
+        }
     }
 }

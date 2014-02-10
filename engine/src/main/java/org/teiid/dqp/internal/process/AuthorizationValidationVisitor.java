@@ -40,6 +40,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
@@ -295,7 +296,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     if (metadataID instanceof TempMetadataID) {
                     	if (group.isProcedure()) {
                     		Map<String, LanguageObject> procMap = new LinkedHashMap<String, LanguageObject>();
-                    		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap);
+                    		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap, getMetadata());
                     		validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
                     	} else if (group.isTempTable() && group.isImplicitTempGroupSymbol()) {
                     		validateTemp(actionCode, group.getNonCorrelationName(), false, group, auditContext);
@@ -303,7 +304,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                         continue;
                     }
                 }
-                addToNameMap(metadataID, symbol, nameToSymbolMap);
+                addToNameMap(metadataID, symbol, nameToSymbolMap, getMetadata());
             } catch(QueryMetadataException e) {
                 handleException(e);
             } catch(TeiidComponentException e) {
@@ -314,16 +315,16 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         validateEntitlements(actionCode, auditContext, nameToSymbolMap);
 	}
     
-    private void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap) throws QueryMetadataException, TeiidComponentException {
-    	String fullName = getMetadata().getFullName(metadataID);
-        Object modelId = getMetadata().getModelID(metadataID);
-        String modelName = getMetadata().getFullName(modelId);
+    static void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    	String fullName = metadata.getFullName(metadataID);
+        Object modelId = metadata.getModelID(metadataID);
+        String modelName = metadata.getFullName(modelId);
         if (!isSystemSchema(modelName)) {
         	nameToSymbolMap.put(fullName, symbol);
         }
     }
 
-	private boolean isSystemSchema(String modelName) {
+	static private boolean isSystemSchema(String modelName) {
 		return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);
 	}
 
