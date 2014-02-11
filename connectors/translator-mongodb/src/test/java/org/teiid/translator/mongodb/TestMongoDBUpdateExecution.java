@@ -117,7 +117,106 @@ public class TestMongoDBUpdateExecution {
 		Mockito.verify(dbCollection, Mockito.never()).insert(details, WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection).update(match, new BasicDBObject("$push", details), false, true, WriteConcern.ACKNOWLEDGED);
 	}
+	
+	@Test // one-2-one mapping update merge case; 
+	public void testMergeInsertOne2One() throws Exception {
+		// tests one-to-many situation
+		String query = "INSERT INTO address (cust_id, street, zip) VALUES (100, '123 Street', '90210')";
 
+		BasicDBObject match = new BasicDBObject("_id", 100);
+		DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, null);
+
+		BasicDBObject details = new BasicDBObject();
+		BasicDBObject pk = new BasicDBObject();
+
+		details.append("street", "123 Street");
+		details.append("zip", "90210");
+		details.append("_id", new DBRef(null,"customer", 100));
+
+		details = new BasicDBObject("address", details);
+		Mockito.verify(dbCollection, Mockito.never()).insert(details, WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", details), false, true, WriteConcern.ACKNOWLEDGED);
+	}
+		
+	@Test // one-2-one mapping update merge case; 
+	public void testMergeUpdateOne2One() throws Exception {
+		// tests one-to-many situation
+		String query = "UPDATE address SET street = 'Highway 100' WHERE cust_id = 100";
+
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
+		BasicDBObject address = new BasicDBObject();
+		address.append("street", "123 Street").append("zip", "90210").append("_id", new DBRef(null, "customer", 100));
+		results.add(new BasicDBObject("_id", 100).append("address", address));
+		
+		BasicDBObject match = new BasicDBObject("_id", 100);
+		DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, results);
+
+		BasicDBObject details = new BasicDBObject();
+		BasicDBObject pk = new BasicDBObject();
+
+		details.append("street", "Highway 100");
+		details.append("zip", "90210");
+		details.append("_id", new DBRef(null,"customer", 100));
+
+		details = new BasicDBObject("address", details);
+		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", details), false, true, WriteConcern.ACKNOWLEDGED);
+	}	
+	
+	@Test // one-2-one mapping update merge case; 
+	public void testMergeDeleteOne2OneonPK() throws Exception {
+		// tests one-to-many situation
+		String query = "DELETE FROM address WHERE cust_id = 100";
+
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
+		BasicDBObject address = new BasicDBObject();
+		address.append("street", "123 Street").append("zip", "90210").append("_id", new DBRef(null, "customer", 100));
+		results.add(new BasicDBObject("_id", 100).append("address", address));
+		
+		BasicDBObject match = new BasicDBObject("address._id.$id", 100);
+		DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, results);
+
+		BasicDBObject details = new BasicDBObject("address", "");
+		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(match, new BasicDBObject("$unset", details), false, true, WriteConcern.ACKNOWLEDGED);
+	}
+	
+	@Test // one-2-one mapping update merge case; 
+	public void testMergeDeleteOne2OneonNonPK() throws Exception {
+		// tests one-to-many situation
+		String query = "DELETE FROM address WHERE street = 'Highway 100'";
+
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
+		BasicDBObject address = new BasicDBObject();
+		address.append("street", "123 Street").append("zip", "90210").append("_id", new DBRef(null, "customer", 100));
+		results.add(new BasicDBObject("_id", 100).append("address", address));
+		
+		DBObject match = QueryBuilder.start("address.street").is("Highway 100").get();
+		DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, results);
+
+		BasicDBObject details = new BasicDBObject("address", "");
+		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(match, new BasicDBObject("$unset", details), false, true, WriteConcern.ACKNOWLEDGED);
+	}	
+	
+	@Test // one-2-one mapping update merge case; 
+	public void testMergeDeleteOne2OneAllRows() throws Exception {
+		// tests one-to-many situation
+		String query = "DELETE FROM address";
+
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
+		BasicDBObject address = new BasicDBObject();
+		address.append("street", "123 Street").append("zip", "90210").append("_id", new DBRef(null, "customer", 100));
+		results.add(new BasicDBObject("_id", 100).append("address", address));
+		
+		DBObject match = QueryBuilder.start("_id").exists("true").get();
+		DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, results);
+
+		BasicDBObject details = new BasicDBObject("address", "");
+		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(match, new BasicDBObject("$unset", details), false, true, WriteConcern.ACKNOWLEDGED);
+	}	
+	
 	@Test
 	public void testSimpleUpdate() throws Exception {
 		String query = "UPDATE Customers SET CompanyName='JBOSS', ContactName='TEIID' WHERE CustomerID = '11'";
@@ -194,8 +293,8 @@ public class TestMongoDBUpdateExecution {
 				false, true, WriteConcern.ACKNOWLEDGED);
 	}
 
-	@Test
-	public void testDeleteMerge() throws Exception {
+	@Test // one to many
+	public void testDeleteMergeOneToManyOnPK() throws Exception {
 		String query = "DELETE FROM OrderDetails WHERE ProductID = 14 and odID = 1";
 
 		DBCollection dbCollection = helpUpdate(query, new String[]{"Orders"}, new BasicDBObject("oid", 1), null);
@@ -211,24 +310,43 @@ public class TestMongoDBUpdateExecution {
 				qb.get(), new BasicDBObject("$pull", new BasicDBObject("OrderDetails", pullQuery.get())),
 				false, true, WriteConcern.ACKNOWLEDGED);
 	}
+	
+	@Test // one to many
+	public void testDeleteMergeOnetoManyAllRows() throws Exception {
+		String query = "DELETE FROM OrderDetails";
 
-	@Test
+		DBCollection dbCollection = helpUpdate(query, new String[]{"Orders"}, new BasicDBObject("oid", 1), null);
+
+		DBObject match = QueryBuilder.start("_id").exists("true").get();
+
+		BasicDBObject details = new BasicDBObject("$pull", QueryBuilder.start("OrderDetails").exists("true").get());
+
+		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection, Mockito.times(1)).update(
+				match, details,
+				false, true, WriteConcern.ACKNOWLEDGED);
+	}	
+
+	@Test // one to many
 	public void testUpdateMerge() throws Exception {
 		String query = "UPDATE OrderDetails SET UnitPrice = 12.50 WHERE ProductID = 14 and odID = 1";
-
-		ArrayList<DBObject> results = new ArrayList<DBObject>();
-
+		
+		BasicDBObject pk1 = new BasicDBObject("ProductID", 14).append("odID", 1);
+		BasicDBObject pk2 = new BasicDBObject("ProductID", 14).append("odID", 2);
+		
 		BasicDBList result = new BasicDBList();
-		result.add(new BasicDBObject("_id", 1).append("ProductID", 14).append("odID", 1));
-		result.add(new BasicDBObject("_id", 1).append("ProductID", 15).append("odID", 2));
+		result.add(new BasicDBObject("_id", new DBRef(null, "Order", pk1)).append("UnitPrice", 99.00));
+		result.add(new BasicDBObject("_id", new DBRef(null, "Order", pk2)).append("UnitPrice", 0.99));
+		
 		BasicDBObject row = new BasicDBObject("OrderDetails", result).append("_id", 1);
 
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
 		results.add(row);
 
 		DBCollection dbCollection = helpUpdate(query, new String[]{"Orders"}, new BasicDBObject("oid", 1), results );
 		// { "$set" : { "OrderDetails" : [ { "_id" : 1 , "ProductID" : 14 , "odID" : 1 , "UnitPrice" : 12.5}]}},
 		BasicDBList expected = new BasicDBList();
-		expected.add(new BasicDBObject("_id", 1).append("ProductID", 14).append("odID", 1).append("UnitPrice", 12.50));
+		expected.add(new BasicDBObject("_id", new DBRef(null, "Order", pk1)).append("UnitPrice", 12.50));
 
 		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection, Mockito.times(1)).update(
@@ -346,7 +464,6 @@ public class TestMongoDBUpdateExecution {
 	public void testNestedMergeInsert2() throws Exception {
 	    BasicDBObject customer_result = new BasicDBObject();
 	    customer_result.append("rental._id", 2);
-	    customer_result.append("_id", 1);
 
 	    BasicDBObject match = new BasicDBObject();
 		match.append("_id", 1);
@@ -361,7 +478,6 @@ public class TestMongoDBUpdateExecution {
 	    DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, null);
 		Mockito.verify(dbCollection, Mockito.never()).insert(customer_result, WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection).update(customer_result, new BasicDBObject("$push", rentalresult), false, true, WriteConcern.ACKNOWLEDGED);
-
 	}
 
 	@Test(expected=TranslatorException.class)

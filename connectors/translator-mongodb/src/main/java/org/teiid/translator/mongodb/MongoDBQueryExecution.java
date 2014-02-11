@@ -73,6 +73,8 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 		if (collection != null) {
 			// TODO: check to see how to pass the hint
 			ArrayList<DBObject> ops = new ArrayList<DBObject>();
+			buildAggregate(ops, "$project", this.visitor.unwindProject); //$NON-NLS-1$
+			
 			if (this.visitor.projectBeforeMatch) {
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$
 			}

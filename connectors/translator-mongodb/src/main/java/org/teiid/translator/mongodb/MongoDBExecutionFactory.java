@@ -76,7 +76,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		setSupportsSelectDistinct(true);
 		setSupportsDirectQueryProcedure(false);
 		setSourceRequiredForMetadata(false);
-		//setSupportsInnerJoins(true);
+		setSupportsInnerJoins(true);
 		setSupportsOuterJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 		

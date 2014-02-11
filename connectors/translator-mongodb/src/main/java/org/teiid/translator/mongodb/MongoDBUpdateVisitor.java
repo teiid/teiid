@@ -35,12 +35,13 @@ import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
+import org.teiid.translator.mongodb.MutableDBRef.Association;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
@@ -203,7 +204,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			}
 			else {
 				if (this.mongoDoc.isMerged()) {
-					if (this.mongoDoc.getMergeAssosiation() == Assosiation.MANY) {
+					if (this.mongoDoc.getMergeAssociation() == Association.MANY) {
 						update.append(embeddedDocumentName+".$."+key, obj); //$NON-NLS-1$
 					}
 					else {
@@ -230,7 +231,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 	public DBObject getPullQuery() {
 		if (this.match == null) {
-			return null;
+			return QueryBuilder.start(mongoDoc.getTable().getName()).exists("true").get(); //$NON-NLS-1$
 		}
 		if (this.pull == null) {
 			this.pull =  new BasicDBObject(this.mongoDoc.getTable().getName(), this.onGoingPullCriteria.pop());
@@ -262,5 +263,22 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 		return updated;
 	}
+	
+	public BasicDBObject updateMerge(DB db, BasicDBObject previousRow) throws TranslatorException {
+		if (this.match == null || ExpressionEvaluator.matches(this.condition, previousRow)) {
+			for (String key:this.columnValues.keySet()) {
+				Object obj = this.columnValues.get(key);
+	
+				if (obj instanceof MutableDBRef) {
+					MutableDBRef ref = ((MutableDBRef)obj);
+					previousRow.put(key, ref.getDBRef(db, true));
+				}
+				else {
+					previousRow.put(key, obj);
+				}
+			}
+		}
+		return previousRow;
+	}	
 
 }
