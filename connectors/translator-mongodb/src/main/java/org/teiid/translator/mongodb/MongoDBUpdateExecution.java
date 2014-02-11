@@ -40,7 +40,8 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
+import org.teiid.translator.mongodb.MongoDocument.MergeDetails;
+import org.teiid.translator.mongodb.MutableDBRef.Association;
 
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBList;
@@ -91,13 +92,13 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 
 			// check if this document need to be embedded in any other document
 			if (mongoDoc.isMerged()) {
-				Object[] mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getInsert(this.mongoDB, embeddedDocuments), false);
+				MergeDetails mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getInsert(this.mongoDB, embeddedDocuments), false);
 
-				if (mergeInfo[2] == Assosiation.MANY) {
-					result = collection.update((DBObject)mergeInfo[0], new BasicDBObject("$push", mergeInfo[1]), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+				if (mergeInfo.association.equals(Association.MANY)) {
+					result = collection.update(mergeInfo.match, new BasicDBObject("$push", mergeInfo.update), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 				}
 				else {
-					result = collection.update((DBObject)mergeInfo[0], new BasicDBObject("$set", mergeInfo[1]), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+					result = collection.update(mergeInfo.match, new BasicDBObject("$set", mergeInfo.update), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 				}
 			}
 			else {
@@ -114,9 +115,8 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 			}
 
 			if (mongoDoc.isMerged()) {
-				Object[] mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getUpdate(this.mongoDB, embeddedDocuments), false);
-				boolean nested = (Boolean)mergeInfo[3];
-				if (nested) {
+				MergeDetails mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getUpdate(this.mongoDB, embeddedDocuments), false);
+				if (mergeInfo.nested) {
 					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18016));
 				}
 				// multi items in array update not available, http://jira.mongodb.org/browse/SERVER-1243
@@ -124,10 +124,19 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 				Iterator<DBObject> output = collection.aggregate(new BasicDBObject("$match", match)).results().iterator(); //$NON-NLS-1$
 				while(output.hasNext()) {
 					DBObject row = output.next();
-					BasicDBList previousMerge = (BasicDBList)row.get(mongoDoc.getTable().getName());
-					BasicDBList updatedDoc = this.visitor.updateMerge(this.mongoDB, previousMerge);
-					if (updatedDoc.size() != 0) {
-						result = collection.update(new BasicDBObject("_id", row.get("_id")), new BasicDBObject("$set", new BasicDBObject(mongoDoc.getTable().getName(), updatedDoc)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					if (mergeInfo.association.equals(Association.MANY)) {
+						BasicDBList previousMerge = (BasicDBList)row.get(mongoDoc.getTable().getName());
+						BasicDBList updatedDoc = this.visitor.updateMerge(this.mongoDB, previousMerge);
+						if (updatedDoc.size() != 0) {
+							result = collection.update(new BasicDBObject("_id", row.get("_id")), new BasicDBObject("$set", new BasicDBObject(mongoDoc.getTable().getName(), updatedDoc)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						}
+					}
+					else {
+						BasicDBObject previousMerge = (BasicDBObject)row.get(mongoDoc.getTable().getName());
+						if (previousMerge != null) {
+							BasicDBObject updatedDoc = this.visitor.updateMerge(this.mongoDB, previousMerge);
+							result = collection.update(new BasicDBObject("_id", row.get("_id")), new BasicDBObject("$set", new BasicDBObject(mongoDoc.getTable().getName(), updatedDoc)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						}
 					}
 				}
 				//result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
@@ -169,12 +178,16 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 			}
 
 			if (mongoDoc.isMerged()) {
-				Object[] mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, new BasicDBObject(), false);
-				Boolean nested = (Boolean)mergeInfo[3];
-				if (nested) {
+				MergeDetails mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, this.visitor.match, null, new BasicDBObject(), false);
+				if (mergeInfo.nested) {
 					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18016));
 				}
-				result = collection.update(match, new BasicDBObject("$pull", this.visitor.getPullQuery()), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+				if (mergeInfo.association.equals(Association.MANY)) { 
+					result = collection.update(mergeInfo.match, new BasicDBObject("$pull", this.visitor.getPullQuery()), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+				}
+				else {
+					result = collection.update(mergeInfo.match, new BasicDBObject("$unset", new BasicDBObject(mongoDoc.getTable().getName(), "")), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$					
+				}
 			}
 			else {
 				result = collection.remove(match, WriteConcern.ACKNOWLEDGED);

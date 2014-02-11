@@ -41,7 +41,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
+import org.teiid.translator.mongodb.MutableDBRef.Association;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -67,6 +67,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	// derived stuff
 	protected BasicDBObject project = new BasicDBObject();
+	protected BasicDBObject unwindProject;
 	protected Integer limit;
 	protected Integer skip;
 	protected DBObject sort;
@@ -266,17 +267,18 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 				else if (targetDocument.embeds(columnDocument)){
 					// if this is embddable/embedIn table, then we need to use the embedded collection name
 					MutableDBRef ref = targetDocument.getEmbeddedDocumentReferenceKey(columnDocument);
-					elementName = ref.getName()+"."+columnName; //$NON-NLS-1$
+					elementName = ref.getAlias()+"."+columnName; //$NON-NLS-1$
 					tableName = columnDocument.getTable().getName();
-
+					selectionName = elementName;
+					
 					if (columnDocument.isPartOfPrimaryKey(columnName)) {
 						if (columnDocument.hasCompositePrimaryKey()) {
-							elementName = ref.getName()+"."+"_id."+columnName; //$NON-NLS-1$ //$NON-NLS-2$
+							elementName = ref.getAlias()+"."+"_id."+columnName; //$NON-NLS-1$ //$NON-NLS-2$
 							selectionName = elementName;
 							pullColumnName = "_id."+columnName; //$NON-NLS-1$
 						}
 						else {
-							elementName = ref.getName()+"."+"_id"; //$NON-NLS-1$ //$NON-NLS-2$
+							elementName = ref.getAlias()+"."+"_id"; //$NON-NLS-1$ //$NON-NLS-2$
 							selectionName = elementName;
 							pullColumnName = "_id"; //$NON-NLS-1$
 						}
@@ -411,39 +413,66 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			if (obj.getLeftItem() instanceof Join) {
 				append(obj.getLeftItem());
 				Table right = ((NamedTable)obj.getRightItem()).getMetadataObject();
-				processJoin(this.mongoDoc, new MongoDocument(right, this.metadata), obj.getCondition());
+				processJoin(this.mongoDoc, new MongoDocument(right, this.metadata), obj.getCondition(), (Join)obj.getLeftItem());
+			}
+			else if (obj.getRightItem() instanceof Join) {
+				Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
+				append(obj.getRightItem());
+				processJoin(this.mongoDoc, new MongoDocument(left, this.metadata), obj.getCondition(), (Join)obj.getRightItem());
 			}
 			else {
 				Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
 				Table right = ((NamedTable)obj.getRightItem()).getMetadataObject();
-				processJoin(new MongoDocument(left, this.metadata), new MongoDocument(right, this.metadata), obj.getCondition());
+				processJoin(new MongoDocument(left, this.metadata), new MongoDocument(right, this.metadata), obj.getCondition(), obj);
 			}
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}
 	}
 
-	private void configureUnwind(MongoDocument doc, String child) throws TranslatorException {
-		if (doc.isMerged()) {
-			MongoDocument mergeDoc = doc.getMergeDocument();
-			if (mergeDoc.isMerged()) {
-				configureUnwind(mergeDoc, doc.getTable().getName());
+	//TODO: test nested merge? does it still work?
+	private void configureUnwind(MongoDocument mergeDocument, String child) throws TranslatorException {
+		if (mergeDocument.isMerged()) {
+			MongoDocument parentDocument = mergeDocument.getMergeDocument();
+			if (parentDocument.isMerged()) {
+				configureUnwind(parentDocument, mergeDocument.getMergeKey().getAlias());
 			}
 			else {
-				if (doc.getMergeAssosiation() == Assosiation.MANY) {
+				if (mergeDocument.getMergeAssociation() == Association.MANY) {
 					if (child == null) {
-						this.unwindTables.addFirst(doc.getMergeKey().getName());
+						this.unwindTables.addFirst(mergeDocument.getMergeKey().getAlias());
 					}
 					else {
-						this.unwindTables.addFirst(doc.getMergeKey().getName()+"."+child); //$NON-NLS-1$
-						this.unwindTables.addFirst(doc.getMergeKey().getName());
+						this.unwindTables.addFirst(mergeDocument.getMergeKey().getAlias()+"."+child); //$NON-NLS-1$
+						this.unwindTables.addFirst(mergeDocument.getMergeKey().getAlias());
 					}
 				}
 			}
 		}
 	}
 
-	private void processJoin(MongoDocument left, MongoDocument right, Condition cond) throws TranslatorException {
+	private void processJoin(MongoDocument left, MongoDocument right, Condition cond, Join join) throws TranslatorException {
+		// now adjust for the left/right outer depending upon who is the outer document
+		JoinCriteriaVisitor jcv = new JoinCriteriaVisitor(join, left, right);
+		DBObject match =  jcv.getCondition();
+		BasicDBObject projection =  jcv.getProjection();
+		
+    	if (match != null && this.match != null) {    		    	
+    		this.match = QueryBuilder.start().and(this.match, match).get();
+    	}
+    	else {
+    		this.match = match;
+    	}
+    	
+    	if (projection != null) {
+    		if (this.unwindProject == null) {
+    			this.unwindProject = projection;
+    		}
+    		else {
+    			this.unwindProject.append(jcv.getAliasName(), projection.get(jcv.getAliasName()));
+    		}
+    	}
+		
 		if (left.embeds(right)) {
 			this.mongoDoc = left;
 			this.joinedDocuments.add(right);
@@ -451,8 +480,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		}
 		else if (right.embeds(left)) {
 			this.mongoDoc = right;
-			this.joinedDocuments.add(right);
-			configureUnwind(right, null);
+			this.joinedDocuments.add(left);
+			configureUnwind(left, null);
 		}
 		else {
 			if (this.mongoDoc != null) {
@@ -467,7 +496,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			}
 			throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18012, left.getTable().getName(), right.getTable().getName()));
 		}
-
+		
         if (cond != null) {
         	this.pendingConditions.add(cond);
         }
@@ -491,10 +520,25 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
         if (!this.onGoingExpression.isEmpty()) {
         	if (this.match != null) {
-        		this.match = QueryBuilder.start().and(this.match, (DBObject)this.onGoingExpression.pop()).get();
+        		DBObject expr = (DBObject)this.onGoingExpression.pop();
+        		ArrayList exprs = (ArrayList)expr.get("$and"); //$NON-NLS-1$
+        		if (exprs != null) {
+        			exprs.add(0, this.match);
+        			this.match = expr;
+        		}
+        		else {
+        			this.match = QueryBuilder.start().and(this.match, expr).get();
+        		}
         	}
         	else {
         		this.match = (DBObject)this.onGoingExpression.pop();
+        	}
+        }
+        else {
+        	// default match in case no where clause used
+        	// TEIID-2841 - in ONE-2-ONE case $unwind works as filter
+        	if (this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation().equals(Association.ONE)) {
+        		this.match = QueryBuilder.start(mongoDoc.getTable().getName()).exists("true").get(); //$NON-NLS-1$
         	}
         }
 

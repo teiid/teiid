@@ -31,6 +31,7 @@ import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.translator.TranslatorException;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 public class ExpressionEvaluator extends HierarchyVisitor {
@@ -91,9 +92,19 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 			throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18017));
 		}
 		ColumnReference column = (ColumnReference)obj;
-		Object value = this.row.get(column.getName());
+		
+		Object value = null;
+		if (MongoDBSelectVisitor.isPartOfPrimaryKey(column.getTable().getMetadataObject(), column.getName())) {
+			value = this.row.get("_id"); //$NON-NLS-1$
+		}
+		else {
+			value = this.row.get(column.getName());
+		}
 		if (value instanceof DBRef) {
 			value = ((DBRef)value).getId();
+		}
+		if (value instanceof DBObject) {
+			value = ((DBObject) value).get(column.getName());
 		}
 		return value;
 	}

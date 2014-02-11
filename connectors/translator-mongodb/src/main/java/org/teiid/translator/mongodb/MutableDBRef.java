@@ -30,7 +30,7 @@ import com.mongodb.DB;
 import com.mongodb.DBRef;
 
 public class MutableDBRef implements Cloneable {
-	enum Assosiation {ONE, MANY};
+	enum Association {ONE, MANY};
 
 	private String parentTable;
 	private IDRef id;
@@ -38,10 +38,22 @@ public class MutableDBRef implements Cloneable {
 	private List<String> columns;
 
 	private String embeddedTable;
-	private Assosiation assosiation;
+	private Association association;
 	private String name;
 	private String idReference;
 	private String referenceName;
+	private String alias;
+
+	public String getAlias() {
+		if (this.alias != null) {
+			return alias;
+		}
+		return this.name;
+	}
+
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
 
 	public String getReferenceName() {
 		// this is name of the reference key in the document that the embedded document represents.
@@ -111,12 +123,12 @@ public class MutableDBRef implements Cloneable {
 		this.embeddedTable = embeddedTable;
 	}
 
-	public Assosiation getAssosiation() {
-		return this.assosiation;
+	public Association getAssociation() {
+		return this.association;
 	}
 
-	public void setAssosiation(Assosiation assosiation) {
-		this.assosiation = assosiation;
+	public void setAssociation(Association association) {
+		this.association = association;
 	}
 
 	public List<String> getColumns() {
@@ -154,10 +166,11 @@ public class MutableDBRef implements Cloneable {
 		clone.referenceColumns = new ArrayList(this.referenceColumns);
 		clone.columns = new ArrayList<String>(this.columns);
 		clone.embeddedTable = this.embeddedTable;
-		clone.assosiation = this.assosiation;
+		clone.association = this.association;
 		clone.name = this.name;
 		clone.idReference = this.idReference;
 		clone.referenceName = this.referenceName;
+		clone.alias = this.alias;
 		return clone;
 	}
 }

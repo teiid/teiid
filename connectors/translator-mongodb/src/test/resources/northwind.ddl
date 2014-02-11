@@ -174,3 +174,17 @@ CREATE FOREIGN TABLE customer (
     customer_id integer PRIMARY KEY,
     name varchar(25)
 ) OPTIONS(UPDATABLE 'TRUE');
+
+CREATE FOREIGN TABLE address (
+    cust_id integer PRIMARY KEY,
+    street varchar(25),
+    zip varchar(25),
+    FOREIGN KEY (cust_id) REFERENCES customer (customer_id)
+) OPTIONS ( UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'customer');
+
+CREATE FOREIGN TABLE Notes (
+    CustomerId integer,
+    PostDate timestamp,
+    Comment varchar(50),
+    FOREIGN KEY (CustomerId) REFERENCES Customer (customer_id)
+ ) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'Customer');
