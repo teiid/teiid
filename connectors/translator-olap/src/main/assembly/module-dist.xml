@@ -22,6 +22,15 @@
   </fileSets>
   
   <dependencySets>
+        <dependencySet>
+          <outputDirectory>org/olap4j/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.olap4j:olap4j</include>
+              <include>org.olap4j:olap4j-xmla</include>
+          </includes>
+      </dependencySet>
+      
       <dependencySet>
           <outputDirectory>org/jboss/teiid/translator/olap/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>

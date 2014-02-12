@@ -31,7 +31,6 @@
           <groupId>org.olap4j</groupId>
           <artifactId>olap4j</artifactId>
           <version>${version.olap4j}</version>
-          <scope>provided</scope>
           <exclusions>
               <exclusion>
                    <groupId>javacup</groupId>
@@ -51,7 +50,6 @@
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j-xmla</artifactId>
             <version>${version.olap4j}</version>
-            <scope>provided</scope>
         </dependency>        
     </dependencies>
     
