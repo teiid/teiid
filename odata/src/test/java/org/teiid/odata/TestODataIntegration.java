@@ -21,16 +21,25 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
@@ -64,6 +73,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
@@ -137,6 +147,78 @@ public class TestODataIntegration extends BaseResourceTest {
         Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
         //Assert.assertEquals("", response.getEntity());		
+	}	
+	
+	@Test
+	public void testCheckGeneratedColumns() throws Exception {
+		Client client = mock(Client.class);
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
+		MockProvider.CLIENT = client;
+		ArgumentCaptor<Command> insertCmd = ArgumentCaptor.forClass(Command.class);
+		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
+		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
+		
+		OEntity entity = createCustomersEntity(eds);
+		ArrayList<OEntity> list = new ArrayList<OEntity>();
+		list.add(entity);
+		
+		EntityList result = Mockito.mock(EntityList.class);
+		when(result.get(0)).thenReturn(entity);
+		when(result.size()).thenReturn(1);
+		when(result.iterator()).thenReturn(list.iterator());
+		
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
+		
+		UpdateResponse respose = new UpdateResponse() {
+			@Override
+			public int getUpdateCount() {
+				return 1;
+			}
+			@Override
+			public Map<String, Object> getGeneratedKeys() {
+				HashMap<String, Object> map = new HashMap<String, Object>();
+				map.put("id", 1234);
+				return map;
+			}
+		};
+		
+		String post = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + 
+				"<entry xml:base=\"http://host/service.svc/\"\n" + 
+				"xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\"\n" + 
+				"xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"\n" + 
+				"xmlns=\"http://www.w3.org/2005/Atom\">\n" + 
+				"    <content type=\"application/xml\">\n" + 
+				"        <m:properties>\n" + 
+				"            <d:CompanyName>JBoss</d:CompanyName>\n" + 
+				"            <d:ContactName>Joe</d:ContactName>\n" + 
+				"            <d:ContactTitle>1970</d:ContactTitle>\n" + 
+				"            <d:Address>123 Main Street</d:Address>\n" +
+				"            <d:City>STL</d:City>\n" + 
+				"            <d:Region>MidWest</d:Region>\n" + 
+				"            <d:PostalCode>12345</d:PostalCode>\n" + 
+				"            <d:Country>USA</d:Country>\n" + 
+				"            <d:Phone>123234</d:Phone>\n" + 
+				"        </m:properties>\n" + 
+				"    </content>\n" + 
+				"</entry>";
+		
+		when(client.executeUpdate(any(Command.class), anyListOf(SQLParam.class))).thenReturn(respose);
+		
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers"));
+        request.body(MediaType.APPLICATION_ATOM_XML, post);
+        
+        ClientResponse<String> response = request.post();
+
+        verify(client).executeUpdate(insertCmd.capture(),  anyListOf(SQLParam.class));
+        
+        // post after insert pulls the entity inserted. In above XML there is customer id, but
+        // below selection is based on primary key 1234
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class));
+        
+        Assert.assertEquals("INSERT INTO Customers (CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", insertCmd.getValue().toString());
+        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.ContactName, g0.ContactTitle, g0.Address, g0.City, g0.Region, g0.PostalCode, g0.Country, g0.Phone, g0.Fax FROM Customers AS g0 WHERE g0.CustomerID = 1234 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals(201, response.getStatus());
 	}	
 	
 	@Test

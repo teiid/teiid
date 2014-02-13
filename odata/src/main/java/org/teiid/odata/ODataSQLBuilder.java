@@ -21,7 +21,7 @@
  */
 package org.teiid.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.SQLConstants.Reserved.CONVERT;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.odata4j.core.NamedValue;
 import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmProperty;
@@ -135,7 +137,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	String aliasGroup = "g"+this.groupCount.getAndIncrement();
 	        	
 	        	for (ForeignKey fk:joinTable.getForeignKeys()) {
-	        		if (fk.getPrimaryKey().getParent().equals(entityTable)) {
+	        		if (fk.getReferenceKey().getParent().equals(entityTable)) {
 
 	        			if(this.assosiatedTables.get(joinTable.getName()) == null) {
 		        			List<String> refColumns = fk.getReferenceColumns();
@@ -152,7 +154,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	// if association not found; see at the other end of the reference
 	        	if (!associationFound) {
 	            	for (ForeignKey fk:entityTable.getForeignKeys()) {
-	            		if (fk.getPrimaryKey().getParent().equals(joinTable)) {
+	            		if (fk.getReferenceKey().getParent().equals(joinTable)) {
 	            			if(this.assosiatedTables.get(joinTable.getName()) == null) {
 	            				List<String> refColumns = fk.getReferenceColumns();
 	            				if (refColumns == null) {
@@ -254,7 +256,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     	String aliasGroup = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
     	
     	for (ForeignKey fk:this.resultEntityTable.getForeignKeys()) {
-    		if (fk.getPrimaryKey().getParent().equals(joinTable)) {
+    		if (fk.getReferenceKey().getParent().equals(joinTable)) {
     			if(this.assosiatedTables.get(joinKey) == null) {
     				List<String> refColumns = fk.getReferenceColumns();
     				if (refColumns == null) {
@@ -268,7 +270,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     	
     	// if join direction is other way
     	for (ForeignKey fk:joinTable.getForeignKeys()) {
-    		if (fk.getPrimaryKey().getParent().equals(this.resultEntityTable)) {
+    		if (fk.getReferenceKey().getParent().equals(this.resultEntityTable)) {
     			if(this.assosiatedTables.get(joinKey) == null) {
     				List<String> refColumns = fk.getReferenceColumns();
     				if (refColumns == null) {
@@ -1002,12 +1004,30 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	}
 	
 	//TODO: allow the generated key building.
-	public OEntityKey buildEntityKey(EdmEntitySet entitySet, OEntity entity) {
+	public OEntityKey buildEntityKey(EdmEntitySet entitySet, OEntity entity, Map<String, Object> generatedKeys) {
 		Table entityTable = findTable(entitySet.getName(), this.metadata);
 		KeyRecord pk = entityTable.getPrimaryKey();
 		List<OProperty<?>> props = new ArrayList<OProperty<?>>();
 		for (Column c:pk.getColumns()) {
-			props.add(entity.getProperty(c.getName()));
+			OProperty prop = null;
+			try {
+				prop = entity.getProperty(c.getName());
+			} catch (Exception e) {
+				Object value = generatedKeys.get(c.getName());
+				if (value == null) {
+					// I observed with mysql did not return the label for column, 
+					// this may be workaround in single key case in compound case 
+					// we got to error.
+					if (pk.getColumns().size() == 1 && generatedKeys.size() == 1) {
+						value = generatedKeys.values().iterator().next();
+					}					
+					if (value == null) {
+						throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16016, entity.getEntitySetName()));
+					}
+				}
+				prop = OProperties.simple(c.getName(),value);
+			}
+			props.add(prop);
 		}
 		return OEntityKey.infer(entitySet, props);
 	}
