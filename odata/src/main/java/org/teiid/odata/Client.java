@@ -23,6 +23,7 @@ package org.teiid.odata;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
@@ -46,7 +47,12 @@ public interface Client {
 	
 	CountResponse executeCount(Query query, List<SQLParam> parameters);
 	
-	int executeUpdate(Command command, List<SQLParam> parameters);	
+	UpdateResponse executeUpdate(Command command, List<SQLParam> parameters);	
 	
 	EdmDataServices getMetadata();
+}
+
+interface UpdateResponse {
+	Map<String, Object> getGeneratedKeys();
+	int getUpdateCount();
 }
