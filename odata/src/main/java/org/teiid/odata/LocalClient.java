@@ -26,12 +26,16 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.odata4j.core.OCollection;
@@ -292,21 +296,31 @@ public class LocalClient implements Client {
 	}
 
 	@Override
-	public int executeUpdate(Command query, List<SQLParam> parameters) {
+	public UpdateResponse executeUpdate(Command query, List<SQLParam> parameters) {
 		ConnectionImpl connection = null;
 		try {
 			String sql = query.toString();
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 			connection = getConnection();
-			final PreparedStatementImpl stmt = connection.prepareStatement(sql);
+			final PreparedStatementImpl stmt = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT, Statement.RETURN_GENERATED_KEYS);
 			if (!parameters.isEmpty()) {
 				for (int i = 0; i < parameters.size(); i++) {
 					stmt.setObject(i+1, parameters.get(i).value, parameters.get(i).sqlType);
 				}
 			}
-			int count = stmt.executeUpdate();
+			final int count = stmt.executeUpdate();
+			final Map<String, Object> keys = getGeneratedKeys(stmt.getGeneratedKeys());
 			stmt.close();
-			return count;
+			return new UpdateResponse() {
+				@Override
+				public Map<String, Object> getGeneratedKeys() {
+					return keys;
+				}
+				@Override
+				public int getUpdateCount() {
+					return count;
+				}
+			};
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
@@ -317,6 +331,23 @@ public class LocalClient implements Client {
 			} catch (SQLException e) {
 			}
 		}
+	}
+	
+	private Map<String, Object> getGeneratedKeys(ResultSet result) throws SQLException{
+		if (result == null) {
+			return null;
+		}
+		
+		HashMap<String, Object> keys = new HashMap<String, Object>();
+		ResultSetMetaData metadata = result.getMetaData();
+		// now read the values
+		while(result.next()) {
+			for (int i = 0; i < metadata.getColumnCount(); i++) {
+				String label = metadata.getColumnLabel(i+1);
+				keys.put(label, result.getObject(i+1));
+			}
+		}
+		return keys;
 	}
 
 	@Override

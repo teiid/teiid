@@ -166,10 +166,10 @@ public class TeiidProducer implements ODataProducer {
 		Insert query = visitor.insert(entitySet, entity);
 
 		List<SQLParam> parameters = visitor.getParameters();
-		int updateCount =  this.client.executeUpdate(query, parameters);
-		if (updateCount  == 1) {
+		UpdateResponse response =  this.client.executeUpdate(query, parameters);
+		if (response.getUpdateCount()  == 1) {
 			visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		    OEntityKey entityKey = visitor.buildEntityKey(entitySet, entity);
+		    OEntityKey entityKey = visitor.buildEntityKey(entitySet, entity, response.getGeneratedKeys());
 		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "created entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		    return getEntity(context, entitySetName, entityKey, EntityQueryInfo.newBuilder().build());
 		}
@@ -190,10 +190,10 @@ public class TeiidProducer implements ODataProducer {
 		Delete query = visitor.delete(entitySet, entityKey);
 
 		List<SQLParam> parameters = visitor.getParameters();
-		int deleteCount =  this.client.executeUpdate(query, parameters);
-		if (deleteCount == 0) {
+		UpdateResponse response =  this.client.executeUpdate(query, parameters);
+		if (response.getUpdateCount() == 0) {
 			LogManager.log(MessageLevel.INFO, LogConstants.CTX_ODATA, null, "no entity to delete in = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
-		} else if (deleteCount == 1) {
+		} else if (response.getUpdateCount() == 1) {
 			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
 			//TODO: should this be an exception (a little too late, may need validation that we are dealing with a single entity first)
@@ -224,7 +224,8 @@ public class TeiidProducer implements ODataProducer {
 		Update query = visitor.update(entitySet, entity);
 
 		List<SQLParam> parameters = visitor.getParameters();
-		return this.client.executeUpdate(query, parameters);
+		UpdateResponse response = this.client.executeUpdate(query, parameters);
+		return response.getUpdateCount();
 	}
 
 	@Override
