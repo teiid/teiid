@@ -436,6 +436,19 @@ public class QueryRewriter {
             } 
         }
         
+        if (!query.getIsXML()) {
+        	//remove multiple element symbols
+        	boolean hasMes = false;
+        	for (Expression ex : query.getSelect().getSymbols()) {
+        		if (ex instanceof MultipleElementSymbol) {
+        			hasMes = true;
+        		}
+        	}
+        	if (hasMes) {
+        		query.getSelect().setSymbols(query.getSelect().getProjectedSymbols());
+        	}
+        }
+        
         rewriteExpressions(query.getSelect());
 
         if (!query.getIsXML()) {

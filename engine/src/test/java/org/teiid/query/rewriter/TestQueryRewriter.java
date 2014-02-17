@@ -1325,16 +1325,16 @@ public class TestQueryRewriter {
      * Case 4814
      */
     @Test public void testVirtualRightOuterJoinSwap() throws Exception {
-        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (select * from BQT1.smalla) sa RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
-        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN (SELECT * FROM BQT1.smalla) AS sa ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (select intkey from BQT1.smalla) sa RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN (SELECT intkey FROM BQT1.smalla) AS sa ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
     
     /**
      * Case 4814
      */
     @Test public void testVirtualRightOuterJoinSwap1() throws Exception {
-        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM ((select * from BQT1.smalla) sa inner join BQT1.smallb on sa.intkey = smallb.intkey) RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
-        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN ((SELECT * FROM BQT1.smalla) AS sa INNER JOIN BQT1.smallb ON sa.intkey = smallb.intkey) ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM ((select intkey from BQT1.smalla) sa inner join BQT1.smallb on sa.intkey = smallb.intkey) RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN ((SELECT intkey FROM BQT1.smalla) AS sa INNER JOIN BQT1.smallb ON sa.intkey = smallb.intkey) ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
     
     @Test public void testRewriteConcat2() {
@@ -1385,8 +1385,8 @@ public class TestQueryRewriter {
     }
     
     @Test public void testBetweenInCase() {
-    	String sqlBefore = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
-    	String sqlAfter = "SELECT * FROM pm1.g1 WHERE convert(e3, integer) = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	String sqlBefore = "SELECT e1 FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	String sqlAfter = "SELECT e1 FROM pm1.g1 WHERE convert(e3, integer) = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
     	
     	helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
@@ -1540,7 +1540,7 @@ public class TestQueryRewriter {
     @Test public void testRewriteXmlTable() throws Exception {
     	String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
     	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteCommand(original, "SELECT * FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT convert(curdate(), string)) AS x", metadata);
+    	helpTestRewriteCommand(original, "SELECT x.x FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT convert(curdate(), string)) AS x", metadata);
     }
     
     @Test public void testRewriteQueryString() throws Exception {

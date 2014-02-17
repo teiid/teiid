@@ -1036,4 +1036,30 @@ public class TestAggregateProcessing {
 		helpProcess(plan, cc, dataManager, expected);
 	}
 	
+	@Test public void testSelectAllWithGrouping() {
+    	Command command = helpParse("select * from (select pm1.g1.e1 x, pm2.g2.e1 y from pm1.g1, pm2.g2) z group by x, y"); //$NON-NLS-1$
+    	
+    	FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+    	capFinder.addCapabilities("pm1", TestAggregatePushdown.getAggregateCapabilities()); //$NON-NLS-1$
+    	capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1", //$NON-NLS-1$ 
+    			new List[] {
+    				Arrays.asList("a"), //$NON-NLS-1$
+    			});
+    	dataManager.addData("SELECT g_0.e1 FROM pm2.g2 AS g_0", //$NON-NLS-1$ 
+    			new List[] {
+    				Arrays.asList("b"), //$NON-NLS-1$
+    			});
+    	
+    	ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
+    	
+    	List[] expected = new List[] { 
+                Arrays.asList("a", "b"),
+            };    
+    	
+    	helpProcess(plan, dataManager, expected);
+    }
+	
 }

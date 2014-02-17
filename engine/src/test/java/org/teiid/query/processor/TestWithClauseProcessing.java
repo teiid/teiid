@@ -12,6 +12,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -301,6 +302,20 @@ public class TestWithClauseProcessing {
 	    bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
 	    bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+	    
+	    helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testWithGroupingAndMultiElement() {
+		String sql = "WITH qry_0 as (SELECT floor(t.e3) AS a1, floor(t2.e3) as b1 FROM pm1.g1 AS t, pm2.g2 as t2 WHERE (t.e3=t2.e3) GROUP BY t.e3, t2.e3) SELECT * from qry_0 GROUP BY a1, b1";
+		
+		List[] expected = new List[] {Arrays.asList(3.0, 3.0)};    
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e3 AS c_0 FROM pm1.g1 AS g_0 GROUP BY g_0.e3 ORDER BY c_0", Arrays.asList(2.1), Arrays.asList(3.2));
+	    dataManager.addData("SELECT g_0.e3 AS c_0 FROM pm2.g2 AS g_0 GROUP BY g_0.e3 ORDER BY c_0", Arrays.asList(2.0), Arrays.asList(3.2));
+		
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
 	    
 	    helpProcess(plan, dataManager, expected);
 	}
