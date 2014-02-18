@@ -25,8 +25,9 @@ connect
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/eviction=EVICTION:add(max-entries=512, strategy=LIRS)
 
 /profile=ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
-/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add(login-modules=[{"code"=>"org.jboss.security.auth.spi.UsersRolesLoginModule", "flag"=>"required", "module-options"=>[("usersProperties"=>"${jboss.domain.config.dir}/teiid-security-users.properties"), ("rolesProperties"=>"${jboss.domain.config.dir}/teiid-security-roles.properties")]}]) 
-/profile=ha/subsystem=threads/bounded-queue-thread-pool=teiid-async:add(max-threads=4, queue-length=100)
+/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
+/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=teiid:add(code=org.jboss.security.auth.spi.UsersRolesLoginModule, flag=required, module-options={usersProperties="${jboss.domain.config.dir}/teiid-security-users.properties", rolesProperties="${jboss.domain.config.dir}/teiid-security-roles.properties"}) 
+/profile=ha/subsystem=threads/unbounded-queue-thread-pool=teiid-async:add(max-threads=4)
 
 /profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /profile=ha/subsystem=teiid/transport=embedded:add()
