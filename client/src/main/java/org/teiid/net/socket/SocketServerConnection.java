@@ -25,7 +25,10 @@ package org.teiid.net.socket;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -167,6 +170,8 @@ public class SocketServerConnection implements ServerConnection {
 
 		SocketServerInstance instance = this.serverInstance;
 		LogonResult newResult = null;
+		
+		updateConnectionProperties(connProps, instance.getLocalAddress(), true);
 
 		AuthenticationType authType  = instance.getAuthenticationType();
 		if (AuthenticationType.CLEARTEXT.equals(authType)) {
@@ -188,6 +193,34 @@ public class SocketServerConnection implements ServerConnection {
 		this.logonResult = newResult;
 		this.logonResults.put(instance.getHostInfo(), this.logonResult);
 		this.connectionFactory.connected(instance, this.logonResult.getSessionToken());
+	}
+	
+	public static void updateConnectionProperties(Properties connectionProperties, InetAddress addr, boolean setMac) {
+		if (addr == null) {
+			return;
+		}
+		String address = addr.getHostAddress();
+		Object old = connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, address);
+		if (old == null || !address.equals(old)) {
+			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
+			if (setMac) {
+				try {
+					NetworkInterface ni = NetworkInterface.getByInetAddress(addr);
+					if (ni != null && ni.getHardwareAddress() != null) {
+						StringBuilder sb = new StringBuilder();
+						for (byte b : ni.getHardwareAddress()) {
+							sb.append(PropertiesUtils.toHex(b >> 4));
+							sb.append(PropertiesUtils.toHex(b));
+						}
+						connectionProperties.put(TeiidURL.CONNECTION.CLIENT_MAC, sb.toString());
+					}
+		        } catch (SocketException e) {
+					connectionProperties.remove(TeiidURL.CONNECTION.CLIENT_MAC);
+		        }
+			} else {
+				connectionProperties.remove(TeiidURL.CONNECTION.CLIENT_MAC);
+			}
+		}
 	}
 	
 	private ILogon connect(HostInfo hostInfo) throws CommunicationException,

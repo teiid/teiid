@@ -24,6 +24,8 @@ package org.teiid.odbc;
 import static org.teiid.odbc.PGUtil.*;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -56,6 +58,7 @@ import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.AuthenticationType;
+import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
@@ -195,7 +198,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 	
 	@Override
-	public void logon(String databaseName, String user, NullTerminatedStringDataInputStream data) {
+	public void logon(String databaseName, String user, NullTerminatedStringDataInputStream data, SocketAddress remoteAddress) {
 		try {
 			java.util.Properties info = new java.util.Properties();
 			info.put("user", user); //$NON-NLS-1$
@@ -222,6 +225,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 			if (password != null) {
 				info.put("password", password); //$NON-NLS-1$
+			}
+			
+			if (remoteAddress instanceof InetSocketAddress) {
+				SocketServerConnection.updateConnectionProperties(info, ((InetSocketAddress)remoteAddress).getAddress(), false);
 			}
 			
 			this.connection =  driver.connect(url, info);

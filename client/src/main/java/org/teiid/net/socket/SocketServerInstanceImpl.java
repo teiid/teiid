@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
@@ -107,6 +108,14 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     public HostInfo getHostInfo() {
     	return info;
     }
+    
+	@Override
+	public InetAddress getLocalAddress() {
+		if (socketChannel != null) {
+			return socketChannel.getLocalAddress();
+		}
+		return null;
+	}
     
     private void doHandshake() throws IOException, CommunicationException {
     	Handshake handshake = null;

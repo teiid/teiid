@@ -21,6 +21,7 @@
  */
 package org.teiid.odbc;
 
+import java.net.SocketAddress;
 import java.util.Properties;
 
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
@@ -29,7 +30,7 @@ public interface ODBCServerRemote {
 	
 	void initialize(Properties props);
 	
-	void logon(String databaseName, String userid, NullTerminatedStringDataInputStream data);
+	void logon(String databaseName, String userid, NullTerminatedStringDataInputStream data, SocketAddress remoteAddress);
 	
 	void prepare(String prepareName, String sql, int[] paramType);
 

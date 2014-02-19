@@ -25,6 +25,7 @@ package org.teiid.net.socket;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -105,6 +106,11 @@ public class TestSocketServerInstanceImpl {
 		@Override
 		public int getSoTimeout() {
 			return 1;
+		}
+
+		@Override
+		public InetAddress getLocalAddress() {
+			return null;
 		}
 		
 	}

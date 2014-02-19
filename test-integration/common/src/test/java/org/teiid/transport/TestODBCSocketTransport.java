@@ -22,10 +22,7 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -503,4 +500,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		//assertEquals(1, java.lang.reflect.Array.get(array, 0));
 	}
 	
+	
+	@Test public void testClientIp() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.session.IPAddress') as X"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String value = rs.getString(1);
+		assertNotNull(value);
+	}
 }

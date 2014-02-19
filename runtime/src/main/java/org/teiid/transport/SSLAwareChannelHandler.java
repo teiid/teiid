@@ -26,6 +26,7 @@
 package org.teiid.transport;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,6 +76,11 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		
 		public SocketAddress getRemoteAddress() {
 			return channel.getRemoteAddress();
+		}
+		
+		@Override
+		public InetAddress getLocalAddress() {
+			throw new UnsupportedOperationException();
 		}
 		
 		@Override

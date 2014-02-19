@@ -28,11 +28,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -284,8 +280,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	 */
 	public SocketServerConnection getConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
 		
-		updateConnectionProperties(connectionProperties);
-		
 		TeiidURL url;
 		try {
 			url = new TeiidURL(connectionProperties.getProperty(TeiidURL.CONNECTION.SERVER_URL));
@@ -310,27 +304,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		discovery.init(url, connectionProperties);
 		
 		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties);
-	}
-
-	static void updateConnectionProperties(Properties connectionProperties) {
-		try {
-			InetAddress addr = InetAddress.getLocalHost();
-			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, addr.getHostAddress());
-			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
-			NetworkInterface ni = NetworkInterface.getByInetAddress(addr);
-			if (ni != null && ni.getHardwareAddress() != null) {
-				StringBuilder sb = new StringBuilder();
-				for (byte b : ni.getHardwareAddress()) {
-					sb.append(PropertiesUtils.toHex(b >> 4));
-					sb.append(PropertiesUtils.toHex(b));
-				}
-				connectionProperties.put(TeiidURL.CONNECTION.CLIENT_MAC, sb.toString());
-			}
-        } catch (UnknownHostException err1) {
-        	connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
-        } catch (SocketException e) {
-        	
-        }
 	}
 
 	public long getSynchronousTtl() {
