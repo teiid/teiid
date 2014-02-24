@@ -25,6 +25,7 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.Expression;
@@ -39,6 +40,12 @@ public class TextTable extends TableFunctionReference {
 		private boolean noTrim;
 		private String selector;
 		private Integer position;
+		private boolean ordinal;
+		
+		public TextColumn(String name) {
+			super(name, DataTypeManager.DefaultDataTypes.INTEGER);
+			this.ordinal = true;
+		}
 		
 		public TextColumn(String name, String type, Integer width, boolean noTrim) {
 			super(name, type);
@@ -78,7 +85,8 @@ public class TextTable extends TableFunctionReference {
 			return EquivalenceUtil.areEqual(width, other.width)
 			&& EquivalenceUtil.areEqual(selector, other.selector)
 			&& EquivalenceUtil.areEqual(position, other.position)
-			&& noTrim == other.noTrim;
+			&& noTrim == other.noTrim
+			&& ordinal == other.ordinal;
 		}
 		
 		@Override
@@ -88,6 +96,7 @@ public class TextTable extends TableFunctionReference {
 			clone.noTrim = this.noTrim;
 			clone.selector = this.selector;
 			clone.position = this.position;
+			clone.ordinal = this.ordinal;
 			this.copyTo(clone);
 			return clone;
 		}
@@ -106,6 +115,10 @@ public class TextTable extends TableFunctionReference {
 		
 		public void setPosition(Integer position) {
 			this.position = position;
+		}
+		
+		public boolean isOrdinal() {
+			return ordinal;
 		}
 		
 	}

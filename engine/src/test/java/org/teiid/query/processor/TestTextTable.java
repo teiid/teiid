@@ -118,7 +118,21 @@ public class TestTextTable {
         };    
     
         FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
+        
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/test-file.txt.csv")));
+    }
+	
+	@Test public void testNamedMultilineHeaderWithOrdinality() throws Exception {
+    	String sql = "SELECT * from texttable(? COLUMNS Col3Head string, y for ordinality HEADER) x";
+    	
+        List<?>[] expected = new List<?>[] {
+        	Arrays.asList("VAL2", 1),
+        	Arrays.asList("VAL4", 2),
+        	Arrays.asList("abc", 3),
+        	Arrays.asList("VAL9", 4),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
         
         processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/test-file.txt.csv")));
     }

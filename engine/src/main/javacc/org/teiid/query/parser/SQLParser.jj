@@ -2601,28 +2601,37 @@ TextTable.TextColumn textColumn(ParseInfo info):
 }
 {
 	name = id(Boolean.TRUE)
-	datatype = parseDataType()
-	[ 
-	  	<WIDTH>
-	  	width = intVal() 
-	  	[ LOOKAHEAD(2)
-		  	<NO> <TRIM>
-		  	{
-				noTrim = true;	  	
-		  	}
+	
+	( (
+      <FOR> <ORDINALITY> 
+      {
+        return new TextTable.TextColumn(name); 
+      } 
+    ) | (
+    	datatype = parseDataType()
+    	[ 
+    	  	<WIDTH>
+    	  	width = intVal() 
+    	  	[ LOOKAHEAD(2)
+    		  	<NO> <TRIM>
+    		  	{
+    				noTrim = true;	  	
+    		  	}
+    		]
+    	]
+    	[ 
+	  		<SELECTOR>
+		    selector = stringVal()
+		  	position = intVal() 
 		]
-	]
-	[ 
-	  	<SELECTOR>
-	    selector = stringVal()
-	  	position = intVal() 
-	]
-	{
-		TextTable.TextColumn result = new TextTable.TextColumn(name, datatype.type, width, noTrim);
-		result.setSelector(selector);
-		result.setPosition(position);
-		return result;
-	}
+		{
+			TextTable.TextColumn result = new TextTable.TextColumn(name, datatype.type, width, noTrim);
+			result.setSelector(selector);
+			result.setPosition(position);
+			return result;
+		}
+    ) )
+	
 }
 
 /*

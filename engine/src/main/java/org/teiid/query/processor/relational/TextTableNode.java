@@ -76,6 +76,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private int textLine = 0;
 	private Map<String, Integer> nameIndexes;
 	private String systemId;
+	private int rowNumber;
 
 	private boolean cr;
 	private boolean eof;
@@ -146,6 +147,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 		this.nameIndexes = null;
 		this.textLine = 0;
+		this.rowNumber = 0;
 		this.cr = false;
 		this.eof = false;
 		if (this.parentLines != null) {
@@ -209,11 +211,18 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				continue;
 			}
 			
+			rowNumber++;
+			
 			List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
 			for (int output : projectionIndexes) {
 				TextColumn col = table.getColumns().get(output);
 				String val = null;
 				int index = output;
+				
+				if (col.isOrdinal()) {
+					tuple.add(rowNumber);
+					continue;
+				}
 				
 				if (col.getSelector() != null) {
 					vals = this.parentLines.get(col.getSelector());
@@ -368,6 +377,9 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			nameIndexes.put(string.toUpperCase(), nameIndexes.size());
 		}
 		for (TextColumn col : table.getColumns()) {
+			if (col.isOrdinal()) {
+				continue;
+			}
 			Integer index = nameIndexes.get(col.getName().toUpperCase());
 			if (index == null) {
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30181, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30181, col.getName(), systemId));

@@ -1386,6 +1386,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	Character quote = null;
     	boolean usingSelector = false;
     	for (TextTable.TextColumn column : obj.getColumns()) {
+    		if (column.isOrdinal()) {
+    			continue;
+    		}
 			if (column.getWidth() != null) {
 				widthSet = true;
 				if (column.getWidth() < 0) {

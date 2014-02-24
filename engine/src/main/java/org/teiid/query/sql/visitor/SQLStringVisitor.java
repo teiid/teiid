@@ -1895,26 +1895,32 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
             outputDisplayName(col.getName());
             append(SPACE);
-            append(col.getType());
-            if (col.getWidth() != null) {
+            if (col.isOrdinal()) {
+                append(FOR);
                 append(SPACE);
-                append(NonReserved.WIDTH);
-                append(SPACE);
-                append(col.getWidth());
-            }
-            if (col.isNoTrim()) {
-            	append(SPACE);
-                append(NO);
-                append(SPACE);
-                append(NonReserved.TRIM);
-            }
-            if (col.getSelector() != null) {
-            	append(SPACE);
-            	append(NonReserved.SELECTOR);
-            	append(SPACE);
-            	append(escapeSinglePart(col.getSelector()));
-            	append(SPACE);
-            	append(col.getPosition());
+                append(NonReserved.ORDINALITY);
+            } else {
+	            append(col.getType());
+	            if (col.getWidth() != null) {
+	                append(SPACE);
+	                append(NonReserved.WIDTH);
+	                append(SPACE);
+	                append(col.getWidth());
+	            }
+	            if (col.isNoTrim()) {
+	            	append(SPACE);
+	                append(NO);
+	                append(SPACE);
+	                append(NonReserved.TRIM);
+	            }
+	            if (col.getSelector() != null) {
+	            	append(SPACE);
+	            	append(NonReserved.SELECTOR);
+	            	append(SPACE);
+	            	append(escapeSinglePart(col.getSelector()));
+	            	append(SPACE);
+	            	append(col.getPosition());
+	            }
             }
             if (cols.hasNext()) {
                 append(","); //$NON-NLS-1$
