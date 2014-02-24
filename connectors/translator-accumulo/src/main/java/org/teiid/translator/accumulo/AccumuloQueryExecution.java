@@ -78,7 +78,6 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 	public void execute() throws TranslatorException {
 		try {
 			Connector connector = this.connection.getInstance();
-			Authorizations auths = new Authorizations();
 			List<Range> ranges = this.visitor.getRanges();
 			Table scanTable = this.visitor.getScanTable();			
 			List<IteratorSetting> scanIterators = visitor.scanIterators();

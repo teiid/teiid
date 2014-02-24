@@ -98,10 +98,10 @@ public class TestAccumuloMetadataProcessor {
 		List<Column> columns = customer.getColumns();
 		assertEquals(4, columns.size());
 		assertNotNull(customer.getColumnByName("rowid"));
-		assertNotNull(customer.getColumnByName("Customer:CompanyName"));
-		assertEquals("string",customer.getColumnByName("Customer:CompanyName").getDatatype().getName());
+		assertNotNull(customer.getColumnByName("Customer_CompanyName"));
+		assertEquals("string",customer.getColumnByName("Customer_CompanyName").getDatatype().getName());
 
-		Column column = customer.getColumnByName("Customer:CompanyName");
+		Column column = customer.getColumnByName("Customer_CompanyName");
 		assertEquals("Customer",column.getProperty(AccumuloMetadataProcessor.CF, false));
 		assertEquals("CompanyName",column.getProperty(AccumuloMetadataProcessor.CQ, false));
 		assertEquals("{VALUE}",column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false));
