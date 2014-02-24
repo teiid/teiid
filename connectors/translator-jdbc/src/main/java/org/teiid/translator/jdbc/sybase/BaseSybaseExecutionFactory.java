@@ -35,6 +35,7 @@ import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.OrderBy;
 import org.teiid.language.SetQuery;
+import org.teiid.language.With;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
@@ -74,6 +75,11 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
 		queryCommand.setLimit(null);
 		queryCommand.setOrderBy(null);
 		List<Object> parts = new ArrayList<Object>(6);
+		if (queryCommand.getWith() != null) {
+			With with = queryCommand.getWith();
+			queryCommand.setWith(null);
+			parts.add(with);
+		}
 		parts.add("SELECT "); //$NON-NLS-1$
 		parts.addAll(translateLimit(limit, context));
 		parts.add(" * FROM ("); //$NON-NLS-1$

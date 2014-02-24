@@ -110,6 +110,16 @@ public class TestSqlServerConversionVisitor {
     }
     
     @Test
+    public void testRowLimitAndCTE() throws Exception {
+        String input = "with x (a) as (select intkey from bqt1.smalla) select a from x union all select a from x limit 100"; //$NON-NLS-1$
+        String output = "WITH x (a) AS (SELECT SmallA.IntKey FROM SmallA) SELECT TOP 100 * FROM (SELECT x.a FROM x UNION ALL SELECT x.a FROM x) AS X"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test
     public void testUnionLimitWithOrderBy() throws Exception {
         String input = "select intkey from bqt1.smalla union select intnum from bqt1.smalla order by intkey limit 100"; //$NON-NLS-1$
         String output = "SELECT TOP 100 * FROM (SELECT SmallA.IntKey FROM SmallA UNION SELECT SmallA.IntNum FROM SmallA) AS X ORDER BY intkey"; //$NON-NLS-1$

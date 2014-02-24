@@ -1060,6 +1060,15 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
     
+    @Test public void testWithAndLimit() throws Exception {
+        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5 limit 10"; //$NON-NLS-1$
+        String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT * FROM (SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5) WHERE ROWNUM <= 10"; //$NON-NLS-1$
+               
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
+                input, output, 
+                TRANSLATOR);
+    }
+    
     @Test public void testVersionedCapabilities() throws Exception {
     	OracleExecutionFactory oef = new OracleExecutionFactory();
     	oef.setDatabaseVersion("10.0");

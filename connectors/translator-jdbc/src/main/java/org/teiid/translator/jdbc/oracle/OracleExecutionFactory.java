@@ -324,6 +324,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		}
 		
     	List<Object> parts = new ArrayList<Object>();
+    	
+    	if (queryCommand.getWith() != null) {
+			With with = queryCommand.getWith();
+			queryCommand.setWith(null);
+			parts.add(with);
+		}
+    	
     	parts.add("SELECT "); //$NON-NLS-1$
     	/*
     	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
