@@ -355,5 +355,32 @@ public class TestUnionPlanning {
             1       // UnionAll
         });                                    
     }  
+    
+    @Test public void testUnionPartitioningWithOrderedLimits() throws Exception {
+    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
+    			+ " union all (select e1, e2, 'b' source from pm2.g2 order by e2 desc limit 5000)) x"
+    			+ " where source in ('b') order by e2 desc limit 0, 500";
+    	
+    	ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_1 DESC" }, ComparisonMode.EXACT_COMMAND_STRING);
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                0,      // Project
+                0,      // Select
+                1,      // Sort
+                0       // UnionAll
+            });    
+    	
+    }
 
 }

@@ -161,7 +161,7 @@ public final class RuleRaiseNull implements OptimizerRule {
                         }
                     }
                     
-                    PlanNode sort = NodeEditor.findParent(firstProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+                    PlanNode sort = NodeEditor.findParent(parentNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
                     
                     if (sort != null) { //correct the sort to the new columns as well
                         OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
