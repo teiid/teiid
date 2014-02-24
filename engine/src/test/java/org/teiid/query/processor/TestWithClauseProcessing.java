@@ -319,5 +319,18 @@ public class TestWithClauseProcessing {
 	    
 	    helpProcess(plan, dataManager, expected);
 	}
+	
+	@Test public void testX() {
+		String sql = "select q.str_a, q.a from(WITH qry_0 as (SELECT e2 AS a1, e1 as str FROM pm1.g1 AS t) SELECT a1 as a, str as str_a from qry_0) as q group by q.str_a, q.a";
+		
+		List[] expected = new List[] {Arrays.asList("a", 1)};    
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList(1, "a"));
+		
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
+	    
+	    helpProcess(plan, dataManager, expected);
+	}
 
 }

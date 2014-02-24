@@ -48,7 +48,10 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
@@ -153,14 +156,20 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            if (command instanceof StoredProcedure) {
 	                //if the access node represents a stored procedure, then we can't actually change the output symbols
 	                root.setProperty(NodeConstants.Info.OUTPUT_COLS, command.getProjectedSymbols());
-	            } else if (checkSymbols) {
-	            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
-	            	for (Expression symbol : outputElements) {
-	                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
-	                    	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
-	                    } 
-					}
-	            }
+	            } else {
+	            	ProcessorPlan plan = FrameUtil.getNestedPlan(root);
+	            	if (plan != null && (command == null || !RelationalNodeUtil.isUpdate(command))) {
+	            		//nested with clauses are handled as sub plans, which have a fixed set of output symbols
+	            		root.setProperty(NodeConstants.Info.OUTPUT_COLS, ResolverUtil.resolveElementsInGroup(root.getGroups().iterator().next(), metadata));
+	            	} if (checkSymbols) {
+		            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
+		            	for (Expression symbol : outputElements) {
+		                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
+		                    	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
+		                    } 
+						}
+	            	}
+		    	}
 		    case NodeConstants.Types.DUP_REMOVE:
 		    	if (root.getType() == NodeConstants.Types.DUP_REMOVE) {
 		    		//TODO there's an analog here for a non-partitioned union, but it would mean checking projections from each branch
