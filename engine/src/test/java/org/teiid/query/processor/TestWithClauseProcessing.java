@@ -12,6 +12,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -272,5 +273,18 @@ public class TestWithClauseProcessing {
 	    
 	    helpProcess(plan, dataManager, result);
 	}
-
+	
+	@Test public void testX() {
+		String sql = "select q.str_a, q.a from(WITH qry_0 as (SELECT e2 AS a1, e1 as str FROM pm1.g1 AS t) SELECT a1 as a, str as str_a from qry_0) as q group by q.str_a, q.a";
+		
+		List<?>[] expected1 = new List[] {Arrays.asList(1, "a")};
+		List<?>[] expected2 = new List[] {Arrays.asList("a", 1)};    
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", expected1);
+		
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
+	    
+	    helpProcess(plan, dataManager, expected2);
+	}
 }
