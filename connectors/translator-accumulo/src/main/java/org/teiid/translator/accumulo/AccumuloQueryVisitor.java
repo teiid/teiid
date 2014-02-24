@@ -211,7 +211,7 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		}
 	}
 	
-	public boolean isPartOfPrimaryKey(Column column) {
+	public static boolean isPartOfPrimaryKey(Column column) {
 		KeyRecord pk = ((Table)column.getParent()).getPrimaryKey();
 		if (pk != null) {
 			for (Column col:pk.getColumns()) {

@@ -165,10 +165,10 @@ public class TestAccumuloQueryExecution {
 
     	
     	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select * from customer where firstname IN('Joe', 'Jack') order by lastname");
-    	//assertEquals(Arrays.asList(2, "Joe", "A"), exec.next());
-    	//assertEquals(Arrays.asList(3, "Jack", "C"), exec.next());
-    	assertNotNull(exec.next());
-    	assertNotNull(exec.next());    	
+    	assertEquals(Arrays.asList(2, "Joe", "A"), exec.next());
+    	assertEquals(Arrays.asList(3, "Jack", "C"), exec.next());
+//    	assertNotNull(exec.next());
+//    	assertNotNull(exec.next());    	
     	
     	assertNull(exec.next());    
     }     

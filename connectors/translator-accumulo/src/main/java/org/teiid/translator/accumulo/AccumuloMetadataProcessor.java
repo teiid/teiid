@@ -45,7 +45,7 @@ public class AccumuloMetadataProcessor {
 	// allowed patterns {CF}, {CQ}, {VALUE}, {ROWID}
 	public static final String COLUMN_NAME_PATTERN = "ColumnNamePattern"; //$NON-NLS-1$
 	public static final String COLUMN_VALUE_PATTERN = "ValueIn"; //$NON-NLS-1$
-	public static final String DEFAULT_COLUMN_NAME_PATTERN = "{CF}:{CQ}"; //$NON-NLS-1$
+	public static final String DEFAULT_COLUMN_NAME_PATTERN = "{CF}_{CQ}"; //$NON-NLS-1$
 	public static final String DEFAULT_VALUE_PATTERN = "{VALUE}"; //$NON-NLS-1$
 	public static final String ROWID = "rowid"; //$NON-NLS-1$
 	public enum ValueIn{CQ,VALUE};
@@ -65,7 +65,7 @@ public class AccumuloMetadataProcessor {
 		for (String tableName:tableNames) {
 			try {
 				
-				if (tableName.equals("!METADATA")) { //$NON-NLS-1$
+				if (tableName.equals("!METADATA") || tableName.equals("trace")) { //$NON-NLS-1$ //$NON-NLS-2$
 					continue;
 				}
 				
@@ -84,6 +84,7 @@ public class AccumuloMetadataProcessor {
 							Column column = mf.addColumn(AccumuloMetadataProcessor.ROWID, TypeFacility.RUNTIME_NAMES.STRING, table);
 							column.setSearchType(SearchType.All_Except_Like);
 							mf.addPrimaryKey("PK0", Arrays.asList(AccumuloMetadataProcessor.ROWID), table); //$NON-NLS-1$
+							column.setUpdatable(false);
 						}
 						else {
 							table = mf.getSchema().getTable(tableName);
@@ -93,6 +94,7 @@ public class AccumuloMetadataProcessor {
 						column.setProperty(CF, cf.toString());
 						column.setProperty(CQ, cq.toString());
 						column.setProperty(VALUE_IN, mf.getModelProperties().getProperty(COLUMN_VALUE_PATTERN, DEFAULT_VALUE_PATTERN));
+						column.setUpdatable(true);
 					}
 					else {
 						break;

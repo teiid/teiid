@@ -131,4 +131,9 @@ public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory
 	public boolean supportsOrCriteria() {
     	return true;
     }
+	
+    @Override
+	public boolean supportsBulkUpdate() {
+		return true;
+	}    
 }

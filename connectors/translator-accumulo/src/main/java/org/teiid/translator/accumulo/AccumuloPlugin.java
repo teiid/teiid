@@ -37,6 +37,7 @@ public class AccumuloPlugin {
     	TEIID19001,
     	TEIID19002,
     	TEIID19003,
-    	TEIID19004
+    	TEIID19004,
+    	TEIID19005
     }
 }
