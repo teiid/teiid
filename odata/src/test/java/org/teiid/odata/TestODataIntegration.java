@@ -21,18 +21,15 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,14 +64,24 @@ import org.odata4j.producer.resources.EntityRequestResource;
 import org.odata4j.producer.resources.MetadataResource;
 import org.odata4j.producer.resources.ODataBatchProvider;
 import org.odata4j.producer.resources.ServiceDocumentResource;
+import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.language.QueryExpression;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
@@ -414,6 +421,57 @@ public class TestODataIntegration extends BaseResourceTest {
 		}
 	}
 	
+	@Test public void testBasicTypes() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("m");
+			mmd.setSchemaSourceType("ddl");
+			
+			mmd.addSourceMapping("x", "x", null);
+			MetadataStore ms = RealMetadataFactory.exampleBQTStore();
+			Schema s = ms.getSchema("BQT1");
+			KeyRecord pk = new KeyRecord(KeyRecord.Type.Primary);
+			Table smalla = s.getTable("SmallA");
+			pk.setName("pk");
+			pk.addColumn(smalla.getColumnByName("IntKey"));
+			smalla.setPrimaryKey(pk);
+			String ddl = DDLStringVisitor.getDDLString(s, EnumSet.allOf(SchemaObjectType.class), "SmallA");
+			mmd.setSchemaText(ddl);
+			HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+				@Override
+				protected List<? extends List<?>> getData(
+						QueryExpression command) {
+					Class<?>[] colTypes = command.getProjectedQuery().getColumnTypes();
+					List<Expression> cols = new ArrayList<Expression>();
+					for (int i = 0; i < colTypes.length; i++) {
+						ElementSymbol elementSymbol = new ElementSymbol("X");
+						elementSymbol.setType(colTypes[i]);
+						cols.add(elementSymbol);
+					}
+					return (List)Arrays.asList(AutoGenDataService.createResults(cols, 1, false));
+				}
+			};
+			
+			es.addTranslator("x", hc);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/SmallA?$format=json&$select=TimeValue"));
+	        ClientResponse<String> response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        System.out.println(response.getEntity());
+		} finally {
+			es.stop();
+		}
+	}
+	
 	private OEntity createCustomersEntity(EdmDataServices metadata) {
 		EdmEntitySet entitySet = metadata.findEdmEntitySet("Customers");
 		OEntityKey entityKey = OEntityKey.parse("CustomerID='12'");
@@ -431,4 +489,5 @@ public class TestODataIntegration extends BaseResourceTest {
 		OEntity entity = OEntities.create(entitySet, entityKey, properties,null);
 		return entity;
 	}
+	
 }

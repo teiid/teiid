@@ -64,6 +64,7 @@ import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.TestDDLParser;
@@ -1762,6 +1763,7 @@ public class RealMetadataFactory {
         column.setUpdatable(true);
         column.setLength(100);
         column.setNameInSource(name);
+        column.setDatatype(SystemMetadata.getInstance().getRuntimeTypeMap().get(type));
         return column; 
     }
     

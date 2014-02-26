@@ -42,7 +42,7 @@ public class ODataTypeManager {
 	static {
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING, EdmSimpleType.STRING);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BOOLEAN, EdmSimpleType.BOOLEAN);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BYTE, EdmSimpleType.BYTE);
+		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BYTE, EdmSimpleType.SBYTE);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.SHORT, EdmSimpleType.INT16);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.CHAR, EdmSimpleType.STRING);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.INTEGER, EdmSimpleType.INT32);
@@ -62,7 +62,7 @@ public class ODataTypeManager {
 		
 		odatakeyed.put(EdmSimpleType.STRING.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
 		odatakeyed.put(EdmSimpleType.BOOLEAN.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BOOLEAN);
-		odatakeyed.put(EdmSimpleType.BYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BYTE);
+		odatakeyed.put(EdmSimpleType.BYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
 		odatakeyed.put(EdmSimpleType.SBYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BYTE);
 		odatakeyed.put(EdmSimpleType.INT16.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
 		odatakeyed.put(EdmSimpleType.INT32.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.INTEGER);

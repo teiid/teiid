@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.io.InputStreamReader;
 import java.sql.Blob;
@@ -352,7 +352,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     		return new java.sql.Timestamp(((LocalTime)value).toDateTimeToday().getMillis());
     	}
 		if (value instanceof UnsignedByte) {
-			return new Byte(((UnsignedByte)value).byteValue());
+			return new Short(((UnsignedByte)value).shortValue());
 		}
 		return value;
 	}

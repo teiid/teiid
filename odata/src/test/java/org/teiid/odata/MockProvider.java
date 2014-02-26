@@ -42,23 +42,6 @@ public class MockProvider implements ContextResolver<ODataProducer> {
 			throw new TeiidRuntimeException("Invalid Context Type requested in OData Server");
 		}
 		
-		String vdb = null;
-		String uri = uriInfo.getBaseUri().getRawPath();
-		int idx = uri.indexOf("/odata/");
-		int endIdx = uri.indexOf('/', idx+7);
-		if (endIdx == -1) {
-			vdb = uri.substring(idx+7);
-		}
-		else {
-			vdb = uri.substring(idx+7, endIdx);
-		}
-		
-		int versionIdx = vdb.indexOf('.');
-		if (versionIdx != -1) {
-			return new TeiidProducer(CLIENT);
-		}
-		return new TeiidProducer(CLIENT) {
-			
-		};
+		return new TeiidProducer(CLIENT);
 	}
 }
