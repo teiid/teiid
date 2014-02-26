@@ -21,18 +21,17 @@
  */
 package org.teiid.translator.accumulo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 
 import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.admin.TimeType;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.security.Authorizations;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -47,23 +46,25 @@ import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestAccumuloQueryExecution {
-    private AccumuloExecutionFactory translator;
-    private TranslationUtility utility;
-    private AccumuloConnection connection;
+    private static AccumuloExecutionFactory translator;
+    private static TranslationUtility utility;
+    private static AccumuloConnection connection;
     
-    @Before
-    public void setUp() throws Exception {
-    	this.translator = new AccumuloExecutionFactory();
-    	this.translator.start();
+    @BeforeClass
+    public static void setUp() throws Exception {
+    	translator = new AccumuloExecutionFactory();
+    	translator.start();
 
     	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sampledb.ddl")), "sakila", "rental");
-    	this.utility = new TranslationUtility(metadata);
+    	utility = new TranslationUtility(metadata);
     	
     	MockInstance instance = new MockInstance("teiid");
-    	this.connection = Mockito.mock(AccumuloConnection.class);
+    	connection = Mockito.mock(AccumuloConnection.class);
     	Connector connector = instance.getConnector("root", new PasswordToken(""));
-    	Mockito.stub(this.connection.getInstance()).toReturn(connector);
-    	Mockito.stub(this.connection.getAuthorizations()).toReturn(new Authorizations("public"));
+    	Mockito.stub(connection.getInstance()).toReturn(connector);
+    	Mockito.stub(connection.getAuthorizations()).toReturn(new Authorizations("public"));
+    	connector.tableOperations().create("customer", true, TimeType.LOGICAL);
+    	connector.tableOperations().create("rental", true, TimeType.LOGICAL);
     }
     
 	private Execution executeCmd(String sql) throws TranslatorException {
