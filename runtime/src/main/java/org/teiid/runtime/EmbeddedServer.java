@@ -345,10 +345,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		} else {
 			this.sessionService.setSecurityHelper(new DoNothingSecurityHelper());
 		}
-		if (config.getSecurityDomains() != null) {
-			this.sessionService.setSecurityDomains(config.getSecurityDomains());
+		if (config.getSecurityDomain() != null) {
+			this.sessionService.setSecurityDomain(config.getSecurityDomain());
 		} else {
-			this.sessionService.setSecurityDomains(Arrays.asList("teiid-security")); //$NON-NLS-1$
+			this.sessionService.setSecurityDomain("teiid-security"); //$NON-NLS-1$
 		}
 
 		this.sessionService.setVDBRepository(repo);
@@ -402,6 +402,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		InetSocketAddress address = new InetSocketAddress(socketConfig.getHostAddress(), socketConfig.getPortNumber());
 		if (socketConfig.getProtocol() == WireProtocol.teiid) {
 			return new SocketListener(address, socketConfig, this.services, bm) {
+				@Override
 				public ChannelListener createChannelListener(ObjectChannel channel) {
 					//TODO: this is a little dirty, but allows us to inject the appropriate connection profile
 					SocketClientInstance instance = (SocketClientInstance) super.createChannelListener(channel);
@@ -413,7 +414,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		else if (socketConfig.getProtocol() == WireProtocol.pg) {
     		this.repo.odbcEnabled();
     		ODBCSocketListener odbc = new ODBCSocketListener(address, socketConfig, this.services, bm, maxODBCLobSize, this.logon, driver);
-    		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
     		return odbc;
 		}
 		return null;

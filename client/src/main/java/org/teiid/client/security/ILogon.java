@@ -28,6 +28,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.net.CommunicationException;
+import org.teiid.net.socket.AuthenticationType;
 
 
 /**
@@ -64,4 +65,6 @@ public interface ILogon {
    
    @Secure
    void assertIdentity(SessionToken sessionId) throws InvalidSessionException, TeiidComponentException, CommunicationException;
+   
+   AuthenticationType getAuthenticationType(String vdbName, String version, AuthenticationType preferType);
 }

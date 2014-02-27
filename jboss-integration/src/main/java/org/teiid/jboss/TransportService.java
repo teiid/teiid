@@ -27,7 +27,6 @@ import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,7 +76,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	private transient ILogon logon;
 	private SocketConfiguration socketConfig;
 	final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
-	private List<String> authenticationDomains;;	
+	private String authenticationDomain;	
 	private long sessionMaxLimit;
 	private long sessionExpirationTimeLimit;
 	private SocketListener socketListener;
@@ -85,7 +84,6 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	private AuthenticationType authenticationType;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private boolean embedded;
-	private String krb5Domain;
 	private InetSocketAddress address = null;
 	private String transportName;
 	
@@ -120,8 +118,8 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.setSecurityHelper(new JBossSecurityHelper());
 		this.setVDBRepository(this.getVdbRepository());
 		this.sessionService = new JBossSessionService(this.securityDomains);
-		if (this.authenticationDomains != null && !this.authenticationDomains.isEmpty()) {
-			this.sessionService.setSecurityDomains(this.authenticationDomains);			
+		if (this.authenticationDomain != null) {
+			this.sessionService.setSecurityDomain(this.authenticationDomain);			
 		}
 		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
@@ -129,9 +127,8 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.sessionService.setVDBRepository(getVdbRepository());
 		this.sessionService.setSecurityHelper(this.getSecurityHelper());
 		this.sessionService.setAuthenticationType(getAuthenticationType());
-		this.sessionService.setGssSecurityDomain(this.krb5Domain);
 		this.sessionService.start();
-		this.setAuthenticationType(this.sessionService.getAuthenticationType());
+		this.setAuthenticationType(this.sessionService.getAuthenticationType(null, null, null));
 		
     	// create the necessary services
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
@@ -154,7 +151,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     		}
     		if (socketConfig.getProtocol() == WireProtocol.teiid) {
     	    	this.socketListener = new SocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), this.authenticationDomain)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
     		else if (socketConfig.getProtocol() == WireProtocol.pg) {
         		getVdbRepository().odbcEnabled();
@@ -178,9 +175,8 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 					}
 				});
         		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon, driver);
-        		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
         		this.socketListener = odbc;
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), this.authenticationDomain)); //$NON-NLS-1$ //$NON-NLS-2$
     		}
     		else {
     			throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50013));
@@ -279,12 +275,12 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.socketConfig = socketConfig;
 	}
 
-	public List<String> getAuthenticationDomains() {
-		return authenticationDomains;
+	public String getAuthenticationDomain() {
+		return authenticationDomain;
 	}
 
-	public void setAuthenticationDomains(List<String> authenticationDomains) {
-		this.authenticationDomains = new LinkedList(authenticationDomains);
+	public void setAuthenticationDomain(String authenticationDomain) {
+		this.authenticationDomain = authenticationDomain;
 	}
 	
 	public void setSessionMaxLimit(long limit) {
@@ -295,10 +291,12 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.sessionExpirationTimeLimit = limit;
 	}
 
+	@Override
 	public AuthenticationType getAuthenticationType() {
 		return authenticationType;
 	}
 
+	@Override
 	public void setAuthenticationType(AuthenticationType authenticationType) {
 		this.authenticationType = authenticationType;
 	}
@@ -337,9 +335,5 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	
 	public boolean isEmbedded() {
 		return this.embedded;
-	}
-	
-	public void setKrb5Domain(String domain) {
-		this.krb5Domain = domain;
-	}
+	}	
 }

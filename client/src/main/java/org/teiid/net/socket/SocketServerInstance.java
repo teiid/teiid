@@ -54,8 +54,5 @@ public interface SocketServerInstance {
 
 	String getServerVersion();
 
-	AuthenticationType getAuthenticationType();
-
 	InetAddress getLocalAddress();
-
 }

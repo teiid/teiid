@@ -22,7 +22,10 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +61,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.net.socket.SocketServerInstance;
@@ -114,6 +118,7 @@ public class TestSocketRemoting {
 			this.server = server;
 		}
 		
+		@Override
 		public boolean isOpen() {
 			return true;
 		}
@@ -127,10 +132,12 @@ public class TestSocketRemoting {
 			workItem.run();
 		}
 
+		@Override
 		public void shutdown() {
 			
 		}
 
+		@Override
 		public Cryptor getCryptor() {
 			return new NullCryptor();
 		}
@@ -161,6 +168,7 @@ public class TestSocketRemoting {
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
 			assertEquals("TEIID20018 Unable to find a component used authenticate on to Teiid", e.getMessage()); //$NON-NLS-1$
+		} catch(NullPointerException npe) {
 		}
 	}
 	
@@ -211,6 +219,11 @@ public class TestSocketRemoting {
 					return null;
 				}
 
+				@Override
+				public AuthenticationType getAuthenticationType(String vdbName,
+						String version, AuthenticationType preferType) {
+					return AuthenticationType.USERPASSWORD;
+				}
 			}, "foo"); //$NON-NLS-1$
 		csr.registerClientService(FakeService.class, new FakeServiceImpl(), "foo"); //$NON-NLS-1$
 		final FakeClientServerInstance serverInstance = new FakeClientServerInstance(csr);

@@ -1,8 +1,8 @@
 package org.teiid.services;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import java.util.List;
 import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
@@ -16,6 +16,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 
 @SuppressWarnings("nls")
@@ -28,9 +29,9 @@ public class TestSessionServiceImpl {
 			@Override
 			protected TeiidLoginContext authenticate(String userName,
 					Credentials credentials, String applicationName,
-					List<String> domains)
+					String securityDomain)
 					throws LoginException {
-				return new TeiidLoginContext(userName, null, domains.iterator().next(), null);
+				return new TeiidLoginContext(userName, null, securityDomain, null);
 			}
 		};
 	}
@@ -150,8 +151,55 @@ public class TestSessionServiceImpl {
 		
 		Properties properties = new Properties();
 		properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
-		SessionMetadata s = ssi.createSession("x", new Credentials(new char[] {'y'}), "z", properties, true);
+		SessionMetadata s = ssi.createSession("domain", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties, true);
 		assertEquals("domain", s.getSecurityDomain());
+	}	
+	
+	@Test public void testAuthenticationType() throws Exception {
+		// this is same as "domain/ANY"
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
+		
+		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		
+		ssi.setVDBRepository(repo);
+		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default
+
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name", "1", AuthenticationType.GSS));
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name", "1", AuthenticationType.USERPASSWORD));
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name", "1", AuthenticationType.ANY));
+		
+		// testing specific domain, enforcing 
+		vdb = new VDBMetaData();
+		vdb.setName("name1");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain/GSS");
+		
+		Mockito.stub(repo.getLiveVDB("name1", 1)).toReturn(vdb);
+
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", AuthenticationType.GSS));
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", AuthenticationType.USERPASSWORD));
+		
+		// testing transport default
+		vdb = new VDBMetaData();
+		vdb.setName("name2");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		Mockito.stub(repo.getLiveVDB("name2", 1)).toReturn(vdb);
+
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", AuthenticationType.GSS));
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", AuthenticationType.ANY));		
+		
+		ssi.setAuthenticationType(AuthenticationType.ANY); // this is transport default
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name2", "1", AuthenticationType.GSS));
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", AuthenticationType.ANY));		
+		
 	}	
 	
     @Test public void testBaseUsername() throws Exception {

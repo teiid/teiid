@@ -61,7 +61,7 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
     private HashMap<String, ClientService> clientServices = new HashMap<String, ClientService>();
     private SecurityHelper securityHelper;
     private Type type = Type.JDBC;
-    private AuthenticationType authenticationType = AuthenticationType.CLEARTEXT;
+    private AuthenticationType authenticationType = AuthenticationType.USERPASSWORD;
     private VDBRepository vdbRepository;
     
     public ClientServiceRegistryImpl() {

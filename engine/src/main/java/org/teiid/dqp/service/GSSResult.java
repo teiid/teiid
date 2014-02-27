@@ -19,16 +19,41 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.dqp.service;
 
-package org.teiid.net.socket;
 
-public enum AuthenticationType {
-	USERPASSWORD,GSS,ANY;
+public class GSSResult {
+	private byte[] serviceToken;
+	private boolean authenticated;
+	private Object securityContext;
+	private String userName;
 	
-	public static AuthenticationType type(String str) {
-		if (str != null && str.equalsIgnoreCase(AuthenticationType.GSS.name())) {
-			return AuthenticationType.GSS;
-		}
-		return AuthenticationType.ANY;
+	public GSSResult(byte[] token, boolean authenticated) {
+		this.serviceToken = token;
+		this.authenticated = authenticated;
 	}
+	
+	public boolean isAuthenticated() {
+		return this.authenticated;
+	}
+	
+	public byte[] getServiceToken() {
+		return this.serviceToken;
+	}
+	
+	public void setSecurityContext(Object sc) {
+		this.securityContext = sc;
+	}
+	
+	public Object getSecurityContext() {
+		return this.securityContext;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+	
+	public void setUserName(String name) {
+		this.userName = name;
+	}	
 }
