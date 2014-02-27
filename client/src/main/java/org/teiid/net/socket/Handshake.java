@@ -42,7 +42,7 @@ public class Handshake implements Externalizable {
     
     private String version = ApplicationInfo.getInstance().getReleaseNumber();
     private byte[] publicKey;
-    private AuthenticationType authType = AuthenticationType.CLEARTEXT;
+    private AuthenticationType authType = AuthenticationType.USERPASSWORD;
     
     public Handshake() {
     	

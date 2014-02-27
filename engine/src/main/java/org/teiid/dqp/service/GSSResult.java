@@ -19,40 +19,41 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
-package org.teiid.net.socket;
-
-import java.io.Serializable;
-import java.net.InetAddress;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import org.teiid.client.util.ResultsFuture;
-import org.teiid.client.util.ResultsReceiver;
-import org.teiid.core.crypto.Cryptor;
-import org.teiid.net.CommunicationException;
-import org.teiid.net.HostInfo;
+package org.teiid.dqp.service;
 
 
-public interface SocketServerInstance {
-
-	<T> T getService(Class<T> iface);
-
-	void shutdown();
+public class GSSResult {
+	private byte[] serviceToken;
+	private boolean authenticated;
+	private Object securityContext;
+	private String userName;
 	
-	HostInfo getHostInfo();
+	public GSSResult(byte[] token, boolean authenticated) {
+		this.serviceToken = token;
+		this.authenticated = authenticated;
+	}
 	
-	boolean isOpen();
+	public boolean isAuthenticated() {
+		return this.authenticated;
+	}
 	
-	Cryptor getCryptor();
+	public byte[] getServiceToken() {
+		return this.serviceToken;
+	}
+	
+	public void setSecurityContext(Object sc) {
+		this.securityContext = sc;
+	}
+	
+	public Object getSecurityContext() {
+		return this.securityContext;
+	}
 
-	long getSynchTimeout();
-
-	void send(Message message, ResultsReceiver<Object> receiver, Serializable key) throws CommunicationException, InterruptedException;
-
-	void read(long timeout, TimeUnit unit, ResultsFuture<?> resultsFuture) throws TimeoutException, InterruptedException;
-
-	String getServerVersion();
-
-	InetAddress getLocalAddress();
+	public String getUserName() {
+		return userName;
+	}
+	
+	public void setUserName(String name) {
+		this.userName = name;
+	}	
 }

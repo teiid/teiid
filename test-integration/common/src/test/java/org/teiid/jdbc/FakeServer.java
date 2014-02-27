@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
@@ -250,6 +251,10 @@ public class FakeServer extends EmbeddedServer {
 	public ConnectionImpl createConnection(String embeddedURL) throws Exception {
 		return getDriver().connect(embeddedURL, null);
 	}
+	
+	public ConnectionImpl createConnection(String embeddedURL, Properties prop) throws Exception {
+		return getDriver().connect(embeddedURL, prop);
+	}	
 	
 	public ClientServiceRegistryImpl getClientServiceRegistry() {
 		return services;

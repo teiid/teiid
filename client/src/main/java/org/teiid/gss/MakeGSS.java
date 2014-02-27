@@ -77,8 +77,9 @@ public class MakeGSS {
         
         String kerberosPrincipalName =  props.getProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME);
         if (kerberosPrincipalName == null) {
-        	errors.append(JDBCPlugin.Util.getString("client_prop_missing", TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME)); //$NON-NLS-1$
-        	errors.append(nl);
+        	//errors.append(JDBCPlugin.Util.getString("client_prop_missing", TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME)); //$NON-NLS-1$
+        	//errors.append(nl);
+        	kerberosPrincipalName="demo/host.example.com@EXAMPLE.COM"; //$NON-NLS-1$
         }
         
         String krb5 = System.getProperty("java.security.krb5.conf"); //$NON-NLS-1$
@@ -165,9 +166,13 @@ class GssAction implements PrivilegedAction {
             desiredMechs[0] = new org.ietf.jgss.Oid("1.2.840.113554.1.2.2"); //$NON-NLS-1$
 
             GSSManager manager = GSSManager.getInstance();
+            
+            //http://docs.oracle.com/cd/E21455_01/common/tutorials/kerberos_principal.html
+            org.ietf.jgss.Oid KERBEROS_V5_PRINCIPAL_NAME = new org.ietf.jgss.Oid("1.2.840.113554.1.2.2.1"); //$NON-NLS-1$
 
             // null on second param means the serverName is already in the native format. 
-            GSSName serverName = manager.createName(this.kerberosPrincipalName, null); 
+            //GSSName serverName = manager.createName(this.kerberosPrincipalName, null);
+            GSSName serverName = manager.createName(this.kerberosPrincipalName, KERBEROS_V5_PRINCIPAL_NAME);
 
             GSSContext secContext = manager.createContext(serverName, desiredMechs[0], null, GSSContext.DEFAULT_LIFETIME);
             secContext.requestMutualAuth(true);

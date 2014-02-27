@@ -22,7 +22,11 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -104,7 +108,7 @@ public class TestCommSockets {
 	@Test public void testConnectWithPooling() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		SocketListenerStats stats = listener.getStats();
-		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(2, stats.objectsRead); // handshake response, logon
 		assertEquals(1, stats.sockets);
 		conn.close();
 		stats = listener.getStats();

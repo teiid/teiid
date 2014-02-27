@@ -22,7 +22,7 @@
 
 package org.teiid.net.socket;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
@@ -36,7 +36,7 @@ public class TestHandshake {
 	@Test public void testCompatibility() throws Exception {
 		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("handshake.ser")));
 		Handshake hs = (Handshake)ois.readObject();
-		assertEquals(AuthenticationType.CLEARTEXT, hs.getAuthType());
+		assertEquals(AuthenticationType.USERPASSWORD, hs.getAuthType());
 	}
 	
 	@Test public void testVersionNormalization() throws Exception {

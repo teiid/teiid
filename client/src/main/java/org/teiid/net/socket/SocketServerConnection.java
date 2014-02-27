@@ -51,6 +51,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.gss.MakeGSS;
+import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -165,21 +166,22 @@ public class SocketServerConnection implements ServerConnection {
 		 throw new CommunicationException(JDBCPlugin.Event.TEIID20021, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20021, hostCopy.toString()));
 	}
 
-	private void logon(ILogon newLogon, boolean logoff) throws LogonException,
-			TeiidComponentException, CommunicationException {
+	private void logon(ILogon newLogon, boolean logoff) throws LogonException, TeiidComponentException, CommunicationException {
 
 		SocketServerInstance instance = this.serverInstance;
-		LogonResult newResult = null;
 		
 		updateConnectionProperties(connProps, instance.getLocalAddress(), true);
 
-		AuthenticationType authType  = instance.getAuthenticationType();
-		if (AuthenticationType.CLEARTEXT.equals(authType)) {
+		String user = connProps.getProperty(BaseDataSource.USER_NAME);
+		AuthenticationType authType  = AuthenticationType.prefer(user);
+		
+		LogonResult newResult = null;
+		if (AuthenticationType.USERPASSWORD.equals(authType)) {
 			newResult = newLogon.logon(connProps);
 		}
 		else if (AuthenticationType.GSS.equals(authType)) {
 			newResult = MakeGSS.authenticate(newLogon, connProps);
-		}
+		}		
 		
 		if (logoff) {
 			if ("07.03".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
@@ -267,6 +269,7 @@ public class SocketServerConnection implements ServerConnection {
 				}
 			}
 			
+			@Override
 			public Object invoke(Object proxy, Method method, Object[] args)
 					throws Throwable {
 				try {

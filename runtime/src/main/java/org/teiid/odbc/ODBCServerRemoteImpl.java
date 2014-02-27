@@ -21,7 +21,10 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.*;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
+import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
+import static org.teiid.odbc.PGUtil.convertType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -163,7 +166,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private TeiidDriver driver;
 	private ODBCClientRemote client;
 	private Properties props;
-	private AuthenticationType authType;
 	private ConnectionImpl connection;
 	private boolean executing;
 	private boolean errorOccurred;
@@ -176,35 +178,37 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private Map<String, Cursor> cursorMap = Collections.synchronizedMap(new HashMap<String, Cursor>());
 	private ILogon logon;
 	
-	public ODBCServerRemoteImpl(ODBCClientInstance client, AuthenticationType authType, TeiidDriver driver, ILogon logon) {
+	public ODBCServerRemoteImpl(ODBCClientInstance client, TeiidDriver driver, ILogon logon) {
 		this.driver = driver;
 		this.client = client.getClient();
-		this.authType = authType;
 		this.logon = logon;
 	}
 	
 	@Override
 	public void initialize(Properties props) {
-		this.props = props;
-
+		this.props = props;		
 		this.client.initialized(this.props);
-		
-		if (this.authType.equals(AuthenticationType.CLEARTEXT)) {
+
+		String user = props.getProperty("user"); //$NON-NLS-1$
+		AuthenticationType authType = AuthenticationType.prefer(user);
+		if (authType.equals(AuthenticationType.USERPASSWORD)) {
 			this.client.useClearTextAuthentication();
 		}
-		else if (this.authType.equals(AuthenticationType.GSS)) {
+		else if (authType.equals(AuthenticationType.GSS)) {
 			this.client.useAuthenticationGSS();
 		}
 	}
-	
+
 	@Override
 	public void logon(String databaseName, String user, NullTerminatedStringDataInputStream data, SocketAddress remoteAddress) {
 		try {
 			java.util.Properties info = new java.util.Properties();
 			info.put("user", user); //$NON-NLS-1$
 			
+			AuthenticationType authType = AuthenticationType.prefer(user);
+			
 			String password = null; 
-			if (authType.equals(AuthenticationType.CLEARTEXT)) {
+			if (authType.equals(AuthenticationType.USERPASSWORD)) {
 				password = data.readString();
 			}
 			else if (authType.equals(AuthenticationType.GSS)) {
