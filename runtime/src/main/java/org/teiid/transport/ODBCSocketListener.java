@@ -27,12 +27,12 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.jdbc.TeiidDriver;
-import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.ObjectChannel;
 
 public class ODBCSocketListener extends SocketListener {
-	private AuthenticationType authType = AuthenticationType.CLEARTEXT;
+	private SessionService sessionService;
 	private int maxBufferSize = Integer.parseInt(System.getProperty("org.teiid.ODBCPacketSize", "307200")); //$NON-NLS-1$ //$NON-NLS-2$
 	private int maxLobSize;
 	private TeiidDriver driver;
@@ -57,6 +57,7 @@ public class ODBCSocketListener extends SocketListener {
 	@Override
 	protected SSLAwareChannelHandler createChannelPipelineFactory(final SSLConfiguration config, final StorageManager storageManager) {
 		return new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager) {
+			@Override
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = new DefaultChannelPipeline();
 				PgBackendProtocol pgBackendProtocol = new PgBackendProtocol(maxLobSize, maxBufferSize, config);
@@ -70,11 +71,11 @@ public class ODBCSocketListener extends SocketListener {
 	
 	@Override
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new ODBCClientInstance(channel, this.authType, driver, logonService);
+		return new ODBCClientInstance(channel, this.sessionService, driver, logonService);
 	}
 
-	public void setAuthenticationType(AuthenticationType value) {
-		this.authType = value;
+	public void setSessionService(SessionService service) {
+		this.sessionService = service;
 	}
 
 }

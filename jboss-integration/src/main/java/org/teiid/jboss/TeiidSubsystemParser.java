@@ -21,8 +21,11 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.jboss.as.controller.parsing.ParseUtils.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
 import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.ArrayList;
@@ -143,7 +146,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			writer.writeEndElement();
     	}
     	
@@ -427,7 +430,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				node.get(element.getModelName()).set(attrValue);
     				break;
 
-    			case AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE:
+    			case AUTHENTICATION_TYPE_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     				

@@ -284,9 +284,9 @@
                             <xs:documentation>Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
                         </xs:annotation>                    
                     </xs:attribute>
-                    <xs:attribute name="krb5-domain" type="xs:string">
+                    <xs:attribute name="type" type="xs:string">
                         <xs:annotation>
-                            <xs:documentation>Kerberos domain name if GSS API based single sign on is being used</xs:documentation>
+                            <xs:documentation>Default authentication type to be used with the transport. Allowed values(CLEARTEXT, GSS)</xs:documentation>
                         </xs:annotation>                    
                     </xs:attribute>                    
                 </xs:complexType>                

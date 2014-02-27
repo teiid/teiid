@@ -41,7 +41,7 @@ public class TestLogonImpl extends TestCase {
 
 	public void testLogonResult() throws Exception {
 		SessionService ssi = Mockito.mock(SessionService.class);
-		Mockito.stub(ssi.getAuthenticationType()).toReturn(AuthenticationType.CLEARTEXT);
+		Mockito.stub(ssi.getAuthenticationType(null, null)).toReturn(AuthenticationType.CLEARTEXT);
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		String userName = "Fred"; //$NON-NLS-1$
 		String applicationName = "test"; //$NON-NLS-1$
@@ -55,7 +55,7 @@ public class TestLogonImpl extends TestCase {
 		session.setSessionId(String.valueOf(1));
 		session.setSessionToken(new SessionToken(1, userName));
 
-		Mockito.stub(ssi.createSession(userName, null, applicationName,p, true)).toReturn(session);
+		Mockito.stub(ssi.createSession(userName, null, applicationName,p, false)).toReturn(session);
 
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 
