@@ -21,7 +21,10 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.*;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
+import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
+import static org.teiid.odbc.PGUtil.convertType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -50,6 +53,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.ResultSetImpl;
@@ -163,7 +167,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private TeiidDriver driver;
 	private ODBCClientRemote client;
 	private Properties props;
-	private AuthenticationType authType;
+	private SessionService sessionService;
 	private ConnectionImpl connection;
 	private boolean executing;
 	private boolean errorOccurred;
@@ -176,23 +180,25 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private Map<String, Cursor> cursorMap = Collections.synchronizedMap(new HashMap<String, Cursor>());
 	private ILogon logon;
 	
-	public ODBCServerRemoteImpl(ODBCClientInstance client, AuthenticationType authType, TeiidDriver driver, ILogon logon) {
+	public ODBCServerRemoteImpl(ODBCClientInstance client, SessionService sessionService, TeiidDriver driver, ILogon logon) {
 		this.driver = driver;
 		this.client = client.getClient();
-		this.authType = authType;
+		this.sessionService = sessionService;
 		this.logon = logon;
 	}
 	
 	@Override
 	public void initialize(Properties props) {
-		this.props = props;
-
+		this.props = props;		
 		this.client.initialized(this.props);
-		
-		if (this.authType.equals(AuthenticationType.CLEARTEXT)) {
+
+		String vdbName = props.getProperty("database"); //$NON-NLS-1$
+		AuthenticationType authType = this.sessionService.getAuthenticationType(vdbName, null);
+
+		if (authType.equals(AuthenticationType.CLEARTEXT)) {
 			this.client.useClearTextAuthentication();
 		}
-		else if (this.authType.equals(AuthenticationType.GSS)) {
+		else if (authType.equals(AuthenticationType.GSS)) {
 			this.client.useAuthenticationGSS();
 		}
 	}
@@ -202,6 +208,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		try {
 			java.util.Properties info = new java.util.Properties();
 			info.put("user", user); //$NON-NLS-1$
+			
+			AuthenticationType authType = this.sessionService.getAuthenticationType(databaseName, null);
 			
 			String password = null; 
 			if (authType.equals(AuthenticationType.CLEARTEXT)) {

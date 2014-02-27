@@ -84,7 +84,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	}
 
 	private SecurityHelper securityHelper;
-	private List<String> securityDomains;
+	private String securityDomain;
 	private TransactionManager transactionManager;
 	private ObjectReplicator objectReplicator;
 	private WorkManager workManager;
@@ -119,11 +119,11 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
 	}
-	public List<String> getSecurityDomains() {
-		return securityDomains;
+	public String getSecurityDomain() {
+		return this.securityDomain;
 	}
-	public void setSecurityDomains(List<String> securityDomains) {
-		this.securityDomains = securityDomains;
+	public void setSecurityDomain(String securityDomain) {
+		this.securityDomain = securityDomain;
 	}
 	public TransactionManager getTransactionManager() {
 		return transactionManager;

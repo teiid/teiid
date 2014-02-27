@@ -22,7 +22,6 @@
 package org.teiid.jboss;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.Map;
 
 import javax.security.auth.Subject;
@@ -46,32 +45,29 @@ public class JBossSessionService extends SessionServiceImpl {
 	}
 		
 	@Override
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains)
+	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, String domain)
 			throws LoginException {
         final String baseUsername = getBaseUsername(userName);
 
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
-        for (String domain:getDomainsForUser(domains, userName)) {
     		// this is the configured login for teiid
-        	SecurityDomainContext securityDomainContext = securityDomainMap.get(domain);
-        	if (securityDomainContext != null) {
-        		AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
-        		if (authManager != null) {
-                    Principal userPrincipal = new SimplePrincipal(userName);
-                    Subject subject = new Subject();
-                    String credString = credentials==null?null:new String(credentials.getCredentialsAsCharArray());
-                    boolean isValid = authManager.isValid(userPrincipal, credString, subject);
-                    if (isValid) {
-        				String qualifiedUserName = baseUsername+AT+domain;
-        				Object securityContext = this.securityHelper.createSecurityContext(domain, userPrincipal, credString, subject);
-        				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
-        				return new TeiidLoginContext(qualifiedUserName, subject, domain, securityContext);
-                    }            			
-        		}
-        	}
+    	SecurityDomainContext securityDomainContext = securityDomainMap.get(domain);
+    	if (securityDomainContext != null) {
+    		AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
+    		if (authManager != null) {
+                Principal userPrincipal = new SimplePrincipal(userName);
+                Subject subject = new Subject();
+                String credString = credentials==null?null:new String(credentials.getCredentialsAsCharArray());
+                boolean isValid = authManager.isValid(userPrincipal, credString, subject);
+                if (isValid) {
+    				String qualifiedUserName = baseUsername+AT+domain;
+    				Object securityContext = this.securityHelper.createSecurityContext(domain, userPrincipal, credString, subject);
+    				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
+    				return new TeiidLoginContext(qualifiedUserName, subject, domain, securityContext);
+                }            			
+    		}
         }
         throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, userName ));       
-    }	
-		
+    }			
 }
