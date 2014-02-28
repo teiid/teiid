@@ -13,6 +13,11 @@
                 <user-name>{user}</user-name>
                 <password>{password}</password>
             </security>
+            <!--
+            If you are using Hive JDBC driver version <= 0.12; uncomment this block 
+            if your database name is different than 'default'
+            <new-connection-sql>use {database-name}</new-connection-sql>
+            -->
         </datasource>                              
         <drivers>
             <driver name="hive" module="org.apache.hadoop.hive">
