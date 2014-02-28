@@ -60,15 +60,7 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.deployers.CompositeGlobalTableStore;
-import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.RuntimeVDB;
-import org.teiid.deployers.TranslatorUtil;
-import org.teiid.deployers.UDFMetaData;
-import org.teiid.deployers.VDBLifeCycleListener;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VDBStatusChecker;
-import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
@@ -107,12 +99,12 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	private VDBLifeCycleListener vdbListener;
 	private VDBLifeCycleListener restEasyListener;
 	private VDBResources vdbResources;
-	private boolean reload;
+	private ContainerLifeCycleListener shutdownListener;
 	
-	public VDBService(VDBMetaData metadata, VDBResources vdbResources, boolean reload) {
+	public VDBService(VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
 		this.vdb = metadata;
 		this.vdbResources = vdbResources;
-		this.reload = reload;
+		this.shutdownListener = shutdownListener;
 	}
 	
 	@Override
@@ -171,7 +163,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		
 		getVDBRepository().addListener(this.vdbListener);
 		
-		this.restEasyListener = new ResteasyEnabler(this.vdb.getName(), this.vdb.getVersion(), controllerValue.getValue(), executorInjector.getValue());
+		this.restEasyListener = new ResteasyEnabler(this.vdb.getName(), this.vdb.getVersion(), controllerValue.getValue(), executorInjector.getValue(), shutdownListener);
 		getVDBRepository().addListener(this.restEasyListener);
 				
 		MetadataStore store = new MetadataStore();
@@ -188,14 +180,14 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			}
 			this.assignMetadataRepositories(vdb, defaultRepo); 
 			// add transformation metadata to the repository.
-			getVDBRepository().addVDB(this.vdb, store, vdbResources.getEntriesPlusVisibilities(), udf, cmr, this.reload);
+			getVDBRepository().addVDB(this.vdb, store, vdbResources.getEntriesPlusVisibilities(), udf, cmr, this.shutdownListener.isBootInProgress());
 		} catch (VirtualDatabaseException e) {
 			throw new StartException(e);
 		}		
 		
 		this.vdb.removeAttachment(UDFMetaData.class);
 		try {
-			loadMetadata(this.vdb, cmr, store, this.vdbResources, this.reload);
+			loadMetadata(this.vdb, cmr, store, this.vdbResources, this.shutdownListener.isBootInProgress());
 		} catch (TranslatorException e) {
 			throw new StartException(e);
 		}
@@ -416,7 +408,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							cacheMetadataStore(model, factory);
 			    		}
 						
-						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true, VDBService.this.reload);
+						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true, VDBService.this.shutdownListener.isBootInProgress());
 			    	} else {
 			    		String errorMsg = ex.getMessage()==null?ex.getClass().getName():ex.getMessage();
 			    		if (te != null) {
@@ -427,7 +419,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			    		//log the exception of a non-teiid runtime exception as it may indicate a problem 
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, (ex instanceof RuntimeException && !(ex instanceof TeiidRuntimeException))?ex:null, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
 						if (ex instanceof RuntimeException) {
-							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, VDBService.this.reload);
+							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, VDBService.this.shutdownListener.isBootInProgress());
 						} else {
 							//defer the load to the status checker if/when a source is available/redeployed
 							model.addAttchment(Runnable.class, this);

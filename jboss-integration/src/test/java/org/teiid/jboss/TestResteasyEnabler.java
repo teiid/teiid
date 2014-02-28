@@ -29,6 +29,7 @@ import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.TestCompositeVDB;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jboss.rest.ResteasyEnabler;
@@ -38,7 +39,7 @@ import org.teiid.metadata.MetadataStore;
 public class TestResteasyEnabler {
 
 	@Test public void testOtherModels() throws VirtualDatabaseException {
-		ResteasyEnabler resteasyEnabler = new ResteasyEnabler("x", 1, Mockito.mock(ModelController.class), ExecutorUtils.getDirectExecutor());
+		ResteasyEnabler resteasyEnabler = new ResteasyEnabler("x", 1, Mockito.mock(ModelController.class), ExecutorUtils.getDirectExecutor(), Mockito.mock(ContainerLifeCycleListener.class));
 		
 		MetadataStore ms = new MetadataStore();
 		

@@ -145,7 +145,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		this.vdbRepository.addPendingDeployment(deployment);
 		// build a VDB service
-		final VDBService vdb = new VDBService(deployment, resources, shutdownListener.isBootInProgress());
+		final VDBService vdb = new VDBService(deployment, resources, shutdownListener);
 		vdb.addMetadataRepository("index", new IndexMetadataRepository()); //$NON-NLS-1$
 		
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
