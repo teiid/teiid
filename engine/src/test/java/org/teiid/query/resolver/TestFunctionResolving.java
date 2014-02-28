@@ -30,6 +30,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverVisitor;
@@ -205,5 +206,26 @@ public class TestFunctionResolving {
     	func = (Function) QueryParser.getQueryParser().parseExpression(sql);
     	ResolverVisitor.resolveLanguageObject(func, tm);
     }
+    
+	@Test public void testUDFResolveOrder() throws Exception {     
+
+        QueryMetadataInterface tm = RealMetadataFactory.fromDDL("create foreign function func(x object) returns object; "
+        		+ " create foreign function func(x string) returns string;"
+        		+ " create foreign function func1(x object) returns double;"
+        		+ " create foreign function func1(x string[]) returns bigdecimal;", "x", "y");
+
+    	String sql = "func('a')";
+
+    	Function func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+		ResolverVisitor.resolveLanguageObject(func, tm);
+		assertEquals(DataTypeManager.DefaultDataClasses.STRING, func.getArgs()[0].getType());
+		assertEquals(DataTypeManager.DefaultDataClasses.STRING, func.getType());
+		
+    	sql = "func1(('1',))";
+
+    	func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+		ResolverVisitor.resolveLanguageObject(func, tm);
+		System.out.println(func.getType());
+	}    
     
 }

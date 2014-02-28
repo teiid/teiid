@@ -277,15 +277,14 @@ public class FunctionLibrary {
         boolean ambiguous = false;
         FunctionMethod result = null;
                 
-        for (FunctionMethod nextMethod : functionMethods) {
+        outer: for (FunctionMethod nextMethod : functionMethods) {
             int currentScore = 0; 
             final List<FunctionParameter> methodTypes = nextMethod.getInputParameters();
             //Holder for current signature with converts where required
             
             //Iterate over the parameters adding conversions where required or failing when
             //no implicit conversion is possible
-            int i = 0;
-            for(; i < types.length; i++) {
+            for(int i = 0; i < types.length; i++) {
                 final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getType();
                 Class<?> targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
 
@@ -307,7 +306,7 @@ public class FunctionLibrary {
 					if (t != null) {
 		                if (t.isExplicit()) {
 		                	if (!(args[i] instanceof Constant) || ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(sourceType), tmpTypeName, (Constant)args[i]) == null) {
-		                		break;
+		                		continue outer;
 		                	}
 		                	currentScore++;
 		                } else {
@@ -315,12 +314,12 @@ public class FunctionLibrary {
 		                }
 					}
 				} catch (InvalidFunctionException e) {
-					break;
+					continue outer;
 				}
             }
             
             //If the method is valid match and it is the current best score, capture those values as current best match
-            if (i != types.length || currentScore > bestScore) {
+            if (currentScore > bestScore) {
                 continue;
             }
             
@@ -341,11 +340,46 @@ public class FunctionLibrary {
 						currentScore += (types.length * types.length);
 					}
             	}
-                ambiguous = currentScore == bestScore;
             }
             
-            if (currentScore < bestScore) {
-
+            boolean useNext = false;
+            if (currentScore == bestScore) {
+            	ambiguous = true;
+            	boolean useCurrent = false;
+            	List<FunctionParameter> bestParams = result.getInputParameters();
+				for (int j = 0; j < types.length; j++) {
+            		String t1 = bestParams.get(Math.min(j, bestParams.size() - 1)).getType();
+            		String t2 = methodTypes.get((Math.min(j, methodTypes.size() - 1))).getType();
+            		
+            		if (types[j] == null || t1.equals(t2)) {
+            			continue;
+            		}
+            		
+            		String commonType = ResolverUtil.getCommonType(new String[] {t1, t2});
+            		
+            		if (commonType == null) {
+            			continue outer; //still ambiguous
+            		}
+            		
+            		if (commonType.equals(t1)) {
+            			if (!useCurrent) {
+            				useNext = true;
+            			}
+            		} else if (commonType.equals(t2)) {
+            			if (!useNext) {
+            				useCurrent = true;
+            			}
+            		} else {
+            			continue outer;
+            		}
+            	}
+				if (useCurrent) {
+					ambiguous = false; //prefer narrower
+				}
+            }
+            
+            if (currentScore < bestScore || useNext) {
+            	ambiguous = false;
                 if (currentScore == 0) {
                     //this must be an exact match
                     return null;
@@ -357,7 +391,7 @@ public class FunctionLibrary {
         }
         
         if (ambiguous || result == null) {
-             throw new InvalidFunctionException(QueryPlugin.Event.TEIID30418);
+             throw GENERIC_EXCEPTION;
         }
         
 		return getConverts(result, types);
@@ -391,6 +425,8 @@ public class FunctionLibrary {
 				&& types[i].isArray() && targetType.isAssignableFrom(types[i].getComponentType());
 	}
 	
+	private static final InvalidFunctionException GENERIC_EXCEPTION = new InvalidFunctionException(QueryPlugin.Event.TEIID30419); 
+	
 	private Transform getConvertFunctionDescriptor(Class<?> sourceType, Class<?> targetType) throws InvalidFunctionException {
         //If exact match no conversion necessary
         if(sourceType.equals(targetType)) {
@@ -399,7 +435,7 @@ public class FunctionLibrary {
         Transform result = DataTypeManager.getTransform(sourceType, targetType);
         //Else see if an implicit conversion is possible.
         if(result == null){
-             throw new InvalidFunctionException(QueryPlugin.Event.TEIID30419);
+             throw GENERIC_EXCEPTION;
         }
         return result;
 	}

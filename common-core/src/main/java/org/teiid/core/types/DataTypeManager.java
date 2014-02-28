@@ -352,6 +352,7 @@ public class DataTypeManager {
 	private static Map<Class<?>, Class<?>> arrayTypes = new HashMap<Class<?>, Class<?>>(128); 
 	private static Map<Class<?>, String> arrayTypeNames = new HashMap<Class<?>, String>(128); 
 
+	/** a set of all type names roughly ordered based upon data width */
 	private static Set<String> DATA_TYPE_NAMES;
 
 	private static Set<Class<?>> DATA_TYPE_CLASSES = Collections.unmodifiableSet(dataTypeClasses.keySet());
