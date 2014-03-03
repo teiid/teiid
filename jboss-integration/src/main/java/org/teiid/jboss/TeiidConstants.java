@@ -27,6 +27,7 @@ import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
 
@@ -102,7 +103,7 @@ public class TeiidConstants {
 	public static TeiidAttribute AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE = new TeiidAttribute(Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, null, ModelType.STRING, true, false, MeasurementUnit.NONE);	
 	public static TeiidAttribute AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE = new TeiidAttribute(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, new ModelNode(5000), ModelType.INT, true, false, MeasurementUnit.NONE);
 	public static TeiidAttribute AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE = new TeiidAttribute(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, new ModelNode(0), ModelType.INT, true, false, MeasurementUnit.NONE);
-	public static TeiidAttribute AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE = new TeiidAttribute(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE, null, ModelType.STRING, true, false, MeasurementUnit.NONE);
+	public static TeiidAttribute AUTHENTICATION_TYPE_ATTRIBUTE = new TeiidAttribute(Element.AUTHENTICATION_TYPE_ATTRIBUTE, new ModelNode(AuthenticationType.CLEARTEXT.name()), ModelType.STRING, true, false, MeasurementUnit.NONE);
 	
 	//PG_ELEMENT("pg"), //$NON-NLS-1$
 	public static TeiidAttribute PG_MAX_LOB_SIZE_ALLOWED_ELEMENT = new TeiidAttribute(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT, new ModelNode(5242880), ModelType.INT, true, false, MeasurementUnit.NONE); //$NON-NLS-1$ //$NON-NLS-2$
