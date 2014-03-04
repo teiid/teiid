@@ -38,6 +38,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -46,6 +47,7 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.service.GSSResult;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
@@ -63,15 +65,14 @@ import org.teiid.security.SecurityHelper;
  */
 public class SessionServiceImpl implements SessionService {
 	public static final String SECURITY_DOMAIN_PROPERTY = "security-domain"; //$NON-NLS-1$
+	public static final String AUTHENTICATION_TYPE_PROPERTY = "authentication-type"; //$NON-NLS-1$
 	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
 	 */
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
-	private AuthenticationType authenticationType = AuthenticationType.CLEARTEXT;
-	private String gssSecurityDomain;
-	
+	private AuthenticationType defaultAuthenticationType = AuthenticationType.CLEARTEXT;
 	/*
 	 * Injected state
 	 */
@@ -82,10 +83,10 @@ public class SessionServiceImpl implements SessionService {
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$    
-    private List<String> securityDomainNames;
+    private String defaultSecurityDomainName;
         
-    public void setSecurityDomains(List<String> domainNames) {
-    	this.securityDomainNames = domainNames;
+    public void setSecurityDomain(String domainName) {
+    	this.defaultSecurityDomainName = domainName;
     }
     
     // -----------------------------------------------------------------------------------
@@ -128,10 +129,9 @@ public class SessionServiceImpl implements SessionService {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
         
-        String securityDomain = "none"; //$NON-NLS-1$
+        String securityDomain = this.defaultSecurityDomainName;
         Object securityContext = null;
         Subject subject = null;
-        List<String> domains = this.securityDomainNames;
         
         // Validate VDB and version if logging on to server product...
         VDBMetaData vdb = null;
@@ -139,9 +139,9 @@ public class SessionServiceImpl implements SessionService {
         if (vdbName != null) {
         	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
         	vdb = getActiveVDB(vdbName, vdbVersion);
-        	securityDomain = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);
-        	if (securityDomain != null) {
-        		domains = Arrays.asList(securityDomain);
+        	String vdbSecurityDomain = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);
+        	if (vdbSecurityDomain != null) {
+        		securityDomain = vdbSecurityDomain;
         	}
         }
 
@@ -149,8 +149,9 @@ public class SessionServiceImpl implements SessionService {
              throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
         }
         
-        if (domains!= null && !domains.isEmpty()) {
-        	if (authenticate) {
+        
+    	if (authenticate) {
+    		if (securityDomain != null) {
 		        // Authenticate user...
 		        // if not authenticated, this method throws exception
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
@@ -158,17 +159,21 @@ public class SessionServiceImpl implements SessionService {
 	        	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 	        	TeiidLoginContext membership = null;
 	        	if (onlyAllowPassthrough) {
-	                membership = passThroughLogin(userName, domains);
+	                membership = passThroughLogin(userName, securityDomain);
 	        	} else {
-		        	membership = authenticate(userName, credentials, applicationName, domains);
+		        	membership = authenticate(userName, credentials, applicationName, securityDomain);
 	        	}
 		        userName = membership.getUserName();
 		        securityDomain = membership.getSecurityDomain();
 		        securityContext = membership.getSecurityContext();
 		        subject = membership.getSubject();
-        	}
-        } else {
-        	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"No Security Domain configured for Teiid for authentication"}); //$NON-NLS-1$
+    		}
+    		else {
+    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
+    		}
+    	}
+        else {
+        	LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40117)); 
         }
         
         long creationTime = System.currentTimeMillis();
@@ -198,15 +203,10 @@ public class SessionServiceImpl implements SessionService {
         return newSession;
 	}
 
-	public TeiidLoginContext passThroughLogin(String userName,
-			List<String> domains)
-			throws LoginException {
-		
-		for (String domain:getDomainsForUser(domains, userName)) {
-			Subject existing = this.securityHelper.getSubjectInContext(domain);
-			if (existing != null) {
-				return new TeiidLoginContext(getUserName(existing, userName)+AT+domain, existing, domain, this.securityHelper.getSecurityContext());
-			}
+	public TeiidLoginContext passThroughLogin(String userName, String securityDomain) throws LoginException {
+		Subject existing = this.securityHelper.getSubjectInContext(securityDomain);
+		if (existing != null) {
+			return new TeiidLoginContext(getUserName(existing, userName)+AT+securityDomain, existing, securityDomain, this.securityHelper.getSecurityContext());
 		}
 		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
 	}
@@ -231,9 +231,9 @@ public class SessionServiceImpl implements SessionService {
 	 * @return
 	 * @throws LoginException
 	 */
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains)
+	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, String securityDomain)
 			throws LoginException {
-		return passThroughLogin(userName, domains);
+		return passThroughLogin(userName, securityDomain);
 	}
 
 	VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
@@ -381,16 +381,27 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public AuthenticationType getAuthenticationType() {
-		return this.authenticationType;
+	public AuthenticationType getAuthenticationType(String vdbName, String version) {
+		if (vdbName != null) {
+	    	try {    		
+				VDB vdb = getActiveVDB(vdbName, version);
+				String type = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
+				if (type != null) {
+					return AuthenticationType.valueOf(type);
+				}
+			} catch (SessionServiceException e) {
+				// ignore and return default, this only occur if the name and version are wrong 
+			}			
+		}
+		return this.defaultAuthenticationType;
 	}
 	
 	public void setAuthenticationType(AuthenticationType flag) {
-		this.authenticationType = flag;		
-	}
+		this.defaultAuthenticationType = flag;		
+	}	
 	
 	public void start() {
-		LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString("auth_type", authenticationType, securityDomainNames)); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Default security domain configured=", this.defaultSecurityDomainName}); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
         	public void run() {
@@ -414,16 +425,6 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void setDqp(DQPCore dqp) {
 		this.dqp = dqp;
-	}
-	
-	
-	public void setGssSecurityDomain(String domain) {
-		this.gssSecurityDomain = domain;
-	}
-	
-	@Override
-	public String getGssSecurityDomain(){
-		return this.gssSecurityDomain;
 	}
 	
 	@Override
@@ -511,5 +512,27 @@ public class SessionServiceImpl implements SessionService {
         }
         
         return -1;
-    }    
+    }
+
+	@Override
+	public String getSecurityDomain(String vdbName, String version) {
+        if (vdbName != null) {
+	    	try {    		
+				VDB vdb = getActiveVDB(vdbName, version);
+				String vdbSecurityDomain = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);
+				if (vdbSecurityDomain != null) {
+					return vdbSecurityDomain;
+				}
+			} catch (SessionServiceException e) {
+				// ignore and return default, this only occur if the name and version are wrong 
+			}
+        }
+		return this.defaultSecurityDomainName;
+	}
+
+	@Override
+	public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+		// must be overridden in platform specific security domain
+		return null;
+	}    
 }

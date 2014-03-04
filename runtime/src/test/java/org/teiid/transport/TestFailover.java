@@ -22,8 +22,10 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
@@ -37,7 +39,6 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.net.CommunicationException;
@@ -98,7 +99,7 @@ public class TestFailover {
 		server.registerClientService(ILogon.class, new LogonImpl(mock(SessionService.class), "fakeCluster") { //$NON-NLS-1$
 			@Override
 			public LogonResult logon(Properties connProps)
-					throws LogonException, ComponentNotFoundException {
+					throws LogonException {
 				logonAttempts++;
 				return new LogonResult(new SessionToken("dummy"), "x", 1, "z");
 			}
