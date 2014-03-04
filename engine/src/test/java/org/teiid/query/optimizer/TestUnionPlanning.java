@@ -30,6 +30,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -382,5 +383,139 @@ public class TestUnionPlanning {
             });    
     	
     }
+    
+    @Test public void testUnionWithOrderedLimits1() throws Exception {
+    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
+    			+ " union all (select e1, e2, 'b' source from pm2.g2 order by e2 desc limit 5000)"
+    			+ " union all (select e1, e2, 'c' source from pm1.g3 order by e2 desc limit 5000)) x"
+    			+ " order by e2 desc limit 0, 500";
+    	
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1 DESC LIMIT 500", 
+                		 "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_1 DESC LIMIT 500", 
+                		 "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g3 AS g_0 ORDER BY c_1 DESC LIMIT 500" }, ComparisonMode.EXACT_COMMAND_STRING);
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {
+                3,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                0,      // Project
+                0,      // Select
+                1,      // Sort
+                1       // UnionAll
+            });  
+    	
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
+    }
+
+    //here the second branch does not match the top level ordering, so the limit is not combined
+    @Test public void testUnionWithOrderedLimits2() throws Exception {
+    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
+    			+ " union all (select e1, e2, 'b' source from pm2.g2 order by e1 desc limit 5000)) x"
+    			+ " order by e2 desc limit 0, 500";
+    	
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1 DESC LIMIT 500"
+			, "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0 DESC LIMIT 5000" }, ComparisonMode.EXACT_COMMAND_STRING);
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                0,      // Project
+                0,      // Select
+                1,      // Sort
+                1       // UnionAll
+            });    
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
+    }
+    
+    @Test public void testUnionWithOrderedLimits3() throws Exception {
+    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1)"
+    			+ " union all (select e1, e2, 'b' source from pm2.g2 limit 5000)) x"
+    			+ " order by e2 desc limit 0, 500";
+    	
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1 DESC LIMIT 500", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_1 DESC LIMIT 500" }, ComparisonMode.EXACT_COMMAND_STRING);
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                1,      // Sort
+                1       // UnionAll
+            });    
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
+    }
+    
+    @Test public void testUnionWithOrderedLimits4() throws Exception {
+    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1)"
+    			+ " union all (select e1, e2, 'b' source from pm2.g2 limit 5000)) x"
+    			+ " order by e2 desc limit 0, 500";
+    	
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+    	
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 LIMIT 5000", "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING);
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                0,      // Project
+                0,      // Select
+                1,      // Sort
+                1       // UnionAll
+            });    
+    	
+    }
+    
+    //TODO: enhancement for ordering over a partition
+    
+    
 
 }

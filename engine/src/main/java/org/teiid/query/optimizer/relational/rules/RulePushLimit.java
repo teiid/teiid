@@ -50,6 +50,8 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
@@ -154,22 +156,14 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.SET_OP:
             {
-                if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION))) {
-                	return false;
-                }   
-                if (!child.hasBooleanProperty(NodeConstants.Info.USE_ALL) && !limitNode.hasBooleanProperty(Info.IS_NON_STRICT)) {
+                if (!canPushToBranches(limitNode, child)) {
                 	return false;
                 }
                 //distribute the limit
                 List<PlanNode> grandChildren = new LinkedList<PlanNode>(child.getChildren());
                 for (PlanNode grandChild : grandChildren) {
-                    PlanNode newLimit = newLimit(limitNode);
-                    newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
-                    grandChild.addAsParent(newLimit);
-                    limitNodes.add(newLimit);
-                	if (grandChild.getType() == NodeConstants.Types.SET_OP) {
-                		newLimit.setProperty(Info.IS_COPIED, true);
-                	}
+                    addBranchLimit(limitNode, limitNodes, metadata,
+							parentLimit, parentOffset, grandChild);
                 }
                 
                 return false;
@@ -223,12 +217,145 @@ public class RulePushLimit implements OptimizerRule {
             case NodeConstants.Types.SELECT:
             case NodeConstants.Types.DUP_REMOVE:
             	return limitNode.hasBooleanProperty(Info.IS_NON_STRICT);
+            case NodeConstants.Types.SORT:
+            	if (child.getFirstChild().getType() == NodeConstants.Types.SET_OP) {
+            		PlanNode setOp = child.getFirstChild();
+            		if (!canPushToBranches(limitNode, setOp)) {
+            			return false;
+            		}
+            		OrderBy parentOrderBy = (OrderBy) child.getProperty(NodeConstants.Info.SORT_ORDER);
+            		distributeLimit(limitNode, setOp, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder);
+            	}
+            	return false;
             default:
             {
                 return false;
             }
         }
     }
+
+	private void addBranchLimit(PlanNode limitNode, List<PlanNode> limitNodes,
+			QueryMetadataInterface metadata, Expression parentLimit,
+			Expression parentOffset, PlanNode grandChild) {
+		PlanNode newLimit = newLimit(limitNode);
+		newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
+		grandChild.addAsParent(newLimit);
+		limitNodes.add(newLimit);
+		if (grandChild.getType() == NodeConstants.Types.SET_OP) {
+			newLimit.setProperty(Info.IS_COPIED, true);
+		}
+	}
+
+	/**
+	 * Push the limit and order by to each union branch
+	 * TODO: check if the top limit is smaller and implement sorted sublist processing, rather than performing a full resort
+	 */
+	private void distributeLimit(PlanNode limitNode, PlanNode setOp,
+			OrderBy parentOrderBy, QueryMetadataInterface metadata, List<PlanNode> limitNodes, Expression parentLimit, Expression parentOffset, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
+		outer: for (PlanNode branch : setOp.getChildren()) {
+			PlanNode branchSort = NodeEditor.findNodePreOrder(branch, NodeConstants.Types.SORT, NodeConstants.Types.SET_OP | NodeConstants.Types.SOURCE);
+			if (branchSort != null) {
+				//implies there is a limit
+				OrderBy orderBy = (OrderBy) branchSort.getProperty(NodeConstants.Info.SORT_ORDER);
+				//can only proceed if order by matches
+				if (parentOrderBy.getOrderByItems().size() > orderBy.getOrderByItems().size()) {
+					continue;
+				}
+				
+				List<OrderByItem> parentkeys = parentOrderBy.getOrderByItems();
+				List<OrderByItem> keys = orderBy.getOrderByItems();
+				
+				for (int i = 0; i < parentkeys.size(); i++) {
+					int pos1 = parentkeys.get(i).getExpressionPosition();
+					int pos2 = keys.get(i).getExpressionPosition();
+					if (pos1 == -1 || pos2 == -1 || pos1 != pos2) {
+						continue outer;
+					}
+				}
+				addBranchLimit(limitNode, limitNodes, metadata, parentLimit, parentOffset, branch);
+			} else {
+				if (branch.getType() == NodeConstants.Types.SET_OP && canPushToBranches(limitNode, branch)) {
+					//go to the children
+					distributeLimit(limitNode, branch, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder);
+					continue;
+				}
+				PlanNode newSort = NodeFactory.getNewNode(NodeConstants.Types.SORT);
+				
+				//push both the limit and order by
+				
+				List<OrderByItem> parentkeys = parentOrderBy.getOrderByItems();
+				List<Expression> cols = (List<Expression>) NodeEditor.findNodePreOrder(branch, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
+				
+				OrderBy newOrderBy = new OrderBy();
+				for (int i = 0; i < parentkeys.size(); i++) {
+					OrderByItem item = parentkeys.get(i).clone();
+					if (item.getExpressionPosition() == -1) {
+						continue outer;
+					}
+					Expression ex = cols.get(item.getExpressionPosition());
+					item.setSymbol((Expression) ex.clone());
+					newOrderBy.getOrderByItems().add(item);
+				}
+				newSort.setProperty(Info.SORT_ORDER, newOrderBy);
+				PlanNode childLimit = NodeEditor.findNodePreOrder(branch, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SET_OP | NodeConstants.Types.SOURCE);
+				if (childLimit != null) {
+					PlanNode parentAccess = NodeEditor.findParent(childLimit, NodeConstants.Types.ACCESS, NodeConstants.Types.SET_OP);
+					if (parentAccess != null) {
+						//if there is a parent access, we need to handle pushing the sort
+						boolean removedLimit = false;
+						if (parentAccess.getFirstChild() == childLimit) {
+							parentAccess.removeChild(childLimit);
+							parentAccess.addFirstChild(childLimit.getFirstChild());
+							removedLimit = true;
+						}
+						boolean canRaise = RuleRaiseAccess.canRaiseOverSort(parentAccess, metadata, capFinder, newSort, null, false);
+						if (removedLimit) {
+							childLimit.addFirstChild(parentAccess.getFirstChild());
+							parentAccess.addFirstChild(childLimit);
+						}
+						if (canRaise) {
+							//put under the limit
+							//TODO: check to make sure that we're narrowing the limit
+							//we won't know this in all cases since it could be parameterized
+							childLimit.getFirstChild().addAsParent(newSort);	
+						} else {
+							continue outer;
+							//TODO - once we support sorted sublist processing, then we'll want to push
+							//put over the access node
+							//parentAccess.addAsParent(newSort);
+							//branch = newSort;
+						}
+					} else {
+						continue outer;
+						//TODO - once we support sorted sublist processing, then we'll want to push
+						//branch.addAsParent(newSort);
+						//branch = newSort;
+					}
+				} else {
+					if (branch.getType() == NodeConstants.Types.ACCESS &&
+							(!RuleRaiseAccess.canRaiseOverSort(branch, metadata, capFinder, newSort, null, false)
+									|| !CapabilitiesUtil.supportsRowLimit(RuleRaiseAccess.getModelIDFromAccess(branch, metadata), metadata, capFinder))) {
+						//TODO - once we support sorted sublist processing, then we'll want to push
+						continue outer;
+					}
+					//TODO: a better check to see if limit is supported - as it may not be pushed
+					branch.addAsParent(newSort);
+					branch = newSort;
+				}
+				addBranchLimit(limitNode, limitNodes, metadata, parentLimit, parentOffset, branch);
+			}
+		}
+	}
+
+	private boolean canPushToBranches(PlanNode limitNode, PlanNode child) {
+		if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION))) {
+			return false;
+		}   
+		if (!child.hasBooleanProperty(NodeConstants.Info.USE_ALL) && !limitNode.hasBooleanProperty(Info.IS_NON_STRICT)) {
+			return false;
+		}
+		return true;
+	}
 
 	private static PlanNode newLimit(PlanNode limitNode) {
 		PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
