@@ -317,6 +317,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     @Override
     public void reset() {
     	super.reset();
+    	this.joinStrategy = this.joinStrategy.clone();
     	this.dvs = null;
     }
 

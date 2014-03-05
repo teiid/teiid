@@ -255,7 +255,16 @@ public class TestJoinNode {
         rightNode.initialize(context, mgr, dataMgr);
         join.initialize(context, mgr, dataMgr);
         
-        join.open();
+        process(expectedResults); 
+        
+        join.reset();
+        
+        process(expectedResults);
+    }
+
+	private void process(List[] expectedResults)
+			throws TeiidComponentException, TeiidProcessingException {
+		join.open();
         
         int currentRow = 1;
         while(true) {
@@ -273,8 +282,8 @@ public class TestJoinNode {
             }
         }
         assertEquals(expectedResults.length, currentRow - 1);
-        join.close(); 
-    }
+        join.close();
+	}
     
     @Test public void testNoRows() throws Exception {
         leftTuples = new List[0];

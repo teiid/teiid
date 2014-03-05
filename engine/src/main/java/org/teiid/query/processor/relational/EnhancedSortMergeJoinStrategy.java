@@ -104,7 +104,6 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	private boolean matched;
 	private TupleBrowser tb;
 	private SingleTupleSource keyTs;
-	private int reserved;
 	private STree index;
 	private int[] reverseIndexes;
 	private List<?> sortedTuple;
@@ -133,15 +132,6 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	if (this.index != null) {
     		this.index.remove();
     	}
-    	releaseReserved();
-    	this.index = null;
-    	this.tb = null;
-    	this.currentSource = null;
-    	this.sortedSource = null;
-    	this.notSortedSource = null;
-    	this.sortedTuple = null;
-    	this.reverseIndexes = null;
-    	this.keyTs = null;
     }
     
     /**
@@ -341,7 +331,8 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		useIndex = true;
     	} 
     	if (useIndex) {
-    		reserved = this.joinNode.getBufferManager().reserveBuffers(toReserve, BufferReserveMode.FORCE);
+    		//TODO: unreserve the base amount once the index is loaded
+    		reserved += this.joinNode.getBufferManager().reserveBuffers(toReserve, BufferReserveMode.FORCE);
     		if (other.hasBuffer()) {
     			other.getTupleBuffer().setForwardOnly(true);
     		}
@@ -355,11 +346,6 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	return true;
     }
     
-	private void releaseReserved() {
-		this.joinNode.getBufferManager().releaseBuffers(this.reserved);
-		this.reserved = 0;
-	}
-        
     @Override
     protected void process() throws TeiidComponentException,
     		TeiidProcessingException {
@@ -437,6 +423,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     public EnhancedSortMergeJoinStrategy clone() {
     	EnhancedSortMergeJoinStrategy clone = new EnhancedSortMergeJoinStrategy(this.sortLeft, this.sortRight);
     	clone.semiDep = this.semiDep;
+    	clone.preferMemCutoff = this.preferMemCutoff;
     	return clone;
     }
     

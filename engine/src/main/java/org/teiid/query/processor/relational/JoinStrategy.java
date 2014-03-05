@@ -35,7 +35,7 @@ public abstract class JoinStrategy {
     protected JoinNode joinNode;
     protected SourceState leftSource;
     protected SourceState rightSource;
-    private int reserved;
+    protected int reserved;
 
     public void close() {
     	if (joinNode == null) {
