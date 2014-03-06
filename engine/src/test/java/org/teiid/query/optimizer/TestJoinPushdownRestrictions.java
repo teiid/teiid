@@ -131,6 +131,33 @@ public class TestJoinPushdownRestrictions {
         		new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g1 AS g_0 ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g2 AS g_0 ORDER BY c_0, c_1"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
 	}
 	
+	@Test public void testAllowJoinInner() throws Exception {
+		String sql = "select a.e1, b.e1 from pm4.g1 a, pm4.g2 b where a.e1 = b.e1 and a.e2 = b.e2"; //$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
+        capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
+
+        TransformationMetadata example4 = RealMetadataFactory.example4();
+        example4.getMetadataStore().getSchema("pm4").getTable("g2").getForeignKeys().get(0).setProperty(ForeignKey.ALLOW_JOIN, "INNER");
+        
+        //should not inhibit
+		TestOptimizer.helpPlan(sql, example4,  
+        		new String[] {"SELECT g_0.e1, g_1.e1 FROM pm4.g1 AS g_0, pm4.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e2 = g_1.e2)"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+		//should inhibit
+		sql = "select a.e1, b.e1 from pm4.g1 a left outer join pm4.g2 b on a.e1 = b.e1 and a.e2 = b.e2"; //$NON-NLS-1$
+		TestOptimizer.helpPlan(sql, example4,  
+        		new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g1 AS g_0 ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g2 AS g_0 ORDER BY c_0, c_1"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+		
+		//should not inhibit
+		sql = "select a.e1, b.e1 from pm4.g1 a right outer join pm4.g2 b on a.e1 = b.e1 and a.e2 = b.e2"; //$NON-NLS-1$
+		TestOptimizer.helpPlan(sql, example4,  
+        		new String[] {"SELECT g_1.e1, g_0.e1 FROM pm4.g2 AS g_0 LEFT OUTER JOIN pm4.g1 AS g_1 ON g_1.e1 = g_0.e1 AND g_1.e2 = g_0.e2"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
+	}
+	
 	@Test public void testCrossJoinWithRestriction() throws Exception {
 		String sql = "select pm1.g1.e2, pm1.g2.e2 from pm1.g1, pm1.g2"; //$NON-NLS-1$
 

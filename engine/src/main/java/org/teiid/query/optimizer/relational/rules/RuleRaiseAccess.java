@@ -766,8 +766,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
 						if (rightGroup == null) {
 							return null;
 						}
-						if (!matchesForeignKey(metadata, leftIds, rightIds,	left.getGroups().iterator().next(), true) 
-								&& !matchesForeignKey(metadata, rightIds, leftIds, rightGroup, true)) {
+						if (!matchesForeignKey(metadata, leftIds, rightIds,	left.getGroups().iterator().next(), true, !type.isOuter() || type == JoinType.JOIN_LEFT_OUTER) 
+								&& !matchesForeignKey(metadata, rightIds, leftIds, rightGroup, true, !type.isOuter())) {
 							return null;
 						}
 					} 
@@ -888,13 +888,18 @@ public final class RuleRaiseAccess implements OptimizerRule {
     }
 
 	public static boolean matchesForeignKey(QueryMetadataInterface metadata,
-			Collection<Object> leftIds, Collection<Object> rightIds, GroupSymbol leftGroup, boolean exact)
+			Collection<Object> leftIds, Collection<Object> rightIds, GroupSymbol leftGroup, boolean exact, boolean inner)
 			throws TeiidComponentException, QueryMetadataException {
 		Collection fks = metadata.getForeignKeysInGroup(leftGroup.getMetadataID());
 		for (Object fk : fks) {
-			String allow = metadata.getExtensionProperty(fk, ForeignKey.ALLOW_JOIN, false);
-			if (allow != null && !Boolean.valueOf(allow)) {
-				continue;
+			if (exact) {
+				String allow = metadata.getExtensionProperty(fk, ForeignKey.ALLOW_JOIN, false);
+				if (allow != null) {
+					boolean allowed = true;
+					if (!Boolean.valueOf(allow) && (!allow.equalsIgnoreCase("INNER") || !inner)) { //$NON-NLS-1$
+						continue;
+					}
+				}
 			}
 			List fkColumns = metadata.getElementIDsInKey(fk);
 			if ((exact && leftIds.size() != fkColumns.size()) || !leftIds.containsAll(fkColumns)) {

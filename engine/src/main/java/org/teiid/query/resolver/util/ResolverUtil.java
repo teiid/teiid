@@ -1057,7 +1057,7 @@ public class ResolverUtil {
 				if (!entry.getKey().get(left?0:1).equals(gs) || !otherGroups.contains(entry.getKey().get(left?1:0))) {
 					continue;
 				}
-				if (RuleRaiseAccess.matchesForeignKey(metadata, entry.getValue().get(left?0:1), entry.getValue().get(left?1:0), gs, false)) {
+				if (RuleRaiseAccess.matchesForeignKey(metadata, entry.getValue().get(left?0:1), entry.getValue().get(left?1:0), gs, false, true)) {
 					keyPreservingGroups.add(gs);
 					result.add(entry.getKey().get(left?1:0));
 				}
