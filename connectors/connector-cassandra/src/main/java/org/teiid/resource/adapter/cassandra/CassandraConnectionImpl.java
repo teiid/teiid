@@ -44,6 +44,11 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	private Cluster cluster = null;
 	private Session session = null;
 	private Metadata metadata = null;
+	
+	public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
+		this.config = config;
+		this.metadata = metadata;
+	}
 
 	public CassandraConnectionImpl(CassandraManagedConnectionFactory config) {
 		this.config = config;
@@ -81,7 +86,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	public KeyspaceMetadata keyspaceInfo() throws KeyspaceNotDefinedException {
 		String keyspace = config.getKeyspace();
 		KeyspaceMetadata result = metadata.getKeyspace(keyspace);
-		if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 2) == '"') {
+		if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 1) == '"') {
 			//try unquoted
 			keyspace = keyspace.substring(1, keyspace.length() - 1);
 			result = metadata.getKeyspace(keyspace);
