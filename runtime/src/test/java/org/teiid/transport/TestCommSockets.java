@@ -22,7 +22,11 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -86,12 +90,12 @@ public class TestCommSockets {
 		p.setProperty("org.teiid.sockets.maxCachedInstances", String.valueOf(0)); //$NON-NLS-1$
 		SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
 		SocketListenerStats stats = listener.getStats();
-		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(3, stats.objectsRead); // handshake response, logon,
 		assertEquals(1, stats.sockets);
 		conn.close();
 		stats = listener.getStats();
 		assertEquals(1, stats.maxSockets);
-		assertEquals(3, stats.objectsRead); // handshake response, logon, logoff
+		assertEquals(4, stats.objectsRead); // handshake response, logon(2), logoff
 		if (stats.sockets > 0) {
 			// there is a timing issue here, since the effect of shutdown on the
 			// server side can be delayed
@@ -104,12 +108,12 @@ public class TestCommSockets {
 	@Test public void testConnectWithPooling() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		SocketListenerStats stats = listener.getStats();
-		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(3, stats.objectsRead); // handshake response, logon(2)
 		assertEquals(1, stats.sockets);
 		conn.close();
 		stats = listener.getStats();
 		assertEquals(1, stats.maxSockets);
-		assertEquals(3, stats.objectsRead); // handshake response, logon, logoff
+		assertEquals(4, stats.objectsRead); // handshake response, logon(2), logoff
 		stats = listener.getStats();
 		assertEquals(1, stats.sockets);
 		conn = helpEstablishConnection(false);
@@ -302,7 +306,7 @@ public class TestCommSockets {
 		SSLConfiguration config = new SSLConfiguration();
 		SocketServerConnection conn = helpEstablishConnection(false, config, p);
 		SocketListenerStats stats = listener.getStats();
-		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(3, stats.objectsRead); // handshake response, logon,
 		assertEquals(1, stats.sockets);
 		conn.cleanUp();
 		assertEquals(1, this.service.getActiveSessionsCount());
@@ -312,7 +316,7 @@ public class TestCommSockets {
 		assertEquals(2, this.service.getActiveSessionsCount());
 		assertTrue(conn.isOpen(1000));
 		stats = listener.getStats();
-		assertEquals(8, stats.objectsRead); // (ping (pool test), assert identityx2, ping (isOpen))x2
+		assertEquals(10, stats.objectsRead); // (ping (pool test), assert identityx2, ping (isOpen))x2
 		assertEquals(2, stats.sockets);
 		conn.close();
 		conn2.close();

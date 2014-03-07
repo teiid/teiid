@@ -33,7 +33,7 @@
     <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
 
     <transport name="odbc" protocol="pg" socket-binding="teiid-odbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3">
-        <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5" sessions-expiration-timelimit="2" krb5-domain="krb5"/>
+        <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5" sessions-expiration-timelimit="2" type="GSS"/>
         <pg max-lob-size-in-bytes="50"/>
         <ssl mode="enabled" authentication-mode="2-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo"
             enabled-cipher-suites="x,y">

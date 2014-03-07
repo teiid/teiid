@@ -25,7 +25,10 @@
  */
 package org.teiid.net.socket;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -113,6 +116,12 @@ public class TestSocketServerConnection {
 		public LogonResult neogitiateGssLogin(Properties connectionProperties,
 				byte[] serviceToken, boolean createSession) throws LogonException {
 			return null;
+		}
+
+		@Override
+		public AuthenticationType getAuthenticationType(String vdbName,
+				String version, AuthenticationType preferType) {
+			return AuthenticationType.USERPASSWORD;
 		}
 	}
 
@@ -214,7 +223,6 @@ public class TestSocketServerConnection {
 				Mockito.stub(instance.getHostInfo()).toReturn(hostInfo);
 				Mockito.stub(instance.getService(ILogon.class)).toReturn(logon);
 				Mockito.stub(instance.getServerVersion()).toReturn("07.03");
-				Mockito.stub(instance.getAuthenticationType()).toReturn(AuthenticationType.CLEARTEXT);
 				if (t != null) {
 					try {
 						Mockito.doAnswer(new Answer<Void>() {

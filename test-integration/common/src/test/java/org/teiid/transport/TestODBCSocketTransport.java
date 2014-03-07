@@ -22,7 +22,11 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -57,6 +61,7 @@ import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 
 @SuppressWarnings("nls")
@@ -141,9 +146,10 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(addr.getPort());
 			server = new FakeServer(true);
-			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, Mockito.mock(ILogon.class), server.getDriver());
+			ILogon logon = Mockito.mock(ILogon.class);
+			Mockito.stub(logon.getAuthenticationType(Mockito.anyString(), Mockito.anyString(), Mockito.any(AuthenticationType.class))).toReturn(AuthenticationType.USERPASSWORD);
+			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
-			
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		}
 		

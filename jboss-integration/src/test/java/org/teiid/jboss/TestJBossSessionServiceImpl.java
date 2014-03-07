@@ -24,10 +24,8 @@ package org.teiid.jboss;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -42,6 +40,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.security.InvalidSessionException;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.TeiidLoginContext;
@@ -68,8 +67,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
         
     	SecurityHelper ms = buildSecurityHelper();
         
-        List<String> domains = new ArrayList<String>();
-        domains.add("testFile"); //$NON-NLS-1$
+        String domains = "testFile";
         Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
         SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
         AuthenticationManager authManager = new AuthenticationManager() {
@@ -98,7 +96,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
         
         JBossSessionService jss = new JBossSessionService(securityDomainMap);
         jss.setSecurityHelper(ms);
-        jss.setSecurityDomains(domains);
+        jss.setSecurityDomain(domains);
         
         TeiidLoginContext c = jss.authenticate("user1", credentials, null, domains); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("user1@testFile", c.getUserName()); //$NON-NLS-1$
@@ -108,15 +106,14 @@ public class TestJBossSessionServiceImpl extends TestCase {
     public void testPassThrough() throws Exception {
     	SecurityHelper ms = buildSecurityHelper();
     	
-        List<String> domains = new ArrayList<String>();
-        domains.add("passthrough"); //$NON-NLS-1$
+        String domain = "passthrough";
         Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
 
         JBossSessionService jss = new JBossSessionService(securityDomainMap);
         jss.setSecurityHelper(ms);
-        jss.setSecurityDomains(domains);
+        jss.setSecurityDomain(domain);
         
-        TeiidLoginContext c = jss.passThroughLogin("user1", domains); //$NON-NLS-1$ //$NON-NLS-2$
+        TeiidLoginContext c = jss.passThroughLogin("user1", domain); //$NON-NLS-1$ //$NON-NLS-2$
         
         assertEquals("alreadylogged@passthrough", c.getUserName()); //$NON-NLS-1$
     }
@@ -138,7 +135,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
 		
         JBossSessionService jss = new JBossSessionService(securityDomainMap);
         jss.setSecurityHelper(buildSecurityHelper());
-		jss.setSecurityDomains(Arrays.asList("somedomain"));
+		jss.setSecurityDomain("somedomain");
 		
 		try {
 			jss.validateSession(String.valueOf(1));
@@ -147,7 +144,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
 			
 		}
 		
-		SessionMetadata info = jss.createSession("steve",  new Credentials("pass1".toCharArray()), "foo", new Properties(), true); //$NON-NLS-1$ //$NON-NLS-2$
+		SessionMetadata info = jss.createSession("somedomain", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1".toCharArray()), "foo", new Properties(), true); //$NON-NLS-1$ //$NON-NLS-2$
 		if (securityEnabled) {
 			Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject()); 
 		}
