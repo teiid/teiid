@@ -25,8 +25,7 @@
         <dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>salesforce-api</artifactId>
-			<version>${project.version}</version>
-            <scope>provided</scope>
+            <version>${project.version}</version>
 		</dependency>
         <dependency>
             <groupId>javax.resource</groupId>
@@ -60,7 +59,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/module-dist.xml</descriptor>
+                       <descriptor>kits/jboss-as7/module-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

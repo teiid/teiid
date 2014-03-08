@@ -31,7 +31,6 @@
       	    <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>google-api</artifactId>
   	    <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
        <!-- can't do this but this should be possible! 
         <dependency>
@@ -68,7 +67,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/module-dist.xml</descriptor>
+                        <descriptor>kits/jboss-as7/module-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

@@ -31,13 +31,11 @@
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>mongodb-api</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>   
         <dependency>
            <groupId>org.mongodb</groupId>
            <artifactId>mongo-java-driver</artifactId>
            <version>${version.mongo-java-driver}</version>
-           <scope>provided</scope>
         </dependency>         
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
@@ -72,7 +70,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/module-dist.xml</descriptor>
+                        <descriptor>kits/jboss-as7/module-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
