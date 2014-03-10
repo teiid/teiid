@@ -153,6 +153,7 @@
                 <configuration>
                     <descriptors>
                         <descriptor>kits/jboss-as7/module-dist.xml</descriptor>
+                        <descriptor>kits/embedded/module-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
