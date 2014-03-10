@@ -170,7 +170,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>
             <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>

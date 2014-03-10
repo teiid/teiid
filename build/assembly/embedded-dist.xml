@@ -60,10 +60,21 @@
             <unpack>false</unpack>
             <dependencySets>
                 <dependencySet>
+                    <excludes>
+                        <exclude>io.netty:netty</exclude>
+                    </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+                <dependencySet>
+                    <outputDirectory>optional</outputDirectory>
+                    <includes>
+                        <include>io.netty:netty</include>
+                    </includes>
+                    <useProjectArtifact>false</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
                 </dependencySet>
             </dependencySets>
             <outputDirectory>lib</outputDirectory>
@@ -104,7 +115,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>optional</outputDirectory>

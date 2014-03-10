@@ -168,8 +168,13 @@
 					<version>${version.jar.plugin}</version>
 				</plugin>
 				<plugin>
+<<<<<<< HEAD
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>2.2-beta-6-m1-jboss</version>
+=======
+				  <artifactId>maven-assembly-plugin</artifactId>
+				  <version>2.4</version>
+>>>>>>> c9deffa... TEIID-2889: updating the ASSEMBLY plugin version to 2.4 to fix a bug
 				</plugin>
 			</plugins>
 		</pluginManagement>
