@@ -151,10 +151,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// create a new attribute list with case ignored in attribute
 		// names
 		Attributes insertAttrs = new BasicAttributes(true);
-		Attribute insertAttr; // what we will use to populate the attribute list
-		ColumnReference insertElement;
-		String nameInsertElement;
-		Object insertValue;
 		String distinguishedName = null;
 		// The IInsert interface uses separate List objects for
 		// the element names and values to be inserted, limiting
@@ -162,13 +158,13 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// other interfaces use ICriteria-based mechanisms for such
 		// input).
 		for (int i=0; i < insertElementList.size(); i++) {
-			insertElement = insertElementList.get(i);
+			ColumnReference insertElement = insertElementList.get(i);
 			// call utility class to get NameInSource/Name of element
-			nameInsertElement = getNameFromElement(insertElement);
+			String nameInsertElement = getNameFromElement(insertElement);
 			// special handling for DN attribute - use it to set
 			// distinguishedName value.
 			if (nameInsertElement.toUpperCase().equals("DN")) {  //$NON-NLS-1$
-				insertValue = ((Literal)insertValueList.get(i)).getValue();
+				Object insertValue = ((Literal)insertValueList.get(i)).getValue();
 				if (insertValue == null) { 
 		            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.columnSourceNameDNNullError"); //$NON-NLS-1$
 					throw new TranslatorException(msg);
@@ -182,8 +178,11 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// for other attributes specified in the insert command,
 			// create a new 
 			else {
-				insertAttr = new BasicAttribute(nameInsertElement);
-				insertValue = ((Literal)insertValueList.get(i)).getValue();
+				Attribute insertAttr = new BasicAttribute(nameInsertElement);
+				Object insertValue = null;
+				if (((Literal)insertValueList.get(i)).getValue() != null) {
+					insertValue = IQueryToLdapSearchParser.getExpressionString(((Literal)insertValueList.get(i)));
+				}
 				insertAttr.add(insertValue);
 				insertAttrs.put(insertAttr);
 			}
@@ -284,10 +283,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// be performed separately using Context.rename()), we will
 		// need to account for this in determining this list size. 
 		ModificationItem[] updateMods = new ModificationItem[updateList.size()];
-		ColumnReference leftElement;
-		Expression rightExpr;
-		String nameLeftElement;
-		Object valueRightExpr = null;
 		// iterate through the supplied list of updates (each of
 		// which is an ICompareCriteria with an IElement on the left
 		// side and an IExpression on the right, per the Connector
@@ -296,12 +291,12 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			SetClause setClause = updateList.get(i);
 			// trust that connector API is right and left side
 			// will always be an IElement
-			leftElement = setClause.getSymbol();
+			ColumnReference leftElement = setClause.getSymbol();
 			// call utility method to get NameInSource/Name for element
-			nameLeftElement = getNameFromElement(leftElement);
+			String nameLeftElement = getNameFromElement(leftElement);
 			// get right expression - if it is not a literal we
 			// can't handle that so throw an exception
-			rightExpr = setClause.getValue();
+			Expression rightExpr = setClause.getValue();
 			if (!(rightExpr instanceof Literal)) { 
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
 				throw new TranslatorException(msg);
@@ -314,10 +309,11 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// value, we don't do any special handling of it right
 			// now.  But maybe null should mean to delete an
 			// attribute?
+			Object valueRightExpr = null;
 			if (((Literal)rightExpr).getValue() != null) {
 				valueRightExpr = IQueryToLdapSearchParser.getExpressionString((Literal)rightExpr);
 			}
-		        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, new BasicAttribute(nameLeftElement, valueRightExpr));
+	        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, new BasicAttribute(nameLeftElement, valueRightExpr));
 		}
 		// just try to update an LDAP entry using the DN and
 		// attributes specified in the UPDATE operation.  If it isn't

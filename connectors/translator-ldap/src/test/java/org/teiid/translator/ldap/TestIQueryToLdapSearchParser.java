@@ -27,14 +27,19 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
+import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.SortKey;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
+import org.teiid.language.Update;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataStore;
@@ -128,6 +133,30 @@ public class TestIQueryToLdapSearchParser {
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
         		expectedCountLimit, expectedSearchScope, expectedSortKeys);
         
+    }
+    
+    @Test public void testUpdateNull() throws Exception {
+        String sql = "update LdapModel.People set userid = 1, name = null where dn = 'x'"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = exampleLdap();
+        
+        Update query = (Update)getCommand(sql, metadata);
+        
+        LDAPExecutionFactory config = new LDAPExecutionFactory();
+    	
+        LdapContext context = Mockito.mock(LdapContext.class);
+        
+        Mockito.stub(context.lookup("")).toReturn(context);
+        
+		LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
+        
+        lue.execute();
+        ArgumentCaptor<ModificationItem[]> captor = ArgumentCaptor.forClass(ModificationItem[].class);
+        Mockito.verify(context).modifyAttributes(ArgumentCaptor.forClass(String.class).capture(), captor.capture());
+        ModificationItem[] modifications = captor.getValue();
+        assertEquals(2, modifications.length);
+        assertEquals("uid: 1", modifications[0].getAttribute().toString());
+        assertEquals("cn: null", modifications[1].getAttribute().toString());
     }
     
 	/**
@@ -269,17 +298,17 @@ public class TestIQueryToLdapSearchParser {
                 
         // Create physical elements
         String[] elemNames = new String[] {
-            "UserID", "Name"  //$NON-NLS-1$ //$NON-NLS-2$
+            "UserID", "Name", "dn"  //$NON-NLS-1$ //$NON-NLS-2$
         };
         String[] elemTypes = new String[] {  
-            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
+            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
         };
         
         List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
         
         // Set name in source on each column
         String[] nameInSource = new String[] {
-           "uid", "cn"             //$NON-NLS-1$ //$NON-NLS-2$  
+           "uid", "cn", "dn"             //$NON-NLS-1$ //$NON-NLS-2$  
         };
         for(int i=0; i<2; i++) {
             Column obj = cols.get(i);
