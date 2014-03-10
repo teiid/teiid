@@ -16,6 +16,7 @@
 		<site.url>http://www.jboss.org/teiid</site.url>
         <version.org.jboss.integration-platform>6.0.0-SNAPSHOT</version.org.jboss.integration-platform>
         <jbossas-version>7.2.0.Alpha1-redhat-4</jbossas-version>
+        <jbossas-module-root>modules/system/layers/base</jbossas-module-root>
         <jbossas-test-version>jboss-eap-6.1</jbossas-test-version>
         <arquillian-container-version>7.2.0.Final</arquillian-container-version>
         <version.ant.plugin>1.7.0</version.ant.plugin>
@@ -55,10 +56,10 @@
         <version.org.infinispan.6>6.0.0.CR1</version.org.infinispan.6>
         <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>1.0.1.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
         <version.olap4j>1.1.0</version.olap4j>
-        <version.cxf>2.6.6</version.cxf>
+        <version.cxf>2.6.8</version.cxf>
         <version.org.hibernate>4.1.1.Final</version.org.hibernate>
         <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
-        <cxf.version>2.6.6</cxf.version>
+        <cxf.version>2.6.8</cxf.version>
         <version.accumulo>1.5.0</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
         <version.thrift>0.9.1</version.thrift>

@@ -180,306 +180,23 @@
         These are built in resource-adapters  
         *********************************************************-->
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
         
         <includes>
-            <include>org.jboss.teiid.connectors:connector-file</include>
+            <include>org.jboss.teiid.connectors:connector-*</include>
         </includes>
-
-        <binaries>   
-          <includeDependencies>true</includeDependencies>
+                
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
           <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/file/main</outputDirectory>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>jboss-as7-dist</attachmentClassifier>
           <fileMode>0644</fileMode>
+          <directoryMode>0755</directoryMode>
         </binaries>
+      
     </moduleSet>
     
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-ldap</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/ldap/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-salesforce</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/salesforce/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-google</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/google/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-mongodb</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/mongodb/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-ws</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/webservice/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-infinispan</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/infinispan/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-cassandra</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/cassandra/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <!-- Apache SimpleDB -->
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-simpledb</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/simpledb/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-infinispan.6</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/infinispan/6.2</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    
-    <!-- Apache Accumulo -->
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-accumulo</include>
-        </includes>
-
-        <binaries>
-            <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>
-            <includeDependencies>true</includeDependencies>
-            <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>
-            <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/accumulo/main</outputDirectory>
-            <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>    
-    
-    <!-- Apache SOLR Connector-->
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:connector-solr</include>
-        </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-            <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/solr/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>       
     
     <!-- **************************************************************************
                         These are built in translators  
@@ -489,14 +206,13 @@
         
         <includes>
             <include>org.jboss.teiid.connectors:translator-*</include>
-            <include>org.jboss.teiid.connectors:*-api</include>
         </includes>
                 
         <binaries> 
           <includeDependencies>false</includeDependencies>
           <unpack>true</unpack>
-          <outputDirectory>modules/system/layers/base/</outputDirectory>
-          <attachmentClassifier>module-dist</attachmentClassifier>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>jboss-as7-dist</attachmentClassifier>
           <fileMode>0644</fileMode>
           <directoryMode>0755</directoryMode>
         </binaries>
