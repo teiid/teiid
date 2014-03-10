@@ -22,14 +22,17 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
@@ -37,13 +40,13 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.net.socket.UrlServerDiscovery;
@@ -85,6 +88,7 @@ public class TestFailover {
 			sscf = new SocketServerConnectionFactory();
 			sscf.initialize(socketConfig);
 		}
+		
 		return sscf.getConnection(p);
 	}
 
@@ -95,10 +99,12 @@ public class TestFailover {
 				return getClass().getClassLoader();
 			}
 		};
-		server.registerClientService(ILogon.class, new LogonImpl(mock(SessionService.class), "fakeCluster") { //$NON-NLS-1$
+		SessionService ss = mock(SessionService.class);
+		Mockito.stub(ss.getAuthenticationType(Mockito.anyString(), Mockito.anyString(), Mockito.any(AuthenticationType.class))).toReturn(AuthenticationType.USERPASSWORD);
+		server.registerClientService(ILogon.class, new LogonImpl(ss, "fakeCluster") { //$NON-NLS-1$
 			@Override
 			public LogonResult logon(Properties connProps)
-					throws LogonException, ComponentNotFoundException {
+					throws LogonException {
 				logonAttempts++;
 				return new LogonResult(new SessionToken("dummy"), "x", 1, "z");
 			}

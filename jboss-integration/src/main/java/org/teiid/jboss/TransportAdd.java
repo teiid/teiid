@@ -21,11 +21,9 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 import static org.teiid.jboss.TeiidConstants.*;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.naming.InitialContext;
@@ -73,6 +71,7 @@ class TransportAdd extends AbstractAddStepHandler {
 		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
 		
 		TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
 		
@@ -119,12 +118,11 @@ class TransportAdd extends AbstractAddStepHandler {
 			LogManager.logDetail(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("socket_binding_not_defined",  transportName)); //$NON-NLS-1$
 		}
     	
-    	List<String> domainList = Collections.emptyList();
+		String securityDomain = null;
    		if (AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.isDefined(operation, context)) {
-    		String domains = AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.asString(operation, context);
-    		domainList = Arrays.asList(domains.split(","));//$NON-NLS-1$
+    		securityDomain = AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.asString(operation, context);
+    		transport.setAuthenticationDomain(securityDomain);
     	}  
-   		transport.setAuthenticationDomains(domainList);
    		
    		if (AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.isDefined(operation, context)) {
    			transport.setSessionMaxLimit(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.asLong(operation, context));
@@ -132,13 +130,19 @@ class TransportAdd extends AbstractAddStepHandler {
     	
    		if (AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.isDefined(operation, context)) {
    			transport.setSessionExpirationTimeLimit(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.asLong(operation, context));
-   		}   		
+   		}
+   		
    		if (AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.isDefined(operation, context)) {
-   			transport.setAuthenticationType(AuthenticationType.GSS);
-   			transport.setKrb5Domain(AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation, context));
+   				LogManager.logWarning(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("security_not_correct",  transportName)); //$NON-NLS-1$
+    			transport.setAuthenticationType(AuthenticationType.GSS);
+    			transport.setAuthenticationDomain(AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation, context));
+   		}   		
+   		
+   		if (AUTHENTICATION_TYPE_ATTRIBUTE.isDefined(operation, context)) {
+   			transport.setAuthenticationType(AuthenticationType.valueOf(AUTHENTICATION_TYPE_ATTRIBUTE.asString(operation, context)));
    		}
    		else {
-   			transport.setAuthenticationType(AuthenticationType.CLEARTEXT);
+   			transport.setAuthenticationType(AuthenticationType.ANY);
    		}
    		
    		if (PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.isDefined(operation, context)) {
@@ -155,9 +159,9 @@ class TransportAdd extends AbstractAddStepHandler {
 
     	
         // add security domains
-        for (String domain:domainList) {
-        	LogManager.logInfo(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50011, domain, transportName));
-        	transportBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", domain), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, domain)); //$NON-NLS-1$ //$NON-NLS-2$
+        if (securityDomain != null) {
+        	LogManager.logInfo(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50011, securityDomain, transportName));
+        	transportBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", securityDomain), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, securityDomain)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         transportBuilder.setInitialMode(ServiceController.Mode.ACTIVE);

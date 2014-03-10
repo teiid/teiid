@@ -50,7 +50,7 @@
             "authentication-security-domain" : "teiid-security,teiid-security2",
             "authentication-sessions-expiration-timelimit" : 2,
             "authentication-max-sessions-allowed" : 5,
-            "authentication-krb5-domain" : "krb5",
+            "authentication-type" : "GSS",
             "input-buffer-size" : 2,
             "keystore-name" : "keystore name",
             "keystore-password" : "keystore passs",

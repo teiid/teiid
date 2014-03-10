@@ -22,19 +22,13 @@
 
 package org.teiid.transport;
 
-import java.security.Principal;
-import java.security.PrivilegedAction;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 
-import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.ietf.jgss.GSSContext;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSManager;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
@@ -44,9 +38,13 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.util.Base64;
+import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.service.GSSResult;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.jdbc.BaseDataSource;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.CommunicationException;
@@ -61,43 +59,62 @@ public class LogonImpl implements ILogon {
 	
 	private SessionService service;
 	private String clusterName;
+	protected Map<String, Object> gssServiceTickets = Collections.synchronizedMap(new LRUCache<String, Object>()); 
 
 	public LogonImpl(SessionService service, String clusterName) {
 		this.service = service;
 		this.clusterName = clusterName;
 	}
 
-	public LogonResult logon(Properties connProps) throws LogonException, TeiidComponentException, CommunicationException {
-		if (this.service.getGssSecurityDomain() != null && connProps.get(ILogon.KRB5TOKEN) != null) {
-			Subject user = this.service.getSecurityHelper().getSubjectInContext(this.service.getGssSecurityDomain());
-			if (user == null) {
-				 throw new LogonException(RuntimePlugin.Event.TEIID40054, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40054));
-			}
-			return logon(connProps, (byte[])connProps.get(ILogon.KRB5TOKEN));
-		}
+	public LogonResult logon(Properties connProps) throws LogonException {
+		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
+		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
+		String user = connProps.getProperty(BaseDataSource.USER_NAME);
 		
-		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthenticationType())) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, "JAAS")); //$NON-NLS-1$
+		AuthenticationType authType = checkAuthTypeSupported(vdbName,vdbVersion, user);
+		
+		// the presence of the KRB5 token take as GSS based login.
+		if (AuthenticationType.GSS.equals(authType)	&& connProps.get(ILogon.KRB5TOKEN) != null) {
+			Object previous = null;
+			boolean assosiated = false;
+			SecurityHelper securityHelper = service.getSecurityHelper();
+			try {
+				byte[] krb5Token = (byte[])connProps.get(ILogon.KRB5TOKEN);
+				Object securityContext = this.gssServiceTickets.remove(Base64.encodeBytes(MD5(krb5Token)));
+				if (securityContext == null) {
+					 throw new LogonException(RuntimePlugin.Event.TEIID40054, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40054));
+				}				
+				previous = securityHelper.associateSecurityContext(securityContext);
+				assosiated = true;
+				return logon(connProps, krb5Token, AuthenticationType.GSS);
+			} finally {
+				if (assosiated) {
+					securityHelper.associateSecurityContext(previous);
+				}
+			}
+		}		
+		if (!AuthenticationType.USERPASSWORD.equals(authType)) {
+			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
+		}		
+		return logon(connProps, null, AuthenticationType.USERPASSWORD);
+	}
+
+	private AuthenticationType checkAuthTypeSupported(String vdbName, String vdbVersion, String user) throws LogonException {
+		AuthenticationType preferredAuthType = 	AuthenticationType.prefer(user);
+		AuthenticationType authType = this.service.getAuthenticationType(vdbName, vdbVersion, preferredAuthType);		
+		if (preferredAuthType != null && !preferredAuthType.equals(authType) && !preferredAuthType.equals(AuthenticationType.ANY)) {
+			 throw new LogonException(RuntimePlugin.Event.TEIID40118, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40118, preferredAuthType.name()));
 		}
-		return logon(connProps, null);
+		return authType;
 	}
 	
-	private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket) throws LogonException {
-		//DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		//String oldSessionId = workContext.getSessionId();
+	private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket, AuthenticationType authType) throws LogonException {
+
+		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
+		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
+		String securityDomain = this.service.getSecurityDomain(vdbName, vdbVersion);
         String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
-        // user may be null if using trustedToken to log on
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
-        
-        // if a user is not speified on the URL for the role information then by default
-        // use krb5 user name. Note that security-domain need not challenge for credential 
-        // in this case as krb5 auth is already occurred. This is just role association
-        String krb5User = connProps.getProperty("kerberosServicePrincipleName"); //$NON-NLS-1$
-        if (krb5ServiceTicket != null &&  krb5User != null) {
-        	user = krb5User;
-        }
-        
-        // password may be null if using trustedToken to log on
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);
 		Credentials credential = null;
         if (password != null) {
@@ -105,7 +122,7 @@ public class LogonImpl implements ILogon {
         }
         
 		try {
-			SessionMetadata sessionInfo = service.createSession(user,credential, applicationName, connProps, true);
+			SessionMetadata sessionInfo = service.createSession(securityDomain, authType, user,credential, applicationName, connProps, securityDomain != null);
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
@@ -125,93 +142,61 @@ public class LogonImpl implements ILogon {
 			 throw new LogonException(e);
 		}
 	}
-	  
-	class GssAction implements PrivilegedAction<GSSResult> {
-		byte[] serviceTicket;
-		
-		public GssAction(byte[] ticket) {
-			this.serviceTicket = ticket;
-		}
-		
-		@Override
-		public GSSResult run() {
-			GSSContext context = null;
-			try {
-				GSSManager manager = GSSManager.getInstance();
-				context = manager.createContext((GSSCredential)null);				
-				this.serviceTicket = context.acceptSecContext(this.serviceTicket, 0, this.serviceTicket.length);				
-				return new GSSResult(context, serviceTicket);
-			} catch (GSSException e) {
-				LogManager.logError(LogConstants.CTX_SECURITY, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
-			}
-			return null;
-		}	
-	}
-	
-	class GSSResult {
-		GSSContext context;
-		byte[] serviceTicket;
-		public GSSResult(GSSContext context, byte[] serviceTicket) {
-			this.context = context;
-			this.serviceTicket = serviceTicket;
-		}
-	}
 	
 	@Override
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
+		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
+		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
+		String user = connProps.getProperty(BaseDataSource.USER_NAME);
 		
-		if (!AuthenticationType.GSS.equals(service.getAuthenticationType())) {
+		AuthenticationType authType = checkAuthTypeSupported(vdbName,vdbVersion, user);
+		
+		if (!AuthenticationType.GSS.equals(authType) || !AuthenticationType.ANY.equals(authType)) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, "Kerberos")); //$NON-NLS-1$
-		}		
+		}
 		
-        String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME);
-        String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);		
-		Object previous = null;
-		boolean associated = false;
 		try {
-			String securityDomain = service.getGssSecurityDomain();
-			if (securityDomain == null) {
+			String securityDomain = service.getSecurityDomain(vdbName, vdbVersion);
+			if (securityDomain == null ) {
 				 throw new LogonException(RuntimePlugin.Event.TEIID40059, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40059));
 			}
-			// If this KRB5 and using keytab, user and password callback handler never gets called 
-			LoginContext ctx = service.createLoginContext(securityDomain, user, password);
-			ctx.login();
-			Subject subject = ctx.getSubject();
-			GSSResult result =  Subject.doAs(subject, new GssAction(serviceTicket));
+			
+			// Using SPENGO security domain establish a token and subject.
+			GSSResult result = service.neogitiateGssLogin(securityDomain, serviceTicket);
 			if (result == null) {
 				 throw new LogonException(RuntimePlugin.Event.TEIID40014, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 			}
 			
-			if (result.context.isEstablished()) {
-				Principal principal = null;
-		    	for(Principal p:subject.getPrincipals()) {
-					principal = p;
-					break;
-		    	}
-		    	SecurityHelper securityHelper = service.getSecurityHelper();
-		    	Object securityContext = securityHelper.createSecurityContext(securityDomain, principal, null, subject);
-		    	previous = securityHelper.associateSecurityContext(securityContext);
-				associated = true;
+			if (result.isAuthenticated()) {
+				LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$	
+				connProps.setProperty(TeiidURL.CONNECTION.USER_NAME, result.getUserName());
+		    	this.gssServiceTickets.put(Base64.encodeBytes(MD5(result.getServiceToken())), result.getSecurityContext());
 			}
-			
-			if (!result.context.isEstablished() || !createSession) {
+						
+			// kerberoes (odbc) will always return here from below block
+			if (!result.isAuthenticated() || !createSession) {
 				LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				logonResult.addProperty(ILogon.KRB5TOKEN, result.serviceTicket);
-				logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.context.isEstablished()));
+				logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
+				logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.isAuthenticated()));
 				return logonResult;
 			}		
 			
-			LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$
-			//connProps.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-			LogonResult loginInResult =  logon(connProps, result.serviceTicket);
+			// GSS API (jdbc) will make the session in one single call			
+			connProps.put(ILogon.KRB5TOKEN, result.getServiceToken());
+			LogonResult loginInResult =  logon(connProps);
 			return loginInResult;
 		} catch (LoginException e) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40014, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
-		} finally {
-			if (associated) {
-				service.getSecurityHelper().associateSecurityContext(previous);
-			}
 		}
+	}
+	
+	protected static byte[] MD5(byte[] content) {
+		try {
+			java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5"); //$NON-NLS-1$
+			return md.digest(content);
+		} catch (java.security.NoSuchAlgorithmException e) {
+			return content;
+		}		
 	}
 	
 	private String updateDQPContext(SessionMetadata s) {
