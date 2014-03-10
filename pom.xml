@@ -59,7 +59,7 @@
         <version.cxf>2.6.8</version.cxf>
         <version.org.hibernate>4.1.1.Final</version.org.hibernate>
         <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
-        <cxf.version>2.6.6</cxf.version>
+        <cxf.version>2.6.8</cxf.version>
         <version.accumulo>1.5.0</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
         <version.thrift>0.9.1</version.thrift>

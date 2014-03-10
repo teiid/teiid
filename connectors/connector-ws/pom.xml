@@ -10,7 +10,7 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>Web Service Adapter</name>
     <description>This resource adapter reads data from Web Services</description>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -26,36 +26,38 @@
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
-        </dependency>    
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-  			<artifactId>cxf-rt-frontend-jaxws</artifactId>
-  			<version>${version.cxf}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
-  			<artifactId>cxf-rt-transports-http</artifactId>
-  			<version>${version.cxf}</version>
-            <scope>provided</scope>        
+            <artifactId>cxf-rt-frontend-jaxws</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
-  			<artifactId>cxf-rt-ws-security</artifactId>
-  			<version>${version.cxf}</version>
-            <scope>provided</scope>        
+            <artifactId>cxf-rt-transports-http</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
-  			<artifactId>cxf-rt-ws-policy</artifactId>
-  			<version>${version.cxf}</version>
-            <scope>provided</scope>        
+            <artifactId>cxf-rt-ws-security</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
-          <groupId>org.apache.cxf</groupId>
-          <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-          <version>${version.cxf}</version>
-          <scope>provided</scope> 
-        </dependency>      
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-ws-policy</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -75,7 +77,7 @@
                 <configuration>
                     <classifier>lib</classifier>
                 </configuration>
-            </plugin>        
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-rar-plugin</artifactId>
@@ -154,7 +156,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
         </plugins>
     </build>
 </project>
