@@ -27,4 +27,13 @@
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/webservice/main</outputDirectory>
         </fileSet>
     </fileSets>
+  <dependencySets>
+      <dependencySet>
+          <outputDirectory>${jbossas-module-root}/org/apache/cxf/impl/frontend-jaxrs/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.apache.cxf:cxf-rt-frontend-jaxws</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>    
 </assembly>
