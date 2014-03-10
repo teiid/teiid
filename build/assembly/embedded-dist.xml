@@ -85,94 +85,47 @@
     <!-- **************************************************************************
                         These are built in translators  
          **************************************************************************-->
+    <!-- ******************************************************** 
+        These are built in resource-adapters  
+        *********************************************************-->
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
-
+        
         <includes>
-            <include>org.jboss.teiid.connectors:translator-jdbc</include>
-            <include>org.jboss.teiid.connectors:translator-loopback</include>
-            <include>org.jboss.teiid.connectors:translator-file</include>
-            <include>org.jboss.teiid.connectors:translator-ldap</include>
-            <include>org.jboss.teiid.connectors:translator-salesforce</include>
-            <include>org.jboss.teiid.connectors:salesforce-api</include>
-            <include>org.jboss.teiid.connectors:translator-ws</include>
-            <include>org.jboss.teiid.connectors:translator-olap</include>
-            <include>org.jboss.teiid.connectors:translator-hive</include>
-            <include>org.jboss.teiid.connectors:translator-jpa</include>
-            <include>org.jboss.teiid.connectors:translator-object</include>
-            <include>org.jboss.teiid.connectors:translator-google</include>
-	        <include>org.jboss.teiid.connectors:translator-simpledb</include>
-            <include>org.jboss.teiid.connectors:google-api</include>
-            <include>org.jboss.teiid.connectors:translator-mongodb</include>
-            <include>org.jboss.teiid.connectors:mongodb-api</include>
-            <include>org.jboss.teiid.connectors:translator-accumulo</include>
-            <include>org.jboss.teiid.connectors:translator-solr</include>
+            <include>org.jboss.teiid.connectors:connector-*</include>
         </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>optional</outputDirectory>
+                
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>embedded-dist</attachmentClassifier>
           <fileMode>0644</fileMode>
+          <directoryMode>0755</directoryMode>
         </binaries>
-    </moduleSet>
-
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-cassandra</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>true</useTransitiveDependencies>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>optional</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
+      
     </moduleSet>
     
+    
+    <!-- **************************************************************************
+                        These are built in translators  
+         **************************************************************************-->
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
-
+        
         <includes>
-            <include>org.jboss.teiid.connectors:connector-file</include>
-            <include>org.jboss.teiid.connectors:connector-ldap</include>
-            <include>org.jboss.teiid.connectors:connector-salesforce</include>
-            <include>org.jboss.teiid.connectors:connector-ws</include>
-            <include>org.jboss.teiid.connectors:connector-infinispan</include>
-            <include>org.jboss.teiid.connectors:connector-google</include>
-            <include>org.jboss.teiid.connectors:connector-mongodb</include>
-            <include>org.jboss.teiid.connectors:connector-cassandra</include>
-    		<include>org.jboss.teiid.connectors:connector-simpledb</include>
-            <include>org.jboss.teiid.connectors:connector-accumulo</include>
-            <include>org.jboss.teiid.connectors:connector-solr</include>
+            <include>org.jboss.teiid.connectors:translator-*</include>
         </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <attachmentClassifier>lib</attachmentClassifier>
-          <unpack>false</unpack>
-          <outputDirectory>optional</outputDirectory>
+                
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>embedded-dist</attachmentClassifier>
           <fileMode>0644</fileMode>
+          <directoryMode>0755</directoryMode>
         </binaries>
+      
     </moduleSet>
     
     </moduleSets>  
