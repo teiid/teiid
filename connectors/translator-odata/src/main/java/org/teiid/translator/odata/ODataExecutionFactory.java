@@ -352,7 +352,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     		return new java.sql.Timestamp(((LocalTime)value).toDateTimeToday().getMillis());
     	}
 		if (value instanceof UnsignedByte) {
-			return new Short(((UnsignedByte)value).shortValue());
+			return Short.valueOf(((UnsignedByte)value).shortValue());
 		}
 		return value;
 	}
