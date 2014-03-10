@@ -66,7 +66,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
                 <dependencySet>
                     <outputDirectory>optional</outputDirectory>
@@ -76,7 +75,6 @@
                     <useProjectArtifact>false</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>
             <outputDirectory>lib</outputDirectory>
@@ -120,7 +118,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>optional</outputDirectory>
@@ -144,7 +141,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>optional</outputDirectory>

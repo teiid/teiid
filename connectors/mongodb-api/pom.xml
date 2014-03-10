@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>mongodb-api</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
-    <name>Salesforce API</name>
+    <name>MongoDB API</name>
     <description>The java API for the MongoDB</description>
     <packaging>bundle</packaging>
     <dependencies>

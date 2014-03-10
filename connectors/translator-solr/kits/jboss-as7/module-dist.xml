@@ -34,7 +34,6 @@
          <useProjectArtifact>false</useProjectArtifact>
          <unpack>false</unpack>
          <useTransitiveDependencies>true</useTransitiveDependencies>
-         <useDefaultExcludes>true</useDefaultExcludes>
      </dependencySet>
      <dependencySet>
          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/solr/main</outputDirectory>

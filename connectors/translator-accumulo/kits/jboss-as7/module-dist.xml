@@ -33,7 +33,6 @@
          <useProjectArtifact>false</useProjectArtifact>
          <unpack>false</unpack>
          <useTransitiveDependencies>true</useTransitiveDependencies>
-         <useDefaultExcludes>true</useDefaultExcludes>
      </dependencySet>
      <dependencySet>
          <outputDirectory>${jbossas-module-root}/org/apache/zookeeper/main</outputDirectory>
@@ -43,7 +42,6 @@
          <useProjectArtifact>false</useProjectArtifact>
          <unpack>false</unpack>
          <useTransitiveDependencies>true</useTransitiveDependencies>
-         <useDefaultExcludes>true</useDefaultExcludes>
      </dependencySet>
      <dependencySet>
          <outputDirectory>${jbossas-module-root}/org/apache/thrift/main</outputDirectory>
@@ -53,7 +51,6 @@
          <useProjectArtifact>false</useProjectArtifact>
          <unpack>false</unpack>
          <useTransitiveDependencies>true</useTransitiveDependencies>
-         <useDefaultExcludes>true</useDefaultExcludes>
      </dependencySet>
      <dependencySet>
          <outputDirectory>${jbossas-module-root}/org/apache/accumulo/main</outputDirectory>
@@ -65,7 +62,6 @@
          <useProjectArtifact>false</useProjectArtifact>
          <unpack>false</unpack>
          <useTransitiveDependencies>true</useTransitiveDependencies>
-         <useDefaultExcludes>true</useDefaultExcludes>
      </dependencySet>
      <dependencySet>
          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/accumulo/main</outputDirectory>
