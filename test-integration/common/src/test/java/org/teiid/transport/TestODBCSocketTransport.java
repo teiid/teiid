@@ -22,11 +22,7 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -56,7 +52,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
-import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
@@ -145,7 +140,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(addr.getPort());
 			server = new FakeServer(true);
-			ILogon logon = Mockito.mock(ILogon.class);
+			LogonImpl logon = Mockito.mock(LogonImpl.class);
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");

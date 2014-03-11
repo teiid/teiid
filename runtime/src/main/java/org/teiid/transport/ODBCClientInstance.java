@@ -28,7 +28,6 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.teiid.client.security.ILogon;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -50,7 +49,7 @@ public class ODBCClientInstance implements ChannelListener{
 	private ReflectionHelper serverProxy = new ReflectionHelper(ODBCServerRemote.class);
 	private ConcurrentLinkedQueue<PGRequest> messageQueue = new ConcurrentLinkedQueue<PGRequest>();
 	
-	public ODBCClientInstance(final ObjectChannel channel, TeiidDriver driver, ILogon logonService) {
+	public ODBCClientInstance(final ObjectChannel channel, TeiidDriver driver, LogonImpl logonService) {
 		this.client = (ODBCClientRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCClientRemote.class}, new InvocationHandler() {
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {

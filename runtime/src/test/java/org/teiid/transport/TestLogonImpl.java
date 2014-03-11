@@ -23,8 +23,7 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -77,7 +76,7 @@ public class TestLogonImpl {
 	@Test
 	public void testLogonResult() throws Exception {
 		SessionService ssi = Mockito.mock(SessionService.class);
-		Mockito.stub(ssi.getAuthenticationType(Mockito.anyString(), Mockito.anyString(), Mockito.any(AuthenticationType.class))).toReturn(AuthenticationType.USERPASSWORD);
+		Mockito.stub(ssi.getAuthenticationType(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).toReturn(AuthenticationType.USERPASSWORD);
 		Mockito.stub(ssi.getSecurityDomain(Mockito.anyString(), Mockito.anyString())).toReturn("SC");
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		String userName = "Fred"; //$NON-NLS-1$
@@ -105,6 +104,7 @@ public class TestLogonImpl {
 	public void testLogonAuthenticationType() throws Exception {
 		VDBRepository repo = Mockito.mock(VDBRepository.class);
 		VDBMetaData vdb = new VDBMetaData();
+		vdb.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
 		vdb.setName("name");
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
@@ -122,7 +122,7 @@ public class TestLogonImpl {
 		assertEquals("fred", result.getUserName());
 		
 		// if no preference then choose USERPASSWORD
-		ssi.setAuthenticationType(AuthenticationType.ANY); // this is transport default		
+		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default		
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		p = buildProperties("fred", "name");		
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
@@ -130,7 +130,7 @@ public class TestLogonImpl {
 		assertEquals("fred", result.getUserName());
 
 		// if user name is set to "GSS", then the preference is set to "GSS"
-		ssi.setAuthenticationType(AuthenticationType.ANY); // this is transport default		
+		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default		
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		p = buildProperties("GSS", "name");		
 		FakeGssLogonImpl fimpl = new FakeGssLogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
@@ -161,7 +161,7 @@ public class TestLogonImpl {
 		ssi.setAuthenticationType(AuthenticationType.GSS); 
 		
 		// default transport - what Teiid has before TEIID-2863
-		addVdb(repo, "name", "SC/USERPASSWORD");		
+		addVdb(repo, "name", "SC", AuthenticationType.USERPASSWORD.name());		
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		Properties p = buildProperties("fred", "name");		
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
@@ -169,7 +169,8 @@ public class TestLogonImpl {
 		assertEquals("fred", result.getUserName());
 		
 		// if no preference then choose USERPASSWORD
-		addVdb(repo, "name1", "SC");		
+		VDBMetaData metadata = addVdb(repo, "name1", "SC", AuthenticationType.USERPASSWORD.name());
+		metadata.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		p = buildProperties("fred", "name1");		
@@ -189,14 +190,13 @@ public class TestLogonImpl {
 			p = buildProperties("GSS", "name");		
 			result = impl.logon(p);
 			assertEquals("GSS", result.getUserName());
-			fail("should have failed due server does not support GSS");
 		} catch(LogonException e) {
 			
 		}
 				
 		// if the transport default defined as GSS, then preference is USERPASSWORD, throw exception
 		try {
-			addVdb(repo, "name2", "SC/GSS");		
+			addVdb(repo, "name2", "SC", "GSS");		
 			DQPWorkContext.setWorkContext(new DQPWorkContext());
 			impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 			p = buildProperties("fred", "name2");		
@@ -216,13 +216,15 @@ public class TestLogonImpl {
 		return p;
 	}
 
-	private void addVdb(VDBRepository repo, String name, String sc) {
+	private VDBMetaData addVdb(VDBRepository repo, String name, String sc, String authenticationType) {
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName(name);
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
 		Mockito.stub(repo.getLiveVDB(name, 1)).toReturn(vdb);
 		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, sc);
+		vdb.addProperty(SessionServiceImpl.AUTHENTICATION_TYPE_PROPERTY, authenticationType);
+		return vdb;
 	}	
 	
 	class FakeGssLogonImpl extends LogonImpl {

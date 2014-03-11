@@ -23,19 +23,5 @@
 package org.teiid.net.socket;
 
 public enum AuthenticationType {
-	USERPASSWORD,GSS,ANY;
-	
-	public static AuthenticationType type(String str) {
-		if (str != null && str.equalsIgnoreCase(AuthenticationType.GSS.name())) {
-			return AuthenticationType.GSS;
-		}
-		return AuthenticationType.ANY;
-	}
-	
-	public static AuthenticationType prefer(String str) {
-		if (str != null && str.equalsIgnoreCase(AuthenticationType.GSS.name())) {
-			return AuthenticationType.GSS;
-		}
-		return AuthenticationType.USERPASSWORD;
-	}	
+	USERPASSWORD,GSS;
 }

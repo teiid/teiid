@@ -21,10 +21,7 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
-import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
-import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
-import static org.teiid.odbc.PGUtil.convertType;
+import static org.teiid.odbc.PGUtil.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -53,6 +50,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.ResultSetImpl;
@@ -66,6 +64,7 @@ import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
 import org.teiid.transport.ODBCClientInstance;
 import org.teiid.transport.PgBackendProtocol;
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
@@ -176,9 +175,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private Map<String, Prepared> preparedMap = Collections.synchronizedMap(new HashMap<String, Prepared>());
 	private Map<String, Portal> portalMap = Collections.synchronizedMap(new HashMap<String, Portal>());
 	private Map<String, Cursor> cursorMap = Collections.synchronizedMap(new HashMap<String, Cursor>());
-	private ILogon logon;
+	private	LogonImpl logon;
 	
-	public ODBCServerRemoteImpl(ODBCClientInstance client, TeiidDriver driver, ILogon logon) {
+	public ODBCServerRemoteImpl(ODBCClientInstance client, TeiidDriver driver, LogonImpl logon) {
 		this.driver = driver;
 		this.client = client.getClient();
 		this.logon = logon;
@@ -190,13 +189,33 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		this.client.initialized(this.props);
 
 		String user = props.getProperty("user"); //$NON-NLS-1$
-		AuthenticationType authType = AuthenticationType.prefer(user);
+		String database = props.getProperty("database");
+		
+		AuthenticationType authType = null;
+		try {
+			authType = getAuthenticationType(user, database);
+		} catch (LogonException e) {
+			errorOccurred(e);
+			terminate();
+		}
+		
 		if (authType.equals(AuthenticationType.USERPASSWORD)) {
 			this.client.useClearTextAuthentication();
 		}
 		else if (authType.equals(AuthenticationType.GSS)) {
 			this.client.useAuthenticationGSS();
+		} else {
+			throw new AssertionError("Unsupported Authentication Type"); //$NON-NLS-1$
 		}
+	}
+
+	private AuthenticationType getAuthenticationType(String user,
+			String database) throws LogonException {
+		SessionService ss = this.logon.getSessionService();
+		if (ss == null) {
+			return AuthenticationType.USERPASSWORD;
+		}
+		return ss.getAuthenticationType(database, null, user);
 	}
 
 	@Override
@@ -205,7 +224,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			java.util.Properties info = new java.util.Properties();
 			info.put("user", user); //$NON-NLS-1$
 			
-			AuthenticationType authType = AuthenticationType.prefer(user);
+			AuthenticationType authType = getAuthenticationType(user, databaseName);
 			
 			String password = null; 
 			if (authType.equals(AuthenticationType.USERPASSWORD)) {
@@ -222,6 +241,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	            	this.client.authenticationGSSContinue(serviceToken);
 	            	return;            		
             	}
+			} else {
+				throw new AssertionError("Unsupported Authentication Type"); //$NON-NLS-1$
 			}
 			
 			// this is local connection

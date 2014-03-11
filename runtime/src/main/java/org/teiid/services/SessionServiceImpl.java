@@ -26,8 +26,16 @@ package org.teiid.services;
 import java.io.IOException;
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -43,6 +51,7 @@ import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.deployers.VDBRepository;
@@ -64,7 +73,10 @@ import org.teiid.security.SecurityHelper;
  * This class serves as the primary implementation of the Session Service.
  */
 public class SessionServiceImpl implements SessionService {
+	public static final String GSS_PATTERN_PROPERTY = "gss-pattern"; //$NON-NLS-1$
+	public static final String PASSWORD_PATTERN_PROPERTY = "password-pattern"; //$NON-NLS-1$
 	public static final String SECURITY_DOMAIN_PROPERTY = "security-domain"; //$NON-NLS-1$
+	public static final String AUTHENTICATION_TYPE_PROPERTY = "authentication-type"; //$NON-NLS-1$
 	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
@@ -410,38 +422,6 @@ public class SessionServiceImpl implements SessionService {
 		return securityHelper;
 	}
 
-    protected Collection<String> getDomainsForUser(List<String> domains, String username) {
-    	// If username is null, return all domains
-        if (username == null) {
-            return domains;
-        }  
-        
-        String domain = getDomainName(username);
-        
-        if (domain == null) {
-        	return domains;
-        }
-        
-        // ------------------------------------------
-        // Handle usernames having @ sign
-        // ------------------------------------------
-        String domainHolder = null;
-        for (String d:domains) {
-        	if(d.equalsIgnoreCase(domain)) {
-        		domainHolder = d;
-        		break;
-        	}        	
-        }
-        
-        if (domainHolder == null) {
-            return Collections.emptyList();
-        }
-        
-        LinkedList<String> result = new LinkedList<String>();
-        result.add(domainHolder);
-        return result;
-    }	
-    
     protected static String getBaseUsername(String username) {
         if (username == null) {
             return username;
@@ -493,58 +473,36 @@ public class SessionServiceImpl implements SessionService {
     }
     
 	@Override
-	public AuthenticationType getAuthenticationType(String vdbName, String version, AuthenticationType preferType) {
+	public AuthenticationType getAuthenticationType(String vdbName, String version, String userName) throws LogonException {
 		if (vdbName != null) {
-	    	try {    		
-				VDB vdb = getActiveVDB(vdbName, version);
-				String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);
-				if (typeProperty != null) {
-					return selectAuthType(preferType, parseAuthType(typeProperty));
-				}
-	    	} catch (SessionServiceException e) {
-				// ignore and return default, this only occur if the name and version are wrong 
-			}			
+			VDB vdb;
+			try {
+				vdb = getActiveVDB(vdbName, version);
+			} catch (SessionServiceException e) {
+				throw new LogonException(e);
+			}
+			
+			String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
+			
+			//TODO: cache the patterns
+			
+			if (gssPattern != null && Pattern.matches(gssPattern, userName)) {
+				return AuthenticationType.GSS;
+			}
+			
+			String passwordPattern = vdb.getPropertyValue(PASSWORD_PATTERN_PROPERTY);
+			
+			if (passwordPattern != null && Pattern.matches(passwordPattern, userName)) {
+				return AuthenticationType.USERPASSWORD;
+			}
+			
+			String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
+			if (typeProperty != null) {
+				return AuthenticationType.valueOf(typeProperty);
+			}
 		}
-		return selectAuthType(preferType, this.defaultAuthenticationType);
+		return this.defaultAuthenticationType;
 	}
-
-	private AuthenticationType selectAuthType(AuthenticationType preferType, AuthenticationType authType) {
-		if (!authType.equals(AuthenticationType.ANY)) {
-			return authType;
-		}
-
-		if (preferType.equals(AuthenticationType.ANY)) {
-			return AuthenticationType.USERPASSWORD;
-		}
-		
-		return preferType;
-	}    
-	
-	/**
-	 * Parse Security-Domain String. Normal form: "security-domain/authentication-type", if authentication type
-	 * omitted it is considered as USERPASSWORD 
-	 */
-	private AuthenticationType parseAuthType(String str) {
-		str = str.trim();
-		int idx = str.indexOf('/');
-		if (idx == -1) {
-			return AuthenticationType.ANY;
-		}
-		return AuthenticationType.valueOf(str.substring(idx+1));		
-	}
-	
-	/**
-	 * Parse Security-Domain String. Normal form: "security-domain/authentication-type", if authentication type
-	 * omitted it is considered as USERPASSWORD 
-	 */
-	private String parseSecurityDomain(String str) {
-		str = str.trim();
-		int idx = str.indexOf('/');
-		if (idx == -1) {
-			return str;
-		}
-		return str.substring(0, idx);		
-	}	
 
 	@Override
 	public String getSecurityDomain(String vdbName, String version) {
@@ -553,7 +511,7 @@ public class SessionServiceImpl implements SessionService {
 				VDB vdb = getActiveVDB(vdbName, version);
 				String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
 				if (typeProperty != null) {
-					return parseSecurityDomain(typeProperty);
+					return typeProperty;
 				}
 			} catch (SessionServiceException e) {
 				// ignore and return default, this only occur if the name and version are wrong 
@@ -567,4 +525,8 @@ public class SessionServiceImpl implements SessionService {
 		// must be overridden in platform specific security domain
 		return null;
 	}    
+	
+	public AuthenticationType getDefaultAuthenticationType() {
+		return defaultAuthenticationType;
+	}
 }
