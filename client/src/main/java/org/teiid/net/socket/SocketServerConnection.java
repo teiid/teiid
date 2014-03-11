@@ -51,7 +51,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.gss.MakeGSS;
-import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -172,16 +171,25 @@ public class SocketServerConnection implements ServerConnection {
 		
 		updateConnectionProperties(connProps, instance.getLocalAddress(), true);
 
-		String user = connProps.getProperty(BaseDataSource.USER_NAME);
-		AuthenticationType authType  = AuthenticationType.prefer(user);
-		
 		LogonResult newResult = null;
-		if (AuthenticationType.USERPASSWORD.equals(authType)) {
+
+		// - if gss
+		if (connProps.contains(TeiidURL.CONNECTION.JAAS_NAME)) {
+			newResult = MakeGSS.authenticate(newLogon, connProps);
+		} else {
 			newResult = newLogon.logon(connProps);
 		}
-		else if (AuthenticationType.GSS.equals(authType)) {
-			newResult = MakeGSS.authenticate(newLogon, connProps);
-		}		
+
+		AuthenticationType type = (AuthenticationType) newResult.getProperty("authType");
+		
+		if (type != null) {
+			//server has issued an additional challange
+			if (type == AuthenticationType.GSS) {
+				newResult = MakeGSS.authenticate(newLogon, connProps);
+			} else {
+				//TODO: throw exception
+			}
+		}
 		
 		if (logoff) {
 			if ("07.03".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$

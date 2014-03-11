@@ -41,6 +41,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.service.GSSResult;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
@@ -71,43 +72,51 @@ public class LogonImpl implements ILogon {
 		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
 		String user = connProps.getProperty(BaseDataSource.USER_NAME);
 		
-		AuthenticationType authType = checkAuthTypeSupported(vdbName,vdbVersion, user);
+		AuthenticationType authType = this.service.getAuthenticationType(vdbName, vdbVersion, user);
 		
 		// the presence of the KRB5 token take as GSS based login.
-		if (AuthenticationType.GSS.equals(authType)	&& connProps.get(ILogon.KRB5TOKEN) != null) {
-			Object previous = null;
-			boolean assosiated = false;
-			SecurityHelper securityHelper = service.getSecurityHelper();
-			try {
-				byte[] krb5Token = (byte[])connProps.get(ILogon.KRB5TOKEN);
-				Object securityContext = this.gssServiceTickets.remove(Base64.encodeBytes(MD5(krb5Token)));
-				if (securityContext == null) {
-					 throw new LogonException(RuntimePlugin.Event.TEIID40054, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40054));
-				}				
-				previous = securityHelper.associateSecurityContext(securityContext);
-				assosiated = true;
-				return logon(connProps, krb5Token, AuthenticationType.GSS);
-			} finally {
-				if (assosiated) {
-					securityHelper.associateSecurityContext(previous);
+		if (connProps.get(ILogon.KRB5TOKEN) != null) {
+			if (authType == AuthenticationType.GSS) {
+				Object previous = null;
+				boolean assosiated = false;
+				SecurityHelper securityHelper = service.getSecurityHelper();
+				try {
+					byte[] krb5Token = (byte[])connProps.get(ILogon.KRB5TOKEN);
+					Object securityContext = this.gssServiceTickets.remove(Base64.encodeBytes(MD5(krb5Token)));
+					if (securityContext == null) {
+						 throw new LogonException(RuntimePlugin.Event.TEIID40054, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40054));
+					}				
+					previous = securityHelper.associateSecurityContext(securityContext);
+					assosiated = true;
+					return logon(connProps, krb5Token, AuthenticationType.GSS);
+				} finally {
+					if (assosiated) {
+						securityHelper.associateSecurityContext(previous);
+					}
 				}
+			} else {
+				//shouldn't really get here, but we'll try user name password anyway
 			}
-		}		
+		} else if (authType == AuthenticationType.GSS) {
+			Version v = DQPWorkContext.getWorkContext().getClientVersion();
+			//send a login result with a GSS challange
+			if (v.compareTo(Version.EIGHT_7) >= 0) {
+				LogonResult result = new LogonResult();
+				result.addProperty("authType", authType); //$NON-NLS-1$
+				return result;
+			}
+			//throw an exception
+			throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
+		}
+		
+		//default to username password
+		
 		if (!AuthenticationType.USERPASSWORD.equals(authType)) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
 		}		
 		return logon(connProps, null, AuthenticationType.USERPASSWORD);
 	}
 
-	private AuthenticationType checkAuthTypeSupported(String vdbName, String vdbVersion, String user) throws LogonException {
-		AuthenticationType preferredAuthType = 	AuthenticationType.prefer(user);
-		AuthenticationType authType = this.service.getAuthenticationType(vdbName, vdbVersion, preferredAuthType);		
-		if (preferredAuthType != null && !preferredAuthType.equals(authType) && !preferredAuthType.equals(AuthenticationType.ANY)) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40118, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40118, preferredAuthType.name()));
-		}
-		return authType;
-	}
-	
 	private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket, AuthenticationType authType) throws LogonException {
 
 		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
@@ -149,9 +158,9 @@ public class LogonImpl implements ILogon {
 		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
 		String user = connProps.getProperty(BaseDataSource.USER_NAME);
 		
-		AuthenticationType authType = checkAuthTypeSupported(vdbName,vdbVersion, user);
+		AuthenticationType authType = this.service.getAuthenticationType(vdbName, vdbVersion, user);
 		
-		if (!AuthenticationType.GSS.equals(authType) || !AuthenticationType.ANY.equals(authType)) {
+		if (!AuthenticationType.GSS.equals(authType)) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, "Kerberos")); //$NON-NLS-1$
 		}
 		
@@ -262,5 +271,9 @@ public class LogonImpl implements ILogon {
 			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40064);
 		}
 		this.updateDQPContext(sessionInfo);
+	}
+	
+	public SessionService getSessionService() {
+		return service;
 	}
 }

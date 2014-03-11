@@ -73,7 +73,7 @@ import org.teiid.transport.SocketListener;
 import org.teiid.transport.WireProtocol;
 
 public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
-	private transient ILogon logon;
+	private transient LogonImpl logon;
 	private SocketConfiguration socketConfig;
 	final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
 	private String authenticationDomain;	
@@ -128,7 +128,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.sessionService.setSecurityHelper(this.getSecurityHelper());
 		this.sessionService.setAuthenticationType(getAuthenticationType());
 		this.sessionService.start();
-		this.setAuthenticationType(this.sessionService.getAuthenticationType(null, null, null));
+		this.setAuthenticationType(this.sessionService.getDefaultAuthenticationType());
 		
     	// create the necessary services
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$

@@ -142,7 +142,7 @@ class TransportAdd extends AbstractAddStepHandler {
    			transport.setAuthenticationType(AuthenticationType.valueOf(AUTHENTICATION_TYPE_ATTRIBUTE.asString(operation, context)));
    		}
    		else {
-   			transport.setAuthenticationType(AuthenticationType.ANY);
+   			transport.setAuthenticationType(AuthenticationType.USERPASSWORD);
    		}
    		
    		if (PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.isDefined(operation, context)) {
@@ -157,11 +157,15 @@ class TransportAdd extends AbstractAddStepHandler {
     	transportBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, transport.getVdbRepositoryInjector());
     	transportBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class, transport.getDqpInjector());
 
-    	
-        // add security domains
-        if (securityDomain != null) {
-        	LogManager.logInfo(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50011, securityDomain, transportName));
-        	transportBuilder.addDependency(ServiceName.JBOSS.append("security", "security-domain", securityDomain), SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, securityDomain)); //$NON-NLS-1$ //$NON-NLS-2$
+    	ServiceName scParent = ServiceName.JBOSS.append("security", "security-domain"); //$NON-NLS-1$ //$NON-NLS-2$
+    	List<ServiceName> names = context.getServiceRegistry(false).getServiceNames();
+
+    	// add security domains as dependencies
+        for (ServiceName name:names) {
+    		if (scParent.isParentOf(name)) {
+	        	LogManager.logDetail(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50011, name.getSimpleName(), transportName));
+	        	transportBuilder.addDependency(name, SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, name.getSimpleName()));
+    		}
         }
         
         transportBuilder.setInitialMode(ServiceController.Mode.ACTIVE);

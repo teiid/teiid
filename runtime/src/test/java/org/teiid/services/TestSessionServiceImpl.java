@@ -1,7 +1,6 @@
 package org.teiid.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -163,27 +162,27 @@ public class TestSessionServiceImpl {
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
 		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
-		
+		vdb.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "x");
 		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default
 
-		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name", "1", AuthenticationType.GSS));
-		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name", "1", AuthenticationType.USERPASSWORD));
-		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name", "1", AuthenticationType.ANY));
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name", "1", "x"));
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name", "1", "y"));
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name", "1", "z"));
 		
 		// testing specific domain, enforcing 
 		vdb = new VDBMetaData();
 		vdb.setName("name1");
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
-		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain/GSS");
-		
+		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
+		vdb.addProperty(SessionServiceImpl.AUTHENTICATION_TYPE_PROPERTY, "GSS");
 		Mockito.stub(repo.getLiveVDB("name1", 1)).toReturn(vdb);
 
-		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", AuthenticationType.GSS));
-		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", AuthenticationType.USERPASSWORD));
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", "x"));
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", "y"));
 		
 		// testing transport default
 		vdb = new VDBMetaData();
@@ -193,12 +192,12 @@ public class TestSessionServiceImpl {
 		
 		Mockito.stub(repo.getLiveVDB("name2", 1)).toReturn(vdb);
 
-		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", AuthenticationType.GSS));
-		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", AuthenticationType.ANY));		
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", "x"));
+		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", "y"));		
 		
-		ssi.setAuthenticationType(AuthenticationType.ANY); // this is transport default
-		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name2", "1", AuthenticationType.GSS));
-		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", AuthenticationType.ANY));		
+		ssi.setAuthenticationType(AuthenticationType.GSS); // this is transport default
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name2", "1", "x"));
+		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name2", "1", "y"));		
 		
 	}	
 	

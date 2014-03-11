@@ -30,6 +30,7 @@ import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
@@ -120,7 +121,7 @@ public interface SessionService {
 	
 	LoginContext createLoginContext(String securityDomain, String user, String password) throws LoginException;
 
-	AuthenticationType getAuthenticationType(String vdbName, String version, AuthenticationType preferType);
+	AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
 	
 	String getSecurityDomain(String vdbName, String version);
 	

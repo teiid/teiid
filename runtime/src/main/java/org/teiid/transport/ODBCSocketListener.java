@@ -25,7 +25,6 @@ import java.net.InetSocketAddress;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.net.socket.ObjectChannel;
@@ -34,9 +33,9 @@ public class ODBCSocketListener extends SocketListener {
 	private int maxBufferSize = Integer.parseInt(System.getProperty("org.teiid.ODBCPacketSize", "307200")); //$NON-NLS-1$ //$NON-NLS-2$
 	private int maxLobSize;
 	private TeiidDriver driver;
-	private ILogon logonService;
+	private LogonImpl logonService;
 	
-	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, ILogon logon, TeiidDriver driver) {
+	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, LogonImpl logon, TeiidDriver driver) {
 		//the clientserviceregistry isn't actually used by ODBC 
 		super(address, config, csr, storageManager);
 		this.maxLobSize = maxLobSize;
