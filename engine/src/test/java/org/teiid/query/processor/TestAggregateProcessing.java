@@ -50,6 +50,7 @@ import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -1057,6 +1058,31 @@ public class TestAggregateProcessing {
     	
     	List[] expected = new List[] { 
                 Arrays.asList("a", "b"),
+            };    
+    	
+    	helpProcess(plan, dataManager, expected);
+    }
+	
+	//TODO: the rewriter may need to correct this case, but at least the grouping node can
+	//now handle it
+	@Test public void testDuplicateGroupBy() {
+    	Command command = helpParse("select e2 from pm1.g1 group by e2, e2"); //$NON-NLS-1$
+    	
+    	CapabilitiesFinder capFinder = TestOptimizer.getGenericFinder();
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", //$NON-NLS-1$ 
+    			new List[] {
+    				Arrays.asList(1), //$NON-NLS-1$
+    				Arrays.asList(2), //$NON-NLS-1$
+    				Arrays.asList(2), //$NON-NLS-1$
+    			});
+    	
+    	ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
+    	
+    	List[] expected = new List[] { 
+                Arrays.asList(1),
+                Arrays.asList(2),
             };    
     	
     	helpProcess(plan, dataManager, expected);

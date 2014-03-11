@@ -365,15 +365,17 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         	}
         	int[] sortIndexes = new int[size];
         	for (int i = 0; i < size; i++) {
+        		int index = i;
         		if (i < this.orderBy.size()) {
         			OrderByItem item = this.orderBy.get(i);
         			nullOrdering.add(item.getNullOrdering());
         			sortTypes.add(item.isAscending());
+        			index = collectedExpressions.get(SymbolMap.getExpression(item.getSymbol()));
         		} else {
         			nullOrdering.add(null);
         			sortTypes.add(OrderBy.ASC);
         		}
-        		sortIndexes[i] = i; 
+        		sortIndexes[i] = index; 
         	}
         	this.indexes = Arrays.copyOf(sortIndexes, orderBy.size());
         	if (rollup) {
