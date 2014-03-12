@@ -1,0 +1,44 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+ <id>jboss-as7-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+    <fileSet>
+        <directory>kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+        <dependencySet>
+          <outputDirectory>${jbossas-module-root}/org/olap4j/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.olap4j:olap4j</include>
+              <include>org.olap4j:olap4j-xmla</include>
+          </includes>
+      </dependencySet>
+      
+      <dependencySet>
+          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/olap/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-olap</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>
+
+
+</assembly>

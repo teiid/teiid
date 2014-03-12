@@ -1,0 +1,40 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>embedded-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+    <fileSet>
+        <directory>kits/embedded</directory>
+        <outputDirectory>/</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+      <dependencySet>
+            <outputDirectory>optional/google</outputDirectory>
+            <includes>
+                <include>org.jboss.teiid.connectors:google-api</include>
+                <include>org.jboss.teiid.connectors.google:gdata-core</include>
+                <include>org.jboss.teiid.connectors.google:gdata-spreadsheet</include>
+            </includes>        
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+      </dependencySet>  
+     <dependencySet>
+         <outputDirectory>optional/google</outputDirectory>
+         <unpack>false</unpack>
+         <useTransitiveDependencies>false</useTransitiveDependencies>
+     </dependencySet>
+  </dependencySets>
+    
+</assembly>

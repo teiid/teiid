@@ -1,0 +1,38 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>embedded-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+    <fileSet>
+        <directory>kits/embedded</directory>
+        <outputDirectory>/</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+    <dependencySet>   
+      <outputDirectory>optional/salesforce</outputDirectory>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+      <includes>
+          <include>com.force.api:force-wsc</include>
+      </includes>       
+    </dependencySet>   
+     <dependencySet>
+         <outputDirectory>optional/salesforce</outputDirectory>
+         <unpack>false</unpack>
+         <useTransitiveDependencies>false</useTransitiveDependencies>
+     </dependencySet>
+  </dependencySets>
+    
+</assembly>
