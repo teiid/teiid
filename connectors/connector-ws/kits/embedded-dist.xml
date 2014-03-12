@@ -17,15 +17,25 @@
             <includes>
                 <include>**/*</include>
             </includes>
-            <excludes>
-                <exclude>module-dist.xml</exclude>
-            </excludes>
         </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/rar-unpack</directory>
+            <outputDirectory>optional/webservice</outputDirectory>
+            <includes>
+                <include>**/cxf-*</include>
+                <include>**/jaxb-*</include>
+                <include>**/jsr311-*</include>
+                <include>**/stax2-*</include>
+                <include>**/woodstox-*</include>
+                <include>**/wsdl4j-*</include>
+            </includes>           
+        </fileSet>        
     </fileSets>
+    
     <files>
         <file>
             <source>${project.build.directory}/${project.artifactId}-${project.version}-lib.jar</source>
-            <outputDirectory>optional/accumulo</outputDirectory>
+            <outputDirectory>optional/webservice</outputDirectory>
         </file>
     </files>
 
