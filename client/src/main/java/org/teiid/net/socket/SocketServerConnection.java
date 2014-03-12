@@ -180,14 +180,14 @@ public class SocketServerConnection implements ServerConnection {
 			newResult = newLogon.logon(connProps);
 		}
 
-		AuthenticationType type = (AuthenticationType) newResult.getProperty("authType");
+		AuthenticationType type = (AuthenticationType) newResult.getProperty(ILogon.AUTH_TYPE);
 		
 		if (type != null) {
 			//server has issued an additional challange
 			if (type == AuthenticationType.GSS) {
 				newResult = MakeGSS.authenticate(newLogon, connProps);
 			} else {
-				//TODO: throw exception
+				throw new LogonException(JDBCPlugin.Event.TEIID20034, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20034, type));
 			}
 		}
 		

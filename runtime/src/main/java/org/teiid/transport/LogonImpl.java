@@ -102,7 +102,7 @@ public class LogonImpl implements ILogon {
 			//send a login result with a GSS challange
 			if (v.compareTo(Version.EIGHT_7) >= 0) {
 				LogonResult result = new LogonResult();
-				result.addProperty("authType", authType); //$NON-NLS-1$
+				result.addProperty(ILogon.AUTH_TYPE, authType); 
 				return result;
 			}
 			//throw an exception
