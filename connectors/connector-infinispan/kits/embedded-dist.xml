@@ -17,15 +17,12 @@
             <includes>
                 <include>**/*</include>
             </includes>
-            <excludes>
-                <exclude>module-dist.xml</exclude>
-            </excludes>
         </fileSet>
     </fileSets>
     <files>
         <file>
             <source>${project.build.directory}/${project.artifactId}-${project.version}-lib.jar</source>
-            <outputDirectory>optional/webservice</outputDirectory>
+            <outputDirectory>optional/infinispan</outputDirectory>
         </file>
     </files>
 

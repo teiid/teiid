@@ -88,7 +88,7 @@
                 <executions>
                     <execution>
                         <id>unpack</id>
-                        <phase>package</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
@@ -111,8 +111,8 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>kits/jboss-as7/module-dist.xml</descriptor>
-                        <descriptor>kits/embedded/module-dist.xml</descriptor>
+                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

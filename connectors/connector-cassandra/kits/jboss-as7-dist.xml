@@ -18,13 +18,11 @@
             <includes>
                 <include>**/*</include>
             </includes>
-            <excludes>
-                <exclude>module-dist.xml</exclude>
-            </excludes>
         </fileSet>
         <fileSet>
             <directory>${project.build.directory}/rar-unpack</directory>
-            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/salesforce/main</outputDirectory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/cassandra/main</outputDirectory>
         </fileSet>
     </fileSets>
+
 </assembly>
