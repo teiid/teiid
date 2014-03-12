@@ -1,0 +1,43 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>jboss-as7-dist</id> 
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+    <fileSet>
+        <directory>kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+      <dependencySet>
+            <includes>
+                <include>org.jboss.teiid.connectors:google-api</include>
+                <include>org.jboss.teiid.connectors.google:gdata-core</include>
+                <include>org.jboss.teiid.connectors.google:gdata-spreadsheet</include>
+            </includes>        
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/google/api/main</outputDirectory>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+      </dependencySet>
+      <dependencySet>
+          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/google/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-google</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>
+    
+</assembly>

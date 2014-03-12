@@ -1,0 +1,43 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>embedded-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+    <fileSet>
+        <directory>kits/embedded</directory>
+        <outputDirectory>/</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>optional/cassandra</outputDirectory>
+      <excludes>
+        <exclude>org.slf4j:slf4j-api</exclude>
+        <exclude>org.codehaus.jackson:jackson-core-asl</exclude>
+        <exclude>org.codehaus.jackson:jackson-mapper-asl</exclude>
+        <exclude>com.google.guava:guava</exclude>
+      </excludes>
+      <useProjectArtifact>false</useProjectArtifact>
+      <unpack>false</unpack>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+    </dependencySet>  
+     <dependencySet>
+         <outputDirectory>optional/cassandra</outputDirectory>
+         <unpack>false</unpack>
+         <useTransitiveDependencies>false</useTransitiveDependencies>
+     </dependencySet>
+  </dependencySets>
+    
+</assembly>

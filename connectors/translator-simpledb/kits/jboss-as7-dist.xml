@@ -1,0 +1,42 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+ <id>jboss-as7-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+    <fileSet>
+        <directory>kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+      <dependencySet>      
+          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/simpledb/api/main</outputDirectory>
+          <useTransitiveDependencies>true</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:simpledb-api</include>
+              <include>com.amazonaws:aws-java-sdk</include>
+          </includes>          
+      </dependencySet>
+      <dependencySet>
+          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/simpledb/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-simpledb</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>
+  
+</assembly>
