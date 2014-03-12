@@ -52,7 +52,7 @@
                 <executions>
                     <execution>
                         <id>build_rar</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>rar</goal>
                         </goals>
@@ -88,7 +88,7 @@
                 <executions>
                     <execution>
                         <id>unpack</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
@@ -118,7 +118,7 @@
                 <executions>
                     <execution>
                         <id>create-assemblies</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
