@@ -234,6 +234,23 @@ public class TestMongoDBQueryExecution {
 	}	
 	
 	@Test // one-2-one
+	public void testSelectONE_TO_ONE() throws Exception {
+		String query = "SELECT c.name, a.zip " +
+				"FROM customer c join address a " +
+				"on c.customer_id=a.cust_id";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 2);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$name");
+	    result.append( "_m1","$address.zip");
+
+		Mockito.verify(dbCollection).aggregate(
+						new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true"))),
+						new BasicDBObject("$project", result));
+	}	
+	
+	@Test // one-2-one
 	public void testSelectMergedWithNOWhere_one_to_one() throws Exception {
 		String query = "SELECT cust_id, zip FROM Address";
 
@@ -626,4 +643,233 @@ public class TestMongoDBQueryExecution {
 		BasicDBObject ifnull = new BasicDBObject("$ifNull", exprs); //$NON-NLS-1$
 		return ifnull;
 	}    
+	
+	@Test
+	public void testSimpleGroupBy() throws Exception {
+		String query = "SELECT Country FROM Customers GROUP BY Country";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$_id._c0");
+
+		Mockito.verify(dbCollection).aggregate(
+						new BasicDBObject("$group", new BasicDBObject("_id", new BasicDBObject("_c0", "$Country"))),
+						new BasicDBObject("$project", result));
+	}
+	
+	@Test
+	public void testMultipleGroupBy() throws Exception {
+		String query = "SELECT Country,City FROM Customers GROUP BY Country,City";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+
+	    BasicDBObject project = new BasicDBObject();
+	    project.append( "_m0","$_id._c0");
+	    project.append( "_m1","$_id._c1");
+
+	    BasicDBObject group = new BasicDBObject();
+	    group.append( "_c0","$Country");
+	    group.append( "_c1","$City");
+	    	    
+		Mockito.verify(dbCollection).aggregate(
+						new BasicDBObject("$group", new BasicDBObject("_id", group)),
+						new BasicDBObject("$project", project));
+	}	
+	
+	@Test
+	public void testDistinctSingle() throws Exception {
+		String query = "SELECT DISTINCT Country FROM Customers";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$_id._m0");
+
+		Mockito.verify(dbCollection).aggregate(
+						new BasicDBObject("$group", new BasicDBObject("_id", new BasicDBObject("_m0", "$Country"))),
+						new BasicDBObject("$project", result));
+	}	
+	
+	@Test
+	public void testDistinctMulti() throws Exception {
+		String query = "SELECT DISTINCT Country, City FROM Customers";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$_id._m0");
+	    result.append( "_m1","$_id._m1");
+	    
+	    BasicDBObject group = new BasicDBObject();
+	    group.append( "_m0","$Country");
+	    group.append( "_m1","$City");
+	    
+		Mockito.verify(dbCollection).aggregate(
+						new BasicDBObject("$group", new BasicDBObject("_id", group)),
+						new BasicDBObject("$project", result));
+	}	
+	
+    @Test // embedded means always nested as doc not as array 
+    public void testONE_TO_ONE_WithGroupBy()  throws Exception {
+		String query = "SELECT c.name, a.zip " +
+				"FROM customer c join address a " +
+				"on c.customer_id=a.cust_id " +
+				"GROUP BY c.name, a.zip";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+
+	    BasicDBObject project = new BasicDBObject();
+	    project.append( "_m0","$_id._c0");
+	    project.append( "_m1","$_id._c1");
+	    
+	    BasicDBObject group = new BasicDBObject();
+	    group.append( "_c0","$name");
+	    group.append( "_c1","$address.zip");	    
+
+	    Mockito.verify(dbCollection).aggregate(
+	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true"))),
+	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
+				new BasicDBObject("$project", project));
+    }	
+    
+    @Test // embedded means always nested as doc not as array 
+    public void testONE_TO_ONE_WithGroupByOrderBy()  throws Exception {
+		String query = "SELECT c.name, a.zip " +
+				"FROM customer c join address a " +
+				"on c.customer_id=a.cust_id " +
+				"GROUP BY c.name, a.zip " +
+				"ORDER BY c.name, a.zip " +
+				"limit 2";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 6);
+
+	    BasicDBObject project = new BasicDBObject();
+	    project.append( "_m0","$_id._c0");
+	    project.append( "_m1","$_id._c1");
+	    
+	    BasicDBObject group = new BasicDBObject();
+	    group.append( "_c0","$name");
+	    group.append( "_c1","$address.zip");	    
+
+	    BasicDBObject sort = new BasicDBObject();
+	    sort.append( "_m0",1);
+	    sort.append( "_m1",1);
+	    
+	    Mockito.verify(dbCollection).aggregate(
+	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true"))),
+	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
+				new BasicDBObject("$project", project),
+				new BasicDBObject("$sort", sort),
+				new BasicDBObject("$skip", 0),
+				new BasicDBObject("$limit", 2));
+    }    
+    
+    @Test
+    public void testSumWithGroupBy() throws Exception {
+    	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id";
+    	
+    	DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
+    	BasicDBObject id = new BasicDBObject();
+	    id.append( "_c0","$user_id");
+	    
+	    BasicDBObject group = new BasicDBObject("_id", id);
+	    group.append("total", new BasicDBObject("$sum", "$age"));
+	    
+		BasicDBObject project = new BasicDBObject();
+	    project.append( "total",1);
+
+	    Mockito.verify(dbCollection).aggregate(	    		
+	    		new BasicDBObject("$group", group),
+				new BasicDBObject("$project", project));
+    }
+    
+    
+    @Test
+    public void testSumWithGroupBy2() throws Exception {
+    	String query = "SELECT user_id, status, SUM(age) as total FROM users GROUP BY user_id, status";
+    	
+		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
+
+		BasicDBObject project = new BasicDBObject();
+	    project.append( "_m0","$_id._c0");
+	    project.append( "_m1","$_id._c1");
+	    project.append( "total",1);
+
+	    BasicDBObject id = new BasicDBObject();
+	    id.append( "_c0","$user_id");
+	    id.append( "_c1","$status");	    
+
+	    BasicDBObject group = new BasicDBObject("_id", id);
+	    group.append("total", new BasicDBObject("$sum", "$age"));
+		
+	    Mockito.verify(dbCollection).aggregate(	    		
+	    		new BasicDBObject("$group", group),
+				new BasicDBObject("$project", project));
+    }
+ 
+    @Test
+    public void testSumWithGroupBy3() throws Exception {
+    	String query = "SELECT user_id, SUM(age) as total FROM users GROUP BY user_id";
+    	
+		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
+
+		BasicDBObject project = new BasicDBObject();
+	    project.append( "_m0","$_id._c0");
+	    project.append( "total",1);
+
+	    BasicDBObject id = new BasicDBObject();
+	    id.append( "_c0","$user_id");
+
+	    BasicDBObject group = new BasicDBObject("_id", id);
+	    group.append("total", new BasicDBObject("$sum", "$age"));
+		
+	    Mockito.verify(dbCollection).aggregate(	    		
+	    		new BasicDBObject("$group", group),
+				new BasicDBObject("$project", project));    	
+    }     
+    
+    @Test
+    public void testAggregateWithHaving() throws Exception {
+    	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id HAVING SUM(age) > 250";
+
+    	DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 3);
+
+		BasicDBObject project = new BasicDBObject();
+	    project.append( "total",1);
+
+	    BasicDBObject id = new BasicDBObject();
+	    id.append( "_c0","$user_id");
+
+	    BasicDBObject group = new BasicDBObject("_id", id);
+	    group.append("total", new BasicDBObject("$sum", "$age"));
+		
+	    Mockito.verify(dbCollection).aggregate(	   
+	    		new BasicDBObject("$group", group),
+	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
+				new BasicDBObject("$project", project));    	
+    	
+    }    
+    
+    @Test
+    public void testAggregateWithHavingAndWhere() throws Exception {
+    	String query = "SELECT SUM(age) as total FROM users WHERE age > 45 GROUP BY user_id HAVING SUM(age) > 250";
+    	
+		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 4);
+
+		BasicDBObject project = new BasicDBObject();
+	    project.append( "total",1);
+
+	    BasicDBObject id = new BasicDBObject();
+	    id.append( "_c1","$user_id");
+
+	    BasicDBObject group = new BasicDBObject("_id", id);
+	    group.append("total", new BasicDBObject("$sum", "$age"));
+		
+	    Mockito.verify(dbCollection).aggregate(	   
+	    		new BasicDBObject("$match", QueryBuilder.start("age").greaterThan(45).get()),
+	    		new BasicDBObject("$group", group),
+	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
+				new BasicDBObject("$project", project));    	
+    }    
 }
