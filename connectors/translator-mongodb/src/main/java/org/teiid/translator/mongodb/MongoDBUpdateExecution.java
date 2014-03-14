@@ -48,6 +48,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
@@ -82,6 +83,15 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 
 	@Override
 	public void execute() throws TranslatorException {
+		try {
+			executeInternal();
+		} catch (MongoException e) {
+			throw new TranslatorException(e);
+		}
+	}
+
+	private void executeInternal() throws TranslatorException {
+		
 		DBCollection collection = getCollection(this.visitor.mongoDoc.getTargetTable());
 		MongoDocument mongoDoc = this.visitor.mongoDoc;
 

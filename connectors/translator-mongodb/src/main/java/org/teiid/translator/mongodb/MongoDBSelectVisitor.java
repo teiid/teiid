@@ -53,6 +53,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	public static final String EMBEDDABLE = MetadataFactory.MONGO_URI+"EMBEDDABLE"; //$NON-NLS-1$
 
     private AtomicInteger aliasCount = new AtomicInteger();
+    private AtomicInteger columnCount = new AtomicInteger();
 	protected MongoDBExecutionFactory executionFactory;
 	protected RuntimeMetadata metadata;
 	private Select command;
@@ -297,7 +298,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 				this.onGoingExpression.push(mongoExpr);
 
 				if (this.onGoingAlias == null) {
-					this.expressionMap.putIfAbsent(mongoExpr, new ColumnAlias(elementName, selectionName, columnName, pullColumnName, tableName));
+					this.expressionMap.putIfAbsent(mongoExpr, new ColumnAlias("_c"+this.columnCount.getAndIncrement(), selectionName, columnName, pullColumnName, tableName)); //$NON-NLS-1$
 				}
 			}
 		} catch (TranslatorException e) {
@@ -851,8 +852,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			append(obj.getElements().get(0));
 			Object mongoExpr = this.onGoingExpression.pop();
 			ColumnAlias alias = this.expressionMap.get(mongoExpr);
-			this.group.put("_id", mongoExpr); //$NON-NLS-1$
-			this.groupByProjections.put("_id", new BasicDBObject(alias.projectedName, "$_id")); //$NON-NLS-1$ //$NON-NLS-2$
+			this.group.put("_id", new BasicDBObject(alias.projectedName, mongoExpr)); //$NON-NLS-1$
+			this.groupByProjections.put("_id", new BasicDBObject(alias.projectedName, "$_id."+alias.projectedName)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else {
 			BasicDBObject fields = new BasicDBObject();

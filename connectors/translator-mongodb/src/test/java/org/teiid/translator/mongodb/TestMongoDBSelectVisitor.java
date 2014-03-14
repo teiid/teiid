@@ -289,9 +289,9 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(
 				query,
 				"users",
-				"{ \"_m0\" : \"$_id.user_id\" , \"age\" : \"$_id.age\"}",
+				"{ \"_m0\" : \"$_id._c0\" , \"age\" : \"$_id._c1\"}",
 				null,
-				"{ \"_id\" : { \"user_id\" : \"$user_id\" , \"age\" : \"$age\"}}",
+				"{ \"_id\" : { \"_c0\" : \"$user_id\" , \"_c1\" : \"$age\"}}",
 				null);
     }
 
@@ -301,66 +301,6 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(query, "users", "{ \"total\" : 1}", null,
 				"{ \"total\" : { \"$sum\" : \"$age\"} , \"_id\" :  null }",
 				null);
-    }
-
-    @Test
-    public void testSumWithGroupBy() throws Exception {
-    	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id";
-		helpExecute(
-				query,
-				"users",
-				"{ \"total\" : 1}",
-				null,
-				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
-				null);
-    }
-    
-    @Test
-    public void testSumWithGroupBy3() throws Exception {
-    	String query = "SELECT user_id, SUM(age) as total FROM users GROUP BY user_id";
-		helpExecute(
-				query,
-				"users",
-				"{ \"_m0\" : \"$_id\" , \"total\" : 1}",
-				null,
-				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
-				null);
-    }    
-
-    @Test
-    public void testSumWithGroupBy2() throws Exception {
-    	String query = "SELECT user_id, status, SUM(age) as total FROM users GROUP BY user_id, status";
-		helpExecute(
-				query,
-				"users",
-				"{ \"_m0\" : \"$_id.user_id\" , \"_m1\" : \"$_id.status\" , \"total\" : 1}",
-				null,
-				"{ \"_id\" : { \"user_id\" : \"$user_id\" , \"status\" : \"$status\"} , \"total\" : { \"$sum\" : \"$age\"}}",
-				null);
-    }
-
-    @Test
-    public void testAggregateWithHaving() throws Exception {
-    	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id HAVING SUM(age) > 250";
-		helpExecute(
-				query,
-				"users",
-				"{ \"total\" : 1}",
-				null,
-				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
-				"{ \"total\" : { \"$gt\" : 250}}");
-    }
-
-    @Test
-    public void testAggregateWithHavingAndWhere() throws Exception {
-    	String query = "SELECT SUM(age) as total FROM users WHERE age > 45 GROUP BY user_id HAVING SUM(age) > 250";
-		helpExecute(
-				query,
-				"users",
-				"{ \"total\" : 1}",
-				"{ \"age\" : { \"$gt\" : 45}}",
-				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
-				"{ \"total\" : { \"$gt\" : 250}}");
     }
 
     @Test

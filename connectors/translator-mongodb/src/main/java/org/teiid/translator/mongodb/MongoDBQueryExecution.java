@@ -40,6 +40,7 @@ import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 
 public class MongoDBQueryExecution extends MongoDBBaseExecution implements ResultSetExecution {
 	private Select command;
@@ -92,12 +93,17 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			if (!this.visitor.projectBeforeMatch) {
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$
 			}
+			
 			buildAggregate(ops, "$sort", this.visitor.sort); //$NON-NLS-1$
 			buildAggregate(ops, "$skip", this.visitor.skip); //$NON-NLS-1$
 			buildAggregate(ops, "$limit", this.visitor.limit); //$NON-NLS-1$
 
-			AggregationOutput output = collection.aggregate(ops.remove(0), ops.toArray(new DBObject[ops.size()]));
-			this.results = output.results().iterator();
+			try {
+				AggregationOutput output = collection.aggregate(ops.remove(0), ops.toArray(new DBObject[ops.size()]));
+				this.results = output.results().iterator();
+			} catch (MongoException e) {
+				throw new TranslatorException(e);
+			}
 		}
 	}
 
