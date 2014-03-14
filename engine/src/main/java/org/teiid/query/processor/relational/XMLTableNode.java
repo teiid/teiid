@@ -160,6 +160,17 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		clone.setProjectedColumns(projectedColumns);
 		return clone;
 	}
+	
+	@Override
+	public void open() throws TeiidComponentException, TeiidProcessingException {
+		super.open();
+		if (getParent() instanceof LimitNode) {
+			LimitNode parent = (LimitNode)getParent();
+			if (parent.getLimit() > 0) {
+				rowLimit = parent.getLimit() + parent.getOffset();
+			}
+		}
+	}
 
 	@Override
 	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
@@ -198,6 +209,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				}
 			}
 			addBatchRow(processRow());
+			if (rowCount == rowLimit) {
+				terminateBatches();
+				break;
+			}
 		}
 		return pullBatch();
 	}

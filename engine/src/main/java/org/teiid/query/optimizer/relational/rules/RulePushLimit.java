@@ -104,11 +104,6 @@ public class RulePushLimit implements OptimizerRule {
                 }
             }
             
-            if (NodeEditor.findAllNodes(limitNode, NodeConstants.Types.ACCESS).isEmpty()) {
-                limitNodes.remove(limitNode);
-                continue;
-            }
-            
             while (canPushLimit(plan, limitNode, limitNodes, metadata, capabilitiesFinder, analysisRecord)) {
                 plan = RuleRaiseAccess.performRaise(plan, limitNode.getFirstChild(), limitNode);
                 //makes this rule safe to run after the final rule assign output elements
@@ -211,6 +206,9 @@ public class RulePushLimit implements OptimizerRule {
                 }
                 if (FrameUtil.isProcedure(child.getFirstChild())) {
                     return false;
+                }
+                if (child.hasProperty(Info.TABLE_FUNCTION)) {
+                	return false;
                 }
                 return true;
             }

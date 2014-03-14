@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.net.InetSocketAddress;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.language.QueryExpression;
+import org.teiid.query.processor.TestTextTable;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.transport.SSLConfiguration;
@@ -119,6 +121,28 @@ public class TestJDBCSocketPerformance {
 			s.close();
 		}
 		System.out.println((System.currentTimeMillis() - start));
+	}
+	
+	//TODO: this isn't a socket test per se, but does show a performance bump with multi-threaded texttable execution
+	@Test public void testTextTable() throws Exception {
+		Properties p = new Properties();
+		p.setProperty("user", "testuser");
+		p.setProperty("password", "testpassword");
+		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:x@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
+		for (int j = 0; j < 10; j++) {
+			PreparedStatement ps = conn.prepareStatement("select * from (select * from texttable(cast (? as clob) columns x string width 100000 no row delimiter) as x limit 1) as x, texttable(cast (? as clob) columns x string width 100 no row delimiter) as y");
+
+			ps.setClob(1, TestTextTable.clobFromFile("test.xml").getReference());
+			ps.setClob(2, TestTextTable.clobFromFile("test.xml").getReference());
+			
+			ResultSet rs = ps.executeQuery();
+			int i = 0;
+			while (rs.next()) {
+				i++;
+			}
+			assertEquals(58454, i);
+			ps.close();
+		}
 	}
 
 }

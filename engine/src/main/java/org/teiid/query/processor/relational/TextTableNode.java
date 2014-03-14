@@ -40,10 +40,12 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
@@ -80,6 +82,11 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 
 	private boolean cr;
 	private boolean eof;
+	
+	private boolean running;
+	private TeiidProcessingException asynchException;
+
+	private int limit = -1;
 	
 	public TextTableNode(int nodeID) {
 		super(nodeID);
@@ -155,6 +162,9 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				entry.setValue(null);
 			}
 		}
+		this.running = false;
+		this.asynchException = null;
+		this.limit = -1;
 	}
 	
 	public void setTable(TextTable table) {
@@ -168,9 +178,20 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		clone.setTable(table);
 		return clone;
 	}
+	
+	@Override
+	public void open() throws TeiidComponentException, TeiidProcessingException {
+		super.open();
+		if (getParent() instanceof LimitNode) {
+			LimitNode parent = (LimitNode)getParent();
+			if (parent.getLimit() > 0) {
+				limit = parent.getLimit() + parent.getOffset();
+			}
+		}
+	}
 
 	@Override
-	protected TupleBatch nextBatchDirect() throws BlockedException,
+	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		
 		if (reader == null) {
@@ -182,70 +203,137 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			return pullBatch();
 		}
 		
-		while (!isBatchFull()) {
-			String line = readLine(lineWidth, table.isFixedWidth());
-			
-			if (line == null) {
-				terminateBatches();
-				break;
-			}
-			
-			String parentSelector = null;
-			if (table.getSelector() != null && !line.regionMatches(0, table.getSelector(), 0, table.getSelector().length())) {
-				if (parentLines == null) {
-					continue; //doesn't match any selector
-				}
-				parentSelector = line.substring(0, table.getSelector().length());
-				
-				if (!parentLines.containsKey(parentSelector)) {
-					continue; //doesn't match any selector
-				} 
-			}
-			
-			List<String> vals = parseLine(line);
-			
-			if (parentSelector != null) {
-				this.parentLines.put(parentSelector, vals);
-				continue;
-			} else if (table.getSelector() != null && !table.getSelector().equals(vals.get(0))) {
-				continue;
-			}
-			
-			rowNumber++;
-			
-			List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
-			for (int output : projectionIndexes) {
-				TextColumn col = table.getColumns().get(output);
-				String val = null;
-				int index = output;
-				
-				if (col.isOrdinal()) {
-					tuple.add(rowNumber);
-					continue;
-				}
-				
-				if (col.getSelector() != null) {
-					vals = this.parentLines.get(col.getSelector());
-					index = col.getPosition() - 1;
-				} else if (nameIndexes != null) {
-					index = nameIndexes.get(col.getName());
-				}
-				if (vals == null || index >= vals.size()) {
-					//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
-					tuple.add(null);
-					continue;
-				} 
-				val = vals.get(index);
-				try {
-					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
-				} catch (TransformationException e) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30176, col.getName(), textLine, systemId));
-				}
-			}
-			addBatchRow(tuple);
+		if (isLastBatch()) {
+			return pullBatch();
 		}
 		
-		return pullBatch();
+		if (isBatchFull()) {
+			TupleBatch result = pullBatch();
+			processAsynch(); // read ahead
+			return result;
+		}
+		
+		if (asynchException != null) {
+			throw asynchException;
+		}
+		
+		processAsynch();
+		
+		if (this.getContext().getWorkItem() == null) {
+			//this is for compatibility with engine tests that are below the level of using the work item
+			synchronized (this) {
+				while (running) {
+					try {
+						this.wait();
+					} catch (InterruptedException e) {
+						throw new TeiidRuntimeException(e);
+					}
+				}
+			}
+		}
+		
+		throw BlockedException.block("Blocking on results from file processing."); //$NON-NLS-1$
+	}
+
+	private void processAsynch() {
+		if (!running) {
+			running = true;
+			getContext().getExecutor().execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						process();
+					} catch (TeiidProcessingException e) {
+						asynchException = e;
+					} finally {
+						running = false;
+						RequestWorkItem workItem = TextTableNode.this.getContext().getWorkItem();
+						if (workItem != null) {
+							workItem.moreWork();
+						} else {
+							synchronized (TextTableNode.this) {
+								TextTableNode.this.notifyAll();
+							}
+						}
+					}
+				}
+			});
+		}
+	}
+
+	private void process() throws TeiidProcessingException {
+		while (true) {
+			synchronized (this) {
+				if (isBatchFull()) {
+					return;
+				}
+				String line = readLine(lineWidth, table.isFixedWidth());
+				
+				if (line == null) {
+					terminateBatches();
+					break;
+				}
+				
+				String parentSelector = null;
+				if (table.getSelector() != null && !line.regionMatches(0, table.getSelector(), 0, table.getSelector().length())) {
+					if (parentLines == null) {
+						continue; //doesn't match any selector
+					}
+					parentSelector = line.substring(0, table.getSelector().length());
+					
+					if (!parentLines.containsKey(parentSelector)) {
+						continue; //doesn't match any selector
+					} 
+				}
+				
+				List<String> vals = parseLine(line);
+				
+				if (parentSelector != null) {
+					this.parentLines.put(parentSelector, vals);
+					continue;
+				} else if (table.getSelector() != null && !table.getSelector().equals(vals.get(0))) {
+					continue;
+				}
+				
+				rowNumber++;
+				
+				List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
+				for (int output : projectionIndexes) {
+					TextColumn col = table.getColumns().get(output);
+					String val = null;
+					int index = output;
+					
+					if (col.isOrdinal()) {
+						tuple.add(rowNumber);
+						continue;
+					}
+					
+					if (col.getSelector() != null) {
+						vals = this.parentLines.get(col.getSelector());
+						index = col.getPosition() - 1;
+					} else if (nameIndexes != null) {
+						index = nameIndexes.get(col.getName());
+					}
+					if (vals == null || index >= vals.size()) {
+						//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
+						tuple.add(null);
+						continue;
+					} 
+					val = vals.get(index);
+					try {
+						tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
+					} catch (TransformationException e) {
+						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30176, col.getName(), textLine, systemId));
+					}
+				}
+				addBatchRow(tuple);
+				
+				if (rowNumber == limit) {
+					terminateBatches();
+					break;
+				}
+			}
+		}
 	}
 
 	private String readLine(int maxLength, boolean exact) throws TeiidProcessingException {

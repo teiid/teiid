@@ -256,6 +256,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
      * @return
      */
     public RequestWorkItem getWorkItem() {
+    	if (globalState.processorID == null) {
+    		return null;
+    	}
         return globalState.processorID.get();
     }
 
