@@ -16,7 +16,15 @@
     <context-param>
         <param-name>local-transport-name</param-name>
         <param-value>odata</param-value>
-    </context-param>      
+    </context-param>
+    <!--   
+    In cloud environment or if under a proxy, update the below url with address of the proxy to generate 
+    odata links correctly.
+    <context-param>
+        <param-name>proxy-base-uri</param-name>
+        <param-value>http://{host}</param-value>
+    </context-param>  
+     -->
     <listener>
         <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>
     </listener>    

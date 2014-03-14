@@ -33,7 +33,12 @@ import javax.ws.rs.core.SecurityContext;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
 import org.jboss.resteasy.logging.Logger;
-import org.jboss.resteasy.plugins.server.servlet.*;
+import org.jboss.resteasy.plugins.server.servlet.ConfigurationBootstrap;
+import org.jboss.resteasy.plugins.server.servlet.HttpRequestFactory;
+import org.jboss.resteasy.plugins.server.servlet.HttpResponseFactory;
+import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
+import org.jboss.resteasy.plugins.server.servlet.ServletSecurityContext;
+import org.jboss.resteasy.plugins.server.servlet.ServletUtil;
 import org.jboss.resteasy.specimpl.UriInfoImpl;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
@@ -43,18 +48,28 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 public class ODataServletContainerDispatcher extends ServletContainerDispatcher {
 	private final static Logger logger = Logger.getLogger(ServletContainerDispatcher.class);
 	ThreadLocal<String> servletMapping;
+	ThreadLocal<String> proxyBaseURI;
 	
 	public ODataServletContainerDispatcher() {
 		super();
 		this.servletMapping = new ThreadLocal<String>();
+		this.proxyBaseURI = new ThreadLocal<String>();
 	}
 	
+	@Override
 	public void init(ServletContext servletContext,
 			ConfigurationBootstrap bootstrap,
 			HttpRequestFactory requestFactory,
 			HttpResponseFactory responseFactory) throws ServletException {
 		super.init(servletContext, bootstrap, requestFactory, responseFactory);
 		this.servletMapping.set(bootstrap.getParameter("resteasy.servlet.mapping.prefix"));
+		
+		String proxyURI = bootstrap.getParameter("proxy-base-uri");
+		if (proxyURI != null && proxyURI.startsWith("${") && proxyURI.endsWith("}")) {
+			proxyURI = proxyURI.substring(2, proxyURI.length()-1);
+			proxyURI = System.getProperty(proxyURI);
+		}
+		this.proxyBaseURI.set(proxyURI);
 	}
 	
 	
@@ -76,8 +91,14 @@ public class ODataServletContainerDispatcher extends ServletContainerDispatcher 
 			HttpHeaders headers = null;
 			UriInfoImpl uriInfo = null;
 			try {
+				String proxyURI = this.proxyBaseURI.get(); 
+				if (proxyURI != null) {
+					request = new ProxyHttpServletRequest(request, proxyURI);
+				}
+				
 				headers = ServletUtil.extractHttpHeaders(request);
 				uriInfo = ServletUtil.extractUriInfo(request, servletMapping.get());
+				
 			} catch (Exception e) {
 				response.sendError(HttpServletResponse.SC_BAD_REQUEST);
 				// made it warn so that people can filter this.
