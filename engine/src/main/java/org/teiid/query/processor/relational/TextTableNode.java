@@ -267,7 +267,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				if (isBatchFull()) {
 					return;
 				}
-				String line = readLine(lineWidth, table.isFixedWidth());
+				StringBuilder line = readLine(lineWidth, table.isFixedWidth());
 				
 				if (line == null) {
 					terminateBatches();
@@ -275,15 +275,20 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				}
 				
 				String parentSelector = null;
-				if (table.getSelector() != null && !line.regionMatches(0, table.getSelector(), 0, table.getSelector().length())) {
-					if (parentLines == null) {
-						continue; //doesn't match any selector
+				if (table.getSelector() != null) {
+					if (line.length() < table.getSelector().length()) {
+						continue;
 					}
-					parentSelector = line.substring(0, table.getSelector().length());
-					
-					if (!parentLines.containsKey(parentSelector)) {
-						continue; //doesn't match any selector
-					} 
+					if (!line.substring(0, table.getSelector().length()).equals(table.getSelector())) {
+						if (parentLines == null) {
+							continue; //doesn't match any selector
+						}
+						parentSelector = line.substring(0, table.getSelector().length());
+						
+						if (!parentLines.containsKey(parentSelector)) {
+							continue; //doesn't match any selector
+						} 
+					}
 				}
 				
 				List<String> vals = parseLine(line);
@@ -336,7 +341,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 	}
 
-	private String readLine(int maxLength, boolean exact) throws TeiidProcessingException {
+	private StringBuilder readLine(int maxLength, boolean exact) throws TeiidProcessingException {
 		if (eof) {
 			return null;
 		}
@@ -356,12 +361,12 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				    if (exact && sb.length() < lineWidth) {
 				    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30177, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30177, sb.length(), lineWidth, textLine, systemId));
 				    }
-					return sb.toString();
+					return sb;
 				}
 		    }
 		    sb.append(c);
 		    if (exact && sb.length() == maxLength && !table.isUsingRowDelimiter()) {
-		    	return sb.toString();
+		    	return sb;
 		    }
 		    if (sb.length() > maxLength) {
 		    	if (exact) {
@@ -371,7 +376,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    		while (readChar() != '\n') {
 		    			
 		    		}
-		    		return sb.toString();
+		    		return sb;
 		    	}
 		    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30178, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30178, textLine+1, systemId, maxLength));
 		    }
@@ -441,7 +446,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		while (textLine < skip) {
 			boolean isHeader = textLine == header;
 			if (isHeader) {
-				String line = readLine(DataTypeManager.MAX_STRING_LENGTH * 16, false);
+				StringBuilder line = readLine(DataTypeManager.MAX_STRING_LENGTH * 16, false);
 				if (line == null) { //just return an empty batch
 					reset();
 					return;
@@ -476,14 +481,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 	}
 
-	private List<String> parseLine(String line) throws TeiidProcessingException {
+	private List<String> parseLine(StringBuilder line) throws TeiidProcessingException {
 		if (table.isFixedWidth()) {
 			return parseFixedWidth(line);
 		} 
 		return parseDelimitedLine(line);
 	}
 
-	private List<String> parseDelimitedLine(String line) throws TeiidProcessingException {
+	private List<String> parseDelimitedLine(StringBuilder line) throws TeiidProcessingException {
 		ArrayList<String> result = new ArrayList<String>();
 		StringBuilder builder = new StringBuilder();
 		boolean escaped = false;
@@ -511,9 +516,8 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30182, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30182, systemId));
 				}
 			}
-			char[] chars = line.toCharArray();
-			for (int i = 0; i < chars.length; i++) {
-				char chr = chars[i];
+			for (int i = 0; i < line.length(); i++) {
+				char chr = line.charAt(i);
 				if (chr == delimiter) {
 					if (escaped || qualified) {
 						builder.append(chr);
@@ -575,7 +579,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		result.add(val);
 	}
 
-	private List<String> parseFixedWidth(String line) {
+	private List<String> parseFixedWidth(StringBuilder line) {
 		ArrayList<String> result = new ArrayList<String>();
 		int beginIndex = 0;
 		for (TextColumn col : table.getColumns()) {
