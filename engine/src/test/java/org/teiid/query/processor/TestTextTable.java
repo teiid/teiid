@@ -391,6 +391,17 @@ public class TestTextTable {
         process(sql, expected);
     }
 	
+	@Test public void testTextTableSelectorFixedWidth() throws Exception {
+		String sql = "select x.* from texttable('A10-dec-20111234533223000222\nB112330501500\nB233330051500\nCX' SELECTOR 'B' COLUMNS x string width 1, y integer width 6, z integer width 6) x";
+    	
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("B", 112330, 501500),
+        		Arrays.asList("B", 233330,  51500),
+        };    
+
+        process(sql, expected);
+    }
+	
 	public static void process(String sql, List<?>[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);

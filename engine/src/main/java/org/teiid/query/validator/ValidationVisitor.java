@@ -1408,7 +1408,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	    	}
 		}
     	if (widthSet) {
-    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null || obj.getSelector() != null || usingSelector) {
+    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null || usingSelector) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_width"), obj); //$NON-NLS-1$
     		}
     	} else {
