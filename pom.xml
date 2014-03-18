@@ -67,6 +67,7 @@
         <version.accumulo>1.5.0</version.accumulo>
         <version.solr>4.6.0</version.solr>
         <version.noggit>0.5</version.noggit>
+        <version.apache.poi>3.9</version.apache.poi>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>

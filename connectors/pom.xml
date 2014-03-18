@@ -124,5 +124,6 @@
     <module>connector-accumulo</module>
     <module>translator-solr</module>
     <module>connector-solr</module>
+    <module>translator-excel</module>
   </modules>
 </project>

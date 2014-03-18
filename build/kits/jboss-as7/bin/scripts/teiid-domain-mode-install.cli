@@ -73,6 +73,7 @@ connect
 /profile=ha/subsystem=teiid/translator=cassandra:add(module=org.jboss.teiid.translator.cassandra)
 /profile=ha/subsystem=teiid/translator=accumulo:add(module=org.jboss.teiid.translator.accumulo)
 /profile=ha/subsystem=teiid/translator=solr:add(module=org.jboss.teiid.translator.solr)
+/profile=ha/subsystem=teiid/translator=excel:add(module=org.jboss.teiid.translator.excel)
 
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)

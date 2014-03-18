@@ -62,6 +62,7 @@ public class MetadataFactory implements Serializable {
 	private static final String TEIID_MONGO = "teiid_mongo"; //$NON-NLS-1$
 	private static final String TEIID_ODATA = "teiid_odata"; //$NON-NLS-1$
 	private static final String TEIID_ACCUMULO = "teiid_accumulo"; //$NON-NLS-1$
+	private static final String TEIID_EXCEL = "teiid_excel"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = 8590341087771685630L;
 
@@ -89,6 +90,7 @@ public class MetadataFactory implements Serializable {
 	public static final String MONGO_URI = "{http://www.teiid.org/translator/mongodb/2013}"; //$NON-NLS-1$
 	public static final String ODATA_URI = "{http://www.jboss.org/teiiddesigner/ext/odata/2012}"; //$NON-NLS-1$
 	public static final String ACCUMULO_URI = "{http://www.teiid.org/translator/accumulo/2013}"; //$NON-NLS-1$
+	public static final String EXCEL_URI = "{http://www.teiid.org/translator/excel/2014}"; //$NON-NLS-1$
 
 	public static final Map<String, String> BUILTIN_NAMESPACES;
 	static {
@@ -99,6 +101,7 @@ public class MetadataFactory implements Serializable {
 		map.put(TEIID_MONGO, MONGO_URI.substring(1, MONGO_URI.length()-1));
 		map.put(TEIID_ODATA, ODATA_URI.substring(1, ODATA_URI.length()-1));
 		map.put(TEIID_ACCUMULO, ACCUMULO_URI.substring(1, ACCUMULO_URI.length()-1));
+		map.put(TEIID_EXCEL, EXCEL_URI.substring(1, EXCEL_URI.length()-1));
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
 
