@@ -176,7 +176,7 @@ public class RulePushLimit implements OptimizerRule {
             		//2 - outer results will be produced using the left product first
             		pushLeft = true;
             	} 
-            	if (pushLeft) {
+            	if (pushLeft && !FrameUtil.findJoinSourceNode(child.getLastChild()).hasProperty(NodeConstants.Info.CORRELATED_REFERENCES)) {
             		PlanNode newLimit = newLimit(limitNode);
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     child.getFirstChild().addAsParent(newLimit);

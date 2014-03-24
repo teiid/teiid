@@ -950,6 +950,35 @@ public class TestLimit {
         }, NODE_TYPES);
     }
     
+    @Test public void testCrossJoinLimitNestedTable() throws Exception {
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+         
+        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1, TABLE(select pm2.g1.e1 FROM pm2.g1 WHERE pm2.g1.e1 = pm1.g1.e1) as x limit 5, 5"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 WHERE pm2.g1.e1 = pm1.g1.e1 LIMIT 10", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                1,      // Limit
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+        }, NODE_TYPES);
+    }
+    
     /**
      * Note that the limit is not pushed below the select nodes under the join
      */
