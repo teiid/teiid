@@ -291,10 +291,6 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					}
 				}
 				
-				if (table.isFixedWidth() && line.length() != lineWidth) {
-			    	throw new TeiidProcessingException(QueryPlugin.Event.TEIID30178, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30178, textLine+1, systemId, lineWidth));
-				}
-				
 				List<String> vals = parseLine(line);
 				
 				if (parentSelector != null) {
@@ -362,9 +358,6 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					}
 				}
 				if (table.isUsingRowDelimiter()) {
-				    if (exact && sb.length() < lineWidth && table.getSelector() == null) {
-				    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30177, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30177, sb.length(), lineWidth, textLine, systemId));
-				    }
 					return sb;
 				}
 		    }
@@ -382,6 +375,8 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    		}
 		    		return sb;
 		    	}
+		    	//protects non-fixed width processing from run-away values
+		    	//TODO it is possible that string values could be desired that are longer than the max and/or returned as clobs
 		    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30178, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30178, textLine+1, systemId, maxLength));
 		    }
 		}
@@ -587,9 +582,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		ArrayList<String> result = new ArrayList<String>();
 		int beginIndex = 0;
 		for (TextColumn col : table.getColumns()) {
-			String val = new String(line.substring(beginIndex, beginIndex + col.getWidth()));
-			addValue(result, col.isNoTrim(), val);
-			beginIndex += col.getWidth();
+			if (beginIndex >= line.length()) {
+				result.add(null);
+			} else {
+				String val = new String(line.substring(beginIndex, Math.min(line.length(), beginIndex + col.getWidth())));
+				addValue(result, col.isNoTrim(), val);
+				beginIndex += col.getWidth();
+			}		
 		}
 		return result;
 	}
