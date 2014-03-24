@@ -519,4 +519,18 @@ public class TestTextTable {
     	}
     }
 	
+	@Test public void testTextTableFixedBestEffort() throws Exception {
+    	String sql = "select x.* from texttable('abc\nde\nfghi\n' COLUMNS x string width 1, y string width 1, z string width 1) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a", "b", "c"),
+        		Arrays.asList("d", "e", null), //too short, but still parsed
+        		Arrays.asList("f", "g", "h"),  //truncated
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+    }
+	
 }
