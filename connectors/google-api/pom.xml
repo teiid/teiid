@@ -7,7 +7,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>google-api</artifactId>
   <groupId>org.jboss.teiid.connectors</groupId>
-  <name>Gogole API</name>
+  <name>Google API</name>
   <description>The java API for connecting Google services</description>
    <dependencies>     
         <dependency>
