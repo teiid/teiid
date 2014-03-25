@@ -3,11 +3,11 @@
   <id>adminshell-dist</id>
   
   <formats>
-    <format>zip</format>
+    <format>dir</format>
   </formats>
   
   <includeBaseDirectory>true</includeBaseDirectory>
-  <baseDirectory>teiid-adminshell-${project.version}</baseDirectory>
+  <baseDirectory>teiid-adminshell</baseDirectory>
 
   <moduleSets>
     <moduleSet>
