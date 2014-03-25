@@ -105,9 +105,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     	ARRAY
     }
 	
-    private static final ThreadLocal<MessageFormat> COMMENT = new ThreadLocal<MessageFormat>() {
+    private final ThreadLocal<MessageFormat> comment = new ThreadLocal<MessageFormat>() {
     	protected MessageFormat initialValue() {
-    		return new MessageFormat("/*teiid sessionid:{0}, requestid:{1}.{2}*/ "); //$NON-NLS-1$
+    		return new MessageFormat(commentFormat);
     	}
     };
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
@@ -142,6 +142,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
 	protected SQLDialect dialect; 
 	private boolean enableDependentJoins;
+	private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
 	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
@@ -159,6 +160,10 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public void start() throws TranslatorException {
 		super.start();		
 		this.databaseCalender = new DatabaseCalender(this.databaseTimeZone);
+		if (useCommentsInSourceQuery) {
+			//will throw an exception if not valid
+			new MessageFormat(commentFormat);
+		}
     }
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
@@ -745,7 +750,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public String getSourceComment(ExecutionContext context, Command command) {
 	    if (addSourceComment() && context != null) {
-            return COMMENT.get().format(new Object[] {context.getConnectionId(), context.getRequestId(), context.getPartIdentifier()});
+            return comment.get().format(new Object[] {context.getConnectionId(), context.getRequestId(), context.getPartIdentifier(), 
+            		context.getExecutionCountIdentifier(), context.getSession().getUserName(), context.getVdbName(), context.getVdbVersion(), context.isTransactional() });
 	    }
 	    return ""; //$NON-NLS-1$ 
     }
@@ -1402,6 +1408,15 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 */
 	public boolean useWithRollup() {
 		return false;
+	}
+	
+	@TranslatorProperty(display="Comment Format", description= "Comment format string used with useCommentsInSourceQuery")
+	public String getCommentFormat() {
+		return commentFormat;
+	}
+	
+	public void setCommentFormat(String commentFormat) {
+		this.commentFormat = commentFormat;
 	}
 	
 }
