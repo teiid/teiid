@@ -40,7 +40,24 @@
         </excludes>      
         <fileMode>0600</fileMode>
         <directoryMode>0755</directoryMode>
-    </fileSet>    
+    </fileSet>
+    
+    <fileSet>
+        <directory>target/</directory>
+        <outputDirectory>datavirtualization/jdbc</outputDirectory>
+        <includes>
+            <include>teiid-${project.version}-jdbc.jar</include>
+        </includes>
+        <fileMode>0644</fileMode>
+    </fileSet>
+    
+    <fileSet>
+        <directory>target/teiid-${project.version}-adminshell-dist/teiid-adminshell</directory>
+        <outputDirectory>datavirtualization/teiid-adminshell</outputDirectory>
+        <fileMode>0644</fileMode>
+    </fileSet>
+
+
           
     <fileSet>
         <directory>../client/src/main/resources</directory>
@@ -60,7 +77,8 @@
         <outputDirectory>docs/schema</outputDirectory>
         <fileMode>0644</fileMode>
         <directoryMode>0755</directoryMode>        
-    </fileSet>    
+    </fileSet>
+    
     	
   </fileSets>
   
@@ -753,8 +771,8 @@
         </binaries>
       
     </moduleSet>
-      
-    <!-- Include the JOPR plugin     
+
+    <!-- Include the JOPR plugin
     <moduleSet>
         <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
@@ -773,4 +791,6 @@
     </moduleSet>
     -->        
     </moduleSets>  
+
+
 </assembly>

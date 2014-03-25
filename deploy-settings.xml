@@ -1,0 +1,182 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+ <servers>
+    <!-- server
+     | Specifies the authentication information to use when connecting to a particular server, identified by
+     | a unique name within the system (referred to by the 'id' attribute below).
+     | 
+     | NOTE: You should either specify username/password OR privateKey/passphrase, since these pairings are 
+     |       used together.
+     |
+    <server>
+      <id>deploymentRepo</id>
+      <username>repouser</username>
+      <password>repopwd</password>
+    </server>
+    -->
+
+    <server>
+      <id>jboss-developer-repository-group</id>
+      <username>hudson-services</username>
+      <password>fiNi83Noauqw</password>
+    </server>
+
+    <server>
+      <id>jboss-snapshots-repository</id>
+      <username>hudson-services</username>
+      <password>fiNi83Noauqw</password>
+    </server>
+
+    <server>
+      <id>jboss-releases-repository</id>
+      <username>hudson-services</username>
+      <password>fiNi83Noauqw</password>
+    </server>		
+ 
+    <!-- deprecated server id.  Poms should be updated to use jboss-snapshots-repository -->
+    <server>
+      <id>jboss-snapshots</id>
+      <username>hudson-services</username>
+      <password>fiNi83Noauqw</password>
+    </server>
+
+
+   <server>
+      <!-- Weld deployment. oskutka@redhat.com -->
+      <id>oss.sonatype.org/jboss-snapshots</id>
+      <username>hudson-jboss</username>
+      <password>5h33PD06</password>
+    </server>
+
+
+    <server>
+      <id>jboss-qa-releases</id>
+      <username>hudson</username>
+      <password>opt2i5R</password>
+    </server>
+
+    <server>
+      <id>jboss-qa-snapshots</id>
+      <username>hudson</username>
+      <password>opt2i5R</password>
+    </server>
+
+    <!-- -->
+
+    
+    <!-- Another sample, using keys to authenticate.
+    <server>
+      <id>siteServer</id>
+      <privateKey>/path/to/private/key</privateKey>
+      <passphrase>optional; leave empty if not used.</passphrase>
+    </server>
+    -->
+  </servers>
+
+  <profiles>
+    <profile>
+      <id>jboss-public-repository</id>
+      <repositories>
+        <repository>
+          <id>jboss-public-repository-group</id>
+          <name>JBoss Public Maven Repository Group</name>
+          <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>jboss-public-repository-group</id>
+          <name>JBoss Public Maven Repository Group</name>
+          <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+    <profile>
+      <id>jboss-developer-repository</id>
+      <repositories>
+        <repository>
+          <id>jboss-developer-repository-group</id>
+          <name>JBoss Developer Maven Repository Group</name>
+          <url>http://repository.jboss.org/nexus/content/groups/developer/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories> 
+    </profile>    
+    <profile>
+      <id>jboss-eap-62</id>
+      <repositories>
+        <repository>
+          <id>jboss-eap-62</id>
+          <name>JBoss EAP6.2</name>
+          <url>http://download.devel.redhat.com/brewroot/repos/jb-eap-6.2.0-rhel-6-build/latest/maven/</url>
+              
+<!--              http://maven.repository.redhat.com/techpreview/eap6/6.2.1/maven-repository/</url> -->
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
+        <id>jboss-eap-alpha</id>
+        <repositories>
+            <repository>
+                <id>jboss-eap-alpha</id>
+                <name>JBoss EAP6.1 Alpha</name>
+                <url>http://maven.repository.redhat.com/techpreview/eap6/6.2.0/maven-repository/</url>
+                <layout>default</layout>
+                <releases>
+                    <enabled>true</enabled>
+                    <updatePolicy>never</updatePolicy>
+                </releases>
+                <snapshots>
+                    <enabled>false</enabled>
+                </snapshots>
+            </repository>
+        </repositories>
+    </profile>    
+    
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>jboss-public-repository</activeProfile>
+    <activeProfile>jboss-developer-repository</activeProfile>
+    <activeProfile>jboss-eap-62</activeProfile>
+    <activeProfile>jboss-eap-alpha</activeProfile>
+  </activeProfiles>
+
+</settings>

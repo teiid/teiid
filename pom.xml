@@ -1,63 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
+    <!--parent>
         <groupId>org.jboss.integration-platform</groupId>
         <artifactId>jboss-integration-platform-parent</artifactId>
         <version>6.0.0.CR3</version>
-    </parent>   
+    </parent-->
+    <parent>
+        <groupId>org.jboss.teiid</groupId>
+        <artifactId>teiid-bom</artifactId>
+        <version>8.4.1</version>
+        <relativePath>./teiid-bom/pom.xml</relativePath>
+
+    </parent>
+
     <modelVersion>4.0.0</modelVersion>
-	<groupId>org.jboss.teiid</groupId>
+	<!--groupId>org.jboss.teiid</groupId-->
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 	<version>8.4.1</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
-        <version.org.jboss.as>7.3.1.Final-redhat-3</version.org.jboss.as>
-        <version.org.jboss.jboss-common-core>2.2.17.GA-redhat-2</version.org.jboss.jboss-common-core>
-        <version.org.apache.cxf>2.7.7.redhat-1</version.org.apache.cxf>
-        <version.org.jboss.resteasy>2.3.7.Final</version.org.jboss.resteasy>
-        <version.wsdl4j>1.6.2.redhat-6</version.wsdl4j>
-        <version.sun.jaxb>2.2.5.redhat-7</version.sun.jaxb>
-        <!--
-        <version.org.hibernate>4.2.7.SP1-redhat-3</version.org.hibernate>
-        <version.org.infinispan>5.2.7.Final-redhat-2</version.org.infinispan>        
-        --> 
-        <version.org.hibernate>4.1.1.Final</version.org.hibernate>
-        <version.org.infinispan>5.2.7.Final</version.org.infinispan>        
-               
 		<site.url>http://www.jboss.org/teiid</site.url>
         <version.ip-bom>6.0.0.CR3</version.ip-bom>
         <jbossas-test-version>jboss-eap-6.2</jbossas-test-version>
-        <arquillian-container-version>7.2.0.Final</arquillian-container-version>
+        <arquillian-container-version>7.3.0.Final</arquillian-container-version>
         <version.ant.plugin>1.7.0</version.ant.plugin>
-        <version.org.jboss.modules.jboss-modules>1.3.0.Final-redhat-2</version.org.jboss.modules.jboss-modules>
-        <version.org.jboss.jboss-dmr>1.2.0.Final-redhat-1</version.org.jboss.jboss-dmr>
-        <version.org.jboss.msc.jboss-msc>1.0.4.GA-redhat-1</version.org.jboss.msc.jboss-msc>
-        <version.org.jboss.jboss-vfs>3.2.2.Final-redhat-1</version.org.jboss.jboss-vfs>
-        <version.org.picketbox>4.0.19.SP3-redhat-1</version.org.picketbox>
+        <!--version.org.jboss.modules.jboss-modules>1.2.0.CR1</version.org.jboss.modules.jboss-modules-->
+        <!--version.org.jboss.jboss-dmr>1.1.6.Final</version.org.jboss.jboss-dmr-->
+        <!--version.org.jboss.msc.jboss-msc>1.0.4.GA</version.org.jboss.msc.jboss-msc-->
+        <!--version.org.jboss.jboss-vfs>3.1.0.Final</version.org.jboss.jboss-vfs-->
+        <version.org.picketbox>4.0.15.Final</version.org.picketbox>
         <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
-        <version.org.jboss.marshalling.jboss-marshalling>1.4.3.Final-redhat-1</version.org.jboss.marshalling.jboss-marshalling>
-        <version.org.jboss.marshalling.jboss-marshalling-river>1.4.3.Final-redhat-1</version.org.jboss.marshalling.jboss-marshalling-river>
-        <version.asm>3.3.1-redhat-5</version.asm>
+        <version.org.jboss.marshalling.jboss-marshalling-river>1.3.16.GA</version.org.jboss.marshalling.jboss-marshalling-river>
+        <!--version.asm>3.3.1</version.asm-->
         <version.org.jboss.arquillian.core>1.0.0.Final</version.org.jboss.arquillian.core>
-        
         <version.json-simple>1.1</version.json-simple>
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
+        <!--version.sun.jaxb>2.2.5.jboss-1</version.sun.jaxb-->
+        <version.javax.wsdl4j>1.6.2</version.javax.wsdl4j>
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
-        <version.core4j>0.5</version.core4j>        
+        <version.core4j>0.5</version.core4j>
+        
         <version.com.force.api>26.0.0</version.com.force.api>
-        <version.mongodb-java-driver>2.11.1</version.mongodb-java-driver> 
+        <version.mongodb-java-driver>2.11.1</version.mongodb-java-driver>
         <version.org.infinispan.6>6.0.0.CR1</version.org.infinispan.6>
-        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>        
+        <!--version.org.hibernate>4.1.1.Final</version.org.hibernate-->
+        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
+        <!--version.javax.ws.rs>1.1</version.javax.ws.rs-->
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
         <developerConnection>scm:git:git@github.com:teiid/teiid.git</developerConnection>
         <url>http://github.com/teiid/teiid</url>
-	  <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 	<licenses>
 		<license>
 			<name>GNU Lesser General Public License</name>
@@ -110,64 +108,64 @@
 		</developer>
 	</developers>
 	<profiles>
-    <profile>
-      <!-- 
-          This profile is activated manually, as in "mvn ... -P release ..."
-		  -->
-      <id>release</id>
-      <properties>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-      </properties>
-      <modules>
-        <module>build</module>        
-      </modules>
-      <build>
-        <plugins>
-       
-        </plugins>
-      </build>
-    </profile>
+        <profile>
+            <!--
+             This profile is activated manually, as in "mvn ... -P release ..."
+             -->
+            <id>release</id>
+            <properties>
+                <maven.javadoc.skip>true</maven.javadoc.skip>
+            </properties>
+            <modules>
+                <module>build</module>
+            </modules>
+            <build>
+                <plugins>
+                    
+                </plugins>
+            </build>
+        </profile>
         
-    <profile>
-      <id>docs</id>
-      <modules>
-        <module>documentation</module>
-      </modules>
-    </profile>
-      
-    <profile>
-         <!--
-          This is to enable faster build for development time.
-          -->
-      <id>dev</id>
-      <properties>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-        <skipTests>true</skipTests>
-      </properties>
-      <modules>
-        <module>build</module>
-      </modules>
-    </profile>   
+        <profile>
+            <id>docs</id>
+            <modules>
+                <module>documentation</module>
+            </modules>
+        </profile>
+        
+        <profile>
+            <!--
+             This is to enable faster build for development time.
+             -->
+            <id>dev</id>
+            <properties>
+                <maven.javadoc.skip>true</maven.javadoc.skip>
+                <skipTests>true</skipTests>
+            </properties>
+            <modules>
+                <module>build</module>
+            </modules>
+        </profile>
 	</profiles>
 	<build>
-	<!-- This section defines the default plugin settings inherited by child projects. -->
+        <!-- This section defines the default plugin settings inherited by child projects. -->
 		<pluginManagement>
 			<plugins>
-		<!-- Fixes how test resources of a project can be used in projects dependent on it  -->
+                <!-- Fixes how test resources of a project can be used in projects dependent on it  -->
 				<plugin>
 		            <groupId>org.apache.maven.plugins</groupId>
 		            <artifactId>maven-javadoc-plugin</artifactId>
 		            <version>${version.javadoc.plugin}</version>
 		            <configuration>
-		              <maxmemory>512m</maxmemory>
-		              <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames>
+                        <maxmemory>512m</maxmemory>
+                        <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames>
 		            </configuration>
 		            <executions>
-		              <execution>
-		                <goals>
-		                  <goal>aggregate-jar</goal>
-		                </goals>
-		              </execution>
+                        <execution>
+                            <goals>
+                                <goal>aggregate-jar</goal>
+                            </goals>
+                        </execution>
 		            </executions>
 	          	</plugin>
 				<plugin>
@@ -176,13 +174,13 @@
 					<version>${version.jar.plugin}</version>
 				</plugin>
 				<plugin>
-				  <artifactId>maven-assembly-plugin</artifactId>
-				  <version>2.2-beta-6-m1-jboss</version>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2-beta-6-m1-jboss</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
-	  <!-- Specify the compiler options and settings -->
+            <!-- Specify the compiler options and settings -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -205,7 +203,7 @@
 					</includes>
 					<excludes>
 						<exclude>**/Abstract*TestCase.java</exclude>
-			<!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
+                        <!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
 						<include>**/Test*$*.java</include>
 					</excludes>
 					<systemPropertyVariables>
@@ -214,10 +212,10 @@
 					</systemPropertyVariables>
 				</configuration>
 			</plugin>
-      <!-- 
-      Build a test-jar for each project, so that src/test/* resources and classes can be used
-      in other projects.  Also customize how the jar files are assembled.
-      -->
+            <!--
+             Build a test-jar for each project, so that src/test/* resources and classes can be used
+             in other projects.  Also customize how the jar files are assembled.
+             -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -255,7 +253,7 @@
             </plugin>
 		</plugins>
 	</build>
-	<dependencies>      
+	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -268,22 +266,22 @@
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
-		<dependencies>     
-        <!--IP-Platform BOM-->
-             <dependency>
-                 <groupId>org.jboss.integration-platform</groupId>
-                 <artifactId>jboss-integration-platform-bom</artifactId>
-                 <version>${version.ip-bom}</version>
-                 <type>pom</type>
-                 <scope>import</scope>
-             </dependency>
-                                        
-      <!--
-      Declare all dependency versions and default scopes here, but not optional.
-      Each module should declare it's direct dependency and possibily overwrite scope/optional.
-      -->
-      
-      <!-- Internal dependencies -->
+		<dependencies>
+            <!--IP-Platform BOM-->
+            <!--dependency>
+                <groupId>org.jboss.integration-platform</groupId>
+                <artifactId>jboss-integration-platform-bom</artifactId>
+                <version>${version.ip-bom}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency-->
+            
+            <!--
+             Declare all dependency versions and default scopes here, but not optional.
+             Each module should declare it's direct dependency and possibily overwrite scope/optional.
+             -->
+            
+            <!-- Internal dependencies -->
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-common-core</artifactId>
@@ -329,7 +327,7 @@
                 <groupId>org.jboss.teiid</groupId>
                 <artifactId>teiid-admin</artifactId>
                 <version>${project.version}</version>
-            </dependency>            
+            </dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-client</artifactId>
@@ -375,9 +373,9 @@
                 <groupId>org.jboss.teiid</groupId>
                 <artifactId>teiid-runtime</artifactId>
                 <version>${project.version}</version>
-            </dependency>    
-      
-      <!-- External dependencies -->
+            </dependency>
+            
+            <!-- External dependencies -->
 			<dependency>
 				<groupId>javax.resource</groupId>
 				<artifactId>connector-api</artifactId>
@@ -404,14 +402,14 @@
                     <exclusion>
                         <groupId>javax.servlet</groupId>
                         <artifactId>servlet-api</artifactId>
-                    </exclusion>       
+                    </exclusion>
 				</exclusions>
 			</dependency>
             <dependency>
                 <groupId>org.jboss.modules</groupId>
                 <artifactId>jboss-modules</artifactId>
                 <version>${version.org.jboss.modules.jboss-modules}</version>
-            </dependency>                         
+            </dependency>
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-common-core</artifactId>
@@ -422,7 +420,12 @@
                         <artifactId>jboss-logging-spi</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>     
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-subsystem-test-framework</artifactId>
+                <version>${version.org.jboss.as}</version>
+            </dependency>
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-dmr</artifactId>
@@ -432,27 +435,27 @@
                 <groupId>org.jboss.msc</groupId>
                 <artifactId>jboss-msc</artifactId>
                 <version>${version.org.jboss.msc.jboss-msc}</version>
-            </dependency> 
+            </dependency>
             <dependency>
                 <groupId>org.jboss.as</groupId>
-                <artifactId>jboss-as-subsystem-test-framework</artifactId>
+                <artifactId>jboss-as-subsystem-test</artifactId>
                 <version>${version.org.jboss.as}</version>
-            </dependency>     
+            </dependency>
             <dependency>
                 <groupId>org.jboss.as</groupId>
-                <artifactId>jboss-as-cli</artifactId>  
-                <version>${version.org.jboss.as}</version>          
-            </dependency>   
+                <artifactId>jboss-as-cli</artifactId>
+                <version>${version.org.jboss.as}</version>
+            </dependency>
             <dependency>
-              <groupId>org.jboss.as</groupId>
-              <artifactId>jboss-as-clustering-jgroups</artifactId>
-              <version>${version.org.jboss.as}</version>
-            </dependency>             
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-clustering-jgroups</artifactId>
+                <version>${version.org.jboss.as}</version>
+            </dependency>
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-controller</artifactId>
                 <version>${version.org.jboss.as}</version>
-            </dependency>                                                                                                                                    
+            </dependency>
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-vfs</artifactId>
@@ -466,8 +469,8 @@
                         <groupId>org.jboss.logging</groupId>
                         <artifactId>jboss-logging-spi</artifactId>
                     </exclusion>
-                </exclusions>                
-            </dependency>              
+                </exclusions>
+            </dependency>
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-server</artifactId>
@@ -491,9 +494,9 @@
                     <exclusion>
                         <groupId>org.jboss.as</groupId>
                         <artifactId>jboss-as-transactions</artifactId>
-                    </exclusion>                    
-                </exclusions>                  
-            </dependency>   
+                    </exclusion>
+                </exclusions>
+            </dependency>
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-security</artifactId>
@@ -506,41 +509,41 @@
                     <exclusion>
                         <groupId>org.jboss.as</groupId>
                         <artifactId>jboss-as-transactions</artifactId>
-                    </exclusion>                    
-                </exclusions>                                                
-            </dependency>   
+                    </exclusion>
+                </exclusions>
+            </dependency>
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-generator</artifactId>
-                <version>${version.org.jboss.logging-tools}</version>            
-            </dependency>   
+                <version>${version.org.jboss.logging-tools}</version>
+            </dependency>
             <dependency>
-              <groupId>org.jboss.as</groupId>
-              <artifactId>jboss-as-clustering-infinispan</artifactId>
-              <version>${version.org.jboss.as}</version>
-              <exclusions>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-clustering-infinispan</artifactId>
+                <version>${version.org.jboss.as}</version>
+                <exclusions>
                     <exclusion>
                         <groupId>org.jboss.logging</groupId>
                         <artifactId>jboss-logging-processor</artifactId>
                     </exclusion>
-             </exclusions>              
-            </dependency>            
+                </exclusions>
+            </dependency>
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-spi</artifactId>
                 <version>2.2.0.CR1</version>
-            </dependency>         
+            </dependency>
             <dependency>
-              <groupId>org.jboss.arquillian.junit</groupId>
-              <artifactId>arquillian-junit-container</artifactId>
-              <version>${version.org.jboss.arquillian.core}</version>
-              <exclusions>
-                <exclusion>
-                  <groupId>commons-logging</groupId>
-                  <artifactId>commons-logging</artifactId>
-                </exclusion>
-              </exclusions>
-            </dependency>       
+                <groupId>org.jboss.arquillian.junit</groupId>
+                <artifactId>arquillian-junit-container</artifactId>
+                <version>${version.org.jboss.arquillian.core}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
 			<dependency>
 				<groupId>net.sourceforge.saxon</groupId>
 				<artifactId>saxonhe</artifactId>
@@ -551,7 +554,7 @@
 				<artifactId>json-simple</artifactId>
   				<version>${version.json-simple}</version>
 			</dependency>
-
+            
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-xjc</artifactId>
@@ -609,11 +612,11 @@
                         <artifactId>staxmapper</artifactId>
                     </exclusion>
                     <exclusion>
-                      <groupId>org.jboss.spec.javax.transaction</groupId>
-                      <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-                    </exclusion>  
+                        <groupId>org.jboss.spec.javax.transaction</groupId>
+                        <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+                    </exclusion>
                 </exclusions>
-            </dependency>     
+            </dependency>
             <dependency>
                 <groupId>asm</groupId>
                 <artifactId>asm</artifactId>
@@ -622,7 +625,7 @@
             <dependency>
                 <groupId>wsdl4j</groupId>
                 <artifactId>wsdl4j</artifactId>
-                <version>${version.wsdl4j}</version>
+                <version>${version.javax.wsdl4j}</version>
             </dependency>
             <dependency>
                 <groupId>javax.ws.rs</groupId>
@@ -630,11 +633,11 @@
                 <version>${version.javax.ws.rs}</version>
             </dependency>
             <dependency>
-              <groupId>org.odata4j</groupId>
-              <artifactId>odata4j-core</artifactId>
-              <version>${version.org.odata4j}</version>
-              <classifier>redhat</classifier>
-              <exclusions>                
+                <groupId>org.odata4j</groupId>
+                <artifactId>odata4j-core</artifactId>
+                <version>${version.org.odata4j}</version>
+                <classifier>redhat</classifier>
+                <exclusions>
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
                         <artifactId>javax.persistence</artifactId>
@@ -646,14 +649,14 @@
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
                         <artifactId>eclipselink</artifactId>
-                    </exclusion>  
-                    <!-- 
-                    <exclusion>
-                        <groupId>joda-time</groupId>
-                        <artifactId>joda-time</artifactId>
-                    </exclusion>    
-                     -->                  
-                </exclusions>              
+                    </exclusion>
+                    <!--
+                     <exclusion>
+                     <groupId>joda-time</groupId>
+                     <artifactId>joda-time</artifactId>
+                     </exclusion>
+                     -->
+                </exclusions>
             </dependency>
             <dependency>
                 <artifactId>core4j</artifactId>
@@ -663,13 +666,13 @@
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>tjws</artifactId>
-                <version>${version.org.jboss.resteasy}</version>
-            </dependency>                 
+                <version>${version.resteasy-tjws}</version>
+            </dependency>
             <dependency>
                 <groupId>com.force.api</groupId>
                 <artifactId>force-wsc</artifactId>
                 <version>${version.com.force.api}</version>
-              <exclusions>                
+                <exclusions>
                     <exclusion>
                         <groupId>com.google.code.gson</groupId>
                         <artifactId>gson</artifactId>
@@ -678,22 +681,22 @@
                         <groupId>rhino</groupId>
                         <artifactId>js</artifactId>
                     </exclusion>
-               </exclusions>                
-            </dependency>   
+                </exclusions>
+            </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
                 <version>${version.org.apache.lucene}</version>
-            </dependency>  
+            </dependency>
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-ws-security</artifactId>
                 <version>${version.org.apache.cxf}</version>
-            </dependency>   
+            </dependency>
             <dependency>
-              <groupId>org.mongodb</groupId>
-              <artifactId>mongo-java-driver</artifactId>
-              <version>${version.mongodb-java-driver}</version>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongo-java-driver</artifactId>
+                <version>${version.mongodb-java-driver}</version>
             </dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -712,5 +715,5 @@
         <module>client-jdk15</module>
 		<module>admin</module>
         <module>odata</module>
-  </modules>
+    </modules>
 </project>
