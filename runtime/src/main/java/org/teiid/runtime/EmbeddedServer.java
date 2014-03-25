@@ -92,6 +92,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
+import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
@@ -555,6 +556,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * @throws IOException 
 	 */
 	public void deployVDB(InputStream is) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException {
+		if (is == null) {
+			return;
+		}
 		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
 		try {
 			//TODO: find a way to do this off of the stream
@@ -568,6 +572,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		} catch (XMLStreamException e) {
 			throw new VirtualDatabaseException(e);
 		}
+		metadata.setXmlDeployment(true);
 		deployVDB(metadata, null);
 	}
 	
@@ -609,13 +614,39 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();
 		udfMetaData.setFunctionClassLoader(Thread.currentThread().getContextClassLoader());
-		this.assignMetadataRepositories(vdb, null);
-		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, VDBResources.Resource>(), udfMetaData, cmr, false);
+		MetadataRepository<?, ?> defaultRepo = null;
+		LinkedHashMap<String, VDBResources.Resource> visibilityMap = null;
+		if (resources != null) {
+			//check to see if there is an index file.  if there is then we assume
+			//that index is the default metadata repo
+			for (String s : resources.getEntriesPlusVisibilities().keySet()) {
+				if (s.endsWith(VDBResources.INDEX_EXT)) {
+					defaultRepo = new IndexMetadataRepository();
+					break;
+				}
+			}
+			visibilityMap = resources.getEntriesPlusVisibilities();
+		} else {
+			visibilityMap = new LinkedHashMap<String, VDBResources.Resource>();
+		}
+		this.assignMetadataRepositories(vdb, defaultRepo);
+		repo.addVDB(vdb, metadataStore, visibilityMap, udfMetaData, cmr, false);
 		try {
 			this.loadMetadata(vdb, cmr, metadataStore, resources, false);
 		} catch (VDBValidationError e) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.valueOf(e.getCode()), e.getMessage());
 		}
+	}
+	
+	@Override
+	protected MetadataRepository<?, ?> getMetadataRepository(String repoType)
+			throws VirtualDatabaseException {
+		if ("index".equals(repoType)) { //$NON-NLS-1$
+			//return a new instance since the repos are globally scoped
+			//this does not support MMX style index files organized by type
+			return new IndexMetadataRepository(); 
+		}
+		return super.getMetadataRepository(repoType);
 	}
 	
 	/**
