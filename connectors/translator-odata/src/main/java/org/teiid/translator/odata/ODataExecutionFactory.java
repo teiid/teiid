@@ -21,37 +21,22 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.SQLConstants.Reserved.NULL;
 
-import java.io.InputStreamReader;
-import java.sql.Blob;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
-import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.odata4j.core.UnsignedByte;
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.internal.InternalUtil;
-import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.Call;
-import org.teiid.language.Command;
-import org.teiid.language.Literal;
-import org.teiid.language.QueryExpression;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
@@ -59,7 +44,6 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 /**
  * TODO:
@@ -122,25 +106,14 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
-		BaseQueryExecution execution = new BaseQueryExecution(this, null, null, conn);
-		BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
-		if (call.getResponseCode() != Status.OK.getStatusCode()) {
-			throw execution.buildError(call);
-		}
-
-		Blob out = (Blob)call.getOutputParameterValues().get(0);
-
-		try {
-			EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
-			ODataMetadataProcessor metadataProcessor = getMetadataProcessor();
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-			metadataProcessor.getMetadata(metadataFactory, eds);
-		} catch (SQLException e) {
-			throw new TranslatorException(e, e.getMessage());
-		}
+	    ODataMetadataProcessor metadataProcessor = (ODataMetadataProcessor)getMetadataProcessor();
+		PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+		metadataProcessor.setExecutionfactory(this);
+		metadataProcessor.process(metadataFactory, conn);
 	}
 
-	protected ODataMetadataProcessor getMetadataProcessor() {
+	@Override
+    public MetadataProcessor<WSConnection> getMetadataProcessor() {
 		return new ODataMetadataProcessor();
 	}
 

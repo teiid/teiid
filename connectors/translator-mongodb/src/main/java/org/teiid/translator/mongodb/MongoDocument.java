@@ -21,28 +21,14 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Association;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
-import com.mongodb.QueryBuilder;
+import com.mongodb.*;
 
 class MongoDocument {
 	private RuntimeMetadata metadata;
@@ -94,15 +80,15 @@ class MongoDocument {
 	}
 
 	public static boolean isEmbeddable(Table tbl) {
-		return Boolean.parseBoolean(tbl.getProperty(MongoDBSelectVisitor.EMBEDDABLE, false));
+		return Boolean.parseBoolean(tbl.getProperty(MongoDBMetadataProcessor.EMBEDDABLE, false));
 	}
 
 	public boolean isMerged() {
-		return this.table.getProperty(MongoDBSelectVisitor.MERGE, false) != null;
+		return this.table.getProperty(MongoDBMetadataProcessor.MERGE, false) != null;
 	}
 
 	public Table getMergeTable() throws TranslatorException {
-		String tblName = this.table.getProperty(MongoDBSelectVisitor.MERGE, false);
+		String tblName = this.table.getProperty(MongoDBMetadataProcessor.MERGE, false);
 		if (tblName == null) {
 			return null;
 		}

@@ -22,29 +22,17 @@
 package org.teiid.translator.solr;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
@@ -69,13 +57,11 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	public void start() throws TranslatorException {
 		super.start();
 	}
-	
+		
 	@Override
-	public void getMetadata(MetadataFactory metadataFactory, SolrConnection conn) throws TranslatorException {
-		SolrMetadataProcessor metadataProcessor = new SolrMetadataProcessor();
-		PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-		metadataProcessor.getConnectorMetadata(conn, metadataFactory);
-	}	
+    public MetadataProcessor<SolrConnection> getMetadataProcessor() {
+	    return new SolrMetadataProcessor();
+	}
 	
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
     	this.functionModifiers.put(name, modifier);

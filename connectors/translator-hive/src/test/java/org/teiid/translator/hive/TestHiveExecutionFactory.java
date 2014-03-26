@@ -1,11 +1,10 @@
 package org.teiid.translator.hive;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
@@ -19,11 +18,7 @@ import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -190,7 +185,7 @@ public class TestHiveExecutionFactory {
            return RealMetadataFactory.createTransformationMetadata(metadataStore, "bqt");//$NON-NLS-1$
     }
     
-    @Test public void testExcludeTables() throws SQLException {
+    @Test public void testExcludeTables() throws Exception {
     	HiveMetadataProcessor hmp = new HiveMetadataProcessor();
     	hmp.setExcludeTables("x");
     	Connection c = Mockito.mock(Connection.class);
@@ -202,7 +197,7 @@ public class TestHiveExecutionFactory {
     	Mockito.stub(rs.next()).toReturn(true).toReturn(false);
     	Mockito.stub(rs.getString(1)).toReturn("x");
     	
-    	hmp.getConnectorMetadata(c, mf);
+    	hmp.process(mf, c);
     	Mockito.verify(mf, Mockito.times(0)).addTable("x");
     }
 }

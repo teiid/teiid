@@ -24,10 +24,8 @@ package org.teiid.deployers;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
-import org.teiid.deployers.ExtendedPropertyMetadata;
 
 @SuppressWarnings("nls")
 public class TestExtendedPropertyMetadata {

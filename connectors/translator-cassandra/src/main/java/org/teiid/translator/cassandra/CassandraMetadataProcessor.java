@@ -20,48 +20,48 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.cassandra.metadata;
+package org.teiid.translator.cassandra;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.cassandra.db.KeyspaceNotDefinedException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.cassandra.CassandraExecutionFactory.Event;
 
 import com.datastax.driver.core.ColumnMetadata;
-import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.TableMetadata;
 
-public class CassandraMetadataProcessor {
-	private MetadataFactory metadataFactory;
-	private KeyspaceMetadata keyspaceMetadata;
-	
-	public CassandraMetadataProcessor(MetadataFactory factory, KeyspaceMetadata keyspaceInfo){
-		this.metadataFactory = factory;
-		this.keyspaceMetadata = keyspaceInfo;
-	}
+public class CassandraMetadataProcessor implements MetadataProcessor<CassandraConnection>{
 	
 	/**
 	 * Creates metadata from all column families in current keyspace.
 	 */
-	public void processMetadata() {
-		for (TableMetadata columnFamily : keyspaceMetadata.getTables()){
-			addTable(columnFamily);
-		}
+	public void process(MetadataFactory factory, CassandraConnection connection) throws TranslatorException {
+        try {
+    		for (TableMetadata columnFamily : connection.keyspaceInfo().getTables()){
+    			addTable(factory, columnFamily);
+    		}
+        } catch (KeyspaceNotDefinedException e) {
+            throw new TranslatorException(Event.TEIID22000, e, CassandraExecutionFactory.UTIL.gs(Event.TEIID22000));
+        }
 	}
 
 	/**
 	 * Adds table.
 	 * @param columnFamily
 	 */
-	private void addTable(TableMetadata columnFamily) {
-		Table table = metadataFactory.addTable(columnFamily.getName());
-		addColumnsToTable(table, columnFamily);
-		addPrimaryKey(table, columnFamily);
+	private void addTable(MetadataFactory factory, TableMetadata columnFamily) {
+		Table table = factory.addTable(columnFamily.getName());
+		addColumnsToTable(factory, table, columnFamily);
+		addPrimaryKey(factory, table, columnFamily);
 		table.setSupportsUpdate(true);
 	}
 
@@ -70,7 +70,7 @@ public class CassandraMetadataProcessor {
 	 * @param table			Teiid table
 	 * @param columnFamily
 	 */
-	private void addPrimaryKey(Table table, TableMetadata columnFamily) {
+	private void addPrimaryKey(MetadataFactory factory, Table table, TableMetadata columnFamily) {
 		List<ColumnMetadata> primaryKeys = new ArrayList<ColumnMetadata>();
 		primaryKeys = columnFamily.getPrimaryKey();
 		List<String> PKNames = new ArrayList<String>();
@@ -79,7 +79,7 @@ public class CassandraMetadataProcessor {
 			PKNames.add(columnName.getName());
 			table.getColumnByName(columnName.getName()).setSearchType(SearchType.Searchable);
 		}
-		metadataFactory.addPrimaryKey("PK_" + columnFamily.getName(), PKNames, table); //$NON-NLS-1$
+		factory.addPrimaryKey("PK_" + columnFamily.getName(), PKNames, table); //$NON-NLS-1$
 	}
 
 	/**
@@ -87,7 +87,7 @@ public class CassandraMetadataProcessor {
 	 * @param table			Teiid table
 	 * @param columnFamily	Column family
 	 */
-	private void addColumnsToTable(Table table, TableMetadata columnFamily) {
+	private void addColumnsToTable(MetadataFactory factory, Table table, TableMetadata columnFamily) {
 		for (ColumnMetadata column : columnFamily.getColumns()){
 
 			Class<?> cqlTypeToJavaClass = column.getType().asJavaClass();
@@ -98,7 +98,7 @@ public class CassandraMetadataProcessor {
 				type = TypeFacility.getDataTypeName(Timestamp.class);
 			}
 			
-			Column c = metadataFactory.addColumn(column.getName(), type, table);
+			Column c = factory.addColumn(column.getName(), type, table);
 			c.setUpdatable(true);
 			if (column.getIndex() != null) {
 				c.setSearchType(SearchType.Searchable);

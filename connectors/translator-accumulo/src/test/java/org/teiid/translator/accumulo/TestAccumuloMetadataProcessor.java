@@ -39,11 +39,9 @@ import org.apache.accumulo.core.security.Authorizations;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.metadata.Column;
+import org.teiid.core.util.PropertiesUtils;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 
 @SuppressWarnings("nls")
@@ -84,8 +82,8 @@ public class TestAccumuloMetadataProcessor {
 		Mockito.stub(conn.getInstance()).toReturn(connector);
 		Mockito.stub(conn.getAuthorizations()).toReturn(new Authorizations("public"));
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "accumulo", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor(mf,conn);
-		processor.processMetadata();
+		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor();
+		processor.process(mf,conn);
 
 
 		Schema schema = mf.getSchema();
@@ -111,15 +109,16 @@ public class TestAccumuloMetadataProcessor {
 	public void testImportPropertiesMetadata() throws Exception {
 		Properties props = new Properties();
 		
-		props.put("ColumnNamePattern", "{CQ}");
-		props.put("ValueIn", "{ROWID}");
+		props.put("importer.ColumnNamePattern", "{CQ}");
+		props.put("importer.ValueIn", "{ROWID}");
 		
 		AccumuloConnection conn = Mockito.mock(AccumuloConnection.class);
 		Mockito.stub(conn.getInstance()).toReturn(connector);
 		Mockito.stub(conn.getAuthorizations()).toReturn(new Authorizations("public"));
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "accumulo", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
-		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor(mf,conn);
-		processor.processMetadata();
+		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor();
+		PropertiesUtils.setBeanProperties(processor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
+		processor.process(mf,conn);
 
 		Schema schema = mf.getSchema();
 		Map<String, Table> tables = schema.getTables();

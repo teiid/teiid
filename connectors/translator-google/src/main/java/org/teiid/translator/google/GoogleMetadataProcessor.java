@@ -20,35 +20,30 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.google.metadata;
+package org.teiid.translator.google;
 
 
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
+import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
 import org.teiid.resource.adapter.google.metadata.Column;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.metadata.Worksheet;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
-public class MetadataProcessor {
+public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsheetConnection>{
 	
-	MetadataFactory metadataFactory;
-	SpreadsheetInfo spreadsheetMetadata;
-
-	public MetadataProcessor(MetadataFactory metadataFactory, SpreadsheetInfo metadata) {
-		this.metadataFactory = metadataFactory;
-		spreadsheetMetadata = metadata;
-	}
-
 	/**
 	 * Creates metadata from all spreadsheets in the user account. Table name
 	 * consists of Spreadsheet name and worksheet name. Columns of the table are
 	 * columns of the worksheet.
 	 */
-	public void processMetadata() {
-		for (Worksheet worksheet : spreadsheetMetadata.getWorksheets()) {
-			addTable(worksheet);
+	public void process(MetadataFactory mf, GoogleSpreadsheetConnection conn) throws TranslatorException {
+	    SpreadsheetInfo ssMetadata = conn.getSpreadsheetInfo();
+		for (Worksheet worksheet : ssMetadata.getWorksheets()) {
+			addTable(mf, worksheet);
 		}
 	}
 
@@ -59,13 +54,13 @@ public class MetadataProcessor {
 	 * @param worksheet    Name of the worksheet
 	 * @throws TranslatorException
 	 */
-	private void addTable(Worksheet worksheet) {
+	private void addTable(MetadataFactory mf, Worksheet worksheet) {
 		if (worksheet.getColumnCount() == 0){
 			return;
 		}
-		Table table=metadataFactory.addTable(worksheet.getName());
+		Table table = mf.addTable(worksheet.getName());
 		table.setNameInSource(worksheet.getName()); 
-		addColumnsToTable(table, worksheet);
+		addColumnsToTable(mf, table, worksheet);
 	}
 	
 	/**
@@ -75,7 +70,7 @@ public class MetadataProcessor {
 	 * @param worksheet  
 	 * @throws TranslatorException
 	 */
-	private void addColumnsToTable(Table table, Worksheet worksheet) {
+	private void addColumnsToTable(MetadataFactory mf, Table table, Worksheet worksheet) {
 		for(Column column : worksheet.getColumns()){
 			String type = null;
 			switch(column.getDataType()){
@@ -97,7 +92,7 @@ public class MetadataProcessor {
 			default:
 				type = TypeFacility.RUNTIME_NAMES.STRING;
 			}
-			org.teiid.metadata.Column c = metadataFactory.addColumn(column.getLabel()!=null?column.getLabel():column.getAlphaName(), type, table);
+			org.teiid.metadata.Column c = mf.addColumn(column.getLabel()!=null?column.getLabel():column.getAlphaName(), type, table);
 			c.setNameInSource(column.getAlphaName());
 			c.setNativeType(column.getDataType().name());
 		}    

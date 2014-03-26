@@ -21,11 +21,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -33,13 +29,7 @@ import java.util.regex.Pattern;
 import org.teiid.language.*;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Association;
 
@@ -49,9 +39,6 @@ import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 
 public class MongoDBSelectVisitor extends HierarchyVisitor {
-	public static final String MERGE = MetadataFactory.MONGO_URI+"MERGE"; //$NON-NLS-1$
-	public static final String EMBEDDABLE = MetadataFactory.MONGO_URI+"EMBEDDABLE"; //$NON-NLS-1$
-
     private AtomicInteger aliasCount = new AtomicInteger();
     private AtomicInteger columnCount = new AtomicInteger();
 	protected MongoDBExecutionFactory executionFactory;

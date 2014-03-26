@@ -37,39 +37,36 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Table;
-import org.teiid.translator.FileConnection;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 
-public class ExcelMetadataProcessor {
+public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection> {
+    
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Excel File Name", description="Excel File name, use file name pattern if one than one file in the parent directory", required=true)
 	public static final String FILE = MetadataFactory.EXCEL_URI+"FILE"; //$NON-NLS-1$
+
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="Cell Number", description="Cell number, where the column information is defined. If column name is ROW_ID, define it as -1", required=true)    
 	public static final String CELL_NUMBER = MetadataFactory.EXCEL_URI+"CELL_NUMBER"; //$NON-NLS-1$
-	public static final String FIRST_DATA_ROW_NUMBER = MetadataFactory.EXCEL_URI+"FIRST_DATA_ROW_NUMBER"; //$NON-NLS-1$
-	public static final String ROW_ID = "ROW_ID"; //$NON-NLS-1$
+
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="First Data Number", description="First Row Number, where data rows start")
+    public static final String FIRST_DATA_ROW_NUMBER = MetadataFactory.EXCEL_URI+"FIRST_DATA_ROW_NUMBER"; //$NON-NLS-1$
+
+    public static final String ROW_ID = "ROW_ID"; //$NON-NLS-1$
 	
-	private MetadataFactory mf;
-	private FileConnection conn;
-	private String excelFileName;
+    private String excelFileName;
 	private int headerRowNumber = 0;
 	private boolean hasHeader = false;
 	private int dataRowNumber = 0;
 	private boolean hasDataRowNumber = false;
 
-	public ExcelMetadataProcessor(MetadataFactory metadataFactory, FileConnection conn) {
-		this.mf = metadataFactory;
-		this.conn = conn;
-	}
-
-	public void processMetadata() throws TranslatorException {
+	public void process(MetadataFactory mf, FileConnection conn) throws TranslatorException {
 		if (this.excelFileName == null) {
 			throw new TranslatorException(ExcelPlugin.Event.TEIID23004, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23004, "importer.ExcelFileName")); //$NON-NLS-1$
 		}
 		try {
-			File xlsFile = this.conn.getFile(this.excelFileName);
+			File xlsFile = conn.getFile(this.excelFileName);
 			if (xlsFile.isDirectory() || !xlsFile.exists()) {
 				throw new TranslatorException(ExcelPlugin.Event.TEIID23005, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23005, xlsFile.getName()));
 			}
@@ -87,7 +84,7 @@ public class ExcelMetadataProcessor {
 				int sheetCount = workbook.getNumberOfSheets();
 				for (int i = 0; i < sheetCount; i++) {
 					Sheet sheet = workbook.getSheetAt(i);
-					addTable(sheet, xlsFile.getName());
+					addTable(mf, sheet, xlsFile.getName());
 				}
 			} finally {
 				xlsFileStream.close();
@@ -99,7 +96,7 @@ public class ExcelMetadataProcessor {
 		}
 	}
 
-	private void addTable(Sheet sheet, String xlsName) {
+	private void addTable(MetadataFactory mf, Sheet sheet, String xlsName) {
 		int firstRowNumber = sheet.getFirstRowNum();
 		Row headerRow = null;
 		int firstCellNumber = -1;
@@ -184,19 +181,7 @@ public class ExcelMetadataProcessor {
 	public void setExcelFileName(String fileName) {
 		this.excelFileName = fileName;
 	}	
-	
-	public void setHeaderRowNumber(String headerNumber) {
-		//adjust for zero index
-		this.headerRowNumber = Integer.parseInt(headerNumber)-1;
-		this.hasHeader = true;
-	}	
-	
-	public void setDataRowNumber(String dataNumber) {
-		//adjust for zero index
-		this.dataRowNumber = Integer.parseInt(dataNumber)-1;
-		this.hasDataRowNumber = true;
-	}	
-	
+		
 	static String getFileExtension(File xlsFile) {
 		int idx = xlsFile.getName().lastIndexOf('.');
 		String extension = "xls"; //$NON-NLS-1$
@@ -216,4 +201,31 @@ public class ExcelMetadataProcessor {
 			return TypeFacility.RUNTIME_NAMES.DOUBLE;
 		}
 	}
+	
+	@TranslatorProperty(display="Header Row Number", description="Row number that contains the header information")
+    public int getHeaderRowNumber() {
+        return headerRowNumber;
+    }
+
+    public void setHeaderRowNumber(int headerRowNumber) {
+        //adjust for zero index
+        this.hasHeader = true;
+        this.headerRowNumber = headerRowNumber-1;
+    }
+    
+    @TranslatorProperty(display="Data Row Number", category=PropertyType.IMPORT, description="Row number from which data rows start from")
+    public int getDataRowNumber() {
+        return dataRowNumber;
+    }
+
+    public void setDataRowNumber(int dataRowNumber) {
+        //adjust for zero index
+        this.hasDataRowNumber = true;
+        this.dataRowNumber = dataRowNumber-1;
+    }
+
+    @TranslatorProperty(display="Excel File", category=PropertyType.IMPORT, description="Name of the Excel file to read metadata from", required=true)
+    public String getExcelFileName() {
+        return excelFileName;
+    }	
 }

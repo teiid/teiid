@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.cassandra.execution;
+package org.teiid.translator.cassandra;
 
 import static org.teiid.language.SQLConstants.Reserved.FROM;
 import static org.teiid.language.SQLConstants.Reserved.SELECT;
