@@ -488,9 +488,17 @@ public class TempTableDataManager implements ProcessorDataManager {
 					} else {
 						boolean load = false;
 						if (!info.isUpToDate()) {
-							load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, false);
+							boolean invalidate = true;
+							VDBMetaData vdb = context.getVdb();
+							if (vdb != null) {
+								String val = vdb.getPropertyValue("lazy-invalidate"); //$NON-NLS-1$
+								if (val != null) {
+									invalidate = !Boolean.valueOf(val);
+								}
+							}
+							load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, invalidate);
 							if (load) {
-								load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, false);
+								load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, invalidate);
 							}
 							if (!load) {
 								synchronized (info) {

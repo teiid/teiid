@@ -675,6 +675,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public VDBMetaData getVdb() {
+		if (this.vdbState.dqpWorkContext == null) {
+			return null;
+		}
 		return this.vdbState.dqpWorkContext.getVDB();
 	}
 	
