@@ -34,10 +34,17 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 
-public class SolrMetadataProcessor {
+public class SolrMetadataProcessor implements MetadataProcessor<SolrConnection>{
 
+    @Override
+    public void process(MetadataFactory metadataFactory,
+            SolrConnection connection) throws TranslatorException {
+        getConnectorMetadata(connection, metadataFactory);
+    }    
+    
 	public void getConnectorMetadata(SolrConnection conn, MetadataFactory metadataFactory) throws TranslatorException {
 		int count = 0;
 		LukeRequest request = new LukeRequest();
@@ -107,5 +114,4 @@ public class SolrMetadataProcessor {
 		}
 		return DataTypeManager.DefaultDataTypes.STRING;
 	}
-
 }

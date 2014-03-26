@@ -31,22 +31,27 @@ import java.util.List;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 
-public class HiveMetadataProcessor extends JDBCMetdataProcessor {
+public class HiveMetadataProcessor extends JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 
 	private boolean trimColumnNames;
 
-	@Override
-	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)	throws SQLException {
-		List<String> tables = getTables(conn);
-		for (String table:tables) {
-			if (shouldExclude(table)) {
-				continue;
-			}
-			addTable(table, conn, metadataFactory);
-		}
+    @Override
+	public void process(MetadataFactory metadataFactory, Connection conn)	throws TranslatorException {
+		try {
+            List<String> tables = getTables(conn);
+            for (String table:tables) {
+            	if (shouldExclude(table)) {
+            		continue;
+            	}
+            	addTable(table, conn, metadataFactory);
+            }
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        }
 	}
 
 	private List<String> getTables(Connection conn) throws SQLException {
@@ -131,4 +136,9 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 	public void setTrimColumnNames(boolean trimColumnNames) {
 		this.trimColumnNames = trimColumnNames;
 	}
+	
+	@TranslatorProperty(display="Trim Columns", category=PropertyType.IMPORT, description="Trim column names read from the database")
+    public boolean isTrimColumnNames() {
+        return trimColumnNames;
+    }	
 }

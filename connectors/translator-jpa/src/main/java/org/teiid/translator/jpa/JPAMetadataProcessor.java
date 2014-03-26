@@ -23,33 +23,17 @@ package org.teiid.translator.jpa;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.*;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
@@ -59,9 +43,13 @@ import org.teiid.translator.TypeFacility;
  * 
  */
 @SuppressWarnings("nls")
-public class JPAMetadataProcessor {
-	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = "assosiated_with_table";
-	public static final String ENTITYCLASS= "entity_class";
+public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
+    
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Foriegn Table Name", description="Applicable on Forign Key columns")
+	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = MetadataFactory.JPA_URI+"assosiated_with_table";
+
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
+	public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class";
 	
 	final static Map<Class<?>, Class<?>> map = new HashMap<Class<?>, Class<?>>();
 	static {
@@ -89,7 +77,7 @@ public class JPAMetadataProcessor {
 	    map.put(Calendar.class, java.sql.Timestamp.class);
 	}
 
-	public void getMetadata(MetadataFactory mf, EntityManager entityManager) throws TranslatorException {
+	public void process(MetadataFactory mf, EntityManager entityManager) throws TranslatorException {
 		Metamodel model = entityManager.getMetamodel();
 		
 		Set<EntityType<?>> entities = model.getEntities();

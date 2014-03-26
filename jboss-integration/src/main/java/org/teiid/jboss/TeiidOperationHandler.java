@@ -21,12 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -34,13 +29,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -48,13 +37,7 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
 import org.jboss.as.connector.services.resourceadapters.deployment.InactiveResourceAdapterDeploymentService.InactiveResourceAdapterDeployment;
 import org.jboss.as.connector.util.ConnectorServices;
-import org.jboss.as.controller.AbstractWriteAttributeHandler;
-import org.jboss.as.controller.AttributeDefinition;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationDefinition;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
+import org.jboss.as.controller.*;
 import org.jboss.as.controller.descriptions.DefaultOperationDescriptionProvider;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
@@ -69,11 +52,8 @@ import org.jboss.jca.common.api.metadata.ra.ResourceAdapter1516;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
-import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.Admin.SchemaObjectType;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.*;
@@ -84,12 +64,8 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.deployers.ExtendedPropertyMetadata;
-import org.teiid.deployers.ExtendedPropertyMetadataList;
-import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.*;
 import org.teiid.deployers.RuntimeVDB.ReplaceResult;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -102,6 +78,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.TempTableDataManager;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.vdb.runtime.VDBKey;
 
 /**
@@ -1497,14 +1474,21 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
 		if (!operation.hasDefined(OperationsConstants.TRANSLATOR_NAME.getName())) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.TRANSLATOR_NAME.getName()+MISSING)));
 		}
+		
+        if (!operation.hasDefined(OperationsConstants.PROPERTY_TYPE.getName())) {
+            throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.PROPERTY_TYPE.getName()+MISSING)));
+        }		
 
 		ModelNode result = context.getResult();
 		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME.getName()).asString();
+		PropertyType type = PropertyType.valueOf(operation.get(OperationsConstants.PROPERTY_TYPE.getName()).asString().toUpperCase());		
 		VDBTranslatorMetaData translator = repo.getTranslatorMetaData(translatorName);
 		if (translator != null) {
 			ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);
 			for (ExtendedPropertyMetadata epm:properties) {
-				result.add(buildNode(epm));
+			    if (PropertyType.valueOf(epm.category()).equals(type)) {
+			        result.add(buildNode(epm));
+			    }
 			}
 		}
 	}
@@ -1512,7 +1496,7 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
 	static ModelNode buildNode(ExtendedPropertyMetadata prop) {
 		ModelNode node = new ModelNode();
 		String name = prop.name();
-		String type = prop.type();
+		String type = prop.datatype();
 
 		if ("java.lang.String".equals(type)) { //$NON-NLS-1$
 			node.get(name, TYPE).set(ModelType.STRING);
@@ -1546,6 +1530,10 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
         }
         
         node.get(name, "masked").set(prop.masked()); //$NON-NLS-1$
+        
+        if (prop.owner() != null) {
+            node.get(name, "owner").set(prop.owner()); //$NON-NLS-1$
+        }
 
         if (prop.defaultValue() != null) {
         	node.get(name, DEFAULT).set(prop.defaultValue());
@@ -1556,6 +1544,7 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
 	@Override
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.TRANSLATOR_NAME);
+		builder.addParameter(OperationsConstants.PROPERTY_TYPE);
 		builder.setReplyType(ModelType.LIST);
 		builder.setReplyValueType(ModelType.PROPERTY);
 	}

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.google.execution;
+package org.teiid.translator.google;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -37,7 +37,6 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.google.SpreadsheetExecutionFactory;
 
 public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 	private static final String WORKSHEET = "worksheet"; //$NON-NLS-1$

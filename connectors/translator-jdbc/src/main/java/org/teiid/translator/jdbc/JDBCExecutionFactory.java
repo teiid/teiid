@@ -48,15 +48,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
 
 
 /**
@@ -106,7 +98,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     }
 	
     private final ThreadLocal<MessageFormat> comment = new ThreadLocal<MessageFormat>() {
-    	protected MessageFormat initialValue() {
+    	@Override
+        protected MessageFormat initialValue() {
     		return new MessageFormat(commentFormat);
     	}
     };
@@ -318,12 +311,21 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			 throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
 		}
 	}
-
-	protected JDBCMetdataProcessor createMetadataProcessor() {
-		JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
-		return metadataProcessor;
+	
+	/**
+	 * @deprecated
+	 * @see getMetadataProcessor
+	 */
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+		return (JDBCMetdataProcessor)getMetadataProcessor();
 	}    
 	
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetdataProcessor();
+    }
+		
 	@Override
     public List<String> getSupportedFunctions() {
         return getDefaultSupportedFunctions();

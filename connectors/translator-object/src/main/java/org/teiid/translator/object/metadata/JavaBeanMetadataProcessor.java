@@ -23,33 +23,31 @@
 package org.teiid.translator.object.metadata;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.ArrayList;
 
 import javax.script.ScriptException;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.MetadataException;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Table;
 import org.teiid.query.eval.TeiidScriptEngine;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
 
 
 /**
  * The BaseMetadataProcess is the core logic for providing metadata to the translator.
  */
-public class JavaBeanMetadataProcessor {
-	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = "assosiated_with_table";  //$NON-NLS-1$
-	public static final String ENTITYCLASS= "entity_class"; //$NON-NLS-1$
+public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnection>{
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
+    public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class"; //$NON-NLS-1$
 	
 	public static final String GET = "get"; //$NON-NLS-1$
 	public static final String IS = "is"; //$NON-NLS-1$
@@ -60,15 +58,13 @@ public class JavaBeanMetadataProcessor {
 	protected boolean isUpdatable = false;
 	private TeiidScriptEngine engine = new TeiidScriptEngine();
 
-	public void getMetadata(MetadataFactory mf, ObjectConnection conn, ObjectExecutionFactory env) {
-		
+	public void process(MetadataFactory mf, ObjectConnection conn) throws TranslatorException {
 		Map<String, Class<?>> cacheTypes = conn.getCacheNameClassTypeMapping();
 		for (String cacheName : cacheTypes.keySet()) {
 			Class<?> type = cacheTypes.get(cacheName);
 			String pkField = conn.getPkField(cacheName);
 			createSourceTable(mf, type, cacheName, pkField);
 		}
-
 	}
 	
 	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, String pkField) {
@@ -104,7 +100,7 @@ public class JavaBeanMetadataProcessor {
 
                 }
                              
-    			String pkName = "PK_" + pkField.toUpperCase();
+    			String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
                 ArrayList<String> x = new ArrayList<String>(1) ;
                 x.add(pkField);
                 mf.addPrimaryKey(pkName, x , table);

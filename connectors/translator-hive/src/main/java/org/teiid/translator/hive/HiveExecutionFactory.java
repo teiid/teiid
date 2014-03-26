@@ -23,10 +23,7 @@ package org.teiid.translator.hive;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,18 +33,8 @@ import org.teiid.language.Function;
 import org.teiid.language.Limit;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.AliasModifier;
-import org.teiid.translator.jdbc.ConvertModifier;
-import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
-import org.teiid.translator.jdbc.ModFunctionModifier;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.*;
+import org.teiid.translator.jdbc.*;
 
 @Translator(name="hive", description="A translator for hive based database on HDFS")
 public class HiveExecutionFactory extends JDBCExecutionFactory {
@@ -361,8 +348,8 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     }
 
     @Override
-    protected JDBCMetdataProcessor createMetadataProcessor() {
-    	return new HiveMetadataProcessor();
+    public MetadataProcessor<Connection> getMetadataProcessor(){
+        return new HiveMetadataProcessor();
     }
 
     @Override

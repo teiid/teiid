@@ -24,11 +24,7 @@ package org.teiid.translator;
 
 import java.util.List;
 
-import org.teiid.language.Argument;
-import org.teiid.language.Call;
-import org.teiid.language.Command;
-import org.teiid.language.LanguageFactory;
-import org.teiid.language.QueryExpression;
+import org.teiid.language.*;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
@@ -105,7 +101,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return (UpdateExecution) delegate.createExecution(command, executionContext,
 				metadata, connection);
 	}
-	public C getConnection(F factory, ExecutionContext executionContext) throws TranslatorException {
+	@Override
+    public C getConnection(F factory, ExecutionContext executionContext) throws TranslatorException {
 		return delegate.getConnection(factory, executionContext);
 	}
 	@Override
@@ -494,5 +491,9 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	@Override
 	public boolean isThreadBound() {
 		return delegate.isThreadBound();
+	}
+	@Override
+    public MetadataProcessor<C> getMetadataProcessor(){
+	    return delegate.getMetadataProcessor();
 	}
 }

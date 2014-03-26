@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.cassandra.execution;
+package org.teiid.translator.cassandra;
 
 import java.util.List;
 
@@ -31,7 +31,6 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.cassandra.CassandraConnection;
 
 public class CassandraDirectQueryExecution extends CassandraQueryExecution implements ProcedureExecution {
 
