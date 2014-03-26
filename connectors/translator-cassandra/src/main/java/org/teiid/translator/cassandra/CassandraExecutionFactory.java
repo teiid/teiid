@@ -26,29 +26,16 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.apache.cassandra.db.KeyspaceNotDefinedException;
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.cassandra.execution.CassandraDirectQueryExecution;
-import org.teiid.translator.cassandra.execution.CassandraQueryExecution;
-import org.teiid.translator.cassandra.execution.CassandraUpdateExecution;
-import org.teiid.translator.cassandra.metadata.CassandraMetadataProcessor;
+import org.teiid.translator.*;
 
 
 @Translator(name = "cassandra", description = "A translator for Cassandra NoSql database")
@@ -69,7 +56,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			CassandraConnection connection) throws TranslatorException {
-		return new CassandraQueryExecution((Select) command, connection, executionContext);
+		return new CassandraQueryExecution(command, connection, executionContext);
 	}
 
 	@Override
@@ -99,15 +86,8 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	}
 	
 	@Override
-	public void getMetadata(MetadataFactory metadataFactory,
-			CassandraConnection conn) throws TranslatorException {
-		CassandraMetadataProcessor processor;
-		try {
-			processor = new CassandraMetadataProcessor(metadataFactory, conn.keyspaceInfo());
-		} catch (KeyspaceNotDefinedException e) {
-			throw new TranslatorException(Event.TEIID22000, e, UTIL.gs(Event.TEIID22000));
-		}
-		processor.processMetadata();
+    public MetadataProcessor<CassandraConnection> getMetadataProcessor(){
+	    return new CassandraMetadataProcessor();
 	}
 
 	@Override

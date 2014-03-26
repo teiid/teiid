@@ -21,36 +21,79 @@
  */
 package org.teiid.translator.odata;
 
+import java.io.InputStreamReader;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.ws.rs.core.Response.Status;
+
 import org.odata4j.edm.*;
+import org.odata4j.format.xml.EdmxFormatParser;
+import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Table;
-import org.teiid.translator.TranslatorException;
+import org.teiid.metadata.*;
+import org.teiid.translator.*;
+import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
-public class ODataMetadataProcessor {
+public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
+
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Link Tables", description="Used to define navigation relationship in many to many case")    
 	public static final String LINK_TABLES = MetadataFactory.ODATA_URI+"LinkTables"; //$NON-NLS-1$
-	public static final String HTTP_METHOD = MetadataFactory.ODATA_URI+"HttpMethod"; //$NON-NLS-1$
+
+    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Http Method", description="Http method used for procedure invocation", required=true)
+    public static final String HTTP_METHOD = MetadataFactory.ODATA_URI+"HttpMethod"; //$NON-NLS-1$
+    
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=Boolean.class, display="Join Column", description="On Link tables this property defines the join column")    
 	public static final String JOIN_COLUMN = MetadataFactory.ODATA_URI+"JoinColumn"; //$NON-NLS-1$
+    
+    @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, datatype=String.class, display="Entity Type Name", description="Name of the Entity Type in EDM", required=true)    
 	public static final String ENTITY_TYPE = MetadataFactory.ODATA_URI+"EntityType"; //$NON-NLS-1$
-	public static final String COMPLEX_TYPE = MetadataFactory.ODATA_URI+"ComplexType"; //$NON-NLS-1$
+
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Complex Type Name", description="Name of the Complex Type in EDM")
+    public static final String COMPLEX_TYPE = MetadataFactory.ODATA_URI+"ComplexType"; //$NON-NLS-1$
+
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Column Group", description="Name of the Column Group")
 	public static final String COLUMN_GROUP = MetadataFactory.ODATA_URI+"ColumnGroup"; //$NON-NLS-1$
 
 	private String entityContainer;
 	private String schemaNamespace;
+	private ODataExecutionFactory ef;
 
-	public void getMetadata(MetadataFactory mf, EdmDataServices eds) throws TranslatorException {
+	public void setExecutionfactory(ODataExecutionFactory ef) {
+        this.ef = ef;
+    }
 
+    private EdmDataServices getEds(WSConnection conn) throws TranslatorException {
+        try {
+            BaseQueryExecution execution = new BaseQueryExecution(ef, null, null, conn);
+            BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
+            if (call.getResponseCode() != Status.OK.getStatusCode()) {
+                throw execution.buildError(call);
+            }
+
+            Blob out = (Blob)call.getOutputParameterValues().get(0);
+
+            EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
+            return eds;
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        }
+	}
+    
+	public void process(MetadataFactory mf, WSConnection conn) throws TranslatorException {
+	    EdmDataServices eds = getEds(conn);
+	    getMetadata(mf, eds);
+	}
+	
+	public void getMetadata(MetadataFactory mf, EdmDataServices eds) throws TranslatorException {	    
+	    
 		for (EdmSchema schema:eds.getSchemas()) {
 
 			if (this.schemaNamespace != null && !this.schemaNamespace.equalsIgnoreCase(schema.getNamespace())) {
@@ -411,4 +454,14 @@ public class ODataMetadataProcessor {
 		}
 		return names;
 	}
+
+	@TranslatorProperty(display="Entity Container Name", category=PropertyType.IMPORT, description="Entity Container Name to import")
+    public String getEntityContainer() {
+        return entityContainer;
+    }
+
+	@TranslatorProperty(display="Schema Namespace", category=PropertyType.IMPORT, description="Namespace of the schema to import")
+    public String getSchemaNamespace() {
+        return schemaNamespace;
+    }
 }

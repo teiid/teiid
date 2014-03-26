@@ -21,31 +21,18 @@
  */
 package org.teiid.translator.jpa;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
@@ -104,14 +91,11 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager connection) throws TranslatorException {
 		 return new JPQLDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true);
 	}	
-	
-	@Override
-	public void getMetadata(MetadataFactory mf, EntityManager em) throws TranslatorException {
-		JPAMetadataProcessor metadataProcessor = new JPAMetadataProcessor();
-		PropertiesUtils.setBeanProperties(metadataProcessor, mf.getImportProperties(), "importer"); //$NON-NLS-1$
-		metadataProcessor.getMetadata(mf, em);
-	}
 
+	@Override
+    public MetadataProcessor<EntityManager> getMetadataProcessor(){
+	    return new JPAMetadataProcessor();
+	}
 
 	@Override
 	public boolean supportsSelectExpression() {

@@ -39,15 +39,17 @@ public class ExtendedPropertyMetadata {
 	boolean required;
 	ArrayList<String> allowed;
 	String name;
-	String type;
+	String dataType;
 	String defaultValue;
+	String category;
+	String owner; 
 	
 	public ExtendedPropertyMetadata() {
 	}
 	
 	public ExtendedPropertyMetadata(String name, String type, String encodedData, String defaultValue) {
 		this.name = name;
-		this.type = type;
+		this.dataType = type;
 		this.defaultValue = defaultValue;
 		
 		encodedData = encodedData.trim();
@@ -164,10 +166,16 @@ public class ExtendedPropertyMetadata {
 		}
 		return new String[] {};
 	}
-	public String type() {
-		return this.type;
+	public String datatype() {
+		return this.dataType;
 	}
 	public String defaultValue() {
 		return this.defaultValue;
+	}
+	public String category() {
+	    return this.category;
+	}
+	public String owner() {
+	    return this.owner;
 	}
 }

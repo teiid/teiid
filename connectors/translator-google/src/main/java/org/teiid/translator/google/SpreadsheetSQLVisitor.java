@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.google.execution;
+package org.teiid.translator.google;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 

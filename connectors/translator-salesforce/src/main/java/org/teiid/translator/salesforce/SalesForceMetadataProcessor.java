@@ -1,41 +1,30 @@
 package org.teiid.translator.salesforce;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.resource.ResourceException;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Table;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.translator.TranslatorException;
+import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.translator.*;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 
-import com.sforce.soap.partner.ChildRelationship;
-import com.sforce.soap.partner.DescribeGlobalResult;
-import com.sforce.soap.partner.DescribeGlobalSObjectResult;
-import com.sforce.soap.partner.DescribeSObjectResult;
-import com.sforce.soap.partner.Field;
-import com.sforce.soap.partner.FieldType;
-import com.sforce.soap.partner.PicklistEntry;
+import com.sforce.soap.partner.*;
 
-public class MetadataProcessor {
+public class SalesForceMetadataProcessor implements MetadataProcessor<SalesforceConnection>{
 	private MetadataFactory metadataFactory;
 	private SalesforceConnection connection;
-	private SalesForceExecutionFactory connectorEnv;
 	
 	private Map<String, Table> tableMap = new HashMap<String, Table>();
 	private List<Relationship> relationships = new ArrayList<Relationship>();
 	private boolean hasUpdateableColumn = false;
 	private List<Column> columns;
+	private boolean auditModelFields = false;
 
 	// Audit Fields
 	public static final String AUDIT_FIELD_CREATED_BY_ID = "CreatedById"; //$NON-NLS-1$
@@ -45,27 +34,68 @@ public class MetadataProcessor {
 	public static final String AUDIT_FIELD_SYSTEM_MOD_STAMP = "SystemModstamp"; //$NON-NLS-1$
 
 	// Model Extensions
-	static final String TABLE_SUPPORTS_CREATE = "Supports Create"; //$NON-NLS-1$
-	static final String TABLE_SUPPORTS_DELETE = "Supports Delete"; //$NON-NLS-1$
-	static final String TABLE_CUSTOM = "Custom"; //$NON-NLS-1$
-	static final String TABLE_SUPPORTS_LOOKUP = "Supports ID Lookup"; //$NON-NLS-1$
-	static final String TABLE_SUPPORTS_MERGE = "Supports Merge"; //$NON-NLS-1$
-	static final String TABLE_SUPPORTS_QUERY = "Supports Query"; //$NON-NLS-1$
-	static final String TABLE_SUPPORTS_REPLICATE = "Supports Replicate"; //$NON-NLS-1$
-	static final String TABLE_SUPPORTS_RETRIEVE = "Supports Retrieve"; //$NON-NLS-1$
-	static final String TABLE_SUPPORTS_SEARCH = "Supports Search"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable= {Table.class}, datatype=Boolean.class, display="Supports Create")
+	static final String TABLE_SUPPORTS_CREATE = "supportsCreate"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Delete")
+	static final String TABLE_SUPPORTS_DELETE = "supportsDelete"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class, Column.class}, datatype=Boolean.class, display="Custom")
+	static final String TABLE_CUSTOM = "custom"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports ID Lookup")
+	static final String TABLE_SUPPORTS_LOOKUP = "supportsIdLookup"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Merge")
+	static final String TABLE_SUPPORTS_MERGE = "supportsMerge"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Query")
+	static final String TABLE_SUPPORTS_QUERY = "supportsQuery"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Replicate")
+	static final String TABLE_SUPPORTS_REPLICATE = "supportsReplicate"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Retrieve")
+	static final String TABLE_SUPPORTS_RETRIEVE = "supportsRetrieve"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Search")
+	static final String TABLE_SUPPORTS_SEARCH = "supportsSearch"; //$NON-NLS-1$
 	
-	static final String COLUMN_DEFAULTED = "Defaulted on Create"; //$NON-NLS-1$
-	static final String COLUMN_CUSTOM = "Custom"; //$NON-NLS-1$
-	static final String COLUMN_CALCULATED = "Calculated"; //$NON-NLS-1$
-	static final String COLUMN_PICKLIST_VALUES = "Picklist Values"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Defaulted on Create")
+	static final String COLUMN_DEFAULTED = "defaultedOnCreate"; //$NON-NLS-1$
+	static final String COLUMN_CUSTOM = TABLE_CUSTOM;
+	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Calculated")
+	static final String COLUMN_CALCULATED = "calculated"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Column.class}, datatype=String.class, display="Picklist Values")
+	static final String COLUMN_PICKLIST_VALUES = "picklistValues"; //$NON-NLS-1$
 	
-	public MetadataProcessor(SalesforceConnection connection, MetadataFactory metadataFactory, SalesForceExecutionFactory env) {
-		this.connection = connection;
-		this.metadataFactory = metadataFactory;
-		this.connectorEnv = env;
+	public void process(MetadataFactory mf, SalesforceConnection connection) throws TranslatorException {
+        this.connection = connection;
+        this.metadataFactory = mf;
+        
+        processMetadata();
+        
+        Procedure p1 = metadataFactory.addProcedure("GetUpdated"); //$NON-NLS-1$
+        p1.setAnnotation("Gets the updated objects"); //$NON-NLS-1$
+        ProcedureParameter param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
+        param.setAnnotation("ObjectName"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("StartDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
+        param.setAnnotation("Start Time"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("EndDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
+        param.setAnnotation("End Time"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
+        param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
+        
+        
+        Procedure p2 = metadataFactory.addProcedure("GetDeleted"); //$NON-NLS-1$
+        p2.setAnnotation("Gets the deleted objects"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
+        param.setAnnotation("ObjectName"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("StartDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+        param.setAnnotation("Start Time"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("EndDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+        param.setAnnotation("End Time"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("EarliestDateAvailable", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+        param.setAnnotation("Earliest Date Available"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+        param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$       
+        metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p2); //$NON-NLS-1$     
+        metadataFactory.addProcedureResultSetColumn("DeletedDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p2); //$NON-NLS-1$        
 	}
-
+	
 	public void processMetadata() throws TranslatorException {
 		try {
 			DescribeGlobalResult globalResult = connection.getObjects();
@@ -88,10 +118,10 @@ public class MetadataProcessor {
 		}
 	}
 
-	private void addRelationships() throws TranslatorException {
+	private void addRelationships() {
 		for (Iterator<Relationship> iterator = relationships.iterator(); iterator.hasNext();) {
 			Relationship relationship = iterator.next();
-			if (!this.connectorEnv.isModelAuditFields() && isAuditField(relationship.getForeignKeyField())) {
+			if (!isModelAuditFields() && isAuditField(relationship.getForeignKeyField())) {
                 continue;
             }
 
@@ -192,7 +222,7 @@ public class MetadataProcessor {
 		for (Field field : fields) {
 			String normalizedName = NameUtil.normalizeName(field.getName());
 			FieldType fieldType = field.getType();
-			if(!this.connectorEnv.isModelAuditFields() && isAuditField(field.getName())) {
+			if(!isModelAuditFields() && isAuditField(field.getName())) {
 				continue;
 			}
 			String sfTypeName = fieldType.value();
@@ -310,4 +340,13 @@ public class MetadataProcessor {
 		}
 		return picklistValues.toString();
 	}
+	
+    @TranslatorProperty(display="Audit Model Fields", category=PropertyType.IMPORT, description="Audit Model Fields")
+    public boolean isModelAuditFields() {
+        return this.auditModelFields;
+    }
+    
+    public void setModelAuditFields(boolean modelAuditFields) {
+        this.auditModelFields = modelAuditFields;
+    }	
 }

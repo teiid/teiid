@@ -34,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminshell.Help.Doc;
 
@@ -216,6 +217,12 @@ public class AdminShell {
 	public static Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(
 			@Doc(text = "translator name") String translatorName) throws AdminException {
 		return getAdmin().getTranslatorPropertyDefinitions(translatorName);
+    }
+	
+    @Doc(text = "Get all PropertyDefinitions for the given translator")
+    public static Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(
+            @Doc(text = "translator name") String translatorName,  @Doc(text = "type of property IMPPORT, OVERRIDE, EXTENSION_METADATA")String type) throws AdminException {
+        return getAdmin().getTranslatorPropertyDefinitions(translatorName, TranlatorPropertyType.valueOf(type.toUpperCase()));
     }
 
 	@Doc(text = "Get all Request instances")

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.simpledb.visitors;
+package org.teiid.translator.simpledb;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
