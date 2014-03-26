@@ -5,7 +5,6 @@
         <resource-root path="teiid-jboss-integration-${project.version}.jar" />
         <resource-root path="teiid-metadata-${project.version}.jar" />
         <resource-root path="teiid-runtime-${project.version}.jar" />
-        <resource-root path="teiid-engine-${project.version}.jar" />
         <resource-root path="saxonhe-9.2.1.5.jar" />
         <resource-root path="nux-1.6.jar" />
         
@@ -16,7 +15,7 @@
         <module name="javax.api" />
         <module name="javax.xml.bind.api" />
         <module name="javax.resource.api"/>   
-        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.common-core" export="true" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.client" />
         <module name="org.jboss.teiid.admin" />
