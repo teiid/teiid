@@ -25,14 +25,7 @@ package org.teiid.metadata;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.teiid.CommandContext;
 import org.teiid.adminapi.Model;
@@ -63,6 +56,7 @@ public class MetadataFactory implements Serializable {
 	private static final String TEIID_ODATA = "teiid_odata"; //$NON-NLS-1$
 	private static final String TEIID_ACCUMULO = "teiid_accumulo"; //$NON-NLS-1$
 	private static final String TEIID_EXCEL = "teiid_excel"; //$NON-NLS-1$
+	private static final String TEIID_JPA = "teiid_jpa"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = 8590341087771685630L;
 
@@ -91,6 +85,7 @@ public class MetadataFactory implements Serializable {
 	public static final String ODATA_URI = "{http://www.jboss.org/teiiddesigner/ext/odata/2012}"; //$NON-NLS-1$
 	public static final String ACCUMULO_URI = "{http://www.teiid.org/translator/accumulo/2013}"; //$NON-NLS-1$
 	public static final String EXCEL_URI = "{http://www.teiid.org/translator/excel/2014}"; //$NON-NLS-1$
+	public static final String JPA_URI = "{http://www.teiid.org/translator/jpa/2014}"; //$NON-NLS-1$
 
 	public static final Map<String, String> BUILTIN_NAMESPACES;
 	static {
@@ -102,6 +97,7 @@ public class MetadataFactory implements Serializable {
 		map.put(TEIID_ODATA, ODATA_URI.substring(1, ODATA_URI.length()-1));
 		map.put(TEIID_ACCUMULO, ACCUMULO_URI.substring(1, ACCUMULO_URI.length()-1));
 		map.put(TEIID_EXCEL, EXCEL_URI.substring(1, EXCEL_URI.length()-1));
+		map.put(TEIID_JPA, JPA_URI.substring(1, JPA_URI.length()-1));
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
 

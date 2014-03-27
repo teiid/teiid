@@ -22,20 +22,8 @@
 
 package org.teiid.translator.jdbc;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.sql.*;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.teiid.core.util.StringUtil;
@@ -44,13 +32,14 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 
 
 /**
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
  */
-public class JDBCMetdataProcessor {
+public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	
 	/**
 	 * A holder for table records that keeps track of catalog and schema information.
@@ -99,6 +88,15 @@ public class JDBCMetdataProcessor {
 	private boolean importStatistics;
 	
 	private String columnNamePattern;
+	
+	
+	public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
+    	try {
+    	    getConnectorMetadata(conn, metadataFactory);
+        } catch (SQLException e) {
+            throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
+        }
+	}
 	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException {
@@ -623,6 +621,7 @@ public class JDBCMetdataProcessor {
 		this.tableTypes = tableTypes;
 	}
 	
+	@TranslatorProperty (display="Table Types", category=PropertyType.IMPORT, description="Comma separated list - without spaces - of imported table types. null returns all types")
 	public String[] getTableTypes() {
 		return tableTypes;
 	}
@@ -655,7 +654,8 @@ public class JDBCMetdataProcessor {
 	 * @deprecated
 	 * @see #setWidenUnsignedTypes
 	 */
-	public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
+	@Deprecated
+    public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
 		this.widenUnsingedTypes = widenUnsingedTypes;
 	}
 	
@@ -716,5 +716,109 @@ public class JDBCMetdataProcessor {
 	protected void setColumnNamePattern(String columnNamePattern) {
 		this.columnNamePattern = columnNamePattern;
 	}
-	
+
+	@TranslatorProperty(display="Import Procedures", category=PropertyType.IMPORT, description="true to import procedures and procedure columns - Note that it is not always possible to import procedure result set columns due to database limitations. It is also not currently possible to import overloaded procedures.")
+    public boolean isImportProcedures() {
+        return importProcedures;
+    }
+
+	@TranslatorProperty(display="Import Keys", category=PropertyType.IMPORT, description="true to import primary and foreign keys - NOTE foreign keys to tables that are not imported will be ignored")
+    public boolean isImportKeys() {
+        return importKeys;
+    }
+
+	@TranslatorProperty(display="Import Foreign Key", category=PropertyType.IMPORT, description="true to import foreign keys")
+    public boolean isImportForeignKeys() {
+        return importForeignKeys;
+    }
+
+	@TranslatorProperty(display="Import Indexes", category=PropertyType.IMPORT, description="true to import index/unique key/cardinality information")
+    public boolean isImportIndexes() {
+        return importIndexes;
+    }
+
+	@TranslatorProperty(display="Procedure Name Pattern", category=PropertyType.IMPORT, description=" a procedure name pattern; must match the procedure name as it is stored in the database")
+    public String getProcedureNamePattern() {
+        return procedureNamePattern;
+    }
+
+	@TranslatorProperty(display="Use Full Schema Name", category=PropertyType.IMPORT, description="When false, directs the importer to drop the source catalog/schema from the Teiid object name, so that the Teiid fully qualified name will be in the form of <model name>.<table name> - Note: when false this may lead to objects with duplicate names when importing from multiple schemas, which results in an exception.  This option does not affect the name in source property.")
+    public boolean isUseFullSchemaName() {
+        return useFullSchemaName;
+    }
+
+	@TranslatorProperty(display="Table Name Pattern", category=PropertyType.IMPORT, description=" a table name pattern; must match the table name as it is stored in the database")
+    public String getTableNamePattern() {
+        return tableNamePattern;
+    }
+
+    @TranslatorProperty(display="catalog", category=PropertyType.IMPORT, description="a catalog name; must match the catalog name as it is stored in the database; \"\" retrieves those without a catalog; null means that the catalog name should not be used to narrow the search")
+    public String getCatalog() {
+        return catalog;
+    }
+
+    @TranslatorProperty(display="Schema Pattern", category=PropertyType.IMPORT, description="a schema name pattern; must match the schema name as it is stored in the database; \"\" retrieves those without a schema; null means that the schema name should not be used to narrow the search")
+    public String getSchemaPattern() {
+        return schemaPattern;
+    }
+
+    @TranslatorProperty(display="Import Approximate Indexes", category=PropertyType.IMPORT, description="true to import approximate index information. when true, result is allowed to reflect approximate or out of data values; when false, results are requested to be accurate")
+    public boolean isImportApproximateIndexes() {
+        return importApproximateIndexes;
+    }
+
+    @TranslatorProperty(display="Widen unSigned Types", category=PropertyType.IMPORT, description="true to convert unsigned types to the next widest type. For example SQL Server reports tinyint as an unsigned type. With this option enabled, tinyint would be imported as a short instead of a byte.")
+    public boolean isWidenUnsingedTypes() {
+        return widenUnsingedTypes;
+    }
+
+    @TranslatorProperty(display="Quote NameInSource", category=PropertyType.IMPORT, description="false will override the default and direct Teiid to create source queries using unquoted identifiers.")
+    public boolean isQuoteNameInSource() {
+        return quoteNameInSource;
+    }
+
+    @TranslatorProperty(display="Use Procedure Specific Name", category=PropertyType.IMPORT, description="true will allow the import of overloaded procedures (which will normally result in a duplicate procedure error) by using the unique procedure specific name as the Teiid name. This option will only work with JDBC 4.0 compatible drivers that report specific names.")
+    public boolean isUseProcedureSpecificName() {
+        return useProcedureSpecificName;
+    }
+
+    @TranslatorProperty(display="Use Catalog Name", category=PropertyType.IMPORT, description="true will use any non-null/non-empty catalog name as part of the name in source, e.g. \"catalog\".\"schema\".\"table\".\"column\", and in the Teiid runtime name if useFullSchemaName is also true. false will not use the catalog name in either the name in source or the Teiid runtime name. Should be set to false for sources that do not fully support a catalog concept, but return a non-null catalog name in their metadata - such as HSQL.")
+    public boolean isUseCatalogName() {
+        return useCatalogName;
+    }
+
+    @TranslatorProperty(display="Auto Create Unique Constraints", category=PropertyType.IMPORT, description="true to create a unique constraint if one is not found for a foreign keys")
+    public boolean isAutoCreateUniqueConstraints() {
+        return autoCreateUniqueConstraints;
+    }
+
+    @TranslatorProperty(display="use Qualified Name", category=PropertyType.IMPORT, description="true will use name qualification for both the Teiid name and name in source as dictated by the useCatalogName and useFullSchemaName properties.  Set to false to disable all qualification for both the Teiid name and the name in source, which effectively ignores the useCatalogName and useFullSchemaName properties.  Note: when false this may lead to objects with duplicate names when importing from multiple schemas, which results in an exception.")
+    public boolean isUseQualifiedName() {
+        return useQualifiedName;
+    }
+
+    @TranslatorProperty(display="Use Any Index Cardinality", category=PropertyType.IMPORT, description="true will use the maximum cardinality returned from DatabaseMetaData.getIndexInfo. importKeys or importIndexes needs to be enabled for this setting to have an effect. This allows for better stats gathering from sources that don't support returning a statistical index.")
+    public boolean isUseAnyIndexCardinality() {
+        return useAnyIndexCardinality;
+    }
+
+    @TranslatorProperty(display="Import Statistics", category=PropertyType.IMPORT, description="true will use database dependent logic to determine the cardinality if none is determined. Not yet supported by all database types - currently only supported by Oracle and MySQL.")
+    public boolean isImportStatistics() {
+        return importStatistics;
+    }
+    
+    @TranslatorProperty(display="Column Name Pattern", category=PropertyType.IMPORT, description="a column name pattern; must match the column name as it is stored in the database. Used to import columns of tables")
+    public String getColumnNamePattern() {
+        return columnNamePattern;
+    }
+    
+    @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
+    public String getExcludeTables() {
+        return this.excludeTables.pattern();
+    }
+    
+    @TranslatorProperty(display="Exclude Procedures", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid procedure name will exclude it from import.  Applied after procedure names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
+    public String getExcludeProcedures() {
+        return this.excludeProcedures.pattern();
+    }    
 }

@@ -28,13 +28,8 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
+import org.teiid.translator.*;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
 
@@ -85,11 +80,13 @@ public class ObjectExecutionFactory extends
 		return false;
 	}
 
-	public boolean supportsCompareCriteriaEquals() {
+	@Override
+    public boolean supportsCompareCriteriaEquals() {
 		return true;
 	}
 
-	public boolean supportsInCriteria() {
+	@Override
+    public boolean supportsInCriteria() {
 		return true;
 	}
 
@@ -102,14 +99,9 @@ public class ObjectExecutionFactory extends
 		  Class<?> type = connection.getType(cacheName);
 		  return sbk.search(command, type, cacheName, connection.getCacheContainer());		
 	}
-	
-	
-	@Override
-	public void getMetadata(MetadataFactory metadataFactory, ObjectConnection connection) throws TranslatorException {
-		if (connection != null) {
-			JavaBeanMetadataProcessor processor = new JavaBeanMetadataProcessor();
-			processor.getMetadata(metadataFactory, connection, this);
-		}
-	}
 
+	@Override
+    public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
+	    return new JavaBeanMetadataProcessor();
+	}
 }

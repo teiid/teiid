@@ -8,7 +8,7 @@ CREATE FOREIGN TABLE country (
 CREATE FOREIGN TABLE city (
   city_id integer  NOT NULL AUTO_INCREMENT,
   city varchar(50) NOT NULL,
-  country_id integer  NOT NULL OPTIONS (assosiated_with_table 'sakila.country'),
+  country_id integer  NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.country'),
   last_update timestamp NOT NULL,
   PRIMARY KEY  (city_id),
   FOREIGN KEY (country_id) REFERENCES country (country_id) OPTIONS(NAMEINSOURCE 'country')
@@ -19,7 +19,7 @@ CREATE FOREIGN TABLE address (
   address varchar(50) NOT NULL,
   address2 varchar(50),
   district varchar(20) NOT NULL,
-  city_id integer  NOT NULL OPTIONS (assosiated_with_table 'sakila.city'),
+  city_id integer  NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.city'),
   postal_code varchar(10),
   phone varchar(20) NOT NULL,
   last_update timestamp NOT NULL,
@@ -31,9 +31,9 @@ CREATE FOREIGN TABLE staff (
   staff_id byte NOT NULL AUTO_INCREMENT,
   first_name varchar(45) NOT NULL,
   last_name varchar(45) NOT NULL,
-  address_id integer NOT NULL OPTIONS (assosiated_with_table 'sakila.address'),
+  address_id integer NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.address'),
   email varchar(50),
-  store_id byte NOT NULL OPTIONS (assosiated_with_table 'sakila.store'),
+  store_id byte NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.store'),
   active boolean NOT NULL,
   username varchar(16) NOT NULL,
   password varchar(40),
@@ -45,8 +45,8 @@ CREATE FOREIGN TABLE staff (
 
 CREATE FOREIGN TABLE store (
   store_id byte  NOT NULL AUTO_INCREMENT,
-  manager_staff_id byte NOT NULL OPTIONS (assosiated_with_table 'sakila.staff'),
-  address_id integer NOT NULL OPTIONS (assosiated_with_table 'sakila.store'),
+  manager_staff_id byte NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.staff'),
+  address_id integer NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.store'),
   last_update timestamp NOT NULL,
   PRIMARY KEY  (store_id),
   FOREIGN KEY (manager_staff_id) REFERENCES staff (staff_id) OPTIONS(NAMEINSOURCE 'staff'),
@@ -55,11 +55,11 @@ CREATE FOREIGN TABLE store (
 
 CREATE FOREIGN TABLE customer (
   customer_id integer NOT NULL AUTO_INCREMENT,
-  store_id byte NOT NULL OPTIONS (assosiated_with_table 'sakila.store'),
+  store_id byte NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.store'),
   first_name varchar(45) NOT NULL,
   last_name varchar(45) NOT NULL,
   email varchar(50),
-  address_id integer  NOT NULL OPTIONS (assosiated_with_table 'sakila.address'),
+  address_id integer  NOT NULL OPTIONS ("teiid_jpa:assosiated_with_table" 'sakila.address'),
   active boolean NOT NULL,
   create_date timestamp NOT NULL,
   last_update timestamp,

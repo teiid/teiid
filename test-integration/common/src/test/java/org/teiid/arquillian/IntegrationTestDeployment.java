@@ -31,12 +31,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePaths;
@@ -50,6 +45,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.postgresql.Driver;
 import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -160,7 +156,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 39, translators.size());
+		assertEquals(translators.toString(), 40, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -178,6 +174,28 @@ public class IntegrationTestDeployment {
 		VDBTranslatorMetaData t = (VDBTranslatorMetaData)admin.getTranslator("orcl");
 		assertNull(t);
 	}
+	
+    @Test
+    public void testTraslatorProperties() throws Exception {
+        Collection<? extends PropertyDefinition> props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.OVERRIDE);
+        assertEquals(18, props.size());
+        
+        props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.EXTENSION_METADATA);
+        assertEquals(3, props.size());
+        for (PropertyDefinition p: props) {
+            if (p.getName().equals("{http://www.teiid.org/translator/accumulo/2013}CF")) {
+                assertEquals("org.teiid.metadata.Column", p.getPropertyValue("owner"));
+            }
+        }
+
+        props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.IMPORT);
+        assertEquals(2, props.size());
+        for (PropertyDefinition p: props) {
+            if (p.getName().equals("importer.ColumnNamePattern")) {
+                assertEquals("java.lang.String", p.getPropertyTypeClassName());
+            }
+        }        
+    }	
 
 	private JavaArchive getLoopyArchive() {
 		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "loopy.jar")

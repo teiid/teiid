@@ -102,6 +102,52 @@ public class TestTupleBuffer {
 		assertTrue(batch.getTerminationFlag());
 	}
 	
+	@Test public void testTruncatePartial() throws Exception {
+		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
+		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		List<ElementSymbol> schema = Arrays.asList(x);
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+		tb.setBatchSize(64);
+		for (int i = 0; i < 65; i++) {
+			tb.addTuple(Arrays.asList(1));
+		}
+		TupleBatch batch = tb.getBatch(1);
+		assertTrue(!batch.getTerminationFlag());
+		assertEquals(65, tb.getManagedRowCount());
+		tb.truncateTo(3);
+		assertEquals(3, tb.getManagedRowCount());
+		assertEquals(3, tb.getRowCount());
+		batch = tb.getBatch(3);
+	}
+	
+	@Test public void testTruncatePartial1() throws Exception {
+		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
+		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		List<ElementSymbol> schema = Arrays.asList(x);
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+		tb.setBatchSize(128);
+		for (int i = 0; i < 131; i++) {
+			tb.addTuple(Arrays.asList(1));
+		}
+		tb.truncateTo(129);
+		assertEquals(129, tb.getManagedRowCount());
+		assertEquals(129, tb.getRowCount());
+	}
+	
+	@Test public void testTruncateMultiple() throws Exception {
+		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
+		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		List<ElementSymbol> schema = Arrays.asList(x);
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+		tb.setBatchSize(16);
+		for (int i = 0; i < 131; i++) {
+			tb.addTuple(Arrays.asList(1));
+		}
+		tb.truncateTo(17);
+		assertEquals(17, tb.getManagedRowCount());
+		assertEquals(17, tb.getRowCount());
+	}
+	
 	@Test public void testLobHandling() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.CLOB);

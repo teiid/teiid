@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.cassandra.execution;
+package org.teiid.translator.cassandra;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -34,8 +34,6 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.cassandra.CassandraConnection;
-import org.teiid.translator.cassandra.CassandraExecutionFactory;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;

@@ -291,10 +291,6 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					}
 				}
 				
-				if (table.isFixedWidth() && line.length() != lineWidth) {
-			    	throw new TeiidProcessingException(QueryPlugin.Event.TEIID30178, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30178, textLine+1, systemId, lineWidth));
-				}
-				
 				List<String> vals = parseLine(line);
 				
 				if (parentSelector != null) {

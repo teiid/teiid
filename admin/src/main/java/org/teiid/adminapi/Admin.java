@@ -35,6 +35,8 @@ public interface Admin {
 	public enum Cache {PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
 
 	public enum SchemaObjectType {TABLES, PROCEDURES, FUNCTIONS};
+	
+	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA};
 
     /**
      * Assign a {@link Translator} and Data source to a {@link VDB}'s Model
@@ -211,8 +213,20 @@ public interface Admin {
      * @param translatorName - Name of the translator
      * @return
      * @throws AdminException
+     * @see getTranslatorPropertyDefinitions
+     * @deprecated
      */
+    @Deprecated
     Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName) throws AdminException;
+
+    /**
+     * Get all of the available configuration Properties for the specified translator
+     * @param translatorName - Name of the translator
+     * @param type - Type of property definition (import, override, extension-metadata)
+     * @return
+     * @throws AdminException
+     */
+    Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName, TranlatorPropertyType type) throws AdminException;
     
 
     /**

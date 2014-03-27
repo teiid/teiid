@@ -22,7 +22,6 @@
 
 package org.teiid.common.buffer;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -408,38 +407,45 @@ public class TupleBuffer {
 		}
 		return this.lobManager.getLobCount();
 	}
-
+	
 	public void truncateTo(int rowLimit) throws TeiidComponentException {
 		if (rowCount <= rowLimit) {
 			return;
 		}
 		//TODO this could be more efficient with handling the last batch
-		TupleBatch last = this.getBatch(rowLimit);
-		TupleBatch tb = last;
 		if (this.batchBuffer != null) {
-			this.batchBuffer.clear();
-		}
-		int begin = tb.getBeginRow();
-		do {
-			if (tb == null) {
-				tb = this.getBatch(begin);
+			for (int i = batchBuffer.size() - 1; i >= 0; i--) {
+				if (this.rowCount == rowLimit) {
+					break;
+				}
+				this.rowCount--;
+				List<?> tuple = this.batchBuffer.remove(i);
+				if (this.lobManager != null) {
+					this.lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
+				}
 			}
-			Long id = this.batches.remove(begin);
+		}
+		TupleBatch last = null;
+		while (rowCount > rowLimit) {
+			last = this.getBatch(rowCount);
+			Long id = this.batches.remove(last.getBeginRow());
 			if (id != null) {
 				this.manager.remove(id);
 			}
 			if (this.lobManager != null) {
-				for (List<?> tuple : tb.getTuples()) {
+				for (List<?> tuple : last.getTuples()) {
 					this.lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
 				}
 			}
-			begin = tb.getEndRow() + 1;
-			tb = null;
-		} while (begin <= rowCount);
-		rowCount = last.getBeginRow() - 1;
-		Iterator<List<?>> iter = last.getTuples().iterator();
-		while (rowCount < rowLimit) {
-			addTuple(iter.next());
+			rowCount = last.getBeginRow() - 1;
+		}
+		if (rowCount < rowLimit) {
+			List<List<?>> tuples = last.getTuples();
+			int i = 0;
+			while (rowCount < rowLimit) {
+				addTuple(tuples.get(i++));
+				
+			}
 		}
 		saveBatch(false);
 	}

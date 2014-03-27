@@ -29,6 +29,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.simpledb.SimpleDBSQLVisitor;
 
 @SuppressWarnings("nls")
 public class VisitorTest {

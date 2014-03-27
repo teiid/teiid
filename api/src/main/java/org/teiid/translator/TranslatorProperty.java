@@ -21,12 +21,7 @@
  */
 package org.teiid.translator;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotates a property that can be externally configured.  
@@ -42,6 +37,21 @@ public @interface TranslatorProperty {
 
 	public static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
+    public enum PropertyType {
+        /*
+         * Import properties used during the source metadata import
+         */
+        IMPORT,
+        /*
+         * Override translator properties are are set on a new translator instance
+         */
+        OVERRIDE,
+        /*
+         * Extension metadata properties that are defined for this translator
+         */
+        EXTENSION_METADATA        
+    }
+    
 	/**
 	 * Description to be shown in tools
 	 * @return
@@ -71,4 +81,10 @@ public @interface TranslatorProperty {
 	 * @return
 	 */
 	boolean masked() default false;
+	
+	/**
+	 * Defines the type of the translator property.
+	 * @return
+	 */
+	PropertyType category() default PropertyType.OVERRIDE;
 }

@@ -17,7 +17,6 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.cassandra.execution.CassandraSQLVisitor;
 
 @SuppressWarnings("nls")
 public class TestTeiidLanguageToCQL {

@@ -19,56 +19,60 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.cassandra.execution;
+package org.teiid.translator.google;
 
-import org.teiid.language.Command;
-import org.teiid.metadata.RuntimeMetadata;
+import java.util.Iterator;
+import java.util.List;
+
+import org.teiid.language.Select;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
+import org.teiid.resource.adapter.google.common.SheetRow;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.cassandra.CassandraConnection;
 
-public class CassandraUpdateExecution implements UpdateExecution {
-	
-	private CassandraConnection connection;
+public class SpreadsheetQueryExecution implements ResultSetExecution {
+
+	private Select query;
+	private GoogleSpreadsheetConnection connection;
+	private Iterator<SheetRow> rowIterator;
 	private ExecutionContext executionContext;
-	private RuntimeMetadata metadata;
-	private Command command;
-	private int updateCount = 1;
-	
-	public CassandraUpdateExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			CassandraConnection connection) {
-		this.command = command;
+
+	public SpreadsheetQueryExecution(Select query,
+			GoogleSpreadsheetConnection connection, ExecutionContext executionContext) {
 		this.executionContext = executionContext;
-		this.metadata = metadata;
 		this.connection = connection;
+		this.query = query;
 	}
 
 	@Override
 	public void close() {
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("close_query")); //$NON-NLS-1$
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("cancel_query")); //$NON-NLS-1$
+
 	}
 
 	@Override
 	public void execute() throws TranslatorException {
-		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
-		visitor.translateSQL(this.command);
-		try {
-			connection.executeQuery(visitor.getTranslatedSQL());
-		} catch(Throwable t) {
-			throw new TranslatorException(t);
-		}
+		SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor();
+		visitor.translateSQL(query);		
+		rowIterator = connection.executeQuery(visitor.getWorksheetTitle(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
+		
 	}
 
 	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException,
-			TranslatorException {
-		return new int[] {this.updateCount};
+	public List<?> next() throws TranslatorException, DataNotAvailableException {		
+		if (rowIterator.hasNext()) {
+			return rowIterator.next().getRow();
+		}
+		return null;
 	}
 
 }

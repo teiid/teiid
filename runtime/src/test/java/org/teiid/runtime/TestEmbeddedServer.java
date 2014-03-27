@@ -314,6 +314,14 @@ public class TestEmbeddedServer {
 		assertEquals("HELLO WORLD", rs.getString(1));
 	}
 	
+	@Test public void testDeployDesignerZip() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		es.deployVDBZip(UnitTestUtil.getTestDataFile("matviews.vdb").toURI().toURL());
+		ResultSet rs = es.getDriver().connect("jdbc:teiid:matviews", null).createStatement().executeQuery("select count(*) from tables where schemaname='test'");
+		rs.next();
+		assertEquals(4, rs.getInt(1));
+	}
+	
 	@Test public void testXMLDeploy() throws Exception {
 		es.start(new EmbeddedConfiguration());
 		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model></vdb>".getBytes()));

@@ -22,11 +22,12 @@
 
 package org.teiid.translator.google;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Properties;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
@@ -40,10 +41,9 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.metadata.Worksheet;
-import org.teiid.translator.google.execution.SpreadsheetSQLVisitor;
-import org.teiid.translator.google.metadata.MetadataProcessor;
 
 /**
  * Tests transformation from Teiid Query to worksheet Query.
@@ -53,32 +53,33 @@ import org.teiid.translator.google.metadata.MetadataProcessor;
  */
 @SuppressWarnings("nls")
 public class TestSQLtoSpreadsheetQuery {
-	private QueryMetadataInterface dummySpreadsheetMetadata() {
-
-
+	private QueryMetadataInterface dummySpreadsheetMetadata() throws Exception {
+	    GoogleSpreadsheetConnection conn = Mockito.mock(GoogleSpreadsheetConnection.class);
+	    
 		SpreadsheetInfo people=  new SpreadsheetInfo("People");
 		Worksheet worksheet = people.createWorksheet("PeopleList");
 		worksheet.setColumnCount(3);
+		Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
 
 		MetadataFactory factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
-		MetadataProcessor processor = new MetadataProcessor(factory, people);
-		processor.processMetadata();
+		GoogleMetadataProcessor processor = new GoogleMetadataProcessor();
+		processor.process(factory, conn);
 		return new TransformationMetadata(null, new CompositeMetadataStore(factory.asMetadataStore()), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
 	}
 
-	public Command getCommand(String sql) {
+	public Command getCommand(String sql) throws Exception {
 		CommandBuilder builder = new CommandBuilder(dummySpreadsheetMetadata());
 		return builder.getCommand(sql);
 	}
 	
-	private void testConversion(String sql, String expectedSpreadsheetQuery) {
+	private void testConversion(String sql, String expectedSpreadsheetQuery) throws Exception{
 		Select select = (Select)getCommand(sql);
 		
 		SpreadsheetSQLVisitor spreadsheetVisitor = new SpreadsheetSQLVisitor();
 		spreadsheetVisitor.translateSQL(select);
 		assertEquals(expectedSpreadsheetQuery, spreadsheetVisitor.getTranslatedSQL());
 	}
-	private SpreadsheetSQLVisitor getVisitorAndTranslateSQL(String sql){
+	private SpreadsheetSQLVisitor getVisitorAndTranslateSQL(String sql) throws Exception {
         Select select = (Select)getCommand(sql);		
 		SpreadsheetSQLVisitor spreadsheetVisitor = new SpreadsheetSQLVisitor();
 		spreadsheetVisitor.translateSQL(select);

@@ -19,50 +19,55 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
-package org.teiid.translator.simpledb.executors;
-
-import java.util.Map;
+package org.teiid.translator.cassandra;
 
 import org.teiid.language.Command;
-import org.teiid.language.Insert;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.simpledb.visitors.SimpleDBInsertVisitor;
 
-public class SimpleDBInsertExecute implements UpdateExecution{
-
-	private Command command;
-	private SimpleDBConnection connection;
-	private int updatedCount=0;
+public class CassandraUpdateExecution implements UpdateExecution {
 	
-	public SimpleDBInsertExecute(Command command, SimpleDBConnection connection) {
+	private CassandraConnection connection;
+	private ExecutionContext executionContext;
+	private RuntimeMetadata metadata;
+	private Command command;
+	private int updateCount = 1;
+	
+	public CassandraUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			CassandraConnection connection) {
 		this.command = command;
+		this.executionContext = executionContext;
+		this.metadata = metadata;
 		this.connection = connection;
 	}
-	
+
 	@Override
 	public void close() {
-		
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
-		
 	}
 
 	@Override
 	public void execute() throws TranslatorException {
-		Insert insert = (Insert) command;
-		Map<String, String> columnsMap = SimpleDBInsertVisitor.getColumnsValuesMap(insert);
-		updatedCount = connection.getAPIClass().performInsert(SimpleDBInsertVisitor.getDomainName(insert), columnsMap.get("itemName()"), columnsMap);
+		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
+		visitor.translateSQL(this.command);
+		try {
+			connection.executeQuery(visitor.getTranslatedSQL());
+		} catch(Throwable t) {
+			throw new TranslatorException(t);
+		}
 	}
 
 	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
-		return new int[] { updatedCount };
+	public int[] getUpdateCounts() throws DataNotAvailableException,
+			TranslatorException {
+		return new int[] {this.updateCount};
 	}
 
 }

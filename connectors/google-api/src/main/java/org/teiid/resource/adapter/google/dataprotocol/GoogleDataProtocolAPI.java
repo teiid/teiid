@@ -213,6 +213,7 @@ public class GoogleDataProtocolAPI {
 							if (type != null) {
 								c.setDataType(SpreadsheetColumnType.valueOf(type.toUpperCase()));
 							}
+							this.metadata.add(c);
 						}
 					}
 

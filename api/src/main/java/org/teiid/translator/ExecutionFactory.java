@@ -32,15 +32,9 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
-import org.teiid.language.Argument;
-import org.teiid.language.BatchedUpdates;
-import org.teiid.language.Call;
-import org.teiid.language.Command;
-import org.teiid.language.LanguageFactory;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
-import org.teiid.language.SetQuery;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
@@ -160,7 +154,8 @@ public class ExecutionFactory<F, C> {
 	 * @return a connection
 	 * @throws TranslatorException
 	 */
-	@SuppressWarnings("unchecked")
+	@Deprecated
+    @SuppressWarnings("unchecked")
 	public C getConnection(F factory) throws TranslatorException {
 		if (factory == null) {
 			return null;
@@ -329,6 +324,14 @@ public class ExecutionFactory<F, C> {
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createDirectExecution")); //$NON-NLS-1$
 	}	
+	
+	/**
+	 * Get Metadata Processor for the translator to read the metadata
+	 * @return
+	 */
+	public MetadataProcessor<C> getMetadataProcessor() {
+	    return null;
+	}
 	
     /** 
      * Support indicates connector can accept queries with SELECT DISTINCT
@@ -906,7 +909,11 @@ public class ExecutionFactory<F, C> {
      * @see #isSourceRequiredForMetadata()
      */
     public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {
-    	
+    	MetadataProcessor mp = getMetadataProcessor();
+    	if (mp != null) {
+    	    PropertiesUtils.setBeanProperties(mp, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+    	    mp.process(metadataFactory, conn);
+    	}
     }
     
     /**
@@ -1107,7 +1114,8 @@ public class ExecutionFactory<F, C> {
 	 * @see #supportsDirectQueryProcedure()
 	 * @return
 	 */
-	@TranslatorProperty(display="Supports direct query procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
+	@Deprecated
+    @TranslatorProperty(display="Supports direct query procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
 	final public boolean supportsNativeQueries() {
 		return this.supportsNativeQueries;
 	}
@@ -1116,7 +1124,8 @@ public class ExecutionFactory<F, C> {
 	 * @deprecated
 	 * @see #setSupportsDirectQueryProcedure(boolean)
 	 */
-	final public void setSupportsNativeQueries(boolean state) {
+	@Deprecated
+    final public void setSupportsNativeQueries(boolean state) {
 		this.supportsNativeQueries = state;
 	}
 	
@@ -1140,7 +1149,8 @@ public class ExecutionFactory<F, C> {
 	 * @see #getDirectQueryProcedureName()
 	 * @return
 	 */
-	@TranslatorProperty(display="Name of the direct query procedure", description="The name of the direct query procedure", advanced=true)
+	@Deprecated
+    @TranslatorProperty(display="Name of the direct query procedure", description="The name of the direct query procedure", advanced=true)
 	final public String getNativeQueryProcedureName() {
 		return this.nativeProcedureName;
 	}
@@ -1149,7 +1159,8 @@ public class ExecutionFactory<F, C> {
 	 * @deprecated
 	 * @see #setDirectQueryProcedureName(String)
 	 */
-	final public void setNativeQueryProcedureName(String name) {
+	@Deprecated
+    final public void setNativeQueryProcedureName(String name) {
 		this.nativeProcedureName = name;
 	}
 	

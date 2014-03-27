@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.TestDeleteImpl;
 import org.teiid.dqp.internal.datamgr.TestInsertImpl;
@@ -33,7 +34,6 @@ import org.teiid.dqp.internal.datamgr.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.TestQueryImpl;
 import org.teiid.dqp.internal.datamgr.TestUpdateImpl;
 import org.teiid.language.LanguageObject;
-import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -41,7 +41,7 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestSQLConversionVisitor {
 
-    public static final ExecutionContext context = new ExecutionContextImpl("VDB",  //$NON-NLS-1$
+    public static final ExecutionContextImpl context = new ExecutionContextImpl("VDB",  //$NON-NLS-1$
                                                                             1, 
                                                                             "Payload",  //$NON-NLS-1$
                                                                             "ConnectionID",   //$NON-NLS-1$
@@ -49,6 +49,10 @@ public class TestSQLConversionVisitor {
                                                                             1, 
                                                                             "PartID",  //$NON-NLS-1$ 
                                                                             "ExecCount");     //$NON-NLS-1$ 
+    
+    static {
+    	context.setSession(new SessionMetadata());
+    }
     
     private static JDBCExecutionFactory TRANSLATOR; 
     
@@ -77,11 +81,18 @@ public class TestSQLConversionVisitor {
 			throw new RuntimeException(e);
 		}
     }
-    
+
     private String getStringWithContext(LanguageObject obj) throws TranslatorException {
+    	return getStringWithContext(obj, null);
+    }
+    
+    private String getStringWithContext(LanguageObject obj, String comment) throws TranslatorException {
     	JDBCExecutionFactory env = new JDBCExecutionFactory();
     	env.setUseCommentsInSourceQuery(true);
     	env.setUseBindVariables(false);
+    	if (comment != null) {
+    		env.setCommentFormat(comment);
+    	}
         env.start();
         
         SQLConversionVisitor visitor = env.getSQLConversionVisitor();
@@ -378,6 +389,11 @@ public class TestSQLConversionVisitor {
         assertEquals(expected, getStringWithContext(TestQueryImpl.example(false)));
         expected = "SELECT /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestQueryImpl.example(true)));
+    }
+    
+    @Test public void testVisitSelectWithCustomComment() throws Exception {
+        String expected = "SELECT /* foo ConnectionID ConnectionID.1 PartID ExecCount null VDB 1 false */g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC"; //$NON-NLS-1$
+        assertEquals(expected, getStringWithContext(TestQueryImpl.example(false), "/* foo {0} {1} {2} {3} {4} {5} {6} {7} */"));
     }
     
     @Test public void testVisitIUpdateWithComment() throws Exception {

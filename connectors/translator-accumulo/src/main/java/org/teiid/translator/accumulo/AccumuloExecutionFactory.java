@@ -28,15 +28,8 @@ import javax.resource.cci.ConnectionFactory;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 
 @Translator(name="accumulo", description="Accumulo Translator, reads and writes the data to Accumulo Key/Value store")
 public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory, AccumuloConnection> {
@@ -72,12 +65,11 @@ public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, AccumuloConnection connection) throws TranslatorException {
 		return new AccumuloUpdateExecution(this, command, executionContext, metadata, connection);
 	} 	
-	
+		
 	@Override
-	public void getMetadata(MetadataFactory metadataFactory, AccumuloConnection conn) throws TranslatorException {
-		AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor(metadataFactory, conn);
-		processor.processMetadata();
-	}
+    public MetadataProcessor<AccumuloConnection> getMetadataProcessor() {
+        return new AccumuloMetadataProcessor();
+    }	
 	
 	@TranslatorProperty(display="Encoding", description="Character Encoding to use for reading and saving text based data", advanced=true)
 	public String getEncoding() {

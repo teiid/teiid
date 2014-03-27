@@ -46,6 +46,7 @@ class OperationsConstants {
 	public static final SimpleAttributeDefinition SQL_QUERY = new SimpleAttributeDefinition("sql-query", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition TIMEOUT_IN_MILLI = new SimpleAttributeDefinition("timeout-in-milli", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition TRANSLATOR_NAME = new SimpleAttributeDefinition("translator-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition PROPERTY_TYPE = new SimpleAttributeDefinition("type", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition ENTITY_TYPE = new SimpleAttributeDefinition("entity-type", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition ENTITY_PATTERN = new SimpleAttributeDefinition("entity-pattern", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition INCLUDE_SOURCE = new SimpleAttributeDefinition("include-source", ModelType.STRING, true); //$NON-NLS-1$

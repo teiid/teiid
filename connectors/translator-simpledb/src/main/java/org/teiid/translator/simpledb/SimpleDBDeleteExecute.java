@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.simpledb.executors;
+package org.teiid.translator.simpledb;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -32,7 +32,6 @@ import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.simpledb.visitors.SimpleDBDeleteVisitor;
 
 public class SimpleDBDeleteExecute implements UpdateExecution {
 	

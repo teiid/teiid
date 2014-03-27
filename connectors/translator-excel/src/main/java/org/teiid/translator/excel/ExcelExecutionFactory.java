@@ -24,17 +24,10 @@ package org.teiid.translator.excel;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.FileConnection;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
+import org.teiid.translator.*;
 
 @Translator(name="excel", description="Excel file translator")
 public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, FileConnection> {
@@ -53,13 +46,11 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, F
     		throws TranslatorException {
     	return new ExcelExecution((Select)command, executionContext, metadata, connection);
     }    
-    
-	@Override
-	public void getMetadata(MetadataFactory metadataFactory, FileConnection connection) throws TranslatorException {
-		ExcelMetadataProcessor processor = new ExcelMetadataProcessor(metadataFactory, connection);
-		PropertiesUtils.setBeanProperties(processor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-		processor.processMetadata();		
-	} 
+    	
+    @Override
+    public MetadataProcessor<FileConnection> getMetadataProcessor(){
+        return new ExcelMetadataProcessor();
+    }
 	
 	@Override
 	public boolean supportsCompareCriteriaEquals() {

@@ -21,13 +21,18 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.util.ArrayList;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorProperty;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.translator.*;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 
 @SuppressWarnings("nls")
 public class TestTranslatorUtil {
@@ -60,6 +65,48 @@ public class TestTranslatorUtil {
 		
 		assertEquals("foo", my.other());
 	}
+	
+    @Test
+    public void testImportProperties() throws Exception {
+        VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
+        tm.setExecutionFactoryClass(MyTranslator.class);
+        tm.addProperty("MyProperty", "correctly-assigned");
+        
+        MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
+
+        VDBTranslatorMetaData translator = TranslatorUtil.buildTranslatorMetadata(my, "my-module");
+        ExtendedPropertyMetadataList props = translator.getAttachment(ExtendedPropertyMetadataList.class);
+        
+        ArrayList<ExtendedPropertyMetadata> importProperties = new ArrayList<ExtendedPropertyMetadata>();
+        for (ExtendedPropertyMetadata prop:props) {
+            if (prop.category().equals(PropertyType.IMPORT.name())) {
+                importProperties.add(prop);
+            }
+        }
+        assertEquals(1, importProperties.size());
+    }
+    
+    @Test
+    public void testExtensionMetadataProperties() throws Exception {
+        VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
+        tm.setExecutionFactoryClass(MyTranslator.class);
+        tm.addProperty("MyProperty", "correctly-assigned");
+        
+        MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
+
+        VDBTranslatorMetaData translator = TranslatorUtil.buildTranslatorMetadata(my, "my-module");
+        ExtendedPropertyMetadataList props = translator.getAttachment(ExtendedPropertyMetadataList.class);
+        
+        ArrayList<ExtendedPropertyMetadata> importProperties = new ArrayList<ExtendedPropertyMetadata>();
+        for (ExtendedPropertyMetadata prop:props) {
+            if (prop.category().equals(PropertyType.EXTENSION_METADATA.name())) {
+                importProperties.add(prop);
+            }
+        }
+        assertEquals("{http://teiid.org}/my-extension-property", importProperties.get(0).name());
+        assertEquals("java.lang.String", importProperties.get(0).datatype());
+        assertEquals("org.teiid.metadata.Column", importProperties.get(0).owner());
+    }    
 	
 	@Test
 	public void testBuildExecutionFactoryWithDefaults() throws Exception {
@@ -98,7 +145,10 @@ public class TestTranslatorUtil {
 	
 	@Translator(name="my-translator")
 	public static class MyTranslator extends ExecutionFactory<Object, Object> {
-		String mine;
+	    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, description="description", required=true)
+	    public static final String EXTENSION_PROP = "{http://teiid.org}/my-extension-property"; 
+		
+	    String mine;
 		String other;
 		
 		@TranslatorProperty(display="my-property", required=true)
@@ -117,6 +167,21 @@ public class TestTranslatorUtil {
 		
 		public void setOther(String other) {
 			this.other = other;
+		}
+		
+		@Override
+        public MetadataProcessor<Object> getMetadataProcessor() {
+		    return new MetadataProcessor<Object> () {
+
+                @Override
+                public void process(MetadataFactory metadataFactory,Object connection) throws TranslatorException {
+                }
+
+                @TranslatorProperty(display="Import Property", category=PropertyType.IMPORT)
+                public String getImportProperty() {
+                    return "import-property";
+                }
+		    };
 		}
 	}
 	
