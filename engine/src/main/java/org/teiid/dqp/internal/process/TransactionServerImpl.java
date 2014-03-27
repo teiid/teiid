@@ -432,6 +432,8 @@ public class TransactionServerImpl implements TransactionService {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
 		} catch (SystemException e) {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
+		} catch (IllegalStateException e) {
+			throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
 		} finally {
             transactions.removeTransactionContext(tc);
         }
