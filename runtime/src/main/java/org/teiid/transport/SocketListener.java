@@ -77,7 +77,7 @@ public class SocketListener implements ChannelListenerFactory {
 		}
         
         if (maxWorkers == 0) {
-        	maxWorkers = Runtime.getRuntime().availableProcessors();
+        	maxWorkers = Math.max(4, 2*Runtime.getRuntime().availableProcessors());
         }
 		
         ChannelFactory factory = new NioServerSocketChannelFactory(this.nettyPool, this.nettyPool, maxWorkers);
