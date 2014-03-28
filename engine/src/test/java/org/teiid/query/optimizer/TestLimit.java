@@ -958,7 +958,7 @@ public class TestLimit {
          
         String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1, TABLE(select pm2.g1.e1 FROM pm2.g1 WHERE pm2.g1.e1 = pm1.g1.e1) as x limit 5, 5"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 LIMIT 10", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 LIMIT 10"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 WHERE pm2.g1.e1 = pm1.g1.e1 LIMIT 10", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
@@ -968,7 +968,7 @@ public class TestLimit {
                 0,      // DupRemove
                 0,      // Grouping
                 1,      // Limit
-                1,      // NestedLoopJoinStrategy
+                0,      // NestedLoopJoinStrategy
                 0,      // MergeJoinStrategy
                 0,      // Null
                 0,      // PlanExecution
