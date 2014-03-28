@@ -493,7 +493,10 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.isThreadBound();
 	}
 	@Override
-    public MetadataProcessor<C> getMetadataProcessor(){
-	    return delegate.getMetadataProcessor();
+        public MetadataProcessor<C> getMetadataProcessor(){
+            if(delegate != null) {
+	        return delegate.getMetadataProcessor();
+            }
+            return null;
 	}
 }
