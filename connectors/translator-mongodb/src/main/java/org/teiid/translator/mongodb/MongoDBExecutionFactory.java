@@ -48,6 +48,7 @@ import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBRef;
@@ -358,6 +359,22 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 					return resource.getInputStream();
 				}
 			});
+		}
+		else if (value instanceof BasicDBList) {
+		    /*
+            //array
+		    if (expectedClass.isArray()) {
+		        Class arrayType = expectedClass.getComponentType();
+    		    if (!(((BasicDBList)value).get(0) instanceof BasicDBObject)) {
+    		        ArrayList<String> values = new ArrayList<String>();
+    		        Iterator iter = ((BasicDBList)value).iterator();
+    		        while (iter.hasNext()) {
+    		            values.add((String)iter.next());
+    		        }
+    		        value = values.toArray(new String[values.size()]);
+                }
+		    }
+		    */
 		}
 		return value;
 	}

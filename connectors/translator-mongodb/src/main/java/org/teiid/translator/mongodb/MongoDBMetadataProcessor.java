@@ -21,12 +21,21 @@
  */
 package org.teiid.translator.mongodb;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+
+import org.bson.types.Binary;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
+
+import com.mongodb.*;
 
 public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnection> {
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Merge Into Table", description="Declare the name of table that this table needs to be merged into. No separate copy maintained")
@@ -35,8 +44,135 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Embedded Into Table", description="Declare the name of table that this table needs to be embedded into. A separate copy is also maintained")
     public static final String EMBEDDABLE = MetadataFactory.MONGO_URI+"EMBEDDABLE"; //$NON-NLS-1$
 
+    private static final String ID = "_id"; //$NON-NLS-1$
+    private static final String TOP_LEVEL_DOC = "TOP_LEVEL_DOC"; //$NON-NLS-1$
+
     @Override
     public void process(MetadataFactory metadataFactory, MongoDBConnection connection) throws TranslatorException {
+        DB db = connection.getDatabase();
+        for (String tableName:db.getCollectionNames()) {
+            
+            DBCollection rows = db.getCollection(tableName);
+            BasicDBObject row = (BasicDBObject)rows.findOne();
+            Table table = addTable(metadataFactory, tableName, row);
+
+            // top level documents can not be seen as merged
+            table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));
+        }
         
+        for (Table table:metadataFactory.getSchema().getTables().values()) {
+            String top = table.getProperty(TOP_LEVEL_DOC, false);
+            String merge = table.getProperty(MERGE, false);
+            if ( top != null) {
+                table.setProperty(TOP_LEVEL_DOC, null);
+                if (merge != null) {
+                    table.setProperty(MERGE, null);
+                    table.setProperty(EMBEDDABLE, merge);
+                }
+            }
+        }
+    }
+
+    private Table addTable(MetadataFactory metadataFactory, String tableName, BasicDBObject row) {
+        if (metadataFactory.getSchema().getTable(tableName) != null) {
+            Table t = metadataFactory.getSchema().getTable(tableName);
+            return t;
+        }
+        
+        Table table = metadataFactory.addTable(tableName);
+        table.setSupportsUpdate(true);
+        
+        for (String columnKey:row.keySet()) {
+            Object value = row.get(columnKey);
+            
+            Column column = addColumn(metadataFactory, table, columnKey, value);
+            
+            if (column != null) {
+                column.setUpdatable(true);
+            }
+        }
+        return table;
+    }
+
+    private Column addColumn(MetadataFactory metadataFactory, Table table, String columnKey, Object value) {
+        Column column = null;
+        
+        if (columnKey.equals(ID)) {
+            if (value instanceof BasicDBObject) {
+                BasicDBObject compositeKey = (BasicDBObject)value;
+                for (String key:compositeKey.keySet()) {                    
+                    column = addColumn(metadataFactory, table, key, compositeKey.get(key));  
+                    column.setUpdatable(true);
+                }                
+            }
+        }
+        
+        if (!columnKey.equals(ID) && value instanceof BasicDBObject) {
+            // embedded doc - one to one
+            Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value);
+            childTable.setProperty(MERGE, table.getName());
+        }
+        else if (value instanceof BasicDBList) {
+            // embedded doc, list one to many
+            if (((BasicDBList)value).get(0) instanceof BasicDBObject) {
+                Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0));
+                childTable.setProperty(MERGE, table.getName());
+            }
+            else {
+                column = metadataFactory.addColumn(columnKey, getDataType(((BasicDBList)value).get(0))+"[]", table); //$NON-NLS-1$
+            }                
+        }
+        else if (value instanceof DBRef) {
+            Object obj = ((DBRef)value).getId();
+            column = addColumn(metadataFactory, table, columnKey, obj);
+            String ref = ((DBRef)value).getRef();
+            metadataFactory.addForiegnKey("FK_"+columnKey, Arrays.asList(columnKey), ref, table); //$NON-NLS-1$
+        }
+        else {
+            column = metadataFactory.addColumn(columnKey, getDataType(value), table);
+        }
+        
+        // create a PK out of _id
+        if (columnKey.equals(ID)) { 
+            if (value instanceof BasicDBObject) {
+                BasicDBObject compositeKey = (BasicDBObject)value;
+                ArrayList<String> columns = new ArrayList<String>();
+                for (String key:compositeKey.keySet()) {                    
+                    columns.add(key);                    
+                }                
+                metadataFactory.addPrimaryKey("PK0", columns, table); //$NON-NLS-1$
+            }
+            else {
+                metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
+            }
+        }
+        return column;
+    }
+    
+    private String getDataType(Object value) {
+        if (value instanceof Integer) {
+            return TypeFacility.RUNTIME_NAMES.INTEGER;
+        }
+        else if (value instanceof Double) {
+            return TypeFacility.RUNTIME_NAMES.DOUBLE;
+        }
+        else if (value instanceof Boolean) {
+            return TypeFacility.RUNTIME_NAMES.BOOLEAN;
+        }
+        else if (value instanceof Long) {
+            return TypeFacility.RUNTIME_NAMES.LONG;
+        }                
+        else if (value instanceof String) {
+            return TypeFacility.RUNTIME_NAMES.STRING;
+        }
+        else if (value instanceof Date) {
+            return TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+        } 
+        else if (value instanceof Binary || value instanceof byte[]) {
+            return TypeFacility.RUNTIME_NAMES.BLOB;
+        }
+        else {
+            return TypeFacility.RUNTIME_NAMES.OBJECT;
+        }        
     }
 }
