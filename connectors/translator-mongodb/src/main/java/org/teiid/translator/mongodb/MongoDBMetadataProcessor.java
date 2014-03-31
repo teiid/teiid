@@ -26,10 +26,8 @@ import java.util.Arrays;
 import java.util.Date;
 
 import org.bson.types.Binary;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ExtensionMetadataProperty;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
@@ -120,6 +118,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             }
             else {
                 column = metadataFactory.addColumn(columnKey, getDataType(((BasicDBList)value).get(0))+"[]", table); //$NON-NLS-1$
+                column.setSearchType(SearchType.Unsearchable);
             }                
         }
         else if (value instanceof DBRef) {
