@@ -23,6 +23,7 @@ package org.teiid.translator.mongodb;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -361,20 +362,17 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 			});
 		}
 		else if (value instanceof BasicDBList) {
-		    /*
+		    BasicDBList arrayValues = (BasicDBList)value;
             //array
-		    if (expectedClass.isArray()) {
+		    if (expectedClass.isArray() && !(arrayValues.get(0) instanceof BasicDBObject)) {
 		        Class arrayType = expectedClass.getComponentType();
-    		    if (!(((BasicDBList)value).get(0) instanceof BasicDBObject)) {
-    		        ArrayList<String> values = new ArrayList<String>();
-    		        Iterator iter = ((BasicDBList)value).iterator();
-    		        while (iter.hasNext()) {
-    		            values.add((String)iter.next());
-    		        }
-    		        value = values.toArray(new String[values.size()]);
-                }
+		        Object array = Array.newInstance(arrayType, arrayValues.size());		        
+                for (int i = 0; i < arrayValues.size(); i++) {
+                    Object arrayItem = retrieveValue(arrayValues.get(i), arrayType, mongoDB, fqn, colName);
+                    Array.set(array, i, arrayItem);
+                }		        
+                value = array;
 		    }
-		    */
 		}
 		return value;
 	}
