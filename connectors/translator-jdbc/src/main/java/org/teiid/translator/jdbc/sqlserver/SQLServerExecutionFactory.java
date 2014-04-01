@@ -24,15 +24,9 @@
  */
 package org.teiid.translator.jdbc.sqlserver;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.AggregateFunction;
@@ -42,10 +36,7 @@ import org.teiid.language.LanguageObject;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.Version;
@@ -331,21 +322,28 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
+    @Deprecated
     protected JDBCMetdataProcessor createMetadataProcessor() {
-    	return new JDBCMetdataProcessor() {
-    		@Override
-    		protected Column addColumn(ResultSet columns, Table table,
-    				MetadataFactory metadataFactory, int rsColumns)
-    				throws SQLException {
-    			Column c = super.addColumn(columns, table, metadataFactory, rsColumns);
-    			//The ms jdbc driver does not correctly report the auto incremented column
-    			if (!c.isAutoIncremented() && c.getNativeType() != null && StringUtil.endsWithIgnoreCase(c.getNativeType(), " identity")) { //$NON-NLS-1$
-    				c.setAutoIncremented(true);
-    			}
-    			return c;
-    		}
-    	};
+        return (JDBCMetdataProcessor)getMetadataProcessor();
     }
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetdataProcessor() {
+            @Override
+            protected Column addColumn(ResultSet columns, Table table,
+                    MetadataFactory metadataFactory, int rsColumns)
+                    throws SQLException {
+                Column c = super.addColumn(columns, table, metadataFactory, rsColumns);
+                //The ms jdbc driver does not correctly report the auto incremented column
+                if (!c.isAutoIncremented() && c.getNativeType() != null && StringUtil.endsWithIgnoreCase(c.getNativeType(), " identity")) { //$NON-NLS-1$
+                    c.setAutoIncremented(true);
+                }
+                return c;
+            }
+        };
+    }
+    
     
 	@Override
 	protected boolean usesDatabaseVersion() {

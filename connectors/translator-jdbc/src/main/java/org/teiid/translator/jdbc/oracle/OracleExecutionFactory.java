@@ -22,15 +22,11 @@
 
 package org.teiid.translator.jdbc.oracle;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,6 +38,7 @@ import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
+import org.teiid.language.Array;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
@@ -50,12 +47,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.*;
 
 
@@ -116,6 +108,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public OracleExecutionFactory() {
 	}
     
+    @Override
     public void start() throws TranslatorException {
         super.start();
         
@@ -575,7 +568,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 								|| "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
 			}
     		
-    		public void visit(In obj) {
+    		@Override
+            public void visit(In obj) {
     			if (isFixedChar(obj.getLeftExpression())) {
     				for (Expression exp : obj.getRightExpressions()) {
     					if (exp instanceof Literal) {
@@ -590,7 +584,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			super.visit(obj);
     		}
     		
-    		public void visit(NamedTable table) {
+    		@Override
+            public void visit(NamedTable table) {
     			stripDualAlias(table);
     			super.visit(table);
     		}
@@ -874,7 +869,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    @Deprecated
     protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
+    }    
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
     	return new JDBCMetdataProcessor() {
     		@Override
     		protected String getRuntimeType(int type, String typeName,

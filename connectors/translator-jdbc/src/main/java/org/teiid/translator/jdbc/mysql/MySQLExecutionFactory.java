@@ -22,28 +22,15 @@
 
 package org.teiid.translator.jdbc.mysql;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
 import org.teiid.metadata.Table;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.ConvertModifier;
-import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCMetdataProcessor;
-import org.teiid.translator.jdbc.LocateFunctionModifier;
+import org.teiid.translator.*;
+import org.teiid.translator.jdbc.*;
 
 
 /** 
@@ -393,7 +380,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    protected JDBCMetdataProcessor createMetadataProcessor() {
+    public MetadataProcessor<Connection> getMetadataProcessor() {
     	return new JDBCMetdataProcessor() {
     		@Override
     		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
@@ -426,4 +413,10 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     		}
     	};
     }
+    
+    @Override
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
+    }    
 }

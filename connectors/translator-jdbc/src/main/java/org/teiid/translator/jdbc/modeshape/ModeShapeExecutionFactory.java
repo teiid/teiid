@@ -22,8 +22,10 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -31,19 +33,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.Comparison;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Literal;
-import org.teiid.language.Not;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
@@ -253,8 +247,14 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     	return false;
     }
 	
-	protected JDBCMetdataProcessor createMetadataProcessor() {
-		return new ModeShapeJDBCMetdataProcessor();
-	}
-        
+	@Override
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
+    }    
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new ModeShapeJDBCMetdataProcessor();
+    }	   
 }

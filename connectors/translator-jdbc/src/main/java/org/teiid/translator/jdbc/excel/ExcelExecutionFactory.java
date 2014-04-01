@@ -22,6 +22,9 @@
 
 package org.teiid.translator.jdbc.excel;
 
+import java.sql.Connection;
+
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
@@ -29,14 +32,20 @@ import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 @Translator(name="excel-odbc", description="A translator for Excel using the JDBC-ODBC bridge")
 public class ExcelExecutionFactory extends JDBCExecutionFactory {
 	
-	@Override
-	protected JDBCMetdataProcessor createMetadataProcessor() {
-		return new JDBCMetdataProcessor() {
-			@Override
-			protected String quoteName(String name) {
-				return '[' + name + ']';
-			}
-		};
-	}
+    @Override
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
+    }    
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetdataProcessor() {
+            @Override
+            protected String quoteName(String name) {
+                return '[' + name + ']';
+            }
+        };
+    }	
 
 }
