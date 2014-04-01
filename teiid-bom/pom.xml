@@ -23,7 +23,7 @@
         <version.asm>3.3.1-redhat-5</version.asm>
         <version.commons-cli>1.2.redhat-3</version.commons-cli>
         
-        <version.com.google.guava> 13.0.1-redhat-1</version.com.google.guava>
+        <version.com.google.guava>13.0.1-redhat-1</version.com.google.guava>
         <version.io.netty>3.6.7.Final-redhat-1</version.io.netty>
         <version.javax.ws.rs>1.1.1</version.javax.ws.rs>
         <version.wsdl4j>1.6.2.redhat-6</version.wsdl4j>
@@ -36,7 +36,7 @@
         
         <version.org.infinispan>5.2.7.Final</version.org.infinispan>
         
-        <version.org.jboss.as>7.3.1.Final-redhat-3</version.org.jboss.as>
+        <version.org.jboss.as>7.3.0.Final-redhat-14</version.org.jboss.as>
         <version.org.jboss.jboss-common-core>2.2.17.GA-redhat-2</version.org.jboss.jboss-common-core>
         <version.org.jboss.jboss-dmr>1.2.0.Final-redhat-1</version.org.jboss.jboss-dmr>
         <version.org.jboss.jboss-vfs>3.2.2.Final-redhat-1</version.org.jboss.jboss-vfs>
