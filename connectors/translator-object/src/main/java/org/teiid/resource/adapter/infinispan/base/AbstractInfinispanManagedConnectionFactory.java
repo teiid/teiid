@@ -90,6 +90,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private Map<String, String> pkMap; // cacheName ==> pkey name
 	private String module;
 	private CACHE_TYPE cacheType;
+	private boolean supportsLuceneSearching = false;
 
 	@Override
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
@@ -179,7 +180,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * Called to get the module(s) that are to be loaded
 	 * 
 	 * @see #setModule
-	 * @return
+	 * @return String
 	 */
 	public String getModule() {
 		return module;
@@ -219,7 +220,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * Set the list of remote servers that make up the Infinispan cluster. The
 	 * servers must be Infinispan HotRod servers. The list must be in the
 	 * appropriate format of <code>host:port[;host:port...]</code> that would be
-	 * used when defining an Infinispan {@link RemoteCacheManager} instance. If
+	 * used when defining an Infinispan instance. If
 	 * the value is missing, <code>localhost:11311</code> is assumed.
 	 * 
 	 * @param remoteServerList
@@ -262,7 +263,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * configure a RemoteCacheManager remoteCacheManager.
 	 * 
 	 * @return the name of the HotRod client properties file to be used to
-	 *         configure {@link RemoteCacheContainer}
+	 *         configure Cache container
 	 * @see #setHotRodClientPropertiesFile(String)
 	 */
 	public String getHotRodClientPropertiesFile() {
@@ -271,11 +272,11 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	/**
 	 * Set the name of the HotRod client properties file that should be used to
-	 * configure a {@link RemoteCacheManager remoteCacheManager}.
+	 * configure a remoteCacheManager.
 	 * 
 	 * @param propertieFileName
 	 *            the name of the HotRod client properties file that should be
-	 *            used to configure the {@link RemoteCacheContainer remote}
+	 *            used to configure the remote cache
 	 *            container.
 	 * @see #getHotRodClientPropertiesFile()
 	 */
@@ -290,6 +291,30 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 */
 	public String getCacheJndiName() {
 		return cacheJndiName;
+	}
+	
+	/**
+	 * Returns <b>true</b> if the cache defined for this connection factory
+	 * supports Lucene searching. 
+	 * 
+	 * @return <b>True</b> if Lucene searching is enabled 
+	 * @see #setSupportLuceneSearching(boolean)
+	 */
+	public boolean supportLuceneSearching() {
+		return supportsLuceneSearching;
+	}
+
+	/**
+	 * Set the indicator as to whether this cache can be searched using
+	 * Hibernate Lucene searching.
+	 * 
+	 * @param supportLucenSearching indicates if the cache can be queried using
+	 * lucene searching.  This would assume the objects in the cache have the
+	 * hibernate annotations to enable such seaching.
+	 * @see #supportLuceneSearching()
+	 */
+	public void setSupportLuceneSearching(boolean supportLucenSearching) {
+		this.supportsLuceneSearching = supportLucenSearching;
 	}
 
 	/**
@@ -401,6 +426,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 				break;
 	
 			}
+			this.cacheContainer.setSupportsLuceneSearching(supportLuceneSearching());
 		} finally {
 			Thread.currentThread().setContextClassLoader(cl);
 		}

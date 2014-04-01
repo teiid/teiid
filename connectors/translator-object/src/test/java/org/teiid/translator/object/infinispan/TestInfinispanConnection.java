@@ -45,13 +45,15 @@ public class TestInfinispanConnection  implements ObjectConnection {
 			  this.container.stop();
 		  }
 		  
-		public static ObjectConnection createConnection(String configFile) throws Exception {
+		public static ObjectConnection createConnection(String configFile, boolean enableSearching) throws Exception {
 				
 				DefaultCacheManager container = new DefaultCacheManager(configFile);
 				
 				TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
 
 				CacheContainerWrapper  wrapper = new TestInfinispanCacheWrapper(container);
+				
+				wrapper.setSupportsLuceneSearching(enableSearching);
 
 				return  new TestInfinispanConnection(wrapper, container);
 			}	

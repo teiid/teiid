@@ -37,6 +37,8 @@ public interface ObjectConnection  {
 		
 	/**
 	 * Return the root class type stored in the specified cache
+	 * @param cacheName 
+	 * @return Class
 	 * @throws TranslatorException
 	 */
 	Class<?> getType(String cacheName) throws TranslatorException;

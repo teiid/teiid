@@ -22,8 +22,10 @@
 
 package org.teiid.resource.adapter.infinispan.base;
 
+import java.util.List;
 import java.util.Map;
 
+import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
