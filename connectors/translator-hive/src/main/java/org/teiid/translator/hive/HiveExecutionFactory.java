@@ -347,6 +347,12 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
         return supportedFunctions;
     }
 
+    @Deprecated
+    @Override
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (HiveMetadataProcessor)getMetadataProcessor();
+    }
+    
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor(){
         return new HiveMetadataProcessor();
