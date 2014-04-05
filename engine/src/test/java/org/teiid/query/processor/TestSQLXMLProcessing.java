@@ -736,5 +736,11 @@ public class TestSQLXMLProcessing {
 		
 		processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(b));
 	}
+	
+	@Test(expected=ExpressionEvaluationException.class) public void testExternalEntityResolving() throws Exception {
+		String sql = "SELECT xmlelement(foo, '<bar>', convert('<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><bar1>&xxe;</bar1>', xml))"; //$NON-NLS-1$
+        
+        process(sql, null);
+	}
     
 }
