@@ -129,6 +129,7 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 			try {
 				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 				dbf.setNamespaceAware(true);
+		        dbf.setFeature("http://xml.org/sax/features/external-general-entities", false); //$NON-NLS-1$
 				DocumentBuilder docBuilder = dbf.newDocumentBuilder();
 	            Node doc = docBuilder.parse(new InputSource(getBinaryStream()));
 	            return (T) new DOMSource(doc);

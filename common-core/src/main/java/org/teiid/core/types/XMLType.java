@@ -35,7 +35,9 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
+import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLResolver;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Result;
@@ -60,10 +62,26 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	
 	private static ThreadLocal<XMLInputFactory> threadLocalFactory = new ThreadLocal<XMLInputFactory>() {
 		protected XMLInputFactory initialValue() {
-			return XMLInputFactory.newInstance();
+			return createXMLInputFactory();
 		}
 	};
-	private static XMLInputFactory factory = XMLInputFactory.newInstance();
+	
+	private static XMLInputFactory createXMLInputFactory()
+			throws FactoryConfigurationError {
+		XMLInputFactory factory = XMLInputFactory.newInstance();
+		factory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
+		factory.setXMLResolver(new XMLResolver() {
+			
+			@Override
+			public Object resolveEntity(String arg0, String arg1, String arg2,
+					String arg3) throws XMLStreamException {
+				throw new XMLStreamException("Reading external entities is disabled");
+			}
+		});
+		return factory;
+	}
+
+	private static XMLInputFactory factory = createXMLInputFactory();
 	private static Boolean factoriesTreadSafe;
 
 	private transient Type type = Type.UNKNOWN;
