@@ -27,7 +27,6 @@
               <useProjectArtifact>true</useProjectArtifact>
               <unpack>false</unpack>
               <useTransitiveDependencies>true</useTransitiveDependencies>
-              <useDefaultExcludes>true</useDefaultExcludes>
             </dependencySet>
           </dependencySets>
           <outputDirectory>lib</outputDirectory>

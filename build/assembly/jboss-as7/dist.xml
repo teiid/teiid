@@ -170,7 +170,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>
             <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>
@@ -211,7 +210,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/file/main</outputDirectory>
@@ -236,7 +235,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/ldap/main</outputDirectory>
@@ -261,7 +260,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/salesforce/main</outputDirectory>
@@ -286,7 +285,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/google/main</outputDirectory>
@@ -311,7 +310,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/mongodb/main</outputDirectory>
@@ -336,7 +335,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/webservice/main</outputDirectory>
@@ -361,7 +360,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/infinispan/main</outputDirectory>
@@ -386,7 +385,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/infinispan/6.2</outputDirectory>
@@ -413,7 +412,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/jdbc/main</outputDirectory>
@@ -438,7 +437,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/loopback/main</outputDirectory>
@@ -462,7 +461,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/file/main</outputDirectory>
@@ -486,7 +485,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/ldap/main</outputDirectory>
@@ -510,7 +509,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                   <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/google/main</outputDirectory>
@@ -533,7 +532,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/google/api/main</outputDirectory>
@@ -557,7 +556,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/mongodb/api/main</outputDirectory>
@@ -581,7 +580,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/salesforce/main</outputDirectory>
@@ -604,7 +603,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/salesforce/api/main</outputDirectory>
@@ -627,7 +626,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/ws/main</outputDirectory>
@@ -651,7 +650,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/olap/main</outputDirectory>
@@ -674,7 +673,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                   <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/hive/main</outputDirectory>
@@ -696,7 +695,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/jpa/main</outputDirectory>
@@ -718,7 +717,7 @@
                       <useProjectArtifact>true</useProjectArtifact>
                       <unpack>false</unpack>
                       <useTransitiveDependencies>false</useTransitiveDependencies>
-                      <useDefaultExcludes>true</useDefaultExcludes>
+                      <!--useDefaultExcludes>true</useDefaultExcludes-->
                   </dependencySet>
               </dependencySets>          
               <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/object/main</outputDirectory>
@@ -740,7 +739,7 @@
                       <useProjectArtifact>true</useProjectArtifact>
                       <unpack>false</unpack>
                       <useTransitiveDependencies>false</useTransitiveDependencies>
-                      <useDefaultExcludes>true</useDefaultExcludes>
+                      <!--useDefaultExcludes>true</useDefaultExcludes-->
                   </dependencySet>
               </dependencySets>          
               <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/odata/main</outputDirectory>
@@ -763,7 +762,7 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <!--useDefaultExcludes>true</useDefaultExcludes-->
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/mongodb/main</outputDirectory>
