@@ -22,14 +22,15 @@
 
 package org.teiid.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -49,20 +50,12 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-
 /**
  */
-public class TestProjectNode extends TestCase {
+@SuppressWarnings({"rawtypes", "unchecked"})
+public class TestProjectNode {
 
-    /**
-     * Constructor for TestSortNode.
-     * @param arg0
-     */
-    public TestProjectNode(String arg0) {
-        super(arg0);
-    }
-    
-    public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) throws TeiidComponentException {
+	public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -122,7 +115,7 @@ public class TestProjectNode extends TestCase {
         }                
     }
         
-    public void testNoProject() throws Exception {
+    @Test public void testNoProject() throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -143,7 +136,7 @@ public class TestProjectNode extends TestCase {
         
     }
 
-    public void testProjectPassThrough() throws Exception {
+    @Test public void testProjectPassThrough() throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -171,7 +164,7 @@ public class TestProjectNode extends TestCase {
         helpTestProject(elements, data, projectElements, data, null);        
     }
 
-    public void testProjectReorder() throws Exception {
+    @Test public void testProjectReorder() throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -205,7 +198,7 @@ public class TestProjectNode extends TestCase {
         helpTestProject(elements, data, projectElements, expected, null);        
     }
 
-    public void testProjectExpression() throws Exception {
+    @Test public void testProjectExpression() throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.STRING);       
         List elements = new ArrayList();
@@ -229,7 +222,7 @@ public class TestProjectNode extends TestCase {
         helpTestProject(projectElements, data, elements, expected, null);        
     }
 
-    public void testProjectExpressionFunctionFails() throws Exception {
+    @Test public void testProjectExpressionFunctionFails() throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.STRING);       
         List elements = new ArrayList();
@@ -247,12 +240,12 @@ public class TestProjectNode extends TestCase {
             Arrays.asList(new Object[] { "1" }),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "2x" }) }; //$NON-NLS-1$
 
-        String expectedMessage = "TEIID30328 Unable to evaluate convert(e1, integer): TEIID30384 Error while evaluating function convert : ROOT ERROR NULL"; //$NON-NLS-1$
+        String expectedMessage = "TEIID30328 UNABLE TO EVALUATE CONVERT(E1, INTEGER): TEIID30384 ERROR WHILE EVALUATING FUNCTION CONVERT"; //$NON-NLS-1$
 
         helpTestProjectFails(projectElements, data, elements, expectedMessage);        
     }
     
-    public void testProjectWithLookupFunction() throws Exception {
+    @Test public void testProjectWithLookupFunction() throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.STRING);       
         List elements = new ArrayList();

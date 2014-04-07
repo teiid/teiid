@@ -891,7 +891,7 @@ public class TestQueryRewriter {
             fail("Expected QueryValidatorException due to divide by 0"); //$NON-NLS-1$
         } catch(TeiidException e) {
         	// looks like message is being wrapped with another exception with same message
-            assertEquals("TEIID30328 Unable to evaluate (5 / 0): TEIID30384 Error while evaluating function / : root error null", e.getMessage());  //$NON-NLS-1$
+            assertEquals("TEIID30328 Unable to evaluate (5 / 0): TEIID30384 Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
         }       
     }
     
@@ -904,7 +904,7 @@ public class TestQueryRewriter {
             QueryRewriter.rewriteCriteria(origCrit, null, metadata);
             fail("Expected QueryValidatorException due to invalid string"); //$NON-NLS-1$
         } catch(TeiidException e) {
-            assertEquals("TEIID30328 Unable to evaluate convert('x', integer): TEIID30384 Error while evaluating function convert : root error null", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30328 Unable to evaluate convert('x', integer): TEIID30384 Error while evaluating function convert", e.getMessage()); //$NON-NLS-1$
         }       
     }
     
@@ -1191,7 +1191,7 @@ public class TestQueryRewriter {
         procedure1 += "exception e\n"; //$NON-NLS-1$
         procedure1 += "end\n"; //$NON-NLS-1$
         
-        String expected = "BEGIN\nRAISE 'org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function / : root error null';\nEXCEPTION e\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nRAISE 'org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /';\nEXCEPTION e\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
