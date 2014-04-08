@@ -202,7 +202,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		}
 	}
 	
-	@TranslatorProperty(display="Header Row Number", description="Row number that contains the header information")
+	@TranslatorProperty(display="Header Row Number", category=PropertyType.IMPORT, description="Row number that contains the header information")
     public int getHeaderRowNumber() {
         return headerRowNumber;
     }

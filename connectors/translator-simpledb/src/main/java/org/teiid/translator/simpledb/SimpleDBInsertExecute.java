@@ -22,46 +22,38 @@
 
 package org.teiid.translator.simpledb;
 
-import java.util.Map;
-
 import org.teiid.language.Command;
-import org.teiid.language.Insert;
 import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
-public class SimpleDBInsertExecute implements UpdateExecution{
+public class SimpleDBInsertExecute implements UpdateExecution {
+    private SimpleDBConnection connection;
+    private int updatedCount=0;
+    private SimpleDBInsertVisitor visitor = new SimpleDBInsertVisitor();
 
-	private Command command;
-	private SimpleDBConnection connection;
-	private int updatedCount=0;
-	
-	public SimpleDBInsertExecute(Command command, SimpleDBConnection connection) {
-		this.command = command;
-		this.connection = connection;
-	}
-	
-	@Override
-	public void close() {
-		
-	}
+    public SimpleDBInsertExecute(Command command, SimpleDBConnection connection) throws TranslatorException {
+        this.connection = connection;
+        this.visitor.visitNode(command);
+        this.visitor.checkExceptions();
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-		
-	}
+    @Override
+    public void close() {
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		Insert insert = (Insert) command;
-		Map<String, String> columnsMap = SimpleDBInsertVisitor.getColumnsValuesMap(insert);
-		updatedCount = connection.getAPIClass().performInsert(SimpleDBInsertVisitor.getDomainName(insert), columnsMap.get("itemName()"), columnsMap);
-	}
+    @Override
+    public void cancel() throws TranslatorException {
+    }
 
-	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
-		return new int[] { updatedCount };
-	}
+    @Override
+    public void execute() throws TranslatorException {
+        this.updatedCount = this.connection.performInsert(visitor.getDomainName(), this.visitor.getColumns(), this.visitor.values());                        
+    }
 
+    @Override
+    public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
+        return new int[] { updatedCount };
+    }
 }

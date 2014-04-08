@@ -29,9 +29,6 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFactory {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -1346340853914009086L;
 	
 	private String accessKey;

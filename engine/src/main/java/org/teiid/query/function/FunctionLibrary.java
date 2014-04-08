@@ -22,13 +22,7 @@
 
 package org.teiid.query.function;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -41,11 +35,8 @@ import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
 
 
 
@@ -292,6 +283,11 @@ public class FunctionLibrary {
                 if (sourceType == null) {
                     currentScore++;
                     continue;
+                }
+                if (sourceType.isArray()&& targetType.isArray()
+                        && sourceType.getComponentType().equals(targetType.getComponentType())) {
+                    currentScore++;
+                    continue;                    
                 }
                 if (sourceType.isArray()) {
                     if (isVarArgArrayParam(nextMethod, types, i, targetType)) {

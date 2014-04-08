@@ -24,75 +24,83 @@ package org.teiid.translator.simpledb;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import org.teiid.language.Comparison;
+import org.teiid.language.Array;
 import org.teiid.language.Literal;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.resource.adpter.simpledb.SimpleDbAPIClass;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Table;
+import org.teiid.resource.adpter.simpledb.SimpleDBDataTypeManager;
+import org.teiid.translator.TranslatorException;
 
 public class SimpleDBUpdateVisitor extends HierarchyVisitor{
+    private Table table;
+    private Map<String, Object> attributes = new HashMap<String, Object>();
+    private String criteria;
+    private ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-	private SimpleDbAPIClass apiClass;
-	private String tableName;
-	private Map<String, String> attributes;
-	private List<String> itemNames;
-	
-	public SimpleDBUpdateVisitor(Update update, SimpleDbAPIClass apiClass) {
-		attributes = new HashMap<String, String>();
-		itemNames = new ArrayList<String>();
-		this.apiClass = apiClass;
-		visit(update);
-	}
-	
-	@Override
-	public void visit(Update obj) {
-		tableName = obj.getTable().getName();
-		for(SetClause setClause : obj.getChanges()){
-			visitNode(setClause);
-		}
-		if (obj.getWhere() != null){
-			visitNode(obj.getWhere());
-		}
-		super.visit(obj);
-	}
-	
-	@Override
-	public void visit(SetClause obj) {
-		if (obj.getValue() instanceof Literal){
-			Literal l = (Literal) obj.getValue();
-			attributes.put(obj.getSymbol().getName(), (String) l.getValue());
-		}
-		super.visit(obj);
-	}
-	
-	@Override
-	public void visit(Comparison obj) {
-		ArrayList<String> columns = new ArrayList<String>();
-		columns.add("itemName()"); //$NON-NLS-1$
-		Iterator<List<String>> response = apiClass.performSelect("SELECT itemName() FROM "+tableName+" WHERE "+SimpleDBSQLVisitor.getSQLString(obj), columns); //$NON-NLS-1$ //$NON-NLS-2$
-		while (response.hasNext()) {
-			itemNames.add(response.next().get(0));
-		}
-		super.visit(obj);
-	}
+    public SimpleDBUpdateVisitor(Update update) {
+        visitNode(update);
+    }
+    
+    public void checkExceptions() throws TranslatorException {
+        if (!this.exceptions.isEmpty()) {
+            throw this.exceptions.get(0);
+        }
+    }
 
-	public String getTableName() {
-		return tableName;
-	}
+    @Override
+    public void visit(Update obj) {
+        if (obj.getParameterValues() != null) {
+            this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24006, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24006)));
+        }
+        
+        this.table = obj.getTable().getMetadataObject();
+        for(SetClause setClause : obj.getChanges()){
+            visitNode(setClause);
+        }
+        if (obj.getWhere() != null) {
+            this.criteria = SimpleDBSQLVisitor.getSQLString(obj.getWhere());
+        }
+    }
 
-	public Map<String, String> getAttributes() {
-		return attributes;
-	}
+    @Override
+    public void visit(SetClause obj) {
+        Column column = obj.getSymbol().getMetadataObject();
+        if (obj.getValue() instanceof Literal){
+            try {
+                Literal l = (Literal) obj.getValue();
+                this.attributes.put(SimpleDBMetadataProcessor.getName(column), SimpleDBDataTypeManager.convertToSimpleDBType(l.getValue(), column.getJavaType()));
+            } catch (TranslatorException e) {
+                this.exceptions.add(e);
+            }
+        }
+        else if (obj.getValue() instanceof Array) {
+            try {
+                Array array  = (Array)obj.getValue();
+                String[] result = SimpleDBInsertVisitor.getValuesArray(array);
+                this.attributes.put(SimpleDBMetadataProcessor.getName(column), result);                
+            } catch (TranslatorException e) {
+                this.exceptions.add(e);
+            }            
+        }
+        else {
+            this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001)));             
+        }
+    }
 
-	public List<String> getItemNames() {
-		return itemNames;
-	}
-	
-	
-	
+    public Table getTable() {
+        return table;
+    }
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+    
+    public String getCriteria() {
+        return this.criteria;
+    }    
 }

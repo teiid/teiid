@@ -5,7 +5,7 @@
             <module slot="main" id="org.jboss.teiid.resource-adapter.simpledb"/>
             <transaction-support>NoTransaction</transaction-support>
             <connection-definitions>
-                <connection-definition class-name="org.teiid.resource.adapter.simpledb.simpledbManagedConnectionFactory" 
+                <connection-definition class-name="org.teiid.resource.adapter.simpledb.SimpleDBManagedConnectionFactory" 
                         jndi-name="java:/simpledbDS" 
                         enabled="true" 
                         use-java-context="true" 

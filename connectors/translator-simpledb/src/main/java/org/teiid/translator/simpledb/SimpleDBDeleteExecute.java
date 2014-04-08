@@ -22,10 +22,6 @@
 
 package org.teiid.translator.simpledb;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
 import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
@@ -34,55 +30,48 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 public class SimpleDBDeleteExecute implements UpdateExecution {
-	
-	private Command command;
-	private SimpleDBConnection connection;
-	private int updatedCount=0;
-	
-	public SimpleDBDeleteExecute(Command command, SimpleDBConnection connection) {
-		this.command = command;
-		this.connection = connection;
-	}
 
-	@Override
-	public void close() {
+    private SimpleDBConnection connection;
+    private int updatedCount=0;
+    private SimpleDBDeleteVisitor visitor;
 
-	}
+    public SimpleDBDeleteExecute(Command command, SimpleDBConnection connection) throws TranslatorException {
+        this.connection = connection;
+        this.visitor = new SimpleDBDeleteVisitor((Delete)command);
+        this.visitor.checkExceptions();
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
+    public void execute() throws TranslatorException {
+        String domainName = SimpleDBMetadataProcessor.getName(this.visitor.getTable());
+        if (this.visitor.getCriteria() != null) {
+            this.updatedCount = this.connection.performDelete(domainName, buildSelect());
+        }
+        else {
+            // this is domain delete. otherwise this could be lot of items. deleted count can 
+            // not be measured.
+            this.connection.deleteDomain(domainName);
+            this.connection.createDomain(domainName);
+        }
+    }    
+    
+    private String buildSelect() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT ").append(SimpleDBMetadataProcessor.ITEM_NAME); //$NON-NLS-1$
+        sb.append(" FROM ").append(SimpleDBMetadataProcessor.getName(this.visitor.getTable())); //$NON-NLS-1$
+        sb.append(" WHERE ").append(this.visitor.getCriteria()); //$NON-NLS-1$
+        return sb.toString();
+    }
 
-	}
+    @Override
+    public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
+        return new int[] { updatedCount };
+    }
+    
+    @Override
+    public void close() {
+    }
 
-	
-	@Override
-	public void execute() throws TranslatorException {
-		Delete delete = (Delete) command;
-		SimpleDBDeleteVisitor visitor = new SimpleDBDeleteVisitor(delete, connection.getAPIClass());
-		if (visitor.hasWhere()){
-			if (visitor.isSimpleDelete()){
-				connection.getAPIClass().performDelete(visitor.getTableName(), visitor.getItemName());
-				updatedCount = 1;
-			}else{
-				for (String itemName : visitor.getItemNames()) {
-					connection.getAPIClass().performDelete(visitor.getTableName(), itemName);
-				}
-				updatedCount = visitor.getItemNames().size();
-			}
-		}else{
-			Iterator<List<String>> result = connection.getAPIClass().performSelect("SELECT itemName() FROM "+visitor.getTableName(), Arrays.asList("itemName()"));
-			while (result.hasNext()) {
-				String itemName = result.next().get(0);
-				connection.getAPIClass().performDelete(visitor.getTableName(), itemName);
-				updatedCount++;
-			}
-		}
-
-	}
-
-	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
-		return new int[] { updatedCount };
-	}
-
+    @Override
+    public void cancel() throws TranslatorException {
+    }    
 }

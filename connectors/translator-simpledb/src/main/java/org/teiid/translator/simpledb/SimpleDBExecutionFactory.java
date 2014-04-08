@@ -22,10 +22,7 @@
 
 package org.teiid.translator.simpledb;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import javax.resource.cci.ConnectionFactory;
 
@@ -34,104 +31,121 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
 import org.teiid.translator.*;
 
-@Translator(name = "simpledb", description = "Translator for SimpleDB")
+@Translator(name = "simpledb", description = "Translator for Amazon SimpleDB")
 public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory, SimpleDBConnection> {
+    public static final String INTERSECTION = "INTERSECTION"; //$NON-NLS-1$
+    public static final String ASTRING = "ASTRING"; //$NON-NLS-1$
+    public static final String EVERY = "EVERY"; //$NON-NLS-1$
+    public static final String SIMPLEDB = "SIMPLEDB"; //$NON-NLS-1$
+    
+    public SimpleDBExecutionFactory() {
+        setSupportsOrderBy(true);
+        setSupportsDirectQueryProcedure(false);
+        setSourceRequiredForMetadata(true);
+    }
+    
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        addPushDownFunction(SIMPLEDB, EVERY, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING+"[]"); //$NON-NLS-1$ 
+        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ 
+        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ 
+        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ 
+    }
+    
+    @Override
+    public UpdateExecution createUpdateExecution(final Command command, ExecutionContext executionContext,
+            RuntimeMetadata metadata, final SimpleDBConnection connection) throws TranslatorException {
+        if (command instanceof Insert) {
+            return new SimpleDBInsertExecute(command, connection);
+        } else if (command instanceof Delete) {
+            return new SimpleDBDeleteExecute(command, connection);
+        } else if (command instanceof Update) {
+            return new SimpleDBUpdateExecute(command, connection);
+        } else {
+            throw new TranslatorException("Just INSERT, DELETE and UPDATE are supported"); //$NON-NLS-1$
+        }
+    }
+    
+    @Override
+    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SimpleDBConnection connection) throws TranslatorException {
+        return new SimpleDBDirectQueryExecution(arguments, command, metadata, connection, executionContext);
+    }       
 
-	@Override
-	public UpdateExecution createUpdateExecution(final Command command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, final SimpleDBConnection connection) throws TranslatorException {
-		if (command instanceof Insert) {
-			return new SimpleDBInsertExecute(command, connection);
-		} else if (command instanceof Delete) {
-			return new SimpleDBDeleteExecute(command, connection);
-		} else if (command instanceof Update) {
-			return new SimpleDBUpdateExecute(command, connection);
-		} else {
-			throw new TranslatorException("Just INSERT, DELETE and UPDATE are supported"); //$NON-NLS-1$
-		}
-	}
+    @Override
+    public ResultSetExecution createResultSetExecution(final QueryExpression command,
+            ExecutionContext executionContext, RuntimeMetadata metadata, final SimpleDBConnection connection)
+                    throws TranslatorException {
+        return new SimpleDBQueryExecution((Select)command, executionContext, metadata, connection); 
+    }
 
-	@Override
-	public ResultSetExecution createResultSetExecution(final QueryExpression command,
-			ExecutionContext executionContext, RuntimeMetadata metadata, final SimpleDBConnection connection)
-			throws TranslatorException {
-		return new ResultSetExecution() {
-			Iterator<List<String>> listIterator;
-
-			@Override
-			public void execute() throws TranslatorException {
-				List<String> columns = new ArrayList<String>();
-				for (DerivedColumn column : ((Select) command).getDerivedColumns()) {
-					columns.add(SimpleDBSQLVisitor.getSQLString(column));
-				}
-				listIterator = connection.getAPIClass().performSelect(SimpleDBSQLVisitor.getSQLString(command),
-						columns);
-
-			}
-
-			@Override
-			public void close() {
-
-			}
-
-			@Override
-			public void cancel() throws TranslatorException {
-
-			}
-
-			@Override
-			public List<?> next() {
-				try {
-					return listIterator.next();
-				} catch (NoSuchElementException ex) {
-					return null;
-				}
-			}
-		};
-	}
-
-	@Override
+    @Override
     public MetadataProcessor<SimpleDBConnection> getMetadataProcessor(){
-	    return new SimpleDBMetadataProcessor();
-	}
+        return new SimpleDBMetadataProcessor();
+    }
 
-	@Override
-	public boolean supportsCompareCriteriaEquals() {
-		return true;
-	}
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return true;
-	}
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsInCriteria() {
-		return true;
-	}
+    @Override
+    public boolean supportsInCriteria() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsIsNullCriteria() {
-		return true;
-	}
+    @Override
+    public boolean supportsIsNullCriteria() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsOnlyLiteralComparison() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsRowLimit() {
-		return true;
-	}
+    @Override
+    public boolean supportsRowLimit() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsNotCriteria() {
-		return true;
-	}
+    @Override
+    public boolean supportsNotCriteria() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsOrCriteria() {
-		return true;
-	}
+    @Override
+    public boolean supportsOrCriteria() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsLikeCriteria() {
-		return true;
-	}
+    @Override
+    public boolean supportsLikeCriteria() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsLikeCriteriaEscapeCharacter() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsAggregatesCountStar() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsArrayType() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsBulkUpdate() {
+        return true;
+    }
 }
