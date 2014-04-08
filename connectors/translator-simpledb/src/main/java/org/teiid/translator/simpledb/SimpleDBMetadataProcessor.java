@@ -21,49 +21,67 @@
  */
 package org.teiid.translator.simpledb;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
+import org.teiid.resource.adpter.simpledb.SimpleDBConnection.SimpleDBAttribute;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 
 public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConnection> {
-
+    public static final String ITEM_NAME = SimpleDBConnection.ITEM_NAME;
+    private static final String DISPLAY_ITEM_NAME = "ItemName"; //$NON-NLS-1$
+    
     /**
      * As SimpleDB does not provide any way to obtain all attribute names for
      * given domain (one can query only attribute names for single item) and
      * querrying all items in domain to get complete set of attribute names
      * would be very slow and resource consuming, this approach has been
-     * selected: For each domain only firt item is queried for attribute names
+     * selected: For each domain only first item is queried for attribute names
      * and metadata are created using this information. Thus first item in
      * domain should have as much attributes as possible.
      * @see org.teiid.translator.MetadataProcessor#process(org.teiid.metadata.MetadataFactory, java.lang.Object)
      */
     @Override
     public void process(MetadataFactory metadataFactory, SimpleDBConnection connection) throws TranslatorException {
-        List<String> domains = connection.getAPIClass().getDomains();
+        List<String> domains = connection.getDomains();
         for (String domain : domains) {
             Table table = metadataFactory.addTable(domain);
             table.setSupportsUpdate(true);
-            Column itemName = new Column();
-            itemName.setName("itemName()"); //$NON-NLS-1$
+            
+            Column itemName = metadataFactory.addColumn(DISPLAY_ITEM_NAME, TypeFacility.RUNTIME_NAMES.STRING, table);
             itemName.setUpdatable(true);
+            itemName.setNameInSource(ITEM_NAME);
             itemName.setNullType(NullType.No_Nulls);
-            Map<String, Datatype> datatypes = metadataFactory.getDataTypes();
-            itemName.setDatatype(datatypes.get("String")); //$NON-NLS-1$
-            table.addColumn(itemName);
-            for (String attributeName : connection.getAPIClass().getAttributeNames(domain)) {
-                Column column = new Column();
+            metadataFactory.addPrimaryKey("PK0", Arrays.asList(DISPLAY_ITEM_NAME), table); //$NON-NLS-1$
+            
+            for (SimpleDBAttribute attribute : connection.getAttributeNames(domain)) {
+                Column column = null;
+                if (attribute.hasMultipleValues()) {
+                    column = metadataFactory.addColumn(attribute.getName(), TypeFacility.RUNTIME_NAMES.STRING+"[]", table); //$NON-NLS-1$
+                }
+                else {
+                    column = metadataFactory.addColumn(attribute.getName(), TypeFacility.RUNTIME_NAMES.STRING, table);
+                }
                 column.setUpdatable(true);
-                column.setName(attributeName);
                 column.setNullType(NullType.Nullable);
-                column.setDatatype(datatypes.get("String")); //$NON-NLS-1$
-                table.addColumn(column);
             }
         }        
     }
-
+    
+    public static String getName(AbstractMetadataRecord record) {
+        return SQLStringVisitor.getShortName(SQLStringVisitor.getRecordName(record));
+    }
+    
+    public static boolean isItemName(Column column) {
+        return SimpleDBMetadataProcessor.getName(column).equalsIgnoreCase(SimpleDBMetadataProcessor.ITEM_NAME);        
+    }
+    public static boolean isItemName(String name) {
+        return name.equalsIgnoreCase(SimpleDBMetadataProcessor.ITEM_NAME);        
+    }    
 }

@@ -23,113 +23,52 @@
 package org.teiid.translator.simpledb;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Delete;
-import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.resource.adpter.simpledb.SimpleDbAPIClass;
+import org.teiid.metadata.Table;
+import org.teiid.translator.TranslatorException;
 
 public class SimpleDBDeleteVisitor extends HierarchyVisitor {
 
-	private boolean hasWhere = false;
-	private String tableName;
-	private boolean isSimpleDelete = false;
-	private String itemName = ""; //$NON-NLS-1$
-	private SimpleDbAPIClass apiClass;
-	private List<String> itemNames;
-	
-	public SimpleDBDeleteVisitor(Delete delete, SimpleDbAPIClass apiClass) {
-		this.apiClass = apiClass;
-		visit(delete);
-	}
-	
-	public String getTableName(){
-		return tableName;
-	}
-	
-	public boolean hasWhere(){
-		return hasWhere;
-	}
-	
-	public boolean isSimpleDelete(){
-		return isSimpleDelete;
-	}
-	
-	public String getItemName(){
-		return itemName;
-	}
-	
-	public List<String> getItemNames() {
-		return itemNames;
-	}
+    private Table table;
+    private String criteria;
+    private ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-	public void setItemNames(List<String> itemNames) {
-		this.itemNames = itemNames;
-	}
+    public SimpleDBDeleteVisitor(Delete delete) {
+        visitNode(delete);
+    }
 
-	@Override
-	public void visit(Delete obj) {
-		visitNode(obj.getTable());
-		if (obj.getWhere() != null){
-			hasWhere = true;
-			visitNode(obj.getWhere());
-		}
-	}
-	
-	@Override
-	public void visit(NamedTable obj) {
-		super.visit(obj);
-		tableName = obj.getName();
-	}
-	
-	@Override
-	public void visit(Comparison obj) {
-		//check whether it's simple delete (itemName() = <value>)
-		if (obj.getLeftExpression() instanceof ColumnReference){
-			if (((ColumnReference)obj.getLeftExpression()).getMetadataObject().getName().equals("itemName()") && obj.getOperator() == Operator.EQ){ //$NON-NLS-1$
-				isSimpleDelete = true;
-				if (obj.getRightExpression() instanceof Literal){
-					itemName = (String) ((Literal)obj.getRightExpression()).getValue();
-				}else{
-					//Could here be something else than literal?
-//					throw new TranslatorException("Wrong DELETE Format");
-				}
-				super.visit(obj);
-				return;
-			}
-		}else if (obj.getRightExpression() instanceof ColumnReference){
-			if (((ColumnReference)obj.getRightExpression()).getMetadataObject().getName().equals("itemName()") && obj.getOperator() == Operator.EQ){ //$NON-NLS-1$
-				isSimpleDelete = true;
-				if (obj.getLeftExpression() instanceof Literal){
-					itemName = (String) ((Literal)obj.getRightExpression()).getValue();
-				}else{
-					//Could here be something else than literal?
-//					throw new TranslatorException("Wrong DELETE Format");
-				}
-				super.visit(obj);
-				return;
-			}
-		}
-		getItemNamesForCriteria(obj);
-		//non trivial DELETE StatementgetItemNamesForCriteria(obj);
-		super.visit(obj);
-	}
-	
-	private void getItemNamesForCriteria(Comparison obj){
-		ArrayList<String> columns = new ArrayList<String>();
-		if (itemNames == null){
-			itemNames = new ArrayList<String>();
-		}
-		columns.add("itemName()"); //$NON-NLS-1$
-		Iterator<List<String>> response = apiClass.performSelect("SELECT itemName() FROM "+tableName+" WHERE "+SimpleDBSQLVisitor.getSQLString(obj), columns); //$NON-NLS-1$ //$NON-NLS-2$
-		while (response.hasNext()) {
-			itemNames.add(response.next().get(0));
-		}
-	}
+    public Table getTable(){
+        return this.table;
+    }
+    
+    public String getCriteria() {
+        return this.criteria;
+    }
+    
+    public void checkExceptions() throws TranslatorException {
+        if (!this.exceptions.isEmpty()) {
+            throw this.exceptions.get(0);
+        }
+    }
+
+    @Override
+    public void visit(NamedTable obj) {
+        super.visit(obj);
+        this.table = obj.getMetadataObject();
+    }
+
+    @Override
+    public void visit(Delete obj) {
+        if (obj.getParameterValues() != null) {
+            this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24007, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24007)));
+        }
+        
+        visitNode(obj.getTable());
+        if (obj.getWhere() != null) {
+            this.criteria = SimpleDBSQLVisitor.getSQLString(obj.getWhere());
+        }
+    }
 }

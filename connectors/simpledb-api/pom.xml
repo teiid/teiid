@@ -20,5 +20,15 @@
 			<artifactId>aws-java-sdk</artifactId>
 			<version>1.5.7</version>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>                
 	</dependencies>    
 </project>

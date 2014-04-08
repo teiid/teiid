@@ -22,9 +22,6 @@
 
 package org.teiid.translator.simpledb;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.teiid.language.Command;
 import org.teiid.language.Update;
 import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
@@ -33,42 +30,42 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 public class SimpleDBUpdateExecute implements UpdateExecution {
-	
-	private Command command;
-	private SimpleDBConnection connection;
-	private int updatedCount=0;
-	
-	public SimpleDBUpdateExecute(Command command, SimpleDBConnection connection) {
-		this.connection = connection;
-		this.command = command;
-	}
-	
-	@Override
-	public void close() {
+    private SimpleDBUpdateVisitor visitor;
+    private SimpleDBConnection connection;
+    private int updatedCount=0;
 
-	}
+    public SimpleDBUpdateExecute(Command command, SimpleDBConnection connection) throws TranslatorException {
+        this.connection = connection;
+        this.visitor = new SimpleDBUpdateVisitor((Update)command);
+        this.visitor.checkExceptions();        
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
+    @Override
+    public void execute() throws TranslatorException {
+        String domainName = SimpleDBMetadataProcessor.getName(this.visitor.getTable());
+        this.updatedCount = this.connection.performUpdate(domainName, this.visitor.getAttributes(), buildSelect());
+    }
 
-	}
+    private String buildSelect() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT ").append(SimpleDBMetadataProcessor.ITEM_NAME); //$NON-NLS-1$
+        sb.append(" FROM ").append(SimpleDBMetadataProcessor.getName(this.visitor.getTable())); //$NON-NLS-1$
+        if (this.visitor.getCriteria() != null) {
+            sb.append(" WHERE ").append(this.visitor.getCriteria()); //$NON-NLS-1$
+        }
+        return sb.toString();
+    }    
+    
+    @Override
+    public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
+        return new int[] { updatedCount };
+    }
+    
+    @Override
+    public void close() {
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		Update update = (Update) command;
-		SimpleDBUpdateVisitor updateVisitor = new SimpleDBUpdateVisitor(update, connection.getAPIClass());
-		Map<String, Map<String,String>> items = new HashMap<String, Map<String,String>>();
-		for(String itemName : updateVisitor.getItemNames()){
-			updatedCount++;
-			items.put(itemName, updateVisitor.getAttributes());
-		}
-		connection.getAPIClass().performUpdate(updateVisitor.getTableName(), items);
-
-	}
-
-	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
-		return new int[] { updatedCount };
-	}
-
+    @Override
+    public void cancel() throws TranslatorException {
+    }
 }

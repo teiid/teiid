@@ -7,10 +7,10 @@
 
 
     <dependencies>
-        <module name="javax.api"/>
-        <module name="javax.resource.api"/>
+        <module name="javax.api" />
+        <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
-	<module name="org.jboss.teiid.translator.simpledb.api" />
+        <module name="org.jboss.teiid.translator.simpledb.api" />
     </dependencies>
 </module>

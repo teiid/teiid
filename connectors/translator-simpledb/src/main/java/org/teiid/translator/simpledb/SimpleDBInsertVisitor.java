@@ -23,57 +23,106 @@
 package org.teiid.translator.simpledb;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
+import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.Column;
+import org.teiid.resource.adpter.simpledb.SimpleDBDataTypeManager;
+import org.teiid.translator.TranslatorException;
+
 public class SimpleDBInsertVisitor extends HierarchyVisitor {
-	
-	private Map<String, String> columnsValuesMap;
-	private List<String> columnNames;
-	
-	public SimpleDBInsertVisitor() {
-		columnsValuesMap = new HashMap<String, String>();
-		columnNames = new ArrayList<String>();
-	}
-	
-	public Map<String, String> returnColumnsValuesMap() {
-		return columnsValuesMap;
-	}
-	
-	public static Map<String, String> getColumnsValuesMap(Insert insert) {
-		SimpleDBInsertVisitor visitor = new SimpleDBInsertVisitor();
-		visitor.visit(insert);
-		return visitor.returnColumnsValuesMap();
-	}
-	
-	public static String getDomainName(Insert insert){
-		return insert.getTable().getName();
-	}
-	
-	@Override
-	public void visit(ColumnReference obj) {
-		columnNames.add(obj.getMetadataObject().getName());
-		super.visit(obj);
-	}
-	
-	@Override
-	public void visit(ExpressionValueSource obj) {
-		List<Expression> values = obj.getValues();
-		for (int i = 0; i< obj.getValues().size(); i++){
-			if (values.get(i) instanceof Literal){
-				Literal lit = (Literal) values.get(i);
-				columnsValuesMap.put(columnNames.get(i), (String) lit.getValue());
-			}else{
-				throw new RuntimeException("Just literals are allowed in VALUES section so far"); //$NON-NLS-1$
-			}
-		}
-		super.visit(obj);
-	}
+
+    private Iterator<? extends List<?>> values;
+    private List<Object> expressionValues = new ArrayList<Object>();
+    private List<Column> columns = new ArrayList<Column>();
+    private ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
+    private String tableName;
+
+    public void checkExceptions() throws TranslatorException {
+        if (!this.exceptions.isEmpty()) {
+            throw this.exceptions.get(0);
+        }
+    }
+    
+    public List<Column> getColumns() {
+        return this.columns;
+    }
+    
+    public Iterator<? extends List<?>> values() {
+        if (this.values != null) {
+            return this.values;
+        }
+        List<List<?>> result = new ArrayList<List<?>>(1);
+        result.add(this.expressionValues);
+        return result.iterator();
+    }
+
+    public String getDomainName(){
+        return this.tableName;
+    }
+    
+    @Override
+    public void visit(Insert obj) {
+        visitNode(obj.getTable());
+        visitNodes(obj.getColumns());
+        if (!(obj.getValueSource() instanceof QueryExpression) && obj.getParameterValues() == null) {
+            visitNode(obj.getValueSource());
+        }
+        else {
+            // bulk insert values
+            this.values = obj.getParameterValues();
+        }
+    }    
+
+    @Override
+    public void visit(NamedTable obj) {
+        this.tableName = SimpleDBMetadataProcessor.getName(obj.getMetadataObject());
+    }	
+
+    @Override
+    public void visit(ColumnReference obj) {
+        this.columns.add(obj.getMetadataObject());
+        super.visit(obj);
+    }
+
+    @Override
+    public void visit(ExpressionValueSource obj) {
+        try {
+            List<Expression> values = obj.getValues();
+            for (int i = 0; i < obj.getValues().size(); i++){
+                if (values.get(i) instanceof Literal){
+                    Literal lit = (Literal) values.get(i);
+                    this.expressionValues.add(lit.getValue());
+                } 
+                else if (values.get(i) instanceof Array){                
+                    Array array  = (Array)values.get(i);
+                    String[] result = getValuesArray(array);
+                    this.expressionValues.add(result);
+                }
+                else {
+                    this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001))); 
+                }
+            }
+            super.visit(obj);
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
+    }
+
+    static String[] getValuesArray(Array array) throws TranslatorException {
+        String[] result = new String[array.getExpressions().size()];
+        for (int j = 0; j < array.getExpressions().size(); j++) {
+            Expression expr = array.getExpressions().get(j);
+            if (expr instanceof Literal){
+                Literal lit = (Literal) expr;
+                result[j] = (String)SimpleDBDataTypeManager.convertToSimpleDBType(lit.getValue(), lit.getType());
+            }
+            else {
+                new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001));                        
+            }
+        }
+        return result;
+    }
 }
