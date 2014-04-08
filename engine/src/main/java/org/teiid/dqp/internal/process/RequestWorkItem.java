@@ -41,6 +41,7 @@ import org.teiid.client.ResizingArrayList;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
@@ -83,6 +84,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.GeneratedKeysImpl;
+import org.teiid.query.util.Options;
 
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
@@ -160,6 +162,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     final RequestMessage requestMsg;    
     final RequestID requestID;
     private Request request; //provides the processing plan, held on a temporary basis
+    private Options options;
     private final int processorTimeslice;
 	private CacheID cid;
 	private final TransactionService transactionService;
@@ -213,6 +216,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         this.transactionService = dqpCore.getTransactionService();
         this.dqpCore = dqpCore;
         this.request = request;
+        if (request != null) {
+        	this.options = request.options;
+        }
         this.dqpWorkContext = workContext;
         this.requestResults(1, requestMsg.getFetchSize(), receiver);
     }
@@ -359,6 +365,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    //Case 5558: Differentiate between system level errors and
 		    //processing errors.  Only log system level errors as errors, 
 		    //log the processing errors as warnings only
+			if (this.options.isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+	    		e = ExceptionUtil.sanitize(e, true);
+	    	}
 		    if(e instanceof TeiidProcessingException) {                          
 		    	Throwable cause = e;
 		    	while (cause.getCause() != null && cause.getCause() != cause) {
@@ -892,12 +901,20 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private void setWarnings(ResultsMessage response) {
+		boolean sanitize = this.options.isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL);
+		
 		// send any warnings with the response object
 		List<Throwable> responseWarnings = new ArrayList<Throwable>();
 		if (this.processor != null) {
 			List<Exception> currentWarnings = processor.getAndClearWarnings();
 		    if (currentWarnings != null) {
-		    	responseWarnings.addAll(currentWarnings);
+		    	if (sanitize) {
+		    		for (Exception e : currentWarnings) {
+		    			responseWarnings.add(ExceptionUtil.sanitize(e, false));
+		    		}
+		    	} else {
+		    		responseWarnings.addAll(currentWarnings);
+		    	}
 		    }
 		}
 		response.setWarnings(responseWarnings);
@@ -950,6 +967,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage();
         Throwable exception = this.processingException;
+        if (this.options.isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        	//we still convey an exception hierarcy here because the client logic looks for certian exception types
+        	exception = ExceptionUtil.sanitize(exception, false);
+        }
         if (isCanceled) {
         	exception = addCancelCode(exception); 
         }

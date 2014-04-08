@@ -33,12 +33,14 @@ public class Options {
 	public static final String PUSHDOWN_DEFAULT_NULL_ORDER = "org.teiid.pushdownDefaultNullOrder"; //$NON-NLS-1$
 	public static final String IMPLICIT_MULTISOURCE_JOIN = "org.teiid.implicitMultiSourceJoin"; //$NON-NLS-1$
 	public static final String JOIN_PREFETCH_BATCHES = "org.teiid.joinPrefetchBatches"; //$NON-NLS-1$
+	public static final String SANITIZE_MESSAGES = "org.teiid.sanitizeMessages"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault;
 	private boolean pushdownDefaultNullOrder;
 	private boolean implicitMultiSourceJoin = true;
 	private int joinPrefetchBatches = 10;
+	private boolean sanitizeMessages;
 	
 	public Properties getProperties() {
 		return properties;
@@ -97,6 +99,19 @@ public class Options {
 	
 	public Options joinPrefetchBatches(int i) {
 		this.joinPrefetchBatches = i;
+		return this;
+	}
+	
+	public void setSanitizeMessages(boolean sanitizeMessages) {
+		this.sanitizeMessages = sanitizeMessages;
+	}
+	
+	public boolean isSanitizeMessages() {
+		return sanitizeMessages;
+	}
+	
+	public Options sanitizeMessages(boolean b) {
+		this.sanitizeMessages = b;
 		return this;
 	}
 
