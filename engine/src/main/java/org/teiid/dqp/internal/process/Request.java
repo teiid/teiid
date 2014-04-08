@@ -129,7 +129,7 @@ public class Request {
 	private int userRequestConcurrency;
 	private AuthorizationValidator authorizationValidator;
 	private Executor executor;
-	private Options options;
+	protected Options options;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,

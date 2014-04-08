@@ -22,10 +22,12 @@
 
 package org.teiid.client.util;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 
 
@@ -65,5 +67,58 @@ public class ExceptionUtil {
         	return exception;
         }
         return new TeiidRuntimeException(exception);
+	}
+	
+	/**
+	 * Strip out the message and optionally the stacktrace 
+	 * @param t
+	 * @return
+	 */
+	public static Throwable sanitize(Throwable t, boolean perserveStack) {
+		String code = null;
+    	if (t instanceof TeiidException) {
+    		code = ((TeiidException)t).getCode();
+    	} else if (t instanceof TeiidRuntimeException) {
+    		code = ((TeiidRuntimeException)t).getCode();
+    	} else {
+    		code = t.getClass().getName();
+    	}
+    	Throwable child = null;
+		if (t.getCause() != null && t.getCause() != t) {
+			child = sanitize(t.getCause(), perserveStack);
+		}
+		Class<?> clazz = t.getClass();
+		Throwable result = null;
+		while (clazz != null) {
+			if (clazz == Throwable.class || clazz == Exception.class) {
+				break;
+			}
+	        Constructor<?> ctor = null;
+	        try {
+	        	ctor = clazz.getDeclaredConstructor(new Class<?>[] {String.class});
+				result = (Throwable) ctor.newInstance(code);
+				break;
+	        } catch (Exception e) {
+	        	
+	        }
+			clazz = clazz.getSuperclass();
+		}
+		if (result == null) {
+			result = new TeiidException(code);
+		}
+		if (result instanceof TeiidException) {
+			((TeiidException)result).setCode(code);
+		} else if (result instanceof TeiidRuntimeException) {
+			((TeiidException)result).setCode(code);
+		}
+		if (child != null) {
+			result.initCause(child);
+		}
+		if (perserveStack) {
+			result.setStackTrace(t.getStackTrace());
+		} else {
+			result.setStackTrace(new StackTraceElement[0]);
+		}
+		return result;
 	}
 }

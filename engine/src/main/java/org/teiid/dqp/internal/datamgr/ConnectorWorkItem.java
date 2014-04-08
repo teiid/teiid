@@ -38,6 +38,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.ResizingArrayList;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
@@ -63,6 +64,7 @@ import org.teiid.language.Call;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -248,11 +250,17 @@ public class ConnectorWorkItem implements ConnectorWork {
         String msg = QueryPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
-        } else if (t instanceof TranslatorException || t instanceof TeiidProcessingException) {
-        	LogManager.logWarning(LogConstants.CTX_CONNECTOR, t, msg);
         } else {
-            LogManager.logError(LogConstants.CTX_CONNECTOR, t, msg);
-        } 
+        	Throwable toLog = t;
+        	if (this.requestMsg.getCommandContext().getOptions().isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+	    		toLog = ExceptionUtil.sanitize(toLog, true);
+	    	}
+        	if (toLog instanceof TranslatorException || toLog instanceof TeiidProcessingException) {
+	        	LogManager.logWarning(LogConstants.CTX_CONNECTOR, toLog, msg);
+	        } else {
+	            LogManager.logError(LogConstants.CTX_CONNECTOR, toLog, msg);
+	        } 
+        }
 		if (t instanceof TranslatorException) {
 			return (TranslatorException)t;
 		}
