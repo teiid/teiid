@@ -45,6 +45,7 @@ import javax.xml.transform.Source;
 
 import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.util.ExternalizeUtil;
+import org.teiid.core.util.PropertiesUtils;
 
 /**
  * This class represents the SQLXML object along with the Streamable interface.
@@ -59,6 +60,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	}
 	
 	private static final long serialVersionUID = -7922647237095135723L;
+	static final boolean SUPPORT_DTD = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.supportDTD", false);
 	
 	private static ThreadLocal<XMLInputFactory> threadLocalFactory = new ThreadLocal<XMLInputFactory>() {
 		protected XMLInputFactory initialValue() {
@@ -69,15 +71,19 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	private static XMLInputFactory createXMLInputFactory()
 			throws FactoryConfigurationError {
 		XMLInputFactory factory = XMLInputFactory.newInstance();
-		factory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
-		factory.setXMLResolver(new XMLResolver() {
-			
-			@Override
-			public Object resolveEntity(String arg0, String arg1, String arg2,
-					String arg3) throws XMLStreamException {
-				throw new XMLStreamException("Reading external entities is disabled");
-			}
-		});
+		if (!SUPPORT_DTD) {
+			factory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+			//these next ones are somewhat redundant, we set them just in case the DTD support property is not respected
+			factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+			factory.setXMLResolver(new XMLResolver() {
+				
+				@Override
+				public Object resolveEntity(String arg0, String arg1, String arg2,
+						String arg3) throws XMLStreamException {
+					throw new XMLStreamException("Reading external entities is disabled");
+				}
+			});
+		}
 		return factory;
 	}
 
