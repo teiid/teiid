@@ -18,7 +18,6 @@
           <include>**/*.sh</include>
         </includes>   
         <fileMode>755</fileMode>  
-        <directoryMode>0755</directoryMode>    
     </fileSet> 
           
     <fileSet>
@@ -27,8 +26,6 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>
     </fileSet>
   </fileSets>
   
@@ -78,7 +75,6 @@
                 </dependencySet>
             </dependencySets>
             <outputDirectory>lib</outputDirectory>
-            <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
    
@@ -100,8 +96,6 @@
           <unpack>true</unpack>
           <outputDirectory>.</outputDirectory>
           <attachmentClassifier>embedded-dist</attachmentClassifier>
-          <fileMode>0644</fileMode>
-          <directoryMode>0755</directoryMode>
         </binaries>
       
     </moduleSet>
@@ -122,8 +116,6 @@
           <unpack>true</unpack>
           <outputDirectory>.</outputDirectory>
           <attachmentClassifier>embedded-dist</attachmentClassifier>
-          <fileMode>0644</fileMode>
-          <directoryMode>0755</directoryMode>
         </binaries>
       
     </moduleSet>

@@ -19,7 +19,6 @@
           <include>**/*.sh</include>
         </includes>   
         <fileMode>755</fileMode>  
-        <directoryMode>0755</directoryMode>    
     </fileSet> 
           
     <fileSet>
@@ -28,8 +27,6 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>
     </fileSet>
     
     <fileSet>
@@ -38,8 +35,6 @@
         <excludes>
           <exclude>**/*.properties</exclude>
         </excludes>      
-        <fileMode>0600</fileMode>
-        <directoryMode>0755</directoryMode>
     </fileSet>    
           
     <fileSet>
@@ -48,8 +43,6 @@
             <include>vdb-deployer.xsd</include>
         </includes>                
         <outputDirectory>docs/teiid/schema</outputDirectory>
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>        
     </fileSet>
     
     <fileSet>
@@ -58,8 +51,6 @@
             <include>jboss-teiid.xsd</include>
         </includes>                
         <outputDirectory>docs/schema</outputDirectory>
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>        
     </fileSet>    
     	
   </fileSets>
@@ -158,7 +149,6 @@
                 </dependencySet>
             </dependencySets>
             <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>
-            <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
     
@@ -190,8 +180,6 @@
           <unpack>true</unpack>
           <outputDirectory>.</outputDirectory>
           <attachmentClassifier>jboss-as7-dist</attachmentClassifier>
-          <fileMode>0644</fileMode>
-          <directoryMode>0755</directoryMode>
         </binaries>
       
     </moduleSet>
@@ -212,8 +200,6 @@
           <unpack>true</unpack>
           <outputDirectory>.</outputDirectory>
           <attachmentClassifier>jboss-as7-dist</attachmentClassifier>
-          <fileMode>0644</fileMode>
-          <directoryMode>0755</directoryMode>
         </binaries>
       
     </moduleSet>

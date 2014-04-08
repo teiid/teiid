@@ -58,6 +58,13 @@
           <plugins>
             <plugin>
               <artifactId>maven-assembly-plugin</artifactId>
+              <configuration>
+                  <archiverConfig>
+                      <fileMode>0644</fileMode>
+                      <directoryMode>0755</directoryMode>
+                      <defaultDirectoryMode>0755</defaultDirectoryMode>
+                  </archiverConfig>
+              </configuration>
             </plugin>
           </plugins>
         </pluginManagement>
