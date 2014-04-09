@@ -1115,7 +1115,7 @@ public class ExecutionFactory<F, C> {
 	 * @return
 	 */
 	@Deprecated
-    @TranslatorProperty(display="Supports direct query procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
+    @TranslatorProperty(display="Deprecated Property:Supports Direct Query Procedure", description="Deprecated Property, Use Supports Direct Query Procedure instead", advanced=true)
 	final public boolean supportsNativeQueries() {
 		return this.supportsNativeQueries;
 	}
@@ -1133,7 +1133,7 @@ public class ExecutionFactory<F, C> {
 	 * True, if this translator supports execution of source specific commands unaltered through a direct procedure.
 	 * @return
 	 */
-	@TranslatorProperty(display="Supports direct query procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
+	@TranslatorProperty(display="Supports Direct Query Procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
 	public boolean supportsDirectQueryProcedure() {
 		return this.supportsNativeQueries;
 	}
@@ -1150,7 +1150,7 @@ public class ExecutionFactory<F, C> {
 	 * @return
 	 */
 	@Deprecated
-    @TranslatorProperty(display="Name of the direct query procedure", description="The name of the direct query procedure", advanced=true)
+    @TranslatorProperty(display="Deprecated Property:Direct Query Procedure Name", description="Deprecated Property, use Direct Query Procedure Name", advanced=true)
 	final public String getNativeQueryProcedureName() {
 		return this.nativeProcedureName;
 	}
@@ -1169,7 +1169,7 @@ public class ExecutionFactory<F, C> {
 	 * of the procedure is defined automatically.
 	 * @return
 	 */
-	@TranslatorProperty(display="Name of the direct query procedure", description="The name of the direct query procedure", advanced=true)
+	@TranslatorProperty(display="Direct Query Procedure Name", description="The name of the direct query procedure", advanced=true)
 	public String getDirectQueryProcedureName() {
 		return this.nativeProcedureName;
 	}
