@@ -50,7 +50,6 @@ public class SimpleDBDeleteExecute implements UpdateExecution {
             // this is domain delete. otherwise this could be lot of items. deleted count can 
             // not be measured.
             this.connection.deleteDomain(domainName);
-            this.connection.createDomain(domainName);
         }
     }    
     
