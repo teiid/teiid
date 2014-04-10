@@ -1,7 +1,11 @@
 package org.teiid.translator.object;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+
+import org.teiid.language.Select;
+import org.teiid.translator.object.infinispan.LuceneSearch;
 
 /**
  * The CacheContainerWrapper serves to hide the implementation details of the actual cache, because not all caches extend a common interface (i.e, Map).  An implementation
@@ -12,8 +16,17 @@ import java.util.Map;
  */
 public abstract class CacheContainerWrapper
 {
+	private boolean supportLuceneSearching;
 	
 	public CacheContainerWrapper() {
+	}
+	
+	public boolean supportsLuceneSearching() {
+		return supportLuceneSearching;
+	}
+	
+	public void setSupportsLuceneSearching(boolean enabled) {
+		supportLuceneSearching = enabled;
 	}
 	
 	/**
@@ -42,5 +55,6 @@ public abstract class CacheContainerWrapper
 	 * @return Object cache
 	 */
 	public abstract <T extends Map> T getCache(String cacheName);  
+
 
 }

@@ -45,14 +45,13 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
 		
-		conn = TestInfinispanConnection.createConnection("./src/test/resources/infinispan_persistent_indexing_config.xml");
+		conn = TestInfinispanConnection.createConnection("./src/test/resources/infinispan_persistent_indexing_config.xml", true);
 		
 		context = mock(ExecutionContext.class);
 	}
 
 	@Before public void beforeEachTest() throws Exception{	
 		factory = new InfinispanExecutionFactory();
-		factory.setSupportsLuceneSearching(true);
 		factory.start();
     }
 	
