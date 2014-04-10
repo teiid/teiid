@@ -140,7 +140,6 @@ public class TestSimpleDBExecution {
         exec.execute();
         
         Mockito.verify(connection).deleteDomain("item");
-        Mockito.verify(connection).createDomain("item");
     }     
     
     @Test

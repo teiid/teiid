@@ -40,6 +40,7 @@ import com.amazonaws.services.simpledb.model.*;
 
 public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBConnection {
     private AmazonSimpleDBClient client;
+    private List<String> domains;
 
     public SimpleDBConnectionImpl(String accessKey, String secretAccessKey) {
         this.client = new AmazonSimpleDBClient(new BasicAWSCredentials(accessKey, secretAccessKey));
@@ -64,6 +65,9 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
     public void deleteDomain(String domainName) throws TranslatorException {
         try {
             this.client.deleteDomain(new DeleteDomainRequest(domainName));
+            if (this.domains.contains(domainName)) {
+                this.domains.remove(domainName);
+            }
         } catch (AmazonServiceException e) {
             throw new TranslatorException(e);
         } catch (AmazonClientException e) {
@@ -138,6 +142,7 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
             if (nextToken != null) {
                 selectRequest.setNextToken(nextToken);
             }
+            selectRequest.setConsistentRead(true);
             return client.select(selectRequest);
         } catch (AmazonServiceException e) {
             throw new TranslatorException(e);
@@ -156,7 +161,7 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
         try {
             List<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
             for (Map.Entry<String, Object> column : updateAttributes.entrySet()) {
-                addAttribute(column.getKey(), column.getValue(), true, attributes);
+                addAttribute(column.getKey(), column.getValue(), attributes);
             }
             
             List<ReplaceableItem> updateItems = new ArrayList<ReplaceableItem>();
@@ -195,6 +200,14 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
     @Override
     public int performInsert(String domainName, List<Column> columns, Iterator<? extends List<?>> valueList) throws TranslatorException {
         try {
+            if (this.domains == null) {
+                this.domains = getDomains();
+            }
+            
+            if (!this.domains.contains(domainName)) {
+                createDomain(domainName);
+            }
+            
             int count = 0;
             List<ReplaceableItem> insertItems = new ArrayList<ReplaceableItem>();
             while(valueList.hasNext()) {
@@ -237,22 +250,18 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
             this.client.batchPutAttributes(request);
         }
     }
-
-    private void addAttribute(String name, Object value, List<ReplaceableAttribute> attributes) {        
-        addAttribute(name, value, false, attributes);
-    }
     
-    private void addAttribute(String name, Object value, boolean replace, List<ReplaceableAttribute> attributes) {
+    private void addAttribute(String name, Object value, List<ReplaceableAttribute> attributes) {
         if (value.getClass().isArray()) { 
             String[] values = (String[])value;
             for (int i = 0; i < values.length; i++) {
-                addAttribute(name, values[i], replace, attributes);
+                addAttribute(name, values[i], attributes);
             }
         }
         else {
             ReplaceableAttribute attribute = new ReplaceableAttribute();
             attribute.setName(name);
-            attribute.setReplace(replace);            
+            attribute.setReplace(true);            
             attribute.setValue((String)value);
             attributes.add(attribute);
         }        
