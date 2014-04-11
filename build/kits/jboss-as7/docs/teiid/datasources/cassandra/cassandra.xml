@@ -16,7 +16,11 @@
                       
                       <!-- Cassandra keyspace -->
                       <config-property name="Keyspace">keyspace</config-property>
-                      
+                      <!--
+                      <config-property name="Username">user</config-property>
+                      <config-property name="Password">password</config-property>
+                      <config-property name="Port">7000</config-property>
+                      -->
                 </connection-definition>
             </connection-definitions>
         </resource-adapter>
