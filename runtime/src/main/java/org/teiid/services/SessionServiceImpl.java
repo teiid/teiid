@@ -26,14 +26,7 @@ package org.teiid.services;
 import java.io.IOException;
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -94,10 +87,15 @@ public class SessionServiceImpl implements SessionService {
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$    
-    private String defaultSecurityDomainName;
-        
+    private List<String> securityDomainNames;
+    
     public void setSecurityDomain(String domainName) {
-    	this.defaultSecurityDomainName = domainName;
+    	if (domainName == null) {
+    		this.securityDomainNames = null;
+    	} else {
+    		//allow for legacy multiple domain names
+    		this.securityDomainNames = Arrays.asList(domainName.split(",")); //$NON-NLS-1$
+    	}
     }
     
     // -----------------------------------------------------------------------------------
@@ -135,8 +133,10 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public SessionMetadata createSession(String securityDomain, AuthenticationType authType, String userName, Credentials credentials, String applicationName, Properties properties, boolean authenticate) 
-		throws LoginException, SessionServiceException {
+	public SessionMetadata createSession(String vdbName,
+			String vdbVersion, AuthenticationType authType, String userName,
+			Credentials credentials, String applicationName, Properties properties)
+			throws LoginException, SessionServiceException {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
         
@@ -145,9 +145,7 @@ public class SessionServiceImpl implements SessionService {
         
         // Validate VDB and version if logging on to server product...
         VDBMetaData vdb = null;
-        String vdbName = properties.getProperty(TeiidURL.JDBC.VDB_NAME);
         if (vdbName != null) {
-        	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
         	vdb = getActiveVDB(vdbName, vdbVersion);
         }
 
@@ -155,32 +153,28 @@ public class SessionServiceImpl implements SessionService {
              throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
         }
         
+        String securityDomain = getSecurityDomain(userName, vdbName, vdbVersion, vdb);
         
-    	if (authenticate) {
-    		if (securityDomain != null) {
-		        // Authenticate user...
-		        // if not authenticated, this method throws exception
-	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
-	
-	        	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
-	        	TeiidLoginContext membership = null;
-	        	if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
-	                membership = passThroughLogin(userName, securityDomain);
-	        	} else {
-		        	membership = authenticate(userName, credentials, applicationName, securityDomain);
-	        	}
-		        userName = membership.getUserName();
-		        securityDomain = membership.getSecurityDomain();
-		        securityContext = membership.getSecurityContext();
-		        subject = membership.getSubject();
-    		}
-    		else {
-    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
-    		}
-    	}
-        else {
+		if (securityDomain != null) {
+	        // Authenticate user...
+	        // if not authenticated, this method throws exception
+            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
+
+        	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
+        	TeiidLoginContext membership = null;
+        	if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
+                membership = passThroughLogin(userName, securityDomain);
+        	} else {
+	        	membership = authenticate(userName, credentials, applicationName, securityDomain);
+        	}
+	        userName = membership.getUserName();
+	        securityDomain = membership.getSecurityDomain();
+	        securityContext = membership.getSecurityContext();
+	        subject = membership.getSubject();
+		}
+		else {
         	LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40117)); 
-        }
+		}
         
         long creationTime = System.currentTimeMillis();
 
@@ -242,7 +236,7 @@ public class SessionServiceImpl implements SessionService {
 		return passThroughLogin(userName, securityDomain);
 	}
 
-	VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
+	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;
 		
 		// handle the situation when the version is part of the vdb name.
@@ -391,7 +385,7 @@ public class SessionServiceImpl implements SessionService {
 	}	
 	
 	public void start() {
-		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Default security domain configured=", this.defaultSecurityDomainName}); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Default security domain configured=", this.securityDomainNames}); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
         	public void run() {
@@ -504,29 +498,57 @@ public class SessionServiceImpl implements SessionService {
 		return this.defaultAuthenticationType;
 	}
 
-	@Override
-	public String getSecurityDomain(String vdbName, String version) {
+	public String getSecurityDomain(String userName, String vdbName, String version, VDB vdb) throws LoginException {
+		String securityDomain = getDomainName(userName);
 		if (vdbName != null) {
 	    	try {    		
-				VDB vdb = getActiveVDB(vdbName, version);
+	    		if (vdb == null) {
+	    			vdb = getActiveVDB(vdbName, version);
+	    		}
 				String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
 				if (typeProperty != null) {
+					if (securityDomain != null && !typeProperty.equals(securityDomain)) {
+						//conflicting
+		    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
+					}
 					return typeProperty;
 				}
 			} catch (SessionServiceException e) {
 				// ignore and return default, this only occur if the name and version are wrong 
 			}			
+		} 
+		if (securityDomain != null) {
+			if (this.securityDomainNames != null && this.securityDomainNames.contains(securityDomain)) {
+				return securityDomain;
+			}
+			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
 		}
-		return this.defaultSecurityDomainName;
-	}
-
-	@Override
-	public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
-		// must be overridden in platform specific security domain
+		
+		if (this.securityDomainNames != null && !this.securityDomainNames.isEmpty()) {
+			return this.securityDomainNames.get(0);
+		}
+		
+		//no default
 		return null;
-	}    
+	}
+	
+	@Override
+	public GSSResult neogitiateGssLogin(String user, String vdbName,
+			String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException {
+		String securityDomain = getSecurityDomain(user, vdbName, vdbVersion, null);
+		if (securityDomain == null ) {
+			 throw new LogonException(RuntimePlugin.Event.TEIID40059, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40059));
+		}
+		return neogitiateGssLogin(securityDomain, serviceTicket);
+	}
 	
 	public AuthenticationType getDefaultAuthenticationType() {
 		return defaultAuthenticationType;
+	}
+
+	protected GSSResult neogitiateGssLogin(String securityDomain,
+			byte[] serviceTicket) throws LoginException {
+		// must be overridden in platform specific security domain
+		return null;
 	}
 }

@@ -150,9 +150,49 @@ public class TestSessionServiceImpl {
 		
 		Properties properties = new Properties();
 		properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
-		SessionMetadata s = ssi.createSession("domain", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties, true);
+		SessionMetadata s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties);
 		assertEquals("domain", s.getSecurityDomain());
 	}	
+	
+	@Test public void testLegacySecurityDomain() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		
+		ssi.setVDBRepository(repo);
+		ssi.setSecurityDomain("sd1,sd");
+		Properties properties = new Properties();
+		properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
+		SessionMetadata s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
+		assertEquals("sd", s.getSecurityDomain());
+		
+		s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties);
+		assertEquals("sd1", s.getSecurityDomain());
+		
+		try {
+			ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd2", new Credentials(new char[] {'y'}), "z", properties);
+		} catch (LoginException e) {
+			
+		}
+		
+		ssi.setSecurityDomain("sd");
+		s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
+		assertEquals("sd", s.getSecurityDomain());
+		
+		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
+
+		try {
+			//conflict
+			ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
+		} catch (LoginException e) {
+			
+		}		
+		
+	}
 	
 	@Test public void testAuthenticationType() throws Exception {
 		// this is same as "domain/ANY"

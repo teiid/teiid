@@ -77,21 +77,22 @@ public class TestLogonImpl {
 	public void testLogonResult() throws Exception {
 		SessionService ssi = Mockito.mock(SessionService.class);
 		Mockito.stub(ssi.getAuthenticationType(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).toReturn(AuthenticationType.USERPASSWORD);
-		Mockito.stub(ssi.getSecurityDomain(Mockito.anyString(), Mockito.anyString())).toReturn("SC");
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		String userName = "Fred"; //$NON-NLS-1$
 		String applicationName = "test"; //$NON-NLS-1$
 		Properties p = new Properties();
 		p.setProperty(TeiidURL.CONNECTION.USER_NAME, userName);
 		p.setProperty(TeiidURL.CONNECTION.APP_NAME, applicationName);
-
+		p.setProperty(TeiidURL.JDBC.VDB_NAME, "x");
+		p.setProperty(TeiidURL.JDBC.VDB_VERSION, "1");
+		
 		SessionMetadata session = new SessionMetadata();
 		session.setUserName(userName);
 		session.setApplicationName(applicationName);
 		session.setSessionId(String.valueOf(1));
 		session.setSessionToken(new SessionToken(1, userName));
 
-		Mockito.stub(ssi.createSession("SC", AuthenticationType.USERPASSWORD, userName, null, applicationName,p, true)).toReturn(session); 
+		Mockito.stub(ssi.createSession("x", "1", AuthenticationType.USERPASSWORD, userName, null, applicationName,p)).toReturn(session); 
 
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 

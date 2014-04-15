@@ -39,7 +39,9 @@ import org.jboss.security.SimplePrincipal;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.InvalidSessionException;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
@@ -133,7 +135,13 @@ public class TestJBossSessionServiceImpl extends TestCase {
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
         securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
 		
-        JBossSessionService jss = new JBossSessionService(securityDomainMap);
+        JBossSessionService jss = new JBossSessionService(securityDomainMap) {
+        	@Override
+        	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
+        			throws SessionServiceException {
+        		return Mockito.mock(VDBMetaData.class);
+        	}
+        };
         jss.setSecurityHelper(buildSecurityHelper());
 		jss.setSecurityDomain("somedomain");
 		
@@ -144,7 +152,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
 			
 		}
 		
-		SessionMetadata info = jss.createSession("somedomain", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1".toCharArray()), "foo", new Properties(), true); //$NON-NLS-1$ //$NON-NLS-2$
+		SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1".toCharArray()), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
 		if (securityEnabled) {
 			Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject()); 
 		}

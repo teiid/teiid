@@ -58,10 +58,10 @@ public interface SessionService {
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
      */
-	public SessionMetadata createSession(String securityDomain,
-			AuthenticationType authenticationType, String userName,
-			Credentials credentials, String applicationName,
-			Properties properties, boolean authenticate) throws LoginException,
+	public SessionMetadata createSession(String vdbName,
+			String vdbVersion, AuthenticationType authType,
+			String user, Credentials credential,
+			String applicationName, Properties connProps) throws LoginException,
 			SessionServiceException;
 
     /**
@@ -123,9 +123,7 @@ public interface SessionService {
 
 	AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
 	
-	String getSecurityDomain(String vdbName, String version);
-	
 	SecurityHelper getSecurityHelper();
 	
-	GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
+	GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
 }
