@@ -121,7 +121,6 @@ public class LogonImpl implements ILogon {
 
 		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
 		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
-		String securityDomain = this.service.getSecurityDomain(vdbName, vdbVersion);
         String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);
@@ -131,7 +130,7 @@ public class LogonImpl implements ILogon {
         }
         
 		try {
-			SessionMetadata sessionInfo = service.createSession(securityDomain, authType, user,credential, applicationName, connProps, securityDomain != null);
+			SessionMetadata sessionInfo = service.createSession(vdbName, vdbVersion, authType, user,credential, applicationName, connProps);
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
@@ -165,13 +164,8 @@ public class LogonImpl implements ILogon {
 		}
 		
 		try {
-			String securityDomain = service.getSecurityDomain(vdbName, vdbVersion);
-			if (securityDomain == null ) {
-				 throw new LogonException(RuntimePlugin.Event.TEIID40059, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40059));
-			}
-			
 			// Using SPENGO security domain establish a token and subject.
-			GSSResult result = service.neogitiateGssLogin(securityDomain, serviceTicket);
+			GSSResult result = service.neogitiateGssLogin(user, vdbName, vdbVersion, serviceTicket);
 			if (result == null) {
 				 throw new LogonException(RuntimePlugin.Event.TEIID40014, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 			}
