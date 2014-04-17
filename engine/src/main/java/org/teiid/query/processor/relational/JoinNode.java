@@ -180,7 +180,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
                                           TeiidProcessingException {
     	try {
 	    	if (state == State.LOAD_LEFT) {
-	        	if (this.joinType != JoinType.JOIN_FULL_OUTER) {
+	        	if (this.joinType != JoinType.JOIN_FULL_OUTER || this.getJoinCriteria() == null) {
 	            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
 	            }
 	        	//left child was already opened by the join node
