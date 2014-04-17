@@ -152,7 +152,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
-	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE \"(\\w+)\" CURSOR(\\s(WITH HOLD|SCROLL))? FOR (.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+\"(\\w+)\"(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -279,48 +279,46 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 	}	
 	
-	private void cursorExecute(String cursorName, final String sql, final ResultsFuture<Integer> completion) {
-		if (sql != null) {
-			try {
-				// close if the name is already used or the unnamed prepare; otherwise
-				// stmt is alive until session ends.
-				this.preparedMap.remove(UNNAMED);
-				Portal p = this.portalMap.remove(UNNAMED);
-				if (p != null) {
-					closePortal(p);
-				}
-				if (cursorName == null || cursorName.length() == 0) {
-					cursorName = UNNAMED;
-				}
-				Cursor cursor = cursorMap.get(cursorName);
-				if (cursor != null) {
-					errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40111, cursorName));
-					return;
-				}
-				
-				final PreparedStatementImpl stmt = this.connection.prepareStatement(sql);
-                this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET, null);
-                final String name = cursorName;
-                this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
-	        		@Override
-	        		public void onCompletion(ResultsFuture<Boolean> future) {
-	        			executionFuture = null;
-                        try {
-	                        if (future.get()) {
-			                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-    	                        cursorMap.put(name, new Cursor(name, sql, stmt, stmt.getResultSet(), cols));
-        						client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
-    							completion.getResultsReceiver().receiveResults(0);
-    						}
-    					} catch (Throwable e) {
-    						completion.getResultsReceiver().exceptionOccurred(e);
-    					}
-	        		}
-				});					
-			} catch (SQLException e) {
-				completion.getResultsReceiver().exceptionOccurred(e);
-			} 
-		}
+	private void cursorExecute(String cursorName, final String sql, final ResultsFuture<Integer> completion, boolean scroll) {
+		try {
+			// close if the name is already used or the unnamed prepare; otherwise
+			// stmt is alive until session ends.
+			this.preparedMap.remove(UNNAMED);
+			Portal p = this.portalMap.remove(UNNAMED);
+			if (p != null) {
+				closePortal(p);
+			}
+			if (cursorName == null || cursorName.length() == 0) {
+				cursorName = UNNAMED;
+			}
+			Cursor cursor = cursorMap.get(cursorName);
+			if (cursor != null) {
+				errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40111, cursorName));
+				return;
+			}
+			
+			final PreparedStatementImpl stmt = this.connection.prepareStatement(sql, scroll?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            this.executionFuture = stmt.submitExecute(ResultsMode.RESULTSET, null);
+            final String name = cursorName;
+            this.executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
+        		@Override
+        		public void onCompletion(ResultsFuture<Boolean> future) {
+        			executionFuture = null;
+                    try {
+                        if (future.get()) {
+		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
+	                        cursorMap.put(name, new Cursor(name, sql, stmt, stmt.getResultSet(), cols));
+    						client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
+							completion.getResultsReceiver().receiveResults(0);
+						}
+					} catch (Throwable e) {
+						completion.getResultsReceiver().exceptionOccurred(e);
+					}
+        		}
+			});					
+		} catch (SQLException e) {
+			completion.getResultsReceiver().exceptionOccurred(e);
+		} 
 	}
 	
 	private void cursorFetch(String cursorName, int rows, final ResultsFuture<Integer> completion) throws SQLException {
@@ -976,7 +974,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    			
 		            	Matcher m = null;
 		    	        if ((m = cursorSelectPattern.matcher(sql)).matches()){
-		    				cursorExecute(m.group(1), fixSQL(m.group(4)), results);
+		    	        	boolean scroll = false;
+		    	        	if (m.group(2) != null && m.group(3) == null ) {
+	    	        			scroll = true;
+		    	        	}
+		    				cursorExecute(m.group(1), fixSQL(m.group(4)), results, scroll);
 		    			}
 		    			else if ((m = fetchPattern.matcher(sql)).matches()){
 		    				cursorFetch(m.group(2), Integer.parseInt(m.group(1)), results);
