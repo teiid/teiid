@@ -21,8 +21,7 @@
  */
 package org.teiid.translator.solr;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -44,7 +43,7 @@ public class TestTeiidLanguageToSolr {
 	private TransformationMetadata metadata;
 	private SolrExecutionFactory translator;
 	private TranslationUtility utility;
-
+	
 	private QueryMetadataInterface setUp(String ddl, String vdbName,
 			String modelName) throws Exception {
 
@@ -246,7 +245,7 @@ public class TestTeiidLanguageToSolr {
 	public void testDateField() throws Exception {
 		assertTrue(getSolrTranslation(
 				"select name,purchasedate from example where purchasedate = {ts '2014-01-06 11:52:07'}")
-				.startsWith("fl=name,purchasedate&q=purchasedate:2014-01-06T11-52-07:000-"));
+				.startsWith("fl=name,purchasedate&q=purchasedate:2014-01-06T11-52-07:000"));
 	}
 	
 	@Test

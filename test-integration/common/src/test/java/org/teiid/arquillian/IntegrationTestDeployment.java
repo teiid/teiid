@@ -124,7 +124,12 @@ public class IntegrationTestDeployment {
 		assertFalse(vdb.isValid());
 	}
 	
+	@Test
 	public void testGetDatasourceProperties() throws Exception {
+	    // jdbc data source
+	    String jdbcSource = "jdbc-source";
+	    assertFalse(admin.getDataSourceNames().contains(jdbcSource));
+	    
 		Properties props = new Properties();
 		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
 		props.setProperty("user-name", "sa");
@@ -132,25 +137,41 @@ public class IntegrationTestDeployment {
 		props.setProperty("connection-properties", "foo=bar,blah=blah");
 		props.setProperty("max-pool-size", "4");
 		
-		admin.createDataSource("Oracle11_PushDS", "h2", props);	
+		admin.createDataSource(jdbcSource, "h2", props);	
 		
-		Properties p = admin.getDataSource("Oracle11_PushDS");
+		assertTrue(admin.getDataSourceNames().contains(jdbcSource));
+		
+		Properties p = admin.getDataSource(jdbcSource);
 		assertEquals("4", p.getProperty("max-pool-size"));
 		assertEquals("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", p.getProperty("connection-url"));
+		assertEquals("h2", p.getProperty("driver-name"));
 		
-		admin.deleteDataSource("Oracle11_PushDS");
+		admin.deleteDataSource("jdbc-source");
+		assertFalse(admin.getDataSourceNames().contains(jdbcSource));
+		
+		// resource -adapter
+		assertTrue(admin.getDataSourceTemplateNames().contains("webservice"));
+		
+		String raSource = "ra-source";
+		assertFalse(admin.getDataSourceNames().contains(raSource));
 		
 		p = new Properties();
 		p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
 		p.setProperty("EndPoint", "{endpoint}");
-		props.setProperty("max-pool-size", "4");
-		admin.createDataSource("nowhere", "teiid-connector-ws.rar", p);		
+		
+		admin.createDataSource(raSource, "webservice", p);		
+		
+		assertTrue(admin.getDataSourceNames().contains(raSource));
+		
+		p = admin.getDataSource(raSource);
 		
 		assertEquals("org.teiid.resource.adapter.ws.WSManagedConnectionFactory", p.getProperty("class-name"));
-		assertEquals("4", p.getProperty("max-pool-size"));
 		assertEquals("{endpoint}", p.getProperty("EndPoint"));
+		assertEquals("webservice", p.getProperty("driver-name"));
 		
-		admin.deleteDataSource("nowhere");		
+		admin.deleteDataSource(raSource);		
+		assertFalse(admin.getDataSourceNames().contains(raSource));
+		assertTrue(admin.getDataSourceTemplateNames().contains("webservice"));
 	}
 
 	@Test

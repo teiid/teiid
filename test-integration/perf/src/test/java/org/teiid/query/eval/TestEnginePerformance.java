@@ -354,6 +354,10 @@ public class TestEnginePerformance {
 		helpTestEquiJoin(bm, 100, 100, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 100);
 	}
 	
+	@Test public void runOuterMergeJoin_1_1000_1000() throws Exception {
+		helpTestEquiJoin(bm, 1000, 1000, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_FULL_OUTER, 1000);
+	}
+	
 	@Test public void runInnerMergeJoin_4_4000_4000() throws Exception {
 		helpTestEquiJoin(bm, 4000, 4000, 500, 4, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 4000);
 	}

@@ -30,11 +30,14 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 public class CassandraManagedConnectionFactory extends BasicManagedConnectionFactory{
 
-	private static final long serialVersionUID = 6467964324032304311L;
+    private static final long serialVersionUID = 6467964324032304311L;
 	private String address;
 	private String keyspace;
+    private String username;
+    private String password;	
+    private Integer port;
 	
-	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CassandraManagedConnectionFactory.class);
+    public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CassandraManagedConnectionFactory.class);
 	
 	@Override
 	@SuppressWarnings("serial")
@@ -62,38 +65,80 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
 	public void setAddress(String address) {
 		this.address = address;
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((address == null) ? 0 : address.hashCode());
-		result = prime * result
-				+ ((keyspace == null) ? 0 : keyspace.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		CassandraManagedConnectionFactory other = (CassandraManagedConnectionFactory) obj;
-		if (address == null) {
-			if (other.address != null)
-				return false;
-		} else if (!address.equals(other.address))
-			return false;
-		if (keyspace == null) {
-			if (other.keyspace != null)
-				return false;
-		} else if (!keyspace.equals(other.keyspace))
-			return false;
-		return true;
-	}
-
 	
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }	
+    
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }    
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((address == null) ? 0 : address.hashCode());
+        result = prime * result
+                + ((keyspace == null) ? 0 : keyspace.hashCode());
+        result = prime * result
+                + ((password == null) ? 0 : password.hashCode());
+        result = prime * result + ((port == null) ? 0 : port.hashCode());
+        result = prime * result
+                + ((username == null) ? 0 : username.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CassandraManagedConnectionFactory other = (CassandraManagedConnectionFactory) obj;
+        if (address == null) {
+            if (other.address != null)
+                return false;
+        } else if (!address.equals(other.address))
+            return false;
+        if (keyspace == null) {
+            if (other.keyspace != null)
+                return false;
+        } else if (!keyspace.equals(other.keyspace))
+            return false;
+        if (password == null) {
+            if (other.password != null)
+                return false;
+        } else if (!password.equals(other.password))
+            return false;
+        if (port == null) {
+            if (other.port != null)
+                return false;
+        } else if (!port.equals(other.port))
+            return false;
+        if (username == null) {
+            if (other.username != null)
+                return false;
+        } else if (!username.equals(other.username))
+            return false;
+        return true;
+    }	
 }

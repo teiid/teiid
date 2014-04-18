@@ -30,11 +30,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.cassandra.CassandraConnection;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 
 /**
  * Represents a connection to Cassandra database.
@@ -53,12 +49,21 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	public CassandraConnectionImpl(CassandraManagedConnectionFactory config) {
 		this.config = config;
 		
-		cluster = Cluster.builder()
-	            .addContactPoint(config.getAddress()).build();
+		Cluster.Builder builder  = Cluster.builder().addContactPoint(config.getAddress());
 		
-		metadata = cluster.getMetadata();
+		if (this.config.getUsername() != null) {
+		    builder.withCredentials(this.config.getUsername(), this.config.getPassword());
+		}
 		
-		session = cluster.connect(config.getKeyspace());
+		if (this.config.getPort() != null) {
+		    builder.withPort(this.config.getPort());
+		}
+		
+		this.cluster = builder.build();
+		
+		this.metadata = cluster.getMetadata();
+		
+		this.session = cluster.connect(config.getKeyspace());
 	}
 
 	@Override
@@ -66,14 +71,12 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		if(cluster != null){
 			cluster.shutdown();
 		}
-		LogManager.logInfo(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.
-				getString("shutting_down")); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("shutting_down")); //$NON-NLS-1$
 	}
 	
 	@Override
 	public boolean isAlive() {
-		LogManager.logInfo(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.
-				getString("alive")); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("alive")); //$NON-NLS-1$
 		return true;
 	}
 	

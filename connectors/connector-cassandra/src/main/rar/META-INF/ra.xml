@@ -33,6 +33,23 @@
                <config-property-name>Keyspace</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
+            <config-property>
+               <description>{$display:"User Name", $description:"Cassandra User Name", $required:"false"}</description>
+               <config-property-name>Username</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Password",$description:"Cassandra User Password",$required:"false",$masked:"true"}</description> 
+               <config-property-name>Password</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+
+            <config-property>
+                <description>{$display:"Port", $description:"Port Number" $required:"false"}</description>
+                <config-property-name>Port</config-property-name>
+                <config-property-type>java.lang.Integer</config-property-type>
+            </config-property>
  
             <!-- use the below as is if you used the Connection Factory interface -->
             <connectionfactory-interface>

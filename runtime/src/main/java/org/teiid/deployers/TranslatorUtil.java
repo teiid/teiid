@@ -264,7 +264,7 @@ public class TranslatorUtil {
         MetadataProcessor metadataProcessor = factory.getMetadataProcessor();
         if (metadataProcessor != null) {
             clazz = metadataProcessor.getClass();
-            readTranslatorPropertyAsExtendedMetadataProperties(metadata, propertyDefns, instance, clazz);
+            readTranslatorPropertyAsExtendedMetadataProperties(metadata, propertyDefns, metadataProcessor, clazz);
         }
     }    
     

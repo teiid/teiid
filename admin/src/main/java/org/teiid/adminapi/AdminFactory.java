@@ -558,6 +558,18 @@ public class AdminFactory {
 							new String[] { "subsystem", "resource-adapters", "resource-adapter", rarName, "connection-definitions", deployedName},
 							null, new ConnectionFactoryProperties(dsProperties, rarName, deployedName, null));
 				}
+				
+				// figure out driver-name
+				if (dsProperties.getProperty("driver-name") == null) {
+    				String moduleName = getResourceAdapterModuleName(rarName);
+    				Set<String> installedRars = getResourceAdapterNames();
+    				for (String installedRar:installedRars) {
+    				    if (getResourceAdapterModuleName(installedRar).equals(moduleName)) {
+    				        dsProperties.setProperty("driver-name", installedRar);
+    				        break;
+    				    }
+    				}
+				}
 			}
 			return dsProperties;
 		}

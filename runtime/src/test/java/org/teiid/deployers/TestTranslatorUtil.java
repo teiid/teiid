@@ -84,6 +84,15 @@ public class TestTranslatorUtil {
             }
         }
         assertEquals(1, importProperties.size());
+        assertEquals("importer.ImportProperty", importProperties.get(0).name);
+        assertEquals("java.lang.String", importProperties.get(0).dataType);
+        assertEquals(false, importProperties.get(0).required);
+        assertEquals(false, importProperties.get(0).advanced);
+        assertEquals("", importProperties.get(0).description);
+        assertEquals("Import Property", importProperties.get(0).displayName);
+        assertEquals(true, importProperties.get(0).editable);
+        assertEquals(false, importProperties.get(0).masked);
+        assertEquals("default-import-property", importProperties.get(0).defaultValue);
     }
     
     @Test
@@ -179,7 +188,7 @@ public class TestTranslatorUtil {
 
                 @TranslatorProperty(display="Import Property", category=PropertyType.IMPORT)
                 public String getImportProperty() {
-                    return "import-property";
+                    return "default-import-property";
                 }
 		    };
 		}

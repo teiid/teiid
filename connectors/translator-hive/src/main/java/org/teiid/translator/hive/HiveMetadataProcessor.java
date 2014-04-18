@@ -42,18 +42,24 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor implements Metad
     @Override
 	public void process(MetadataFactory metadataFactory, Connection conn)	throws TranslatorException {
 		try {
-            List<String> tables = getTables(conn);
-            for (String table:tables) {
-            	if (shouldExclude(table)) {
-            		continue;
-            	}
-            	addTable(table, conn, metadataFactory);
-            }
+		    getConnectorMetadata(conn, metadataFactory);
         } catch (SQLException e) {
             throw new TranslatorException(e);
         }
 	}
-
+    
+    @Override
+    public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
+            throws SQLException {
+        List<String> tables = getTables(conn);
+        for (String table:tables) {
+            if (shouldExclude(table)) {
+                continue;
+            }
+            addTable(table, conn, metadataFactory);
+        }
+    }
+    
 	private List<String> getTables(Connection conn) throws SQLException {
 		ArrayList<String> tables = new ArrayList<String>();
 		Statement stmt = conn.createStatement();
