@@ -35,6 +35,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -343,7 +344,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         	}
         }
         MakeDep makeDep = (MakeDep)sourceNode.getProperty(Info.MAKE_DEP);
-    	if (fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep) || fullPushOnly) {
+    	if (fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions) || fullPushOnly) {
     		return false;
     	}
 
@@ -373,20 +374,77 @@ public final class RuleChooseDependent implements OptimizerRule {
 	 * Check for fully pushable dependent joins
 	 * currently we only look for the simplistic scenario where there are no intervening 
 	 * nodes above the dependent side
+	 * @param independentExpressions 
 	 */
 	private boolean fullyPush(PlanNode sourceNode, PlanNode joinNode,
 			QueryMetadataInterface metadata,
 			CapabilitiesFinder capabilitiesFinder, CommandContext context,
 			PlanNode indNode,
-			RuleStack rules, MakeDep makeDep) throws QueryMetadataException,
+			RuleStack rules, MakeDep makeDep, AnalysisRecord analysisRecord, List independentExpressions) throws QueryMetadataException,
 			TeiidComponentException, QueryPlannerException {
 		if (sourceNode.getType() != NodeConstants.Types.ACCESS) {
     		return false; //don't remove as we may raise an access node to make this possible
     	}
 		Object modelID = RuleRaiseAccess.getModelIDFromAccess(sourceNode, metadata);
-		if (makeDep == null || !makeDep.isJoin() || !CapabilitiesUtil.supports(Capability.FULL_DEPENDENT_JOIN, modelID, metadata, capabilitiesFinder)) {
-    		return false;
+
+		boolean shouldPush = false;
+		boolean hasHint = false;
+
+		if (makeDep != null && makeDep.isJoin()) {
+    		hasHint = true;
     	}
+		
+		if (!CapabilitiesUtil.supports(Capability.FULL_DEPENDENT_JOIN, modelID, metadata, capabilitiesFinder)) {
+			if (hasHint) {
+				sourceNode.recordDebugAnnotation("cannot pushdown dependent join", modelID, "dependent join pushdown needs enabled at the source", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+            return false;
+		}
+		
+		List<? extends Expression> projected = (List<? extends Expression>) indNode.getProperty(Info.OUTPUT_COLS);
+		if (projected == null) {
+			PlanNode plan = sourceNode;
+			while (plan.getParent() != null) {
+				plan = plan.getParent();
+			}
+			new RuleAssignOutputElements(false).execute(plan, metadata, capabilitiesFinder, null, AnalysisRecord.createNonRecordingRecord(), context);
+			projected = (List<? extends Expression>) indNode.getProperty(Info.OUTPUT_COLS);
+		}
+		
+		if (!hasHint) {
+			//cost based decision
+			if (context.getOptions().getDependentJoinPushdownThreshold() < 1) {
+				return false;
+			}
+			
+			//require no lobs
+			for (Expression ex : projected) {
+				if (DataTypeManager.isLOB(ex.getClass())) {
+					return false;
+				}
+			}
+			
+			//old optimizer tests had no buffermanager
+			if (context.getBufferManager() == null) {
+				return false;
+			}
+			
+			if (makeDep != null && makeDep.getMax() != null) {
+				//if the user specifies a max, it's best to just use a regular dependent join
+				return false;
+			}
+	
+			//consider the size of the columns beyond the equi-join
+			int totalWidth = context.getBufferManager().getSchemaSize(projected);
+			float equiWidth = context.getBufferManager().getSchemaSize(independentExpressions);
+			
+			if (totalWidth / equiWidth <= context.getOptions().getDependentJoinPushdownThreshold()) {
+				//below the data threshold
+				shouldPush = true;
+			}
+		} else {
+			shouldPush = true;
+		}
     	
     	/*
     	 * check to see how far the access node can be raised 
@@ -400,12 +458,24 @@ public final class RuleChooseDependent implements OptimizerRule {
     	indNode.addAsParent(tempAccess);
     	boolean raised = false;
     	while (sourceNode.getParent() != null && sourceNode.getParent().getParent() != null && RuleRaiseAccess.raiseAccessNode(sourceNode, sourceNode, metadata, capabilitiesFinder, true, null, context) != null) {
+    		int type = sourceNode.getFirstChild().getType();
+    		if (!shouldPush) {
+    			//if we can push more than the join, and it's a potentially costly operation (this is not an exhaustive search), then we should push
+    			shouldPush = (type & (NodeConstants.Types.GROUP | NodeConstants.Types.SELECT | NodeConstants.Types.TUPLE_LIMIT | NodeConstants.Types.SORT | NodeConstants.Types.DUP_REMOVE)) != 0;
+    			if (raised && type == NodeConstants.Types.JOIN) {
+    				shouldPush = true;
+    			}
+    		}
 			//continue to raise
     		raised = true;
 		}
-    	if (!raised) {
-    		//the join is not generally allowable, so restore the plan
-    		tempAccess.getParent().replaceChild(tempAccess, tempAccess.getFirstChild());
+    	if (!raised || !shouldPush) {
+    		if (tempAccess.getParent() == null) {
+    			tempAccess.removeAllChildren();
+    		} else {
+	    		//the join is not generally allowable, so restore the plan
+	    		tempAccess.getParent().replaceChild(tempAccess, tempAccess.getFirstChild());
+    		}
     		return false;
     	}
 		//all the references to any groups from this join have to changed over to the new group
@@ -413,15 +483,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 		PlanNode project = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
 		PlanNode source = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
 		source.addGroup(gs);
-		List<? extends Expression> projected = (List<? extends Expression>) indNode.getProperty(Info.OUTPUT_COLS);
-		if (projected == null) {
-			PlanNode plan = sourceNode;
-			while (plan.getParent() != null) {
-				plan = plan.getParent();
-			}
-			new RuleAssignOutputElements(false).execute(plan, metadata, capabilitiesFinder, null, AnalysisRecord.createNonRecordingRecord(), context);
-			projected = (List<? extends Expression>) indNode.getProperty(Info.OUTPUT_COLS);
-		}
+
 		project.setProperty(Info.OUTPUT_COLS, projected);
 		project.setProperty(Info.PROJECT_COLS, projected);
 
