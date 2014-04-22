@@ -37,6 +37,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -76,7 +77,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         boolean rightCandidate;
     }
 
-	public static final int DEFAULT_INDEPENDENT_CARDINALITY = 10;
+	public static final int DEFAULT_INDEPENDENT_CARDINALITY = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.defaultIndependentCardinality", 10); //$NON-NLS-1$
 	public static final int UNKNOWN_INDEPENDENT_CARDINALITY = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	
 	private boolean fullPushOnly;
@@ -344,7 +345,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         	}
         }
         MakeDep makeDep = (MakeDep)sourceNode.getProperty(Info.MAKE_DEP);
-    	if (fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions) || fullPushOnly) {
+    	if (fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions, isLeft) || fullPushOnly) {
     		return false;
     	}
 
@@ -380,14 +381,13 @@ public final class RuleChooseDependent implements OptimizerRule {
 			QueryMetadataInterface metadata,
 			CapabilitiesFinder capabilitiesFinder, CommandContext context,
 			PlanNode indNode,
-			RuleStack rules, MakeDep makeDep, AnalysisRecord analysisRecord, List independentExpressions) throws QueryMetadataException,
+			RuleStack rules, MakeDep makeDep, AnalysisRecord analysisRecord, List independentExpressions, boolean isLeft) throws QueryMetadataException,
 			TeiidComponentException, QueryPlannerException {
 		if (sourceNode.getType() != NodeConstants.Types.ACCESS) {
     		return false; //don't remove as we may raise an access node to make this possible
     	}
 		Object modelID = RuleRaiseAccess.getModelIDFromAccess(sourceNode, metadata);
 
-		boolean shouldPush = false;
 		boolean hasHint = false;
 
 		if (makeDep != null && makeDep.isJoin()) {
@@ -438,18 +438,15 @@ public final class RuleChooseDependent implements OptimizerRule {
 			int totalWidth = context.getBufferManager().getSchemaSize(projected);
 			float equiWidth = context.getBufferManager().getSchemaSize(independentExpressions);
 			
-			if (totalWidth / equiWidth <= context.getOptions().getDependentJoinPushdownThreshold()) {
-				//below the data threshold
-				shouldPush = true;
+			if (totalWidth / equiWidth > context.getOptions().getDependentJoinPushdownThreshold()) {
+				//above the data threshold
+				return false;
 			}
-		} else {
-			shouldPush = true;
 		}
     	
     	/*
     	 * check to see how far the access node can be raised 
     	 */
-    	
     	PlanNode tempAccess = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
     	GroupSymbol gs = RulePlaceAccess.recontextSymbol(new GroupSymbol("TEIID_TEMP"), context.getGroups()); //$NON-NLS-1$
     	gs.setDefinition(null);
@@ -458,24 +455,10 @@ public final class RuleChooseDependent implements OptimizerRule {
     	indNode.addAsParent(tempAccess);
     	boolean raised = false;
     	while (sourceNode.getParent() != null && sourceNode.getParent().getParent() != null && RuleRaiseAccess.raiseAccessNode(sourceNode, sourceNode, metadata, capabilitiesFinder, true, null, context) != null) {
-    		int type = sourceNode.getFirstChild().getType();
-    		if (!shouldPush) {
-    			//if we can push more than the join, and it's a potentially costly operation (this is not an exhaustive search), then we should push
-    			shouldPush = (type & (NodeConstants.Types.GROUP | NodeConstants.Types.SELECT | NodeConstants.Types.TUPLE_LIMIT | NodeConstants.Types.SORT | NodeConstants.Types.DUP_REMOVE)) != 0;
-    			if (raised && type == NodeConstants.Types.JOIN) {
-    				shouldPush = true;
-    			}
-    		}
-			//continue to raise
     		raised = true;
 		}
-    	if (!raised || !shouldPush) {
-    		if (tempAccess.getParent() == null) {
-    			tempAccess.removeAllChildren();
-    		} else {
-	    		//the join is not generally allowable, so restore the plan
-	    		tempAccess.getParent().replaceChild(tempAccess, tempAccess.getFirstChild());
-    		}
+    	if (!raised) {
+    		tempAccess.getParent().replaceChild(tempAccess, tempAccess.getFirstChild());
     		return false;
     	}
 		//all the references to any groups from this join have to changed over to the new group
