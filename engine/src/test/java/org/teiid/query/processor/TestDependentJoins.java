@@ -1268,8 +1268,7 @@ public class TestDependentJoins {
 		
 		cc.getOptions().setDependentJoinPushdownThreshold(1.01f);
 		plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
-		TestOptimizer.checkAtomicQueries(new String[] {"SELECT g_0.e1, g_0.e2, g_1.e2 FROM pm1.g1 AS g_0, pm2.g1 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 IN (<dependent values>))" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
-		
+		TestOptimizer.checkAtomicQueries(new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }
