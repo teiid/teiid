@@ -1163,8 +1163,7 @@ public class NewCalculateCostUtil {
 			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, false);
 			boolean unknownNDV = false;
 			if (indSymbolNDV == UNKNOWN_VALUE) {
-				unknownNDV = true;
-				indSymbolNDV = independentCardinality/2;
+				indSymbolNDV = independentCardinality;
 			}
 			Expression depExpr = (Expression)dependentExpressions.get(i);
 			
