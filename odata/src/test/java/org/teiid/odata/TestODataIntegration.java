@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -71,6 +72,9 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.json.simple.ContentHandler;
+import org.teiid.json.simple.JSONParser;
+import org.teiid.json.simple.ParseException;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
@@ -331,6 +335,101 @@ public class TestODataIntegration extends BaseResourceTest {
 	        ClientResponse<String> response = request.get(String.class);
 	        Assert.assertEquals(200, response.getStatus());
 	        assertTrue(response.getEntity().contains("ab cd "));
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test public void testSkip() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			props.setProperty("batch-size", "1");
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
+	        ClientResponse<String> response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        JSONParser parser = new JSONParser();
+	        final String[] val = new String[1];
+	        parser.parse(response.getEntity(), new ContentHandler() {
+				boolean next;
+	        	
+				@Override
+				public boolean startObjectEntry(String key) throws ParseException,
+						IOException {
+					if (key.equals("__next")) {
+						next = true;
+					}
+					return true;
+				}
+				
+				@Override
+				public boolean startObject() throws ParseException, IOException {
+					return true;
+				}
+				
+				@Override
+				public void startJSON() throws ParseException, IOException {
+					
+				}
+				
+				@Override
+				public boolean startArray() throws ParseException, IOException {
+					return true;
+				}
+				
+				@Override
+				public boolean primitive(Object value) throws ParseException, IOException {
+					if (next) {
+						val[0] = (String) value;
+						next = false;
+					}
+					return true;
+				}
+				
+				@Override
+				public boolean endObjectEntry() throws ParseException, IOException {
+					return true;
+				}
+				
+				@Override
+				public boolean endObject() throws ParseException, IOException {
+					return true;
+				}
+				
+				@Override
+				public void endJSON() throws ParseException, IOException {
+					
+				}
+				
+				@Override
+				public boolean endArray() throws ParseException, IOException {
+					return true;
+				}
+			});
+	        assertNotNull(val[0]);
+	        assertTrue(response.getEntity().contains("abc"));
+	        assertTrue(!response.getEntity().contains("xyz"));
+	        
+	        //follow the skip
+	        request = new ClientRequest(val[0]);
+	        response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        
+	        assertTrue(!response.getEntity().contains("abc"));
+	        assertTrue(response.getEntity().contains("xyz"));
 		} finally {
 			es.stop();
 		}

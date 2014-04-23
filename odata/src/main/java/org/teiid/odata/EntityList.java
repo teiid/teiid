@@ -76,8 +76,11 @@ class EntityList extends ArrayList<OEntity>{
 		if (size == -1) {
 			size = Integer.MAX_VALUE;
 		}
+		if (skipSize > 0) {
+			rs.absolute(skipSize);
+		}
 		for (int i = 1; i <= size; i++) {
-			if (!rs.absolute(i)) {
+			if (!rs.next()) {
 				break;
 			}
 			this.add(getEntity(rs, propertyTypes, columns, entitySet));
