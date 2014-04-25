@@ -80,14 +80,13 @@ public class TeiidProducer implements ODataProducer {
 	}
 
 	@Override
-	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, QueryInfo queryInfo) {
+	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, final QueryInfo queryInfo) {
 		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
 		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
 		List<SQLParam> parameters = visitor.getParameters();
-		final boolean returnCount = queryInfo.inlineCount == InlineCount.ALLPAGES;
-		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), true, queryInfo.skipToken, returnCount);
+		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), queryInfo);
 		return new EntitiesResponse() {
 			@Override
 			public List<OEntity> getEntities() {
@@ -99,7 +98,7 @@ public class TeiidProducer implements ODataProducer {
 			}
 			@Override
 			public Integer getInlineCount() {
-				if (returnCount) {
+				if (queryInfo.inlineCount == InlineCount.ALLPAGES) {
 					return entities.getCount();
 				}
 				return null;
@@ -136,7 +135,7 @@ public class TeiidProducer implements ODataProducer {
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, null, false);
 		EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
 		List<SQLParam> parameters = visitor.getParameters();
-		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), false, null, false);
+		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), null);
 		if (entityList.isEmpty()) {
 			return null;
 		}

@@ -248,7 +248,7 @@ public class TestODataSQLStringVisitor {
 				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
 				"CompanyName desc, Phone", -1, null, null);
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 ORDER BY g0.ShipperID LIMIT 0, 10",
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 ORDER BY g0.ShipperID",
 				"nw.Shippers", null, null, null, 10, null, null);
 	}	
 	
