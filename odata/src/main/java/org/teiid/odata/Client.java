@@ -30,6 +30,7 @@ import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmType;
 import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.CountResponse;
+import org.odata4j.producer.QueryInfo;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
@@ -43,7 +44,7 @@ public interface Client {
 	
 	BaseResponse executeCall(String sql, List<SQLParam> sqlParams, EdmType returnType);
 
-	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount);
+	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, QueryInfo queryInfo);
 	
 	CountResponse executeCount(Query query, List<SQLParam> parameters);
 	

@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmSimpleType;
 import org.odata4j.edm.EdmType;
 import org.odata4j.format.xml.EdmxFormatWriter;
+import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.Responses;
 import org.odata4j.producer.resources.EntitiesRequestResource;
 import org.odata4j.producer.resources.EntityRequestResource;
@@ -71,6 +73,9 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.json.simple.ContentHandler;
+import org.teiid.json.simple.JSONParser;
+import org.teiid.json.simple.ParseException;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
@@ -92,6 +97,69 @@ import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 @SuppressWarnings("nls")
 public class TestODataIntegration extends BaseResourceTest {
 	
+	private static final class JSONValueExtractor implements ContentHandler {
+		Object value;
+		boolean next;
+		String key;
+
+		private JSONValueExtractor(String key) {
+			this.key = key;
+		}
+
+		@Override
+		public boolean startObjectEntry(String key) throws ParseException,
+				IOException {
+			if (key.equals(this.key)) {
+				next = true;
+			}
+			return true;
+		}
+
+		@Override
+		public boolean startObject() throws ParseException, IOException {
+			return true;
+		}
+
+		@Override
+		public void startJSON() throws ParseException, IOException {
+			
+		}
+
+		@Override
+		public boolean startArray() throws ParseException, IOException {
+			return true;
+		}
+
+		@Override
+		public boolean primitive(Object value) throws ParseException, IOException {
+			if (next) {
+				this.value = value;
+				next = false;
+			}
+			return true;
+		}
+
+		@Override
+		public boolean endObjectEntry() throws ParseException, IOException {
+			return true;
+		}
+
+		@Override
+		public boolean endObject() throws ParseException, IOException {
+			return true;
+		}
+
+		@Override
+		public void endJSON() throws ParseException, IOException {
+			
+		}
+
+		@Override
+		public boolean endArray() throws ParseException, IOException {
+			return true;
+		}
+	}
+
 	private static TransformationMetadata metadata;
 	private static EdmDataServices eds;
 	
@@ -145,11 +213,11 @@ public class TestODataIntegration extends BaseResourceTest {
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
         
         Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
@@ -175,7 +243,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenReturn(result);
 		
 		UpdateResponse respose = new UpdateResponse() {
 			@Override
@@ -221,7 +289,7 @@ public class TestODataIntegration extends BaseResourceTest {
         
         // post after insert pulls the entity inserted. In above XML there is customer id, but
         // below selection is based on primary key 1234
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
         
         Assert.assertEquals("INSERT INTO Customers (CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", insertCmd.getValue().toString());
         Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.ContactName, g0.ContactTitle, g0.Address, g0.City, g0.Region, g0.PostalCode, g0.Country, g0.Phone, g0.Fax FROM Customers AS g0 WHERE g0.CustomerID = 1234 ORDER BY g0.CustomerID", sql.getValue().toString());
@@ -270,7 +338,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		stub(client.getMetadata()).toReturn(eds);
 		MockProvider.CLIENT = client;
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenThrow(new NullPointerException());
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
@@ -297,11 +365,11 @@ public class TestODataIntegration extends BaseResourceTest {
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
         
         Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
@@ -362,6 +430,102 @@ public class TestODataIntegration extends BaseResourceTest {
 	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
 	        response = request.get(String.class);
 	        assertEquals(500, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test public void testSkipToken() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			props.setProperty("batch-size", "1");
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
+	        ClientResponse<String> response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        JSONParser parser = new JSONParser();
+	        JSONValueExtractor contentHandler = new JSONValueExtractor("__next");
+			parser.parse(response.getEntity(), contentHandler);
+	        assertNotNull(contentHandler.next);
+	        assertTrue(response.getEntity().contains("abc"));
+	        assertTrue(!response.getEntity().contains("xyz"));
+	        
+	        //follow the skip
+	        request = new ClientRequest((String) contentHandler.value);
+	        response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        
+	        assertTrue(!response.getEntity().contains("abc"));
+	        assertTrue(response.getEntity().contains("xyz"));
+	        
+	        contentHandler.value = null;
+	        parser.parse(response.getEntity(), contentHandler);
+	        assertNull(contentHandler.value);
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test public void testCount() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			props.setProperty("batch-size", "1");
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json&$inlinecount=allpages&$top=1&$skip=1"));
+	        ClientResponse<String> response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        JSONParser parser = new JSONParser();
+	        JSONValueExtractor contentHandler = new JSONValueExtractor("__count");
+			parser.parse(response.getEntity(), contentHandler);
+	        assertEquals("2", contentHandler.value);
+	        assertTrue(response.getEntity().contains("xyz"));
+	        assertTrue(!response.getEntity().contains("abc"));
+	        
+	        //effectively the same as above
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json&$inlinecount=allpages&$skip=1"));
+	        response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        contentHandler.value = null;
+			parser.parse(response.getEntity(), contentHandler);
+	        assertEquals("2", contentHandler.value);
+	        contentHandler.key = "__next";
+	        contentHandler.value = null;
+	        parser.parse(response.getEntity(), contentHandler);
+	        assertNull(contentHandler.value);
+	        
+	        //now there should be a next
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json&$inlinecount=allpages"));
+	        response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        contentHandler.value = null;
+			parser.parse(response.getEntity(), contentHandler);
+	        assertNotNull(contentHandler.value);
 		} finally {
 			es.stop();
 		}

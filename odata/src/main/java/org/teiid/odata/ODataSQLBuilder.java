@@ -21,7 +21,7 @@
  */
 package org.teiid.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -82,10 +82,15 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
 	private AtomicInteger groupCount = new AtomicInteger(1);
 	private boolean distinct = false;
+	private boolean useLimit = true;
 
 	public ODataSQLBuilder(MetadataStore metadata, boolean prepared) {
 		this.metadata = metadata;
 		this.prepared = prepared;
+	}
+	
+	public void setUseLimit(boolean useLimit) {
+		this.useLimit = useLimit;
 	}
 
 	public Query selectString(String entityName, QueryInfo info, OEntityKey key, String navProperty, boolean countStar) {
@@ -222,13 +227,6 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			query.setOrderBy(this.orderBy);
 		}
 
-		if (info.top != null && info.skip != null) {
-			query.setLimit(new Limit(new Constant(info.skip), new Constant(info.top)));
-		}
-		else if (info.top != null) {
-			query.setLimit(new Limit(new Constant(0), new Constant(info.top)));
-		}
-		
 		select.setDistinct(this.distinct);
 		From from = new From();
 		from.addClause(this.fromCluse);

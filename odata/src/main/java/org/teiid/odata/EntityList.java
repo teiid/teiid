@@ -26,8 +26,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.odata4j.core.OEntities;
@@ -37,7 +35,6 @@ import org.odata4j.core.OLink;
 import org.odata4j.core.OLinks;
 import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.edm.EdmEntityType;
 import org.odata4j.edm.EdmNavigationProperty;
 import org.odata4j.edm.EdmProperty;
 import org.odata4j.edm.EdmType;
@@ -45,43 +42,15 @@ import org.teiid.core.types.TransformationException;
 
 class EntityList extends ArrayList<OEntity>{
 	private int count = 0;
-	private int batchSize;
-	private int skipSize;
+	private String skipToken;
 	private String invalidCharacterReplacement;
 	
-	public EntityList(LinkedHashMap<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs, int skipSize, int batchSize, boolean getCount, String invalidCharacterReplacement) throws SQLException, TransformationException, IOException {
-		this.batchSize = batchSize;
-		this.skipSize = skipSize;
-		this.invalidCharacterReplacement = invalidCharacterReplacement;
-		
-		if (columns == null) {
-			columns = new LinkedHashMap<String, Boolean>();
-			for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-				columns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
-			}
-		}
-
-		HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
-		
-		EdmEntityType entityType = entitySet.getType();
-		Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
-		while(propIter.hasNext()) {
-			EdmProperty prop = propIter.next();
-			propertyTypes.put(prop.getName(), prop);
-		}
-		int size = batchSize;
-		if (getCount && rs.last()) {
-			this.count = rs.getRow();
-		}
-		if (size == -1) {
-			size = Integer.MAX_VALUE;
-		}
-		for (int i = 1; i <= size; i++) {
-			if (!rs.absolute(i)) {
-				break;
-			}
-			this.add(getEntity(rs, propertyTypes, columns, entitySet));
-		}
+	public EntityList(String invalidCharacterReplacement) throws SQLException, TransformationException, IOException {
+	    this.invalidCharacterReplacement = invalidCharacterReplacement;
+	}
+	
+	void addEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
+		this.add(getEntity(rs, propertyTypes, columns, entitySet));
 	}
 
 	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
@@ -118,10 +87,15 @@ class EntityList extends ArrayList<OEntity>{
 	}
 
 	public String nextToken() {
-		if (size() < this.batchSize) {
-			return null;
-		}
-		return String.valueOf(this.skipSize + size());
+		return this.skipToken;
+	}
+	
+	public void setSkipToken(String skipToken) {
+		this.skipToken = skipToken;
+	}
+	
+	public void setCount(int count) {
+		this.count = count;
 	}
 	
 }

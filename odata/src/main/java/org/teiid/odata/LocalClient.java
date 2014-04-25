@@ -52,6 +52,7 @@ import org.odata4j.edm.EdmCollectionType;
 import org.odata4j.edm.EdmComplexType;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmEntityType;
 import org.odata4j.edm.EdmProperty;
 import org.odata4j.edm.EdmSimpleType;
 import org.odata4j.edm.EdmType;
@@ -59,6 +60,8 @@ import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.ServerErrorException;
 import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.CountResponse;
+import org.odata4j.producer.InlineCount;
+import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.Responses;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
@@ -81,7 +84,9 @@ import org.teiid.net.TeiidURL;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 import org.teiid.translator.odata.ODataTypeManager;
@@ -99,6 +104,7 @@ public class LocalClient implements Client {
 	private long cacheTime;
 	private String transportName;
 	private String connectionString;
+	private Properties connectionProperties = new Properties();
 	private EdmDataServices edmMetaData;
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
@@ -112,9 +118,9 @@ public class LocalClient implements Client {
 		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
 		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		sb.append(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION+"=true;"); //$NON-NLS-1$
-		sb.append(EmbeddedProfile.TRANSPORT_NAME).append("=").append(this.transportName).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
-		sb.append(EmbeddedProfile.WAIT_FOR_LOAD).append("=").append("0;"); //$NON-NLS-1$ //$NON-NLS-2$
+		connectionProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
+		connectionProperties.put(EmbeddedProfile.TRANSPORT_NAME, transportName); 
+		connectionProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
 		this.connectionString = sb.toString();
 	}
 
@@ -133,7 +139,7 @@ public class LocalClient implements Client {
 	}
 
 	ConnectionImpl getConnection() throws SQLException {
-		return driver.connect(this.connectionString, null);
+		return driver.connect(this.connectionString, connectionProperties);
 	}
 
 	@Override
@@ -223,14 +229,28 @@ public class LocalClient implements Client {
 
 
 	@Override
-	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount) {
+	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, QueryInfo queryInfo) {
 		Connection connection = null;
 		try {
-			if (useSkipToken) {
+			boolean cache = queryInfo != null && this.batchSize > 0; 
+			if (cache) {
 				CacheHint hint = new CacheHint();
 				hint.setTtl(this.cacheTime);
 				hint.setScope(CacheDirective.Scope.USER);
 				query.setCacheHint(hint);
+			}
+			
+			boolean getCount = false; 
+			if (queryInfo != null) {
+				getCount = queryInfo.inlineCount == InlineCount.ALLPAGES;
+				if (!getCount && (queryInfo.top != null || queryInfo.skip != null)) {
+					if (queryInfo.top != null && queryInfo.skip != null) {
+						query.setLimit(new Limit(new Constant(queryInfo.skip), new Constant(queryInfo.top)));
+					}
+					else if (queryInfo.top != null) {
+						query.setLimit(new Limit(new Constant(0), new Constant(queryInfo.top)));
+					}
+				}
 			}
 
 			String sql = query.toString();
@@ -238,7 +258,7 @@ public class LocalClient implements Client {
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 
 			connection = getConnection();
-			final PreparedStatement stmt = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			final PreparedStatement stmt = connection.prepareStatement(sql, cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			if (parameters!= null && !parameters.isEmpty()) {
 				for (int i = 0; i < parameters.size(); i++) {
 					stmt.setObject(i+1, parameters.get(i).value, parameters.get(i).sqlType);
@@ -246,11 +266,89 @@ public class LocalClient implements Client {
 			}
 
 			final ResultSet rs = stmt.executeQuery();
-            int skipSize = 0;
-            if (skipToken != null) {
-            	skipSize = Integer.parseInt(skipToken);
-            }
-			return new EntityList(projectedColumns, entitySet, rs, skipSize, this.batchSize, getCount, this.invalidCharacterReplacement);
+			
+			if (projectedColumns == null) {
+				projectedColumns = new LinkedHashMap<String, Boolean>();
+				for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+					projectedColumns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
+				}
+			}
+			
+			EntityList result = new EntityList(invalidCharacterReplacement);
+			
+			HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
+			
+			EdmEntityType entityType = entitySet.getType();
+			Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
+			while(propIter.hasNext()) {
+				EdmProperty prop = propIter.next();
+				propertyTypes.put(prop.getName(), prop);
+			}
+			
+			//skip to the initial position
+			int count = 0;
+			int skipSize = 0;
+			//skip based upon the skip value
+			if (getCount && queryInfo.skip != null) {
+				skipSize = queryInfo.skip;
+			}
+			//skip based upon the skipToken
+			if (queryInfo != null && queryInfo.skipToken != null) {
+				skipSize += Integer.parseInt(queryInfo.skipToken);
+			}
+			if (skipSize > 0) {
+				count += skip(cache, rs, skipSize);
+			}
+
+			//determine the number of records to return
+			int size = batchSize;
+			int top = Integer.MAX_VALUE;
+			if (getCount && queryInfo.top != null) {
+				top = queryInfo.top;
+				size = top; 
+				if (batchSize > 0) {
+					size = Math.min(batchSize, size);
+				}
+			} else if (size < 1) {
+				size = Integer.MAX_VALUE;
+			}
+			
+			//build the results
+			for (int i = 0; i < size; i++) {
+				count++;
+				if (!rs.next()) {
+					break;
+				}
+				result.addEntity(rs, propertyTypes, projectedColumns, entitySet);
+			}
+			
+			//set the count
+			if (getCount) {
+				if (!cache) {
+					while (rs.next()) {
+						count++;
+					}
+				} else {
+					rs.last();
+					count = rs.getRow();
+				}
+			}
+			result.setCount(count);
+			
+			//set the skipToken if needed
+			if (cache && result.size() == this.batchSize) {
+				int end = skipSize + result.size();
+				if (getCount) {
+					if (end < Math.min(top, count)) {
+						result.setSkipToken(String.valueOf(end));
+					}
+				} else if (rs.next()) {
+					result.setSkipToken(String.valueOf(end));
+					//will force the entry to cache or is effectively a no-op when already cached
+					rs.last();	
+				}
+			}
+			return result;
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
@@ -261,6 +359,22 @@ public class LocalClient implements Client {
 				}
 			}
 		}
+	}
+
+	private int skip(boolean cache, final ResultSet rs, int skipSize)
+			throws SQLException {
+		int skipped = 0;
+		if (!cache) {
+			for (int i = 0; i < skipSize; i++) {
+				skipped++;
+				if (!rs.next()) {
+					break;
+				}
+			}
+		} else {
+			rs.absolute(skipSize);
+		}
+		return skipped;
 	}
 
 	@Override
