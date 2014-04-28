@@ -26,18 +26,6 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-  <li>TEIID-1070 <b>Amazon SimpleDB</b> support has been contributed by Radim Hopp.  See the Admin and Reference Guides for more.
-  <li>TEIID-2761 <b>Security Enhancements</b> added support for a grant-all attribute on a role.  Also added the ability to specify the security domain for a VDB.  See the reference guide for more.
-  <li>TEIID-2780 <b>Apache Solr</b> Translator  has been added.  See the Admin and Reference Guides for more. See <a href="https://community.jboss.org/wiki/IntegrateApacheSolrWithTeiid">example here</a>
-  <li>TEIID-2809 <b>Pattern based system property substitution</b> has been added to VDB.XML files. Only supported if the DVB is being deployed JBoss EAP.
-  <li>TEIID-2844 <b>Remove unauthorized columns</b> from SELECT * can be enabled via the session property ignore_unauthorized_asterisk.  See the Reference for more.
-  <li>TEIID-2863/TEIID-2761 <b>More robust GSS-API support</b>. This issue also implements a feature where a user can now define a "security-domain" per VDB. User no longer has to depend upon the transport level authentication.
-  <li>TEIID-2826 <b>Revamped build structure for translators and connectors</b> so that it is easier to package them and deploy them to a Teiid server.
-  <li>TEIID-2859 <b>TEXTTABLE FOR ORDINALITY</b> a FOR ORDINALITY column can now be used with TEXTTABLE.  See the Reference for more.
-  <li>TEIID-965  <b>Apache POI based Excel</b> connectivity has been added.  See the reference for more. See <a href="https://community.jboss.org/wiki/MicrosoftExcelDocumentIntoRelationalTable">example here</a>
-  <li>TEIID-2888 <b>Designer VDB support in Embedded</b> is now available.  With a few caveats, Designer .INDEX based vdbs can now be used with Teiid Embedded.  See the Embedded Guide for more.
-  <li>TEIID-2904 <b>Translator Properties</b> Translator import, override and extension-metadata properties are can retrieved through Admin API</li>
-  <li>TEIID-2627 <b>Accumulo</b> Translator has been added. See Admin and Reference guides for more information. See <a href="https://community.jboss.org/wiki/ApacheAccumuloWithTeiid">example here</a></li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -352,7 +340,7 @@ The following components have been updated:
 </ul>
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
-<a href="https://issues.jboss.org/secure/ReleaseNote.jspa?projectId=12310782&version=12318879">Detailed Release Notes - Teiid - Version ${project.version}</a>            
+<a href="https://issues.jboss.org/secure/ReleaseNote.jspa?projectId=12310782">Detailed Release Notes - Teiid - Version ${project.version}</a>            
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
 The <a href="http://www.jboss.org/teiid/">Teiid community project</a> is hosted on jboss.org.
