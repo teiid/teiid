@@ -26,7 +26,6 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-<<<<<<< HEAD
   <li>TEIID-1070 <b>Amazon SimpleDB</b> support has been contributed by Radim Hopp.  See the Admin and Reference Guides for more.
   <li>TEIID-2761 <b>Security Enhancements</b> added support for a grant-all attribute on a role.  Also added the ability to specify the security domain for a VDB.  See the reference guide for more.
   <li>TEIID-2780 <b>Apache Solr</b> Translator  has been added.  See the Admin and Reference Guides for more. See <a href="https://community.jboss.org/wiki/IntegrateApacheSolrWithTeiid">example here</a>
@@ -311,6 +310,14 @@ temporary table access.
 </ul>
 
 <h2><a name="Other">Other Issues</a></h2>
+
+<h4>from ${project.version}</h4>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2936'>TEIID-2936</a>] -  Combining multiple 'in' criteria can prevent pushing criteria to database
+</li>
+</ul>
+
+<h4>from 8.0</h4>
 <ul>
     <li>TEIID-1170 - correlated subqueries are not allowed in UPDATEs or DELETEs against internal Teiid tables (internal materialized views or temporary tables).
     <li>TEIID-1281 - Negative start indexing is not supported by DB2 and Derby databases.  Usage of the Teiid SUBSTRING against these sources should not use negative start values.

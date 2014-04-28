@@ -139,6 +139,7 @@ public class LanguageBridgeFactory {
     private Map<String, List<? extends List<?>>> dependentSets;
     private boolean convertIn;
     private boolean supportsConcat2;
+	private int maxInCriteriaSize;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
@@ -484,6 +485,20 @@ public class LanguageBridgeFactory {
 					condition = new AndOr(new Comparison(expr, expression, criteria.isNegated()?Operator.NE:Operator.EQ), condition, criteria.isNegated()?AndOr.Operator.AND:AndOr.Operator.OR);
 				}
 			}
+        	return condition;
+        }
+        if (maxInCriteriaSize > 0 && translatedExpressions.size() > maxInCriteriaSize) {
+        	Condition condition = null;
+        	int count = translatedExpressions.size()/maxInCriteriaSize + ((translatedExpressions.size()%maxInCriteriaSize!=0)?1:0);
+        	for (int i = 0; i < count; i++) {
+        		List<org.teiid.language.Expression> subList = translatedExpressions.subList(maxInCriteriaSize*i, Math.min(translatedExpressions.size(), maxInCriteriaSize*(i+1)));
+				List<org.teiid.language.Expression> translatedExpressionsSubList = new ArrayList<org.teiid.language.Expression>(subList);
+				if (condition == null) {
+					condition = new In(expr, translatedExpressionsSubList, criteria.isNegated()); 
+				} else {
+					condition = new AndOr(new In(expr, translatedExpressionsSubList, criteria.isNegated()), condition, criteria.isNegated()?AndOr.Operator.AND:AndOr.Operator.OR);
+				}
+        	}
         	return condition;
         }
         return new In(expr,
@@ -995,4 +1010,8 @@ public class LanguageBridgeFactory {
         }
         return new org.teiid.language.Limit(rowOffset, rowLimit);
     }
+
+	public void setMaxInPredicateSize(int maxInCriteriaSize) {
+		this.maxInCriteriaSize = maxInCriteriaSize;
+	}
 }

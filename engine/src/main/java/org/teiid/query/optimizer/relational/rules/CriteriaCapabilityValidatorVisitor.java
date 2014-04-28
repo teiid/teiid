@@ -415,8 +415,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	checkAbstractSetCriteria(crit);
         try {    
             int maxSize = CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder); 
-            
-            if (maxSize > 0 && crit.getValues().size() > maxSize) {
+            int maxPredicates = CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder);
+            //allow 1/2 to a single predicate - TODO: make this more precise
+            if (maxSize > 0 && maxPredicates > 0 && crit.getValues().size() > Math.max(maxSize, (maxSize * (long)maxPredicates)/2)) {
                 markInvalid(crit, "SetCriteria size exceeds maximum for source"); //$NON-NLS-1$
                 return;
             }
