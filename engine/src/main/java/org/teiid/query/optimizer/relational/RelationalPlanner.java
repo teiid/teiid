@@ -556,12 +556,12 @@ public class RelationalPlanner {
         if (hints.hasJoin && hints.hasOptionalJoin) {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
         }
-        if (hints.hasRowBasedSecurity) {
-        	rules.push(new RuleApplySecurity());
-        }
-        if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin) || hints.hasRowBasedSecurity) {
+        if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin)) {
         	//do initial filtering to make merging and optional join logic easier
             rules.push(new RuleAssignOutputElements(false));
+        }
+        if (hints.hasRowBasedSecurity) {
+        	rules.push(new RuleApplySecurity());
         }
         rules.push(RuleConstants.PLACE_ACCESS);
         return rules;
