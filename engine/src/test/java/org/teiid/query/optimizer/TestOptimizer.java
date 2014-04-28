@@ -3171,22 +3171,22 @@ public class TestOptimizer {
         });         
     } 
 
-    @Test public void testLargeSetCriteria() {
+    @Test public void testLargeSetCriteria() throws TeiidComponentException, TeiidProcessingException {
         //      Create query
         String sql = "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA INNER JOIN BQT2.SmallB ON BQT1.SmallA.IntKey = BQT2.SmallB.IntKey WHERE BQT1.SmallA.IntKey IN (1,2,3,4,5)";     //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
-        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1)); //the language bridge factory will handle the expansion
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(),  
             null, capFinder,
-            new String[] { "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA ORDER BY BQT1.SmallA.IntKey",  //$NON-NLS-1$
-                            "SELECT BQT2.SmallB.IntKey FROM BQT2.SmallB ORDER BY BQT2.SmallB.IntKey" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+            new String[] { "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.IntKey IN (1, 2, 3, 4, 5) ORDER BY BQT1.SmallA.IntKey", 
+        	"SELECT BQT2.SmallB.IntKey FROM BQT2.SmallB WHERE BQT2.SmallB.IntKey IN (1, 2, 3, 4, 5) ORDER BY BQT2.SmallB.IntKey" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -3199,7 +3199,7 @@ public class TestOptimizer {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            2,      // Select
+            0,      // Select
             0,      // Sort
             0       // UnionAll
         });            

@@ -146,6 +146,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		this.securityContext.setTransactional(requestMsg.isTransactional());
         LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
         factory.setConvertIn(!this.connector.supportsInCriteria());
+        factory.setMaxInPredicateSize(this.connector.getMaxInCriteriaSize());
         try {
 			factory.setSupportsConcat2(manager.getCapabilities().supportsFunction(SourceSystemFunctions.CONCAT2));
 		} catch (TranslatorException e) {

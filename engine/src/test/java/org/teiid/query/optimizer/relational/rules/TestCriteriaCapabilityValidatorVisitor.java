@@ -616,6 +616,10 @@ public class TestCriteriaCapabilityValidatorVisitor {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(2));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
+        helpTestVisitor("pm1.g1.e1 IN ('x', 'y', 'z')", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
+        
+        caps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        
         helpTestVisitor("pm1.g1.e1 IN ('x', 'y', 'z')", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
     

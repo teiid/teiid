@@ -29,10 +29,10 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.language.AndOr;
+import org.teiid.language.AndOr.Operator;
 import org.teiid.language.Expression;
 import org.teiid.language.In;
 import org.teiid.language.Literal;
-import org.teiid.language.AndOr.Operator;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -66,6 +66,18 @@ public class TestInCriteriaImpl {
         lbf.setConvertIn(true);
         AndOr or = (AndOr) lbf.translate(inCriteria);
         assertEquals(Operator.OR, or.getOperator());
+        inCriteria.setNegated(true);
+        AndOr and = (AndOr) lbf.translate(inCriteria);
+        assertEquals(Operator.AND, and.getOperator());
+    }
+    
+    @Test public void testExpansion1() throws Exception {
+    	SetCriteria inCriteria = helpExample(false);
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.example1Cached());
+        lbf.setMaxInPredicateSize(2);
+        AndOr or = (AndOr) lbf.translate(inCriteria);
+        assertEquals(Operator.OR, or.getOperator());
+        assertEquals(2, ((In)or.getRightCondition()).getRightExpressions().size());
         inCriteria.setNegated(true);
         AndOr and = (AndOr) lbf.translate(inCriteria);
         assertEquals(Operator.AND, and.getOperator());
