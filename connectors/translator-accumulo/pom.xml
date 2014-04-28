@@ -34,39 +34,32 @@
         <dependency>
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-core</artifactId>
-            <version>${version.accumulo}</version>
-        </dependency>    
+        </dependency>            
         <dependency>
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-fate</artifactId>
-            <version>${version.accumulo}</version>
         </dependency>  
         <dependency>
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-trace</artifactId>
-            <version>${version.accumulo}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
-            <version>${version.hadoop-core}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
-            <version>${version.thrift}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
-            <version>${version.zookeeper}</version>
         </dependency>
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <scope>test</scope>
         </dependency>
-                                                           
     </dependencies>
     
     <build>

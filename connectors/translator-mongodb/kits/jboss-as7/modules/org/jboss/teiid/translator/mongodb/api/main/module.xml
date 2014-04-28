@@ -2,7 +2,7 @@
 <module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.translator.mongodb.api">
     <resources>
         <resource-root path="mongodb-api-${project.version}.jar" />
-        <resource-root path="mongo-java-driver-2.11.1.jar" />
+        <resource-root path="mongo-java-driver-${version.org.mongodb.mongo-java-driver}.jar" />
     </resources>
 
     <dependencies>
