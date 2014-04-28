@@ -30,12 +30,10 @@
 		<dependency>
 			<groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-			<version>${version.solr}</version>
 		</dependency>
         <dependency>
             <groupId>org.noggit</groupId>
             <artifactId>noggit</artifactId>
-            <version>${version.noggit}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
