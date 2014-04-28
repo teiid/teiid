@@ -51,25 +51,26 @@
           <artifactId>connector-api</artifactId>
           <scope>provided</scope>
         </dependency>  
-        
 		<dependency>
 		   <groupId>org.hibernate</groupId>
 		   <artifactId>hibernate-search</artifactId>
-		   <version>${version.org.hibernate}</version>
 		   <scope>provided</scope>
 		</dependency>
         <dependency>
+           <groupId>org.hibernate</groupId>
+           <artifactId>hibernate-search-engine</artifactId>
+           <scope>provided</scope>
+        </dependency>        
+        <dependency>
            <groupId>org.infinispan</groupId>
            <artifactId>infinispan-core</artifactId>
-           <version>${version.org.infinispan}</version>
            <scope>provided</scope>
         </dependency> 		
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-query</artifactId>
-	      <version>${version.org.infinispan}</version>
 	      <scope>provided</scope>
-	    </dependency> 
+	    </dependency>
 	    <dependency>
 		    <groupId>org.mockito</groupId>
 		    <artifactId>mockito-all</artifactId>

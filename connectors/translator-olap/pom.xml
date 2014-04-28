@@ -30,26 +30,10 @@
          <dependency>
           <groupId>org.olap4j</groupId>
           <artifactId>olap4j</artifactId>
-          <version>${version.olap4j}</version>
-          <exclusions>
-              <exclusion>
-                   <groupId>javacup</groupId>
-                  <artifactId>javacup</artifactId>
-              </exclusion>
-             <exclusion>
-                  <groupId>retroweaver</groupId>
-                  <artifactId>retroweaver</artifactId>
-             </exclusion>
-              <exclusion>
-                  <groupId>retroweaver</groupId>
-                  <artifactId>retroweaver-rt</artifactId>
-              </exclusion>
-           </exclusions>
         </dependency>
         <dependency>
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j-xmla</artifactId>
-            <version>${version.olap4j}</version>
         </dependency>        
     </dependencies>
     
