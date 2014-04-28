@@ -42,7 +42,7 @@
         <version.com.google.guava>14.0.1</version.com.google.guava>
         <version.org.apache.httpcomponents.httpclient>4.2.1</version.org.apache.httpcomponents.httpclient>
         <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>1.0.1.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
-        <version.dom4j>1.6.1.redhat-6</version.dom4j>
+        <version.dom4j>1.6.1</version.dom4j>
                 
         <!-- integration stack bom propererties -->
         <version.org.mongodb.mongo-java-driver>2.11.1</version.org.mongodb.mongo-java-driver>
