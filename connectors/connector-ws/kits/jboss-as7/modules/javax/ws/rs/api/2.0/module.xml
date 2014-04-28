@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.1" name="javax.ws.rs.api" slot="2.0">
+    <resources>
+        <resource-root path="javax.ws.rs-api-${version.javax.ws.rs}.jar"/>
+        <!-- Insert resources here -->
+    </resources>
+
+
+</module>

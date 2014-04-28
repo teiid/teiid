@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.apache.poi">
     <resources>
-        <resource-root path="poi-3.10-FINAL.jar" />
-        <resource-root path="poi-ooxml-3.10-FINAL.jar" />
-        <resource-root path="poi-ooxml-schemas-3.10-FINAL.jar" />
+        <resource-root path="poi-${version.org.apache.poi}.jar" />
+        <resource-root path="poi-ooxml-${version.org.apache.poi}.jar" />
+        <resource-root path="poi-ooxml-schemas-${version.org.apache.poi}.jar" />
         <!-- Insert resources here -->
     </resources>
-
 
     <dependencies>
         <module name="javax.api" />

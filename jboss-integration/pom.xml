@@ -118,7 +118,7 @@
       
     <dependency>
         <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-subsystem-test</artifactId>
+        <artifactId>jboss-as-subsystem-test-framework</artifactId>
         <scope>test</scope>
     </dependency>
     <dependency>

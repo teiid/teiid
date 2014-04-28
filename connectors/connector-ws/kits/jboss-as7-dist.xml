@@ -36,5 +36,12 @@
                 <include>org.apache.cxf:cxf-rt-frontend-jaxrs</include>
             </includes>
         </dependencySet>
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/javax/ws/rs/api/2.0</outputDirectory>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>javax.ws.rs:javax.ws.rs-api</include>
+            </includes>
+        </dependencySet>        
     </dependencySets>
 </assembly>

@@ -5,7 +5,7 @@
         <resource-root path="teiid-jboss-integration-${project.version}.jar" />
         <resource-root path="teiid-metadata-${project.version}.jar" />
         <resource-root path="teiid-runtime-${project.version}.jar" />
-        <resource-root path="Saxon-HE-${version.net.sf.saxon}.jar" />
+        <resource-root path="Saxon-HE-${version.net.sourceforge.saxon}.jar" />
         <resource-root path="nux-${version.nux}.jar" />
         
         <resource-root path="deployments" />
