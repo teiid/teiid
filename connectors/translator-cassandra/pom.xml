@@ -27,8 +27,15 @@
         <dependency>
 			<groupId>com.datastax.cassandra</groupId>
 			<artifactId>cassandra-driver-core</artifactId>
-			<version>1.0.4</version>
 			<exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpcore</artifactId>
+                </exclusion>            
+                <exclusion>
+                    <groupId>org.apache.thrift</groupId>
+                    <artifactId>libthrift</artifactId>
+                </exclusion>            
 			     <exclusion>
 			     	<artifactId>cassandra-thrift</artifactId>
 			     	<groupId>org.apache.cassandra</groupId>

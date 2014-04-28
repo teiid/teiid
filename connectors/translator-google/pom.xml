@@ -30,7 +30,7 @@
         <dependency>
       	    <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>google-api</artifactId>
-  	    <version>${project.version}</version>
+  	        <version>${project.version}</version>
         </dependency>
        <!-- can't do this but this should be possible! 
         <dependency>
