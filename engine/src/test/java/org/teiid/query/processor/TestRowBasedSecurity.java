@@ -38,6 +38,7 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -101,15 +102,49 @@ public class TestRowBasedSecurity {
 	 * Note that we create an inline view to keep the proper position of the filter
 	 */
 	@Test public void testSelectFilterOuterJoin() throws Exception {
-		HardcodedDataManager dataManager = new HardcodedDataManager();
-		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
-		dataManager.addData("SELECT pm1.g3.e1 FROM pm1.g3", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
 		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
 		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
 		caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
 		ProcessorPlan plan = helpGetPlan(helpParse("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 full outer join pm1.g3 on (pm1.g1.e1=pm1.g3.e1)"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
 		TestOptimizer.checkAtomicQueries(new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'user') AS v_0 FULL OUTER JOIN pm1.g3 AS g_1 ON v_0.c_0 = g_1.e1"}, plan);
+	}
+	
+	@Test public void testSelectFilterOuterJoin1() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string, y integer); create foreign table t1 (x string, y integer) create view v as select t.x, t1.y from t left outer join t1 on t.y = t1.y", "x", "y");
+		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+		caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, false);
+		
+		CommandContext context = createCommandContext();
+		DQPWorkContext workContext = new DQPWorkContext();
+		HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
+		DataPolicyMetadata policy = new DataPolicyMetadata();
+		pmd = new PermissionMetaData();
+		pmd.setResourceName("y.v");
+		pmd.setCondition("x = user()");
+
+		policy.addPermission(pmd);
+		policy.setName("some-role");
+		policies.put("some-role", policy);
+		
+		workContext.setPolicies(policies);
+		context.setDQPWorkContext(workContext);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT g_0.y AS c_0, g_0.x AS c_1 FROM y.t AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList(1, "a"), Arrays.asList(2, "b")});
+		dataManager.addData("SELECT g_0.y AS c_0 FROM y.t1 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList(1)});
+		
+		ProcessorPlan plan = helpGetPlan(helpParse("select count(1) from v"), tm, new DefaultCapabilitiesFinder(caps), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList(0)};
+		helpProcess(plan, context, dataManager, expectedResults);
+		
+		plan = helpGetPlan(helpParse("select count(1) from v where y is not null"), tm, new DefaultCapabilitiesFinder(caps), context);
+		dataManager.addData("SELECT g_0.y AS c_0 FROM y.t AS g_0 WHERE g_0.x = 'user' ORDER BY c_0", new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
+		dataManager.addData("SELECT g_0.y AS c_0 FROM y.t1 AS g_0 WHERE g_0.y IS NOT NULL ORDER BY c_0", Arrays.asList(1));
+		expectedResults = new List<?>[] {Arrays.asList(1)};
+		helpProcess(plan, context, dataManager, expectedResults);
 	}
 	
 	/**

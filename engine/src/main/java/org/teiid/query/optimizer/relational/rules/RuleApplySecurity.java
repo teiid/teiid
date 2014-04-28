@@ -70,14 +70,13 @@ public class RuleApplySecurity implements OptimizerRule {
 			AnalysisRecord analysisRecord, CommandContext context)
 			throws QueryPlannerException, QueryMetadataException,
 			TeiidComponentException {
-		boolean pushAssignOutputElements = false;
 		try {
 			for (PlanNode sourceNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
 				GroupSymbol group = sourceNode.getGroups().iterator().next();
 				if (!RowBasedSecurityHelper.applyRowSecurity(metadata, group, context)) {
 					continue;
 				}
-				List<ElementSymbol> cols = (List<ElementSymbol>) sourceNode.getProperty(Info.OUTPUT_COLS);
+				List<ElementSymbol> cols = null;
 				Command command = (Command) sourceNode.getProperty(Info.VIRTUAL_COMMAND);
 				if (group.isProcedure()) {
 					if (command == null) {
@@ -137,7 +136,6 @@ public class RuleApplySecurity implements OptimizerRule {
 			            	}
 	        				root.addAsParent(project);
 	        				addView(metadata, context, group, cols, masked, project);
-	        				pushAssignOutputElements = true;
 	        				parentJoin = null;
 	        			}
 		        	}
@@ -171,14 +169,10 @@ public class RuleApplySecurity implements OptimizerRule {
         	    	parent.addAsParent(project);
         	    	//a view is needed to keep the logical placement of the criteria
     				addView(metadata, context, group, cols, cols, project);
-    				pushAssignOutputElements = true;
         	    }
 			}
 		} catch (TeiidProcessingException e) {
 			throw new QueryPlannerException(e);
-		}
-		if (pushAssignOutputElements) {
-			rules.push(new RuleAssignOutputElements(false));
 		}
 		return plan;
 	}
@@ -195,6 +189,11 @@ public class RuleApplySecurity implements OptimizerRule {
 		PlanNode newSourceNode = RuleDecomposeJoin.createSource(securityVeiw, viewRoot, newCols);
 		Map<ElementSymbol, Expression> upperMapping = SymbolMap.createSymbolMap(cols, newCols).asMap();
 		FrameUtil.convertFrame(newSourceNode.getParent(), group, Collections.singleton(securityVeiw), upperMapping, metadata);
+	}
+	
+	@Override
+	public String toString() {
+		return "ApplySecurity"; //$NON-NLS-1$
 	}
 
 }
