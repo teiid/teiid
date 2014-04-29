@@ -1,0 +1,14 @@
+<!-- If susbsytem "datasources" is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/impala-ds" pool-name="ImpalaDS" enabled="true" use-java-context="true">
+            <connection-url>jdbc:hive2://localhost:21050/;auth=noSasl</connection-url>
+            <driver>impala</driver>
+        </datasource>
+        <drivers>
+            <driver name="impala" module="org.apache.hadoop.impala">
+                <driver-class>org.apache.hive.jdbc.HiveDriver</driver-class>
+            </driver>
+        </drivers>
+    </datasources>
+</subsystem> 

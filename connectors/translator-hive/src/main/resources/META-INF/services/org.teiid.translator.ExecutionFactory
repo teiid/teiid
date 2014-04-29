@@ -1,1 +1,2 @@
 org.teiid.translator.hive.HiveExecutionFactory
+org.teiid.translator.hive.ImpalaExecutionFactory
