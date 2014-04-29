@@ -22,8 +22,10 @@
 
 package org.teiid.query.optimizer.relational;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -66,7 +68,7 @@ public class AliasGenerator extends PreOrderNavigator {
             
             Map<String, Map<String, String>> elementMap = new HashMap<String, Map<String, String>>();
             Map<String, String> groupNames = new HashMap<String, String>();
-            Map<Expression, String> currentSymbols;
+            LinkedHashMap<Expression, String> currentSymbols;
             
             boolean aliasColumns = false;
             
@@ -209,7 +211,7 @@ public class AliasGenerator extends PreOrderNavigator {
     
     public void visit(Select obj) {
     	List<Expression> selectSymbols = obj.getSymbols();
-        HashMap<Expression, String> symbols = new HashMap<Expression, String>(selectSymbols.size());                
+        LinkedHashMap<Expression, String> symbols = new LinkedHashMap<Expression, String>(selectSymbols.size());                
         for (int i = 0; i < selectSymbols.size(); i++) {
             Expression symbol = selectSymbols.get(i);
             visitNode(symbol);
@@ -268,10 +270,18 @@ public class AliasGenerator extends PreOrderNavigator {
     
     public void visit(SubqueryFromClause obj) {
         visitor.createChildNamingContext(true);
+        //first determine the original names
+        List<Expression> exprs = obj.getCommand().getProjectedSymbols();
+        List<String> names = new ArrayList<String>(exprs.size());
+        for (int i = 0; i < exprs.size(); i++) {
+        	names.add(Symbol.getShortName(exprs.get(i)));
+        }
         obj.getCommand().acceptVisitor(this);
         Map<String, String> viewGroup = new HashMap<String, String>();
+        int i = 0;
+        //now map to the new names
         for (Entry<Expression, String> entry : visitor.namingContext.currentSymbols.entrySet()) {
-        	viewGroup.put(Symbol.getShortName(entry.getKey()), entry.getValue());
+        	viewGroup.put(names.get(i++), entry.getValue());
         }
         visitor.namingContext.parent.elementMap.put(obj.getName(), viewGroup);
         visitor.removeChildNamingContext();
