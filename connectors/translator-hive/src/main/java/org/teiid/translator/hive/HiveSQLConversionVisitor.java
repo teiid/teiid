@@ -31,7 +31,7 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 
-	public HiveSQLConversionVisitor(HiveExecutionFactory hef) {
+	public HiveSQLConversionVisitor(BaseHiveExecutionFactory hef) {
 		super(hef);
 	}
 	

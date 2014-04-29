@@ -373,7 +373,8 @@
             <translator name="accumulo" module="org.jboss.teiid.translator.accumulo"/>
             <translator name="solr" module="org.jboss.teiid.translator.solr"/>
             <translator name="excel" module="org.jboss.teiid.translator.excel"/>
-        </subsystem>        
+            <translator name="impala" module="org.jboss.teiid.translator.hive"/>
+        </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <unbounded-queue-thread-pool name="teiid-async">
                 <max-threads count="4"/>
