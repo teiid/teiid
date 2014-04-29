@@ -75,7 +75,7 @@
         <version.accumulo>1.5.0</version.accumulo>
         <version.solr>4.6.0</version.solr>
         <version.noggit>0.5</version.noggit>
-        <version.apache.poi>3.10</version.apache.poi>
+        <version.apache.poi>3.9</version.apache.poi>
         <version.aws-java-sdk>1.5.7</version.aws-java-sdk>
         <version.cassandra-driver-core>1.0.4</version.cassandra-driver-core>
         <version.poi-ooxml-schemas>3.9</version.poi-ooxml-schemas>
