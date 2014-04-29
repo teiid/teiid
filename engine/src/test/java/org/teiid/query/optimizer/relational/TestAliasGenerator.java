@@ -34,6 +34,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
@@ -74,6 +75,15 @@ public class TestAliasGenerator {
         ((ElementSymbol)command.getSelect().getSymbol(0)).setGroupSymbol(new GroupSymbol("y")); //$NON-NLS-1$
         command.acceptVisitor(new AliasGenerator(true));
         assertEquals("SELECT v_0.c_0 FROM (SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0) AS v_0", command.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testNestedViewAliasing() throws Exception {
+        String sql = "select e1, e2 from (select y.e1, y.e2 from (select pm1.g1.e1, 1 as e2 from pm1.g1) y) z"; //$NON-NLS-1$
+        Query command = (Query)QueryParser.getQueryParser().parseCommand(sql);
+        QueryResolver.resolveCommand(command, RealMetadataFactory.example1Cached());
+        command = (Query) command.clone();
+        command.acceptVisitor(new AliasGenerator(true));
+        assertEquals("SELECT v_1.c_0, v_1.c_1 FROM (SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.e1 AS c_0, 1 AS c_1 FROM pm1.g1 AS g_0) AS v_0) AS v_1", command.toString()); //$NON-NLS-1$
     }
     
     @Test public void testLongOrderByAlias() throws Exception {
