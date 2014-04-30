@@ -189,13 +189,13 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     private static final String QUERY_INDEX_INFO =
       new StringBuffer("SELECT VDBName AS TABLE_CAT, SchemaName AS TABLE_SCHEM, TableName AS TABLE_NAME") //$NON-NLS-1$
         .append(", case when KeyType = 'Index' then TRUE else FALSE end AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, KeyName AS INDEX_NAME") //$NON-NLS-1$
-        .append(", 0 AS TYPE, convert(Position, short) AS ORDINAL_POSITION, k.Name AS COLUMN_NAME") //$NON-NLS-1$
+        .append(", 3 AS TYPE, convert(Position, short) AS ORDINAL_POSITION, k.Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", NULL AS ASC_OR_DESC, 0 AS CARDINALITY, 1 AS PAGES, NULL AS FILTER_CONDITION") //$NON-NLS-1$
         .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".KeyColumns k") //$NON-NLS-1$ //$NON-NLS-2$
         .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" AND UCASE(TableName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
-        .append(" AND KeyType IN ('Index', ?)") //$NON-NLS-1$
+        .append(" AND KeyType IN ('Unique', ?)") //$NON-NLS-1$
         .append(" ORDER BY NON_UNIQUE, TYPE, INDEX_NAME, ORDINAL_POSITION").toString(); //$NON-NLS-1$
     
     private static final String QUERY_PRIMARY_KEYS =
@@ -867,7 +867,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             prepareQuery.setObject(1, catalog.toUpperCase());
             prepareQuery.setObject(2, schema.toUpperCase());
             prepareQuery.setObject(3, table.toUpperCase());
-            prepareQuery.setObject(4, unique?null:"NonUnique"); //$NON-NLS-1$
+            prepareQuery.setObject(4, unique?null:"Index"); //$NON-NLS-1$
             
 
             // make a query against runtimemetadata and get results
