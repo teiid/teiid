@@ -42,6 +42,9 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -52,7 +55,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes", "nls"})
 public class TestJoinNode {
     private static final int NO_CRITERIA = 0;
     private static final int EQUAL_CRITERIA = 1;
@@ -1029,6 +1032,28 @@ public class TestJoinNode {
         join.setJoinStrategy(joinStrategy);
         
         helpTestJoinDirect(expected, 100, 100000);
+    }
+    
+    @Test public void testEnhancedWithSortDistinct() throws Exception {
+    	String sql = "select a.e1, b.e2 from pm1.g1 as a, (select e1, e2 from pm2.g2 union select e1, e2 from pm2.g2) as b where a.e1 = b.e1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        List<?>[] rows = new List<?>[10];
+        for (int i = 0; i < rows.length; i++) {
+        	rows[i] = Arrays.asList(String.valueOf(i));
+        }
+        hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
+        rows = new List<?>[10];
+        for (int i = 0; i < rows.length; i++) {
+        	rows[i] = Arrays.asList(String.valueOf(i), i);
+        }
+        hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
+        BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
+        mgr.setTargetBytesPerRow(100);
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TestProcessor.helpProcess(plan, context, hdm, rows);
     }
     
 }

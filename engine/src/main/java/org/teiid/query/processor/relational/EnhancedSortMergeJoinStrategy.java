@@ -137,7 +137,8 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     /**
      * Create an index of the smaller size
      */
-    public void createIndex(SourceState state, boolean sorted) throws TeiidComponentException, TeiidProcessingException {
+    public void createIndex(SourceState state, SortOption sortOption) throws TeiidComponentException, TeiidProcessingException {
+    	boolean sorted = sortOption == SortOption.ALREADY_SORTED;
     	int[] expressionIndexes = state.getExpressionIndexes();
 		int keyLength = expressionIndexes.length;
     	List elements = state.getSource().getOutputElements();
@@ -155,7 +156,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		}
     	}
     	List<Expression> reordered = RelationalNode.projectTuple(reorderedSortIndex, elements);
-    	if (!state.isDistinct()) {
+    	if (sortOption == SortOption.SORT_DISTINCT) {
+    		keyLength = elements.size();
+    	} else if (!state.isDistinct()) {
     		//need to add a rowid, just in case
     		reordered = new ArrayList<Expression>(reordered);
     		ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
@@ -165,7 +168,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	}
     	index = this.joinNode.getBufferManager().createSTree(reordered, this.joinNode.getConnectionID(), keyLength);
     	index.setPreferMemory(true);
-    	if (!state.isDistinct()) {
+    	if (sortOption == SortOption.SORT_DISTINCT) {
+    		index.getComparator().setDistinctIndex(expressionIndexes.length);
+    	} else if (!state.isDistinct()) {
     		index.getComparator().setDistinctIndex(keyLength-2);
     	}
     	IndexedTupleSource its = state.getTupleBuffer().createIndexedTupleSource(!joinNode.isDependent());
@@ -188,7 +193,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		}
     		lastTuple = originalTuple;
     		List<Object> tuple = (List<Object>) RelationalNode.projectTuple(reorderedSortIndex, originalTuple);
-    		if (!state.isDistinct()) {
+    		if (!state.isDistinct() && sortOption != SortOption.SORT_DISTINCT) {
     			tuple.add(keyLength - 1, rowId++);
     		}
     		index.insert(tuple, sorted?InsertMode.ORDERED:InsertMode.NEW, sizeHint);
@@ -202,11 +207,14 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	this.reverseIndexes = new int[elements.size()];
     	for (int i = 0; i < reorderedSortIndex.length; i++) {
     		int oldIndex = reorderedSortIndex[i];
-    		this.reverseIndexes[oldIndex] = i + (!state.isDistinct()&&i>=keyLength-1?1:0); 
+    		this.reverseIndexes[oldIndex] = i + ((!state.isDistinct()&&(i>=keyLength-1)&&sortOption!=SortOption.SORT_DISTINCT)?1:0); 
     	}
+    	//TODO: this logic doesn't catch distinct join expressions when using sort distinct very well
     	if (!state.isDistinct() 
     			&& ((!sorted && index.getComparator().isDistinct()) || (sorted && sortedDistinct))) {
-    		this.index.removeRowIdFromKey();
+    		if (sortOption!=SortOption.SORT_DISTINCT) {
+    			this.index.removeRowIdFromKey();
+    		}
     		state.markDistinct(true);
     	}
     	keyTs = new SingleTupleSource();
@@ -256,7 +264,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	this.notSortedSource = this.leftSource;
 
         	if (!repeatedMerge) {
-        		createIndex(this.rightSource, this.processingSortRight == SortOption.ALREADY_SORTED);
+        		createIndex(this.rightSource, this.processingSortRight);
         	} else {
         		super.loadRight(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
@@ -280,7 +288,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	}
 
         	if (!repeatedMerge) {
-        		createIndex(this.leftSource, this.processingSortLeft == SortOption.ALREADY_SORTED);
+        		createIndex(this.leftSource, this.processingSortLeft);
         	} else {
         		super.loadLeft(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
