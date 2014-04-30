@@ -25,6 +25,7 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -259,5 +260,32 @@ public class TestDynamicImportedMetaData {
     	Map<String, FunctionMethod> functions = mf.asMetadataStore().getSchemas().get("TEST").getFunctions();
     	
     	assertEquals(14, functions.size());
+    }
+    
+    @Test public void testIgnorePkIndex() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("x");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	mf.addPrimaryKey("foo", Arrays.asList("x"), dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	
+    	//cheat and add the index after deployment
+    	mf.addIndex("foo", false, Arrays.asList("x"), dup);
+    	
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importKeys", Boolean.TRUE.toString());
+    	importProperties.setProperty("importer.importIndexes", Boolean.TRUE.toString());
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("test.X.X");
+    	assertNotNull(t.getPrimaryKey());
+    	assertEquals(0, t.getUniqueKeys().size());
+    	assertEquals(0, t.getIndexes().size());
     }
 }

@@ -32,8 +32,11 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.*;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 
 
 /**
@@ -567,7 +570,8 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					tableInfo.table.setCardinality(Math.max(cardinality, tableInfo.table.getCardinality()));
 				}
 				if (ordinalPosition <= savedOrdinalPosition) {
-					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)) {
+					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique) 
+							&& (indexName == null || nonUnique || tableInfo.table.getPrimaryKey() == null || !indexName.equals(tableInfo.table.getPrimaryKey().getName()))) {
 						metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 					}
 					indexColumns = new TreeMap<Short, String>();
@@ -589,7 +593,8 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					}
 				}
 			}
-			if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)) {
+			if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)
+					&& (indexName == null || nonUnique || tableInfo.table.getPrimaryKey() == null || !indexName.equals(tableInfo.table.getPrimaryKey().getName()))) {
 				metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 			}
 			indexInfo.close();

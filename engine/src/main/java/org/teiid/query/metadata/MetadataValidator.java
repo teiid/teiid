@@ -22,6 +22,7 @@
 package org.teiid.query.metadata;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +113,10 @@ public class MetadataValidator {
 				for (Table t:schema.getTables().values()) {
 					if (t.getColumns() == null || t.getColumns().size() == 0) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, t.getFullName()));
-					}					
+					}
+					Set<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+					validateConstraintNames(metadataValidator, report, model, t.getAllKeys(), names);
+					validateConstraintNames(metadataValidator, report, model, t.getFunctionBasedIndexes(), names);
 				}
 				
 				// procedure validation is handled in parsing routines.
@@ -123,6 +127,17 @@ public class MetadataValidator {
 					if(report.hasItems()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31073, funcReport));
 					}						
+				}
+			}
+		}
+
+		private void validateConstraintNames(MetadataValidator metadataValidator, ValidatorReport report, ModelMetaData model, Collection<KeyRecord> keys, Set<String> names) {
+			for (KeyRecord record : keys) {
+				if (record.getName() == null) {
+					continue;
+				}
+				if (!names.add(record.getName())) {
+					metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31152, record.getFullName()));
 				}
 			}
 		}

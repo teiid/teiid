@@ -385,6 +385,15 @@ public class TestMetadataValidator {
 		assertFalse(printError(report), report.hasItems());
     }
     
+    @Test public void testConstraintNames() throws Exception {
+    	buildModel("phy1", true, this.vdb, this.store, "CREATE FOREIGN TABLE t1 ( col1 string, col2 integer, constraint x primary key (col1), constraint x unique (col2) )");
+    	
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
+    }
+    
     @Test public void testResolvingOrder() throws Exception {
     	buildModel("phy1", true, this.vdb, this.store, "CREATE FOREIGN TABLE t1 ( col1 string, col2 integer ) options (updatable true); CREATE view a as select * from t1;");
     	
