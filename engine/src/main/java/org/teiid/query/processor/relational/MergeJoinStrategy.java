@@ -287,7 +287,7 @@ public class MergeJoinStrategy extends JoinStrategy {
         }
         if (previousTuple != null) {
             int compare = 1;
-            if (!target.isDistinct()) {
+            if (!target.isExpresssionDistinct()) {
                 compare = compare(previousTuple, target.getCurrentTuple(), target.getExpressionIndexes(), target.getExpressionIndexes());
             }
             if (compare != 0) {

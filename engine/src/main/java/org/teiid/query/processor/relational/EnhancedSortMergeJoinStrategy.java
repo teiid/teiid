@@ -158,7 +158,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	List<Expression> reordered = RelationalNode.projectTuple(reorderedSortIndex, elements);
     	if (sortOption == SortOption.SORT_DISTINCT) {
     		keyLength = elements.size();
-    	} else if (!state.isDistinct()) {
+    	} else if (!state.isExpresssionDistinct()) {
     		//need to add a rowid, just in case
     		reordered = new ArrayList<Expression>(reordered);
     		ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
@@ -170,13 +170,13 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	index.setPreferMemory(true);
     	if (sortOption == SortOption.SORT_DISTINCT) {
     		index.getComparator().setDistinctIndex(expressionIndexes.length);
-    	} else if (!state.isDistinct()) {
+    	} else if (!state.isExpresssionDistinct()) {
     		index.getComparator().setDistinctIndex(keyLength-2);
     	}
     	IndexedTupleSource its = state.getTupleBuffer().createIndexedTupleSource(!joinNode.isDependent());
     	int rowId = 0;
     	List<?> lastTuple = null;
-    	boolean sortedDistinct = sorted && !state.isDistinct();
+    	boolean sortedDistinct = sorted && !state.isExpresssionDistinct();
     	int sizeHint = index.getExpectedHeight(state.getRowCount());
     	index.setBatchInsert(sorted);
     	outer: while (its.hasNext()) {
@@ -193,7 +193,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		}
     		lastTuple = originalTuple;
     		List<Object> tuple = (List<Object>) RelationalNode.projectTuple(reorderedSortIndex, originalTuple);
-    		if (!state.isDistinct() && sortOption != SortOption.SORT_DISTINCT) {
+    		if (!state.isExpresssionDistinct() && sortOption != SortOption.SORT_DISTINCT) {
     			tuple.add(keyLength - 1, rowId++);
     		}
     		index.insert(tuple, sorted?InsertMode.ORDERED:InsertMode.NEW, sizeHint);
@@ -207,15 +207,15 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	this.reverseIndexes = new int[elements.size()];
     	for (int i = 0; i < reorderedSortIndex.length; i++) {
     		int oldIndex = reorderedSortIndex[i];
-    		this.reverseIndexes[oldIndex] = i + ((!state.isDistinct()&&(i>=keyLength-1)&&sortOption!=SortOption.SORT_DISTINCT)?1:0); 
+    		this.reverseIndexes[oldIndex] = i + ((!state.isExpresssionDistinct()&&(i>=keyLength-1)&&sortOption!=SortOption.SORT_DISTINCT)?1:0); 
     	}
     	//TODO: this logic doesn't catch distinct join expressions when using sort distinct very well
-    	if (!state.isDistinct() 
+    	if (!state.isExpresssionDistinct() 
     			&& ((!sorted && index.getComparator().isDistinct()) || (sorted && sortedDistinct))) {
     		if (sortOption!=SortOption.SORT_DISTINCT) {
     			this.index.removeRowIdFromKey();
     		}
-    		state.markDistinct(true);
+    		state.markExpressionsDistinct(true);
     	}
     	keyTs = new SingleTupleSource();
     	keyTs.indexes = this.notSortedSource.getExpressionIndexes();
@@ -276,7 +276,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	this.sortedSource = this.leftSource;
         	this.notSortedSource = this.rightSource;
 
-    		if (semiDep && this.leftSource.isDistinct()) {
+    		if (semiDep && this.leftSource.isExpresssionDistinct()) {
     			this.rightSource.getTupleBuffer();
     			if (!this.joinNode.getDependentValueSource().isUnused()) {
     				//sort is not needed

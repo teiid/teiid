@@ -245,11 +245,14 @@ class SourceState {
         return this.buffer;
     }
 
-    public boolean isDistinct() {
+    /**
+     * @return true if the join expressions are a distinct set
+     */
+    public boolean isExpresssionDistinct() {
         return this.distinct;
     }
 
-    public void markDistinct(boolean distinct) {
+    public void markExpressionsDistinct(boolean distinct) {
         this.distinct |= distinct;
     }
     
@@ -271,7 +274,7 @@ class SourceState {
     		}
 		    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), 
 		    		sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT, this.source.getBufferManager(), this.source.getConnectionID(), source.getElements());
-		    this.markDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
+		    this.markExpressionsDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
 		    if (ts == null) {
 		    	this.sortUtility.setWorkingBuffer(this.buffer);
 		    }
@@ -279,7 +282,7 @@ class SourceState {
     	if (sortOption == SortOption.NOT_SORTED) {
     		this.buffers = sortUtility.onePassSort();
     		if (this.buffers.size() == 1) {
-    			this.markDistinct(sortUtility.isDistinct());
+    			this.markExpressionsDistinct(sortUtility.isDistinct());
     		}
     		nextBuffer();
     		return;
@@ -290,7 +293,7 @@ class SourceState {
     		this.buffer.remove();
     	}
 		this.buffer = sorted;
-        this.markDistinct(sortUtility.isDistinct());
+        this.markExpressionsDistinct(sortUtility.isDistinct());
     }
     
     public boolean hasBuffer() {

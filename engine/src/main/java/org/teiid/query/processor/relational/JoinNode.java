@@ -189,7 +189,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
 	                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
 	                //the tuplebuffer may be from a lower node, so pass in the schema
 	                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
-	                dvs.setDistinct(this.joinStrategy.leftSource.isDistinct());
+	                dvs.setDistinct(this.joinStrategy.leftSource.isExpresssionDistinct());
 	                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
 	            }
 	            state = State.LOAD_RIGHT;

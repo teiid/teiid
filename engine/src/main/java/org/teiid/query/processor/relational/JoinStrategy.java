@@ -62,9 +62,9 @@ public abstract class JoinStrategy {
     public void initialize(JoinNode joinNode) {
         this.joinNode = joinNode;
         this.leftSource = new SourceState(joinNode.getChildren()[0], joinNode.getLeftExpressions());
-        this.leftSource.markDistinct(this.joinNode.isLeftDistinct());
+        this.leftSource.markExpressionsDistinct(this.joinNode.isLeftDistinct());
         this.rightSource = new SourceState(joinNode.getChildren()[1], joinNode.getRightExpressions());
-        this.rightSource.markDistinct(this.joinNode.isRightDistinct());
+        this.rightSource.markExpressionsDistinct(this.joinNode.isRightDistinct());
     }
             
     protected void loadLeft() throws TeiidComponentException, TeiidProcessingException {
