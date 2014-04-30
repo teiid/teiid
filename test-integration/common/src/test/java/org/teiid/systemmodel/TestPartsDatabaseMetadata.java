@@ -84,6 +84,10 @@ public class TestPartsDatabaseMetadata {
     @Test public void testIndexInfo()  throws Exception {
     	TestMMDatabaseMetaData.compareResultSet(dbMetadata.getIndexInfo(VDB, null, "%", true, true)); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testIndexInfoAll()  throws Exception {
+    	TestMMDatabaseMetaData.compareResultSet(dbMetadata.getIndexInfo(VDB, null, "%", false, true)); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Test public void testCrossReference()  throws Exception {
     	TestMMDatabaseMetaData.compareResultSet(dbMetadata.getCrossReference(VDB, null, "%", VDB, null, "%")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
