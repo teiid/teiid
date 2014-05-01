@@ -200,7 +200,7 @@ class SourceState {
 	    	if (collector == null) {
 	            collector = new BatchCollector(source, source.getBufferManager(), source.getContext(), false);
 	    	}
-	    	if (collector.getTupleBuffer().getManagedRowCount() >= limit) {
+	    	if (collector.getTupleBuffer() != null && collector.getTupleBuffer().getManagedRowCount() >= limit) {
 	    		return;
 	    	}
 	        this.buffer = collector.collectTuples(true);
