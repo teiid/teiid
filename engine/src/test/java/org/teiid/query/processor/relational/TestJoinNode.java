@@ -36,6 +36,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -44,8 +45,10 @@ import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Constant;
@@ -1054,6 +1057,51 @@ public class TestJoinNode {
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         TestProcessor.helpProcess(plan, context, hdm, rows);
+    }
+    
+    @Test public void testPrefetchDistinct() throws Exception {
+    	String sql = "select a.e1, b.e2 from pm1.g1 as a, (select e1, e2 from pm2.g2 union select e1, e2 from pm2.g2) as b"; //$NON-NLS-1$
+
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        HardcodedDataManager hdm = new HardcodedDataManager() {
+        	public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException {
+        		final TupleSource source = super.registerRequest(context, command, modelName, parameterObject);
+        		return new TupleSource() {
+
+					private int block;
+
+					@Override
+					public List<?> nextTuple() throws TeiidComponentException,
+							TeiidProcessingException {
+						if (block++%2==0) {
+							throw BlockedException.INSTANCE;
+						}
+						return source.nextTuple();
+					}
+
+					@Override
+					public void closeSource() {
+						source.closeSource();
+					}
+        			
+        		};
+        	}
+        };
+        List<?>[] rows = new List<?>[2];
+        for (int i = 0; i < rows.length; i++) {
+        	rows[i] = Arrays.asList(String.valueOf(i));
+        }
+        hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
+        rows = new List<?>[2];
+        for (int i = 0; i < rows.length; i++) {
+        	rows[i] = Arrays.asList(String.valueOf(i), i);
+        }
+        hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
+        BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
+        mgr.setTargetBytesPerRow(100);
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TestProcessor.helpProcess(plan, context, hdm, new List<?>[] {Arrays.asList("0", 0), Arrays.asList("0", 1), Arrays.asList("1", 0), Arrays.asList("1", 1)});
     }
     
 }
