@@ -52,6 +52,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
@@ -166,11 +169,16 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	Connection conn;
 	
 	@Before public void setUp() throws Exception {
+		String database = "parts";
+		connect(database);
+	}
+
+	private void connect(String database) throws SQLException {
 		Driver d = new Driver();
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
-		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/"+database, p);
 	}
 	
 	@After public void tearDown() throws Exception {
@@ -528,4 +536,26 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		String value = rs.getString(1);
 		assertNotNull(value);
 	}
+	
+	@Test public void testVDBConnectionProperty() throws Exception {
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("x");
+		vdb.addProperty("connection.foo", "bar");
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setSchemaSourceType("ddl");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.setSchemaText("create view v as select 1");
+		vdb.addModel(mmd);
+		odbcServer.server.deployVDB(vdb);
+		this.conn.close();
+		connect("x");
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("show foo"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String value = rs.getString(1);
+		assertEquals("bar", value);
+	}
+
 }

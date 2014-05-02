@@ -42,6 +42,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
@@ -75,6 +77,7 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
+	private static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
@@ -189,7 +192,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		this.client.initialized(this.props);
 
 		String user = props.getProperty("user"); //$NON-NLS-1$
-		String database = props.getProperty("database");
+		String database = props.getProperty("database"); //$NON-NLS-1$
 		
 		AuthenticationType authType = null;
 		try {
@@ -197,6 +200,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} catch (LogonException e) {
 			errorOccurred(e);
 			terminate();
+			return;
 		}
 		
 		if (authType.equals(AuthenticationType.USERPASSWORD)) {
@@ -259,6 +263,16 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			this.connection =  driver.connect(url, info);
 			//Propagate so that we can use in pg methods
 			((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession().addAttchment(ODBCServerRemoteImpl.class, this);
+			SessionMetadata sm = this.logon.getSessionService().getActiveSession(this.connection.getServerConnection().getLogonResult().getSessionID());
+			VDB vdb = sm.getVdb();
+			Properties p = vdb.getProperties();
+			for (Map.Entry<Object, Object> entry : p.entrySet()) {
+				String key = (String)entry.getKey();
+				
+				if (key.startsWith(CONNECTION_PROPERTY_PREFIX)) {
+					this.connection.setExecutionProperty(key.substring(0, CONNECTION_PROPERTY_PREFIX.length()), (String) entry.getValue());
+				}
+			}
 			int hash = this.connection.getConnectionId().hashCode();
 			Enumeration<?> keys = this.props.propertyNames();
 			while (keys.hasMoreElements()) {
