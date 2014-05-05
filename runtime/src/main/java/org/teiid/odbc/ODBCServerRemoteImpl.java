@@ -262,15 +262,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			
 			this.connection =  driver.connect(url, info);
 			//Propagate so that we can use in pg methods
-			((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession().addAttchment(ODBCServerRemoteImpl.class, this);
-			SessionMetadata sm = this.logon.getSessionService().getActiveSession(this.connection.getServerConnection().getLogonResult().getSessionID());
+			SessionMetadata sm = ((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession();
+			sm.addAttchment(ODBCServerRemoteImpl.class, this);
 			VDB vdb = sm.getVdb();
 			Properties p = vdb.getProperties();
 			for (Map.Entry<Object, Object> entry : p.entrySet()) {
 				String key = (String)entry.getKey();
 				
 				if (key.startsWith(CONNECTION_PROPERTY_PREFIX)) {
-					this.connection.setExecutionProperty(key.substring(0, CONNECTION_PROPERTY_PREFIX.length()), (String) entry.getValue());
+					this.connection.setExecutionProperty(key.substring(CONNECTION_PROPERTY_PREFIX.length()), (String) entry.getValue());
 				}
 			}
 			int hash = this.connection.getConnectionId().hashCode();
