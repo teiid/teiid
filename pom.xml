@@ -75,10 +75,9 @@
         <version.accumulo>1.5.0</version.accumulo>
         <version.solr>4.6.0</version.solr>
         <version.noggit>0.5</version.noggit>
-        <version.apache.poi>3.9</version.apache.poi>
+        <version.org.apache.poi>3.10-FINAL</version.org.apache.poi>
         <version.aws-java-sdk>1.5.7</version.aws-java-sdk>
         <version.cassandra-driver-core>1.0.4</version.cassandra-driver-core>
-        <version.poi-ooxml-schemas>3.9</version.poi-ooxml-schemas>
         <version.org.jboss.resteasy.tjws>2.3.6.Final</version.org.jboss.resteasy.tjws>
         <version.org.apache.cxf-jaxrs>2.6.8</version.org.apache.cxf-jaxrs>
 	</properties>
@@ -832,10 +831,21 @@
                 <artifactId>zookeeper</artifactId>
                 <version>${version.zookeeper}</version>
             </dependency>
+        
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${version.org.apache.poi}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${version.org.apache.poi}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi-ooxml-schemas</artifactId>
-                <version>${version.poi-ooxml-schemas}</version>
+                <version>${version.org.apache.poi}</version>
             </dependency>
             <dependency>
                 <groupId>dom4j</groupId>
