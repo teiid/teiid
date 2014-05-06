@@ -77,7 +77,7 @@ public class TestJoinNode {
     protected JoinNode join;
     protected JoinStrategy joinStrategy;
     private BlockingFakeRelationalNode leftNode;
-    private RelationalNode rightNode;
+    private BlockingFakeRelationalNode rightNode;
     
     private FakeDataManager dataMgr;
 
@@ -656,7 +656,7 @@ public class TestJoinNode {
         leftNode = new BlockingFakeRelationalNode(1, leftTuples);
         leftNode.setElements(Arrays.asList(es1, es2));
         
-        rightNode = new FakeRelationalNode(2, rightTuples);
+        rightNode = new BlockingFakeRelationalNode(2, rightTuples);
         rightNode.setElements(Arrays.asList(es3, es4, es5));
         
         List joinElements = new ArrayList();
@@ -907,7 +907,7 @@ public class TestJoinNode {
         };
         helpCreateJoin();               
         this.joinStrategy = new MergeJoinStrategy(SortOption.SORT, SortOption.ALREADY_SORTED, false);
-        FakeRelationalNode newNode = new BlockingFakeRelationalNode(2, rightTuples) {
+        BlockingFakeRelationalNode newNode = new BlockingFakeRelationalNode(2, rightTuples) {
         	@Override
         	public TupleBatch nextBatchDirect() throws BlockedException,
         			TeiidComponentException, TeiidProcessingException {
@@ -1055,7 +1055,7 @@ public class TestJoinNode {
         BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
         mgr.setTargetBytesPerRow(100);
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
-        
+        context.setBufferManager(mgr);
         TestProcessor.helpProcess(plan, context, hdm, rows);
     }
     
@@ -1100,8 +1100,35 @@ public class TestJoinNode {
         BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
         mgr.setTargetBytesPerRow(100);
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
-        
+        context.setBufferManager(mgr);
         TestProcessor.helpProcess(plan, context, hdm, new List<?>[] {Arrays.asList("0", 0), Arrays.asList("0", 1), Arrays.asList("1", 0), Arrays.asList("1", 1)});
+    }
+    
+    @Test public void testEnhancedWithLimit() throws Exception {
+        String sql = "select a.e1, b.e2 from pm1.g1 as a, pm2.g2 as b where a.e1 = b.e1 limit 10"; //$NON-NLS-1$
+
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        List<?>[] rows = new List<?>[50];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = Arrays.asList(String.valueOf(i));
+        }
+        hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
+        rows = new List<?>[200];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = Arrays.asList(String.valueOf(i), i);
+        }
+        hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
+        BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
+        mgr.setTargetBytesPerRow(100);
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
+        context.setBufferManager(mgr);
+        
+        rows = new List<?>[10];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = Arrays.asList(String.valueOf(i), i);
+        }
+        TestProcessor.helpProcess(plan, context, hdm, rows);
     }
     
     @Test public void testDupRemoveUnderJoin() throws Exception {

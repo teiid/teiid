@@ -110,9 +110,13 @@ class SourceState {
     }
     
     public void close() {
-    	while (nextBuffer()) {
-    		//do nothing
+    	closeBuffer();
+    	if (buffers != null) {
+	    	for (TupleBuffer tb : buffers) {
+	    		tb.remove();
+	    	}
     	}
+    	this.buffers = null;
         this.open = false;
         if (this.sortUtility != null) {
         	this.sortUtility.remove();
@@ -262,7 +266,14 @@ class SourceState {
     		if (source.hasBuffer(true)) {
     			this.buffer = getTupleBuffer();
     		} else if (this.buffer == null && this.collector != null) {
-    			this.buffer = this.collector.collectTuples();
+    			if (sortOption == SortOption.NOT_SORTED) {
+    				//pass the buffer and the source
+    				this.buffer = this.collector.getTupleBuffer();
+    				ts = new BatchCollector.BatchProducerTupleSource(this.source, this.buffer.getRowCount() + 1);
+    			} else {
+    				//fully read
+    				this.buffer = this.collector.collectTuples();
+    			}
     		}
     		if (this.buffer != null) {
     			this.buffer.setForwardOnly(true);
@@ -272,19 +283,25 @@ class SourceState {
 		    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), 
 		    		sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT, this.source.getBufferManager(), this.source.getConnectionID(), source.getElements());
 		    this.markDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
-		    if (ts == null) {
+		    if (this.buffer != null) {
 		    	this.sortUtility.setWorkingBuffer(this.buffer);
 		    }
 		}
+    	TupleBuffer sorted = null;
     	if (sortOption == SortOption.NOT_SORTED) {
-    		this.buffers = sortUtility.onePassSort();
-    		if (this.buffers.size() == 1) {
-    			this.markDistinct(sortUtility.isDistinct());
+    		if (this.buffers != null || sortUtility.isDoneReading()) {
+    			return;
     		}
-    		nextBuffer();
-    		return;
-    	} 
-    	TupleBuffer sorted = sortUtility.sort();
+    		this.buffers = sortUtility.onePassSort();
+    		if (this.buffers.size() != 1 || !sortUtility.isDoneReading()) {
+        		nextBuffer();
+        		return;
+    		}
+    		sorted = this.buffers.get(0);
+    		this.buffers = null;
+    	} else { 
+    		sorted = sortUtility.sort();
+    	}
     	//only remove the buffer if this is the first time through
     	if (this.buffer != null && this.buffer != sorted) {
     		this.buffer.remove();
@@ -297,9 +314,13 @@ class SourceState {
     	return this.buffer != null || this.source.hasBuffer(true);
     }
     
-    public boolean nextBuffer() {
+    public boolean nextBuffer() throws TeiidComponentException, TeiidProcessingException {
     	this.closeBuffer();
     	if (this.buffers == null || this.buffers.isEmpty()) {
+    		if (!sortUtility.isDoneReading()) {
+    			this.buffers = sortUtility.onePassSort();
+    			return nextBuffer();
+    		}
     		return false;
     	}
     	this.buffer = this.buffers.remove(this.buffers.size() - 1);
@@ -343,6 +364,10 @@ class SourceState {
 			//TODO: should estimate the rows based upon what is being fed into the sort
 		}
 		return low?0:Integer.MAX_VALUE;
+	}
+	
+	public SortUtility getSortUtility() {
+		return sortUtility;
 	}
     
 }
