@@ -79,6 +79,11 @@ public class BatchCollector {
 		public BatchProducerTupleSource(BatchProducer sourceNode) {
 			this.sourceNode = sourceNode;
 		}
+		
+		public BatchProducerTupleSource(BatchProducer sourceNode, int startRow) {
+			this.sourceNode = sourceNode;
+			this.sourceRow = startRow;
+		}
 
 		@Override
 		public List<Object> nextTuple() throws TeiidComponentException,

@@ -40,6 +40,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
@@ -252,12 +253,53 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	    	} 
     	}
     	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
-    		super.loadRight();
-    		super.loadLeft();
-    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_DQP, "degrading to merged join", this.joinNode.getID()); //$NON-NLS-1$
+    		if (this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER) {
+	    		RelationalNode parent = this.joinNode.getParent();
+	    		boolean hasLimit = false;
+	    		while (parent != null && !hasLimit) {
+	    			if (parent instanceof LimitNode) {
+	    				LimitNode ln = (LimitNode)parent;
+	    				if (ln.getLimit() != -1) {
+	        				hasLimit = true;
+	    				}
+	    				break;
+	    			}
+	    			if (parent instanceof WindowFunctionProjectNode) {
+	    				break;
+	    			}
+	    			if (parent instanceof GroupingNode) {
+	    				break;
+	    			}
+	    			if (parent instanceof JoinNode) {
+	    				break;
+	    			}
+	    			if (parent instanceof SortNode) {
+	    				SortNode sort = (SortNode)parent;
+	    				if (sort.getMode() != Mode.DUP_REMOVE) {
+	    					break;
+	    				}
+	    			}
+	    			parent = parent.getParent();
+	    		}
+	    		if (hasLimit) {
+		    		if (this.processingSortLeft == SortOption.SORT && 
+		    				(!this.rightSource.rowCountLE(this.leftSource.getIncrementalRowCount(false)) || this.processingSortRight != SortOption.SORT)) {
+		    			this.processingSortRight = SortOption.NOT_SORTED;
+		    			repeatedMerge = true;
+		    		} else if (this.processingSortRight == SortOption.SORT) {
+		    			this.processingSortLeft = SortOption.NOT_SORTED;
+		    			repeatedMerge = true;
+		    		}
+	    		}
     		}
-    		return; //degrade to merge join
+    		if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
+	    		super.loadRight();
+	    		super.loadLeft();
+	    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+	    			LogManager.logDetail(LogConstants.CTX_DQP, "degrading to merged join", this.joinNode.getID()); //$NON-NLS-1$
+	    		}
+	    		return; //degrade to merge join
+    		}
     	}
         if (this.processingSortLeft == SortOption.NOT_SORTED) {
         	this.sortedSource = this.rightSource;
@@ -303,6 +345,10 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	long size = joinNode.getBatchSize();
     	int indexSize = possibleIndex.hasBuffer()?possibleIndex.getRowCount():-1;
     	int otherSize = other.hasBuffer()?other.getRowCount():-1;
+    	int schemaSize = this.joinNode.getBufferManager().getSchemaSize(other.getSource().getOutputElements());
+    	int toReserve = this.joinNode.getBufferManager().getMaxProcessingSize();
+    	int minSize = toReserve/schemaSize*this.joinNode.getBatchSize();
+
     	//determine sizes in an incremental fashion as to avoid a full buffer of the unsorted side
     	while (size < Integer.MAX_VALUE && (indexSize == -1 || otherSize == -1)) {
     		if (indexSize == -1 && (possibleIndex.rowCountLE((int)size) || possibleIndex.hasBuffer())) {
@@ -322,11 +368,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 		if ((size > Integer.MAX_VALUE && (indexSize == -1 || otherSize == -1)) || (indexSize != -1 && otherSize != -1 && indexSize * 4 > otherSize)) {
     		return false; //index is too large
     	}
-    	int schemaSize = this.joinNode.getBufferManager().getSchemaSize(other.getSource().getOutputElements());
-    	int toReserve = this.joinNode.getBufferManager().getMaxProcessingSize();
     	//check if the other side can be sorted in memory
     	if (other.hasBuffer() && ((other.getRowCount() <= this.joinNode.getBatchSize()) 
-    			|| (possibleIndex.getRowCount() > this.joinNode.getBatchSize() && other.getRowCount()/this.joinNode.getBatchSize() < toReserve/schemaSize))) {
+    			|| (possibleIndex.getRowCount() > this.joinNode.getBatchSize() && other.rowCountLE(minSize)))) {
     		return false; //just use a merge join
     	}
     	boolean useIndex = false;
@@ -365,7 +409,10 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		return;
     	}
     	if (repeatedMerge) {
-    		while (this.notSortedSource.hasBuffer()) {
+    		while (!this.notSortedSource.getSortUtility().isDoneReading() || this.notSortedSource.hasBuffer()) {
+    			if (!this.notSortedSource.hasBuffer()) {
+    				this.notSortedSource.nextBuffer();
+    			}
     			super.process();
     			resetMatchState();
     			this.sortedSource.resetState();

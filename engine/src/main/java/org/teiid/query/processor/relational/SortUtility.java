@@ -226,6 +226,9 @@ public class SortUtility {
     	try {
 	    	if(this.phase == INITIAL_SORT) {
 	            initialSort(true);
+	            if (!isDoneReading()) {
+	            	this.phase = INITIAL_SORT;
+	            }
 	        }
 	    	
 	    	for (TupleBuffer tb : activeTupleBuffers) {
@@ -273,6 +276,10 @@ public class SortUtility {
 		            		break;
 		            	}
 		            	this.workingBuffer.addTuple(tuple);
+		            	
+		            	if (onePass && this.workingBuffer.getRowCount() > 2*this.targetRowCount) {
+		            		break outer;
+		            	}
 		            } catch(BlockedException e) {
 		            	/*there are three cases here
 		            	 * 1. a fully blocking sort (optionally dup removal)
@@ -579,6 +586,10 @@ public class SortUtility {
 	
 	void setBatchSize(int batchSize) {
 		this.batchSize = batchSize;
+	}
+	
+	public boolean isDoneReading() {
+		return doneReading;
 	}
     
 }
