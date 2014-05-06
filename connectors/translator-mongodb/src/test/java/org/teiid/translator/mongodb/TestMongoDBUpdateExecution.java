@@ -448,7 +448,7 @@ public class TestMongoDBUpdateExecution {
 
 		// { "$push" : { "rental" : { "amount" : "3.99" , "customer_id" : { "$ref" : "customer" , "$id" : 1} , "_id" : 1}}},
 		BasicDBObject rental = new BasicDBObject();
-		rental.append("amount", "3.99");
+		rental.append("amount", 3.99);
 		rental.append("customer_id", new DBRef(null, "customer", 1));
 		rental.append("_id", 2);
 		BasicDBObject rentalresult = new BasicDBObject("rental", rental);
@@ -470,7 +470,7 @@ public class TestMongoDBUpdateExecution {
 
 		BasicDBObject rental = new BasicDBObject();
 		rental.append("rental_id", new DBRef(null, "rental", 2));
-		rental.append("amount", "3.99");
+		rental.append("amount", 3.99);
 		rental.append("_id", 3);
 		BasicDBObject rentalresult = new BasicDBObject("rental.$.payment", rental);
 
