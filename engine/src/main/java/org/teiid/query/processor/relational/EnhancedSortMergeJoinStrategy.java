@@ -252,44 +252,43 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	    		this.processingSortLeft = SortOption.NOT_SORTED;
 	    	} 
     	}
+    	RelationalNode parent = this.joinNode.getParent();
+		boolean hasLimit = false;
+		while (parent != null && !hasLimit) {
+			if (parent instanceof LimitNode) {
+				LimitNode ln = (LimitNode)parent;
+				if (ln.getLimit() != -1) {
+    				hasLimit = true;
+				}
+				break;
+			}
+			if (parent instanceof WindowFunctionProjectNode) {
+				break;
+			}
+			if (parent instanceof GroupingNode) {
+				break;
+			}
+			if (parent instanceof JoinNode) {
+				break;
+			}
+			if (parent instanceof SortNode) {
+				SortNode sort = (SortNode)parent;
+				if (sort.getMode() != Mode.DUP_REMOVE) {
+					break;
+				}
+			}
+			parent = parent.getParent();
+		}
     	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
-    		if (this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER) {
-	    		RelationalNode parent = this.joinNode.getParent();
-	    		boolean hasLimit = false;
-	    		while (parent != null && !hasLimit) {
-	    			if (parent instanceof LimitNode) {
-	    				LimitNode ln = (LimitNode)parent;
-	    				if (ln.getLimit() != -1) {
-	        				hasLimit = true;
-	    				}
-	    				break;
-	    			}
-	    			if (parent instanceof WindowFunctionProjectNode) {
-	    				break;
-	    			}
-	    			if (parent instanceof GroupingNode) {
-	    				break;
-	    			}
-	    			if (parent instanceof JoinNode) {
-	    				break;
-	    			}
-	    			if (parent instanceof SortNode) {
-	    				SortNode sort = (SortNode)parent;
-	    				if (sort.getMode() != Mode.DUP_REMOVE) {
-	    					break;
-	    				}
-	    			}
-	    			parent = parent.getParent();
-	    		}
-	    		if (hasLimit) {
-		    		if (this.processingSortLeft == SortOption.SORT && 
-		    				(!this.rightSource.rowCountLE(this.leftSource.getIncrementalRowCount(false)) || this.processingSortRight != SortOption.SORT)) {
-		    			this.processingSortRight = SortOption.NOT_SORTED;
-		    			repeatedMerge = true;
-		    		} else if (this.processingSortRight == SortOption.SORT) {
-		    			this.processingSortLeft = SortOption.NOT_SORTED;
-		    			repeatedMerge = true;
-		    		}
+    		if (hasLimit && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER) {
+    			//still use a more incremental join/sort approach
+    			if (this.processingSortLeft == SortOption.SORT && 
+	    				(!this.rightSource.rowCountLE(this.leftSource.getIncrementalRowCount(false)) || this.processingSortRight != SortOption.SORT)) {
+	    			this.processingSortRight = SortOption.NOT_SORTED;
+	    			repeatedMerge = true;
+	    		} else if (this.processingSortRight == SortOption.SORT) {
+	    			this.processingSortLeft = SortOption.NOT_SORTED;
+	    			repeatedMerge = true;
 	    		}
     		}
     		if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
@@ -308,6 +307,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	if (!repeatedMerge) {
         		createIndex(this.rightSource, this.processingSortRight);
         	} else {
+        		this.notSortedSource.isLimited(hasLimit);
         		super.loadRight(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
         		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -332,6 +332,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	if (!repeatedMerge) {
         		createIndex(this.leftSource, this.processingSortLeft);
         	} else {
+        		this.notSortedSource.isLimited(hasLimit);
         		super.loadLeft(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
         		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
