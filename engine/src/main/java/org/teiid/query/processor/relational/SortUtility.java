@@ -200,7 +200,7 @@ public class SortUtility {
     	boolean success = false;
     	try {
 	        if(this.phase == INITIAL_SORT) {
-	            initialSort(false);
+	            initialSort(false, false);
 	        }
 	        
 	        if(this.phase == MERGE) {
@@ -218,11 +218,11 @@ public class SortUtility {
         }
     }
     
-    public List<TupleBuffer> onePassSort() throws TeiidComponentException, TeiidProcessingException {
+    public List<TupleBuffer> onePassSort(boolean lowLatency) throws TeiidComponentException, TeiidProcessingException {
     	boolean success = false;
     	try {
 	    	if(this.phase == INITIAL_SORT) {
-	            initialSort(true);
+	            initialSort(true, lowLatency);
 	            if (!isDoneReading()) {
 	            	this.phase = INITIAL_SORT;
 	            }
@@ -255,7 +255,7 @@ public class SortUtility {
 	/**
 	 * creates sorted sublists stored in tuplebuffers
 	 */
-    protected void initialSort(boolean onePass) throws TeiidComponentException, TeiidProcessingException {
+    protected void initialSort(boolean onePass, boolean lowLatency) throws TeiidComponentException, TeiidProcessingException {
     	outer: while (!doneReading) {
     		
     		if (this.source != null) {
@@ -274,7 +274,7 @@ public class SortUtility {
 		            	}
 		            	this.workingBuffer.addTuple(tuple);
 		            	
-		            	if (onePass && this.workingBuffer.getRowCount() > 2*this.targetRowCount) {
+		            	if (onePass && lowLatency && this.workingBuffer.getRowCount() > 2*this.targetRowCount) {
 		            		break outer;
 		            	}
 		            } catch(BlockedException e) {
@@ -311,10 +311,6 @@ public class SortUtility {
 			this.workingBuffer.close();
 			schemaSize = Math.max(1, this.workingBuffer.getRowSizeEstimate()*this.batchSize);
 			long memorySpaceNeeded = workingBuffer.getRowCount()*(long)this.workingBuffer.getRowSizeEstimate();
-			if (onePass) {
-				//one pass just needs small sub-lists
-				memorySpaceNeeded = Math.min(memorySpaceNeeded, bufferManager.getMaxProcessingSize());
-			}
 			totalReservedBuffers = bufferManager.reserveBuffers(Math.min(bufferManager.getMaxProcessingSize(), (int)Math.min(memorySpaceNeeded, Integer.MAX_VALUE)), BufferReserveMode.FORCE);
 			if (totalReservedBuffers != memorySpaceNeeded) {
 				int processingSublists = Math.max(2, bufferManager.getMaxProcessingSize()/schemaSize);

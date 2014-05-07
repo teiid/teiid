@@ -60,6 +60,7 @@ class SourceState {
     boolean open;
     
     private SortUtility sortUtility;
+	private boolean limited;
     
     public SourceState(RelationalNode source, List expressions) {
         this.source = source;
@@ -292,7 +293,7 @@ class SourceState {
     		if (this.buffers != null || sortUtility.isDoneReading()) {
     			return;
     		}
-    		this.buffers = sortUtility.onePassSort();
+    		this.buffers = sortUtility.onePassSort(limited);
     		if (this.buffers.size() != 1 || !sortUtility.isDoneReading()) {
         		nextBuffer();
         		return;
@@ -318,7 +319,7 @@ class SourceState {
     	this.closeBuffer();
     	if (this.buffers == null || this.buffers.isEmpty()) {
     		if (!sortUtility.isDoneReading()) {
-    			this.buffers = sortUtility.onePassSort();
+    			this.buffers = sortUtility.onePassSort(limited);
     			return nextBuffer();
     		}
     		return false;
@@ -368,6 +369,10 @@ class SourceState {
 	
 	public SortUtility getSortUtility() {
 		return sortUtility;
+	}
+
+	public void isLimited(boolean hasLimit) {
+		this.limited = hasLimit;
 	}
     
 }
