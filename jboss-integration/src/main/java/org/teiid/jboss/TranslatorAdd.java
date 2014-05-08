@@ -22,15 +22,14 @@
 package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.teiid.jboss.TeiidConstants.TRANSLATOR_MODULE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.asString;
+import static org.teiid.jboss.TeiidConstants.isDefined;
 
 import java.util.List;
 import java.util.ServiceLoader;
 
-import org.jboss.as.controller.AbstractAddStepHandler;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.*;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -43,7 +42,6 @@ import org.teiid.deployers.TranslatorUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionFactory;
-import static org.teiid.jboss.TeiidConstants.*;
 
 class TranslatorAdd extends AbstractAddStepHandler {
 	public static TranslatorAdd INSTANCE = new TranslatorAdd();
@@ -63,8 +61,8 @@ class TranslatorAdd extends AbstractAddStepHandler {
     	final String translatorName = pathAddress.getLastElement().getValue();
 		
     	String moduleName = null;
-    	if (TRANSLATOR_MODULE_ATTRIBUTE.isDefined(operation, context)) {
-    		moduleName = TRANSLATOR_MODULE_ATTRIBUTE.asString(operation, context);
+    	if (isDefined(TRANSLATOR_MODULE_ATTRIBUTE, operation, context)) {
+    		moduleName = asString(TRANSLATOR_MODULE_ATTRIBUTE, operation, context);
     	}
 		
         final ServiceTarget target = context.getServiceTarget();

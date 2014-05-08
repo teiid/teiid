@@ -85,10 +85,13 @@ import org.teiid.vdb.runtime.VDBKey;
  * Keep this the class and all the extended classes stateless as there is single instance.
  */
 abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
-
 	protected TeiidOperationHandler(String operationName){
 		super(operationName);
 	}
+	
+    protected TeiidOperationHandler(String operationName,boolean changesRuntime){
+        super(operationName, changesRuntime);
+    }
 	
 	static VDBMetaData checkVDB(OperationContext context, String vdbName,
 			int vdbVersion) throws OperationFailedException {
@@ -107,7 +110,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 
 	@Override
 	protected DQPCore getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
-        ServiceController<?> repo = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.ENGINE);
+        ServiceController<?> repo = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.ENGINE);
         if (repo != null) {
         	return  DQPCore.class.cast(repo.getValue());
         }
@@ -115,7 +118,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	}
 
 	protected BufferManagerService getBufferManager(OperationContext context) {
-		ServiceController<?> repo = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.BUFFER_MGR);
+		ServiceController<?> repo = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.BUFFER_MGR);
         if (repo != null) {
         	return BufferManagerService.class.cast(repo.getService());
         }
@@ -123,7 +126,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	}
 
 	protected VDBRepository getVDBrepository(OperationContext context) {
-		ServiceController<?> repo = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
+		ServiceController<?> repo = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.VDB_REPO);
         if (repo != null) {
         	return VDBRepository.class.cast(repo.getValue());
         }
@@ -144,7 +147,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 		List<ServiceName> services = context.getServiceRegistry(false).getServiceNames();
         for (ServiceName name:services) {
         	if (TeiidServiceNames.TRANSPORT_BASE.isParentOf(name)) {
-        		ServiceController<?> transport = context.getServiceRegistry(false).getService(name);
+        		ServiceController<?> transport = context.getServiceRegistry(isChangesRuntimes()).getService(name);
         		if (transport != null) {
         			transports.add(TransportService.class.cast(transport.getValue()));
         		}
@@ -534,8 +537,9 @@ class ListLongRunningRequests extends TeiidOperationHandler{
 
 class TerminateSession extends TeiidOperationHandler{
 	protected TerminateSession() {
-		super("terminate-session"); //$NON-NLS-1$
+		super("terminate-session", true); //$NON-NLS-1$
 	}
+	
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		if (!operation.hasDefined(OperationsConstants.SESSION.getName())) {
@@ -554,7 +558,7 @@ class TerminateSession extends TeiidOperationHandler{
 
 class CancelRequest extends TeiidOperationHandler{
 	protected CancelRequest() {
-		super("cancel-request"); //$NON-NLS-1$
+		super("cancel-request", true); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
@@ -614,7 +618,11 @@ abstract class BaseCachehandler extends BaseOperationHandler<SessionAwareCache>{
 	BaseCachehandler(String operationName){
 		super(operationName);
 	}
-
+    
+	BaseCachehandler(String operationName, boolean changesRuntimeState){
+        super(operationName, changesRuntimeState);
+    }
+    
 	@Override
 	protected SessionAwareCache getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
 		String cacheType = Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name();
@@ -663,7 +671,7 @@ class CacheTypes extends BaseCachehandler {
 class ClearCache extends BaseCachehandler {
 
 	protected ClearCache() {
-		super("clear-cache"); //$NON-NLS-1$
+		super("clear-cache", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -738,7 +746,7 @@ class CacheStatistics extends BaseCachehandler {
 
 class MarkDataSourceAvailable extends TeiidOperationHandler{
 	protected MarkDataSourceAvailable() {
-		super("mark-datasource-available"); //$NON-NLS-1$
+		super("mark-datasource-available", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -747,7 +755,7 @@ class MarkDataSourceAvailable extends TeiidOperationHandler{
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DS_NAME.getName()+MISSING)));
 		}
 		String dsName = operation.get(OperationsConstants.DS_NAME.getName()).asString();
-		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
+		ServiceController<?> sc = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
 		VDBStatusChecker vsc = VDBStatusChecker.class.cast(sc.getValue());
 		vsc.dataSourceAdded(dsName, null);
 	}
@@ -800,7 +808,7 @@ class ListTransactions extends TeiidOperationHandler{
 class TerminateTransaction extends TeiidOperationHandler{
 
 	protected TerminateTransaction() {
-		super("terminate-transaction"); //$NON-NLS-1$
+		super("terminate-transaction", true); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
@@ -826,7 +834,7 @@ class TerminateTransaction extends TeiidOperationHandler{
 class ExecuteQuery extends TeiidOperationHandler{
 
 	protected ExecuteQuery() {
-		super("execute-query"); //$NON-NLS-1$
+		super("execute-query", true); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
@@ -923,12 +931,14 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 class GetSchema extends BaseOperationHandler<VDBRepository>{
 
 	protected GetSchema() {
-		super("get-schema"); //$NON-NLS-1$
+	    // even though this is read-only operation schema may be a protected 
+	    // resource, should not visible to every one
+		super("get-schema", true); //$NON-NLS-1$
 	}
 
 	@Override
 	protected VDBRepository getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
-        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
+        ServiceController<?> sc = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.VDB_REPO);
         return VDBRepository.class.cast(sc.getValue());
 	}
 
@@ -1084,10 +1094,15 @@ class GetTranslator extends TranslatorOperationHandler{
 }
 
 abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
-
-	public VDBOperations(String operationName) {
+	boolean changesRuntimeState;
+    public VDBOperations(String operationName) {
 		super(operationName);
 	}
+	
+    public VDBOperations(String operationName, boolean changesRuntimeState) {
+        super(operationName, changesRuntimeState);
+        this.changesRuntimeState = changesRuntimeState;
+    }	
 
 	@Override
 	public RuntimeVDB getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
@@ -1104,7 +1119,7 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 
 		TeiidOperationHandler.checkVDB(context, vdbName, vdbVersion);
 
-		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.vdbServiceName(vdbName, vdbVersion));
+		ServiceController<?> sc = context.getServiceRegistry(this.changesRuntimeState).getRequiredService(TeiidServiceNames.vdbServiceName(vdbName, vdbVersion));
         return RuntimeVDB.class.cast(sc.getValue());
 	}
 
@@ -1138,7 +1153,7 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 class AddDataRole extends VDBOperations {
 
 	public AddDataRole() {
-		super("add-data-role"); //$NON-NLS-1$
+		super("add-data-role", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -1172,7 +1187,7 @@ class AddDataRole extends VDBOperations {
 class RemoveDataRole extends VDBOperations {
 
 	public RemoveDataRole() {
-		super("remove-data-role"); //$NON-NLS-1$
+		super("remove-data-role", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -1206,7 +1221,7 @@ class RemoveDataRole extends VDBOperations {
 class AddAnyAuthenticatedDataRole extends VDBOperations {
 
 	public AddAnyAuthenticatedDataRole() {
-		super("add-anyauthenticated-role"); //$NON-NLS-1$
+		super("add-anyauthenticated-role", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -1234,7 +1249,7 @@ class AddAnyAuthenticatedDataRole extends VDBOperations {
 class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 
 	public RemoveAnyAuthenticatedDataRole() {
-		super("remove-anyauthenticated-role"); //$NON-NLS-1$
+		super("remove-anyauthenticated-role", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -1261,7 +1276,7 @@ class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 class ChangeVDBConnectionType extends VDBOperations {
 
 	public ChangeVDBConnectionType() {
-		super("change-vdb-connection-type"); //$NON-NLS-1$
+		super("change-vdb-connection-type", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -1288,7 +1303,7 @@ class ChangeVDBConnectionType extends VDBOperations {
 class RestartVDB extends VDBOperations {
 
 	public RestartVDB() {
-		super("restart-vdb"); //$NON-NLS-1$
+		super("restart-vdb", true); //$NON-NLS-1$
 	}
 
 	@Override
@@ -1320,11 +1335,11 @@ class AssignDataSource extends VDBOperations {
 	boolean modelNameParam;
 
 	public AssignDataSource() {
-		this("assign-datasource", true); //$NON-NLS-1$
+		this("assign-datasource", true, true); //$NON-NLS-1$
 	}
 	
-	protected AssignDataSource(String operation, boolean modelNameParam) {
-		super(operation);
+	protected AssignDataSource(String operation, boolean modelNameParam, boolean changesRuntimeState) {
+		super(operation, changesRuntimeState);
 		this.modelNameParam = modelNameParam;
 	}
 
@@ -1371,7 +1386,7 @@ class AssignDataSource extends VDBOperations {
 class UpdateSource extends AssignDataSource {
 	
 	public UpdateSource() {
-		super("update-source", false); //$NON-NLS-1$
+		super("update-source", false, true); //$NON-NLS-1$
 	}
 	
 }
@@ -1379,7 +1394,7 @@ class UpdateSource extends AssignDataSource {
 class AddSource extends VDBOperations {
 	
 	public AddSource() {
-		super("add-source"); //$NON-NLS-1$
+		super("add-source", true); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -1429,7 +1444,7 @@ class AddSource extends VDBOperations {
 class RemoveSource extends VDBOperations {
 	
 	public RemoveSource() {
-		super("remove-source"); //$NON-NLS-1$
+		super("remove-source", true); //$NON-NLS-1$
 	}
 	
 	@Override
