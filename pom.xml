@@ -378,7 +378,18 @@
             	<artifactId>translator-object</artifactId>
             	<version>${project.version}</version>
             	<type>test-jar</type>
-        	</dependency>       
+        	</dependency>  
+			<dependency>
+				<groupId>org.jboss.teiid.connectors</groupId>
+				<artifactId>translator-infinispan-dsl</artifactId>
+				<version>${project.version}</version>
+			</dependency>        
+			 <dependency>
+				<groupId>org.jboss.teiid.connectors</groupId>
+				<artifactId>translator-infinispan-dsl</artifactId>
+				<version>${project.version}</version>
+				<type>test-jar</type>
+			</dependency>              	     
         	<dependency>
           		<groupId>org.jboss.teiid.connectors</groupId>
           		<artifactId>translator-ws</artifactId>
@@ -518,8 +529,25 @@
 			  <version>${project.version}</version>
 			  <type>test-jar</type>
 			</dependency>
+            <dependency>
+            	<groupId>org.jboss.teiid</groupId>
+            	<artifactId>teiid-client-jdk15</artifactId>
+            	<version>${project.version}</version>
+        	</dependency>
 			            
       <!-- External dependencies -->
+      
+			<dependency>
+				<groupId>net.sf.retrotranslator</groupId>
+				<artifactId>retrotranslator-runtime</artifactId>
+				<version>1.2.9</version>
+			</dependency>
+
+			<dependency>
+				<groupId>net.sf.retrotranslator</groupId>
+				<artifactId>retrotranslator-transformer</artifactId>
+				<version>1.2.9</version>
+			</dependency> 
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-subsystem-test-framework</artifactId>
@@ -1124,7 +1152,12 @@
 				<groupId>org.dbunit</groupId>
 				<artifactId>dbunit</artifactId>
 				<version>2.2</version>
-			</dependency>			 		                                                                                 
+			</dependency>	
+			<dependency>
+			  <groupId>com.google.protobuf</groupId>
+			  <artifactId>protobuf-java</artifactId>
+			  <version>2.5.0</version>
+			</dependency>					 		                                                                                 
         </dependencies>
 	</dependencyManagement>
 	<modules>
