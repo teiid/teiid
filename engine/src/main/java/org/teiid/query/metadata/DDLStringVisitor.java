@@ -281,8 +281,12 @@ public class DDLStringVisitor {
 			ForeignKey key = table.getForeignKeys().get(i);
 			addConstraint("FK" + i, FOREIGN_KEY, key, false); //$NON-NLS-1$
 			append(SPACE).append(REFERENCES);
-			if (key.getPrimaryKey() != null) {
-				append(SPACE).append(new GroupSymbol(key.getPrimaryKey().getParent().getFullName()));
+			if (key.getReferenceKey() != null) {
+				if (key.getReferenceKey().getParent().getParent().equals(key.getParent().getParent())) {
+					append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getName()));
+				} else {
+					append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getFullName()));
+				}
 			} else if (key.getReferenceTableName() != null) {
 				append(SPACE).append(new GroupSymbol(key.getReferenceTableName()));
 			}

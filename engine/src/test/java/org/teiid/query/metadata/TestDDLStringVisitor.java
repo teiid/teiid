@@ -35,6 +35,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.parser.TestDDLParser;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestDDLStringVisitor {
@@ -128,7 +129,7 @@ public class TestDDLStringVisitor {
 	public void testFK() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(\"g1-e1\" integer, g1e2 varchar, PRIMARY KEY(\"g1-e1\", g1e2));\n" +
 				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, " +
-				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
+				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (\"g1-e1\", g1e2))";
 		
 		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
 				"	\"g1-e1\" integer,\n" + 
@@ -139,10 +140,13 @@ public class TestDDLStringVisitor {
 				"CREATE FOREIGN TABLE G2 (\n" + 
 				"	g2e1 integer,\n" + 
 				"	g2e2 string,\n" + 
-				"	FOREIGN KEY(g2e1, g2e2) REFERENCES G1 (g1e1, g1e2)\n" + 
+				"	FOREIGN KEY(g2e1, g2e2) REFERENCES G1 (\"g1-e1\", g1e2)\n" + 
 				");";
 		
-		helpTest(ddl, expected);
+		TransformationMetadata vdb = RealMetadataFactory.fromDDL(ddl, "x", "y");
+		Schema s = vdb.getModelID("y");
+		String metadataDDL = DDLStringVisitor.getDDLString(s, null, null);
+		assertEquals(expected, metadataDDL);
 	}	
 	
 	@Test
