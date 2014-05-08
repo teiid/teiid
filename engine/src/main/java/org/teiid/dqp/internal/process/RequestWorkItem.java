@@ -657,40 +657,54 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			        		throw new AssertionError("Should not add batch to buffer"); //$NON-NLS-1$
 			        	}
 			        }
-					if (isForwardOnly() && add 
-							&& !processor.hasBuffer(false) //restrict the buffer size for forward only results
-							&& !batch.getTerminationFlag() 
-							&& transactionState != TransactionState.ACTIVE
-							&& resultsBuffer.getManagedRowCount() >= maxRows) {
-						int timeOut = 500;
-						if (!connectorInfo.isEmpty()) {
-							if (explicitSourceClose) {
-								for (DataTierTupleSource ts : getConnectorRequests()) {
-									if (!ts.isExplicitClose()) {
-										timeOut = 100;
-										break;
-									}
-								}
-							} else {
-								timeOut = 100;	
-							}
-						}
-						if (dqpCore.blockOnOutputBuffer(RequestWorkItem.this)) {
-							if (moreWorkTask != null) {
-								moreWorkTask.cancel(false);
-								moreWorkTask = null;
-							}
-							if (getThreadState() != ThreadState.MORE_WORK) {
-								//we schedule the work to ensure that an idle client won't just indefinitely hold resources
-								moreWorkTask = scheduleWork(timeOut); 
-							}
-							throw BlockedException.block(requestID, "Blocking due to full results TupleBuffer", //$NON-NLS-1$
-									this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
-						} 
-						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans or this is using the calling thread."); //$NON-NLS-1$
-						}
+					if (add) {
+						flowControl(batch);
 					}
+				}
+			}
+
+			private void flowControl(TupleBatch batch)
+					throws BlockedException {
+				if (processor.hasBuffer(false)
+						|| batch.getTerminationFlag() 
+						|| transactionState == TransactionState.ACTIVE) {
+					return;
+				}
+				if (!isForwardOnly() && resultsReceiver != null && begin > resultsBuffer.getRowCount()) {
+					return; //a valid request beyond the processed range
+				}
+				
+				if (resultsBuffer.getManagedRowCount() < maxRows) {
+					return; //continue to buffer
+				}
+					
+				int timeOut = 500;
+				if (!connectorInfo.isEmpty()) {
+					if (explicitSourceClose) {
+						for (DataTierTupleSource ts : getConnectorRequests()) {
+							if (!ts.isExplicitClose()) {
+								timeOut = 100;
+								break;
+							}
+						}
+					} else {
+						timeOut = 100;	
+					}
+				}
+				if (dqpCore.blockOnOutputBuffer(RequestWorkItem.this)) {
+					if (moreWorkTask != null) {
+						moreWorkTask.cancel(false);
+						moreWorkTask = null;
+					}
+					if (getThreadState() != ThreadState.MORE_WORK) {
+						//we schedule the work to ensure that an idle client won't just indefinitely hold resources
+						moreWorkTask = scheduleWork(timeOut); 
+					}
+					throw BlockedException.block(requestID, "Blocking due to full results TupleBuffer", //$NON-NLS-1$
+							this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
+				} 
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans or this is using the calling thread."); //$NON-NLS-1$
 				}
 			}
 		};

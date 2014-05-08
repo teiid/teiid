@@ -345,7 +345,8 @@ public class TestDQPCore {
         	Thread.sleep(100);
         }
         assertEquals(ThreadState.IDLE, item.getThreadState());
-        assertEquals(item.resultsBuffer.getManagedRowCount(), 400); //should have the full results
+        //should buffer the same as forward only until a further batch is requested
+        assertTrue(item.resultsBuffer.getManagedRowCount() <= rowsPerBatch*23);
         
         //local should not buffer
         reqMsg = exampleRequestMessage(sql);
