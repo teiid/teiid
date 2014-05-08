@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
+	<parent>
+    	<groupId>org.jboss.integration-platform</groupId>
+    	<artifactId>jboss-integration-platform-parent</artifactId>
+    	<version>6.0.0.CR8</version>
+    <!--parent>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-parent</artifactId>
-      <version>11</version>
+      <version>11</version-->
     </parent>    
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
@@ -66,7 +70,7 @@
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
-        <version.org.infinispan.6>6.0.0.CR1</version.org.infinispan.6>
+        <version.org.infinispan.6>6.0.0.Final</version.org.infinispan.6>
         <version.olap4j>1.1.0</version.olap4j>
         <version.accumulo>1.5.0</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
@@ -81,6 +85,12 @@
         <version.poi-ooxml-schemas>3.9</version.poi-ooxml-schemas>
         <version.org.jboss.resteasy.tjws>2.3.6.Final</version.org.jboss.resteasy.tjws>
         <version.org.apache.cxf-jaxrs>2.7.10</version.org.apache.cxf-jaxrs>
+        
+        <version.postgresql>9.1-901.jdbc4</version.postgresql> <!-- overriding v8 -->
+        
+        <derby.version>10.2.1.6</derby.version>
+		<mysql.connector.version>5.1.5</mysql.connector.version>
+        
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -332,13 +342,92 @@
              <version>${version.org.jboss.as}</version>
              <type>pom</type>
              <scope>import</scope>
-          </dependency>                                                       
-      <!--
+          </dependency>   
+          
+       <!--
       Declare all dependency versions and default scopes here, but not optional.
       Each module should declare it's direct dependency and possibily overwrite scope/optional.
       -->
       
       <!-- Internal dependencies -->
+			<dependency>
+			  <groupId>org.jboss.teiid.connectors</groupId>
+			  <artifactId>translator-odata</artifactId>
+			  <version>${project.version}</version>
+			</dependency>      
+        	<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-loopback</artifactId>
+            	<version>${project.version}</version>
+        	</dependency>       
+        	<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-solr</artifactId>
+            	<version>${project.version}</version>
+        	</dependency>         
+        	<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-accumulo</artifactId>
+            	<version>${project.version}</version>
+        	</dependency>      
+			<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-cassandra</artifactId>
+            	<version>${project.version}</version>
+       		</dependency>      
+        	<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-object</artifactId>
+            	<version>${project.version}</version>
+        	</dependency>      
+       		<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-object</artifactId>
+            	<version>${project.version}</version>
+            	<type>test-jar</type>
+        	</dependency>       
+        	<dependency>
+          		<groupId>org.jboss.teiid.connectors</groupId>
+          		<artifactId>translator-ws</artifactId>
+          		<version>${project.version}</version>
+        	</dependency>    
+       		<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-salesforce</artifactId>
+            	<version>${project.version}</version>
+        	</dependency>  
+      		<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+           		<artifactId>translator-jdbc</artifactId>
+				<version>${project.version}</version>
+			</dependency>        	      	   
+            <dependency>
+      	    	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>google-api</artifactId>
+  	        	<version>${project.version}</version>
+        	</dependency>
+            <dependency>
+      	    	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>salesforce-api</artifactId>
+  	        	<version>${project.version}</version>
+        	</dependency> 
+            <dependency>
+      	    	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>mongodb-api</artifactId>
+  	        	<version>${project.version}</version>
+        	</dependency>
+            <dependency>
+      	    	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>simpledb-api</artifactId>
+  	        	<version>${project.version}</version>
+        	</dependency>         	       	
+
+        	<dependency>
+           	 	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-jdbc</artifactId>    
+            	<version>${project.version}</version>  
+            	<type>test-jar</type>
+        	</dependency>			
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-common-core</artifactId>
@@ -372,7 +461,12 @@
                 <groupId>org.jboss.teiid</groupId>
                 <artifactId>teiid-admin</artifactId>
                 <version>${project.version}</version>
-            </dependency>            
+            </dependency>  
+			<dependency>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-adminshell</artifactId>
+                <version>${project.version}</version>
+			</dependency>                      
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-client</artifactId>
@@ -402,7 +496,6 @@
 				<artifactId>teiid-metadata</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
-				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
@@ -419,7 +512,20 @@
                 <artifactId>teiid-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>    
-      
+              <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-runtime</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+			<dependency>
+			  <groupId>org.jboss.teiid</groupId>
+			  <artifactId>test-integration-common</artifactId>
+			  <version>${project.version}</version>
+			  <type>test-jar</type>
+			</dependency>
+			            
       <!-- External dependencies -->
             <dependency>
                 <groupId>org.jboss.as</groupId>
@@ -542,7 +648,12 @@
                         <artifactId>jboss-logging-processor</artifactId>
                     </exclusion>
              </exclusions>              
-            </dependency>            
+            </dependency>  
+	    	<dependency>
+	      		<groupId>org.infinispan</groupId>
+	      		<artifactId>infinispan-server-hotrod</artifactId>
+	      		<version>${version.org.infinispan}</version>
+	    	</dependency>		    	                      
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-spi</artifactId>
@@ -558,7 +669,27 @@
                   <artifactId>commons-logging</artifactId>
                 </exclusion>
               </exclusions>
-            </dependency>       
+            </dependency>   
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-arquillian-container-managed</artifactId>
+                <version>${arquillian-container-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-arquillian-common</artifactId>
+                <version>${arquillian-container-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-arquillian-protocol-jmx</artifactId>
+                <version>${arquillian-container-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-arquillian-testenricher-msc</artifactId>
+                <version>${arquillian-container-version}</version>
+            </dependency>              
 			<dependency>
 				<groupId>net.sourceforge.saxon</groupId>
 				<artifactId>saxonhe</artifactId>
@@ -569,11 +700,40 @@
 				<artifactId>netty</artifactId>
 				<version>${version.io.netty}</version>
 			</dependency>
-			<dependency>
+			<!--dependency>
 				<groupId>org.apache.ant</groupId>
 				<artifactId>ant</artifactId>
 				<version>${version.ant.plugin}</version>
+			</dependency-->
+			<dependency>
+				<groupId>org.apache.ant</groupId>
+				<artifactId>ant-launcher</artifactId>
+				<version>${version.ant.plugin}</version>
+			</dependency>	
+			<dependency>
+				<groupId>ant-contrib</groupId>
+				<artifactId>ant-contrib</artifactId>
+				<version>1.0b3</version>
+				<exclusions>
+								<exclusion>
+									<groupId>ant</groupId>
+									<artifactId>ant</artifactId>
+								</exclusion>
+				</exclusions>
+
 			</dependency>
+
+			<dependency>
+				<groupId>ant-contrib</groupId>
+				<artifactId>cpptasks</artifactId>
+				<version>1.0b3</version>
+				<exclusions>
+								<exclusion>
+									<groupId>ant</groupId>
+									<artifactId>ant</artifactId>
+								</exclusion>
+				</exclusions>
+			</dependency>					
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-xjc</artifactId>
@@ -734,8 +894,13 @@
             <dependency>
                 <groupId>nux</groupId>
                 <artifactId>nux</artifactId>
-                <version>1.6</version>
-            </dependency>            
+                <version>${version.nux}</version>
+            </dependency>  
+			<dependency>
+				<groupId>org.jdom</groupId>
+				<artifactId>jdom</artifactId>
+				<version>${version.org.jdom}</version>
+			</dependency>                      
             <dependency>
                   <groupId>jaxen</groupId>
                   <artifactId>jaxen</artifactId>
@@ -792,11 +957,11 @@
               <artifactId>httpclient</artifactId>
               <version>${version.org.apache.httpcomponents.httpclient}</version>
             </dependency> 
-            <dependency>
+            <!--dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
                 <version>${version.commons-logging}</version>
-            </dependency>
+            </dependency-->
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk</artifactId>
@@ -865,6 +1030,22 @@
                  -->               
             </dependency>
             <dependency>
+            	<groupId>org.fusesource.jansi</groupId>
+            	<artifactId>jansi</artifactId>
+            	<version>1.2.1</version>
+        	</dependency>
+			<dependency>
+				<groupId>jline</groupId>
+				<artifactId>jline</artifactId>
+				<version>0.9.94</version>
+				<exclusions>
+					<exclusion>
+						<groupId>junit</groupId>
+						<artifactId>junit</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>        	
+            <dependency>
                 <groupId>org.olap4j</groupId>
                 <artifactId>olap4j</artifactId>
                 <version>${version.olap4j}</version>
@@ -918,7 +1099,28 @@
               <groupId>org.jboss.teiid.connectors.google</groupId>
               <artifactId>gdata-core</artifactId>
               <version>${version.gdata-core}</version>
-            </dependency>                                                                       
+            </dependency>  
+    		<dependency>
+        		<groupId>postgresql</groupId>
+        		<artifactId>postgresql</artifactId>
+       			<version>${version.postgresql}</version>
+        		<scope>test</scope>
+    		</dependency>  
+			<dependency>
+				<groupId>org.apache.derby</groupId>
+				<artifactId>derby</artifactId>
+				<version>${derby.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.h2database</groupId>
+				<artifactId>h2</artifactId>
+				<version>${version.com.h2database}</version>
+			</dependency>  
+			<dependency>
+				<groupId>org.dbunit</groupId>
+				<artifactId>dbunit</artifactId>
+				<version>2.2</version>
+			</dependency>			 		                                                                                 
         </dependencies>
 	</dependencyManagement>
 	<modules>

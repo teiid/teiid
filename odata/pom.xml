@@ -63,13 +63,11 @@
       <artifactId>teiid-runtime</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
-      <version>${project.version}</version>
     </dependency> 
     
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-odata</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
               

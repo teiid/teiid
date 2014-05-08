@@ -30,7 +30,6 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>mongodb-api</artifactId>
-            <version>${project.version}</version>
         </dependency>   
         <dependency>
            <groupId>org.mongodb</groupId>
@@ -39,7 +38,6 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency> 
     </dependencies>

@@ -10,13 +10,16 @@
 	<name>Performance Integration Tests</name>
 	<description>Performance tests that do not require external dependencies</description>
 	<dependencies>
-	<dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>test-integration-common</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
-    </dependency>
-	
+		<dependency>
+		  <groupId>org.jboss.teiid</groupId>
+		  <artifactId>test-integration-common</artifactId>
+		  <type>test-jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-runtime</artifactId>
+			<type>test-jar</type>
+		</dependency>  	
 	</dependencies>
 	
 	<profiles>

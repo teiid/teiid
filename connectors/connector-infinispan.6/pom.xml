@@ -10,6 +10,29 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>Infinispan Connector 6</name>
     <description>This connector creates the connection to the Infinispan Cache</description>
+    	
+    <dependencyManagement>
+		<dependencies>
+			<dependency>
+			  <groupId>org.infinispan</groupId>
+			  <artifactId>infinispan-client-hotrod</artifactId>
+			  <version>${version.org.infinispan.6}</version>
+			</dependency>  
+	
+			<dependency>
+			  <groupId>org.infinispan</groupId>
+			  <artifactId>infinispan-server-hotrod</artifactId>
+			  <version>${version.org.infinispan.6}</version>
+			</dependency>	   
+			<dependency>
+				<groupId>org.infinispan</groupId>
+				<artifactId>infinispan-core</artifactId>
+			   <version>${version.org.infinispan.6}</version>
+			</dependency> 
+        </dependencies>	
+    </dependencyManagement>
+
+
     <dependencies>
  
         <dependency>
@@ -25,13 +48,11 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>        
          <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
-            <version>${project.version}</version>
             <type>test-jar</type>
             <scope>provided</scope>
         </dependency>        
@@ -49,30 +70,26 @@
 		</dependency>
 		
         <dependency>
-          <groupId>org.infinispan</groupId>
-          <artifactId>infinispan-client-hotrod</artifactId>
-          <version>${version.org.infinispan.6}</version>
-          <scope>provided</scope>
-        </dependency>  
-        
-	    <dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-server-hotrod</artifactId>
-          <version>${version.org.infinispan.6}</version>
-	      <scope>test</scope>
-	    </dependency>	   
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
-		   <version>${version.org.infinispan.6}</version>
-            <scope>provided</scope>
-        </dependency> 	
-    
-        <dependency>
             <groupId>org.jboss.modules</groupId>
             <artifactId>jboss-modules</artifactId>
             <scope>provided</scope>
         </dependency>
+			<dependency>
+			  <groupId>org.infinispan</groupId>
+			  <artifactId>infinispan-client-hotrod</artifactId>
+			  <scope>provided</scope>
+		</dependency>  
+	
+		<dependency>
+		  <groupId>org.infinispan</groupId>
+		  <artifactId>infinispan-server-hotrod</artifactId>
+		  <scope>test</scope>
+		</dependency>	   
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-core</artifactId>
+			<scope>provided</scope>
+		</dependency>        
     </dependencies>
     
     <build>

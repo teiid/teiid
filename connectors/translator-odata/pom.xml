@@ -31,13 +31,11 @@
         <dependency>
           <groupId>org.jboss.teiid.connectors</groupId>
           <artifactId>translator-ws</artifactId>
-          <version>${project.version}</version>
           <scope>provided</scope>
         </dependency>  
         <dependency>
           <groupId>org.jboss.teiid.connectors</groupId>
           <artifactId>translator-jdbc</artifactId>
-          <version>${project.version}</version>
           <scope>provided</scope>
         </dependency>              
         <dependency>
