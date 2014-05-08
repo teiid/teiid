@@ -1131,7 +1131,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	}
 	
 	@Override
-	public Object getModelID(String modelName) throws TeiidComponentException,
+	public Schema getModelID(String modelName) throws TeiidComponentException,
 			QueryMetadataException {
 		Schema s = this.getMetadataStore().getSchema(modelName);
 		if (s == null) {
