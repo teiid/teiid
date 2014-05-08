@@ -28,11 +28,18 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 
 class TransportResourceDefinition extends SimpleResourceDefinition {
 	public static final PathElement TRANSPORT_PATH = PathElement.pathElement(Element.TRANSPORT_ELEMENT.getLocalName());
+	/*
+	private final List<AccessConstraintDefinition> accessConstraints;
+	*/
 	
 	public TransportResourceDefinition() {
 		super(TRANSPORT_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSPORT_ELEMENT.getLocalName()), 
 				TransportAdd.INSTANCE,
 				TransportRemove.INSTANCE);
+		/*
+        ApplicationTypeConfig atc = new ApplicationTypeConfig(TeiidExtension.TEIID_SUBSYSTEM, Element.TRANSPORT_ELEMENT.getLocalName());
+        this.accessConstraints = new ApplicationTypeAccessConstraintDefinition(atc).wrapAsList();
+        */       
 	}
 	
     @Override
@@ -50,5 +57,12 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
-    }	
+    }
+    
+    /*
+    @Override
+    public List<AccessConstraintDefinition> getAccessConstraints() {
+        return this.accessConstraints;
+    } 
+    */    
 }

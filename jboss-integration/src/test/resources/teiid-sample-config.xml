@@ -1,5 +1,5 @@
 <subsystem xmlns="urn:jboss:domain:teiid:1.0">
-    <allow-env-function>false</allow-env-function>
+    <allow-env-function>true</allow-env-function>
     <async-thread-pool>teiid-async</async-thread-pool>
 
     <buffer-service use-disk="false" processor-batch-size="2"  

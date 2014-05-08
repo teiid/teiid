@@ -28,11 +28,17 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 
 public class TranslatorResourceDefinition extends SimpleResourceDefinition {
 	public static final PathElement TRANSLATOR_PATH = PathElement.pathElement(Element.TRANSLATOR_ELEMENT.getLocalName());
-	
+	/*
+	private final List<AccessConstraintDefinition> accessConstraints;
+	*/
 	public TranslatorResourceDefinition() {
 		super(TRANSLATOR_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSLATOR_ELEMENT.getLocalName()), 
 				TranslatorAdd.INSTANCE,
 				TranslatorRemove.INSTANCE);
+		/*
+		ApplicationTypeConfig atc = new ApplicationTypeConfig(TeiidExtension.TEIID_SUBSYSTEM, Element.TRANSLATOR_ELEMENT.getLocalName());
+        this.accessConstraints = new ApplicationTypeAccessConstraintDefinition(atc).wrapAsList();
+        */		
 	}
 	
     @Override
@@ -48,5 +54,12 @@ public class TranslatorResourceDefinition extends SimpleResourceDefinition {
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
-    }	
+    }
+    
+    /*
+    @Override
+    public List<AccessConstraintDefinition> getAccessConstraints() {
+        return this.accessConstraints;
+    } 
+    */   
 }
