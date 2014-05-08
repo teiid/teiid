@@ -22,14 +22,7 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 import static org.teiid.jboss.TeiidConstants.*;
 
 import java.io.BufferedReader;
@@ -47,15 +40,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jboss.as.controller.AbstractAddStepHandler;
-import org.jboss.as.controller.ControlledProcessStateService;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.OperationStepHandler;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.ProcessType;
-import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.*;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.RelativePathService;
@@ -71,13 +56,8 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
-import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceContainer;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
-import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheFactory;
@@ -86,14 +66,8 @@ import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
-import org.teiid.dqp.internal.process.AuthorizationValidator;
-import org.teiid.dqp.internal.process.CachedResults;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
-import org.teiid.dqp.internal.process.PreparedPlan;
-import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.events.EventDistributorFactory;
-import org.teiid.jboss.TeiidConstants.TeiidAttribute;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
@@ -106,7 +80,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 	
 	public static TeiidAdd INSTANCE = new TeiidAdd(); 
 
-	static TeiidAttribute[] ATTRIBUTES = {
+	static SimpleAttributeDefinition[] ATTRIBUTES = {
 		TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT,
 		TeiidConstants.ASYNC_THREAD_POOL_ELEMENT,
 		TeiidConstants.MAX_THREADS_ELEMENT,
@@ -198,7 +172,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
 		
-		final String asyncThreadPoolName = ASYNC_THREAD_POOL_ELEMENT.asString(operation, context);
+		final String asyncThreadPoolName = asString(ASYNC_THREAD_POOL_ELEMENT, operation, context);
 				
 		// translator repository
     	final TranslatorRepository translatorRepo = new TranslatorRepository();
@@ -213,8 +187,8 @@ class TeiidAdd extends AbstractAddStepHandler {
     	
     	// system function tree
 		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
-		if (ALLOW_ENV_FUNCTION_ELEMENT.isDefined(operation, context)) {
-			systemFunctionManager.setAllowEnvFunction(ALLOW_ENV_FUNCTION_ELEMENT.asBoolean(operation, context));
+		if (isDefined(ALLOW_ENV_FUNCTION_ELEMENT, operation, context)) {
+			systemFunctionManager.setAllowEnvFunction(asBoolean(ALLOW_ENV_FUNCTION_ELEMENT, operation, context));
 		}
 		else {
 			systemFunctionManager.setAllowEnvFunction(false);
@@ -249,8 +223,8 @@ class TeiidAdd extends AbstractAddStepHandler {
     	
     	// Object Replicator
     	boolean replicatorAvailable = false;
-    	if (DC_STACK_ATTRIBUTE.isDefined(operation, context)) {
-    		String stack = DC_STACK_ATTRIBUTE.asString(operation, context);
+    	if (isDefined(DC_STACK_ATTRIBUTE, operation, context)) {
+    		String stack = asString(DC_STACK_ATTRIBUTE, operation, context);
     		
     		replicatorAvailable = true;
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService();
@@ -284,13 +258,13 @@ class TeiidAdd extends AbstractAddStepHandler {
     	newControllers.add(edfsServiceBuilder.install());
     	
     	PolicyDecider policyDecider = null;
-    	if (POLICY_DECIDER_MODULE_ELEMENT.isDefined(operation, context)) {
-    		policyDecider = buildService(PolicyDecider.class, POLICY_DECIDER_MODULE_ELEMENT.asString(operation, context));    		
+    	if (isDefined(POLICY_DECIDER_MODULE_ELEMENT, operation, context)) {
+    		policyDecider = buildService(PolicyDecider.class, asString(POLICY_DECIDER_MODULE_ELEMENT, operation, context));    		
     	}
     	
     	final AuthorizationValidator authValidator;
-    	if (AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.isDefined(operation, context)) {
-    		authValidator = buildService(AuthorizationValidator.class, AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.asString(operation, context));
+    	if (isDefined(AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, operation, context)) {
+    		authValidator = buildService(AuthorizationValidator.class, asString(AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, operation, context));
     	}
     	else {
     		DefaultAuthorizationValidator dap = new DefaultAuthorizationValidator();
@@ -308,31 +282,31 @@ class TeiidAdd extends AbstractAddStepHandler {
     	
     	// resultset cache
     	boolean rsCache = true;
-    	if (RSC_ENABLE_ATTRIBUTE.isDefined(operation, context) && !RSC_ENABLE_ATTRIBUTE.asBoolean(operation, context)) {
+    	if (isDefined(RSC_ENABLE_ATTRIBUTE, operation, context) && !asBoolean(RSC_ENABLE_ATTRIBUTE, operation, context)) {
     		rsCache = false;
     	}
     		
-    	if (!RSC_CONTAINER_NAME_ATTRIBUTE.isDefined(operation, context)) {
+    	if (!isDefined(RSC_CONTAINER_NAME_ATTRIBUTE, operation, context)) {
     		throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50094));
     	}
 
     	String cacheName = "resultset"; //$NON-NLS-1$
-    	if (RSC_NAME_ATTRIBUTE.isDefined(operation, context)) {
+    	if (isDefined(RSC_NAME_ATTRIBUTE, operation, context)) {
     		// if null; default cache will be used
-    		cacheName = RSC_NAME_ATTRIBUTE.asString(operation, context);
+    		cacheName = asString(RSC_NAME_ATTRIBUTE, operation, context);
     	}	 
     	
     	if (rsCache) {
 	    	CacheFactoryService cfs = new CacheFactoryService();
 	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(TeiidServiceNames.RESULTSET_CACHE_FACTORY, cfs);
 	    	
-	    	String ispnName = RSC_CONTAINER_NAME_ATTRIBUTE.asString(operation, context);
+	    	String ispnName = asString(RSC_CONTAINER_NAME_ATTRIBUTE, operation, context);
 	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
 	    	newControllers.add(cacheFactoryBuilder.install());
 	    	
 	    	int maxStaleness = 60;
-	    	if (RSC_MAX_STALENESS_ATTRIBUTE.isDefined(operation, context)) {
-	    		maxStaleness = RSC_MAX_STALENESS_ATTRIBUTE.asInt(operation, context);
+	    	if (isDefined(RSC_MAX_STALENESS_ATTRIBUTE, operation, context)) {
+	    		maxStaleness = asInt(RSC_MAX_STALENESS_ATTRIBUTE, operation, context);
 	    	}
 	    	
 	    	CacheService<CachedResults> resultSetService = new CacheService<CachedResults>(cacheName, SessionAwareCache.Type.RESULTSET, maxStaleness);
@@ -346,24 +320,24 @@ class TeiidAdd extends AbstractAddStepHandler {
     	
     	// prepared-plan cache
     	boolean ppCache = true;
-    	if (PPC_ENABLE_ATTRIBUTE.isDefined(operation, context)) {
-    		ppCache = PPC_ENABLE_ATTRIBUTE.asBoolean(operation, context);
+    	if (isDefined(PPC_ENABLE_ATTRIBUTE, operation, context)) {
+    		ppCache = asBoolean(PPC_ENABLE_ATTRIBUTE, operation, context);
     	}
     		
-    	if (!PPC_CONTAINER_NAME_ATTRIBUTE.isDefined(operation, context)) {
+    	if (!isDefined(PPC_CONTAINER_NAME_ATTRIBUTE, operation, context)) {
     		throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50095));
     	}
 
     	cacheName = "preparedplan"; //$NON-NLS-1$
-    	if (PPC_NAME_ATTRIBUTE.isDefined(operation, context)) {
-    		cacheName = PPC_NAME_ATTRIBUTE.asString(operation, context);
+    	if (isDefined(PPC_NAME_ATTRIBUTE, operation, context)) {
+    		cacheName = asString(PPC_NAME_ATTRIBUTE, operation, context);
     	}	 
     	
     	if (ppCache) {
 	    	CacheFactoryService cfs = new CacheFactoryService();
 	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY, cfs);
 	    	
-	    	String ispnName = PPC_CONTAINER_NAME_ATTRIBUTE.asString(operation, context);
+	    	String ispnName = asString(PPC_CONTAINER_NAME_ATTRIBUTE, operation, context);
     		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
     		newControllers.add(cacheFactoryBuilder.install());
 	    	
@@ -377,8 +351,8 @@ class TeiidAdd extends AbstractAddStepHandler {
     	// Query Engine
     	final DQPCoreService engine = buildQueryEngine(context, operation);
     	String workManager = "default"; //$NON-NLS-1$
-    	if (WORKMANAGER.isDefined(operation, context)) {
-    		workManager = WORKMANAGER.asString(operation, context);
+    	if (isDefined(WORKMANAGER, operation, context)) {
+    		workManager = asString(WORKMANAGER, operation, context);
     	}
     	
         ServiceBuilder<DQPCore> engineBuilder = target.addService(TeiidServiceNames.ENGINE, engine);
@@ -473,41 +447,41 @@ class TeiidAdd extends AbstractAddStepHandler {
     		return bufferManger;
     	}
     	
-    	if (USE_DISK_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setUseDisk(USE_DISK_ATTRIBUTE.asBoolean(node, context));
+    	if (isDefined(USE_DISK_ATTRIBUTE, node, context)) {
+    		bufferManger.setUseDisk(asBoolean(USE_DISK_ATTRIBUTE, node, context));
     	}	                	
-    	if (PROCESSOR_BATCH_SIZE_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setProcessorBatchSize(PROCESSOR_BATCH_SIZE_ATTRIBUTE.asInt(node, context));
+    	if (isDefined(PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context)) {
+    		bufferManger.setProcessorBatchSize(asInt(PROCESSOR_BATCH_SIZE_ATTRIBUTE, node, context));
     	}	
-    	if (MAX_PROCESSING_KB_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMaxProcessingKb(MAX_PROCESSING_KB_ATTRIBUTE.asInt(node, context));
+    	if (isDefined(MAX_PROCESSING_KB_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxProcessingKb(asInt(MAX_PROCESSING_KB_ATTRIBUTE, node, context));
     	}
-    	if (MAX_RESERVED_KB_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMaxReserveKb(MAX_RESERVED_KB_ATTRIBUTE.asInt(node, context));
+    	if (isDefined(MAX_RESERVED_KB_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxReserveKb(asInt(MAX_RESERVED_KB_ATTRIBUTE, node, context));
     	}
-    	if (MAX_FILE_SIZE_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMaxFileSize(MAX_FILE_SIZE_ATTRIBUTE.asLong(node, context));
+    	if (isDefined(MAX_FILE_SIZE_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxFileSize(asLong(MAX_FILE_SIZE_ATTRIBUTE, node, context));
     	}
-    	if (MAX_BUFFER_SPACE_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMaxBufferSpace(MAX_BUFFER_SPACE_ATTRIBUTE.asLong(node, context));
+    	if (isDefined(MAX_BUFFER_SPACE_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxBufferSpace(asLong(MAX_BUFFER_SPACE_ATTRIBUTE, node, context));
     	}
-    	if (MAX_OPEN_FILES_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMaxOpenFiles(MAX_OPEN_FILES_ATTRIBUTE.asInt(node, context));
+    	if (isDefined(MAX_OPEN_FILES_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxOpenFiles(asInt(MAX_OPEN_FILES_ATTRIBUTE, node, context));
     	}	    
-    	if (MEMORY_BUFFER_SPACE_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMemoryBufferSpace(MEMORY_BUFFER_SPACE_ATTRIBUTE.asInt(node, context));
+    	if (isDefined(MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context)) {
+    		bufferManger.setMemoryBufferSpace(asInt(MEMORY_BUFFER_SPACE_ATTRIBUTE, node, context));
     	}  
-    	if (MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMemoryBufferOffHeap(MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.asBoolean(node, context));
+    	if (isDefined(MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context)) {
+    		bufferManger.setMemoryBufferOffHeap(asBoolean(MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node, context));
     	} 
-    	if (MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setMaxStorageObjectSize(MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.asInt(node, context));
+    	if (isDefined(MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context)) {
+    		bufferManger.setMaxStorageObjectSize(asInt(MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node, context));
     	}
-    	if (INLINE_LOBS.isDefined(node, context)) {
-    		bufferManger.setInlineLobs(INLINE_LOBS.asBoolean(node, context));
+    	if (isDefined(INLINE_LOBS, node, context)) {
+    		bufferManger.setInlineLobs(asBoolean(INLINE_LOBS, node, context));
     	}     	
-    	if (ENCRYPT_FILES_ATTRIBUTE.isDefined(node, context)) {
-    		bufferManger.setEncryptFiles(ENCRYPT_FILES_ATTRIBUTE.asBoolean(node, context));
+    	if (isDefined(ENCRYPT_FILES_ATTRIBUTE, node, context)) {
+    		bufferManger.setEncryptFiles(asBoolean(ENCRYPT_FILES_ATTRIBUTE, node, context));
     	}
     	return bufferManger;
     }	
@@ -515,38 +489,38 @@ class TeiidAdd extends AbstractAddStepHandler {
 	private DQPCoreService buildQueryEngine(final OperationContext context, ModelNode node) throws OperationFailedException {
 		DQPCoreService engine = new DQPCoreService();
     	
-    	if (MAX_THREADS_ELEMENT.isDefined(node, context)) {
-    		engine.setMaxThreads(MAX_THREADS_ELEMENT.asInt(node, context));
+    	if (isDefined(MAX_THREADS_ELEMENT, node, context)) {
+    		engine.setMaxThreads(asInt(MAX_THREADS_ELEMENT, node, context));
     	}
-    	if (MAX_ACTIVE_PLANS_ELEMENT.isDefined(node, context)) {
-    		engine.setMaxActivePlans(MAX_ACTIVE_PLANS_ELEMENT.asInt(node, context));
+    	if (isDefined(MAX_ACTIVE_PLANS_ELEMENT, node, context)) {
+    		engine.setMaxActivePlans(asInt(MAX_ACTIVE_PLANS_ELEMENT, node, context));
     	}
-    	if (USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT.isDefined(node, context)) {
-    		engine.setUserRequestSourceConcurrency(USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT.asInt(node, context));
+    	if (isDefined(USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, node, context)) {
+    		engine.setUserRequestSourceConcurrency(asInt(USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, node, context));
     	}	
-    	if (TIME_SLICE_IN_MILLI_ELEMENT.isDefined(node, context)) {
-    		engine.setTimeSliceInMilli(TIME_SLICE_IN_MILLI_ELEMENT.asInt(node, context));
+    	if (isDefined(TIME_SLICE_IN_MILLI_ELEMENT, node, context)) {
+    		engine.setTimeSliceInMilli(asInt(TIME_SLICE_IN_MILLI_ELEMENT, node, context));
     	}
-    	if (MAX_ROWS_FETCH_SIZE_ELEMENT.isDefined(node, context)) {
-    		engine.setMaxRowsFetchSize(MAX_ROWS_FETCH_SIZE_ELEMENT.asInt(node, context));
+    	if (isDefined(MAX_ROWS_FETCH_SIZE_ELEMENT, node, context)) {
+    		engine.setMaxRowsFetchSize(asInt(MAX_ROWS_FETCH_SIZE_ELEMENT, node, context));
     	}
-    	if (LOB_CHUNK_SIZE_IN_KB_ELEMENT.isDefined(node, context)) {
-    		engine.setLobChunkSizeInKB(LOB_CHUNK_SIZE_IN_KB_ELEMENT.asInt(node, context));
+    	if (isDefined(LOB_CHUNK_SIZE_IN_KB_ELEMENT, node, context)) {
+    		engine.setLobChunkSizeInKB(asInt(LOB_CHUNK_SIZE_IN_KB_ELEMENT, node, context));
     	}
-    	if (QUERY_THRESHOLD_IN_SECS_ELEMENT.isDefined(node, context)) {
-    		engine.setQueryThresholdInSecs(QUERY_THRESHOLD_IN_SECS_ELEMENT.asInt(node, context));
+    	if (isDefined(QUERY_THRESHOLD_IN_SECS_ELEMENT, node, context)) {
+    		engine.setQueryThresholdInSecs(asInt(QUERY_THRESHOLD_IN_SECS_ELEMENT, node, context));
     	}
-    	if (MAX_SOURCE_ROWS_ELEMENT.isDefined(node, context)) {
-    		engine.setMaxSourceRows(MAX_SOURCE_ROWS_ELEMENT.asInt(node, context));
+    	if (isDefined(MAX_SOURCE_ROWS_ELEMENT, node, context)) {
+    		engine.setMaxSourceRows(asInt(MAX_SOURCE_ROWS_ELEMENT, node, context));
     	}
-    	if (EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT.isDefined(node, context)) {
-    		engine.setExceptionOnMaxSourceRows(EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT.asBoolean(node, context));
+    	if (isDefined(EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node, context)) {
+    		engine.setExceptionOnMaxSourceRows(asBoolean(EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node, context));
     	}
-    	if (DETECTING_CHANGE_EVENTS_ELEMENT.isDefined(node, context)) {
-    		engine.setDetectingChangeEvents(DETECTING_CHANGE_EVENTS_ELEMENT.asBoolean(node, context));
+    	if (isDefined(DETECTING_CHANGE_EVENTS_ELEMENT, node, context)) {
+    		engine.setDetectingChangeEvents(asBoolean(DETECTING_CHANGE_EVENTS_ELEMENT, node, context));
     	}	 
-    	if (QUERY_TIMEOUT.isDefined(node, context)) {
-    		engine.setQueryTimeout(QUERY_TIMEOUT.asLong(node, context));
+    	if (isDefined(QUERY_TIMEOUT, node, context)) {
+    		engine.setQueryTimeout(asLong(QUERY_TIMEOUT, node, context));
     	}
 		return engine;
 	}    

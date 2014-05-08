@@ -1,5 +1,5 @@
 {"subsystem" : {"teiid" : {
-    "allow-env-function" : false,
+    "allow-env-function" : true,
     "async-thread-pool" : "teiid-async",
     "buffer-service-connector-batch-size" : 2,
     "buffer-service-max-buffer-space" : 2,

@@ -21,17 +21,12 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationDefinition;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.OperationStepHandler;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
+import org.jboss.as.controller.*;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
@@ -39,15 +34,27 @@ import org.jboss.as.controller.services.path.ResolvePathHandler;
 import org.jboss.dmr.ModelNode;
 
 public abstract class BaseOperationHandler<T> implements OperationStepHandler {
+    /*
+    public static final SensitivityClassification ACCESS_CONTROL = new SensitivityClassification(TeiidExtension.TEIID_SUBSYSTEM, "access-control", false, true, true); //$NON-NLS-1$
+    public static final SensitiveTargetAccessConstraintDefinition ACCESS_CONTROL_DEF = new SensitiveTargetAccessConstraintDefinition(ACCESS_CONTROL);
+    */
+    
 	private static final String DESCRIBE = ".describe"; //$NON-NLS-1$
 	protected static final String MISSING = ".missing"; //$NON-NLS-1$
 	protected static final String REPLY = ".reply"; //$NON-NLS-1$
 	
 	private String operationName; 
+	// this is flaf indicates that changes the runtime state of a service
+	private boolean changesRuntime = false; 
 	
 	protected BaseOperationHandler(String operationName){
 		this.operationName = operationName;
 	}
+	
+    protected BaseOperationHandler(String operationName, boolean changesRuntime){
+        this.operationName = operationName;
+        this.changesRuntime = changesRuntime;
+    }
 	
 	public void register(ManagementResourceRegistration subsystem) {
 		subsystem.registerOperationHandler(getOperationDefinition(), this);
@@ -55,6 +62,10 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
 	
 	public String name() {
 		return this.operationName;
+	}
+	
+	public boolean isChangesRuntimes() {
+	    return this.changesRuntime;
 	}
 	
     public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
@@ -83,6 +94,10 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
     public OperationDefinition getOperationDefinition() {
         SimpleOperationDefinitionBuilder builder = new SimpleOperationDefinitionBuilder(this.operationName, new TeiidResourceDescriptionResolver(this.operationName));
         builder.setRuntimeOnly();
+        /*builder.setAccessConstraints(ACCESS_CONTROL_DEF);*/
+        if (!isChangesRuntimes()) {
+            builder.setReadOnly();
+        }
         describeParameters(builder);
         return builder.build();
     }	
@@ -90,6 +105,7 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
     static class TeiidResourceDescriptionResolver extends StandardResourceDescriptionResolver {
         private final String operationName;
 
+        @Override
         public ResourceBundle getResourceBundle(Locale locale) {
             if (locale == null) {
                 locale = Locale.getDefault();
