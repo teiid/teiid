@@ -28,12 +28,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
+import javax.ws.rs.core.Response;
+
+import org.apache.cxf.jaxrs.client.WebClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
+import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.UnitTestUtil;
@@ -82,16 +80,12 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
 		
-		HttpClient client = new HttpClient();
-		client.getState().setCredentials(
-            AuthScope.ANY,
-            new UsernamePasswordCredentials("user", "user")
-		);		
+		WebClient client = WebClient.create("http://localhost:8080/odata/loopy.1/$metadata");
+		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+		Response response = client.invoke("GET", null);
 		
-		HttpMethod method = new GetMethod("http://localhost:8080/odata/loopy.1/$metadata");
-		int statusCode = client.executeMethod(method);
-		assertTrue(statusCode == HttpStatus.SC_OK);
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), method.getResponseBodyAsString());
-		method.releaseConnection();
+		int statusCode = response.getStatus();
+		assertTrue(statusCode == 200);
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), response.getEntity().toString());
 	}
 }

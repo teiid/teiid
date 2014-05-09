@@ -28,12 +28,7 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Parameter;
+import org.teiid.language.*;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -42,11 +37,8 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 
-import com.sforce.async.BatchResult;
+import com.sforce.async.*;
 import com.sforce.async.Error;
-import com.sforce.async.JobInfo;
-import com.sforce.async.Result;
-import com.sforce.async.StatusCode;
 
 @SuppressWarnings("nls")
 public class TestBulkInsertExecution {
@@ -89,7 +81,8 @@ public class TestBulkInsertExecution {
 		Mockito.when(batchResult.getResult()).thenReturn(new Result[] {r1}).thenReturn((new Result[] {r2})).thenReturn(new Result[] {r3});
 				
 		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
-		Mockito.when(connection.executeBulkJob(Mockito.anyString(), Mockito.anyList())).thenReturn(Mockito.mock(JobInfo.class));
+		JobInfo jobInfo = Mockito.mock(JobInfo.class);
+		Mockito.when(connection.executeBulkJob(Mockito.anyString(), Mockito.anyList())).thenReturn(jobInfo);
 		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class))).thenReturn(batchResult);
 		
 		SalesForceExecutionFactory config = new SalesForceExecutionFactory();
@@ -152,7 +145,8 @@ public class TestBulkInsertExecution {
 		Mockito.when(batchResult.getResult()).thenReturn(new Result[] {r1}).thenReturn((new Result[] {r2})).thenReturn(new Result[] {r3});
 				
 		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
-		Mockito.when(connection.executeBulkJob(Mockito.anyString(), Mockito.anyList())).thenReturn(Mockito.mock(JobInfo.class));
+		JobInfo jobInfo = Mockito.mock(JobInfo.class);
+		Mockito.when(connection.executeBulkJob(Mockito.anyString(), Mockito.anyList())).thenReturn(jobInfo);
 		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class))).thenReturn(batchResult);
 		
 		SalesForceExecutionFactory config = new SalesForceExecutionFactory();

@@ -14,45 +14,53 @@
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
-        
-        <!-- jboss bom overrides -->
-        <version.org.jboss.integration-platform>6.0.0-SNAPSHOT</version.org.jboss.integration-platform>
-        <version.org.jboss.jboss-common-core>2.2.17.GA</version.org.jboss.jboss-common-core>
-        <version.org.apache.cxf>2.6.8</version.org.apache.cxf>
-        <version.org.jboss.as>7.2.0.Alpha1-redhat-4</version.org.jboss.as>
+	    
+	    <!-- commenting out to use jboss bom versions -->
         <version.org.jboss.resteasy>2.3.6.Final</version.org.jboss.resteasy>
-        <version.wsdl4j>1.6.2</version.wsdl4j>
-        <version.sun.jaxb>2.2.5.jboss-1</version.sun.jaxb>
         <version.org.hibernate>4.1.6.Final</version.org.hibernate>
         <version.org.hibernate.search>4.2.0.Final</version.org.hibernate.search>
+        <version.javax.ws.rs>1.1</version.javax.ws.rs> 
         <version.org.infinispan>5.2.7.Final</version.org.infinispan>
-        <version.ant.plugin>1.7.0</version.ant.plugin>
+        <version.org.apache.xmlbeans>2.3.0</version.org.apache.xmlbeans>
+        <version.org.apache.lucene>3.6.2</version.org.apache.lucene> 
+        <version.asm>3.3.1</version.asm> 
+        <version.org.apache.cxf>2.6.8</version.org.apache.cxf> 
+        <version.org.apache.cxf-jaxrs>2.6.8</version.org.apache.cxf-jaxrs>
+        <!-- version.org.jboss.logging.jboss-logging>${version.org.jboss.logging}</version.org.jboss.logging.jboss-logging-->
+        <version.com.sun.xml.bind.jaxb>2.2.5.jboss-1</version.com.sun.xml.bind.jaxb>
+        <version.org.apache.ant>1.7.0</version.org.apache.ant>
+        <!-- version.org.jboss.marshalling.jboss-marshalling-river>${version.org.jboss.marshalling}</version.org.jboss.marshalling.jboss-marshalling-river-->
+        <version.org.jboss.arquillian>1.0.0.Final</version.org.jboss.arquillian>
+        <!-- version.javax.enterprise>${version.javax.enterprise.cdi}</version.javax.enterprise-->
+        <version.org.apache.httpcomponents>4.2.1</version.org.apache.httpcomponents>
+        <!-- version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>${version.org.hibernate.javax.persistence}</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api-->
+	    <version.io.netty>3.6.2.Final</version.io.netty> 
+        <version.commons-logging>1.1.3</version.commons-logging>
+        <version.junit>4.11</version.junit>
+        <version.org.mockito>1.9.5</version.org.mockito>
+
+		<!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
+        <version.jaxen>1.1.4</version.jaxen> <!--  1.1.3  -->
+        
+        <!-- jboss bom overrides -->
+        <!-- version.org.jboss.integration-platform>6.0.0.CR8</version.org.jboss.integration-platform-->
+        <version.org.jboss.jboss-common-core>2.2.17.GA</version.org.jboss.jboss-common-core>
+        <version.org.jboss.as>7.2.0.Alpha1-redhat-4</version.org.jboss.as>
+        <version.wsdl4j>1.6.2</version.wsdl4j>
         <version.org.jboss.jboss-dmr>1.1.6.Final</version.org.jboss.jboss-dmr>
         <version.org.jboss.msc.jboss-msc>1.0.4.GA</version.org.jboss.msc.jboss-msc>
         <version.org.jboss.jboss-vfs>3.1.0.Final</version.org.jboss.jboss-vfs>
         <version.org.picketbox>4.0.15.Final</version.org.picketbox>        
-        <version.org.jboss.logging.jboss-logging>3.1.2.GA</version.org.jboss.logging.jboss-logging>
-        <version.org.jboss.marshalling.jboss-marshalling-river>1.3.16.GA</version.org.jboss.marshalling.jboss-marshalling-river>
-        <version.asm>3.3.1</version.asm>
-        <version.org.jboss.arquillian.core>1.0.0.Final</version.org.jboss.arquillian.core>
-        <version.javax.enterprise>1.0-SP4</version.javax.enterprise>
-        <version.io.netty>3.6.2.Final</version.io.netty>
-        <version.jaxen>1.1.4</version.jaxen>
+       
         <version.xom>1.2.5</version.xom>
         <version.com.google.guava>14.0.1</version.com.google.guava>
-        <version.org.apache.httpcomponents.httpclient>4.2.1</version.org.apache.httpcomponents.httpclient>
-        <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>1.0.1.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
         <version.dom4j>1.6.1</version.dom4j>
                 
         <!-- integration stack bom propererties -->
         <version.org.mongodb.mongo-java-driver>2.11.1</version.org.mongodb.mongo-java-driver>
-        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
-        <version.commons-logging>1.1.3</version.commons-logging>
-        <version.org.apache.xmlbeans>2.3.0</version.org.apache.xmlbeans>
         
         <!-- Teiid specific properties -->
         <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
-        <version.javax.ws.rs>1.1</version.javax.ws.rs>
         <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
         <version.json-simple>1.1</version.json-simple>
         <version.connector-api>1.5</version.connector-api>
@@ -78,13 +86,12 @@
         <version.org.apache.poi>3.10-FINAL</version.org.apache.poi>
         <version.aws-java-sdk>1.5.7</version.aws-java-sdk>
         <version.cassandra-driver-core>1.0.4</version.cassandra-driver-core>
-        <version.org.jboss.resteasy.tjws>2.3.6.Final</version.org.jboss.resteasy.tjws>
-        <version.org.apache.cxf-jaxrs>2.6.8</version.org.apache.cxf-jaxrs>        
-        <version.postgresql>9.1-901.jdbc4</version.postgresql> <!-- overriding v8 -->        
+        <version.org.jboss.resteasy.tjws>2.3.6.Final</version.org.jboss.resteasy.tjws>        
+        <version.postgresql>9.1-901.jdbc4</version.postgresql>
         <derby.version>10.2.1.6</derby.version>
 		<mysql.connector.version>5.1.5</mysql.connector.version>
         <version.org.codehaus.groovy>1.7.2</version.org.codehaus.groovy>
-        <version.commons-httpclient></version.commons-httpclient>
+        <version.com.h2database>1.3.152</version.com.h2database>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -323,6 +330,16 @@
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${version.junit}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>${version.org.mockito}</version>
+            </dependency>        
            <!--  dependency>
             <groupId>org.jboss.integration-platform</groupId>
             <artifactId>jboss-integration-platform-bom</artifactId>
@@ -673,7 +690,7 @@
             <dependency>
               <groupId>org.jboss.arquillian.junit</groupId>
               <artifactId>arquillian-junit-container</artifactId>
-              <version>${version.org.jboss.arquillian.core}</version>
+              <version>${version.org.jboss.arquillian}</version>
               <exclusions>
                 <exclusion>
                   <groupId>commons-logging</groupId>
@@ -719,7 +736,7 @@
 			<dependency>
 				<groupId>org.apache.ant</groupId>
 				<artifactId>ant-launcher</artifactId>
-				<version>${version.ant.plugin}</version>
+				<version>${version.org.apache.ant}</version>
 			</dependency>
             <dependency>
                 <groupId>ant-contrib</groupId>
@@ -746,7 +763,7 @@
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-xjc</artifactId>
-                <version>${version.sun.jaxb}</version>
+                <version>${version.com.sun.xml.bind.jaxb}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.xml.bind</groupId>
@@ -964,7 +981,7 @@
             <dependency>
               <groupId>org.apache.httpcomponents</groupId>
               <artifactId>httpclient</artifactId>
-              <version>${version.org.apache.httpcomponents.httpclient}</version>
+              <version>${version.org.apache.httpcomponents}</version>
             </dependency> 
             <!--dependency>
                 <groupId>commons-logging</groupId>
@@ -1145,7 +1162,12 @@
                 <groupId>org.codehaus.groovy</groupId>
                 <artifactId>groovy-all</artifactId>
                 <version>${version.org.codehaus.groovy}</version>
-            </dependency>            			 		                                                                                 
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.connector.version}</version>
+            </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>

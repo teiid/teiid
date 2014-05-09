@@ -29,6 +29,9 @@
                 <exclude>**/stax2-*</exclude>
                 <exclude>**/woodstox-*</exclude>
                 <exclude>**/wsdl4j-*</exclude>
+                <exclude>**/javax*</exclude>
+                <exclude>**/txw2*</exclude>
+                <exclude>**/istack-commons-runtime*</exclude>
             </excludes>           
         </fileSet>
     </fileSets>

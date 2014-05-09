@@ -21,7 +21,9 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -38,13 +40,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -273,7 +269,8 @@ public class TestVisitors {
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 		
         ArgumentCaptor<String> queryArgument = ArgumentCaptor.forClass(String.class);
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(Mockito.mock(QueryResult.class));
+        QueryResult qr = Mockito.mock(QueryResult.class);
+        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
         
 		Execution execution = factory.createExecution(command, ec, rm, connection);
 		execution.execute();

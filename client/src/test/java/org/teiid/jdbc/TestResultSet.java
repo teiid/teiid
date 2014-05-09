@@ -23,18 +23,15 @@
 package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
 
 import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -764,7 +761,8 @@ public class TestResultSet {
 
 	static StatementImpl createMockStatement(int cursorType) throws SQLException {
 		StatementImpl statement = mock(StatementImpl.class);
-		stub(statement.getDQP()).toReturn(mock(DQP.class));
+		DQP dqp = mock(DQP.class);
+		stub(statement.getDQP()).toReturn(dqp);
 		stub(statement.getResultSetType()).toReturn(cursorType);
 		TimeZone tz = TimeZone.getTimeZone("GMT-06:00"); //$NON-NLS-1$
 		TimeZone serverTz = TimeZone.getTimeZone("GMT-05:00"); //$NON-NLS-1$

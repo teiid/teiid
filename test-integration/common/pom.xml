@@ -19,8 +19,8 @@
   			<artifactId>h2</artifactId>
 		</dependency>
         <dependency>
-          <groupId>commons-httpclient</groupId>
-          <artifactId>commons-httpclient</artifactId>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
         </dependency>        
 		<dependency>
   			<artifactId>teiid-jboss-integration</artifactId>
