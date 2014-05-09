@@ -195,9 +195,19 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" AND UCASE(TableName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
-        .append(" AND KeyType IN ('Unique', ?)") //$NON-NLS-1$
-        .append(" ORDER BY NON_UNIQUE, TYPE, INDEX_NAME, ORDINAL_POSITION").toString(); //$NON-NLS-1$
+        .append(" AND KeyType IN ('Unique', ?)").toString(); //$NON-NLS-1$
     
+    private static final String QUERY_INDEX_INFO_CARDINALITY =
+      new StringBuffer("SELECT VDBName AS TABLE_CAT, SchemaName AS TABLE_SCHEM, Name AS TABLE_NAME") //$NON-NLS-1$
+        .append(", FALSE AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, null AS INDEX_NAME") //$NON-NLS-1$
+        .append(", 0 AS TYPE, cast(0 as short) AS ORDINAL_POSITION, null AS COLUMN_NAME") //$NON-NLS-1$
+        .append(", NULL AS ASC_OR_DESC, CARDINALITY, 1 AS PAGES, NULL AS FILTER_CONDITION") //$NON-NLS-1$
+        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Tables t") //$NON-NLS-1$ //$NON-NLS-2$
+        .append(" WHERE Cardinality > -1") //$NON-NLS-1$
+        .append(" AND UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(Name)") .append(LIKE_ESCAPE).toString(); //$NON-NLS-1$
+
     private static final String QUERY_PRIMARY_KEYS =
       new StringBuffer("SELECT VDBName as TABLE_CAT, SchemaName AS TABLE_SCHEM, TableName AS TABLE_NAME") //$NON-NLS-1$
         .append(", k.Name AS COLUMN_NAME, convert(Position, short) AS KEY_SEQ, KeyName AS PK_NAME") //$NON-NLS-1$
@@ -863,13 +873,24 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         PreparedStatement prepareQuery = null;
 
         try {
-            prepareQuery = driverConnection.prepareStatement(QUERY_INDEX_INFO); 
+        	String query = QUERY_INDEX_INFO;
+        	if (approximate) {
+        		query += " UNION ALL " + QUERY_INDEX_INFO_CARDINALITY;
+        	}
+        	query += " ORDER BY NON_UNIQUE, TYPE, INDEX_NAME, ORDINAL_POSITION";
+
+            prepareQuery = driverConnection.prepareStatement(query); 
             prepareQuery.setObject(1, catalog.toUpperCase());
             prepareQuery.setObject(2, schema.toUpperCase());
             prepareQuery.setObject(3, table.toUpperCase());
             prepareQuery.setObject(4, unique?null:"Index"); //$NON-NLS-1$
             
-
+            if (approximate) {
+            	prepareQuery.setObject(5, catalog.toUpperCase());
+                prepareQuery.setObject(6, schema.toUpperCase());
+                prepareQuery.setObject(7, table.toUpperCase());
+            }
+            
             // make a query against runtimemetadata and get results
             results = (ResultSetImpl) prepareQuery.executeQuery();
 
