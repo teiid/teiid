@@ -25,7 +25,6 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-solr</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>        
         <dependency>
