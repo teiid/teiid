@@ -21,19 +21,10 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Statement;
+import java.io.*;
+import java.sql.*;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,7 +55,7 @@ public class TestRelate {
     	//config.setUserRequestSourceConcurrency(1);
     	server = new FakeServer(true);
     	JdbcDataSource h2ds = new JdbcDataSource();
-    	h2ds.setURL("jdbc:h2:zip:src/test/resources/relate/test.zip!/test");
+    	h2ds.setURL("jdbc:h2:zip:src/test/resources/relate/test.zip!/test;ACCESS_MODE_LOG=RW");
     	final DataSource ds = JdbcConnectionPool.create(h2ds);
 		ExecutionFactory h2 = new H2ExecutionFactory();
 		h2.start();
