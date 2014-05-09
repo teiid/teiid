@@ -40,10 +40,12 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-search</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
+            <scope>provided</scope>
         </dependency>  
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
