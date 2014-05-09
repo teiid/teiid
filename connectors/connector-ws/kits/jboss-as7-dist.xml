@@ -29,6 +29,7 @@
                 <exclude>**/stax2-*</exclude>
                 <exclude>**/woodstox-*</exclude>
                 <exclude>**/wsdl4j-*</exclude>
+                <exclude>**/javax*</exclude>
             </excludes>           
         </fileSet>
     </fileSets>
