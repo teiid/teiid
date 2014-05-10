@@ -179,11 +179,6 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	}
 	
 	@Override
-	public boolean supportsArrayType() {
-		return true;
-	}
-	
-	@Override
 	public String getHibernateDialectClassName() {
 		return "org.hibernate.dialect.DB2Dialect"; //$NON-NLS-1$
 	}
