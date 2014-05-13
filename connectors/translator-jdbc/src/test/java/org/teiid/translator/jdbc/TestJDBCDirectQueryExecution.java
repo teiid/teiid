@@ -22,14 +22,9 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.sql.*;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -58,7 +53,8 @@ public class TestJDBCDirectQueryExecution {
 		Mockito.stub(rs.next()).toReturn(true);
 		Mockito.stub(rs.getObject(1)).toReturn(5);
 		Mockito.stub(rs.getObject(2)).toReturn("five");
-		Mockito.stub(connection.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
+		DatabaseMetaData dbmd = Mockito.mock(DatabaseMetaData.class);
+		Mockito.stub(connection.getMetaData()).toReturn(dbmd);
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
 		ef.setSupportsDirectQueryProcedure(true);
@@ -83,7 +79,8 @@ public class TestJDBCDirectQueryExecution {
 		Mockito.stub(rs.next()).toReturn(true);
 		Mockito.stub(rs.getObject(1)).toReturn(5);
 		Mockito.stub(rs.getObject(2)).toReturn("five");
-		Mockito.stub(connection.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
+		DatabaseMetaData dbmd = Mockito.mock(DatabaseMetaData.class);
+		Mockito.stub(connection.getMetaData()).toReturn(dbmd);
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
 		ef.setSupportsDirectQueryProcedure(true);
@@ -105,7 +102,8 @@ public class TestJDBCDirectQueryExecution {
 		Mockito.stub(rs.getMetaData()).toReturn(rsm);
 		Mockito.stub(rsm.getColumnCount()).toReturn(2);
 		Mockito.stub(connection.prepareStatement("update source set e1=? where e2 = ?")).toReturn(stmt); //$NON-NLS-1$
-		Mockito.stub(connection.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
+		DatabaseMetaData dbmd = Mockito.mock(DatabaseMetaData.class);
+		Mockito.stub(connection.getMetaData()).toReturn(dbmd);
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
 		ef.setSupportsDirectQueryProcedure(true);

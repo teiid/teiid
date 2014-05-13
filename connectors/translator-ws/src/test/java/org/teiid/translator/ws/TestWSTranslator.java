@@ -22,7 +22,8 @@
 
 package org.teiid.translator.ws;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
@@ -76,7 +77,8 @@ public class TestWSTranslator {
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
 		WSConnection mockConnection = Mockito.mock(WSConnection.class);
 		Dispatch<Object> mockDispatch = mockDispatch();
-		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(Mockito.mock(DataSource.class));
+		DataSource source = Mockito.mock(DataSource.class);
+		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(source);
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		CommandBuilder cb = new CommandBuilder(tm);
 		
@@ -87,7 +89,8 @@ public class TestWSTranslator {
 
 		mockConnection = Mockito.mock(WSConnection.class);
 		mockDispatch = Mockito.mock(Dispatch.class);
-		Mockito.stub(mockDispatch.invoke(Mockito.any(StAXSource.class))).toReturn(Mockito.mock(StAXSource.class));
+		StAXSource ssource = Mockito.mock(StAXSource.class);
+		Mockito.stub(mockDispatch.invoke(Mockito.any(StAXSource.class))).toReturn(ssource);
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		call = (Call)cb.getCommand("call invoke()");
 		WSProcedureExecution wpe = new WSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);

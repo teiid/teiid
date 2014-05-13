@@ -22,7 +22,7 @@
 
 package org.teiid.resource.adapter.cassandra;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -38,7 +38,8 @@ public class TestCassandraConnectionImpl {
 		config.setKeyspace("\"x\"");
 		Metadata metadata = Mockito.mock(Metadata.class);
 		CassandraConnectionImpl cci = new CassandraConnectionImpl(config, metadata);
-		Mockito.stub(metadata.getKeyspace("x")).toReturn(Mockito.mock(KeyspaceMetadata.class));
+		KeyspaceMetadata key_metadata = Mockito.mock(KeyspaceMetadata.class);
+		Mockito.stub(metadata.getKeyspace("x")).toReturn(key_metadata);
 		assertNotNull(cci.keyspaceInfo());
 	}
 }

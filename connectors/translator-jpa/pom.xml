@@ -26,13 +26,11 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>   
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>translator-jdbc</artifactId>
-            <version>${project.version}</version>        
+            <artifactId>translator-jdbc</artifactId>       
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

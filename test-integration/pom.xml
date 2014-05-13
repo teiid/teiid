@@ -11,14 +11,6 @@
 	<name>Integration Tests</name>
 	<description>Integration tests spanning	server/embedded/connectors.</description>
 
-	<properties>
-		<derby.version>10.2.1.6</derby.version>
-		<mysql.connector.version>5.1.5</mysql.connector.version>
-		<postgresql.version>8.4-702.jdbc4</postgresql.version>
-
-		<apache.ant.version>1.7.0</apache.ant.version>
-	</properties>
-	
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -41,12 +33,10 @@
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>translator-jdbc</artifactId>
-			<version>${project.version}</version>
 		</dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-loopback</artifactId>
-            <version>${project.version}</version>
         </dependency>        
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -69,7 +59,6 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-adminshell</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -80,8 +69,6 @@
 		<dependency>
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derby</artifactId>
-			<version>${derby.version}</version>
-
 		</dependency>
 		
 		<dependency>
@@ -92,28 +79,28 @@
     	
     	<dependency>
 			<groupId>javax.transaction</groupId>
-                <artifactId>jta</artifactId>
+            <artifactId>jta</artifactId>
 		</dependency>
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>test</scope>
-    </dependency> 
-    <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging</artifactId>
-        <scope>test</scope>        
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-clustering-jgroups</artifactId>
-      <scope>test</scope> 
-    </dependency> 
-    <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty</artifactId>
-        <scope>test</scope> 
-    </dependency>
+		<dependency>
+			<groupId>org.jboss</groupId>
+			<artifactId>jboss-vfs</artifactId>
+			<scope>test</scope>
+		</dependency> 
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging</artifactId>
+			<scope>test</scope>        
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.as</groupId>
+			<artifactId>jboss-as-clustering-jgroups</artifactId>
+			<scope>test</scope> 
+		</dependency> 
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty</artifactId>
+			<scope>test</scope> 
+		</dependency>
      
 	</dependencies>
 

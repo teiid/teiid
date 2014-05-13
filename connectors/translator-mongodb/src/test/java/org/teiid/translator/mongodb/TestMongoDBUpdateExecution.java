@@ -237,7 +237,8 @@ public class TestMongoDBUpdateExecution {
 	private DBCollection helpUpdate(String query, String[] expectedCollection, DBObject match_result, ArrayList<DBObject> results) throws TranslatorException {
 		Command cmd = this.utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-		Mockito.stub(context.getCommandContext()).toReturn(Mockito.mock(CommandContext.class));
+		CommandContext cc = Mockito.mock(CommandContext.class);
+		Mockito.stub(context.getCommandContext()).toReturn(cc);
 		MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
 		DB db = Mockito.mock(DB.class);
 		DBCollection dbCollection = Mockito.mock(DBCollection.class);
@@ -249,11 +250,12 @@ public class TestMongoDBUpdateExecution {
 
 		Mockito.stub(db.getCollectionFromString(Mockito.anyString())).toReturn(dbCollection);
 		Mockito.stub(dbCollection.findOne(Mockito.any(BasicDBObject.class))).toReturn(match_result);
+		WriteResult result = Mockito.mock(WriteResult.class);
 		Mockito.stub(dbCollection.update(Mockito.any(BasicDBObject.class),
 				Mockito.any(BasicDBObject.class),
 				Mockito.eq(false),
 				Mockito.eq(true),
-				Mockito.any(WriteConcern.class))).toReturn(Mockito.mock(WriteResult.class));;
+				Mockito.any(WriteConcern.class))).toReturn(result);
 
 		if (results != null) {
 			AggregationOutput out = Mockito.mock(AggregationOutput.class);

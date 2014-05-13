@@ -30,7 +30,6 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -41,22 +40,22 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-search</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
+            <scope>provided</scope>
         </dependency>  
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
-            <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>        
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-server-hotrod</artifactId>
-	      <version>${version.org.infinispan}</version>
 	      <scope>test</scope>
 	    </dependency>	   
 	   

@@ -22,11 +22,7 @@
 
 package org.teiid.translator.jdbc;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -79,7 +75,8 @@ public class TestJDBCUpdateExecution {
 			}			
 		};
 		ResultSet r = Mockito.mock(ResultSet.class);
-		Mockito.stub(r.getMetaData()).toReturn(Mockito.mock(ResultSetMetaData.class));
+		ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
+		Mockito.stub(r.getMetaData()).toReturn(rs);
 		
 		Mockito.stub(p.getGeneratedKeys()).toReturn(r);
 		

@@ -22,7 +22,7 @@
 
 package org.teiid.translator.ws;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.Properties;
@@ -69,7 +69,8 @@ public class TestWSTranslatorMetadata {
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
 		
 		Dispatch<Object> mockDispatch = Mockito.mock(Dispatch.class);
-		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(Mockito.mock(StAXSource.class));
+		StAXSource source = Mockito.mock(StAXSource.class);
+		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(source);
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		
 		CommandBuilder cb = new CommandBuilder(tm);

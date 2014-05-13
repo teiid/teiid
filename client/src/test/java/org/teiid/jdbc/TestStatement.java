@@ -75,7 +75,8 @@ public class TestStatement {
 		results.getResultsReceiver().receiveResults(rm);
 		Mockito.stub(conn.getDQP()).toReturn(dqp);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
-			protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
+			@Override
+            protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
 				return null;
 			}
 		};
@@ -141,7 +142,8 @@ public class TestStatement {
 	
 	@Test public void testDisableLocalTransations() throws Exception {
 		ServerConnection mock = Mockito.mock(ServerConnection.class);
-		Mockito.stub(mock.getService(DQP.class)).toReturn(Mockito.mock(DQP.class));
+		DQP dqp = Mockito.mock(DQP.class);
+		Mockito.stub(mock.getService(DQP.class)).toReturn(dqp);
 		ConnectionImpl conn = new ConnectionImpl(mock, new Properties(), "x");
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		assertTrue(conn.getAutoCommit());

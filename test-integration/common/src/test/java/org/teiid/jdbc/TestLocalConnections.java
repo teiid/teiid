@@ -24,7 +24,6 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -34,13 +33,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -72,12 +65,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.security.SecurityHelper;
-import org.teiid.translator.DataNotAvailableException;
-import org.teiid.translator.Execution;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.TranslatorException;
+import org.teiid.translator.*;
 import org.teiid.transport.LogonImpl;
 
 @SuppressWarnings("nls")
@@ -471,7 +459,7 @@ public class TestLocalConnections {
 			rs.next();
 			String id1 = rs.getString(1);
 			rs.close();
-			assertNotEquals(id, id1);
+			assertFalse(id.equals(id1));
 			try {
 				server.getSessionService().pingServer(id);
 				//should have logged off

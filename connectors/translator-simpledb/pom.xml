@@ -30,7 +30,6 @@
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>simpledb-api</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
