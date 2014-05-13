@@ -109,9 +109,6 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 		@Override
 		public String getContentType() {
-			if (this.contentType == null) {
-				return "application/octet-stream"; //$NON-NLS-1$
-			}
 			return this.contentType;
 		}
 	}
@@ -165,7 +162,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				this.responseContext.putAll(response.getMetadata());
 
 				ArrayList contentTypes = (ArrayList)this.responseContext.get("content-type"); //$NON-NLS-1$
-				return new HttpDataSource(url, (InputStream)response.getEntity(), contentTypes != null ? (String)contentTypes.get(0):null);
+				String contentType = contentTypes != null ? (String)contentTypes.get(0):"application/octet-stream"; //$NON-NLS-1$
+				return new HttpDataSource(url, (InputStream)response.getEntity(), contentType);
 			} catch (IOException e) {
 				throw new WebServiceException(e);
 			}
