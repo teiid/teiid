@@ -162,7 +162,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				this.responseContext.putAll(response.getMetadata());
 
 				ArrayList contentTypes = (ArrayList)this.responseContext.get("content-type"); //$NON-NLS-1$
-				return new HttpDataSource(url, (InputStream)response.getEntity(), (String)contentTypes.get(0));
+				String contentType = contentTypes != null ? (String)contentTypes.get(0):"application/octet-stream"; //$NON-NLS-1$
+				return new HttpDataSource(url, (InputStream)response.getEntity(), contentType);
 			} catch (IOException e) {
 				throw new WebServiceException(e);
 			}
