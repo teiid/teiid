@@ -26,7 +26,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.cassandra.db.KeyspaceNotDefinedException;
+import javax.resource.ResourceException;
+
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataFactory;
@@ -49,7 +50,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
     		for (TableMetadata columnFamily : connection.keyspaceInfo().getTables()){
     			addTable(factory, columnFamily);
     		}
-        } catch (KeyspaceNotDefinedException e) {
+        } catch (ResourceException e) {
             throw new TranslatorException(Event.TEIID22000, e, CassandraExecutionFactory.UTIL.gs(Event.TEIID22000));
         }
 	}

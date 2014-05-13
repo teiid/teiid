@@ -22,19 +22,13 @@
   
   <dependencySets>
       <dependencySet>
+            <excludes>
+               <exclude>log4j:log4j</exclude>
+            </excludes>
             <outputDirectory>optional/google</outputDirectory>
-            <includes>
-                <include>org.jboss.teiid.connectors:google-api</include>
-                <include>org.jboss.teiid.connectors.google:gdata-core</include>
-                <include>org.jboss.teiid.connectors.google:gdata-spreadsheet</include>
-            </includes>        
-            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <unpack>false</unpack>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
       </dependencySet>  
-     <dependencySet>
-         <outputDirectory>optional/google</outputDirectory>
-         <unpack>false</unpack>
-         <useTransitiveDependencies>false</useTransitiveDependencies>
-     </dependencySet>
   </dependencySets>
     
 </assembly>

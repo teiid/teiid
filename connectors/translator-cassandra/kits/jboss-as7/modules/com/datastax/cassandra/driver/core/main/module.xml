@@ -1,22 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="com.datastax.cassandra.driver.core">
     <resources>
-        <resource-root path="cassandra-driver-core-1.0.4.jar"/>
-        <resource-root path="cassandra-all-1.2.9.jar"/>
-        <resource-root path="snappy-java-1.0.5.jar"/>
-        <resource-root path="metrics-core-2.2.0.jar"/>
-        <resource-root path="concurrentlinkedhashmap-lru-1.3.jar"/>
+        <resource-root path="cassandra-driver-core-2.0.1.jar"/>
+        <resource-root path="metrics-core-3.0.2.jar"/>
+        <resource-root path="guava-16.0.1.jar"/>
     </resources>
 
     <dependencies>
         <module name="javax.api" />
         <module name="org.slf4j" />
         <module name="org.jboss.netty"/>
-        <module name="org.codehaus.jackson.jackson-core-asl"/>
-        <module name="org.codehaus.jackson.jackson-mapper-asl"/>
-        <module name="com.google.guava"/>
-        <module name="org.apache.thrift"/>
-        <module name="org.apache.httpcomponents"/>
     </dependencies>
 
 </module>

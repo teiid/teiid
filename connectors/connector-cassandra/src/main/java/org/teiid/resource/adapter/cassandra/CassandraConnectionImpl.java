@@ -24,13 +24,16 @@ package org.teiid.resource.adapter.cassandra;
 
 import javax.resource.ResourceException;
 
-import org.apache.cassandra.db.KeyspaceNotDefinedException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.cassandra.CassandraConnection;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Session;
 
 /**
  * Represents a connection to Cassandra database.
@@ -69,7 +72,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	@Override
 	public void close() throws ResourceException {
 		if(cluster != null){
-			cluster.shutdown();
+			cluster.close();
 		}
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("shutting_down")); //$NON-NLS-1$
 	}
@@ -86,7 +89,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	}
 
 	@Override
-	public KeyspaceMetadata keyspaceInfo() throws KeyspaceNotDefinedException {
+	public KeyspaceMetadata keyspaceInfo() throws ResourceException {
 		String keyspace = config.getKeyspace();
 		KeyspaceMetadata result = metadata.getKeyspace(keyspace);
 		if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 1) == '"') {
@@ -95,7 +98,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 			result = metadata.getKeyspace(keyspace);
 		}
 		if (result == null) {
-			throw new KeyspaceNotDefinedException(keyspace);
+			throw new ResourceException(keyspace);
 		}
 		return result;
 	}

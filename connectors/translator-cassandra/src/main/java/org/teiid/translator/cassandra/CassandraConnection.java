@@ -22,9 +22,8 @@
 
 package org.teiid.translator.cassandra;
 
+import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
-
-import org.apache.cassandra.db.KeyspaceNotDefinedException;
 
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.ResultSet;
@@ -43,6 +42,6 @@ public interface CassandraConnection extends Connection{
 	 * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
 	 * @throws KeyspaceNotDefinedException 
 	 * */
-	public KeyspaceMetadata keyspaceInfo() throws KeyspaceNotDefinedException;
+	public KeyspaceMetadata keyspaceInfo() throws ResourceException;
 	
 }

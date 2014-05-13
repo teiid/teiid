@@ -85,13 +85,14 @@
         <version.noggit>0.5</version.noggit>
         <version.org.apache.poi>3.10-FINAL</version.org.apache.poi>
         <version.aws-java-sdk>1.5.7</version.aws-java-sdk>
-        <version.cassandra-driver-core>1.0.4</version.cassandra-driver-core>
+        <version.cassandra-driver-core>2.0.1</version.cassandra-driver-core>
         <version.org.jboss.resteasy.tjws>2.3.6.Final</version.org.jboss.resteasy.tjws>        
         <version.postgresql>9.1-901.jdbc4</version.postgresql>
         <derby.version>10.2.1.6</derby.version>
 		<mysql.connector.version>5.1.5</mysql.connector.version>
         <version.org.codehaus.groovy>1.7.2</version.org.codehaus.groovy>
         <version.com.h2database>1.3.152</version.com.h2database>
+        <version.com.codahale.metrics.metrics-core>3.0.2</version.com.codahale.metrics.metrics-core>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -977,6 +978,11 @@
                 <groupId>com.datastax.cassandra</groupId>
                 <artifactId>cassandra-driver-core</artifactId>
                 <version>${version.cassandra-driver-core}</version>                
+            </dependency>
+            <dependency>
+                <groupId>com.codahale.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>${version.com.codahale.metrics.metrics-core}</version>                
             </dependency>      
             <dependency>
               <groupId>org.apache.httpcomponents</groupId>
