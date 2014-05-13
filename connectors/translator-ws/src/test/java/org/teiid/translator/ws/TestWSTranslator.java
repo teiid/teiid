@@ -45,6 +45,7 @@ import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Call;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -64,6 +65,12 @@ public class TestWSTranslator {
 		p = mf.getSchema().getProcedure("invoke");
 		assertEquals(6, p.getParameters().size());
 		p.getParameters().remove(5);
+		//designer treated the result as an out parameter
+		p.getParameters().get(0).setType(Type.Out);
+		p.getParameters().add(p.getParameters().remove(0));
+		for (int i = 0; i < p.getParameters().size(); i++) {
+			p.getParameters().get(i).setPosition(i+1);
+		}
 		
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);

@@ -43,6 +43,7 @@ import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.language.Argument;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -159,7 +160,9 @@ public class WSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() > 4 && Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
+		if (returnValue != null && procedure.getArguments().size() > 4
+				&& procedure.getArguments().get(4).getDirection() == Direction.IN
+				&& Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
 			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
 			XMLType xml = new XMLType(sqlXml);
 			xml.setType(Type.DOCUMENT);
