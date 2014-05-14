@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
@@ -49,6 +50,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -342,6 +344,17 @@ public class TestDataTierManager {
     	assertNull(((CachingTupleSource)ts).dtts.scope);
     	
     	assertEquals(0, this.rm.getRsCache().getCachePutCount());
+    }
+    
+    @Test public void testCheckForUpdatesWithBatched() throws Exception {
+    	helpSetupDataTierManager();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        AtomicRequestMessage request = helpSetupRequest("delete from bqt1.smalla", 1, metadata);
+        Command command = helpGetCommand("insert into bqt1.smalla (stringkey) values ('1')", metadata);
+        BatchedUpdateCommand bac = new BatchedUpdateCommand(Arrays.asList(request.getCommand(), command));
+        request.setCommand(bac);
+        DataTierTupleSource dtts = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
+        pullTuples(dtts, 2);
     }
     
 }

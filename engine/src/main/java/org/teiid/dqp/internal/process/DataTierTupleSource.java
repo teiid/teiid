@@ -220,7 +220,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (!RelationalNodeUtil.isUpdate(command) || !(command instanceof ProcedureContainer)) {
 			return;
 		}
-		ProcedureContainer pc = (ProcedureContainer)aqr.getCommand();
+		ProcedureContainer pc = (ProcedureContainer)command;
 		GroupSymbol gs = pc.getGroup();
 		Integer zero = Integer.valueOf(0);
 		if (results.getResults().length <= commandIndex || zero.equals(results.getResults()[commandIndex].get(0))) {
