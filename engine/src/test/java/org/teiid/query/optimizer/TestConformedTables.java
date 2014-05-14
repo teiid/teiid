@@ -22,6 +22,7 @@
 
 package org.teiid.query.optimizer;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import org.junit.BeforeClass;
@@ -33,6 +34,8 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
+import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -53,12 +56,16 @@ public class TestConformedTables {
 	@Test public void testConformedJoin() throws Exception {
 		String sql = "select pm1.g1.e1 from pm1.g1, pm2.g2 where g1.e1=g2.e1";
 		
-		helpPlan(sql, tm, new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm2.g2 AS g_1 WHERE g_0.e1 = g_1.e1"}, ComparisonMode.EXACT_COMMAND_STRING);
+		RelationalPlan plan = (RelationalPlan)helpPlan(sql, tm, new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm2.g2 AS g_1 WHERE g_0.e1 = g_1.e1"}, ComparisonMode.EXACT_COMMAND_STRING);
+		AccessNode anode = (AccessNode) plan.getRootNode();
+		assertEquals("pm2", anode.getModelName());
 		
 		//it should work either way
-		sql = "select pm1.g1.e1 from pm1.g2, pm1.g1 where g1.e1=g2.e1";
+		sql = "select pm1.g1.e1 from pm2.g2, pm1.g1 where g1.e1=g2.e1";
 		
-		helpPlan(sql, tm, new String[] {"SELECT g_1.e1 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE g_1.e1 = g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING);
+		plan = (RelationalPlan)helpPlan(sql, tm, new String[] {"SELECT g_1.e1 FROM pm2.g2 AS g_0, pm1.g1 AS g_1 WHERE g_1.e1 = g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING);
+		anode = (AccessNode) plan.getRootNode();
+		assertEquals("pm2", anode.getModelName());
 	}
 	
 	@Test public void testConformedJoin1() throws Exception {
