@@ -967,11 +967,20 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			PlanNode other) {
     	Set<Object> conformedSources = (Set<Object>)accessNode.getProperty(Info.CONFORMED_SOURCES);
     	Set<Object> conformedSourcesOther = (Set<Object>)other.getProperty(Info.CONFORMED_SOURCES);
-    	if (conformedSources == null || conformedSources.isEmpty() || conformedSourcesOther == null || conformedSourcesOther.isEmpty()) {
-    		accessNode.setProperty(Info.CONFORMED_SOURCES, null);
+		if (conformedSources == null && conformedSourcesOther == null) {
+			accessNode.setProperty(Info.CONFORMED_SOURCES, null);
     		return;
+		}
+    	if (conformedSources == null) {
+    		conformedSources = new HashSet<Object>();
+    		conformedSources.add(accessNode.getProperty(Info.MODEL_ID));
     	}
-    	conformedSources.retainAll(conformedSourcesOther);
+    	if (conformedSourcesOther != null) { 
+    		conformedSources.retainAll(conformedSourcesOther);
+    	} else {
+    		conformedSources.clear();
+    		conformedSources.add(other.getProperty(Info.MODEL_ID));
+    	}
     	updateConformed(accessNode, conformedSources);
 	}
 
@@ -984,7 +993,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     		//switch to another id - TODO: make a better selection
     		accessNode.setProperty(Info.MODEL_ID, conformedSources.iterator().next());
     	}
-    	if (conformedSources.size() == 1) {
+    	if (conformedSources.size() < 2) {
     		accessNode.setProperty(Info.CONFORMED_SOURCES, null);
     	}
 	}
