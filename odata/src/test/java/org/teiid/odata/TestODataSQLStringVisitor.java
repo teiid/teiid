@@ -142,6 +142,7 @@ public class TestODataSQLStringVisitor {
 		te("toupper(x)", "UCASE(x)");
 		te("trim('x')", "TRIM(' ' FROM 'x')");
 		te("trim(x) ne 'foo' and toupper(y) eq 'bar'", "(TRIM(' ' FROM x) <> 'foo') AND (UCASE(y) = 'bar')");
+		te("substringof(x, 'foo')", "LOCATE(x, 'foo', 1) >= 1");
 	}	
 	
 	

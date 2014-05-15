@@ -771,11 +771,15 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(StartsWithMethodCallExpression expr) {
+		locate(expr, CompareCriteria.EQ);
+	}
+
+	private void locate(BoolMethodExpression expr, int compare) {
 		visitNode(expr.getTarget());
 		Expression target = stack.pop();
 		visitNode(expr.getValue());
 		Expression value = stack.pop();		
-		this.criteria = new CompareCriteria(new Function("LOCATE", new Expression[] {value, target, new Constant(1)}), CompareCriteria.EQ, new Constant(1));
+		this.criteria = new CompareCriteria(new Function("LOCATE", new Expression[] {value, target, new Constant(1)}), compare, new Constant(1));
 		stack.push(this.criteria);
 	}
 
@@ -817,7 +821,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(SubstringOfMethodCallExpression expr) {
-		throw new UnsupportedOperationException();
+		locate(expr, CompareCriteria.GE);
 	}
 
 	@Override
