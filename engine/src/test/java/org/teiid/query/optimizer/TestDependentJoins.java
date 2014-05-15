@@ -223,6 +223,50 @@ public class TestDependentJoins {
         }); 
         checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
     }
+    
+    @Test public void testGlobalHint() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep @g4.g2", TestOptimizer.example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
+    }
+    
+    @Test public void testGlobalHint1() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 as x option makedep @x.g2", TestOptimizer.example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
+    }
 
 	@Test public void testDepJoinMultiGroupBaseline() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select vm1.g4.*, pm1.g3.e1 FROM vm1.g4, pm1.g3 where pm1.g3.e1=vm1.g4.e1", TestOptimizer.example1(), //$NON-NLS-1$

@@ -34,6 +34,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Procedure;
@@ -467,8 +468,13 @@ public class RelationalPlanner {
         for (String groupName : groups) {
         	Object val = valIter.next();
             // Walk through nodes and apply hint to all that match group name
-            boolean appliedHint = applyHint(nodes, groupName, hintProperty, val);
-
+        	boolean appliedHint = false;
+        	if (groupName.startsWith("@")) { //$NON-NLS-1$
+	        	appliedHint = applyGlobalTableHint(plan, hintProperty, groupName.substring(1), val);
+        	} 
+        	if (!appliedHint) {
+        		appliedHint = applyHint(nodes, groupName, hintProperty, val);
+        	}
             if(! appliedHint) {
                 //check if it is partial group name
                 Collection groupNames = metadata.getGroupsForPartialName(groupName);
@@ -502,6 +508,34 @@ public class RelationalPlanner {
         }
         return appliedHint;
     }
+    
+    private boolean applyGlobalTableHint(PlanNode plan,
+			NodeConstants.Info hintProperty, String groupName, Object value) {
+		GroupSymbol gs = new GroupSymbol(groupName);
+		List<String> nameParts = StringUtil.split(gs.getName(), "."); //$NON-NLS-1$
+		PlanNode root = plan;
+		boolean found = true;
+		for (int i = 0; i < nameParts.size() && found; i++) {
+			String part = nameParts.get(i);
+			List<PlanNode> targets = NodeEditor.findAllNodes(root.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE);
+			boolean leaf = i == nameParts.size() - 1;
+			found = false;
+			for (PlanNode planNode : targets) {
+				if (part.equalsIgnoreCase(planNode.getGroups().iterator().next().getShortName())) {
+					if (leaf) {
+						planNode.setProperty(hintProperty, value);
+		                return true;
+					} else if (planNode.getChildren().isEmpty()) {
+						return false;
+					}
+					root = planNode;
+					found = true;
+					break;
+				}
+			}
+		}
+		return false;
+	}
 
     public RuleStack buildRules() {
         RuleStack rules = new RuleStack();
