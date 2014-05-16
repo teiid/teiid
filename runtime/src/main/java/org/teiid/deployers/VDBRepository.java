@@ -64,6 +64,7 @@ import org.teiid.vdb.runtime.VDBKey;
  * Repository for VDBs
  */
 public class VDBRepository implements Serializable{
+	private static final String LIFECYCLE_CONTEXT = LogConstants.CTX_RUNTIME + ".VDBLifeCycleListener";
 	private static final long serialVersionUID = 312177538191772674L;
 	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
 	
@@ -297,14 +298,12 @@ public class VDBRepository implements Serializable{
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
 					if (!metadataAwareVDB.isPreview() && !processMetadataValidatorReport(key, report)) {
 						metadataAwareVDB.setStatus(Status.FAILED);
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
 						notifyFinished(name, version, v, reload);
 						return;
 					}
 				} 
 				validateDataSources(metadataAwareVDB);
 				metadataAwareVDB.setStatus(Status.ACTIVE);
-				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
 				notifyFinished(name, version, v, reload);
 			} finally {
 				if (metadataAwareVDB.getStatus() != Status.ACTIVE && metadataAwareVDB.getStatus() != Status.FAILED) {
@@ -348,6 +347,7 @@ public class VDBRepository implements Serializable{
 	
 	
 	private void notifyFinished(String name, int version, CompositeVDB v, boolean reloading) {
+		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, v.getVDB().getStatus()));
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.finishedDeployment(name, version, v, reloading);
 		}
@@ -362,18 +362,21 @@ public class VDBRepository implements Serializable{
 	}
 	
 	private void notifyAdd(String name, int version, CompositeVDB vdb, boolean reloading) {
+		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40118,name, version, reloading));
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.added(name, version, vdb, reloading);
 		}
 	}
 	
 	private void notifyRemove(String name, int version, CompositeVDB vdb) {
+		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40119,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.removed(name, version, vdb);
 		}
 	}
 	
 	private void notifyBeforeRemove(String name, int version, CompositeVDB vdb) {
+		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40120,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.beforeRemove(name, version, vdb);
 		}
