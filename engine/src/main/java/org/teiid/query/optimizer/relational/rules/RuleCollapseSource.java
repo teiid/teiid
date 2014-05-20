@@ -199,15 +199,20 @@ public final class RuleCollapseSource implements OptimizerRule {
             SetQuery unionCommand = new SetQuery(setOp);
             boolean unionAll = ((Boolean)setOpNode.getProperty(NodeConstants.Info.USE_ALL)).booleanValue();
             unionCommand.setAll(unionAll);
+            int count = 0;
+            OrderBy orderBy = null;
             PlanNode sort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.SET_OP);
             if (sort != null) {
                 processOrderBy(sort, unionCommand, modelID, context, capFinder);
+                orderBy = unionCommand.getOrderBy();
+                unionCommand.setOrderBy(null);
+                //we have to remap if the primary projection is from a grouping
+                PlanNode groupNode = NodeEditor.findNodePreOrder(setOpNode.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
+        		if (groupNode != null) {
+        	        SymbolMap symbolMap = (SymbolMap) groupNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        	        ExpressionMappingVisitor.mapExpressions(orderBy, symbolMap.asMap(), true);
+        		}
             }
-            PlanNode limit = NodeEditor.findNodePreOrder(node, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SET_OP);
-            if (limit != null) {
-                processLimit(limit, unionCommand, metadata);
-            }
-            int count = 0;
             for (PlanNode child : setOpNode.getChildren()) {
                 QueryCommand command = createQuery(context, capFinder, accessRoot, child);
                 if (count == 0) {
@@ -219,6 +224,11 @@ public final class RuleCollapseSource implements OptimizerRule {
                 }
                 count++;
             }
+            PlanNode limit = NodeEditor.findNodePreOrder(node, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SET_OP);
+            if (limit != null) {
+                processLimit(limit, unionCommand, metadata);
+            }
+            unionCommand.setOrderBy(orderBy);
             return unionCommand;
         }
 		Query query = new Query();
