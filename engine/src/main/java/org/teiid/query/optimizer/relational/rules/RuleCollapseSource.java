@@ -89,8 +89,11 @@ public final class RuleCollapseSource implements OptimizerRule {
             	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);
             	if (intoGroup != null) {
             		commandRoot = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SOURCE).getFirstChild();
+            		//the project into source is effectively the accessNode for the inline view check
+            		plan = removeUnnecessaryInlineView(plan, commandRoot.getParent());
+            	} else {
+            		plan = removeUnnecessaryInlineView(plan, commandRoot);
             	}
-                plan = removeUnnecessaryInlineView(plan, commandRoot);
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
             	addDistinct(metadata, capFinder, accessNode, queryCommand);
                 command = queryCommand;
@@ -176,6 +179,8 @@ public final class RuleCollapseSource implements OptimizerRule {
     	PlanNode child = accessNode.getFirstChild();
         
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
+        	
+        	
         	child.removeProperty(NodeConstants.Info.INLINE_VIEW);
         	root = RuleRaiseAccess.performRaise(root, child, accessNode);
             //add the groups from the lower project
