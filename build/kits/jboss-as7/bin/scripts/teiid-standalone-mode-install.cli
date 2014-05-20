@@ -1,5 +1,3 @@
-connect
-/extension=org.jboss.teiid:add(module=org.jboss.teiid)
 /socket-binding-group=standard-sockets/socket-binding=teiid-jdbc:add(port=31000)
 /socket-binding-group=standard-sockets/socket-binding=teiid-odbc:add(port=35432)
 
@@ -72,7 +70,6 @@ connect
 /subsystem=teiid/translator=excel:add(module=org.jboss.teiid.translator.excel)
 /subsystem=teiid/translator=impala:add(module=org.jboss.teiid.translator.hive)
 
-
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 
@@ -85,4 +82,3 @@ connect
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 
-/:reload
