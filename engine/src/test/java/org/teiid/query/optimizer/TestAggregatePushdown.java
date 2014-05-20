@@ -1342,4 +1342,16 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan("SELECT A.e1 FROM pm1.g1 A, (select e2 from pm2.g1) B WHERE A.e2 = 1 OR B.e2 IS NULL GROUP BY A.e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT g_0.e2 FROM pm2.g1 AS g_0", "SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0 GROUP BY g_0.e2, g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); 
     }
+    
+	@Test public void testGroupingOrderByUnionPushed() throws Exception {
+		String sql = "SELECT x FROM (select count(*) as x from BQT1.SmallA union all select intkey from BQT1.SmallA) x order by x"; //$NON-NLS-1$
+
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+		BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+		bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+
+        TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(bsc),  //$NON-NLS-1$
+                new String[]{"SELECT COUNT(*) AS c_0 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); 
+	}
 }
