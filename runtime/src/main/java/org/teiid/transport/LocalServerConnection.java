@@ -151,7 +151,9 @@ public class LocalServerConnection implements ServerConnection {
 					// check to make sure the current security context same as logged one
 					if (passthrough && !logon 
 							&& !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
-							&& workContext.getSession().getSessionId() != null 
+							&& workContext.getSession().getSessionId() != null
+							//if configured without a security domain the context will be null
+							&& workContext.getSession().getSecurityDomain() != null
 							&& !csr.getSecurityHelper().sameSubject(workContext.getSession().getSecurityDomain(), workContext.getSession().getSecurityContext(), workContext.getSubject())) {
 						//TODO: this is an implicit changeUser - we may want to make this explicit, but that would require pools to explicitly use changeUser
 						LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40115, workContext.getSession().getSessionId()));
