@@ -14,6 +14,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -427,6 +428,23 @@ public class TestInsertProcessing {
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
 		dataManager.addData("INSERT INTO g1 (e1) SELECT g2.e1 FROM g2", expected);
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertQueryExpressionInlineView() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE Test_Insert  (  status varchar(4000) ) options (updatable true);"
+        		+ " CREATE foreign TABLE test_a  (  a varchar(4000) )", "x",  "y" );
+
+        String sql = "INSERT INTO Test_Insert SELECT CASE WHEN (status = '0') AND (cnt > 0) THEN '4' ELSE status END AS status FROM"
+                + "(SELECT (SELECT COUNT(*) FROM test_a AS smh2) AS cnt, a AS status FROM test_a AS smh) AS a  "; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
+        
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"INSERT INTO Test_Insert (status) SELECT CASE WHEN (status = '0') AND (cnt > 0) THEN '4' ELSE status END AS status FROM (SELECT a AS status, (SELECT COUNT(*) FROM y.test_a AS g_0) AS cnt FROM test_a AS smh) AS a"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
     }
     
     @Test public void testAutoIncrementView() throws Exception {
