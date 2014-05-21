@@ -331,14 +331,13 @@ public class RulePushLimit implements OptimizerRule {
 					}
 				} else {
 					if (branch.getType() == NodeConstants.Types.ACCESS &&
-							(!RuleRaiseAccess.canRaiseOverSort(branch, metadata, capFinder, newSort, null, false)
-									|| !CapabilitiesUtil.supportsRowLimit(RuleRaiseAccess.getModelIDFromAccess(branch, metadata), metadata, capFinder))) {
-						//TODO - once we support sorted sublist processing, then we'll want to push
-						continue outer;
+							RuleRaiseAccess.canRaiseOverSort(branch, metadata, capFinder, newSort, null, false)) {
+						branch.getFirstChild().addAsParent(newSort);
+					} else {
+						//TODO: if the limit is too large we shouldn't add it in here
+						branch.addAsParent(newSort);
+						branch = newSort;
 					}
-					//TODO: a better check to see if limit is supported - as it may not be pushed
-					branch.addAsParent(newSort);
-					branch = newSort;
 				}
 				addBranchLimit(limitNode, limitNodes, metadata, parentLimit, parentOffset, branch);
 			}

@@ -28,6 +28,7 @@ import static org.teiid.query.optimizer.TestOptimizer.*;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.DupRemoveSortNode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -431,6 +432,24 @@ public class TestSortOptimization {
                 1       // UnionAll
             });
         checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
+    }
+    
+    @Test public void testUnionWithAggregation() throws Exception{
+    	QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table items (item_id varchar)", "x", "y");
+
+        String sql = "select FOO.SOURCE SOURCE, FOO.FOO_ID FOO_ID from ("
+                + "(select 'X' SOURCE, ITEMS.ITEM_ID FOO_ID from ITEMS ITEMS group by ITEMS.ITEM_ID) "
+                + "union all (select 'Y' SOURCE, ITEMS.ITEM_ID FOO_ID from ITEMS ITEMS) union all"
+                + " (select 'Z' SOURCE, '123' FOO_ID) ) FOO order by FOO_ID desc limit 50";
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        
+        helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(caps), 
+                new String[] {"SELECT 'X' AS c_0, g_1.item_id AS c_1 FROM y.items AS g_1 GROUP BY g_1.item_id UNION ALL SELECT 'Y' AS c_0, g_0.item_id AS c_1 FROM y.items AS g_0 ORDER BY c_1 DESC LIMIT 50"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
 
 }
