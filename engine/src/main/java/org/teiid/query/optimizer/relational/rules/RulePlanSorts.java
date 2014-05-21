@@ -219,9 +219,9 @@ public class RulePlanSorts implements OptimizerRule {
 		boolean raiseAccess = false;
 		//special check for unrelated order by compensation
 		if (projectNode.getType() == NodeConstants.Types.ACCESS && RuleRaiseAccess.canRaiseOverSort(projectNode, metadata, capFinder, node, record, true)) {
-			projectNode = NodeEditor.findNodePreOrder(projectNode, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
+			projectNode = NodeEditor.findNodePreOrder(projectNode, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
 			if (projectNode == null) {
-				return root; //shouldn't happen
+				return root; //no interviening project
 			}
 			raiseAccess = true;
 		} else if (projectNode.getType() == NodeConstants.Types.PROJECT && projectNode.getFirstChild() != null) {

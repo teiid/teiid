@@ -402,13 +402,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }
         }
         
+        boolean isSet = false;
         if (accessNode.getLastChild() != null) {
             //check to see if the sort applies to a union
             if (accessNode.getLastChild().getType() == NodeConstants.Types.SET_OP) {
-                return CapabilitiesUtil.supportsSetQueryOrderBy(modelID, metadata, capFinder);
-            }
-            //check to see the plan is not in a consistent state to have a sort applied
-            if (accessNode.getLastChild().getType() == NodeConstants.Types.TUPLE_LIMIT) {
+            	isSet = true;
+                if (!CapabilitiesUtil.supportsSetQueryOrderBy(modelID, metadata, capFinder)) {
+                	return false;
+                }
+            } else if (accessNode.getLastChild().getType() == NodeConstants.Types.TUPLE_LIMIT) { 
+            	//check to see the plan is not in a consistent state to have a sort applied	
                 return false;
             }
         }
@@ -418,11 +421,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         
         // If model supports the support constant parameter, then move access node
-        if (!CapabilitiesUtil.supportsOrderBy(modelID, metadata, capFinder)) {
+        if (!isSet && !CapabilitiesUtil.supportsOrderBy(modelID, metadata, capFinder)) {
         	return false;
         }
         
-        if (parentNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT) 
+        if (!isSet && parentNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT) 
         		&& !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_UNRELATED, modelID, metadata, capFinder)
         		&& NodeEditor.findParent(accessNode, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) == null
         		&& !compensateForUnrelated) {

@@ -474,7 +474,7 @@ public class TestUnionPlanning {
                 0,      // MergeJoinStrategy
                 0,      // Null
                 0,      // PlanExecution
-                1,      // Project
+                0,      // Project
                 0,      // Select
                 1,      // Sort
                 1       // UnionAll
@@ -508,7 +508,7 @@ public class TestUnionPlanning {
                 0,      // PlanExecution
                 0,      // Project
                 0,      // Select
-                1,      // Sort
+                2,      // Sort
                 1       // UnionAll
             });    
     	
