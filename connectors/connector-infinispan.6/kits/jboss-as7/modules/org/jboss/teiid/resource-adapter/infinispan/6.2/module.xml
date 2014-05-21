@@ -14,11 +14,10 @@
         <module name="org.jboss.teiid.translator.object"/>
         
         <!-- 
-            this module name is based on what the teiid infinispan-remote-cache
-            quickstart has defined as the location to put all the JDG 6.2 hotrod client jars.  
-            However, if you use a different module, be sure to update this
+            this 6.2 slot references the infinispan module installed as part of 
+            connector-infinispan-dsl.
         -->
-        <module name="org.jboss.infinispan.hotrod" slot="6.2" />
+        <module name="org.infinispan.hotrod" slot="6.2" />
         <module name="org.jboss.modules"/>
     </dependencies>
 </module>
