@@ -131,10 +131,6 @@ public class RulePushAggregates implements
             			//hybrid of the join/union/decompose pushing logic
 	            		if (access.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
 	            			if (!RuleRaiseAccess.isPartitioned(metadata, groupingExpressions, groupNode)) {
-		            			if (aggregates.isEmpty()) {
-		            				//TODO: insert distinct if supported by the access node
-		            				continue;
-		            			} 
 		            			for (AggregateSymbol agg : aggregates) {
 		            				if (!agg.canStage()) {
 		            					continue outer;
@@ -145,6 +141,7 @@ public class RulePushAggregates implements
 		            				continue;
 		            			}
 		            			Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
+		            			stagedGroupingSymbols.addAll(groupingExpressions);
 	                        	aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
 			                    if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
 			                        continue;
