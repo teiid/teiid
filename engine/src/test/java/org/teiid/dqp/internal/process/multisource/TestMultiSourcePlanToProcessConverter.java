@@ -95,7 +95,7 @@ public class TestMultiSourcePlanToProcessConverter {
         }
     }
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb) throws Exception {
     	return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
@@ -347,6 +347,70 @@ public class TestMultiSourcePlanToProcessConverter {
         };
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT MAX(g_0.a) FROM MultiModel.Phys AS g_0", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList("y")}); 
+        ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                3,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                1,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                1       // UnionAll
+            });
+    }
+    
+    @Test public void testAggNotParitionedGroupBy() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+
+        final String userSql = "SELECT max(phys.a) FROM MultiModel.Phys group by b"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList("y"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.b, MAX(g_0.a) FROM MultiModel.Phys AS g_0 GROUP BY g_0.b", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList("x", "y")}); 
+        ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                3,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                1,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                1       // UnionAll
+            });
+    }
+    
+    @Test public void testGroupByNotParitioned() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+
+        final String userSql = "SELECT phys.a FROM MultiModel.Phys group by phys.a"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList("y"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.a FROM MultiModel.Phys AS g_0 GROUP BY g_0.a", //$NON-NLS-1$
                         new List<?>[] {
                             Arrays.asList("y")}); 
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
