@@ -133,6 +133,10 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     	// create the necessary services
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
 		
+		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
+    	this.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
+    	this.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
+		
     	if (this.socketConfig != null) {
     		/*
     		try {
@@ -185,10 +189,6 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     	else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50038, LocalServerConnection.jndiNameForRuntime(transportName)));   		
     	}
-    			
-		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
-    	this.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	this.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
 	}
 
 	@Override
