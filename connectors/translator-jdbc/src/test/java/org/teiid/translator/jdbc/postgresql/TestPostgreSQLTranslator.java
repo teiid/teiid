@@ -561,5 +561,14 @@ public class TestPostgreSQLTranslator {
     	assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) on commit drop", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     	assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
     }
+        
+    @Test public void testFormatTimestampFrac() throws Exception {
+        String input = "SELECT formattimestamp(now(), 'SSS'), formattimestamp(now(), 'SSSSSSS') FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT TO_CHAR(now(), 'MS'), TO_CHAR(now(), 'US') FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
     
 }

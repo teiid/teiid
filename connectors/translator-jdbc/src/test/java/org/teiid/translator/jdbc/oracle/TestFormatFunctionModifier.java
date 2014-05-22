@@ -32,35 +32,37 @@ public class TestFormatFunctionModifier {
 	OracleFormatFunctionModifier offm = new OracleFormatFunctionModifier("TO_CHAR(");
     
     public void helpTest(String expected, String format) {
-    	assertTrue(OracleFormatFunctionModifier.supportsLiteral(format));
+    	assertTrue(offm.supportsLiteral(format));
         assertEquals(expected, offm.translateFormat(format));
     }
     
     @Test public void testQuoting() {
-    	helpTest("\"a'\"\"123\"", "'a'''123");
+    	helpTest("'\"a\"\"123\"'", "'a'123");
+    	helpTest("'\"a''\"\"123\"'", "'a'''123");
     }
     
     @Test public void testDay() {
-    	helpTest("DD DDD", "d D");
+    	helpTest("'DD DDD'", "d D");
     }
     
     @Test public void testYear() {
-    	helpTest("YY YY YY YYYY", "y yy yyy yyyy");
+    	helpTest("'YY YY YY YYYY'", "y yy yyy yyyy");
     }
     
     @Test public void testMonth() {
-    	helpTest("MM MM Mon Month", "M MM MMM MMMM");
+    	helpTest("'MM MM Mon Month'", "M MM MMM MMMM");
     }
     
     @Test public void testISO() {
-    	helpTest("YYYY-MM-DD\"T\"HH24:MI:SS.FF3", "yyyy-MM-dd'T'HH:mm:ss.SSS");
+    	helpTest("'YYYY-MM-DD\"T\"HH24:MI:SS.FF3'", "yyyy-MM-dd'T'HH:mm:ss.SSS");
     }
     
     @Test public void testSupports() {
-    	assertFalse(OracleFormatFunctionModifier.supportsLiteral("\""));
-    	assertFalse(OracleFormatFunctionModifier.supportsLiteral("'"));
-    	assertFalse(OracleFormatFunctionModifier.supportsLiteral("x"));
-    	assertFalse(OracleFormatFunctionModifier.supportsLiteral("-ax"));
+    	assertFalse(offm.supportsLiteral("\""));
+    	assertFalse(offm.supportsLiteral("'"));
+    	assertFalse(offm.supportsLiteral("x"));
+    	assertFalse(offm.supportsLiteral("-ax"));
+    	assertFalse(offm.supportsLiteral("k"));
     }
 
 }

@@ -67,12 +67,33 @@ import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
+	private static final class PostgreSQLFormatFunctionModifier extends
+			OracleFormatFunctionModifier {
+		private PostgreSQLFormatFunctionModifier(String prefix) {
+			super(prefix);
+		}
+
+		protected Object convertToken(String group) {
+			switch (group.charAt(0)) {
+			case 'Z':
+				return "TZ"; //$NON-NLS-1$
+			case 'S':
+				if (group.length() > 3) {
+					return "US"; //$NON-NLS-1$
+				}
+				return "MS"; //$NON-NLS-1$
+			}
+			return super.convertToken(group);
+		}
+	}
+
 	public static final Version EIGHT_0 = Version.getVersion("8.0"); //$NON-NLS-1$
 	public static final Version EIGHT_1 = Version.getVersion("8.1"); //$NON-NLS-1$
 	public static final Version EIGHT_2 = Version.getVersion("8.2"); //$NON-NLS-1$
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	private OracleFormatFunctionModifier formatModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP("); //$NON-NLS-1$
     
 	public PostgreSQLExecutionFactory() {
 		setMaxDependentInPredicates(1);
@@ -114,14 +135,13 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         
-        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new OracleFormatFunctionModifier("TO_TIMESTAMP(")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new OracleFormatFunctionModifier("TO_CHAR(")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, formatModifier);
+        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new PostgreSQLFormatFunctionModifier("TO_CHAR(")); //$NON-NLS-1$
         
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$ 
 
         //specific to 8.2 client or later
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
         
         registerFunctionModifier(SourceSystemFunctions.ARRAY_GET, new FunctionModifier() {
 			
@@ -359,7 +379,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         if (this.getVersion().compareTo(EIGHT_2) >= 0) {
         	supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
-        	supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+        	
+        	//only year and day match our expectations
+        	//supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
         }
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
@@ -555,7 +577,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	if (format == Format.NUMBER) {
     		return false;
     	}
-    	return OracleFormatFunctionModifier.supportsLiteral(literal);
+    	return formatModifier.supportsLiteral(literal);
     }
     
     @Override
