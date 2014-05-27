@@ -344,7 +344,6 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		TestMMDatabaseMetaData.compareResultSet(rs); //compare the rest
 	}
 	
-	// this does not work as JDBC always sends the queries in prepared form
 	@Test public void testCursor() throws Exception {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExectutorImpl.simplePortal = "foo";
@@ -370,6 +369,26 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		ExtendedQueryExectutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc;"));
+			assertFalse(stmt.execute("move 5 in \"foo\""));
+			stmt.execute("fetch 10 in \"foo\"");
+			ResultSet rs = stmt.getResultSet();
+			int rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(6, rowCount);
+			stmt.execute("close \"foo\"");
+		} finally {
+			ExtendedQueryExectutorImpl.simplePortal = null;
+		}
+		
+	}
+	
+	@Test public void testScrollCursorWithHold() throws Exception {
+		Statement stmt = conn.createStatement();
+		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		try {
+			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor with hold for select * from pg_proc;"));
 			assertFalse(stmt.execute("move 5 in \"foo\""));
 			stmt.execute("fetch 10 in \"foo\"");
 			ResultSet rs = stmt.getResultSet();
