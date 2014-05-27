@@ -31,7 +31,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePaths;
@@ -122,6 +127,10 @@ public class IntegrationTestDeployment {
 		admin.deleteDataSource("Oracle11_PushDS");
 		vdb = admin.getVDB("bqt", 1);
 		assertFalse(vdb.isValid());
+		
+		admin.deploy("bqt.2.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
+		vdb = admin.getVDB("bqt", 2);
+		assertEquals(2, vdb.getVersion());
 	}
 	
 	@Test
