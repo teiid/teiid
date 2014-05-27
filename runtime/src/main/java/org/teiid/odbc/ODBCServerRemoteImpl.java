@@ -152,7 +152,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
-	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+\"(\\w+)\"(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+\"(\\w+)\"(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
