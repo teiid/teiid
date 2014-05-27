@@ -1,5 +1,3 @@
-connect
-/extension=org.jboss.teiid:add(module=org.jboss.teiid)
 /socket-binding-group=standard-sockets/socket-binding=teiid-jdbc:add(port=31000)
 /socket-binding-group=standard-sockets/socket-binding=teiid-odbc:add(port=35432)
 
@@ -84,5 +82,3 @@ connect
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
-
-/:reload
