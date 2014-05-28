@@ -21,16 +21,20 @@
  */
 package org.teiid.dqp.service;
 
+import org.ietf.jgss.GSSCredential;
+
 
 public class GSSResult {
 	private byte[] serviceToken;
 	private boolean authenticated;
 	private Object securityContext;
 	private String userName;
+	private GSSCredential delegationCredentail;
 	
-	public GSSResult(byte[] token, boolean authenticated) {
+	public GSSResult(byte[] token, boolean authenticated, GSSCredential cred) {
 		this.serviceToken = token;
 		this.authenticated = authenticated;
+		this.delegationCredentail = cred;
 	}
 	
 	public boolean isAuthenticated() {
@@ -55,5 +59,13 @@ public class GSSResult {
 	
 	public void setUserName(String name) {
 		this.userName = name;
-	}	
+	}
+
+    public GSSCredential getDelegationCredentail() {
+        return delegationCredentail;
+    }
+
+    public void setDelegationCredentail(GSSCredential delegationCredentail) {
+        this.delegationCredentail = delegationCredentail;
+    }	
 }

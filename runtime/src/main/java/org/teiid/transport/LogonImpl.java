@@ -29,12 +29,9 @@ import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
 
+import org.ietf.jgss.GSSCredential;
 import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.client.security.ILogon;
-import org.teiid.client.security.InvalidSessionException;
-import org.teiid.client.security.LogonException;
-import org.teiid.client.security.LogonResult;
-import org.teiid.client.security.SessionToken;
+import org.teiid.client.security.*;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
@@ -131,6 +128,11 @@ public class LogonImpl implements ILogon {
         
 		try {
 			SessionMetadata sessionInfo = service.createSession(vdbName, vdbVersion, authType, user,credential, applicationName, connProps);
+			
+			if (connProps.get(GSSCredential.class.getName()) != null) {
+			    sessionInfo.getSubject().getPrivateCredentials().add(connProps.get(GSSCredential.class.getName()));
+			}
+			
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
@@ -181,13 +183,17 @@ public class LogonImpl implements ILogon {
 				LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
 				logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.isAuthenticated()));
+				if (result.isAuthenticated()) {
+				    logonResult.addProperty(GSSCredential.class.getName(), result.getDelegationCredentail());
+				}
 				return logonResult;
 			}		
 			
 			// GSS API (jdbc) will make the session in one single call			
 			connProps.put(ILogon.KRB5TOKEN, result.getServiceToken());
-			LogonResult loginInResult =  logon(connProps);
-			return loginInResult;
+			connProps.put(GSSCredential.class.getName(), result.getDelegationCredentail());
+			LogonResult logonResult =  logon(connProps);
+			return logonResult;
 		} catch (LoginException e) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40014, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 		}
