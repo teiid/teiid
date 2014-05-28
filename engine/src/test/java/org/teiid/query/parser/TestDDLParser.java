@@ -659,7 +659,55 @@ public class TestDDLParser {
 		
 		assertTrue(mf.getNamespaces().keySet().contains("teiid"));
 		assertEquals("http://teiid.org", mf.getNamespaces().get("teiid"));
-	}		
+	}
+	
+    @Test
+    public void testReservedNamespace1() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_sf";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("teiid_sf"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_sf"));
+    }   
+    
+    @Test(expected=MetadataException.class)
+    public void testReservedNamespaceURIWrong() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2013' AS teiid_sf";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("teiid_sf"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_sf"));
+    } 
+    
+    @Test(expected=MetadataException.class)
+    public void testReservedNamespacePrefixMismatch() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_foo";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("teiid_foo"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_foo"));
+    }     
+	
+    @Test
+    public void testReservedURIDifferentNS() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS ns";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("ns"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("ns"));
+    }    
 
 	public static MetadataFactory helpParse(String ddl, String model) {
 		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 

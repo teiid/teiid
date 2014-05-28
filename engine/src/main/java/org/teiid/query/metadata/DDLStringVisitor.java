@@ -21,18 +21,15 @@
  */
 package org.teiid.query.metadata;
 
-import static org.teiid.language.SQLConstants.NonReserved.*;
+import static org.teiid.language.SQLConstants.NonReserved.AUTO_INCREMENT;
+import static org.teiid.language.SQLConstants.NonReserved.INDEX;
+import static org.teiid.language.SQLConstants.NonReserved.SERIAL;
+import static org.teiid.language.SQLConstants.NonReserved.VIEW;
 import static org.teiid.language.SQLConstants.Reserved.*;
 import static org.teiid.language.SQLConstants.Tokens.*;
 import static org.teiid.query.metadata.DDLConstants.*;
 
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.teiid.adminapi.Admin.SchemaObjectType;
@@ -74,6 +71,7 @@ public class DDLStringVisitor {
 	private Pattern filter;
 	private Map<String, String> prefixMap;
 	protected boolean usePrefixes = true;
+	protected boolean createNS = true;
 	
 	private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
 	static {
@@ -526,16 +524,16 @@ public class DDLStringVisitor {
 				String uri = key.substring(1, index);
 				key = key.substring(index + 1, key.length());
 				String prefix = BUILTIN_PREFIXES.get(uri);
-				if (prefix == null && usePrefixes) {
+				if ((prefix == null && usePrefixes) || createNS) {
 					if (prefixMap == null) {
 						prefixMap = new LinkedHashMap<String, String>();
 					} else {
 						prefix = this.prefixMap.get(uri);
 					}
 					if (prefix == null) {
-						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$
-						this.prefixMap.put(uri, prefix); 
+						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$						
 					}
+					this.prefixMap.put(uri, prefix);
 				} 
 				if (prefix != null) {
 					key = prefix + ":" + key; //$NON-NLS-1$
@@ -718,6 +716,7 @@ public class DDLStringVisitor {
 		append(SQLStringVisitor.escapeSinglePart(param.getName())).append(SPACE).append(param.getType());
 	}
 
+    @Override
     public String toString() {
     	if (this.prefixMap != null) {
     		StringBuilder sb = new StringBuilder();

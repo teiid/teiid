@@ -50,7 +50,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
     @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="Cell Number", description="Cell number, where the column information is defined. If column name is ROW_ID, define it as -1", required=true)    
 	public static final String CELL_NUMBER = MetadataFactory.EXCEL_URI+"CELL_NUMBER"; //$NON-NLS-1$
 
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="First Data Number", description="First Row Number, where data rows start")
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=Integer.class, display="First Data Number", description="First Row Number, where data rows start")
     public static final String FIRST_DATA_ROW_NUMBER = MetadataFactory.EXCEL_URI+"FIRST_DATA_ROW_NUMBER"; //$NON-NLS-1$
 
     public static final String ROW_ID = "ROW_ID"; //$NON-NLS-1$
