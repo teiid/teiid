@@ -58,7 +58,8 @@ public class TestMongoDBMetadataProcessor {
         mp.process(mf, conn);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "CREATE FOREIGN TABLE child (\n" + 
+        String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
+        		"CREATE FOREIGN TABLE child (\n" + 
         		"\tcol1 string,\n" + 
         		"\tcol2 string\n" + 
         		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 

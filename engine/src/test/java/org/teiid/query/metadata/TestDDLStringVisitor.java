@@ -21,7 +21,7 @@
  */
 package org.teiid.query.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,10 +30,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -269,7 +266,7 @@ public class TestDDLStringVisitor {
 	
 	@Test public void testNamespaces() throws Exception {
 		String ddl = "set namespace 'some long thing' as x; CREATE View G1(a integer, b varchar) options (\"teiid_rel:x\" false, \"x:z\" 'stringval') AS select e1, e2 from foo.bar";
-		String expected = "SET NAMESPACE 'some long thing' AS n0;\n\nCREATE VIEW G1 (\n	a integer,\n	b string\n) OPTIONS (\"teiid_rel:x\" 'false', \"n0:z\" 'stringval')\nAS\nSELECT e1, e2 FROM foo.bar;";
+		String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\nSET NAMESPACE 'some long thing' AS n1;\n\nCREATE VIEW G1 (\n	a integer,\n	b string\n) OPTIONS (\"teiid_rel:x\" 'false', \"n1:z\" 'stringval')\nAS\nSELECT e1, e2 FROM foo.bar;";
 		helpTest(ddl, expected);
 	}
 	

@@ -24,11 +24,7 @@ package org.teiid.query.sql.visitor;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
@@ -68,6 +64,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 		private DDLVisitor() {
 			super(null, null);
 			this.usePrefixes = false;
+			this.createNS = false;
 		}
 
 		@Override
@@ -128,6 +125,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     // ############ Visitor methods for language objects ####################
 
+    @Override
     public void visit( BetweenCriteria obj ) {
         visitNode(obj.getExpression());
         append(SPACE);
@@ -146,6 +144,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(obj.getUpperExpression());
     }
 
+    @Override
     public void visit( CaseExpression obj ) {
         append(CASE);
         append(SPACE);
@@ -172,6 +171,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(END);
     }
 
+    @Override
     public void visit( CompareCriteria obj ) {
         Expression leftExpression = obj.getLeftExpression();
         visitNode(leftExpression);
@@ -182,6 +182,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(rightExpression);
     }
 
+    @Override
     public void visit( CompoundCriteria obj ) {
         // Get operator string
         int operator = obj.getOperator();
@@ -221,6 +222,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( Delete obj ) {
         // add delete clause
         append(DELETE);
@@ -244,6 +246,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( DependentSetCriteria obj ) {
         visitNode(obj.getExpression());
 
@@ -257,12 +260,14 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(" (<dependent values>)"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( From obj ) {
         append(FROM);
         beginClause(1);
         registerNodes(obj.getClauses(), 0);
     }
 
+    @Override
     public void visit( GroupBy obj ) {
         append(GROUP);
         append(SPACE);
@@ -278,6 +283,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( Insert obj ) {
     	if (obj.isMerge()) {
     		append(MERGE);
@@ -324,6 +330,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( Create obj ) {
         append(CREATE);
         append(SPACE);
@@ -393,6 +400,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(")"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( Drop obj ) {
         append(DROP);
         append(SPACE);
@@ -401,6 +409,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(obj.getTable());
     }
 
+    @Override
     public void visit( IsNullCriteria obj ) {
         Expression expr = obj.getExpression();
         appendNested(expr);
@@ -414,6 +423,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(NULL);
     }
 
+    @Override
     public void visit( JoinPredicate obj ) {
         addHintComment(obj);
 
@@ -511,6 +521,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	}
     }
 
+    @Override
     public void visit( JoinType obj ) {
         String[] output = null;
         if (obj.equals(JoinType.JOIN_INNER)) {
@@ -537,6 +548,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( MatchCriteria obj ) {
     	visitNode(obj.getLeftExpression());
 
@@ -570,6 +582,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
     
+    @Override
     public void visit( NotCriteria obj ) {
         append(NOT);
         append(" ("); //$NON-NLS-1$
@@ -577,6 +590,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(")"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( Option obj ) {
         append(OPTION);
 
@@ -670,6 +684,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 		return this;
 	}
 
+    @Override
     public void visit( OrderBy obj ) {
         append(ORDER);
         append(SPACE);
@@ -699,6 +714,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( DynamicCommand obj ) {
         append(EXECUTE);
         append(SPACE);
@@ -747,6 +763,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( SetClauseList obj ) {
         for (Iterator<SetClause> iterator = obj.getClauses().iterator(); iterator.hasNext();) {
             SetClause clause = iterator.next();
@@ -757,6 +774,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( SetClause obj ) {
         ElementSymbol symbol = obj.getSymbol();
         outputShortName(symbol);
@@ -787,6 +805,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	append(Tokens.RPAREN);
     }
 
+    @Override
     public void visit( Query obj ) {
     	addCacheHint(obj.getCacheHint());
     	addWithClause(obj);
@@ -888,6 +907,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(crit);
     }
 
+    @Override
     public void visit( SearchedCaseExpression obj ) {
         append(CASE);
         for (int i = 0; i < obj.getWhenCount(); i++) {
@@ -910,6 +930,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(END);
     }
 
+    @Override
     public void visit( Select obj ) {
 		if (obj.isDistinct()) {
             append(SPACE);
@@ -935,6 +956,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 		append(SPACE);
 	}
 
+    @Override
     public void visit( SetCriteria obj ) {
         // variable
     	appendNested(obj.getExpression());
@@ -983,6 +1005,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
 	}
 
+    @Override
     public void visit( SetQuery obj ) {
         addCacheHint(obj.getCacheHint());
         addWithClause(obj);
@@ -1029,6 +1052,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( StoredProcedure obj ) {
         addCacheHint(obj.getCacheHint());
         if (obj.isCalledWithReturn()) {
@@ -1134,6 +1158,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         beginClause(0);
     }
 
+    @Override
     public void visit( SubqueryFromClause obj ) {
         addHintComment(obj);
         if (obj.isTable()) {
@@ -1147,6 +1172,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         addMakeDep(obj);
     }
 
+    @Override
     public void visit( SubquerySetCriteria obj ) {
         // variable
         visitNode(obj.getExpression());
@@ -1164,12 +1190,14 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(")"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( UnaryFromClause obj ) {
         addHintComment(obj);
         visitNode(obj.getGroup());
         addMakeDep(obj);
     }
 
+    @Override
     public void visit( Update obj ) {
         // Update clause
         append(UPDATE);
@@ -1195,6 +1223,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( Into obj ) {
         append(INTO);
         append(SPACE);
@@ -1203,6 +1232,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     // ############ Visitor methods for symbol objects ####################
 
+    @Override
     public void visit( AggregateSymbol obj ) {
         append(obj.getName());
         append("("); //$NON-NLS-1$
@@ -1241,6 +1271,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( AliasSymbol obj ) {
         visitNode(obj.getSymbol());
         append(SPACE);
@@ -1249,6 +1280,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(escapeSinglePart(obj.getOutputName()));
     }
 
+    @Override
     public void visit( MultipleElementSymbol obj ) {
     	if (obj.getGroup() == null) {
     		append(Tokens.ALL_COLS);
@@ -1259,6 +1291,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	}
     }
 
+    @Override
     public void visit( Constant obj ) {
         Class<?> type = obj.getType();
         boolean multiValued = obj.isMultiValued();
@@ -1332,6 +1365,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         return StringUtil.replaceAll(str, tick, tick + tick);
     }
 
+    @Override
     public void visit( ElementSymbol obj ) {
         if (obj.getDisplayMode().equals(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME) || shortNameOnly) {
             outputShortName(obj);
@@ -1358,10 +1392,12 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( ExpressionSymbol obj ) {
         visitNode(obj.getExpression());
     }
 
+    @Override
     public void visit( Function obj ) {
         String name = obj.getName();
         Expression[] args = obj.getArgs();
@@ -1460,6 +1496,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( GroupSymbol obj ) {
         String alias = null;
         String fullGroup = obj.getOutputName();
@@ -1478,6 +1515,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( Reference obj ) {
         if (!obj.isPositional() && obj.getExpression() != null) {
             visitNode(obj.getExpression());
@@ -1488,6 +1526,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     // ############ Visitor methods for storedprocedure language objects ####################
 
+    @Override
     public void visit( Block obj ) {
     	addLabel(obj);
         List<Statement> statements = obj.getStatements();
@@ -1537,6 +1576,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     protected void addTabs( int level ) {
     }
 
+    @Override
     public void visit( CommandStatement obj ) {
         visitNode(obj.getCommand());
         if (!obj.isReturnable()) {
@@ -1548,11 +1588,13 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(";"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( CreateProcedureCommand obj ) {
     	addCacheHint(obj.getCacheHint());
         visitNode(obj.getBlock());
     }
 
+    @Override
     public void visit( DeclareStatement obj ) {
         append(DECLARE);
         append(SPACE);
@@ -1574,6 +1616,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(";"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( IfStatement obj ) {
         append(IF);
         append("("); //$NON-NLS-1$
@@ -1591,10 +1634,12 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( AssignmentStatement obj ) {
         createAssignment(obj);
     }
 
+    @Override
     public void visit( RaiseStatement obj ) {
         append(NonReserved.RAISE);
         append(SPACE);
@@ -1640,6 +1685,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	append(Tokens.SEMICOLON);
     }
 
+    @Override
     public void visit( BranchingStatement obj ) {
     	switch (obj.getMode()) {
     	case CONTINUE:
@@ -1659,6 +1705,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(";"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( LoopStatement obj ) {
     	addLabel(obj);
         append(LOOP);
@@ -1675,6 +1722,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(obj.getBlock());
     }
 
+    @Override
     public void visit( WhileStatement obj ) {
     	addLabel(obj);
         append(WHILE);
@@ -1685,6 +1733,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(obj.getBlock());
     }
 
+    @Override
     public void visit( ExistsCriteria obj ) {
     	if (obj.isNegated()) {
             append(NOT);
@@ -1722,6 +1771,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
+    @Override
     public void visit( SubqueryCompareCriteria obj ) {
         Expression leftExpression = obj.getLeftExpression();
         visitNode(leftExpression);
@@ -1739,6 +1789,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(")"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( ScalarSubquery obj ) {
         // operator and beginning of list
         append("("); //$NON-NLS-1$
@@ -1849,6 +1900,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(")"); //$NON-NLS-1$
     }
 
+    @Override
     public void visit( Limit obj ) {
     	if (!obj.isStrict()) {
     		append(BEGIN_HINT);
