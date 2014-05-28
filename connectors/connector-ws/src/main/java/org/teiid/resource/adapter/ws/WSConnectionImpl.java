@@ -27,11 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Future;
 
 import javax.activation.DataSource;
@@ -39,14 +35,8 @@ import javax.resource.ResourceException;
 import javax.security.auth.Subject;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.namespace.QName;
-import javax.xml.ws.AsyncHandler;
-import javax.xml.ws.Binding;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.EndpointReference;
-import javax.xml.ws.Response;
-import javax.xml.ws.Service;
+import javax.xml.ws.*;
 import javax.xml.ws.Service.Mode;
-import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
@@ -61,6 +51,7 @@ import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
+import org.ietf.jgss.GSSCredential;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.StringUtil;
@@ -137,9 +128,12 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				}
 				String username = (String) this.requestContext.get(Dispatch.USERNAME_PROPERTY);
 				String password = (String) this.requestContext.get(Dispatch.PASSWORD_PROPERTY);
-
+				
 				if (username != null) {
 					this.client.header("Authorization", "Basic " + Base64.encodeBytes((username + ':' + password).getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				else if (this.requestContext.get(GSSCredential.class.getName()) != null) {
+				    WebClient.getConfig(this.client).getRequestContext().put(GSSCredential.class.getName(), this.requestContext.get(GSSCredential.class.getName()));
 				}
 
 				InputStream payload = null;
@@ -368,6 +362,20 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, userName);
 			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, password);
+		}
+		else if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.Kerberos) {
+		    boolean credentialFound = false;
+            Subject subject = ConnectionContext.getSubject();
+            if (subject != null) {
+                GSSCredential credential = ConnectionContext.getSecurityCredential(subject, GSSCredential.class);
+                if (credential != null) {
+                    dispatch.getRequestContext().put(GSSCredential.class.getName(), credential);  
+                    credentialFound = true;
+                }
+            }
+            if (!credentialFound) {
+                throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("no_gss_credential")); //$NON-NLS-1$
+            }
 		}
 
 		if (this.mcf.getRequestTimeout() != null){

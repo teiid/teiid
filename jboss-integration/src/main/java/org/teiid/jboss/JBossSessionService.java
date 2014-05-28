@@ -27,6 +27,8 @@ import java.util.Map;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
+import org.ietf.jgss.GSSContext;
+import org.ietf.jgss.GSSException;
 import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.security.AuthenticationManager;
 import org.jboss.security.SecurityContext;
@@ -128,8 +130,14 @@ public class JBossSessionService extends SessionServiceImpl {
 
 	private GSSResult buildGSSResult(NegotiationContext context, String securityDomain) throws LoginException {
 		if (context.getResponseMessage() instanceof KerberosMessage) {
-			KerberosMessage km = (KerberosMessage)context.getResponseMessage();
-			return new GSSResult(km.getToken(), context.isAuthenticated());
+			try {
+                KerberosMessage km = (KerberosMessage)context.getResponseMessage();
+                GSSContext securityContext = (GSSContext) context.getSchemeContext();			
+                return new GSSResult(km.getToken(), context.isAuthenticated(), securityContext.getDelegCred());
+            } catch (GSSException e) {
+                // login exception can not take exception
+                throw new LoginException(e.getMessage());
+            }
 		}
 		throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50103, securityDomain));
 	} 	
