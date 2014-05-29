@@ -422,10 +422,7 @@ public class XMLSystemFunctions {
 	}
 	
 	public static XMLOutputFactory getOutputFactory() throws FactoryConfigurationError {
-		if (XMLType.isThreadSafeXmlFactories()) {
-			return xmlOutputFactory;
-		}
-		return threadLocalOutputFactory.get();
+		return getOutputFactory(false);
 	}
 
 	public static ClobType xslTransform(CommandContext context, Object xml, Object styleSheet) throws Exception {
@@ -1100,6 +1097,19 @@ public class XMLSystemFunctions {
 			isf = Evaluator.getInputStreamFactory(value);
 		}
 		return new BlobType(new BlobImpl(isf));
+	}
+
+	public static XMLOutputFactory getOutputFactory(boolean repairing) {
+		if (XMLType.isThreadSafeXmlFactories() && !repairing) {
+			return xmlOutputFactory;
+		}
+		XMLOutputFactory f = threadLocalOutputFactory.get();
+		if (repairing && f.isPropertySupported(XMLOutputFactory.IS_REPAIRING_NAMESPACES)) {
+			f.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
+		} else {
+			f.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, false);
+		}
+		return f;
 	}
     
 }

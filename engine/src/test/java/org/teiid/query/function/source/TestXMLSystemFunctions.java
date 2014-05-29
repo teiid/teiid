@@ -24,8 +24,10 @@ package org.teiid.query.function.source;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLXML;
@@ -34,6 +36,12 @@ import java.util.TimeZone;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 import javax.sql.rowset.serial.SerialException;
+import javax.xml.stream.EventFilter;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLEventWriter;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.events.EndElement;
+import javax.xml.stream.events.XMLEvent;
 
 import net.sf.saxon.trans.XPathException;
 
@@ -244,6 +252,30 @@ public class TestXMLSystemFunctions {
 		String json = "[[],{\"x\": 1},[]]"; 
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Person></Person><Person><x xsi:type=\"decimal\">1</x></Person><Person></Person></Person>";
 		helpTestJson(json, "Person", expected);
+	}
+	
+	@Test public void testRepairingNamespaces() throws Exception {
+		XMLOutputFactory factory = XMLSystemFunctions.getOutputFactory(true);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		XMLEventWriter writer = factory.createXMLEventWriter(baos);
+		XMLEventReader reader = XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a xmlns:x=\"http://foo\"><b x:y=\"1\"/></a>"));
+		reader.nextTag();
+		reader = XMLType.getXmlInputFactory().createFilteredReader(reader, new EventFilter() {
+			
+			@Override
+			public boolean accept(XMLEvent arg0) {
+				if (arg0.isStartDocument() || arg0.isEndDocument()) {
+					return false;
+				}
+				if (arg0.isEndElement() && ((EndElement)arg0).getName().getLocalPart().equals("a")) {
+					return false;
+				}
+				return true;
+			}
+		});
+		writer.add(reader);
+		writer.close();
+		assertEquals("<b xmlns=\"\" xmlns:x=\"http://foo\" x:y=\"1\"></b>", new String(baos.toByteArray(), "UTF-8"));
 	}
 	
 	@BeforeClass static public void setUpOnce() {
