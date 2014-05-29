@@ -582,7 +582,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 					try {
 						final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
 						final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-						value = new SaveOnReadInputStream(new XMLInputStream(ss, XMLSystemFunctions.getOutputFactory()), fsisf).getInputStreamFactory();
+						value = new SaveOnReadInputStream(new XMLInputStream(ss, XMLSystemFunctions.getOutputFactory(true)), fsisf).getInputStreamFactory();
 					} catch (XMLStreamException e) {
 						throw new TransformationException(e);
 					}
