@@ -35,31 +35,31 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 
 	// Model Extensions
 	@ExtensionMetadataProperty(applicable= {Table.class}, datatype=Boolean.class, display="Supports Create")
-	static final String TABLE_SUPPORTS_CREATE = "supportsCreate"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_CREATE = "Supports Create"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Delete")
-	static final String TABLE_SUPPORTS_DELETE = "supportsDelete"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_DELETE = "Supports Delete"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class, Column.class}, datatype=Boolean.class, display="Custom")
-	static final String TABLE_CUSTOM = "custom"; //$NON-NLS-1$
+	static final String TABLE_CUSTOM = "Custom"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports ID Lookup")
-	static final String TABLE_SUPPORTS_LOOKUP = "supportsIdLookup"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_LOOKUP = "Supports ID Lookup"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Merge")
-	static final String TABLE_SUPPORTS_MERGE = "supportsMerge"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_MERGE = "Supports Merge"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Query")
-	static final String TABLE_SUPPORTS_QUERY = "supportsQuery"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_QUERY = "Supports Query"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Replicate")
-	static final String TABLE_SUPPORTS_REPLICATE = "supportsReplicate"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_REPLICATE = "Supports Replicate"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Retrieve")
-	static final String TABLE_SUPPORTS_RETRIEVE = "supportsRetrieve"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_RETRIEVE = "Supports Retrieve"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Search")
-	static final String TABLE_SUPPORTS_SEARCH = "supportsSearch"; //$NON-NLS-1$
+	static final String TABLE_SUPPORTS_SEARCH = "Supports Search"; //$NON-NLS-1$
 	
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Defaulted on Create")
-	static final String COLUMN_DEFAULTED = "defaultedOnCreate"; //$NON-NLS-1$
+	static final String COLUMN_DEFAULTED = "Defaulted on Create"; //$NON-NLS-1$
 	static final String COLUMN_CUSTOM = TABLE_CUSTOM;
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Calculated")
 	static final String COLUMN_CALCULATED = "calculated"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=String.class, display="Picklist Values")
-	static final String COLUMN_PICKLIST_VALUES = "picklistValues"; //$NON-NLS-1$
+	static final String COLUMN_PICKLIST_VALUES = "Picklist Values"; //$NON-NLS-1$
 	
 	public void process(MetadataFactory mf, SalesforceConnection connection) throws TranslatorException {
         this.connection = connection;
