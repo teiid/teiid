@@ -22,6 +22,7 @@
 package org.teiid.odata;
 
 import java.io.IOException;
+import java.sql.Array;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -39,11 +40,14 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.odata4j.core.OCollection;
+import org.odata4j.core.OCollection.Builder;
 import org.odata4j.core.OCollections;
 import org.odata4j.core.OComplexObject;
 import org.odata4j.core.OComplexObjects;
+import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
+import org.odata4j.core.OSimpleObjects;
 import org.odata4j.edm.EdmCollectionType;
 import org.odata4j.edm.EdmComplexType;
 import org.odata4j.edm.EdmDataServices;
@@ -154,7 +158,7 @@ public class LocalClient implements Client {
 			boolean results = stmt.execute();
 			if (results) {
 				final ResultSet rs = stmt.getResultSet();
-                OCollection.Builder resultRows = OCollections.newBuilder(returnType);
+                OCollection.Builder resultRows = OCollections.newBuilder((EdmComplexType)((EdmCollectionType)returnType).getItemType());
                 while (rs.next()) {
                 	int idx = 1;
                 	List<OProperty<?>> row = new ArrayList<OProperty<?>>();
@@ -360,6 +364,26 @@ public class LocalClient implements Client {
 	
 	static OProperty<?> buildPropery(String propName, EdmType type, Object value, String invalidCharacterReplacement) throws TransformationException, SQLException, IOException {
 		if (!(type instanceof EdmSimpleType)) {
+			if (type instanceof EdmCollectionType) {
+				EdmCollectionType collectionType = (EdmCollectionType)type;
+				EdmType componentType = collectionType.getItemType();
+				Builder<OObject> b = OCollections.newBuilder(componentType);
+				if (value instanceof Array) {
+					value = ((Array)value).getArray();
+				}
+				int length = java.lang.reflect.Array.getLength(value);
+				for (int i = 0; i < length; i++) {
+					Object o = java.lang.reflect.Array.get(value, i);
+					OProperty p = buildPropery("x", componentType, o, invalidCharacterReplacement);
+					if (componentType instanceof EdmSimpleType) {
+						b.add(OSimpleObjects.create((EdmSimpleType) componentType, p.getValue()));
+					} else {
+						throw new AssertionError("Multi-dimensional arrays are not yet supported.");
+						//b.add((OCollection)p.getValue());
+					}
+				}
+				return OProperties.collection(propName, collectionType, b.build());
+			}
 			throw new AssertionError("non-simple types are not yet supported");
 		}
 		EdmSimpleType expectedType = (EdmSimpleType)type;
