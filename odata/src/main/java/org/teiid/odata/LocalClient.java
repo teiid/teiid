@@ -164,7 +164,7 @@ public class LocalClient implements Client {
 			boolean results = stmt.execute();
 			if (results) {
 				final ResultSet rs = stmt.getResultSet();
-                OCollection.Builder resultRows = OCollections.newBuilder(returnType);
+                OCollection.Builder resultRows = OCollections.newBuilder((EdmComplexType)((EdmCollectionType)returnType).getItemType());
                 while (rs.next()) {
                 	int idx = 1;
                 	List<OProperty<?>> row = new ArrayList<OProperty<?>>();
@@ -475,11 +475,11 @@ public class LocalClient implements Client {
 		if (!(type instanceof EdmSimpleType)) {
 			if (type instanceof EdmCollectionType) {
 				EdmCollectionType collectionType = (EdmCollectionType)type;
-				Builder<OObject> b = OCollections.newBuilder(collectionType);
+				EdmType componentType = collectionType.getItemType();
+				Builder<OObject> b = OCollections.newBuilder(componentType);
 				if (value instanceof Array) {
 					value = ((Array)value).getArray();
 				}
-				EdmType componentType = collectionType.getItemType();
 				int length = java.lang.reflect.Array.getLength(value);
 				for (int i = 0; i < length; i++) {
 					Object o = java.lang.reflect.Array.get(value, i);

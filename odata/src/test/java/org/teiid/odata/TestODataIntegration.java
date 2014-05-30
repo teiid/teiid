@@ -305,7 +305,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<List> params = ArgumentCaptor.forClass(List.class);
 		
-		when(client.executeCall(any(String.class), anyListOf(SQLParam.class), any(EdmType.class))).thenReturn(Responses.simple(EdmSimpleType.INT32, "return", org.odata4j.expression.Expression.null_()));
+		when(client.executeCall(any(String.class), anyListOf(SQLParam.class), any(EdmType.class))).thenReturn(Responses.simple(EdmSimpleType.INT32, "return", null));
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/getCustomers?p2=datetime'2011-09-11T00:00:00'&p3=2.0M"));
         ClientResponse<String> response = request.get(String.class);
@@ -585,6 +585,34 @@ public class TestODataIntegration extends BaseResourceTest {
 		}
 	}
 	
+	@Test public void testJsonProcedureResultSet() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+		hc.addData("EXEC x()", Arrays.asList(Arrays.asList("x"), Arrays.asList("y")));
+		es.addTranslator("x", hc);
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("m");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create foreign procedure x () returns table(y string);");
+			mmd.addSourceMapping("x", "x", null);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
+	        ClientResponse<String> response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+	
 	@Test public void testBasicTypes() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
 		es.start(new EmbeddedConfiguration());
@@ -630,7 +658,6 @@ public class TestODataIntegration extends BaseResourceTest {
 	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/SmallA?$format=json&$select=TimeValue"));
 	        ClientResponse<String> response = request.get(String.class);
 	        assertEquals(200, response.getStatus());
-	        System.out.println(response.getEntity());
 		} finally {
 			es.stop();
 		}
