@@ -27,12 +27,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -45,6 +47,48 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	
 	public HardCodedExecutionFactory() {
 		setSourceRequired(false);
+	}
+	
+	@Override
+	public ProcedureExecution createProcedureExecution(Call command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			Object connection) throws TranslatorException {
+		List<? extends List<?>> list = getData(command);
+		if (list == null) {
+			throw new RuntimeException(command.toString());
+		}
+		final Iterator<? extends List<?>> result = list.iterator();
+		return new ProcedureExecution() {
+			
+			@Override
+			public void execute() throws TranslatorException {
+				
+			}
+			
+			@Override
+			public void close() {
+				
+			}
+			
+			@Override
+			public void cancel() throws TranslatorException {
+				
+			}
+			
+			@Override
+			public List<?> next() throws TranslatorException, DataNotAvailableException {
+				if (result.hasNext()) {
+					return result.next();
+				}
+				return null;
+			}
+
+			@Override
+			public List<?> getOutputParameterValues()
+					throws TranslatorException {
+				return null;
+			}
+		};
 	}
 	
 	@Override
@@ -83,8 +127,12 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 			}
 		};
 	}
-
+	
 	protected List<? extends List<?>> getData(final QueryExpression command) {
+		return getData((Command)command);
+	}
+
+	protected List<? extends List<?>> getData(final Command command) {
 		return dataMap.get(command.toString());
 	}
 	
