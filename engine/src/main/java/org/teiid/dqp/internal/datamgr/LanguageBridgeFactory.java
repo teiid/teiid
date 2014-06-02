@@ -181,7 +181,7 @@ public class LanguageBridgeFactory {
 	        } else if (command instanceof BatchedUpdateCommand) {
 	            return translate((BatchedUpdateCommand)command);
 	        }
-	        throw new AssertionError();
+	        throw new AssertionError(command.getClass().getName() + " " + command); //$NON-NLS-1$
     	} finally {
     		this.allValues.clear();
     		this.dependentSets = null;
@@ -302,7 +302,7 @@ public class LanguageBridgeFactory {
         } else if (clause instanceof UnaryFromClause) {
             return translate((UnaryFromClause)clause);
         }
-        throw new AssertionError();
+        throw new AssertionError(clause.getClass().getName() + " " + clause); //$NON-NLS-1$
     }
 
     Join translate(JoinPredicate join) {
@@ -366,7 +366,7 @@ public class LanguageBridgeFactory {
         } else if (criteria instanceof DependentSetCriteria) {
         	return translate((DependentSetCriteria)criteria);
         }
-        throw new AssertionError();
+        throw new AssertionError(criteria.getClass().getName() + " " + criteria); //$NON-NLS-1$
     }
     
     org.teiid.language.Comparison translate(DependentSetCriteria criteria) {
@@ -621,7 +621,7 @@ public class LanguageBridgeFactory {
         } else if (expr instanceof Array) {
         	return translate((Array)expr);
         }
-        throw new AssertionError();
+        throw new AssertionError(expr.getClass().getName() + " " + expr); //$NON-NLS-1$
     }
     
     org.teiid.language.Array translate(Array array) {
