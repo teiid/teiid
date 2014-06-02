@@ -75,6 +75,30 @@ import org.teiid.query.validator.ValidatorReport;
 
 public class RowBasedSecurityHelper {
 	
+	static class RecontextVisitor extends
+			ExpressionMappingVisitor {
+		private final GroupSymbol group;
+		private final String definition;
+
+		RecontextVisitor(GroupSymbol group) {
+			super(null);
+			this.group = group;
+			this.definition = group.getDefinition();
+		}
+
+		@Override
+		public Expression replaceExpression(
+				Expression element) {
+			if (element instanceof ElementSymbol) {
+				ElementSymbol es = (ElementSymbol)element;
+				if (es.getGroupSymbol().getDefinition() == null && es.getGroupSymbol().getName().equalsIgnoreCase(this.definition)) {
+					es.getGroupSymbol().setDefinition(group.getDefinition());
+					es.getGroupSymbol().setName(group.getName());            						}
+			}
+			return element;
+		}
+	}
+
 	public static boolean applyRowSecurity(QueryMetadataInterface metadata,
 			final GroupSymbol group, CommandContext cc) throws QueryMetadataException, TeiidComponentException {
 		Map<String, DataPolicy> policies = cc.getAllowedDataPolicies();
@@ -136,19 +160,7 @@ public class RowBasedSecurityHelper {
 		}
 		
 		if (group.getDefinition() != null) {
-			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-				@Override
-				public Expression replaceExpression(
-						Expression element) {
-					if (element instanceof ElementSymbol) {
-						ElementSymbol es = (ElementSymbol)element;
-						if (es.getGroupSymbol().getDefinition() == null && es.getGroupSymbol().getName().equalsIgnoreCase(group.getDefinition())) {
-							es.getGroupSymbol().setDefinition(group.getDefinition());
-							es.getGroupSymbol().setName(group.getName());            						}
-					}
-					return element;
-				}
-			};
+			ExpressionMappingVisitor emv = new RecontextVisitor(group);
 	        PreOrPostOrderNavigator.doVisit(result, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
 		}
 		//we treat this as user deterministic since the data roles won't change.  this may change if the logic becomes dynamic
@@ -321,7 +333,7 @@ public class RowBasedSecurityHelper {
 			return;
 		}
 		Set<GroupSymbol> groups = Collections.singleton(gs);
-		planner.planSubqueries(null, null, groups, null, subqueries, true);
+		planner.planSubqueries(null, groups, null, subqueries, true);
 		List<Reference> refs = new LinkedList<Reference>();
 		CorrelatedReferenceCollectorVisitor.collectReferences(object, groups, refs);
 		if (!refs.isEmpty()) {

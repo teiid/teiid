@@ -734,6 +734,10 @@ public class RulePushAggregates implements
         	if (ndv != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality / ndv < 4) {
     			continue;
         	}
+        	
+        	/*if (possibleTargetNodes.size() == 1 && groupingExpressions.size() == stagedGroupingSymbols.size() && stagedGroupingSymbols.containsAll(groupingExpressions)) {
+            	throw new AssertionError();
+            }*/
             
             if (aggregates != null) {
                 aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
@@ -744,6 +748,7 @@ public class RulePushAggregates implements
             if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
                 continue;
             }
+            
             addGroupBy(planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, true, stagedGroupingSymbols.isEmpty() && containsNullDependent(aggregates));
         }
     }

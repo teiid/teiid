@@ -91,4 +91,8 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 		return tupleBuffer;
 	}
 	
+	public void setGroupSymbol(GroupSymbol groupSymbol) {
+		this.groupSymbol = groupSymbol;
+	}
+	
 }

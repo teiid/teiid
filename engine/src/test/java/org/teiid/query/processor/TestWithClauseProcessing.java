@@ -45,6 +45,25 @@ public class TestWithClauseProcessing {
 	    helpProcess(plan, dataManager, expected);
 	}
 	
+	@Test public void testSingleItemInView() throws TeiidComponentException, TeiidProcessingException {
+	    String sql = "select * from (with a (x, y, z) as (select e1, e2, e3 from pm1.g1) SELECT pm1.g2.e2, a.x, z from pm1.g2, a where e1 = x order by x) as x where z = 1"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+	        Arrays.asList(0, "a", true),
+	        Arrays.asList(3, "a", true),
+	        Arrays.asList(1, "c", true),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    dataManager.setBlockOnce();
+	    sampleData1(dataManager);
+	    
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), 
+	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE ORDER BY a.x", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    helpProcess(plan, dataManager, expected);
+	}
+	
 	@Test public void testMultipleItems() {
 	    String sql = "with a (x, y, z) as (select e1, e2, e3 from pm1.g1), b as (SELECT * from pm1.g2, a where e1 = x and z = 1 order by e2 limit 2) SELECT a.x, b.e1 from a, b where a.x = b.e1"; //$NON-NLS-1$
 	    
@@ -128,7 +147,7 @@ public class TestWithClauseProcessing {
 		    };    
 
 	    dataManager.addData("WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1", expected);
-	    dataManager.addData("WITH b (e1) AS (SELECT g_0.e1 FROM g1 AS g_0), a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0) SELECT g_0.y FROM a AS g_0, b AS g_1 WHERE g_0.x = 'a'", 
+	    dataManager.addData("WITH b__1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0), a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0) SELECT g_0.y FROM a AS g_0, b__1 AS g_1 WHERE g_0.x = 'a'", 
 	    		new List[] {Arrays.asList(2)});
 	    
 	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);

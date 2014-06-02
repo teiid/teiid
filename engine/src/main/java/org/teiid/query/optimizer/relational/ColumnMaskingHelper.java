@@ -168,19 +168,7 @@ public class ColumnMaskingHelper {
 		}
 
 		ArrayList<Expression> result = new ArrayList<Expression>(cols.size());
-		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-			@Override
-			public Expression replaceExpression(
-					Expression element) {
-				if (element instanceof ElementSymbol) {
-					ElementSymbol es = (ElementSymbol)element;
-					if (es.getGroupSymbol().getDefinition() == null && es.getGroupSymbol().getName().equalsIgnoreCase(group.getDefinition())) {
-						es.getGroupSymbol().setDefinition(group.getDefinition());
-						es.getGroupSymbol().setName(group.getName());            						}
-				}
-				return element;
-			}
-		};
+		ExpressionMappingVisitor emv = new RowBasedSecurityHelper.RecontextVisitor(group);
 		GroupSymbol gs = group;
 		if (gs.getDefinition() != null) {
 			gs = new GroupSymbol(metadata.getFullName(group.getMetadataID()));
