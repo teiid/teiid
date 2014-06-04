@@ -38,13 +38,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.AggregationOutput;
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
+import com.mongodb.*;
 
 @SuppressWarnings("nls")
 public class TestMongoDBQueryExecution {
@@ -872,4 +866,41 @@ public class TestMongoDBQueryExecution {
 	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
 				new BasicDBObject("$project", project));    	
     }    
+    
+    @Test
+    public void testCountStar() throws Exception {
+        String query = "SELECT count(*) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+
+        BasicDBObject group = new BasicDBObject();
+        group.append( "_id", null);
+        group.append( "_m0", new BasicDBObject("$sum", 1));
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", 1);
+
+        Mockito.verify(dbCollection).aggregate(
+                        new BasicDBObject("$group", group),
+                        new BasicDBObject("$project", result));
+    }  
+    
+    @Test
+    public void testCountOnColumn() throws Exception {
+        String query = "SELECT count(CategoryName) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        
+        BasicDBObject group = new BasicDBObject();
+        group.append( "_id", null);
+        group.append( "_m0", new BasicDBObject("$sum", 1));
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", 1);
+
+        Mockito.verify(dbCollection).aggregate(
+                        new BasicDBObject("$match", QueryBuilder.start("CategoryName").notEquals(null).get()),
+                        new BasicDBObject("$group", group),
+                        new BasicDBObject("$project", result));
+    }     
 }
