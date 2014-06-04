@@ -312,15 +312,12 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     	if (!obj.getParameters().isEmpty()) {
     		append(obj.getParameters());
     	}
-    	else {
-			// this is only true for count(*) case, so we need implicit group id clause
-    		this.onGoingExpression.push(new Integer(1));
-   			this.group.put("_id", null); //$NON-NLS-1$
-    	}
 
     	BasicDBObject expr = null;
 		if (obj.getName().equals(AggregateFunction.COUNT)) {
-			expr = new BasicDBObject("$sum", this.onGoingExpression.pop()); //$NON-NLS-1$
+	        // this is only true for count(*) case, so we need implicit group id clause
+		    this.group.put("_id", null); //$NON-NLS-1$
+			expr = new BasicDBObject("$sum", new Integer(1)); //$NON-NLS-1$
 		}
 		else if (obj.getName().equals(AggregateFunction.AVG)) {
 			expr = new BasicDBObject("$avg", this.onGoingExpression.pop()); //$NON-NLS-1$
@@ -492,6 +489,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(Select obj) {
+	    SQLRewriterVisitor.rewrite(obj);
+	    
     	this.command = obj;
 
         if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
