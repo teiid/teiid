@@ -57,7 +57,13 @@ public class ScriptReader {
         if (endOfFile) {
             return null;
         }
-        return readStatementLoop();
+        while (true) {
+        	String result = readStatementLoop();
+        	if (result != null || endOfFile) {
+        		return result;
+        	}
+        }
+        
     }
 
     private String readStatementLoop() throws IOException {

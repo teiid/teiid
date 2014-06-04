@@ -81,4 +81,15 @@ public class TestScriptReader {
 		assertEquals("where oid=(SELECT oid FROM pg_class WHERE upper(relname) = 'A')", result);
 	}
 	
+	@Test public void testExtraDelim() throws Exception {
+		ScriptReader sr = new ScriptReader("BEGIN;declare \"SQL_CUR0x1e4ba50\" cursor with hold for select * from pg_proc;;fetch 1 in \"SQL_CUR0x1e4ba50\"");
+		String result = sr.readStatement();
+		assertEquals("BEGIN", result);
+		result = sr.readStatement();
+		assertEquals("declare \"SQL_CUR0x1e4ba50\" cursor with hold for select * from pg_proc", result);
+		result = sr.readStatement();
+		assertEquals("fetch 1 in \"SQL_CUR0x1e4ba50\"", result);
+		assertNull(sr.readStatement());
+	}
+	
 }
