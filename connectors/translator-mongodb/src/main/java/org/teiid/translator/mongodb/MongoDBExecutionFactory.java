@@ -34,14 +34,8 @@ import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.language.Argument;
-import org.teiid.language.Call;
-import org.teiid.language.Command;
-import org.teiid.language.QueryExpression;
+import org.teiid.core.types.*;
+import org.teiid.language.*;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.mongodb.MongoDBConnection;
@@ -59,8 +53,12 @@ import com.mongodb.gridfs.GridFSInputFile;
 
 @Translator(name="mongodb", description="MongoDB Translator, reads and writes the data to MongoDB")
 public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory, MongoDBConnection> {
+    public static final Version TWO_4 = Version.getVersion("2.4"); //$NON-NLS-1$
+    public static final Version TWO_6 = Version.getVersion("2.6"); //$NON-NLS-1$
+    
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-
+	private Version version = TWO_4;
+	
 	public MongoDBExecutionFactory() {
 		setSupportsOrderBy(true);
 		setSupportsSelectDistinct(true);
@@ -77,6 +75,17 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("$concat"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("$substr"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                function.setName("$substr"); //$NON-NLS-1$
+                if (function.getParameters().size() == 2) {
+                    function.getParameters().add(new Literal(DataTypeManager.MAX_STRING_LENGTH, TypeFacility.RUNTIME_TYPES.INTEGER));
+                }
+                return null;
+            }
+        });
+        
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("$toLower"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("$toUpper"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("$dayOfYear"));//$NON-NLS-1$
@@ -95,6 +104,27 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	public void start() throws TranslatorException {
 		super.start();
 	}
+	
+    @TranslatorProperty(display="Database Version", description= "Database Version")
+    public String getDatabaseVersion() {
+        return this.version.toString();
+    }
+
+    Version getVersion() {
+        return this.version;
+    }
+    
+    /**
+     * Sets the database version.  See also {@link #getVersion()}
+     * @param version
+     */
+    public void setDatabaseVersion(String version) {
+        this.version = Version.getVersion(version);
+    }
+    
+    public void setDatabaseVersion(Version version) {
+        this.version = version;
+    }	
 	
 	@Override
     public MetadataProcessor<MongoDBConnection> getMetadataProcessor() {

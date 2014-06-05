@@ -48,6 +48,7 @@ public class TestMongoDBQueryExecution {
     @Before
     public void setUp() throws Exception {
     	this.translator = new MongoDBExecutionFactory();
+    	this.translator.setDatabaseVersion("2.6");
     	this.translator.start();
 
     	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "sakila", "northwind");
@@ -903,4 +904,73 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
     }     
+    
+    @Test(expected=TranslatorException.class)
+    public void testCountOnmultipleColumns() throws Exception {
+        String query = "SELECT count(CategoryName), count(CategoryID) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        
+        BasicDBObject group = new BasicDBObject();
+        group.append( "_id", null);
+        group.append( "_m0", new BasicDBObject("$sum", 1));
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", 1);
+
+        Mockito.verify(dbCollection).aggregate(
+                        new BasicDBObject("$match", QueryBuilder.start("CategoryName").notEquals(null).get()),
+                        new BasicDBObject("$group", group),
+                        new BasicDBObject("$project", result));
+    }  
+    
+    @Test
+    public void testFunctionInWhere() throws Exception {
+        String query = "SELECT CategoryName FROM Categories WHERE CONCAT(CategoryName, '2') = '2'";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+        
+        // { "$project" : { "_m0" : { "$concat" : [ "$CategoryName" , "2"]} , "_m1" : "$CategoryName"}},
+        BasicDBList params = new BasicDBList();
+        params.add("$CategoryName");
+        params.add("2");
+        
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", new BasicDBObject("$concat", params));
+        result.append( "_m1", "$CategoryName");
+
+        Mockito.verify(dbCollection).aggregate(
+                        new BasicDBObject("$project", result),
+                        new BasicDBObject("$match", QueryBuilder.start("_m0").is("2").get()));
+    }   
+    
+    @Test
+    public void testSubStr() throws Exception {
+        String query = "SELECT SUBSTRING(CategoryName, 3) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+
+        BasicDBList params = new BasicDBList();
+        params.add("$CategoryName");
+        params.add(3);
+        params.add(4000);
+        
+        //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", new BasicDBObject("$substr", params));
+
+        Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
+    }   
+    
+    @Test
+    public void testSelectConstant() throws Exception {
+        String query = "SELECT 'hit' FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", new BasicDBObject("$literal", "hit"));
+
+        Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
+    }    
 }
