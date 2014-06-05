@@ -28,6 +28,8 @@
                 <include>**/stax2-*</include>
                 <include>**/woodstox-*</include>
                 <include>**/wsdl4j-*</include>
+                <include>**/neethi-*</include>
+                <include>**/xmlschema-*</include>
             </includes>           
         </fileSet>        
     </fileSets>
