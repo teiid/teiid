@@ -248,7 +248,6 @@ public class TestMongoDBSelectVisitor {
     	visitor.visitNode(cmd);
     	BasicDBObject expected = new BasicDBObject("_m1", 1);
     	expected.put("_m2", -1);
-    	System.out.println(visitor.project.toString());
     	assertEquals(expected, visitor.sort);
     }
 
