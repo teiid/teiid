@@ -957,6 +957,17 @@
 		        <version>${version.com.google.guava}</version>
             </dependency>
             <dependency>
+                <groupId>org.codehaus.woodstox</groupId>
+                <artifactId>woodstox-core-asl</artifactId>
+                <version>4.2.0</version>
+                <exclusions>
+                   <exclusion>
+                       <artifactId>stax-api</artifactId>
+                       <groupId>javax.xml.stream</groupId>
+                   </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-frontend-jaxws</artifactId>
                 <version>${version.org.apache.cxf}</version>

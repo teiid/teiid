@@ -22,17 +22,9 @@
         <fileSet>
             <directory>${project.build.directory}/rar-unpack</directory>
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/webservice/main</outputDirectory>
-            <excludes>
-                <exclude>**/cxf-*</exclude>
-                <exclude>**/jaxb-*</exclude>
-                <exclude>**/jsr311-*</exclude>
-                <exclude>**/stax2-*</exclude>
-                <exclude>**/woodstox-*</exclude>
-                <exclude>**/wsdl4j-*</exclude>
-                <exclude>**/javax*</exclude>
-                <exclude>**/txw2*</exclude>
-                <exclude>**/istack-commons-runtime*</exclude>
-            </excludes>           
+            <includes>
+                <include>**/connector-ws-*</include>
+            </includes>           
         </fileSet>
     </fileSets>
     <dependencySets>
