@@ -36,11 +36,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.AggregationOutput;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
+import com.mongodb.*;
 
 public class MongoDBQueryExecution extends MongoDBBaseExecution implements ResultSetExecution {
 	private Select command;
@@ -75,6 +71,10 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			// TODO: check to see how to pass the hint
 			ArrayList<DBObject> ops = new ArrayList<DBObject>();
 			buildAggregate(ops, "$project", this.visitor.unwindProject); //$NON-NLS-1$
+			
+			if (this.visitor.project.isEmpty()) {
+			    throw new TranslatorException(MongoDBPlugin.Event.TEIID18025, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18025));
+			}
 			
 			if (this.visitor.projectBeforeMatch) {
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$

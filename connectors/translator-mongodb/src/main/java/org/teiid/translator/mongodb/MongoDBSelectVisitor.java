@@ -173,23 +173,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			}			
 		}
 		else {
-			if (originalExpr instanceof AggregateFunction) {
-				ColumnAlias alias = addToProject(expr, false);
-				if (!this.group.values().contains(expr)) {
-					this.group.put(alias.projectedName, expr);
-				}
-			}
-			else if (originalExpr instanceof Function) {
-				addToProject(expr, true);
-			}
-			else if (originalExpr instanceof Condition) {
-				// needs to be in the form "_mo: {$cond: [{$eq :["$city", "FREEDOM"]}, true, false]}}}"
-				BasicDBList values = new BasicDBList();
-				values.add(0, expr);
-				values.add(1, true);
-				values.add(2, false);
-				addToProject(new BasicDBObject("$cond", values), true); //$NON-NLS-1$
-			}
+		    implicitProject(originalExpr, expr);
 			// what user sees as project
 			this.selectColumns.add(previousAlias.projectedName);
 			this.selectColumnReferences.add(previousAlias.projectedName);
@@ -489,7 +473,12 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(Select obj) {
-	    SQLRewriterVisitor.rewrite(obj);
+	    
+	    try {
+            SQLRewriterVisitor.rewrite(obj);
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
 	    
     	this.command = obj;
 
@@ -567,6 +556,42 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         	 append(obj.getLimit());
         }
     }
+	
+	private ColumnAlias implicitProject(Expression teiidExpr, Object mongoExpr) {
+        if (teiidExpr instanceof ColumnReference) {
+            ColumnAlias alias = this.expressionMap.get(mongoExpr);
+            if (alias == null) {
+                alias = buildAlias(null);
+                this.expressionMap.put(mongoExpr, alias);
+            }
+            return alias;
+        }
+        else if (teiidExpr instanceof AggregateFunction) {
+            ColumnAlias alias = addToProject(mongoExpr, false);
+            if (!this.group.values().contains(mongoExpr)) {
+                this.group.put(alias.projectedName, mongoExpr);
+            }
+            return alias;
+        }
+        else if (teiidExpr instanceof Function) {
+            return addToProject(mongoExpr, true);
+        }
+        else if (teiidExpr instanceof Condition) {
+            // needs to be in the form "_mo: {$cond: [{$eq :["$city", "FREEDOM"]}, true, false]}}}"
+            BasicDBList values = new BasicDBList();
+            values.add(0, mongoExpr);
+            values.add(1, true);
+            values.add(2, false);
+            return addToProject(new BasicDBObject("$cond", values), true); //$NON-NLS-1$
+        }
+        else if (teiidExpr instanceof Literal) {
+            if (this.executionFactory.getVersion().compareTo(MongoDBExecutionFactory.TWO_6) >= 0) {
+                return addToProject(new BasicDBObject("$literal", mongoExpr), true); //$NON-NLS-1$
+            }
+            this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18026, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18026)));
+        }
+        return null;
+	}
 
 	@Override
 	public void visit(Comparison obj) {
@@ -729,11 +754,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		append(obj);
 
 		Object expr = this.onGoingExpression.pop();
-		ColumnAlias exprAlias = this.expressionMap.get(expr);
-		if (exprAlias == null) {
-			exprAlias = buildAlias(null);
-			this.expressionMap.put(expr, exprAlias);
-		}
+		ColumnAlias exprAlias = implicitProject(obj, expr);
+//		if (exprAlias == null) {
+//			exprAlias = buildAlias(null);
+//			this.expressionMap.put(expr, exprAlias);
+//		}
 
 		// when expression shows up in a condition, but it is not a derived column
 		// then add implicit project on that alias.
