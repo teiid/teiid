@@ -171,7 +171,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getRegistry().addPerRequestResource(EntityRequestResource.class);
 		deployment.getRegistry().addPerRequestResource(MetadataResource.class);
 		deployment.getRegistry().addPerRequestResource(ServiceDocumentResource.class);
-		deployment.getProviderFactory().registerProviderInstance(ODataBatchProvider.class);
+		deployment.getProviderFactory().registerProvider(ODataBatchProvider.class);
 		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
 		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
 		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
@@ -580,6 +580,47 @@ public class TestODataIntegration extends BaseResourceTest {
 	        request.body("application/json", "{\"c\":5}");
 	        response = request.put(String.class);
 	        assertEquals(200, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test public void testBatch() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+			@Override
+			public boolean supportsCompareCriteriaEquals() {
+				return true;
+			}
+		};
+		hc.addUpdate("DELETE FROM x WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
+		es.addTranslator("x", hc);
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("m");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+			mmd.addSourceMapping("x", "x", null);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+			String post = "Content-Type: application/http\n"
+					+ "Content-Transfer-Encoding:binary\n"
+					+ "\nDELETE /odata/northwind/x(a='a',b='b') HTTP/1.1\n"
+					//+ "Host: host\n"
+					+ "--batch_36522ad7-fc75-4b56-8c71-56071383e77b\n";
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers/$batch"));
+	        request.body(ODataBatchProvider.MULTIPART_MIXED, post); 
+			
+	        ClientResponse<String> response = request.post(String.class);
+	        assertEquals(202, response.getStatus());
 		} finally {
 			es.stop();
 		}

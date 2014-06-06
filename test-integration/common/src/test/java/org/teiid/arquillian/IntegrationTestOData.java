@@ -22,8 +22,7 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -66,7 +65,6 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 	public void testOdata() throws Exception {
 		String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"Loopy\" version=\"1\">\n" + 
-				"    <property name=\"UseConnectorMetadata\" value=\"true\" />\n" + 
 				"    <model name=\"MarketData\">\n" + 
 				"        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" + 
 				"         <metadata type=\"DDL\"><![CDATA[\n" + 
@@ -85,7 +83,7 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		Response response = client.invoke("GET", null);
 		
 		int statusCode = response.getStatus();
-		assertTrue(statusCode == 200);
+		assertEquals(200, statusCode);
 		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), response.getEntity().toString());
 	}
 }
