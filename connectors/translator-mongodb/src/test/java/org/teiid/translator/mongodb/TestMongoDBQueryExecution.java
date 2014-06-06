@@ -972,5 +972,19 @@ public class TestMongoDBQueryExecution {
         result.append( "_m0", new BasicDBObject("$literal", "hit"));
 
         Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
-    }    
+    }
+    
+    @Test
+    public void testOffsetWithoutLimit() throws Exception {
+        String query = "SELECT CategoryName FROM Categories OFFSET 45 ROWS";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", "$CategoryName");
+
+        Mockito.verify(dbCollection).aggregate(
+                new BasicDBObject("$project", result),
+                new BasicDBObject("$skip", 45));
+    }     
 }
