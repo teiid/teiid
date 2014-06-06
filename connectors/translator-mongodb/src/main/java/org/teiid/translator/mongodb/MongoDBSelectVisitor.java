@@ -835,7 +835,9 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(Limit obj) {
-		this.limit = new Integer(obj.getRowLimit());
+	    if (obj.getRowLimit() != Integer.MAX_VALUE) {
+	        this.limit = new Integer(obj.getRowLimit());
+	    }
 		this.skip = new Integer(obj.getRowOffset());
 	}
 
