@@ -43,6 +43,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.ietf.jgss.GSSCredential;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.VDB;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
@@ -76,6 +78,7 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
+	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
@@ -263,7 +266,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			
 			this.connection =  driver.connect(url, info);
 			//Propagate so that we can use in pg methods
-			((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession().addAttchment(ODBCServerRemoteImpl.class, this);
+			SessionMetadata sm = ((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession();
+			sm.addAttchment(ODBCServerRemoteImpl.class, this);
+			setConnectionProperties(this.connection);
 			int hash = this.connection.getConnectionId().hashCode();
 			Enumeration<?> keys = this.props.propertyNames();
 			while (keys.hasMoreElements()) {
@@ -283,6 +288,25 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} catch (IOException e) {
 			errorOccurred(e);
 			terminate();			
+		}
+	}
+
+	public static void setConnectionProperties(ConnectionImpl conn)
+			throws SQLException {
+		SessionMetadata sm = ((LocalServerConnection)conn.getServerConnection()).getWorkContext().getSession();
+		VDB vdb = sm.getVdb();
+		Properties p = vdb.getProperties();
+		setConnectionProperties(conn, p);
+	}
+
+	public static void setConnectionProperties(ConnectionImpl conn,
+			Properties p) {
+		for (Map.Entry<Object, Object> entry : p.entrySet()) {
+			String key = (String)entry.getKey();
+			
+			if (key.startsWith(CONNECTION_PROPERTY_PREFIX)) {
+				conn.setExecutionProperty(key.substring(CONNECTION_PROPERTY_PREFIX.length()), (String) entry.getValue());
+			}
 		}
 	}	
 	
