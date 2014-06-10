@@ -44,6 +44,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
@@ -264,6 +265,22 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("attr", "second"),
         };    
     
+        process(sql, expected);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testXmlTableSequence() throws Exception {
+        String sql = "select * from xmltable('/a' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path 'b') as x"; //$NON-NLS-1$
+        
+        process(sql, null);
+    }
+    
+    @Test public void testXmlTableSequenceArray() throws Exception {
+        String sql = "select * from xmltable('/a' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string[] path 'b') as x"; //$NON-NLS-1$
+        
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(new ArrayImpl("first", "second")),
+        }; 
         process(sql, expected);
     }
     

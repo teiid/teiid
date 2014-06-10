@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
+import java.lang.reflect.Array;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,6 +41,7 @@ import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ConversionResult;
+import net.sf.saxon.type.ValidationException;
 import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.CalendarValue;
 import net.sf.saxon.value.StringValue;
@@ -54,7 +56,9 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -296,39 +300,56 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						tuple.add(value);
 						continue;
 					}
-					if (pathIter.next() != null) {
-						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
-					}
-					Object value = colItem;
-					if (value instanceof AtomicValue) {
-						value = getValue((AtomicValue)colItem);
-					} else if (value instanceof Item) {
-						Item i = (Item)value;
-						if (XMLSystemFunctions.isNull(i)) {
-							tuple.add(null);
+					Item next = pathIter.next();
+					if (next != null) {
+						if (proColumn.getSymbol().getType().isArray()) {
+							ArrayList<Object> vals = new ArrayList<Object>();
+							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem));
+							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next));
+							while ((next = pathIter.next()) != null) {
+								vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next));
+							}
+							Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(proColumn.getSymbol().getType().getComponentType(), vals.size())));
+							tuple.add(value);
 							continue;
 						}
-						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
-						if (bat != null) {
-							ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);
-							value = cr.asAtomic();
-							value = getValue((AtomicValue)value);
-							if (value instanceof Item) {
-								value = ((Item)value).getStringValue();
-							}
-						} else {
-							value = i.getStringValue();
-						}
+						throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
 					}
-					value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType());
+					Object value = getValue(proColumn.getSymbol().getType(), colItem);
 					tuple.add(value);
 				} catch (XPathException e) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30172, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30172, proColumn.getName()));
+					throw new TeiidProcessingException(QueryPlugin.Event.TEIID30172, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30172, proColumn.getName()));
 				}
 			}
 		}
 		item = null;
 		return tuple;
+	}
+
+	private Object getValue(Class<?> type,
+			Item colItem) throws XPathException,
+			ValidationException, TransformationException {
+		Object value = colItem;
+		if (value instanceof AtomicValue) {
+			value = getValue((AtomicValue)colItem);
+		} else if (value instanceof Item) {
+			Item i = (Item)value;
+			if (XMLSystemFunctions.isNull(i)) {
+				return null;
+			}
+			BuiltInAtomicType bat = typeMapping.get(type);
+			if (bat != null) {
+				ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);
+				value = cr.asAtomic();
+				value = getValue((AtomicValue)value);
+				if (value instanceof Item) {
+					value = ((Item)value).getStringValue();
+				}
+			} else {
+				value = i.getStringValue();
+			}
+		}
+		return FunctionDescriptor.importValue(value, type);
 	}
 
 	private Object getValue(AtomicValue value) throws XPathException {
