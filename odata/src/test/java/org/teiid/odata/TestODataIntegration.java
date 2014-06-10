@@ -72,6 +72,8 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.service.AutoGenDataService;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.ExecutionProperties;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.json.simple.ContentHandler;
 import org.teiid.json.simple.JSONParser;
@@ -81,6 +83,7 @@ import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Command;
@@ -699,6 +702,33 @@ public class TestODataIntegration extends BaseResourceTest {
 	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/SmallA?$format=json&$select=TimeValue"));
 	        ClientResponse<String> response = request.get(String.class);
 	        assertEquals(200, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test public void testConnectionProperties() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("m");
+			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create view v as select 1");
+			
+			Properties props = new Properties();
+			props.setProperty(ODBCServerRemoteImpl.CONNECTION_PROPERTY_PREFIX + ExecutionProperties.RESULT_SET_CACHE_MODE, "true");
+			
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			ConnectionImpl impl = lc.getConnection();
+			
+			assertEquals("true", impl.getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE));
 		} finally {
 			es.stop();
 		}

@@ -81,6 +81,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.net.TeiidURL;
+import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -105,6 +106,7 @@ public class LocalClient implements Client {
 	private String transportName;
 	private String connectionString;
 	private Properties connectionProperties = new Properties();
+	private Properties initProperties;
 	private EdmDataServices edmMetaData;
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
@@ -118,12 +120,13 @@ public class LocalClient implements Client {
 		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
 		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		this.initProperties = props;
 		connectionProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
 		connectionProperties.put(EmbeddedProfile.TRANSPORT_NAME, transportName); 
 		connectionProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
 		this.connectionString = sb.toString();
 	}
-
+	
 	@Override
 	public String getVDBName() {
 		return this.vdbName;
@@ -139,7 +142,10 @@ public class LocalClient implements Client {
 	}
 
 	ConnectionImpl getConnection() throws SQLException {
-		return driver.connect(this.connectionString, connectionProperties);
+		ConnectionImpl connection = driver.connect(this.connectionString, connectionProperties);
+		ODBCServerRemoteImpl.setConnectionProperties(connection);
+		ODBCServerRemoteImpl.setConnectionProperties(connection, initProperties);
+		return connection;
 	}
 
 	@Override
