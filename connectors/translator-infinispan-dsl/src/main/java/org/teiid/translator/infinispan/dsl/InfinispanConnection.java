@@ -21,8 +21,10 @@
  */
 package org.teiid.translator.infinispan.dsl;
 
+import java.util.List;
 import java.util.Map;
 
+import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
 
 import com.google.protobuf.Descriptors.Descriptor;
@@ -76,5 +78,21 @@ public interface InfinispanConnection {
 	 * @throws TranslatorException 
 	 */
 	public Map<?, ?> getCache(String cacheName) throws TranslatorException;
+	
+	/**
+	 * Return the QueryFactory used by the cache.
+	 * @param cacheName
+	 * @return QueryFactory
+	 * @throws TranslatorException
+	 */
+	@SuppressWarnings("rawtypes")
+	public QueryFactory getQueryFactory(String cacheName) throws TranslatorException;
+	
+	/**
+	 * Return a list of all the classes that have been registered for serialization.
+	 * @return List<Class>
+	 */
+	public List<Class> getRegisteredClasses();
+	
 	
 }

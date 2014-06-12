@@ -39,8 +39,11 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.util.VDBUtility;
 
 /**
- * NOTE: These test queries only test based on the source query.  A VIEW query will not 
+ * NOTES: 
+ * 
+ * <li>These test queries only test based on the source query.  A VIEW query will not 
  * resolve correctly to produce a source query that will be sent to the translator.
+ * <li>The WHERE clause cannot be tested to confirm filtering at this time.
  * 
  * @author vanhalbert
  *
@@ -52,7 +55,7 @@ public class TestInfinispanExecution {
 	
 	private static TranslationUtility translationUtility = VDBUtility.TRANSLATION_UTILITY;
 	
-	private static Map<?, ?> DATA = PersonCacheSource.loadCache();
+	static Map<?, ?> DATA = PersonCacheSource.loadCache();
 	
 	
     @BeforeClass
@@ -64,7 +67,7 @@ public class TestInfinispanExecution {
 
 
 	@Test public void testExecution() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select PersonName, PersonID, Email From Persons_Object_Model.Persons_Cache as T"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select name, id, email From Persons_Object_Model.Persons as T"); //$NON-NLS-1$
 		
 		performTest(10, 3, command);
 
@@ -75,23 +78,37 @@ public class TestInfinispanExecution {
 	 * @throws Exception
 	 */
 	@Test public void testReturningObject() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select PersonObject From Persons_Object_Model.Persons_Cache as T"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select PersonObject From Persons_Object_Model.Persons as T"); //$NON-NLS-1$
 
 		
 		performTest(10, 1, command);
 
 	}
 	
-//	/**
-//	 * Test querying the view
-//	 * @throws Exception
-//	 */
-//	@Test public void testPersonView() throws Exception {
-//		Select command = (Select)translationUtility.parseCommand("select * From Persons_Object_Model.Persons_Cache"); //$NON-NLS-1$
-//	
-//		performTest(10, 4, command);
-//
-//	}
+	@Test public void test1toManyOnlyChild() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select number From Persons_Object_Model.PhoneNumber as T"); //$NON-NLS-1$
+
+		
+		performTest(20, 1, command);
+
+	}
+	
+	@Test public void test1toManyA() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number From Persons_Object_Model.Persons as A, Persons_Object_Model.PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
+
+		
+		performTest(20, 4, command);
+
+	}
+	
+	@Test public void test1toManyB() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number, b.type From Persons_Object_Model.Persons as A, Persons_Object_Model.PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
+
+		
+		performTest(20, 5, command);
+
+	}	
+	
 
 	protected List<Object> performTest(int rowcnt, int colCount, Select command)
 			throws TranslatorException {
@@ -107,7 +124,39 @@ public class TestInfinispanExecution {
 	
 		while (row != null) {
 			rows.add(row);
-			assertEquals(colCount, row.size());
+			assertEquals("column count did not match", colCount, row.size());
+			++cnt;
+			row = exec.next();
+		}
+		
+		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
+		
+		exec.close();
+		return rows;
+	}
+	
+	protected List<Object> performTest(int rowcnt, int colCount, Select command, List<Object> expectedResults)
+			throws TranslatorException {
+		
+		InfinispanExecution exec = createExecution(command, rowcnt, colCount);
+
+		exec.execute();
+		
+		List<Object> rows = new ArrayList<Object>();
+		
+		int cnt = 0;
+		List<Object> row = exec.next();
+	
+		while (row != null) {
+			rows.add(row);
+			assertEquals("column count did not match", colCount, row.size());
+			
+			for (int i=0; i<expectedResults.size(); i++) {
+				
+				assertEquals("values don't match for row " + cnt + " column " + i, row.get(i), expectedResults.get(i));
+				
+			}
+			
 			++cnt;
 			row = exec.next();
 		}
@@ -122,9 +171,8 @@ public class TestInfinispanExecution {
 		InfinispanExecutionFactory translator = new InfinispanExecutionFactory() {
 			@Override
 			public List<Object> search(Select command, String cacheName,
-					InfinispanConnection connection, ExecutionContext executionContext)
-					throws TranslatorException {
-					List<Object> rows = new ArrayList(DATA.values());
+					InfinispanConnection connection, ExecutionContext executionContext) {
+					List<Object> rows = new ArrayList<Object>(DATA.values());
         			return rows;
          	}
 

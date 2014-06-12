@@ -21,12 +21,18 @@
  */
 package org.teiid.translator.infinispan.dsl.util;
  
+import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord.Type;
+import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
@@ -60,34 +66,71 @@ public class VDBUtility {
 	        Schema objectModel = RealMetadataFactory.createPhysicalModel("Persons_Object_Model", store); //$NON-NLS-1$
 	        
 	        // Create Person group
-	        Table personTable = RealMetadataFactory.createPhysicalGroup("Persons_Cache", objectModel); //$NON-NLS-1$
+	        Table personTable = RealMetadataFactory.createPhysicalGroup("Persons", objectModel); //$NON-NLS-1$
 	        personTable.setNameInSource("Persons"); //$NON-NLS-1$
 	        personTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+	        personTable.setProperty("teiid_jpa:entity_class", Person.class.getName());
 //	        accountTable.setProperty(Constants.SUPPORTS_RETRIEVE, Boolean.TRUE.toString());
 	        // Create Account Columns
 	        String[] acctNames = new String[] {
-	            "PersonObject", "PersonID", "PersonName", "Email", "PhoneNumber", "PhoneType"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	        		"PersonObject", "id", "name", "email"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	        };
 	        String[] acctTypes = new String[] {  
-	            DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
+	            DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
 	        };
 	        
 	        List<Column> acctCols = RealMetadataFactory.createElements(personTable, acctNames, acctTypes);
 	        acctCols.get(0).setSearchType(SearchType.Unsearchable);
 	        // Set name in source on each column
 	        String[] accountNameInSource = new String[] {
-	        		"this", "id", "name", "email", "PhoneNumber.number", "PhoneNumber.type"     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
+	        		"this", "id", "name", "email"    //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
 	        };
 	        for(int i=0; i<accountNameInSource.length; i++) {
 	            Column obj = acctCols.get(i);
 	            obj.setNameInSource(accountNameInSource[i]);
 	        }
 	        
+	        List<Column> pkeycol = new ArrayList<Column>();
+	        pkeycol.add(acctCols.get(1));
+	        RealMetadataFactory.createKey(Type.Primary, "PK_PERSONJ", personTable, pkeycol);
+
+	        // Create PhoneNumber group
+	        Table phoneTable = RealMetadataFactory.createPhysicalGroup("PhoneNumber", objectModel); //$NON-NLS-1$
+	        phoneTable.setNameInSource("Persons"); //$NON-NLS-1$
+	        phoneTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+	        phoneTable.setProperty("teiid_jpa:entity_class", PhoneNumber.class.getName());
+
+//	        accountTable.setProperty(Constants.SUPPORTS_RETRIEVE, Boolean.TRUE.toString());
+	        // Create Account Columns
+	        String[] pnNames = new String[] {
+	           "id", "number", "type"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	        };
+	        String[] pnTypes = new String[] {  
+	            DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
+	        };
+	        
+	        List<Column> pnCols = RealMetadataFactory.createElements(phoneTable, pnNames, pnTypes);
+	        pnCols.get(0).setSearchType(SearchType.Unsearchable);
+	        // Set name in source on each column
+	        String[] pnNameInSource = new String[] {
+	        		"id", "phone.number", "phone.type"     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
+	        };
+	        for(int i=0; i<pnNameInSource.length; i++) {
+	            Column obj = pnCols.get(i);
+	            obj.setNameInSource(pnNameInSource[i]);
+	        }
+	  
+	        List<Column> fkeycol = new ArrayList<Column>();
+	        pkeycol.add(pnCols.get(0));
+
+	        KeyRecord fbi = new KeyRecord(KeyRecord.Type.Primary);
+	        fbi.addColumn(pkeycol.get(0));
+	        ForeignKey fk = RealMetadataFactory.createForeignKey("FK_PERSON", phoneTable, fkeycol, fbi);
+	        fk.setNameInSource("phones");
 	        
 	        Schema personViewSchema = RealMetadataFactory.createVirtualModel("Person_View_Model", store);
 	        
-	        String query = "SELECT t.PersonId, t.PersonName, t.Email FROM " +
-	        		"Persons_Object_Model.Persons_Cache, OBJECTTABLE('x' PASSING Persons_Object_Model.Persons_Cache.PersonObject AS x COLUMNS PersonId integer 'teiid_row.id', PersonName string 'teiid_row.name', Email string 'teiid_row.email') AS t";
+	        String query = "SELECT t.PersonId, t.PersonName, t.Email FROM Persons_Object_Model.Persons";
 	        QueryNode qn = new QueryNode(query);
 	        
 	        // Create Contact group
@@ -106,7 +149,7 @@ public class VDBUtility {
 	        RealMetadataFactory.createElements(viewTable, elemNames, elemTypes);
 
 	        
-	        query = "SELECT t.PersonId, t.PersonName, t.Email, t.PhoneNumber, t.PhoneType FROM Persons_Cache";
+	        query = "SELECT t.PersonId, t.PersonName, t.Email, p.PhoneNumber, p.PhoneType FROM Persons, PhoneNumber";
 	        QueryNode phqn = new QueryNode(query);
 	        
 	        // Create Contact group
