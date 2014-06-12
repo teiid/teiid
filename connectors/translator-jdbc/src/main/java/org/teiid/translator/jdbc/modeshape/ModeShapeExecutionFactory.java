@@ -62,8 +62,8 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public void start() throws TranslatorException {
         super.start();
         
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UpperCase")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("LowerCase")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("LOWER")); //$NON-NLS-1$
         
 		registerFunctionModifier(JCR_ISCHILDNODE, new IdentifierFunctionModifier()); 
 		registerFunctionModifier(JCR_ISDESCENDANTNODE, new IdentifierFunctionModifier()); 
