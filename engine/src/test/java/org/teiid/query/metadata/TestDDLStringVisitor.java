@@ -167,6 +167,25 @@ public class TestDDLStringVisitor {
 				");";
 		helpTest(ddl, expected);
 	}	
+
+	@Test
+	public void testFKWithOptions() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE \"G1+\"(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
+				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
+				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 OPTIONS (NAMEINSOURCE 'g1Relationship'))  ";
+		String expected = "CREATE FOREIGN TABLE \"G1+\" (\n" + 
+				"	g1e1 integer,\n" + 
+				"	g1e2 string,\n" + 
+				"	PRIMARY KEY(g1e1, g1e2)\n" + 
+				");\n" + 
+				"\n" + 
+				"CREATE FOREIGN TABLE G2 (\n" + 
+				"	g2e1 integer,\n" + 
+				"	g2e2 string,\n" + 
+				"	PRIMARY KEY(g2e1, g2e2),\n	FOREIGN KEY(g2e1, g2e2) REFERENCES G1  OPTIONS (NAMEINSOURCE 'g1Relationship')\n" + 
+				");";
+		helpTest(ddl, expected);
+	}		
 	
 	@Test
 	public void testMultipleCommands() throws Exception {
