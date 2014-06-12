@@ -496,6 +496,7 @@ public class DDLStringVisitor {
 	
 	private void appendOptions(AbstractMetadataRecord record) {
 		StringBuilder options = new StringBuilder();
+		addCommonOptions(options, record);
 		buildOptions(record, options);
 		if (options.length() != 0) {
 			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
