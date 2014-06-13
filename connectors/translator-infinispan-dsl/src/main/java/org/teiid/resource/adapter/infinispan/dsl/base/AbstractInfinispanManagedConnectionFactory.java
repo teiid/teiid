@@ -65,6 +65,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String cacheJndiName = null;
 	private Map<String, Class<?>> typeMap = null; // cacheName ==> ClassType
 	private String cacheTypes = null;
+	@SuppressWarnings("rawtypes")
 	private Map<Class, BaseMarshaller> messageMarshallerList = null;
 	
 	private String protobinFile = null;
@@ -368,7 +369,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		return this.cl;
 	}
 	
-	protected Class loadClass(String className) throws ResourceException {
+	protected Class<?> loadClass(String className) throws ResourceException {
 		try {
 			return Class.forName(className, true, getClassLoader());
 		} catch (ClassNotFoundException e) {
@@ -542,7 +543,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			LogManager.logInfo(LogConstants.CTX_CONNECTOR,
 				"=== Using RemoteCacheManager (loaded vi JNDI) ==="); //$NON-NLS-1$
 
-			return (RemoteCacheManager) cacheContainer;
+			return cacheContainer;
 		}
 
 		throw new ResourceException(
@@ -553,15 +554,16 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	}
 	
+	@SuppressWarnings("rawtypes")
 	protected void registerMarshallers(SerializationContext ctx, ClassLoader cl) throws ResourceException {
 
 		try {
 			ctx.registerProtofile(cl.getResourceAsStream(getProtobinFile()));
-			@SuppressWarnings("rawtypes")
 			Map<Class, BaseMarshaller> ml = getMessageMarshallerList();
+			
 			Iterator it = ml.keySet().iterator();
 			while (it.hasNext()) {
-				Class c = (Class) it.next();
+				Class<?> c = (Class) it.next();
 				BaseMarshaller m = ml.get(c);
 				ctx.registerMarshaller(c, m);
 			}

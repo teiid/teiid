@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
@@ -35,13 +36,13 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.infinispan.dsl.metadata.ProtobufMetadataProcessor;
 
 
 
 /**
- * InfinispanExecutionFactory is the translator that will access a remote Infinispan cache and issue queries
+ * InfinispanExecutionFactory is the translator that will be use to translate  a remote Infinispan cache and issue queries
  * using DSL to query the cache.  
  * 
  * @author vhalbert
@@ -55,19 +56,28 @@ public class InfinispanExecutionFactory extends
 
 	public static final int MAX_SET_SIZE = 10000;
 	
-	private String messageDescriptor;
-
 	public InfinispanExecutionFactory() {
-		setSourceRequiredForMetadata(false);
+		setSourceRequiredForMetadata(true);
 		setMaxInCriteriaSize(MAX_SET_SIZE);
 		setMaxDependentInPredicates(1);
 
-		setSupportsOrderBy(false);
+		setSupportsOrderBy(true);
 		setSupportsSelectDistinct(false);
-		setSupportsInnerJoins(false);
+		setSupportsInnerJoins(true);
 		setSupportsFullOuterJoins(false);
-		setSupportsOuterJoins(false);
+		setSupportsOuterJoins(true);
+	
+		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
+	
+	
+
+	@Override
+	public int getMaxFromGroups() {
+		return 2;
+	}
+
+
 
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
@@ -76,42 +86,44 @@ public class InfinispanExecutionFactory extends
 		return new InfinispanExecution((Select) command, metadata, this, connection, executionContext);
 	}
 	
-	/**
-	 * Returns the name of the message descriptor to be found in the ProfoBuf that describes
-	 * the object to be serialized.
-	 * 
-	 * @return String MessageDescriptor
-	 * 
-	 * @since 6.1.0
-	 */
-	@TranslatorProperty(display = "Protobuf Message Descriptor", description = "The name of the message descriptor to get from the Protobuf")
-	public String getMessageDescriptor() {
-		return this.messageDescriptor;
+	
+    @Override
+	public UpdateExecution createUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			InfinispanConnection connection) {
+    	return new InfinispanUpdateExecution(command, connection, executionContext, this);
 	}
-
-	public void setMessageDescriptor(String messageDescriptor) {
-		this.messageDescriptor = messageDescriptor;
-	}
-
-	@Override
-    public boolean supportsCompareCriteriaEquals() {
-		return true;
-	}
+    
+    @Override
+    public boolean supportsAliasedTable() {
+        return true;
+    }
 
 	@Override
     public boolean supportsInCriteria() {
-		return true;
+		return Boolean.TRUE.booleanValue();
 	}
 
 	@Override
-	public boolean supportsOnlyLiteralComparison() {
-		return true;
+    public boolean supportsIsNullCriteria() {
+		return Boolean.TRUE.booleanValue();
 	}
+	
+//	@Override
+//	public boolean supportsOnlyLiteralComparison() {
+//		return false;
+//	}
 	
 	@Override
 	public boolean supportsOrCriteria() {
 		return Boolean.TRUE.booleanValue();
 	}
+
+	@Override
+    public boolean supportsCompareCriteriaEquals() {
+		return Boolean.TRUE.booleanValue();
+	}
+	
 	
 	@Override
 	public boolean supportsCompareCriteriaOrdered() {
@@ -120,10 +132,16 @@ public class InfinispanExecutionFactory extends
 	
 	@Override
 	public boolean supportsLikeCriteria() {
-		// at this point, i've been unable to get the Like to work.
+		return Boolean.TRUE.booleanValue();
+	}	
+
+	@Override
+	public boolean supportsLikeCriteriaEscapeCharacter() {
 		return Boolean.TRUE.booleanValue();
 	}	
 	
+	
+
 	public List<Object> search(Select command, String cacheName,
 			InfinispanConnection connection, ExecutionContext executionContext)
 			throws TranslatorException {

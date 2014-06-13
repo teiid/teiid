@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
 
@@ -45,7 +46,7 @@ import com.google.protobuf.Descriptors.FileDescriptor;
  * @author vhalbert
  *
  */
-@SuppressWarnings({ "nls", "unchecked" })
+@SuppressWarnings({ "nls" })
 public class PersonCacheSource extends HashMap <Object, Object> {
 	
 	/**
@@ -84,7 +85,7 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 		return new InfinispanConnection() {
 
 			@Override
-			public Class<?> getType(String cacheName) throws TranslatorException {
+			public Class<?> getType(String cacheName)  {
 				return Person.class;
 			}
 
@@ -106,10 +107,26 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 			}
 
 			@Override
-			public Map<?, ?> getCache(String cacheName)
-					throws TranslatorException {
+			public Map<?, ?> getCache(String cacheName) {
 				return OBJECTS;
 			}
+
+
+			@Override
+			public QueryFactory getQueryFactory(String cacheName) {
+				return null;
+			}
+
+			public List<Class> getRegisteredClasses() {
+				ArrayList<Class> al = new ArrayList<Class>(3);
+				al.add(Person.class);
+				al.add(PhoneNumber.class);
+				al.add(PhoneType.class);
+				return al;
+				
+			}
+			
+
 
 		};
 	}
@@ -124,7 +141,7 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 			double d = 0;
 			for (int j = 1; j <= NUMPHONES; j++) {
 				
-				PhoneNumber pn = new PhoneNumber("111222345 " + j, types[t++]);
+				PhoneNumber pn = new PhoneNumber("(111)222-345" + j, types[t++]);
 				
 				if (t > 2) t = 0;
 				

@@ -22,16 +22,16 @@
 
 package org.teiid.resource.adapter.infinispan.dsl.base;
 
-import java.io.IOException;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-
-import javax.resource.ResourceException;
+import java.util.Set;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.protostream.BaseMarshaller;
+import org.infinispan.client.hotrod.Search;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -39,7 +39,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 
-import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.Descriptors.Descriptor;
 
 /** 
@@ -54,23 +53,14 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	SerializationContext ctx = null;
 	AbstractInfinispanManagedConnectionFactory config = null;
 
-	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config) throws ResourceException  {
+	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)   {
 		this.config = config;
 		
 		this.rcm = config.getCacheContainer();
 		this.ctx = config.getContext();
 
-	    registerMarshallers();
-
-
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created."); //$NON-NLS-1$
 	}
-
-//	@Override
-//	public Object get(String cacheName, Object key) throws TranslatorException {
-//		return null;
-//	}
-
 	
 	/** 
 	 * Close the connection, if a connection requires closing.
@@ -142,29 +132,19 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		return d;
 	}
 	
-	private void registerMarshallers() throws ResourceException {
-
-		try {
-			ctx.registerProtofile(InfinispanConnectionImpl.class
-					.getClassLoader().getResourceAsStream(
-							config.getProtobinFile()));
-			@SuppressWarnings("rawtypes")
-			Map<Class, BaseMarshaller> ml = config.getMessageMarshallerList();
-			Iterator it = ml.keySet().iterator();
-			while (it.hasNext()) {
-				Class c = (Class) it.next();
-				BaseMarshaller m = ml.get(c);
-				ctx.registerMarshaller(c, m);
-
-			}
-
-		} catch (IOException e) {
-			throw new ResourceException(e);
-		} catch (DescriptorValidationException e) {
-			throw new ResourceException(e);
-		} catch (Throwable t) {
-			throw new ResourceException(t);
-		}
+	@SuppressWarnings({ "unused", "rawtypes" })
+	@Override
+	public QueryFactory getQueryFactory(String cacheName) throws TranslatorException {
+		RemoteCache rc =  getCache(cacheName);
+		
+		return Search.getQueryFactory(rc);
 	}
-
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public List<Class> getRegisteredClasses() {
+		List<Class> c = new ArrayList<Class>();
+		c.addAll(config.getMessageMarshallerList().keySet());
+		return c;
+	}
 }

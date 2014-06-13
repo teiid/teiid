@@ -25,18 +25,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.language.Select;
-import org.teiid.translator.TranslatorException;
+import org.infinispan.query.dsl.FilterConditionBeginContext;
+import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.Search;
-import org.teiid.language.*;
+import org.infinispan.query.dsl.SortOrder;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.Exists;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.OrderBy;
+import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
+import org.teiid.translator.TranslatorException;
 
 
 
@@ -50,6 +62,9 @@ import org.teiid.metadata.Column;
  * 
  * @since 8.7.x
  * 
+ * @TODO
+ * Between
+ * 
  */
 public final class DSLSearch   {
 
@@ -58,41 +73,51 @@ public final class DSLSearch   {
 	public static List<Object> performSearch(Select command, Class<?> type, String cacheName, InfinispanConnection conn)
 			throws TranslatorException {
 		
-		RemoteCache rc = (RemoteCache) conn.getCache(cacheName);
-		
-		QueryFactory qf = Search.getQueryFactory(rc);
+		QueryFactory qf = conn.getQueryFactory(cacheName);
 	    		  
 	    QueryBuilder qb = qf.from(type);
+	    	    
+	    OrderBy ob = command.getOrderBy();
+	    if (ob != null) {
+		    List<SortSpecification> sss = ob.getSortSpecifications();
+		    for (SortSpecification spec:sss) {
+		    	Expression exp = spec.getExpression();
+		    	Column mdIDElement = ((ColumnReference) exp).getMetadataObject();
+		    	qb = qb.orderBy(mdIDElement.getNameInSource(), SortOrder.DESC);
+		    }
+	    }
 	    	
-		boolean createdQueries = buildQueryFromWhereClause(command.getWhere(), qb);	 
+	    FilterConditionContext fcc = buildQueryFromWhereClause(command.getWhere(), qb, null);	 
 		 			
 		List<Object> results =  null;
-		
+				
 		Query query = null;
-		if (createdQueries) {
-			query = qb.build();
+		if (fcc != null) {
+			query = fcc.toBuilder().build();
 			results = query.list();
 
-			if (results == null || results.isEmpty()) {
+			if (results == null) {
 				return Collections.emptyList();
 			}
 			
 		} else {
-			results = new ArrayList();
-			
-			results.addAll( rc.getBulk().values() );
+			query = qb.build();
+			results = query.list();
+			if (results == null) {
+				return Collections.emptyList();
+			}
 		}
 
 		return results;
 		
 	}
 	
-	private static boolean buildQueryFromWhereClause(Condition criteria, QueryBuilder queryBuilder)
+	private static FilterConditionContext buildQueryFromWhereClause(Condition criteria, @SuppressWarnings("rawtypes") QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)
 			throws TranslatorException {
-		boolean createdQueries = false;
 
-		if (criteria == null) return false;
-	
+		if (criteria == null) return null;
+		FilterConditionContext fcc = null;
+
 		
 		if (criteria instanceof AndOr) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
@@ -103,40 +128,23 @@ public final class DSLSearch   {
 			switch (op) {
 			case AND:
 
-////				BooleanJunction<BooleanJunction> leftAnd = queryBuilder.
-////						.bool();
-//				boolean andLeftHasQueries = buildQueryFromWhereClause(
-//						crit.getLeftCondition(), queryBuilder);
-//
-////				BooleanJunction<BooleanJunction> rightAnd = queryBuilder
-////						.bool();
-//				boolean andRightHasQueries = buildQueryFromWhereClause(
-//						crit.getRightCondition(), queryBuilder);
-//
-//				if (andLeftHasQueries && andRightHasQueries) {
-//					leftAnd.must(rightAnd.createQuery());
-//					inUse.should(leftAnd.createQuery());
-//				} else if (andLeftHasQueries) {
-//
-//					inUse.should(leftAnd.createQuery());
-//				} else if (andRightHasQueries) {
-//					inUse.should(rightAnd.createQuery());
-//				}
-//
-//				createdQueries = (andLeftHasQueries ? andLeftHasQueries
-//						: andRightHasQueries);
+				FilterConditionContext f_and = buildQueryFromWhereClause(
+						crit.getLeftCondition(), queryBuilder, null);
+				FilterConditionBeginContext fcbca = f_and.and();
+
+				fcc = buildQueryFromWhereClause(
+						crit.getRightCondition(), queryBuilder, fcbca);
 
 				break;
 
 			case OR:
+				
+				FilterConditionContext f_or = buildQueryFromWhereClause(
+						crit.getLeftCondition(), queryBuilder, null);
+				FilterConditionBeginContext fcbcb = f_or.or();
 
-//				boolean orLeftHasQueries = buildQueryFromWhereClause(
-//						crit.getLeftCondition(), inUse, queryBuilder);
-//				boolean orRightHasQueries = buildQueryFromWhereClause(
-//						crit.getRightCondition(), inUse, queryBuilder);
-//
-//				createdQueries = (orLeftHasQueries ? orLeftHasQueries
-//						: orRightHasQueries);
+				fcc = buildQueryFromWhereClause(
+						crit.getRightCondition(), queryBuilder, fcbcb);
 
 				break;
 
@@ -147,7 +155,7 @@ public final class DSLSearch   {
 			}
 
 		} else if (criteria instanceof Comparison) {
-			createdQueries = visit((Comparison) criteria,  queryBuilder);
+			fcc = visit((Comparison) criteria,  queryBuilder, fcbc);
 
 		} else if (criteria instanceof Exists) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
@@ -155,11 +163,13 @@ public final class DSLSearch   {
 			// TODO Exists should be supported in a future release.
 
 		} else if (criteria instanceof Like) {
-			createdQueries = visit((Like) criteria, queryBuilder);
+			fcc = visit((Like) criteria, queryBuilder, fcbc);
 
 		} else if (criteria instanceof In) {
-			createdQueries = visit((In) criteria, queryBuilder);
+			fcc = visit((In) criteria, queryBuilder, fcbc);
 
+		} else if (criteria instanceof IsNull) {
+			fcc = visit( (IsNull) criteria, queryBuilder, fcbc);
 		}
 		// else if (criteria instanceof Not) {
 		//			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing NOT criteria."); //$NON-NLS-1$
@@ -168,93 +178,11 @@ public final class DSLSearch   {
 		// new LinkedList<String>()));
 		// }
 
-		return createdQueries;
+		return fcc;
 	}
-		
 
-//	private static boolean buildQueryFromWhereClause(Condition criteria, QueryBuilder queryBuilder)
-//			throws TranslatorException {
-//		boolean createdQueries = false;
-//		BooleanJunction<BooleanJunction> inUse = junction;
-//
-//		if (criteria instanceof AndOr) {
-//			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-//					"Parsing compound criteria."); //$NON-NLS-1$
-//			AndOr crit = (AndOr) criteria;
-//			AndOr.Operator op = crit.getOperator();
-//
-//			switch (op) {
-//			case AND:
-//
-//				BooleanJunction<BooleanJunction> leftAnd = queryBuilder
-//						.bool();
-//				boolean andLeftHasQueries = buildQueryFromWhereClause(
-//						crit.getLeftCondition(), leftAnd, queryBuilder);
-//
-//				BooleanJunction<BooleanJunction> rightAnd = queryBuilder
-//						.bool();
-//				boolean andRightHasQueries = buildQueryFromWhereClause(
-//						crit.getRightCondition(), rightAnd, queryBuilder);
-//
-//				if (andLeftHasQueries && andRightHasQueries) {
-//					leftAnd.must(rightAnd.createQuery());
-//					inUse.should(leftAnd.createQuery());
-//				} else if (andLeftHasQueries) {
-//
-//					inUse.should(leftAnd.createQuery());
-//				} else if (andRightHasQueries) {
-//					inUse.should(rightAnd.createQuery());
-//				}
-//
-//				createdQueries = (andLeftHasQueries ? andLeftHasQueries
-//						: andRightHasQueries);
-//
-//				break;
-//
-//			case OR:
-//
-//				boolean orLeftHasQueries = buildQueryFromWhereClause(
-//						crit.getLeftCondition(), inUse, queryBuilder);
-//				boolean orRightHasQueries = buildQueryFromWhereClause(
-//						crit.getRightCondition(), inUse, queryBuilder);
-//
-//				createdQueries = (orLeftHasQueries ? orLeftHasQueries
-//						: orRightHasQueries);
-//
-//				break;
-//
-//			default:
-//				final String msg = InfinispanAPIPlugin.Util
-//						.getString("LuceneSearch.invalidOperator", new Object[] { op, "And, Or" }); //$NON-NLS-1$ //$NON-NLS-2$
-//				throw new TranslatorException(msg);
-//			}
-//
-//		} else if (criteria instanceof Comparison) {
-//			createdQueries = visit((Comparison) criteria, inUse, queryBuilder);
-//
-//		} else if (criteria instanceof Exists) {
-//			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-//					"Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
-//			// TODO Exists should be supported in a future release.
-//
-//		} else if (criteria instanceof Like) {
-//			createdQueries = visit((Like) criteria, inUse, queryBuilder);
-//
-//		} else if (criteria instanceof In) {
-//			createdQueries = visit((In) criteria, inUse, queryBuilder);
-//
-//		}
-//		// else if (criteria instanceof Not) {
-//		//			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing NOT criteria."); //$NON-NLS-1$
-//		// isNegated = true;
-//		// filterList.addAll(getSearchFilterFromWhereClause(((Not)criteria).getCriteria(),
-//		// new LinkedList<String>()));
-//		// }
-//
-//		return createdQueries;
-//	}
-
-	public static boolean visit(Comparison obj, QueryBuilder queryBuilder) throws TranslatorException {
+	@SuppressWarnings("rawtypes")
+	public static FilterConditionContext visit(Comparison obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing Comparison criteria."); //$NON-NLS-1$
@@ -266,7 +194,7 @@ public final class DSLSearch   {
 		// joins between the objects in the same cache is not usable
 		if ((lhs instanceof ColumnReference && rhs instanceof ColumnReference)
 				|| (lhs instanceof Literal && rhs instanceof Literal)) {
-			return false;
+			return null;
 		}
 
 		Object value = null;
@@ -290,50 +218,72 @@ public final class DSLSearch   {
 			throw new TranslatorException(msg);
 		}
 
+		
 		value = escapeReservedChars(value);
 		switch (op) {
 		case NE:
-			createEqualsQuery(mdIDElement, value, false, true, queryBuilder);
-			break;
+			if (fcbc == null) {
+				return queryBuilder.not().having(getNameInSource(mdIDElement)).eq(value);
+			} 
+			return fcbc.not().having(getNameInSource(mdIDElement)).eq(value);
+			
 
 		case EQ:
-			createEqualsQuery(mdIDElement, value, true, false, queryBuilder);
-			break;
+			if (fcbc == null ) {
+				return queryBuilder.having(getNameInSource(mdIDElement)).eq(value);
+			}
+			return fcbc.having(getNameInSource(mdIDElement)).eq(value);
 
 		case GT:
-			createRangeAboveQuery(mdIDElement, value, queryBuilder);
-			break;
+			if (fcbc == null) {
+				return queryBuilder.having(getNameInSource(mdIDElement)).gt(value);
+			}
+			return fcbc.having(getNameInSource(mdIDElement)).gt(value);
+
+		case GE:
+			if (fcbc == null) {
+				return queryBuilder.having(getNameInSource(mdIDElement)).gte(value);
+			}
+			return fcbc.having(getNameInSource(mdIDElement)).gte(value);
 
 		case LT:
-			createRangeBelowQuery(mdIDElement, value, queryBuilder);
-			break;
+			if (fcbc == null) {
+				return queryBuilder.having(getNameInSource(mdIDElement)).lt(value);
+			}
+			return fcbc.having(getNameInSource(mdIDElement)).lt(value);
+			
+		case LE:
+			if (fcbc == null) {
+				return queryBuilder.having(getNameInSource(mdIDElement)).lte(value);
+			}
+			return fcbc.having(getNameInSource(mdIDElement)).lte(value);
 
 		default:
 			final String msg = InfinispanPlugin.Util
-					.getString("LuceneSearch.invalidOperator", new Object[] { op, "NE, EQ, GT, LT" }); //$NON-NLS-1$ //$NON-NLS-2$
+					.getString("LuceneSearch.invalidOperator", new Object[] { op, "NE, EQ, GT, GE, LT, LE" }); //$NON-NLS-1$ //$NON-NLS-2$
 			throw new TranslatorException(msg);
 		}
-		return true;
 
 	}
 
-	public static boolean visit(In obj, QueryBuilder queryBuilder) throws TranslatorException {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static FilterConditionContext visit(In obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
 
 		Expression lhs = obj.getLeftExpression();
 
-		Column mdIDElement = ((ColumnReference) lhs).getMetadataObject();
-
 		List<Expression> rhsList = obj.getRightExpressions();
+		
+		List v = new ArrayList(rhsList.size()) ;
+		//= Arrays.asList(1
 		boolean createdQuery = false;
 		for (Expression expr : rhsList) {
 
 			if (expr instanceof Literal) {
 				Literal literal = (Literal) expr;
 
-				// add these as OR queries
-				createEqualsQuery(mdIDElement,
-						escapeReservedChars(literal.getValue()), false, false, queryBuilder);
+				Object value = escapeReservedChars(literal.getValue());
+				v.add(value);
 				createdQuery = true;
 			} else {
 				String msg = InfinispanPlugin.Util.getString(
@@ -342,10 +292,20 @@ public final class DSLSearch   {
 				throw new TranslatorException(msg);
 			}
 		}
-		return createdQuery;
+		
+		if (createdQuery) {
+			Column col = ((ColumnReference) lhs).getMetadataObject();
+
+			if (fcbc == null) {
+				return  queryBuilder.having(getNameInSource(col)).in(v);
+			}
+			return fcbc.having(getNameInSource(col)).in(v);
+		}
+		return null;
 	}
 
-	public static boolean visit(Like obj, QueryBuilder queryBuilder) throws TranslatorException {
+	@SuppressWarnings("rawtypes")
+	public static FilterConditionContext visit(Like obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing LIKE criteria."); //$NON-NLS-1$
 
@@ -367,16 +327,32 @@ public final class DSLSearch   {
 
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
-			createLikeQuery(c, value.replaceAll("%", ""),  queryBuilder); // "*" //$NON-NLS-1$ //$NON-NLS-2$
-		} else {
-			final String msg = InfinispanPlugin.Util.getString(
-					"LuceneSearch.Unsupported_expression", //$NON-NLS-1$
-					new Object[] { literalExp.toString(), "LIKE" }); //$NON-NLS-1$
-			throw new TranslatorException(msg);
-		}
+			if (fcbc == null) {
+				return queryBuilder.having(getNameInSource(c)).like(value);
+			}
+			return fcbc.having(getNameInSource(c)).like(value);
+		} 
+		final String msg = InfinispanPlugin.Util.getString(
+				"LuceneSearch.Unsupported_expression", //$NON-NLS-1$
+				new Object[] { literalExp.toString(), "LIKE" }); //$NON-NLS-1$
+		throw new TranslatorException(msg);
 
-		return true;
 	}
+	
+	@SuppressWarnings("rawtypes")
+	public static FilterConditionContext visit(IsNull obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)  {
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+				"Parsing IsNull criteria."); //$NON-NLS-1$
+
+		Expression exp = obj.getExpression();
+		Column c =  ((ColumnReference) exp).getMetadataObject();
+
+		if (fcbc == null) {
+			return queryBuilder.having(getNameInSource(c)).isNull();
+		}
+		return fcbc.having(getNameInSource(c)).isNull();
+
+	}	
 
 	protected static Object escapeReservedChars(final Object value) {
 		if (value instanceof String) {
@@ -410,45 +386,6 @@ public final class DSLSearch   {
 			}
 		}
 		return sb.toString();
-	}
-
-	private static void createEqualsQuery(Column column, Object value, boolean and,
-			boolean not, QueryBuilder queryBuilder) {
-        
-        queryBuilder.having(getNameInSource(column)).eq(value.toString());
-
-//		if (not) {
-//			junction.must(queryKey).not();
-//		} else if (and) {
-//			junction.must(queryKey);
-//		} else {
-//			junction.should(queryKey);
-//		}
-//		return queryKey;
-	}
-
-	private static void createRangeAboveQuery(Column column, Object value, QueryBuilder queryBuilder) {
-//
-//		Query queryKey = queryBuilder.range()
-//				.onField(ObjectExecution.getNameInSource(column))
-//				.above(value.toString()).excludeLimit().createQuery();
-//		junction.must(queryKey);
-//		return queryKey;
-	}
-
-	private static void createRangeBelowQuery(Column column, Object value, QueryBuilder queryBuilder) {
-
-//		Query queryKey = queryBuilder.range()
-//				.onField(ObjectExecution.getNameInSource(column))
-//				.below(value.toString()).excludeLimit().createQuery();
-//		junction.must(queryKey);
-//		return queryKey;
-	}
-
-	private static void createLikeQuery(Column column, String value, QueryBuilder queryBuilder) {
-		
-		queryBuilder.having(getNameInSource(column)).like(value);
-
 	}
 	
 	public static String getNameInSource(AbstractMetadataRecord c) {
