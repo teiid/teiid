@@ -142,6 +142,10 @@ public class TeiidDataSource extends BaseDataSource {
         if (this.getDiscoveryStrategy() != null) {
         	props.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, this.getDiscoveryStrategy());
         }
+        
+        if (this.encryptRequests) {
+        	props.setProperty(TeiidURL.CONNECTION.ENCRYPT_REQUESTS, Boolean.TRUE.toString());
+        }
 
         return props;
     }
