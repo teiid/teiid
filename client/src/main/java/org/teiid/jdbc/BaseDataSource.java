@@ -341,18 +341,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         return getXAConnection(null,null);
     }
     
-    /**
-     * Attempt to establish a database connection that can be used with distributed transactions.
-     * @param userName the database user on whose behalf the XAConnection is being made
-     * @param password the user's password
-     * @return an XAConnection to the database
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.XADataSource#getXAConnection(java.lang.String, java.lang.String)
-     */
-    public XAConnection getXAConnection(final String userName, final String password) throws java.sql.SQLException {
-    	return new XAConnectionImpl((ConnectionImpl) getConnection(userName, password));
-    }
-    
     public PooledConnection getPooledConnection() throws SQLException {
 		return getPooledConnection(null, null);
 	}

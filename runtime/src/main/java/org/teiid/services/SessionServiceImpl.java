@@ -47,6 +47,7 @@ import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.GSSResult;
@@ -77,6 +78,8 @@ public class SessionServiceImpl implements SessionService {
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
 	private AuthenticationType defaultAuthenticationType = AuthenticationType.USERPASSWORD;
+	
+	private static boolean CHECK_PING = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.checkPing", true);
 	/*
 	 * Injected state
 	 */
@@ -106,7 +109,7 @@ public class SessionServiceImpl implements SessionService {
 		long currentTime = System.currentTimeMillis();
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
-    			if (!info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 3) {
+    			if (CHECK_PING && !info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 3) {
     				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40007, info.getSessionId()));
     				closeSession(info.getSessionId());
     			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {

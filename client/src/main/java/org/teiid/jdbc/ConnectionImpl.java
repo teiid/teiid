@@ -796,7 +796,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 		return this.getServerConnection().isOpen(timeout * 1000);
 	}
 	
-	public void recycleConnection() {
+	public void recycleConnection(boolean selectNewInstance) {
 		this.payload = null;
         try {
         	//close all open statements
@@ -819,7 +819,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         	logger.log(Level.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error"), e); //$NON-NLS-1$
         }
         
-		this.serverConn.cleanUp();
+        if (selectNewInstance) {
+        	this.serverConn.cleanUp();
+        }
 	}
 	
 	public boolean isSameProcess(ConnectionImpl conn) throws CommunicationException {

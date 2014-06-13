@@ -149,6 +149,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	private long synchronousTtl = 240000l;
 	private int maxCachedInstances=16;
 
+	private boolean disablePing;
+
 	public static synchronized SocketServerConnectionFactory getInstance() {
 		if (INSTANCE == null) {
 			INSTANCE = new SocketServerConnectionFactory();
@@ -176,8 +178,17 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 	}
 	
+	public void setDisablePing(boolean disable) {
+		this.disablePing = disable;
+	}
+	
 	public void initialize(Properties info) {
 		PropertiesUtils.setBeanProperties(this, info, "org.teiid.sockets"); //$NON-NLS-1$
+		this.channelFactory = new OioOjbectChannelFactory(info);
+
+		if (disablePing) {
+			return;
+		}
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
 		this.pingTimer.schedule(new TimerTask() {
 			
@@ -223,7 +234,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				}
 			}
 		}, ServerConnection.PING_INTERVAL, ServerConnection.PING_INTERVAL);
-		this.channelFactory = new OioOjbectChannelFactory(info);
 	}
 	
 	@Override

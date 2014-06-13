@@ -28,6 +28,8 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import javax.sql.XAConnection;
+
 import org.teiid.net.TeiidURL;
 
 
@@ -115,6 +117,8 @@ public class TeiidDataSource extends BaseDataSource {
     private boolean encryptRequests;
     
     private final TeiidDriver driver;
+
+	private boolean loadBalance;
     
 	public TeiidDataSource() {
 		this.driver = new TeiidDriver();
@@ -545,5 +549,32 @@ public class TeiidDataSource extends BaseDataSource {
 	public boolean getEncryptRequests() {
 		return encryptRequests;
 	}
+	
+	public boolean isLoadBalance() {
+		return loadBalance;
+	}
+	
+	public boolean getLoadBalance() {
+		return loadBalance;
+	}
+	
+	public void setLoadBalance(boolean loadBalance) {
+		this.loadBalance = loadBalance;
+	}
+	
+	/**
+     * Attempt to establish a database connection that can be used with distributed transactions.
+     * @param userName the database user on whose behalf the XAConnection is being made
+     * @param password the user's password
+     * @return an XAConnection to the database
+     * @throws java.sql.SQLException if a database-access error occurs
+     * @see javax.sql.XADataSource#getXAConnection(java.lang.String, java.lang.String)
+     */
+    public XAConnection getXAConnection(final String userName, final String password) throws java.sql.SQLException {
+    	XAConnectionImpl result = new XAConnectionImpl((ConnectionImpl) getConnection(userName, password));
+    	result.setLoadBalance(loadBalance);
+    	return result;
+    }
+    
 }
 
