@@ -671,6 +671,14 @@ public class TestTeiidDataSource extends TestCase {
     	ds.setPortNumber(1);
     	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2048;ApplicationName=JDBC;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
+    
+    public void testBuildURLEncryptRequests() throws TeiidSQLException {
+    	final TeiidDataSource ds = new TeiidDataSource();
+    	ds.setServerName("hostName"); //$NON-NLS-1$
+    	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
+    	ds.setEncryptRequests(true);
+    	assertEquals("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+    }
 
     public void testInvalidDataSource() {
         final String serverName = "hostName"; //$NON-NLS-1$
