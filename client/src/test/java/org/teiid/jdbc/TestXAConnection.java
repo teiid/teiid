@@ -50,6 +50,9 @@ public class TestXAConnection {
 		StatementImpl stmt = (StatementImpl)conn.createStatement();
 		conn.setAutoCommit(false);
 		conn.close();
+		
+		ServerConnection sc = xaConn.getConnectionImpl().getServerConnection();
+		Mockito.verify(sc, VerificationModeFactory.times(1)).cleanUp();
 
 		assertTrue(stmt.isClosed());
 		assertTrue(conn.getAutoCommit());

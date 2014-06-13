@@ -118,7 +118,7 @@ public class TeiidDataSource extends BaseDataSource {
     
     private final TeiidDriver driver;
 
-	private boolean loadBalance;
+	private boolean loadBalance = true;
     
 	public TeiidDataSource() {
 		this.driver = new TeiidDriver();
