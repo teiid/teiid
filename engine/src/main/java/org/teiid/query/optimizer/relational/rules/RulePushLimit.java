@@ -81,7 +81,7 @@ public class RulePushLimit implements OptimizerRule {
                                                    QueryMetadataException,
                                                    TeiidComponentException {
         
-        List<PlanNode> limitNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.TUPLE_LIMIT);
+        List<PlanNode> limitNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.ACCESS);
         
         boolean pushRaiseNull = false;
         
