@@ -487,6 +487,24 @@ public class TestLimit {
         }, NODE_TYPES);
     }
     
+    @Test public void testPushedLimit() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        // pm1 model supports order by
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        String sql = "SELECT e2 from pm1.g2 UNION ALL SELECT e2 FROM PM1.g2 LIMIT 100";//$NON-NLS-1$
+        String[] expectedSql = new String[] {
+            "SELECT pm1.g2.e2 AS c_0 FROM pm1.g2 UNION ALL SELECT pm1.g2.e2 AS c_0 FROM pm1.g2 LIMIT 100" //$NON-NLS-1$
+            };
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
+                                                    null, capFinder, expectedSql, true);  
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
     @Test public void testLimitNotPushedWithDupRemove() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
