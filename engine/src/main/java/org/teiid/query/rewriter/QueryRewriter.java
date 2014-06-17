@@ -1879,7 +1879,7 @@ public class QueryRewriter {
     }
 
 	private Criteria rewriteCriteria(SetCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
-		if (criteria.isAllConstants() && criteria.getValues().size() > 1) {
+		if (criteria.isAllConstants() && criteria.getValues().size() > 1 && criteria.getExpression() instanceof ElementSymbol) {
 			return criteria;
 		}
 		

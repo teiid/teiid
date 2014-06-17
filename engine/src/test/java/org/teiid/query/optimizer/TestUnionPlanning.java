@@ -355,5 +355,36 @@ public class TestUnionPlanning {
             1       // UnionAll
         });                                    
     }  
+    
+    @Test public void testCriteriaRewrite() throws Exception {
+    	String sql = "select * from (select e1, e2 from pm1.g1 union all select convert(e2, string), e2 from pm1.g2) x where e1 in ('1', '2')";
+    	
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+    	
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+                new String[] { "SELECT g_0.e2 FROM pm1.g2 AS g_0 WHERE g_0.e2 IN (1, 2)", "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('1', '2')" }, ComparisonMode.EXACT_COMMAND_STRING);
+    	
+    	TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                1       // UnionAll
+            });    
+    	
+    }
+    
+    //TODO: enhancement for ordering over a partition
 
 }
