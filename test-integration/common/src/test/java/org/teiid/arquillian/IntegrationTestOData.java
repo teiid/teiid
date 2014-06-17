@@ -24,6 +24,7 @@ package org.teiid.arquillian;
 
 import static org.junit.Assert.*;
 
+import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 
@@ -84,6 +85,12 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		
 		int statusCode = response.getStatus();
 		assertEquals(200, statusCode);
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), response.getEntity().toString());
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), ObjectConverterUtil.convertToString((InputStream)response.getEntity()));
+		
+		//make sure that datetime works
+		client = WebClient.create("http://localhost:8080/odata/loopy.1/G1?$filter=e1%20eq%20datetime'2000-01-01T01:01:01'");
+		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+		response = client.invoke("GET", null);
+		assertEquals(200, statusCode);
 	}
 }
