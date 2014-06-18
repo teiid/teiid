@@ -114,7 +114,7 @@ public class TestModeShapeSqlTranslator {
 		String output = "SELECT g_0.\"jcr:primaryType\" FROM \"nt:base\" AS g_0 WHERE g_0.\"jcr:primaryType\" LIKE '%relational%'"; //$NON-NLS-1$
 
 		helpTestVisitor(input, output);
-
+	
 	}
 	
 }
