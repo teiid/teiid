@@ -70,6 +70,18 @@ public class TestModeShapeSqlTranslator {
 		cols.get(0).setNameInSource("\"jcr:path\"");
 		cols.get(1).setNameInSource("\"mode:properties\"");
 		cols.get(2).setNameInSource("\"jcr:primaryType\"");
+		
+    	Table nt_version = RealMetadataFactory.createPhysicalGroup("nt_version", modeshape);
+    	nt_version.setNameInSource("\"nt:version\"");
+		List<Column> cols2 = RealMetadataFactory.createElements(nt_version, new String[] { "jcr_path",
+				"mode_properties", "jcr_primaryType", "prop" }, new String[] {
+				TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.STRING });
+		cols2.get(0).setNameInSource("\"jcr:path\"");
+		cols2.get(1).setNameInSource("\"mode:properties\"");
+		cols2.get(2).setNameInSource("\"jcr:primaryType\"");		
     	return RealMetadataFactory.createTransformationMetadata(store, "modeshape");
     }
 
@@ -114,7 +126,20 @@ public class TestModeShapeSqlTranslator {
 		String output = "SELECT g_0.\"jcr:primaryType\" FROM \"nt:base\" AS g_0 WHERE g_0.\"jcr:primaryType\" LIKE '%relational%'"; //$NON-NLS-1$
 
 		helpTestVisitor(input, output);
-
 	}
+	
+	/**
+	 * TEIID-3102
+	 * @throws Exception 
+	 */
+	@Test
+	public void testSelectJoin() throws Exception {
+
+		String input = "select nt_base.jcr_path from nt_base join nt_version  ON JCR_ISCHILDNODE(nt_base.jcr_path, nt_version.jcr_path)"; //$NON-NLS-1$
+		String output = "SELECT g_0.\"jcr:path\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:version\" AS g_1 ON ISCHILDNODE(g_0, g_1)"; //$NON-NLS-1$
+
+		helpTestVisitor(input, output);
+
+	}		
 	
 }
