@@ -133,7 +133,7 @@ public class JBossSessionService extends SessionServiceImpl {
 			try {
                 KerberosMessage km = (KerberosMessage)context.getResponseMessage();
                 GSSContext securityContext = (GSSContext) context.getSchemeContext();			
-                return new GSSResult(km.getToken(), context.isAuthenticated(), securityContext.getDelegCred());
+                return new GSSResult(km.getToken(), context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);
             } catch (GSSException e) {
                 // login exception can not take exception
                 throw new LoginException(e.getMessage());
