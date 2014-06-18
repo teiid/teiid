@@ -22,11 +22,14 @@
 
 package org.teiid.transport;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
 import org.ietf.jgss.GSSCredential;
@@ -130,7 +133,7 @@ public class LogonImpl implements ILogon {
 			SessionMetadata sessionInfo = service.createSession(vdbName, vdbVersion, authType, user,credential, applicationName, connProps);
 			
 			if (connProps.get(GSSCredential.class.getName()) != null) {
-			    sessionInfo.getSubject().getPrivateCredentials().add(connProps.get(GSSCredential.class.getName()));
+			    addCredentials(sessionInfo.getSubject(), (GSSCredential)connProps.get(GSSCredential.class.getName()));
 			}
 			
 	        updateDQPContext(sessionInfo);
@@ -152,7 +155,7 @@ public class LogonImpl implements ILogon {
 			 throw new LogonException(e);
 		}
 	}
-	
+		
 	@Override
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
@@ -276,4 +279,17 @@ public class LogonImpl implements ILogon {
 	public SessionService getSessionService() {
 		return service;
 	}
+	
+	static void addCredentials(final Subject subject, final GSSCredential cred) {
+	    if (System.getSecurityManager() == null) {
+	        subject.getPrivateCredentials().add(cred);
+	    }
+	    
+	    AccessController.doPrivileged(new PrivilegedAction<Void>() { 
+	        public Void run() {
+	            subject.getPrivateCredentials().add(cred);
+	            return null;
+	        }
+	    });        
+	}	
 }
