@@ -177,7 +177,8 @@ class GssAction implements PrivilegedAction {
             GSSContext secContext = manager.createContext(serverName, desiredMechs[0], null, GSSContext.DEFAULT_LIFETIME);
             secContext.requestMutualAuth(true);
             secContext.requestConf(true);  // Will use confidentiality later
-            secContext.requestInteg(true); // Will use integrity later            
+            secContext.requestInteg(true); // Will use integrity later
+            secContext.requestCredDeleg(true); //will use credential delegation
 
             byte inToken[] = new byte[0];
 
