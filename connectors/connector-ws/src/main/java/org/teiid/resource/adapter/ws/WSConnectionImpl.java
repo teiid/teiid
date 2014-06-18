@@ -111,9 +111,14 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		private WebClient client;
 		private String endpoint;
 
-		public HttpDispatch(String endpoint) {
+		public HttpDispatch(String endpoint, String configFile, @SuppressWarnings("unused") String configName) {
 			this.endpoint = endpoint;
-			this.client = WebClient.create(this.endpoint);
+			if (configFile == null) {
+			    this.client = WebClient.create(this.endpoint);
+			}
+			else {
+			    this.client = WebClient.create(this.endpoint, configFile);
+			}
 		}
 
 		@Override
@@ -134,6 +139,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				}
 				else if (this.requestContext.get(GSSCredential.class.getName()) != null) {
 				    WebClient.getConfig(this.client).getRequestContext().put(GSSCredential.class.getName(), this.requestContext.get(GSSCredential.class.getName()));
+				    WebClient.getConfig(this.client).getRequestContext().put("auth.spnego.requireCredDelegation", true); //$NON-NLS-1$ 
 				}
 
 				InputStream payload = null;
@@ -279,7 +285,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			Bus bus = BusFactory.getThreadDefaultBus();
 			BusFactory.setThreadDefaultBus(this.mcf.getBus());
 			try {
-				dispatch = (Dispatch<T>) new HttpDispatch(endpoint);
+				dispatch = (Dispatch<T>) new HttpDispatch(endpoint, this.mcf.getConfigFile(), this.mcf.getConfigName());
 			} finally {
 				BusFactory.setThreadDefaultBus(bus);
 			}
