@@ -256,5 +256,16 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
         return new ModeShapeJDBCMetdataProcessor();
-    }	   
+    }	
+    
+    /**
+     * TEIID-3102 - ModeShape requires the use of JOIN, and not ',' when joining tables.
+     * {@inheritDoc}
+     *
+     * @see org.teiid.translator.ExecutionFactory#useAnsiJoin()
+     */
+	@Override
+	public boolean useAnsiJoin() {
+		return true;
+	}
 }
