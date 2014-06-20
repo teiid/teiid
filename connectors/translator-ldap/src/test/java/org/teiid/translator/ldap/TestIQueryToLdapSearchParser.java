@@ -159,6 +159,30 @@ public class TestIQueryToLdapSearchParser {
         assertEquals("cn: null", modifications[1].getAttribute().toString());
     }
     
+    @Test public void testUpdateArray() throws Exception {
+        String sql = "update LdapModel.People set userid = 1, vals = ('a','b') where dn = 'x'"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = exampleLdap();
+        
+        Update query = (Update)getCommand(sql, metadata);
+        
+        LDAPExecutionFactory config = new LDAPExecutionFactory();
+    	
+        LdapContext context = Mockito.mock(LdapContext.class);
+        
+        Mockito.stub(context.lookup("")).toReturn(context);
+        
+		LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
+        
+        lue.execute();
+        ArgumentCaptor<ModificationItem[]> captor = ArgumentCaptor.forClass(ModificationItem[].class);
+        Mockito.verify(context).modifyAttributes(ArgumentCaptor.forClass(String.class).capture(), captor.capture());
+        ModificationItem[] modifications = captor.getValue();
+        assertEquals(2, modifications.length);
+        assertEquals("uid: 1", modifications[0].getAttribute().toString());
+        assertEquals("vals: a, b", modifications[1].getAttribute().toString());
+    }
+    
 	/**
      * Test a Query with a criteria
      */
@@ -298,10 +322,10 @@ public class TestIQueryToLdapSearchParser {
                 
         // Create physical elements
         String[] elemNames = new String[] {
-            "UserID", "Name", "dn"  //$NON-NLS-1$ //$NON-NLS-2$
+            "UserID", "Name", "dn", "vals"  //$NON-NLS-1$ //$NON-NLS-2$
         };
         String[] elemTypes = new String[] {  
-            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
+            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, "string[]"
         };
         
         List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);

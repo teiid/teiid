@@ -33,8 +33,8 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 	private String ldapAdminUserDN;
 	private String ldapAdminUserPassword;
 	private String ldapUrl;
-	private long ldapTxnTimeoutInMillis;
-	private String ldapContextFactory;
+	private Long ldapTxnTimeoutInMillis;
+	private String ldapContextFactory = "com.sun.jndi.ldap.LdapCtxFactory"; //$NON-NLS-1$
 	
 	
 	@Override

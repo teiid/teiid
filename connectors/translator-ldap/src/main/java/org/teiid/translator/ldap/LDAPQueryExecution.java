@@ -72,6 +72,7 @@
 package org.teiid.translator.ldap;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -95,6 +96,7 @@ import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.SortControl;
 import javax.naming.ldap.SortKey;
 
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -377,6 +379,19 @@ public class LDAPQueryExecution implements ResultSetExecution {
 					}
 				}
 				row.add(multivalSB.toString());
+				return;
+			}
+			if (modelAttrClass.isArray()) {
+				ArrayList<Object> multivalList = new ArrayList<Object>();
+				NamingEnumeration<?> attrNE = resultAttr.getAll();
+				int length = 0;
+				while(attrNE.hasMore()) {
+					multivalList.add(attrNE.next());
+					length++;
+				}
+				Object[] values = (Object[]) Array.newInstance(modelAttrClass.getComponentType(), length);
+				ArrayImpl value = new ArrayImpl(multivalList.toArray(values));
+				row.add(value);
 				return;
 			}
 			

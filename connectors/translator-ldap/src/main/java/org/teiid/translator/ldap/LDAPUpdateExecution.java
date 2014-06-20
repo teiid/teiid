@@ -138,9 +138,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// specified then all of the other required attributes for that
 	// objectClass will of course also be required.
 	//
-	// Just as with the read support in the LDAPSyncQueryExecution class,
-	// multi-value attributes are not supported by this implementation.
-	// 
 	// TODO - maybe automatically specify objectClass based off of
 	// Name/NameInSource RESTRICT property settings, like with read support
 	private void executeInsert()
@@ -163,8 +160,9 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			String nameInsertElement = getNameFromElement(insertElement);
 			// special handling for DN attribute - use it to set
 			// distinguishedName value.
+			Expression literal = insertValueList.get(i);
 			if (nameInsertElement.toUpperCase().equals("DN")) {  //$NON-NLS-1$
-				Object insertValue = ((Literal)insertValueList.get(i)).getValue();
+				Object insertValue = ((Literal)literal).getValue();
 				if (insertValue == null) { 
 		            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.columnSourceNameDNNullError"); //$NON-NLS-1$
 					throw new TranslatorException(msg);
@@ -178,12 +176,8 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// for other attributes specified in the insert command,
 			// create a new 
 			else {
-				Attribute insertAttr = new BasicAttribute(nameInsertElement);
-				Object insertValue = null;
-				if (((Literal)insertValueList.get(i)).getValue() != null) {
-					insertValue = IQueryToLdapSearchParser.getExpressionString(((Literal)insertValueList.get(i)));
-				}
-				insertAttr.add(insertValue);
+				Attribute insertAttr = createBasicAttribute(nameInsertElement,
+						literal);
 				insertAttrs.put(insertAttr);
 			}
 		}
@@ -206,6 +200,28 @@ public class LDAPUpdateExecution implements UpdateExecution {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailedUnexpected",distinguishedName); //$NON-NLS-1$
 			throw new TranslatorException(e, msg);
 		}
+	}
+
+	private Attribute createBasicAttribute(String id,
+			Expression expr) {
+		Attribute attr = new BasicAttribute(id);
+		if (expr instanceof org.teiid.language.Array) {
+			List<Expression> exprs = ((org.teiid.language.Array)expr).getExpressions();
+			for (Expression val : exprs) {
+				Literal l = (Literal)val;
+				if (l.getValue() != null) {
+					attr.add(IQueryToLdapSearchParser.getExpressionString(l));
+				}
+			}
+		} else {
+			Literal l = (Literal)expr;
+			Object insertValue = null;
+			if (l.getValue() != null) {
+				insertValue = IQueryToLdapSearchParser.getExpressionString(l);
+			}
+			attr.add(insertValue);
+		}
+		return attr;
 	}
 
 	// Private method to actually do a delete operation.  Per JNDI doc at
@@ -297,7 +313,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// get right expression - if it is not a literal we
 			// can't handle that so throw an exception
 			Expression rightExpr = setClause.getValue();
-			if (!(rightExpr instanceof Literal)) { 
+			if (!(rightExpr instanceof Literal) && !(rightExpr instanceof org.teiid.language.Array)) { 
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
 				throw new TranslatorException(msg);
 			}
@@ -309,11 +325,8 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// value, we don't do any special handling of it right
 			// now.  But maybe null should mean to delete an
 			// attribute?
-			Object valueRightExpr = null;
-			if (((Literal)rightExpr).getValue() != null) {
-				valueRightExpr = IQueryToLdapSearchParser.getExpressionString((Literal)rightExpr);
-			}
-	        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, new BasicAttribute(nameLeftElement, valueRightExpr));
+			Attribute attribute = createBasicAttribute(nameLeftElement, rightExpr);
+	        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, attribute);
 		}
 		// just try to update an LDAP entry using the DN and
 		// attributes specified in the UPDATE operation.  If it isn't
