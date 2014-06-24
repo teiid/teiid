@@ -26,7 +26,7 @@ connect
 
 /profile=ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
-/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=teiid:add(code=org.jboss.security.auth.spi.UsersRolesLoginModule, flag=required, module-options={usersProperties="${jboss.domain.config.dir}/teiid-security-users.properties", rolesProperties="${jboss.domain.config.dir}/teiid-security-roles.properties"}) 
+/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RelamDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")]) 
 /profile=ha/subsystem=threads/unbounded-queue-thread-pool=teiid-async:add(max-threads=4)
 
 /profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
