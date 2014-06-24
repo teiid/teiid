@@ -21,21 +21,21 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import javax.ws.rs.core.MediaType;
 
@@ -49,11 +49,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.odata4j.core.OEntities;
-import org.odata4j.core.OEntity;
-import org.odata4j.core.OEntityKey;
-import org.odata4j.core.OProperties;
-import org.odata4j.core.OProperty;
+import org.odata4j.core.*;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmSimpleType;
@@ -61,14 +57,11 @@ import org.odata4j.edm.EdmType;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.Responses;
-import org.odata4j.producer.resources.EntitiesRequestResource;
-import org.odata4j.producer.resources.EntityRequestResource;
-import org.odata4j.producer.resources.MetadataResource;
-import org.odata4j.producer.resources.ODataBatchProvider;
-import org.odata4j.producer.resources.ServiceDocumentResource;
+import org.odata4j.producer.resources.*;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.service.AutoGenDataService;
@@ -92,7 +85,6 @@ import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.HardCodedExecutionFactory;
-import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 
 @SuppressWarnings("nls")
 public class TestODataIntegration extends BaseResourceTest {
@@ -161,10 +153,9 @@ public class TestODataIntegration extends BaseResourceTest {
 	}
 
 	private static TransformationMetadata metadata;
-	private static EdmDataServices eds;
 	
 	@BeforeClass
-	public static void before() throws Exception {
+	public static void before() throws Exception {	    
 		deployment = EmbeddedContainer.start("/odata/northwind");
 		dispatcher = deployment.getDispatcher();
 		deployment.getRegistry().addPerRequestResource(EntitiesRequestResource.class);
@@ -174,37 +165,70 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getProviderFactory().registerProviderInstance(ODataBatchProvider.class);
 		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
 		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
-		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
-		eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");		
 	}	
 	
 	@Test
 	public void testMetadata() throws Exception {
-		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());	
-		stub(client.getMetadata()).toReturn(eds);
+		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		
 		StringWriter sw = new StringWriter();
 		
-		EdmxFormatWriter.write(eds, sw);
+		EdmxFormatWriter.write(client.getMetadata(), sw);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/$metadata"));
         ClientResponse<String> response = request.get(String.class);
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(sw.toString(), response.getEntity());		
+        Assert.assertEquals(sw.toString(), response.getEntity());
 	}
+	
+    protected Client mockClient2() {
+        Client client = mock(Client.class);
+        VDBMetaData vdb = mock(VDBMetaData.class);
+        ModelMetaData model = mock(ModelMetaData.class);
+        stub(model.isVisible()).toReturn(false);
+        stub(vdb.getModel("nw")).toReturn(model);
+        stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());  
+        EdmDataServices eds = LocalClient.buildMetadata(vdb, metadata.getMetadataStore());
+        stub(client.getMetadata()).toReturn(eds);
+        return client;
+    }	
+	
+    @Test
+    public void testMetadataVisibility() throws Exception {
+        Client client = mockClient2();
+        MockProvider.CLIENT = client;
+        
+        StringWriter sw = new StringWriter();
+        
+        EdmxFormatWriter.write(client.getMetadata(), sw);
+        
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/$metadata"));
+        ClientResponse<String> response = request.get(String.class);
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(sw.toString(), response.getEntity());  
+        String edm = "<?xml version=\"1.0\" encoding=\"utf-8\"?><edmx:Edmx Version=\"1.0\" xmlns:edmx=\"http://schemas.microsoft.com/ado/2007/06/edmx\"><edmx:DataServices m:DataServiceVersion=\"2.0\" xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"></edmx:DataServices></edmx:Edmx>";
+        Assert.assertEquals(edm, response.getEntity());
+    }	
+
+    protected Client mockClient() {
+        Client client = mock(Client.class);
+        VDBMetaData vdb = mock(VDBMetaData.class);
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());	
+		EdmDataServices eds = LocalClient.buildMetadata(vdb, metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
+        return client;
+    }
 
 	@Test
 	public void testProjectedColumns() throws Exception {
-		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
-		stub(client.getMetadata()).toReturn(eds);
+		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
 		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
-		OEntity entity = createCustomersEntity(eds);
+		OEntity entity = createCustomersEntity(client.getMetadata());
 		ArrayList<OEntity> list = new ArrayList<OEntity>();
 		list.add(entity);
 		
@@ -226,15 +250,13 @@ public class TestODataIntegration extends BaseResourceTest {
 	
 	@Test
 	public void testCheckGeneratedColumns() throws Exception {
-		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
-		stub(client.getMetadata()).toReturn(eds);
+		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<Command> insertCmd = ArgumentCaptor.forClass(Command.class);
 		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
 		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
-		OEntity entity = createCustomersEntity(eds);
+		OEntity entity = createCustomersEntity(client.getMetadata());
 		ArrayList<OEntity> list = new ArrayList<OEntity>();
 		list.add(entity);
 		
@@ -298,9 +320,7 @@ public class TestODataIntegration extends BaseResourceTest {
 	
 	@Test
 	public void testProcedure() throws Exception {
-		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
-		stub(client.getMetadata()).toReturn(eds);
+		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<List> params = ArgumentCaptor.forClass(List.class);
@@ -319,9 +339,7 @@ public class TestODataIntegration extends BaseResourceTest {
 	
 	@Test
 	public void testSkipNoPKTable() throws Exception {
-		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
-		stub(client.getMetadata()).toReturn(eds);
+		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/NoPKTable"));
@@ -333,9 +351,7 @@ public class TestODataIntegration extends BaseResourceTest {
 	
 	@Test
 	public void testError() throws Exception {
-		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
-		stub(client.getMetadata()).toReturn(eds);
+		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		
 		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenThrow(new NullPointerException());
@@ -349,14 +365,12 @@ public class TestODataIntegration extends BaseResourceTest {
 	
 	@Test
 	public void testProcedureCall() throws Exception {
-		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
-		stub(client.getMetadata()).toReturn(eds);
+		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
 		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
-		OEntity entity = createCustomersEntity(eds);
+		OEntity entity = createCustomersEntity(client.getMetadata());
 		ArrayList<OEntity> list = new ArrayList<OEntity>();
 		list.add(entity);
 		
