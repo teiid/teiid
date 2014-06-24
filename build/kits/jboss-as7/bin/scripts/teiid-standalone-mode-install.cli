@@ -20,7 +20,8 @@
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/eviction=EVICTION:add(max-entries=512, strategy=LIRS)
 
 /subsystem=security/security-domain=teiid-security:add(cache-type=default)
-/subsystem=security/security-domain=teiid-security/authentication=classic:add(login-modules=[{"code"=>"org.jboss.security.auth.spi.UsersRolesLoginModule", "flag"=>"required", "module-options"=>[("usersProperties"=>"${jboss.server.config.dir}/teiid-security-users.properties"), ("rolesProperties"=>"${jboss.server.config.dir}/teiid-security-roles.properties")]}]) 
+/subsystem=security/security-domain=teiid-security/authentication=classic:add()
+/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RelamDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
 /subsystem=threads/unbounded-queue-thread-pool=teiid-async:add(max-threads=4)
 
 /subsystem=teiid:add(async-thread-pool=teiid-async, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
