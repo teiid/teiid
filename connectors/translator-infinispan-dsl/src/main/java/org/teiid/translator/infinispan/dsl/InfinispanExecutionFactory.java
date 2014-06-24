@@ -27,8 +27,10 @@ import java.util.List;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.Command;
+import org.teiid.language.Delete;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -47,7 +49,7 @@ import org.teiid.translator.infinispan.dsl.metadata.ProtobufMetadataProcessor;
  * 
  * @author vhalbert
  * 
- * @since 8.8
+ * @since 8.7
  *
  */
 @Translator(name = "infinispan-cache-dsl", description = "The Infinispan Translator Using DSL to Query Cache")
@@ -70,14 +72,10 @@ public class InfinispanExecutionFactory extends
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
 	
-	
-
 	@Override
 	public int getMaxFromGroups() {
 		return 2;
 	}
-
-
 
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
@@ -85,7 +83,6 @@ public class InfinispanExecutionFactory extends
 			InfinispanConnection connection) throws TranslatorException {
 		return new InfinispanExecution((Select) command, metadata, this, connection, executionContext);
 	}
-	
 	
     @Override
 	public UpdateExecution createUpdateExecution(Command command,
@@ -108,11 +105,6 @@ public class InfinispanExecutionFactory extends
     public boolean supportsIsNullCriteria() {
 		return Boolean.TRUE.booleanValue();
 	}
-	
-//	@Override
-//	public boolean supportsOnlyLiteralComparison() {
-//		return false;
-//	}
 	
 	@Override
 	public boolean supportsOrCriteria() {
@@ -139,15 +131,26 @@ public class InfinispanExecutionFactory extends
 	public boolean supportsLikeCriteriaEscapeCharacter() {
 		return Boolean.TRUE.booleanValue();
 	}	
-	
-	
 
 	public List<Object> search(Select command, String cacheName,
 			InfinispanConnection connection, ExecutionContext executionContext)
 			throws TranslatorException {
-
-			return DSLSearch.performSearch(command, connection.getType(cacheName), cacheName, connection);
+		return DSLSearch.performSearch(command, cacheName, connection);
 	}
+	
+	public List<Object> search(Delete command, String cacheName, InfinispanConnection conn, ExecutionContext executionContext)
+				throws TranslatorException {   
+		return DSLSearch.performSearch(command, cacheName, conn);
+	}
+	
+	public List<Object> search(Update command, String cacheName, InfinispanConnection conn, ExecutionContext executionContext)
+			throws TranslatorException {   
+		return DSLSearch.performSearch(command, cacheName, conn);
+	}	
+	
+	public Object performKeySearch(String cacheName, String columnName, Object value, InfinispanConnection conn, ExecutionContext executionContext) throws TranslatorException {
+		return DSLSearch.performKeySearch(cacheName, columnName, value, conn);
+	}	
 
 	@Override
     public MetadataProcessor<InfinispanConnection> getMetadataProcessor(){

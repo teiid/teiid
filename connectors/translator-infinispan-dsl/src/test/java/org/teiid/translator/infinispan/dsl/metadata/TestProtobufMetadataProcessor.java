@@ -39,7 +39,7 @@ public class TestProtobufMetadataProcessor {
 				null, null);
 
 		System.out.println("Schema: " + metadataDDL);
-		String expected =  "SET NAMESPACE 'http://www.teiid.org/translator/infinispan/2014' AS teiid_infinispan;\n"
+		String expected =  "SET NAMESPACE 'http://www.teiid.org/translator/infinispan/2014' AS n0;\n"
 				+ "\n"
 				+ "CREATE FOREIGN TABLE Person (\n"
 				+ "\tPersonObject object OPTIONS (NAMEINSOURCE 'this', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.Object'),\n"
@@ -47,14 +47,14 @@ public class TestProtobufMetadataProcessor {
 				+ "\tid integer OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.Integer'),\n"
 				+ "\temail string OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\tCONSTRAINT PK_ID PRIMARY KEY(id)\n"
-				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', \"teiid_infinispan:entity_class\" 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person');\n"
+				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', \"n0:entity_class\" 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person');\n"
 				+ "\n"
 				+ "CREATE FOREIGN TABLE PhoneNumber (\n"
 				+ "\tnumber string OPTIONS (NAMEINSOURCE 'phone.number', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\ttype string OPTIONS (NAMEINSOURCE 'phone.type', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
-				+ "\tId integer NOT NULL OPTIONS (SELECTABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'int'),\n"
-				+ "\tCONSTRAINT FK_PERSON FOREIGN KEY(Id) REFERENCES Person (Id) OPTIONS (NAMEINSOURCE 'phones')\n"
-				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', \"teiid_infinispan:entity_class\" 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber');"
+				+ "\tid integer NOT NULL OPTIONS (SELECTABLE FALSE, SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
+				+ "\tCONSTRAINT FK_PERSON FOREIGN KEY(id) REFERENCES Person (id) OPTIONS (NAMEINSOURCE 'phones')\n"
+				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', \"n0:entity_class\" 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber');"
 				;
 		
 		//, \"entity_class\" 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person'

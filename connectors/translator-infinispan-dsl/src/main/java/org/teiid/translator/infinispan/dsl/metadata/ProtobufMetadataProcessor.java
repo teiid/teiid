@@ -25,17 +25,17 @@ package org.teiid.translator.infinispan.dsl.metadata;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.script.ScriptException;
-
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.query.eval.TeiidScriptEngine;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -84,65 +84,55 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 	public static final String URI="{http://www.teiid.org/translator/infinispan/2014}"; //$NON-NLS-1$
 	public static final String PREFIX="teiid_infinispan";
 
-	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = "assosiated_with_table";  //$NON-NLS-1$
-	
 	/* The entity class name is needed for updates */
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=String.class, display="Entity Class Name", description="Class Name for Entity in Cache", required=true)
     public static final String ENTITYCLASS= URI + "entity_class";
-	
+		
 	public static final String GET = "get"; //$NON-NLS-1$
 	public static final String IS = "is"; //$NON-NLS-1$
 		
 	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
-	
-	private TeiidScriptEngine engine = new TeiidScriptEngine();
-	/* contains all the methods for each registered class in the cache */
-	private Map<String, Method> methods = new  HashMap<String, Method>();
-	@SuppressWarnings("rawtypes")
-	private List<Class> registeredClasses;
-
 
 	protected boolean isUpdatable = false;
 	
-	@SuppressWarnings("rawtypes")
 	@Override
 	public void process(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
-		registeredClasses = conn.getRegisteredClasses();
-		for (Class c:registeredClasses) {
-			try {
-				methods.putAll( engine.getMethodMap(c) );
-			} catch (ScriptException e) {
-				throw new TranslatorException(e);
-			}			
-		}
 			
 		Map<String, Class<?>> cacheTypes = conn.getCacheNameClassTypeMapping();
 		for (String cacheName : cacheTypes.keySet()) {
 
 			Class<?> type = cacheTypes.get(cacheName);
 			String pkField = conn.getPkField(cacheName);
-			createRootTable(metadataFactory, type, conn.getDescriptor(cacheName), cacheName, pkField);
-		}
-		
+			createRootTable(metadataFactory, type, conn.getDescriptor(cacheName), cacheName, pkField, conn);
+		}		
 	}
 
-	private Table createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, String pkField) throws TranslatorException {
+
+	private Table createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, String pkField, InfinispanConnection conn) throws TranslatorException {
 			
 		Table rootTable = addTable(mf, entity, descriptor);
 		rootTable.setNameInSource(cacheName); 
 		
 	    Method pkMethod = null;
 	    if (pkField != null) {
-            pkMethod = methods.get(pkField);
-	    }
-	    
-		addRootColumn(mf, Object.class, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable,true); //$NON-NLS-1$
-		
-		processDescriptor(mf, descriptor.getFields(), rootTable, pkMethod);
+	    	pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
+        }
+	    	    
+		addRootColumn(mf, Object.class, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable,true); //$NON-NLS-1$	
+
+		boolean repeats = false;
+		for (FieldDescriptor fd:descriptor.getFields()) {	
+			if (fd.isRepeated() ) {
+				repeats = true;
+			} else {
+				addRootColumn(mf, getJavaType(fd), fd, SearchType.Searchable, rootTable.getName(), rootTable, true);	
+			}
+		}	
 		
 		// add the PK column, if it doesnt exist
 		if (pkField != null) {
+
 			// if there is no method, need to create a column for the pkey
 		    if (pkMethod == null) {
 	            
@@ -154,14 +144,24 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 	
 	         } else {
 	 			// warn if no pk is defined
-	 //			LogManager.logWarning(LogConstants.CTX_CONNECTOR, InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID21000, tableName));				
+	 	//		LogManager.logWarning(LogConstants.CTX_CONNECTOR, InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID21000, tableName));				
 	         }	
+	    	
 			String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
             ArrayList<String> x = new ArrayList<String>(1) ;
             x.add(pkField);
             mf.addPrimaryKey(pkName, x , rootTable);
-
+		    
 		}
+		
+		if (repeats) {
+			for (FieldDescriptor fd:descriptor.getFields()) {	
+				if (fd.isRepeated() ) {
+					processRepeatedType(mf,fd, rootTable, pkMethod, conn);	
+				} 
+			}	
+		}
+
 			
 		return rootTable;
 	}
@@ -180,22 +180,11 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		return t;
 		
 	}
-	private void processDescriptor(MetadataFactory mf, List<FieldDescriptor> fields, Table rootTable, Method pkMethod) throws TranslatorException {
+	private void processDescriptor(MetadataFactory mf, List<FieldDescriptor> fields, Table rootTable, Method pkMethod, InfinispanConnection conn) throws TranslatorException {
 
 		for (FieldDescriptor fd:fields) {	
 			if (fd.isRepeated() ) {
-				// Need to find the method name that corresponds to the repeating attribute
-				// so that the actual method name can be used in defining the NIS
-				// which will provide the correct method to use when retrieving the data at execution time
-				String mName = findRepeatedMethodName(fd.getName());
-				
-				if (mName == null) {
-					final String msg = InfinispanPlugin.Util
-							.getString("ProtobufMetadataProcessor.noCorrespondingMethod", new Object[] { fd.getName() }); //$NON-NLS-1$ //$NON-NLS-2$
-					throw new TranslatorException(msg);
-
-				}
-				processRepeatedType(mf,fd, mName, rootTable, pkMethod);	
+				processRepeatedType(mf,fd, rootTable, pkMethod, conn);	
 			} else {
 				addRootColumn(mf, getJavaType(fd), fd, SearchType.Searchable, rootTable.getName(), rootTable, true);	
 			}
@@ -203,17 +192,19 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		
 	}	
 	
-    private  String findRepeatedMethodName( String methodName) {
+    private  String findRepeatedMethodName(String className, String methodName, InfinispanConnection conn) throws TranslatorException {
         if (methodName == null || methodName.length() == 0) {
             return null;
         }
         
+        Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
+        
         // because the class 'methods' contains 2 different references
         //  get'Name'  and 'Name', this will look for the 'Name' version
-        for (Iterator it=methods.keySet().iterator(); it.hasNext();) {
+        for (Iterator it=mapMethods.keySet().iterator(); it.hasNext();) {
         	String mName = (String) it.next();
         	if (mName.toLowerCase().startsWith(methodName.toLowerCase()) ) {
-        		Method m = methods.get(mName);
+        		Method m = mapMethods.get(mName);
         		Class<?> c = m.getReturnType();
         		if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
         			return mName;
@@ -223,13 +214,30 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         return null;
     }	
 	
-	private void processRepeatedType(MetadataFactory mf, FieldDescriptor fd, String mName, Table rootTable, Method pkMethod) throws TranslatorException  {
+	private void processRepeatedType(MetadataFactory mf, FieldDescriptor fd, Table rootTable, Method pkMethod, InfinispanConnection conn) throws TranslatorException  {
 		Descriptor d = fd.getMessageType();
+
+		Descriptor parent = d.getContainingType();
+		// Need to find the method name that corresponds to the repeating attribute
+		// so that the actual method name can be used in defining the NIS
+		// which will provide the correct method to use when retrieving the data at execution time
+
+		Class<?> pc = getRegisteredClass(parent.getName(), conn);
+		Class<?> c = getRegisteredClass(fd.getMessageType().getName(), conn);
+
+		String mName = findRepeatedMethodName(pc.getName(), fd.getName(), conn);
 		
-		Class c = getRegisteredClass(fd.getMessageType().getName());
+		if (mName == null) {
+			final String msg = InfinispanPlugin.Util
+					.getString("ProtobufMetadataProcessor.noCorrespondingMethod", new Object[] { fd.getName() }); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new TranslatorException(msg);
+
+		}
 		
 		Table t = addTable(mf, c, d);
 		t.setNameInSource(rootTable.getNameInSource()); 
+		t.setProperty(ENTITYCLASS, c.getName());	
+
 			
 		List<FieldDescriptor> fields = fd.getMessageType().getFields();
 		for (FieldDescriptor f:fields) {
@@ -239,13 +247,14 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		}
 		
 		if (pkMethod != null) {
-			String methodName = pkMethod.getName().substring( GET.length());
+			// use the same parent table primary ke column name in the foreign key tables
+			String methodName = rootTable.getPrimaryKey().getColumns().get(0).getName();
 			List<String> keyColumns = new ArrayList<String>();
 			keyColumns.add(methodName);
 			List<String> referencedKeyColumns = new ArrayList<String>();
 			referencedKeyColumns.add(methodName);
 			String fkName = "FK_" + rootTable.getName().toUpperCase();
-    		addRootColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Unsearchable, t.getName(), t, false);
+    		addRootColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false);
 			ForeignKey fk = mf.addForiegnKey(fkName, keyColumns, referencedKeyColumns, rootTable.getName(), t);
 			fk.setNameInSource(mName);
 
@@ -256,7 +265,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		return descriptor.getName();
 	}
 	
-	private Class<?> getRegisteredClass(String name) throws TranslatorException {
+	private Class<?> getRegisteredClass(String name, InfinispanConnection conn) throws TranslatorException {
+		List<Class<?>> registeredClasses = conn.getClassRegistry().getRegisteredClasses();
 		for (Class<?> c:registeredClasses) {
 			if (c.getName().endsWith(name)) {
 				return c;
@@ -286,7 +296,6 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		
 		// Null fd indicates this is for the object
 		if (columnFullName != null) {
-//			String fn = fd.getFullName();
 			int idx;
 			
 			// the following logic is to set the NameInSource to the attribute name, for 

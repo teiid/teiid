@@ -24,7 +24,6 @@ package org.teiid.resource.adapter.infinispan.dsl.base;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +43,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.dsl.ClassRegistry;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 
 import com.google.protobuf.Descriptors.DescriptorValidationException;
@@ -66,7 +67,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private Map<String, Class<?>> typeMap = null; // cacheName ==> ClassType
 	private String cacheTypes = null;
 	@SuppressWarnings("rawtypes")
-	private Map<Class, BaseMarshaller> messageMarshallerList = null;
+	private Map<String, BaseMarshaller> messageMarshallerMap = null;
+	private static ClassRegistry methodUtil = new ClassRegistry();
 	
 	private String protobinFile = null;
 	private String messageMarshallers = null;
@@ -271,12 +273,10 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public Class<?> getCacheType(String cacheName) {
 		return this.typeMap.get(cacheName);
 	}
-	
-	@SuppressWarnings("rawtypes")
-	public Map<Class, BaseMarshaller> getMessageMarshallerList() {
-		return this.messageMarshallerList;
-	}
 
+	public ClassRegistry getClassRegistry() {
+		return AbstractInfinispanManagedConnectionFactory.methodUtil;
+	}
 	/**
 	 * Returns the <code>host:port[;host:port...]</code> list that identifies
 	 * the remote servers to include in this cluster;
@@ -428,8 +428,9 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		}
 
 		List<String> marshallers = StringUtil.getTokens(this.getMessageMarshallers(), ","); //$NON-NLS-1$
-		messageMarshallerList = new HashMap<Class, BaseMarshaller>(marshallers.size());
-
+		
+		Map<String, BaseMarshaller> mmp = new HashMap<String, BaseMarshaller>(marshallers.size());
+		
 		for (String mm : marshallers) {
 			
 			List<String> mapped = StringUtil.getTokens(mm, ":"); //$NON-NLS-1$
@@ -442,19 +443,27 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			final String m = mapped.get(1);
 
 			try {
-				Object i = (loadClass(m)).newInstance();
+				Object bmi = (loadClass(m)).newInstance();
+				Class ci = loadClass(className);
 
-				messageMarshallerList.put(loadClass(className), (BaseMarshaller) i); 		
-			
+				mmp.put(className, (BaseMarshaller) bmi); 	
+
+				AbstractInfinispanManagedConnectionFactory.methodUtil.registerClass(ci);
+		
 			} catch (InstantiationException e) {
 				throw new ResourceException(e);
 			} catch (IllegalAccessException e) {	
 				throw new ResourceException(e);
-			} 
+			} catch (TranslatorException e) {
+				throw new ResourceException(e);
+			}
+		
 		}
 		
 		setCacheNameClassTypeMapping(Collections.unmodifiableMap(tm));
 		setPkMap(Collections.unmodifiableMap(pkMap));
+		
+		messageMarshallerMap=Collections.unmodifiableMap(mmp);
 
 		return cl;
 
@@ -551,7 +560,6 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 					.getString(
 							"InfinispanManagedConnectionFactory.JNDInotInstanceOfRemoteCacheManager", cacheContainer.getClass().getName())); //$NON-NLS-1$
 
-
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -559,13 +567,11 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 		try {
 			ctx.registerProtofile(cl.getResourceAsStream(getProtobinFile()));
-			Map<Class, BaseMarshaller> ml = getMessageMarshallerList();
 			
-			Iterator it = ml.keySet().iterator();
-			while (it.hasNext()) {
-				Class<?> c = (Class) it.next();
-				BaseMarshaller m = ml.get(c);
-				ctx.registerMarshaller(c, m);
+			List<Class<?>> registeredClasses = AbstractInfinispanManagedConnectionFactory.methodUtil.getRegisteredClasses();
+			for (Class clz:registeredClasses) {
+				BaseMarshaller m = messageMarshallerMap.get(clz.getName());
+				ctx.registerMarshaller(clz, m);				
 			}
 
 		} catch (IOException e) {
@@ -620,7 +626,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	public void cleanUp() {
 
-		messageMarshallerList = null;
+		messageMarshallerMap = null;
+//		registeredClasses=null;
 		typeMap = null;
 		cacheContainer = null;
 		pkMap = null;

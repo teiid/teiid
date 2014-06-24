@@ -182,18 +182,15 @@ public class InfinispanExecution implements ResultSetExecution {
 		}
 	}
 
-	private static final String OBJECT_NAME = "o"; //$NON-NLS-1$
 	protected Select query;
 	protected InfinispanConnection connection;
 	private Object[] colObjects;
 	private ScriptContext sc = new SimpleScriptContext();
-	private static TeiidScriptEngine scriptEngine = new TeiidScriptEngine();
+	private TeiidScriptEngine scriptEngine;
 	private Iterator<Object> objResultsItr = null;
 	private Iterator<Object> cacheResultsIt = null;
-//	private boolean usedCacheResults=false;
 	private InfinispanExecutionFactory factory;
 	private ExecutionContext executionContext;
-//	private Map<String, List<String>> depthNodeMap;
 	private int depth = 0; // the bottom depth to go, not all depths may retrieve data/
 	private int colSize = 0;
 
@@ -203,11 +200,9 @@ public class InfinispanExecution implements ResultSetExecution {
 		this.query = query;
 		this.connection = connection;
 		this.executionContext = executionContext;
+		this.scriptEngine = connection.getClassRegistry().getReadScriptEngine();
 
 		colSize = query.getDerivedColumns().size();
-		
-//		depthNodeMap = new HashMap<String, List<String>>(colSize);
-		
 
 		int numForeignKeys = 0;
 		ForeignKey fk = null;
@@ -253,20 +248,11 @@ public class InfinispanExecution implements ResultSetExecution {
  						int n =dn.getNumberOfNodes();
 
 						if (n > depth) depth = n;
-						
-//						List<String> methods = depthNodeMap.get(dn.getDepthNodes());
-//						if (methods == null) {
-//							methods = new ArrayList<String>(2);
-//						}
-//						
-//						methods.add(dn.getDepthMethodName());
-//						
-//						depthNodeMap.put(dn.getDepthNodes(), methods);	
 					
 				} else {
 					
 					try {
-						colObjects[col] = scriptEngine.compile(OBJECT_NAME + "." + name);
+						colObjects[col] = getCompiledNode(name);
 					} catch (ScriptException e) {
 						throw new TranslatorException(e);
 					}
@@ -313,7 +299,7 @@ public class InfinispanExecution implements ResultSetExecution {
 		if (objResultsItr.hasNext()) {
 			List<Object> r = new ArrayList<Object>(colSize);
 			final Object o = objResultsItr.next();
-			sc.setAttribute(OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
+			sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
 			
 			
 			if (depth > 0) {
@@ -352,7 +338,7 @@ public class InfinispanExecution implements ResultSetExecution {
 				
 				final List<Object> rows = processDepth( r, loadedDepths);
 				
-				if (rows.size() < 2) return rows;
+				if (rows.size() < 2) return (List<Object>) rows.get(0);
 				
 				cacheResultsIt = rows.iterator();
 				if (cacheResultsIt != null && cacheResultsIt.hasNext()) {
@@ -440,16 +426,6 @@ public class InfinispanExecution implements ResultSetExecution {
 			
 		return results;	
 
-		
-		// processing notes:
-		// - need to process common nodes at the same time, otherwise, what is returned for each could be not aligned
-		//   with its associated attribute value.  Example:  phone number and type might get mismatched
-		//   is there a way to ensure alignment:  use linkedlist or an array
-		
-		// NOTE:  because the rule is that only 1 1-to-many can be included in the query,
-		//        the results from processNode(..) should be the same size
-
-
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -475,7 +451,7 @@ public class InfinispanExecution implements ResultSetExecution {
 						continue;
 					}
 
-					sc.setAttribute(OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
+					sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
 
 					Object v = cs.eval(sc);
 					
@@ -492,8 +468,6 @@ public class InfinispanExecution implements ResultSetExecution {
 					} else {
 						rows.add(v);
 					}
-					
-
 				}
 				
 			} else if (depthNode.isMap()) {
@@ -508,7 +482,7 @@ public class InfinispanExecution implements ResultSetExecution {
 						rows.add(null);
 						continue;
 					}
-					sc.setAttribute(OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
+					sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
 
 					Object v = cs.eval(sc);
 					
@@ -534,7 +508,7 @@ public class InfinispanExecution implements ResultSetExecution {
 						rows.add(null);
 						continue;
 					}
-					sc.setAttribute(OBJECT_NAME, a[i], ScriptContext.ENGINE_SCOPE);
+					sc.setAttribute(ClassRegistry.OBJECT_NAME, a[i], ScriptContext.ENGINE_SCOPE);
 
 					Object v = cs.eval(sc);
 					
@@ -549,7 +523,7 @@ public class InfinispanExecution implements ResultSetExecution {
 				}
 				// 
 			} else {
-				sc.setAttribute(OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
+				sc.setAttribute(ClassRegistry.OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
 				Object v = getCompiledNode(depthNode.getCurrentNodeName()).eval(sc);
 				depthNode.incrementPosition();
 				rows.add(v);
@@ -565,7 +539,7 @@ public class InfinispanExecution implements ResultSetExecution {
 	}
 	
 	private Object evaluate(DepthNode depthNode) throws TranslatorException {
-		sc.setAttribute(OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
+		sc.setAttribute(ClassRegistry.OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
 		Object v;
 		try {
 			v = getCompiledNode(depthNode.getCurrentNodeName()).eval(sc);
@@ -576,20 +550,23 @@ public class InfinispanExecution implements ResultSetExecution {
 
 	}
 	
-
 	@Override
 	public void close() {
 		this.query = null;
 		this.connection = null;
 		this.objResultsItr = null;
+		this.scriptEngine = null;
+		this.connection = null;
+		this.factory = null;
+		this.executionContext = null;
 	}
 
 	@Override
 	public void cancel()  {
 	}
 	
-	private static CompiledScript getCompiledNode(String nodeName) throws ScriptException {
-		return scriptEngine.compile(OBJECT_NAME + "." + nodeName);
+	private CompiledScript getCompiledNode(String nodeName) throws ScriptException {
+		return scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + nodeName);
 	}
 	
 

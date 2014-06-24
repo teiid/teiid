@@ -21,18 +21,12 @@
  */
 package org.teiid.translator.infinispan.dsl.util;
  
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Properties;
 
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber;
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord.Type;
-import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
@@ -40,8 +34,12 @@ import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.dsl.InfinispanConnection;
+import org.teiid.translator.infinispan.dsl.InfinispanExecutionFactory;
 
 /**
  * This VDBUtility is building the metadata based on the JDG quickstart:  remote-query
@@ -59,74 +57,33 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class VDBUtility {
 
+	private static MetadataFactory createSchema() {
+		InfinispanExecutionFactory translator;
 
-	  public static QueryMetadataInterface exampleTrades() { 
+		MetadataFactory mf = null;
+		translator = new InfinispanExecutionFactory();
+		try {
+			translator.start();
+
+			mf = new MetadataFactory("vdb", 1, "objectvdb",
+					SystemMetadata.getInstance().getRuntimeTypeMap(),
+					new Properties(), null);
+	
+			InfinispanConnection conn = PersonCacheSource.createConnection();
+	
+			translator.getMetadataProcessor().process(mf, conn);
+		
+		} catch (TranslatorException e) {
+			
+		}
+
+		return mf;
+	}
+
+	  public static QueryMetadataInterface examplePersons() { 
 	    	MetadataStore store = new MetadataStore();
-	        // Create models
-	        Schema objectModel = RealMetadataFactory.createPhysicalModel("Persons_Object_Model", store); //$NON-NLS-1$
-	        
-	        // Create Person group
-	        Table personTable = RealMetadataFactory.createPhysicalGroup("Persons", objectModel); //$NON-NLS-1$
-	        personTable.setNameInSource("Persons"); //$NON-NLS-1$
-	        personTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
-	        personTable.setProperty("teiid_jpa:entity_class", Person.class.getName());
-//	        accountTable.setProperty(Constants.SUPPORTS_RETRIEVE, Boolean.TRUE.toString());
-	        // Create Account Columns
-	        String[] acctNames = new String[] {
-	        		"PersonObject", "id", "name", "email"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        };
-	        String[] acctTypes = new String[] {  
-	            DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
-	        };
-	        
-	        List<Column> acctCols = RealMetadataFactory.createElements(personTable, acctNames, acctTypes);
-	        acctCols.get(0).setSearchType(SearchType.Unsearchable);
-	        // Set name in source on each column
-	        String[] accountNameInSource = new String[] {
-	        		"this", "id", "name", "email"    //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
-	        };
-	        for(int i=0; i<accountNameInSource.length; i++) {
-	            Column obj = acctCols.get(i);
-	            obj.setNameInSource(accountNameInSource[i]);
-	        }
-	        
-	        List<Column> pkeycol = new ArrayList<Column>();
-	        pkeycol.add(acctCols.get(1));
-	        RealMetadataFactory.createKey(Type.Primary, "PK_PERSONJ", personTable, pkeycol);
-
-	        // Create PhoneNumber group
-	        Table phoneTable = RealMetadataFactory.createPhysicalGroup("PhoneNumber", objectModel); //$NON-NLS-1$
-	        phoneTable.setNameInSource("Persons"); //$NON-NLS-1$
-	        phoneTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
-	        phoneTable.setProperty("teiid_jpa:entity_class", PhoneNumber.class.getName());
-
-//	        accountTable.setProperty(Constants.SUPPORTS_RETRIEVE, Boolean.TRUE.toString());
-	        // Create Account Columns
-	        String[] pnNames = new String[] {
-	           "id", "number", "type"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        };
-	        String[] pnTypes = new String[] {  
-	            DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
-	        };
-	        
-	        List<Column> pnCols = RealMetadataFactory.createElements(phoneTable, pnNames, pnTypes);
-	        pnCols.get(0).setSearchType(SearchType.Unsearchable);
-	        // Set name in source on each column
-	        String[] pnNameInSource = new String[] {
-	        		"id", "phone.number", "phone.type"     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
-	        };
-	        for(int i=0; i<pnNameInSource.length; i++) {
-	            Column obj = pnCols.get(i);
-	            obj.setNameInSource(pnNameInSource[i]);
-	        }
-	  
-	        List<Column> fkeycol = new ArrayList<Column>();
-	        pkeycol.add(pnCols.get(0));
-
-	        KeyRecord fbi = new KeyRecord(KeyRecord.Type.Primary);
-	        fbi.addColumn(pkeycol.get(0));
-	        ForeignKey fk = RealMetadataFactory.createForeignKey("FK_PERSON", phoneTable, fkeycol, fbi);
-	        fk.setNameInSource("phones");
+	    	Schema objectModel = createSchema().getSchema();
+	    	store.addSchema(objectModel);
 	        
 	        Schema personViewSchema = RealMetadataFactory.createVirtualModel("Person_View_Model", store);
 	        
@@ -171,7 +128,7 @@ public class VDBUtility {
 	        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
 	    }    
 
-		public static TranslationUtility TRANSLATION_UTILITY = new TranslationUtility(exampleTrades());
+		public static TranslationUtility TRANSLATION_UTILITY = new TranslationUtility(examplePersons());
 		
 		public static RuntimeMetadata RUNTIME_METADATA = TRANSLATION_UTILITY.createRuntimeMetadata();
 
