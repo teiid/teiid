@@ -182,6 +182,25 @@
                                     </resources>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>copy-resources2</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/${jbossas-test-version}/standalone/configuration</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>src/test/resources/arquillian/credentials</directory>
+                                            <includes>
+                                            <include>*.properties</include>
+                                            </includes>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>                            
                         </executions>
                     </plugin>                    
                     <plugin>

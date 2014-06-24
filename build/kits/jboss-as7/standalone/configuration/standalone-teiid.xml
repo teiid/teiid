@@ -339,9 +339,8 @@
                 </security-domain>
                 <security-domain name="teiid-security" cache-type="default">
                     <authentication>
-                        <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
-                            <module-option name="usersProperties" value="${jboss.server.config.dir}/teiid-security-users.properties"/>
-                            <module-option name="rolesProperties" value="${jboss.server.config.dir}/teiid-security-roles.properties"/>
+                        <login-module code="RealmDirect" flag="sufficient">
+                           <module-option name="password-stacking" value="useFirstPass"/>
                         </login-module>
                     </authentication>
                 </security-domain>                
