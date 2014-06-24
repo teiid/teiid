@@ -31,15 +31,14 @@ import org.odata4j.edm.EdmType;
 import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.CountResponse;
 import org.odata4j.producer.QueryInfo;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 
 public interface Client {
-	String getVDBName();
-	
-	int getVDBVersion();
-	
+	VDBMetaData getVDB();
+		
 	MetadataStore getMetadataStore();
 	
 	BaseResponse executeCall(String sql, List<SQLParam> sqlParams, EdmType returnType);

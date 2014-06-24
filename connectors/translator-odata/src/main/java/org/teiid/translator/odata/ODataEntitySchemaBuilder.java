@@ -115,7 +115,7 @@ public class ODataEntitySchemaBuilder {
 		return null;
 	}	
 	
-	private static void buildEntityTypes(Schema schema, List<EdmSchema.Builder> edmSchemas) {
+	public static void buildEntityTypes(Schema schema, List<EdmSchema.Builder> edmSchemas) {
 		List<EdmEntitySet.Builder> entitySets = new ArrayList<EdmEntitySet.Builder>();
 		List<EdmEntityType.Builder> entityTypes = new ArrayList<EdmEntityType.Builder>();
 	    
@@ -197,7 +197,7 @@ public class ODataEntitySchemaBuilder {
 		return entityTypeName;
 	}
 	
-	private static void buildAssosiationSets(Schema schema, List<Builder> edmSchemas) {
+	public static void buildAssosiationSets(Schema schema, List<Builder> edmSchemas) {
 		EdmSchema.Builder odataSchema = findSchema(edmSchemas, schema.getName());
 		EdmEntityContainer.Builder entityContainer = findEntityContainer(edmSchemas, schema.getName());
 		List<EdmAssociationSet.Builder> assosiationSets = new ArrayList<EdmAssociationSet.Builder>();
@@ -252,13 +252,15 @@ public class ODataEntitySchemaBuilder {
 					association.setRefConstraint(erc);
 				}					
 				
-				// Add EdmNavigationProperty to entity type
-				EdmNavigationProperty.Builder nav = EdmNavigationProperty.newBuilder(fk.getReferenceTableName());
-				nav.setRelationshipName(fk.getName());
-				nav.setFromToName(table.getName(), fk.getReferenceTableName());
-				nav.setRelationship(association);
-				nav.setFromTo(endSelf, endRef);
-				entityType.addNavigationProperties(nav);
+				if (!fk.getReferenceTableName().equalsIgnoreCase(table.getName())) {
+				    // Add EdmNavigationProperty to entity type
+    				EdmNavigationProperty.Builder nav = EdmNavigationProperty.newBuilder(fk.getReferenceTableName());
+    				nav.setRelationshipName(fk.getName());
+    				nav.setFromToName(table.getName(), fk.getReferenceTableName());
+    				nav.setRelationship(association);
+    				nav.setFromTo(endSelf, endRef);
+    				entityType.addNavigationProperties(nav);
+				}
 				
 				// Add EdmNavigationProperty to Reference entity type
 				EdmNavigationProperty.Builder refNav = EdmNavigationProperty.newBuilder(table.getName());
@@ -293,7 +295,7 @@ public class ODataEntitySchemaBuilder {
 		odataSchema.addAssociations(assosiations);
 	}	
 	
-	private static void buildFunctionImports(Schema schema, List<Builder> edmSchemas) {
+	public static void buildFunctionImports(Schema schema, List<Builder> edmSchemas) {
 		EdmSchema.Builder odataSchema = findSchema(edmSchemas, schema.getName());
 		EdmEntityContainer.Builder entityContainer = findEntityContainer(edmSchemas, schema.getName());
 		
