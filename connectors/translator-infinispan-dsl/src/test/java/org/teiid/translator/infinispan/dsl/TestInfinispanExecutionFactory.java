@@ -23,6 +23,7 @@ package org.teiid.translator.infinispan.dsl;
 
 import static org.junit.Assert.assertNotNull;
 
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -45,8 +46,8 @@ public class TestInfinispanExecutionFactory {
 	@Mock
 	private Select command;
 	
-	@Mock
-	private InfinispanConnection connection;
+	
+	private InfinispanConnection connection = PersonCacheSource.createConnection();
 	
     @BeforeClass
     public static void setUp() throws TranslatorException {

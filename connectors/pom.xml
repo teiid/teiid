@@ -113,6 +113,7 @@
     <module>translator-jpa</module>
     <module>translator-object</module>
     <module>translator-odata</module>
+    <module>translator-infinispan-dsl</module>
 
     <module>connector-file</module>
     <module>connector-google</module>
@@ -126,6 +127,7 @@
     <module>connector-simpledb</module>
     <module>connector-accumulo</module>
     <module>connector-solr</module>
+    <module>connector-infinispan-dsl</module>
     
     <module>sandbox</module>
 

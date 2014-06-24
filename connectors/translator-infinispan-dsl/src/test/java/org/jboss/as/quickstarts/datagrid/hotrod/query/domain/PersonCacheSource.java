@@ -24,6 +24,7 @@ package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Map;
 
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.dsl.ClassRegistry;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
 
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
@@ -67,21 +69,26 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 	public static final int NUMPERSONS = 10;
 	public static final int NUMPHONES = 2;
 	
-	private static Map <Object, Object> OBJECTS;
+	static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
 	
 	static {
 		mapOfCaches.put(PersonCacheSource.PERSON_CACHE_NAME, Person.class);
 		try {
 			DESCRIPTOR = createDescriptor();
+
+			CLASS_REGISTRY.registerClass(Person.class);
+			CLASS_REGISTRY.registerClass(PhoneNumber.class);
+			CLASS_REGISTRY.registerClass(PhoneType.class);
+
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		
-		OBJECTS = loadCache();
 	}
 	
 	
 	public static InfinispanConnection createConnection() {
+		final Map <Object, Object> objects = PersonCacheSource.loadCache();
+
 		return new InfinispanConnection() {
 
 			@Override
@@ -107,8 +114,8 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 			}
 
 			@Override
-			public Map<?, ?> getCache(String cacheName) {
-				return OBJECTS;
+			public Map<Object, Object> getCache(String cacheName) {
+				return objects;
 			}
 
 
@@ -116,18 +123,10 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 			public QueryFactory getQueryFactory(String cacheName) {
 				return null;
 			}
-
-			public List<Class> getRegisteredClasses() {
-				ArrayList<Class> al = new ArrayList<Class>(3);
-				al.add(Person.class);
-				al.add(PhoneNumber.class);
-				al.add(PhoneType.class);
-				return al;
-				
-			}
 			
-
-
+	        public ClassRegistry getClassRegistry() {
+		        return PersonCacheSource.CLASS_REGISTRY;
+		    }
 		};
 	}
 	
@@ -140,12 +139,8 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 			List<PhoneNumber> pns = new ArrayList<PhoneNumber>();
 			double d = 0;
 			for (int j = 1; j <= NUMPHONES; j++) {
-				
 				PhoneNumber pn = new PhoneNumber("(111)222-345" + j, types[t++]);
-				
-				if (t > 2) t = 0;
-				
-				
+				if (t > 2) t = 0;				
 				pns.add(pn);
 			}
 			
@@ -154,7 +149,7 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 			p.setName("Person " + i);
 			p.setPhones(pns);
 				
-			cache.put(String.valueOf(i), p);
+			cache.put(i, p);
 
 		}
 	}
@@ -162,11 +157,7 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 	public static Map<Object, Object>  loadCache() {
 		PersonCacheSource tcs = new PersonCacheSource();
 		PersonCacheSource.loadCache(tcs);
-		return tcs;		
-	}
-	
-	public List<Object> getAll() {
-		return new ArrayList<Object>(this.values());
+		return tcs;
 	}
 	
 	public List<Object> get(int key) {
@@ -175,44 +166,44 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 		return objs;
 	}	
 	
-    private static Descriptor createDescriptor() throws Exception {
-	
-	InputStream is = new FileInputStream("./src/test/resources/addressbook.protobin");
-	FileDescriptorSet fds = FileDescriptorSet.parseFrom(is);
-    Map<String, FileDescriptor> fdl = new HashMap<String, FileDescriptor>(); 
-	
-	  try { 
-          FileDescriptor current = null; 
-          for (FileDescriptorProto fdp : fds.getFileList()) { 
-              final List<String> dependencyList = fdp.getDependencyList(); 
-              final FileDescriptor[] fda = new FileDescriptor[dependencyList 
-                      .size()]; 
+	private static Descriptor createDescriptor() throws Exception {
 
-              for (int i = 0; i < fda.length; i++) { 
-                  FileDescriptor fddd = fdl.get(dependencyList.get(i)); 
-                  if (fddd == null) { 
-                      // missing imports! - this should not happen  unless you left off the --include_imports directive 
-                  } else { 
-                      fda[i] = fddd; 
-                  } 
-              } 
-              current = FileDescriptor.buildFrom(fdp, fda); 
-              fdl.put(current.getName(), current); 
-          } 
+		InputStream is = new FileInputStream(
+				"./src/test/resources/addressbook.protobin");
+		FileDescriptorSet fds = FileDescriptorSet.parseFrom(is);
+		Map<String, FileDescriptor> fdl = new HashMap<String, FileDescriptor>();
 
-          // the "fdl" object now has all the descriptors - grab the  one you need. 
+		try {
+			FileDescriptor current = null;
+			for (FileDescriptorProto fdp : fds.getFileList()) {
+				final List<String> dependencyList = fdp.getDependencyList();
+				final FileDescriptor[] fda = new FileDescriptor[dependencyList
+						.size()];
 
-      } catch (DescriptorValidationException e) { 
-          // panic ? 
-      } 
-	
-	is.close();
-	
+				for (int i = 0; i < fda.length; i++) {
+					FileDescriptor fddd = fdl.get(dependencyList.get(i));
+					if (fddd == null) {
+						// missing imports! - this should not happen unless you
+						// left off the --include_imports directive
+					} else {
+						fda[i] = fddd;
+					}
+				}
+				current = FileDescriptor.buildFrom(fdp, fda);
+				fdl.put(current.getName(), current);
+			}
 
-	FileDescriptor fdes = fdl.get("addressbook.proto");
-	List<Descriptor> all = fdes.getMessageTypes();
-	return all.get(0);
-}
+			// the "fdl" object now has all the descriptors - grab the one you
+			// need.
 
-	
+		} catch (DescriptorValidationException e) {
+			// panic ?
+		}
+
+		is.close();
+
+		FileDescriptor fdes = fdl.get("addressbook.proto");
+		List<Descriptor> all = fdes.getMessageTypes();
+		return all.get(0);
+	}
 }

@@ -31,19 +31,7 @@ import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.SortOrder;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.Exists;
-import org.teiid.language.Expression;
-import org.teiid.language.In;
-import org.teiid.language.IsNull;
-import org.teiid.language.Like;
-import org.teiid.language.Literal;
-import org.teiid.language.OrderBy;
-import org.teiid.language.Select;
-import org.teiid.language.SortSpecification;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -67,19 +55,49 @@ import org.teiid.translator.TranslatorException;
  * 
  */
 public final class DSLSearch   {
-
-
-	@SuppressWarnings("rawtypes")
-	public static List<Object> performSearch(Select command, Class<?> type, String cacheName, InfinispanConnection conn)
-			throws TranslatorException {
+	
+	public static Object performKeySearch(String cacheName, String columnNameInSource, Object value, InfinispanConnection conn) throws TranslatorException {
+	    @SuppressWarnings("rawtypes")
+		QueryBuilder qb = getQueryBuilder(cacheName, conn);
+	    
+		value = escapeReservedChars(value);
 		
-		QueryFactory qf = conn.getQueryFactory(cacheName);
-	    		  
-	    QueryBuilder qb = qf.from(type);
+	    FilterConditionContext fcc = qb.having(columnNameInSource).eq(value);
+		
+		Query query = fcc.toBuilder().build();
+		List<Object> results = query.list();
+		if (results.size() == 1) {
+			return results.get(0);
+		} else if (results.size() > 1) {
+			throw new TranslatorException("Multiple objects found for key: " + value.toString());
+		}
+		
+		return null;
+	}
+
+	public static List<Object> performSearch(Update command, String cacheName, InfinispanConnection conn)
+			throws TranslatorException {
+		return performSearch(command.getWhere(), null, cacheName, conn);
+	}
+	
+	public static List<Object> performSearch(Delete command, String cacheName, InfinispanConnection conn)
+			throws TranslatorException {	
+		return performSearch(command.getWhere(), null, cacheName, conn);
+	}
+
+	public static List<Object> performSearch(Select command, String cacheName, InfinispanConnection conn)
+			throws TranslatorException {	
+		return performSearch(command.getWhere(), command.getOrderBy(), cacheName, conn);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static List<Object> performSearch(Condition where, OrderBy orderby, String cacheName, InfinispanConnection conn)
+				throws TranslatorException {
+
+	    QueryBuilder qb = getQueryBuilder(cacheName, conn);
 	    	    
-	    OrderBy ob = command.getOrderBy();
-	    if (ob != null) {
-		    List<SortSpecification> sss = ob.getSortSpecifications();
+	    if (orderby != null) {
+		    List<SortSpecification> sss = orderby.getSortSpecifications();
 		    for (SortSpecification spec:sss) {
 		    	Expression exp = spec.getExpression();
 		    	Column mdIDElement = ((ColumnReference) exp).getMetadataObject();
@@ -87,7 +105,7 @@ public final class DSLSearch   {
 		    }
 	    }
 	    	
-	    FilterConditionContext fcc = buildQueryFromWhereClause(command.getWhere(), qb, null);	 
+	    FilterConditionContext fcc = buildQueryFromWhereClause(where, qb, null);	 
 		 			
 		List<Object> results =  null;
 				
@@ -112,6 +130,18 @@ public final class DSLSearch   {
 		
 	}
 	
+	@SuppressWarnings("rawtypes")
+	private static QueryBuilder getQueryBuilder(String cacheName, InfinispanConnection conn) throws TranslatorException {
+		
+		Class<?> type = conn.getType(cacheName);
+		
+		QueryFactory qf = conn.getQueryFactory(cacheName);
+	    		  
+	    QueryBuilder qb = qf.from(type);
+
+	    return qb;
+	}
+	
 	private static FilterConditionContext buildQueryFromWhereClause(Condition criteria, @SuppressWarnings("rawtypes") QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)
 			throws TranslatorException {
 
@@ -130,8 +160,10 @@ public final class DSLSearch   {
 
 				FilterConditionContext f_and = buildQueryFromWhereClause(
 						crit.getLeftCondition(), queryBuilder, null);
-				FilterConditionBeginContext fcbca = f_and.and();
-
+				FilterConditionBeginContext fcbca =  null;
+				if (f_and != null) {
+					fcbca = f_and.and();
+				}
 				fcc = buildQueryFromWhereClause(
 						crit.getRightCondition(), queryBuilder, fcbca);
 
@@ -141,11 +173,14 @@ public final class DSLSearch   {
 				
 				FilterConditionContext f_or = buildQueryFromWhereClause(
 						crit.getLeftCondition(), queryBuilder, null);
-				FilterConditionBeginContext fcbcb = f_or.or();
-
+				FilterConditionBeginContext fcbcb = null;
+				if (f_or != null) {
+					fcbcb = f_or.or();
+				}
 				fcc = buildQueryFromWhereClause(
 						crit.getRightCondition(), queryBuilder, fcbcb);
-
+				
+				
 				break;
 
 			default:
