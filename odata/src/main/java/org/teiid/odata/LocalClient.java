@@ -22,64 +22,26 @@
 package org.teiid.odata;
 
 import java.io.IOException;
-import java.sql.Array;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.sql.*;
+import java.util.*;
 
-import org.odata4j.core.OCollection;
+import org.odata4j.core.*;
 import org.odata4j.core.OCollection.Builder;
-import org.odata4j.core.OCollections;
-import org.odata4j.core.OComplexObject;
-import org.odata4j.core.OComplexObjects;
-import org.odata4j.core.OObject;
-import org.odata4j.core.OProperties;
-import org.odata4j.core.OProperty;
-import org.odata4j.core.OSimpleObjects;
-import org.odata4j.edm.EdmCollectionType;
-import org.odata4j.edm.EdmComplexType;
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.edm.EdmEntityType;
-import org.odata4j.edm.EdmProperty;
-import org.odata4j.edm.EdmSimpleType;
-import org.odata4j.edm.EdmType;
+import org.odata4j.edm.*;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.ServerErrorException;
-import org.odata4j.producer.BaseResponse;
-import org.odata4j.producer.CountResponse;
-import org.odata4j.producer.InlineCount;
-import org.odata4j.producer.QueryInfo;
-import org.odata4j.producer.Responses;
+import org.odata4j.producer.*;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.core.types.Transform;
-import org.teiid.core.types.TransformationException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.*;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.jdbc.CallableStatementImpl;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
-import org.teiid.jdbc.PreparedStatementImpl;
-import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
 import org.teiid.net.TeiidURL;
 import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -98,7 +60,7 @@ public class LocalClient implements Client {
 	private static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
 	static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
 
-	private volatile MetadataStore metadataStore;
+	private volatile VDBMetaData vdb;
 	private String vdbName;
 	private int vdbVersion;
 	private int batchSize;
@@ -128,13 +90,30 @@ public class LocalClient implements Client {
 	}
 	
 	@Override
-	public String getVDBName() {
-		return this.vdbName;
-	}
-
-	@Override
-	public int getVDBVersion() {
-		return this.vdbVersion;
+	public VDBMetaData getVDB() {
+        ConnectionImpl connection = null;
+        if (this.vdb == null) {
+            try {
+                connection = getConnection();
+                LocalServerConnection lsc = (LocalServerConnection)connection.getServerConnection();
+                VDBMetaData vdb = lsc.getWorkContext().getVDB();
+                if (vdb == null) {
+                    throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16001, this.vdbName, this.vdbVersion));
+                }
+                this.vdb = vdb;
+            } catch (SQLException e) {
+                throw new ServerErrorException(e.getMessage(),e);
+            } finally {
+                if (connection != null) {
+                    try {
+                        connection.close();
+                    } catch (SQLException e) {
+                        
+                    }
+                }
+            }
+        }
+        return this.vdb;
 	}
 	
 	public void setDriver(TeiidDriver driver) {
@@ -208,31 +187,8 @@ public class LocalClient implements Client {
 
 	@Override
 	public MetadataStore getMetadataStore() {
-		ConnectionImpl connection = null;
-		if (this.metadataStore == null) {
-			try {
-				connection = getConnection();
-				LocalServerConnection lsc = (LocalServerConnection)connection.getServerConnection();
-				VDBMetaData vdb = lsc.getWorkContext().getVDB();
-				if (vdb == null) {
-					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16001, this.vdbName, this.vdbVersion));
-				}
-				this.metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-			} catch (SQLException e) {
-				throw new ServerErrorException(e.getMessage(),e);
-			} finally {
-				if (connection != null) {
-					try {
-						connection.close();
-					} catch (SQLException e) {
-						
-					}
-				}
-			}
-		}
-		return this.metadataStore;
+		return getVDB().getAttachment(TransformationMetadata.class).getMetadataStore();
 	}
-
 
 	@Override
 	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, QueryInfo queryInfo) {
@@ -472,10 +428,43 @@ public class LocalClient implements Client {
 	@Override
 	public EdmDataServices getMetadata() {
 		if (this.edmMetaData == null) {
-			this.edmMetaData = ODataEntitySchemaBuilder.buildMetadata(getMetadataStore());
+			this.edmMetaData = buildMetadata(getVDB(), getMetadataStore());
 		}
 		return this.edmMetaData;
 	}
+	
+    public static EdmDataServices buildMetadata(VDBMetaData vdb, MetadataStore metadataStore) {
+        try {
+            List<EdmSchema.Builder> edmSchemas = new ArrayList<EdmSchema.Builder>();
+            for (Schema schema:metadataStore.getSchemaList()) {
+                if (isVisible(vdb, schema)) {
+                    ODataEntitySchemaBuilder.buildEntityTypes(schema, edmSchemas);
+                }
+            }
+            for (Schema schema:metadataStore.getSchemaList()) {
+                if (isVisible(vdb, schema)) {
+                    ODataEntitySchemaBuilder.buildFunctionImports(schema, edmSchemas);
+                }
+            }
+            for (Schema schema:metadataStore.getSchemaList()) {
+                if (isVisible(vdb, schema)) {
+                    ODataEntitySchemaBuilder.buildAssosiationSets(schema, edmSchemas);
+                }
+            }
+            return EdmDataServices.newBuilder().addSchemas(edmSchemas).build();
+        } catch (Exception e) {
+            throw new TeiidRuntimeException(e);
+        }
+    }	
+    
+    private static boolean isVisible(VDBMetaData vdb, Schema schema) {
+        String schemaName = schema.getName();
+        Model model = vdb.getModel(schemaName);
+        if (model == null) {
+            return true;
+        }
+        return model.isVisible();
+    }
 	
 	static OProperty<?> buildPropery(String propName, EdmType type, Object value, String invalidCharacterReplacement) throws TransformationException, SQLException, IOException {
 		if (!(type instanceof EdmSimpleType)) {
