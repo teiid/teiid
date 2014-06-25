@@ -339,7 +339,7 @@
                 </security-domain>
                 <security-domain name="teiid-security" cache-type="default">
                     <authentication>
-                        <login-module code="RealmDirect" flag="sufficient">
+                        <login-module code="RealmDirect" flag="required">
                            <module-option name="password-stacking" value="useFirstPass"/>
                         </login-module>
                     </authentication>
