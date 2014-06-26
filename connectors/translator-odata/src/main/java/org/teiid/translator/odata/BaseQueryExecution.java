@@ -221,10 +221,7 @@ public class BaseQueryExecution {
 		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection);
 		execution.setUseResponseContext(true);
 		execution.setAlwaysAllowPayloads(true);
-
-		for (String header:headers.keySet()) {
-			execution.addHeader(header, headers.get(header));
-		}
+		execution.setCustomHeaders(headers);
 		execution.execute();
 		return execution;
 	}

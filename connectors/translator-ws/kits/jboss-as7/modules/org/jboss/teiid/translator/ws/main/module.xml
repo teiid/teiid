@@ -11,6 +11,7 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
+        <module name="org.jboss.teiid" />
         <module name="javax.wsdl4j.api"/>
         <module name="org.springframework.spring" optional="true"/>  
     </dependencies>

@@ -22,13 +22,14 @@
 
 package org.teiid.translator.ws;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -37,10 +38,12 @@ import javax.activation.DataSource;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
+import javax.xml.ws.handler.MessageContext;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Call;
@@ -51,6 +54,7 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
 @SuppressWarnings("nls")
@@ -61,8 +65,9 @@ public class TestWSTranslator {
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
 		ef.getMetadata(mf, null);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
-		assertEquals(6, p.getParameters().size());
+		assertEquals(7, p.getParameters().size());
 		p.getParameters().remove(4);
+		p.getParameters().remove(5);
 		p = mf.getSchema().getProcedure("invoke");
 		assertEquals(6, p.getParameters().size());
 		p.getParameters().remove(5);
@@ -103,7 +108,7 @@ public class TestWSTranslator {
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
 		ef.getMetadata(mf, null);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
-		assertEquals(6, p.getParameters().size());
+		assertEquals(7, p.getParameters().size());
 		
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
@@ -130,13 +135,54 @@ public class TestWSTranslator {
 			//should only be able to read once
 		}
 	}
+	
+	@Test public void testHeaders() throws Exception {
+		WSExecutionFactory ef = new WSExecutionFactory();
+    	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+		ef.getMetadata(mf, null);
+		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
+		
+		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
+		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
+		WSConnection mockConnection = Mockito.mock(WSConnection.class);
+		Dispatch<Object> mockDispatch = mockDispatch();
+		DataSource mock = Mockito.mock(DataSource.class);
+		ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
+		Mockito.stub(mock.getInputStream()).toReturn(baos);
+		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(mock);
+		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+		CommandBuilder cb = new CommandBuilder(tm);
+		
+		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, false, '{\"ContentType\":\"application/json\"}')");
+		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
+		pe.execute();
+		
+		Map<String, List<String>> headers = (Map<String, List<String>>) mockDispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
+		assertEquals(Arrays.asList("application/json"), headers.get("ContentType"));
+	}
 
 	private Dispatch<Object> mockDispatch() {
 		Dispatch<Object> mockDispatch = Mockito.mock(Dispatch.class);
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put(WSConnection.STATUS_CODE, 200);
+		Map<String, Object> requestMap = new HashMap<String, Object>();
+		Mockito.stub(mockDispatch.getRequestContext()).toReturn(requestMap);
+		requestMap.put(MessageContext.HTTP_REQUEST_HEADERS, new LinkedHashMap<String, List<String>>());
 		Mockito.stub(mockDispatch.getResponseContext()).toReturn(map);
 		return mockDispatch;
+	}
+	
+	@Test public void testJSONHeader() throws Exception {
+		HashMap<String, List<String>> vals = new HashMap<String, List<String>>();
+		BinaryWSProcedureExecution.parseHeader(vals, new ClobImpl("{\"a\":1, \"b\":[\"x\",\"y\"]}"));
+		assertEquals(2, vals.size());
+		assertEquals(vals.get("b"), Arrays.asList("x", "y"));
+		assertEquals(vals.get("a"), Arrays.asList("1"));
+	}
+	
+	@Test(expected=TranslatorException.class) public void testJSONHeaderInvalid() throws Exception {
+		HashMap<String, List<String>> vals = new HashMap<String, List<String>>();
+		BinaryWSProcedureExecution.parseHeader(vals, new ClobImpl("[]"));
 	}
 	
 }

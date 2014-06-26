@@ -24,13 +24,13 @@ package org.teiid.translator.ws;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +46,9 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.json.simple.JSONParser;
+import org.teiid.json.simple.ParseException;
+import org.teiid.json.simple.SimpleContentHandler;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.metadata.RuntimeMetadata;
@@ -84,7 +87,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     private DataSource returnValue;
     private WSConnection conn;
     WSExecutionFactory executionFactory;
-    Map<String, List<String>> customHeaders = new HashMap<String, List<String>>();
+    Map<String, List<String>> customHeaders;
     Map<String, Object> responseContext = Collections.emptyMap();
     int responseCode = 200;
     private boolean useResponseContext;
@@ -128,8 +131,14 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 
 	        Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
-	        for (String key:this.customHeaders.keySet()) {
-	        	httpHeaders.put(key, this.customHeaders.get(key));
+	        if (customHeaders != null) {
+	        	httpHeaders.putAll(customHeaders);
+	        }
+	        if (arguments.size() > 5) {
+	        	Clob headers = (Clob)arguments.get(5).getArgumentValue().getValue();
+	        	if (headers != null) {
+	        		parseHeader(httpHeaders, headers);
+	        	}
 	        }
 	        dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_HEADERS, httpHeaders);
 
@@ -160,8 +169,52 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
+		} catch (ParseException e) {
+			throw new TranslatorException(e);
+		} catch (IOException e) {
+			throw new TranslatorException(e);
+		} catch (SQLException e) {
+			throw new TranslatorException(e);
 		}
     }
+
+	static void parseHeader(Map<String, List<String>> httpHeaders,
+			Clob headers) throws ParseException, TranslatorException, IOException, SQLException {
+		SimpleContentHandler sch = new SimpleContentHandler();
+		JSONParser parser = new JSONParser();
+		Reader characterStream = headers.getCharacterStream();
+		try {
+			parser.parse(characterStream, sch);
+			Object result = sch.getResult();
+			if (!(result instanceof Map)) {
+				throw new TranslatorException(WSExecutionFactory.Event.TEIID15006, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15006));
+			}
+			Map<String, Object> values = (Map)result;
+			for (Map.Entry<String, Object> entry : values.entrySet()) {
+				if ((entry.getValue() instanceof Map) || entry.getValue() == null) {
+					throw new TranslatorException(WSExecutionFactory.Event.TEIID15006, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15006));
+				}
+				if (!(entry.getValue() instanceof List)) {
+					entry.setValue(Arrays.asList(entry.getValue().toString()));
+					continue;
+				}
+				List<Object> list = (List)entry.getValue();
+				for (int i = 0; i < list.size(); i++) {
+					Object value = list.get(i);
+					if (value instanceof Map || value instanceof List) {
+						throw new TranslatorException(WSExecutionFactory.Event.TEIID15006, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15006));
+					}
+					if (!(value instanceof String)) {
+						list.set(i, value.toString());
+					}
+				}
+			}
+			httpHeaders.putAll((Map) values);
+		} finally {
+			characterStream.close();
+		}
+	
+	}
 
 	@Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
@@ -188,10 +241,10 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     public void cancel() throws TranslatorException {
         // no-op
     }
-
-    public void addHeader(String name, List<String> value) {
-    	this.customHeaders.put(name, value);
-    }
+    
+    public void setCustomHeaders(Map<String, List<String>> customHeaders) {
+		this.customHeaders = customHeaders;
+	}
 
     public Object getResponseHeader(String name){
     	return this.responseContext.get(name);

@@ -77,7 +77,8 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     	TEIID15002,
     	TEIID15003,
     	TEIID15004, 
-    	TEIID15005,
+    	TEIID15005, 
+    	TEIID15006,
     }	
 		
 	private Mode defaultServiceMode = Mode.PAYLOAD;
@@ -185,6 +186,10 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setDefaultValue("false"); //$NON-NLS-1$
 		
 		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$
+		
+		param = metadataFactory.addProcedureParameter("headers", TypeFacility.RUNTIME_NAMES.CLOB, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("Headers to send"); //$NON-NLS-1$
+		param.setNullType(NullType.Nullable);
 		
 		if (conn != null && conn.getWsdl() != null) {
 			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl().toString());
