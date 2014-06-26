@@ -21,7 +21,7 @@
  * 02110-1301 USA.
  */
 
-package TestScriptReader;
+package org.teiid.odbc;
 
 import static org.junit.Assert.*;
 
