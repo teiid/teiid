@@ -23,16 +23,29 @@ package org.teiid.translator.jpa;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.*;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -51,32 +64,6 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
 	public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class";
 	
-	final static Map<Class<?>, Class<?>> map = new HashMap<Class<?>, Class<?>>();
-	static {
-	    map.put(boolean.class, Boolean.class);
-	    map.put(byte.class, Byte.class);
-	    map.put(short.class, Short.class);
-	    map.put(char.class, Character.class);
-	    map.put(int.class, Integer.class);
-	    map.put(long.class, Long.class);
-	    map.put(float.class, Float.class);
-	    map.put(double.class, Double.class);
-	    map.put(byte[].class, BlobType.class);
-	    map.put(char[].class, ClobType.class);
-	    map.put(Byte[].class, BlobType.class);
-	    map.put(Character[].class, ClobType.class);
-	    
-	    map.put(Boolean.class, Boolean.class);
-	    map.put(Byte.class, Byte.class);
-	    map.put(Short.class, Short.class);
-	    map.put(Character.class, Character.class);
-	    map.put(Integer.class, Integer.class);
-	    map.put(Long.class, Long.class);
-	    map.put(Float.class, Float.class);
-	    map.put(Double.class, Double.class);
-	    map.put(Calendar.class, java.sql.Timestamp.class);
-	}
-
 	public void process(MetadataFactory mf, EntityManager entityManager) throws TranslatorException {
 		Metamodel model = entityManager.getMetamodel();
 		
@@ -186,7 +173,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 		return type.isPrimitive() || type.equals(String.class)
 				|| type.equals(BigDecimal.class) || type.equals(Date.class)
 				|| type.equals(BigInteger.class)
-				|| map.containsKey(type);
+				|| TypeFacility.getRuntimeType(type) != Object.class;
 	}
 	
 	private void addForeignKeys(MetadataFactory mf, Metamodel model, ManagedType<?> entity, Table entityTable) throws TranslatorException {
@@ -290,14 +277,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 	}
 	
 	private Class getJavaDataType(Class type) {
-		if (type.equals(Date.class)) {
-			return java.sql.Timestamp.class;
-		}
-		
-		if (type.isPrimitive()) {
-			return map.get(type);  // usage			
-		}
-		return type;
+		return TypeFacility.getRuntimeType(type);
 	}
 	
 }
