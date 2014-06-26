@@ -4334,7 +4334,7 @@ XMLParse xmlParse(ParseInfo info) :
 /*
 name=querystring function
 description=Produces a URL query string from the given arguments.
-example={code:sql}QUERYSTRING(col1 AS opt, col2 AS val){code}
+example={code:sql}QUERYSTRING('path', col1 AS opt, col2 AS val){code}
 */
 QueryString queryString(ParseInfo info) :
 {
