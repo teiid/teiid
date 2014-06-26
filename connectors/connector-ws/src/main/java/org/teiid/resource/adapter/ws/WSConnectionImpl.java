@@ -27,7 +27,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.activation.DataSource;
@@ -35,8 +39,14 @@ import javax.resource.ResourceException;
 import javax.security.auth.Subject;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.namespace.QName;
-import javax.xml.ws.*;
+import javax.xml.ws.AsyncHandler;
+import javax.xml.ws.Binding;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.EndpointReference;
+import javax.xml.ws.Response;
+import javax.xml.ws.Service;
 import javax.xml.ws.Service.Mode;
+import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
@@ -54,7 +64,6 @@ import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.ietf.jgss.GSSCredential;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Base64;
-import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -128,8 +137,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 				Map<String, List<String>> header = (Map<String, List<String>>)this.requestContext.get(MessageContext.HTTP_REQUEST_HEADERS);
 				for (Map.Entry<String, List<String>> entry : header.entrySet()) {
-					String value = StringUtil.join(entry.getValue(), ","); //$NON-NLS-1$
-					this.client.header(entry.getKey(), value);
+					this.client.header(entry.getKey(), entry.getValue().toArray());
 				}
 				String username = (String) this.requestContext.get(Dispatch.USERNAME_PROPERTY);
 				String password = (String) this.requestContext.get(Dispatch.PASSWORD_PROPERTY);
