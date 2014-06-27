@@ -191,7 +191,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	private enum SystemAdminTables {
 		MATVIEWS,
 		VDBRESOURCES,
-		TRIGGERS
+		TRIGGERS,
+		VIEWS,
+		STOREDPROCEDURES
 	}
 	
 	private enum SystemAdminProcs {
@@ -562,6 +564,55 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		return cols;
         	}
         });        
+        name = SystemAdminTables.VIEWS.name();
+        columns = getColumns(tm, name);
+        systemAdminTables.put(SystemAdminTables.VIEWS, new RecordExtractionTable<Table>(new TableSystemTable(1, 2, columns) {
+        	@Override
+        	protected boolean isValid(Table s, VDBMetaData vdb,
+        			List<Object> rowBuffer, Criteria condition)
+        			throws TeiidProcessingException, TeiidComponentException {
+        		if (s == null || !s.isVirtual()) {
+        			return false;
+        		}
+        		return super.isValid(s, vdb, rowBuffer, condition);
+        	}
+        }, columns) {
+			
+			@Override
+			public void fillRow(List<Object> row, Table table,
+					VDBMetaData v, TransformationMetadata m, CommandContext cc, SimpleIterator<Table> iter) {
+				row.add(v.getName());
+				row.add(table.getParent().getName());
+				row.add(table.getName());
+				row.add(new ClobType(new ClobImpl(table.getSelectTransformation())));
+				row.add(table.getUUID());
+			}
+		});
+        name = SystemAdminTables.STOREDPROCEDURES.name();
+        columns = getColumns(tm, name);
+        systemAdminTables.put(SystemAdminTables.STOREDPROCEDURES, new RecordExtractionTable<Procedure>(new ProcedureSystemTable(1, 2, columns) {
+        	@Override
+        	protected boolean isValid(Procedure s, VDBMetaData vdb,
+        			List<Object> rowBuffer, Criteria condition)
+        			throws TeiidProcessingException, TeiidComponentException {
+        		if (s == null || !s.isVirtual()) {
+        			return false;
+        		}
+        		return super.isValid(s, vdb, rowBuffer, condition);
+        	}
+        }, columns) {
+        	
+        	@Override
+        	public void fillRow(List<Object> row, Procedure proc,
+        			VDBMetaData v, TransformationMetadata m, CommandContext cc,
+        			SimpleIterator<Procedure> iter) {
+				row.add(v.getName());
+				row.add(proc.getParent().getName());
+				row.add(proc.getName());
+				row.add(new ClobType(new ClobImpl(proc.getQueryPlan())));
+				row.add(proc.getUUID());
+			}
+		});
         name = SystemTables.COLUMNS.name();
         columns = getColumns(tm, name);
         systemTables.put(SystemTables.COLUMNS, new ChildRecordExtractionTable<Table, Column>(new TableSystemTable(1, 2, columns), columns) {

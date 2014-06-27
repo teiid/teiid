@@ -240,4 +240,12 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		assertRowCount(0);
 	}
 	
+	@Test public void testViews() throws Exception {
+		checkResult("testViews", "select Name, Body from Views order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testStoredProcedures() throws Exception {
+		checkResult("testStoredProcedures", "select Name, Body from StoredProcedures order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
 }

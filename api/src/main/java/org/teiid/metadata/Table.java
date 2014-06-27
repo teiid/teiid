@@ -108,6 +108,10 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	private volatile transient long lastModified;
 	private volatile transient long lastDataModification;
 	
+	/**
+	 * Used in xml document models mapping classes to represent input parameters
+	 * @return
+	 */
     public List<String> getBindings() {
 		return bindings;
 	}
@@ -116,6 +120,11 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		this.bindings = bindings;
 	}
 
+	/**
+	 * If the table represents an xml document model with associated schemas in the vdb, this
+	 * will return a list of the file paths
+	 * @return
+	 */
 	public List<String> getSchemaPaths() {
 		return schemaPaths;
 	}

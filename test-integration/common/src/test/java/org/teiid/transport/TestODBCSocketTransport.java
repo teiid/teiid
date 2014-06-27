@@ -224,17 +224,17 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	 * tests that the portal max is handled correctly
 	 */
 	@Test public void testMultibatchSelectPrepared() throws Exception {
-		PreparedStatement s = conn.prepareStatement("select * from tables t1, tables t2 where t1.name > ?");
+		PreparedStatement s = conn.prepareStatement("select * from (select * from tables order by name desc limit 21) t1, (select * from tables order by name desc limit 21) t2 where t1.name > ?");
 		conn.setAutoCommit(false);
 		s.setFetchSize(100);
-		s.setString(1, "a");
+		s.setString(1, "0");
 		ResultSet rs = s.executeQuery();
 		int i = 0;
 		while (rs.next()) {
 			i++;
 			rs.getString(1);
 		}
-		assertEquals(462, i);
+		assertEquals(441, i);
 	}
 	
 	@Test public void testBlob() throws Exception {
