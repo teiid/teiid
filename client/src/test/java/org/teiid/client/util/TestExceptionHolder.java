@@ -26,12 +26,15 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.teiid.core.TeiidException;
@@ -43,6 +46,24 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestExceptionHolder {
 	
+	private static final class CustomStream extends ObjectOutputStream {
+		final AtomicInteger count = new AtomicInteger();
+
+		private CustomStream(OutputStream out)
+				throws IOException {
+			super(out);
+			this.enableReplaceObject(true);
+		}
+
+		@Override
+		protected Object replaceObject(Object obj) throws IOException {
+			if (obj instanceof ExceptionHolder) {
+				count.incrementAndGet();
+			}
+			return super.replaceObject(obj);
+		}
+	}
+
 	@SuppressWarnings("all")
 	public static class BadException extends TeiidProcessingException {
 		private Object obj;
@@ -106,29 +127,42 @@ public class TestExceptionHolder {
 	@Test public void testSQLExceptionChain() throws Exception {
 		ClassLoader cl = new URLClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
 		Exception obj = (Exception)ReflectionHelper.create("test.UnknownException", null, cl); //$NON-NLS-1$
-		SQLException se = new SQLException("something bad happended");
+		SQLException se = new SQLException("something bad happened");
 		se.initCause(obj); //$NON-NLS-1$
-		SQLException se1 = new SQLException("something else bad happended");
-		se1.initCause(obj); //$NON-NLS-1$
-		se.setNextException(se1);
+		
+		SQLException next = se;
+		for (int i = 0; i < 10; i++) {
+			SQLException se1 = new SQLException("something else bad happened");
+			se1.initCause(obj); //$NON-NLS-1$
+			next.setNextException(se1);
+			next = se1;
+		}
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
+		CustomStream oos = new CustomStream(baos);
         oos.writeObject(new ExceptionHolder(se, false)); //$NON-NLS-1$
         oos.flush();
+        
+        assertEquals(22, oos.count.get());
         
         ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
         ExceptionHolder holder = (ExceptionHolder)ois.readObject();
         Throwable e = holder.getException();
         assertTrue(e instanceof SQLException);
-        assertEquals("Remote java.sql.SQLException: something bad happended", e.getMessage()); //$NON-NLS-1$
+        assertEquals("Remote java.sql.SQLException: something bad happened", e.getMessage()); //$NON-NLS-1$
         
         assertTrue(e.getCause() instanceof TeiidRuntimeException);
         
         e = ((SQLException)e).getNextException();
         assertTrue(e instanceof SQLException);
         
-        assertEquals("Remote java.sql.SQLException: something else bad happended", e.getMessage()); //$NON-NLS-1$
+        assertEquals("Remote java.sql.SQLException: something else bad happened", e.getMessage()); //$NON-NLS-1$
+        
+        int count = 0;
+        while ((e = ((SQLException)e).getNextException()) != null) {
+        	count++;
+        }
+        assertEquals(9, count);
 	}
 	
 	@Test public void testDeserializationUnknownChildException2() throws Exception {
