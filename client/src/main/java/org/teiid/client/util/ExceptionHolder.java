@@ -126,18 +126,22 @@ public class ExceptionHolder implements Externalizable {
 		}
 		// handle SQLException chains
 		if (exception instanceof SQLException) {
-			SQLException se = (SQLException)exception;
-			SQLException next = se.getNextException();
-			int count = 0;
-			while (next != null) {
-				count++;
-				next = next.getNextException();
-			}
-			out.writeInt(count);
-			next = se.getNextException();
-			while (next != null) {
-				out.writeObject(new ExceptionHolder(next, true));
-				next = next.getNextException();
+			if (nested) {
+				out.writeInt(0);
+			} else {
+				SQLException se = (SQLException)exception;
+				SQLException next = se.getNextException();
+				int count = 0;
+				while (next != null) {
+					count++;
+					next = next.getNextException();
+				}
+				out.writeInt(count);
+				next = se.getNextException();
+				while (next != null) {
+					out.writeObject(new ExceptionHolder(next, true));
+					next = next.getNextException();
+				}
 			}
 		}
 	}
