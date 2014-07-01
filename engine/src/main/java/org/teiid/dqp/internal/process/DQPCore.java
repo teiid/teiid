@@ -815,7 +815,7 @@ public class DQPCore implements DQP {
 	private void checkActive(DQPWorkContext workContext)
 			throws TeiidProcessingException {
 		if (workContext.getVDB().getStatus() != Status.ACTIVE) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, workContext.getVDB()));
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, workContext.getVDB(), workContext.getVDB().getStatus()));
 		}
 	}
 	

@@ -50,10 +50,12 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.BundleUtil.Event;
@@ -76,6 +78,7 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
@@ -435,6 +438,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				}
 				rs.clearForVDB(name, 1);
 				ppc.clearForVDB(name, 1);
+				try {
+					for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(name, version)) {
+						try {
+							sessionService.closeSession(session.getSessionId());
+						} catch (InvalidSessionException e) {
+						}
+					}
+				} catch (SessionServiceException e) {
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not terminate sessions for", name, version);  //$NON-NLS-1$
+				}
 			}
 
 			@Override

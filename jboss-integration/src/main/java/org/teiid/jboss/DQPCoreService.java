@@ -23,10 +23,8 @@ package org.teiid.jboss;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
@@ -41,7 +39,6 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
@@ -56,7 +53,6 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.services.InternalEventDistributorFactory;
-import org.teiid.vdb.runtime.VDBKey;
 
 
 public class DQPCoreService extends DQPConfiguration implements Serializable, Service<DQPCore>  {
@@ -96,18 +92,8 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     	// add vdb life cycle listeners
     	getVdbRepository().addListener(new VDBLifeCycleListener() {
 			
-			private Set<VDBKey> recentlyRemoved = Collections.synchronizedSet(Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000)));
-			
 			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {
-				recentlyRemoved.add(new VDBKey(name, version));
-			}
-			
-			@Override
-			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
-				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
-					return;
-				}
 				// terminate all the previous sessions
 		        List<ServiceName> services = context.getController().getServiceContainer().getServiceNames();
 		        for (ServiceName service:services) {
@@ -132,6 +118,10 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		        if (getPreparedPlanCacheInjector().getValue() != null) {
 		        	getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
 		        }
+			}
+			
+			@Override
+			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
 			}
 
 			@Override

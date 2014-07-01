@@ -907,5 +907,14 @@ public class TestEmbeddedServer {
 		
 		assertTrue(closed.get());
 	}
+	
+	@Test public void testUndeploy() throws Exception { 
+		es.start(new EmbeddedConfiguration());
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model type=\"VIRTUAL\" name=\"test\"><metadata type=\"DDL\"><![CDATA[CREATE view x as select 1;]]> </metadata></model></vdb>".getBytes()));
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		assertTrue(c.isValid(10));
+		es.undeployVDB("test");
+		assertTrue(!c.isValid(10));
+	}
 
 }

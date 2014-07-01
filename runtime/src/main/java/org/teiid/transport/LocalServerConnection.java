@@ -39,6 +39,7 @@ import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
@@ -184,6 +185,12 @@ public class LocalServerConnection implements ServerConnection {
 	@Override
 	public boolean isOpen(long msToTest) {
 		if (shutdown) {
+			return false;
+		}
+		try {
+			ResultsFuture<?> result = this.getService(ILogon.class).ping();
+			result.get(msToTest, TimeUnit.MILLISECONDS);
+		} catch (Exception e) {
 			return false;
 		}
 		return true;
