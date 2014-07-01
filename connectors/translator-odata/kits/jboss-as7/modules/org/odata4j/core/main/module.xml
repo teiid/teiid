@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.odata4j.core">
     <resources>
-        <resource-root path="odata4j-core-${version.org.odata4j}-redhat.jar" />
+        <resource-root path="odata4j-core-${version.org.odata4j}.jar" />
         <resource-root path="core4j-${version.core4j}.jar" />
     </resources>
 
