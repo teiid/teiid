@@ -987,4 +987,19 @@ public class TestMongoDBQueryExecution {
                 new BasicDBObject("$project", result),
                 new BasicDBObject("$skip", 45));
     }     
+    
+    
+    @Test
+    public void testArrtyType() throws Exception {
+        String query = "SELECT * FROM ArrayTest";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"ArrayTest"}, 1);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", "$id");
+        result.append("_m1", "$column1");
+
+        Mockito.verify(dbCollection).aggregate(
+                new BasicDBObject("$project", result));
+    }    
 }

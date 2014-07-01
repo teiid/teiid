@@ -117,7 +117,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 childTable.setProperty(MERGE, table.getName());
             }
             else {
-                column = metadataFactory.addColumn(columnKey, getDataType(((BasicDBList)value).get(0))+"[]", table); //$NON-NLS-1$
+                column = metadataFactory.addColumn(columnKey, TypeFacility.RUNTIME_NAMES.OBJECT+"[]", table); //$NON-NLS-1$
                 column.setSearchType(SearchType.Unsearchable);
             }                
         }

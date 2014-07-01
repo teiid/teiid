@@ -188,3 +188,8 @@ CREATE FOREIGN TABLE Notes (
     Comment varchar(50),
     FOREIGN KEY (CustomerId) REFERENCES Customer (customer_id)
  ) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'Customer');
+ 
+ CREATE FOREIGN TABLE ArrayTest (
+    id integer,
+    column1 object[] OPTIONS (SEARCHABLE 'Unsearchable')
+ ) OPTIONS(UPDATABLE 'TRUE');

@@ -500,4 +500,43 @@ public class TestMongoDBUpdateExecution {
 		Mockito.verify(dbCollection, Mockito.never()).insert(customer_result, WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection).update(customer_result, new BasicDBObject("$push", rentalresult), false, true, WriteConcern.ACKNOWLEDGED);
 	}
+	
+    @Test
+    public void testArrayInsert() throws Exception {
+        String query = "insert into ArrayTest(id,column1) VALUES (1, ('jboss', 'teiid', 'Mr.Lizard'))";
+
+        DBCollection dbCollection = helpUpdate(query, new String[]{"ArrayTest"}, null, null);
+
+        BasicDBList col1 = new BasicDBList();
+        col1.add("jboss");
+        col1.add("teiid");
+        col1.add("Mr.Lizard");
+        
+        BasicDBObject result = new BasicDBObject();
+        result.append("id", 1);
+        result.append("column1", col1);
+        Mockito.verify(dbCollection).insert(result, WriteConcern.ACKNOWLEDGED);
+        Mockito.verify(dbCollection, Mockito.never()).update(new BasicDBObject(), result, false, true, WriteConcern.ACKNOWLEDGED);
+    }	
+    
+    @Test
+    public void testArrayUpdate() throws Exception {
+        String query = "UPDATE ArrayTest SET column1 = ('jboss', 'teiid', 'Mr.Lizard') WHERE id = 1";
+
+        BasicDBObject match = new BasicDBObject("id", 1);
+        DBCollection dbCollection = helpUpdate(query, new String[]{"ArrayTest"}, match, null);
+
+        BasicDBList col1 = new BasicDBList();
+        col1.add("jboss");
+        col1.add("teiid");
+        col1.add("Mr.Lizard");
+        
+        BasicDBObject details = new BasicDBObject();
+        details.append("column1", col1);
+
+        details = new BasicDBObject("$set", details);
+
+        Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
+        Mockito.verify(dbCollection).update(match, details, false, true, WriteConcern.ACKNOWLEDGED);
+    }    
 }
