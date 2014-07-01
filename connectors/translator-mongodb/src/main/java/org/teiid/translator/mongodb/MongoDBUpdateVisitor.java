@@ -24,24 +24,12 @@ package org.teiid.translator.mongodb;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Condition;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.SetClause;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Association;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
+import com.mongodb.*;
 
 public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
@@ -77,6 +65,19 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		Object value = null;
 		if (expr instanceof Literal) {
 			value = this.executionFactory.convertToMongoType(((Literal) expr).getValue(), this.mongoDB, colName);
+		}
+		else if (expr instanceof org.teiid.language.Array) {
+		    org.teiid.language.Array contents = (org.teiid.language.Array)expr;
+		    List<Expression> arrayExprs = contents.getExpressions();
+		    value = new BasicDBList();
+		    for (Expression exp:arrayExprs) {
+		        if (exp instanceof Literal) {
+		            ((BasicDBList)value).add(this.executionFactory.convertToMongoType(((Literal) exp).getValue(), this.mongoDB, colName));
+		        }
+		        else {
+		            this.exceptions.add(new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18001)));
+		        }
+		    }
 		}
 		else {
 			this.exceptions.add(new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18001)));

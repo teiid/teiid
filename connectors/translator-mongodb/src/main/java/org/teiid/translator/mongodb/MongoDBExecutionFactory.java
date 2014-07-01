@@ -323,7 +323,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		if (value.getClass().equals(expectedClass)) {
 			return value;
 		}
-
+		
 		if (value instanceof DBRef) {
 			Object obj = ((DBRef)value).getId();
 			if (obj instanceof BasicDBObject) {
@@ -402,6 +402,10 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
                 value = array;
 		    }
 		}
+		else if (value instanceof org.bson.types.ObjectId) {
+		    org.bson.types.ObjectId id = (org.bson.types.ObjectId) value;
+		    value = id.toStringBabble();
+		}
 		return value;
 	}
 
@@ -458,6 +462,13 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 				gfsFile.setFilename(uuid);
 				gfsFile.save();
 				return uuid;
+			}
+			else if (value instanceof Object[]) {
+			    BasicDBList list = new BasicDBList();
+			    for (Object obj:(Object[])value) {
+			        list.add(obj);
+			    }
+			    return list;
 			}
 			return value;
 		} catch (SQLException e) {

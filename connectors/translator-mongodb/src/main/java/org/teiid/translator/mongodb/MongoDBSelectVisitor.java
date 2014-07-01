@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
@@ -204,6 +205,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 				}
 			}
 			else {
+			    if (!this.processingDerivedColumn) {
+			        if (DataTypeManager.isArrayType(obj.getMetadataObject().getRuntimeType())){
+			            this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18027, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18027, elementName)));
+			        }
+			    }
 				String selectionName = elementName;
 				String columnName = obj.getMetadataObject().getName();
 				String pullColumnName = obj.getMetadataObject().getName();
@@ -711,6 +717,16 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         	break;
         }
     }
+	
+	@Override
+    public void visit(Array array) {
+	    append(array.getExpressions());
+	    BasicDBList values = new BasicDBList();
+	    for (int i = 0; i < array.getExpressions().size(); i++) {
+	        values.add(this.onGoingExpression.pop());
+	    }
+	    this.onGoingExpression.push(values);
+	}	
 
 	@Override
 	public void visit(Literal obj) {
