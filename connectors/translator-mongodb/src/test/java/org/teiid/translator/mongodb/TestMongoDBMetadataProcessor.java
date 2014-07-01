@@ -70,7 +70,7 @@ public class TestMongoDBMetadataProcessor {
         		"\tcol3 long,\n" + 
         		"\tcol5 boolean,\n" + 
         		"\tcol6 string,\n" + 
-        		"\tcol7 string[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
+        		"\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
         		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
         		"\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
         		") OPTIONS (UPDATABLE TRUE);";
