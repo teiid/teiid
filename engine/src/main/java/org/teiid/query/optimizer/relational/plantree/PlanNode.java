@@ -33,6 +33,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -415,6 +416,12 @@ public class PlanNode {
 				SymbolMap groupMap = (SymbolMap)this.getProperty(Info.SYMBOL_MAP);
 				toSearch = groupMap.getValues();
 				break;
+			}
+			case NodeConstants.Types.SORT: {
+				OrderBy orderBy = (OrderBy) this.getProperty(NodeConstants.Info.SORT_ORDER);
+				if (orderBy != null) {
+					toSearch = orderBy.getOrderByItems();
+				}
 			}
 		}
 		return ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);

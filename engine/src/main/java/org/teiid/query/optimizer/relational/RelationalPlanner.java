@@ -390,7 +390,7 @@ public class RelationalPlanner {
     private void connectSubqueryContainers(PlanNode plan, Map<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
 
-        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP)) {
+        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT)) {
             List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
             planSubqueries(pushdownWith, groupSymbols, node, subqueryContainers, false);
             node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));

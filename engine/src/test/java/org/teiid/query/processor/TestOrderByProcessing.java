@@ -249,5 +249,39 @@ public class TestOrderByProcessing {
 		manager.addData("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY g_0.StringKey", new List[] {Arrays.asList(1)});
 		helpProcess(plan, manager, expected);
 	}
+	
+	@Test public void testSubqueryOrderNotPushdown() throws Exception {
+		String sql = "SELECT (SELECT SUM(pm1.g1.e2) AS subField FROM pm1.g1 WHERE (pm1.g2.e1 = pm1.g1.e1)) AS sumField FROM pm1.g2 ORDER BY sumField DESC"; //$NON-NLS-1$
+
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc));
+
+		List[] expected = new List[] { Arrays.asList(Long.valueOf(2))	};
+
+		HardcodedDataManager manager = new HardcodedDataManager(metadata);
+		manager.addData("SELECT g_0.e1 FROM g2 AS g_0", new List[] {Arrays.asList("1")});
+		manager.addData("SELECT g_0.e2 FROM g1 AS g_0 WHERE g_0.e1 = '1'", new List[] {Arrays.asList(2)});
+		helpProcess(plan, manager, expected);
+	}
+	
+	@Test public void testSubqueryOrderPushdown() throws Exception {
+		String sql = "SELECT (SELECT SUM(pm1.g1.e2) AS subField FROM pm1.g1 WHERE (pm1.g2.e1 = pm1.g1.e1)) AS sumField FROM pm1.g2 ORDER BY sumField DESC"; //$NON-NLS-1$
+
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+		bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc));
+
+		List[] expected = new List[] { Arrays.asList(1), 
+		};
+
+		HardcodedDataManager manager = new HardcodedDataManager(metadata);
+		manager.addData("SELECT (SELECT SUM(g_1.e2) FROM g1 AS g_1 WHERE g_1.e1 = g_0.e1) AS c_0 FROM g2 AS g_0 ORDER BY c_0 DESC", new List[] {Arrays.asList(1)});
+		helpProcess(plan, manager, expected);
+	}
 
 }

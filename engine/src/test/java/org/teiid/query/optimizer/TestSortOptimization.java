@@ -338,7 +338,7 @@ public class TestSortOptimization {
     }
     
     //TODO this should trigger another view removal and thus the combination of the grouping/dup operation
-    @Test public void testGroupDupCombination1Pushdown() { 
+    @Test public void testGroupDupCombination1Pushdown() throws TeiidComponentException, TeiidProcessingException { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
@@ -351,7 +351,7 @@ public class TestSortOptimization {
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from (select distinct e1, e2 from pm1.g1) as x group by e1, e2 order by e1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 ORDER BY c_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
+                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, new int[] {
                 1,      // Access

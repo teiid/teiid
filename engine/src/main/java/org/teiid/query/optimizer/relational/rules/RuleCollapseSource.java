@@ -508,6 +508,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             case NodeConstants.Types.SORT: 
             {
+            	prepareSubqueries(node.getSubqueryContainers());
                 processOrderBy(node, query, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), context, capFinder);
                 break;
             }
@@ -647,8 +648,12 @@ public final class RuleCollapseSource implements OptimizerRule {
 		query.setOrderBy(orderBy);
 		if (query instanceof Query) {
 			List<Expression> cols = query.getProjectedSymbols();
+			List<Expression> exprs = new ArrayList<Expression>(cols.size());
+			for (Expression expr : cols) {
+				exprs.add(SymbolMap.getExpression(expr));
+			}
 			for (OrderByItem item : orderBy.getOrderByItems()) {
-				item.setExpressionPosition(cols.indexOf(item.getSymbol()));
+				item.setExpressionPosition(exprs.indexOf(SymbolMap.getExpression(item.getSymbol())));
 			}
 			QueryRewriter.rewriteOrderBy(query, orderBy, query.getProjectedSymbols(), new LinkedList<OrderByItem>());
 		}
