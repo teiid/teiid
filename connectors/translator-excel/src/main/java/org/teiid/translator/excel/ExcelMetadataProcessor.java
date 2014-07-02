@@ -102,17 +102,23 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		int firstCellNumber = -1;
 		if (this.hasHeader) {
 			headerRow = sheet.getRow(this.headerRowNumber);
-			firstRowNumber = this.headerRowNumber;
-			firstCellNumber = headerRow.getFirstCellNum();
-			if (firstCellNumber == -1) {
-				LogManager.logInfo(LogConstants.CTX_CONNECTOR, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23006, xlsName));
-				return;
+			if (headerRow != null) {
+    			firstRowNumber = this.headerRowNumber;
+    			firstCellNumber = headerRow.getFirstCellNum();
+    			if (firstCellNumber == -1) {
+    				LogManager.logInfo(LogConstants.CTX_CONNECTOR, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23006, xlsName));
+    				return;
+    			}
 			}
 		}
 
 		if (headerRow == null) {
 			while (firstCellNumber == -1) {
 				headerRow = sheet.getRow(firstRowNumber++);
+				// check if this is a empty sheet; the data must be present in first 10000 rows
+				if (headerRow == null && firstRowNumber > 10000) {
+				    return;
+				}
 				if (headerRow == null) {
 					continue;
 				}
@@ -211,6 +217,9 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
         //adjust for zero index
         this.hasHeader = true;
         this.headerRowNumber = headerRowNumber-1;
+        if (this.headerRowNumber < 0) {
+            this.headerRowNumber = 0;
+        }
     }
     
     @TranslatorProperty(display="Data Row Number", category=PropertyType.IMPORT, description="Row number from which data rows start from")
@@ -222,6 +231,9 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
         //adjust for zero index
         this.hasDataRowNumber = true;
         this.dataRowNumber = dataRowNumber-1;
+        if (this.dataRowNumber < 0) {
+            this.dataRowNumber = 0;
+        }
     }
 
     @TranslatorProperty(display="Excel File", category=PropertyType.IMPORT, description="Name of the Excel file to read metadata from", required=true)
