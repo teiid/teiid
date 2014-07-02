@@ -1000,7 +1000,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				return exception;
 			}
 		}
-		return new TeiidProcessingException(exception, SQLStates.QUERY_CANCELED);
+		TeiidProcessingException tpe = new TeiidProcessingException(exception);
+		tpe.setCode(SQLStates.QUERY_CANCELED);
+		return tpe;
 	}
     
     private static List<ParameterInfo> getParameterInfo(StoredProcedure procedure) {

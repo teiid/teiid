@@ -152,6 +152,9 @@ public class TeiidSQLException extends SQLException {
 			sqlState = SQLStates.VIRTUAL_PROCEDURE_ERROR;
 		} else if (exception instanceof TeiidProcessingException) {
 			sqlState = SQLStates.USAGE_ERROR;
+			if (SQLStates.QUERY_CANCELED.equals(((TeiidException) exception).getCode())) {
+				sqlState = SQLStates.QUERY_CANCELED;
+            }
 		} else if (exception instanceof UnknownHostException
 				|| exception instanceof ConnectException
 				|| exception instanceof MalformedURLException
@@ -168,11 +171,6 @@ public class TeiidSQLException extends SQLException {
             Throwable originalException = exception;
             exception = originalException.getCause();
             exception = findRootException(exception);
-            
-            if (exception instanceof CommunicationException) {
-                sqlState = SQLStates.USAGE_ERROR;
-                exception = exception.getCause();
-            }
             
             if (exception != null && exception != originalException) {
                 sqlState = determineSQLState(exception, sqlState);
