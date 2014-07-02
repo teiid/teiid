@@ -377,7 +377,16 @@ public class AliasGenerator extends PreOrderNavigator {
         		name = visitor.namingContext.currentSymbols.get(element);
         	}
             if (name == null) {
-            	name = Symbol.getShortName(element);
+            	//this is a bit messy, because we have cloned to do the aliasing, there
+            	//is a chance that a subquery is throwing off the above get
+            	int pos = item.getExpressionPosition();
+            	if (pos < visitor.namingContext.currentSymbols.size()) {
+            		ArrayList<Map.Entry<Expression, String>> list = new ArrayList<Map.Entry<Expression,String>>(visitor.namingContext.currentSymbols.entrySet());
+            		name = list.get(pos).getValue();
+            		expr = SymbolMap.getExpression(list.get(pos).getKey());
+            	} else {
+            		name = Symbol.getShortName(element);
+            	}
             }
             boolean needsAlias = visitor.namingContext.aliasColumns;
             if (name == null) {
