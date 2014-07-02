@@ -619,7 +619,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         reqMsg.setExecutionId(this.currentRequestID);
         
         ResultsFuture.CompletionListener<ResultsMessage> compeletionListener = null;
-		if (queryTimeoutMS > 0 && !synch) {
+		if (queryTimeoutMS > 0 && (!synch || this.driverConnection.getServerConnection().isLocal())) {
 			final Task c = cancellationTimer.add(cancelTask, queryTimeoutMS);
 			compeletionListener = new ResultsFuture.CompletionListener<ResultsMessage>() {
 				@Override

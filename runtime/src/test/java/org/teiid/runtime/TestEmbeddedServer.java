@@ -35,6 +35,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,6 +61,7 @@ import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.jdbc.SQLStates;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.language.Command;
@@ -915,6 +917,41 @@ public class TestEmbeddedServer {
 		assertTrue(c.isValid(10));
 		es.undeployVDB("test");
 		assertTrue(!c.isValid(10));
+	}
+	
+	@Test public void testQueryTimeout() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		es.addTranslator("foo", new ExecutionFactory() {
+			@Override
+			public boolean isSourceRequired() {
+				return false;
+			}
+			
+			@Override
+			public ResultSetExecution createResultSetExecution(
+					QueryExpression command, ExecutionContext executionContext,
+					RuntimeMetadata metadata, Object connection)
+					throws TranslatorException {
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+				}
+				return super.createResultSetExecution(command, executionContext, metadata,
+						connection);
+			}
+			
+		});
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\"><source name=\"foo\" translator-name=\"foo\"/><metadata type=\"DDL\"><![CDATA[CREATE foreign table x (y xml);]]> </metadata></model></vdb>".getBytes()));
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		Statement s = c.createStatement();
+		s.setQueryTimeout(1);
+		try {
+			s.execute("select * from x");
+			fail();
+		} catch (SQLException e) {
+			assertEquals(SQLStates.QUERY_CANCELED, e.getSQLState());
+		}
+		
 	}
 
 }
