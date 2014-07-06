@@ -32,7 +32,6 @@ import java.util.Map;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -81,12 +80,6 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
  * 
  */
 public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanConnection>{
-	public static final String URI="{http://www.teiid.org/translator/infinispan/2014}"; //$NON-NLS-1$
-	public static final String PREFIX="teiid_infinispan";
-
-	/* The entity class name is needed for updates */
-	@ExtensionMetadataProperty(applicable={Table.class}, datatype=String.class, display="Entity Class Name", description="Class Name for Entity in Cache", required=true)
-    public static final String ENTITYCLASS= URI + "entity_class";
 		
 	public static final String GET = "get"; //$NON-NLS-1$
 	public static final String IS = "is"; //$NON-NLS-1$
@@ -94,7 +87,6 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
 
-	protected boolean isUpdatable = false;
 	
 	@Override
 	public void process(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
@@ -104,6 +96,9 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
 			Class<?> type = cacheTypes.get(cacheName);
 			String pkField = conn.getPkField(cacheName);
+			if (pkField == null || pkField.trim().length() == 0) {
+					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25007, new Object[] {cacheName}));
+			}
 			createRootTable(metadataFactory, type, conn.getDescriptor(cacheName), cacheName, pkField, conn);
 		}		
 	}
@@ -114,45 +109,32 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		Table rootTable = addTable(mf, entity, descriptor);
 		rootTable.setNameInSource(cacheName); 
 		
-	    Method pkMethod = null;
-	    if (pkField != null) {
-	    	pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
-        }
+	    Method pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
+	    if (pkMethod == null) {
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, entity.getName()}));
+	    	
+	    }
 	    	    
-		addRootColumn(mf, Object.class, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable,true); //$NON-NLS-1$	
+	    // add column for cache Object
+		addRootColumn(mf, Object.class, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable,true, false); //$NON-NLS-1$	
 
+		// add a column for primary key
+		addRootColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, rootTable.getName(), rootTable, true, true);
+		
 		boolean repeats = false;
 		for (FieldDescriptor fd:descriptor.getFields()) {	
 			if (fd.isRepeated() ) {
 				repeats = true;
 			} else {
-				addRootColumn(mf, getJavaType(fd), fd, SearchType.Searchable, rootTable.getName(), rootTable, true);	
+				addRootColumn(mf, getJavaType(fd), fd, SearchType.Searchable, rootTable.getName(), rootTable, true, true);	
 			}
 		}	
 		
-		// add the PK column, if it doesnt exist
-		if (pkField != null) {
-
-			// if there is no method, need to create a column for the pkey
-		    if (pkMethod == null) {
-	            
-		    	if (rootTable.getColumnByName(pkField) == null) {
-	 	                      
-		            // add a column so the PKey can be created, but make it not selectable
-		    		addRootColumn(mf, entity, pkField, pkField, SearchType.Searchable, rootTable.getName(), rootTable, false);
-		    	}
-	
-	         } else {
-	 			// warn if no pk is defined
-	 	//		LogManager.logWarning(LogConstants.CTX_CONNECTOR, InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID21000, tableName));				
-	         }	
-	    	
-			String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
-            ArrayList<String> x = new ArrayList<String>(1) ;
-            x.add(pkField);
-            mf.addPrimaryKey(pkName, x , rootTable);
-		    
-		}
+		// add primary key
+		String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
+        ArrayList<String> x = new ArrayList<String>(1) ;
+        x.add(pkField);
+        mf.addPrimaryKey(pkName, x , rootTable);		    
 		
 		if (repeats) {
 			for (FieldDescriptor fd:descriptor.getFields()) {	
@@ -167,30 +149,19 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 	}
 	
 	private Table addTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor) {
-		String tName = getTableName(descriptor);
+		String tName = entity.getSimpleName();
+				//getTableName(descriptor);
 		Table t = mf.getSchema().getTable(tName);
 		if (t != null) {
 			//already loaded
 			return t;
 		}
 		t = mf.addTable(tName);
-		t.setSupportsUpdate(isUpdateable());
+		t.setSupportsUpdate(true);
 
-		t.setProperty(ENTITYCLASS, entity.getName());	
 		return t;
 		
 	}
-	private void processDescriptor(MetadataFactory mf, List<FieldDescriptor> fields, Table rootTable, Method pkMethod, InfinispanConnection conn) throws TranslatorException {
-
-		for (FieldDescriptor fd:fields) {	
-			if (fd.isRepeated() ) {
-				processRepeatedType(mf,fd, rootTable, pkMethod, conn);	
-			} else {
-				addRootColumn(mf, getJavaType(fd), fd, SearchType.Searchable, rootTable.getName(), rootTable, true);	
-			}
-		}	
-		
-	}	
 	
     private  String findRepeatedMethodName(String className, String methodName, InfinispanConnection conn) throws TranslatorException {
         if (methodName == null || methodName.length() == 0) {
@@ -228,22 +199,17 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		String mName = findRepeatedMethodName(pc.getName(), fd.getName(), conn);
 		
 		if (mName == null) {
-			final String msg = InfinispanPlugin.Util
-					.getString("ProtobufMetadataProcessor.noCorrespondingMethod", new Object[] { fd.getName() }); //$NON-NLS-1$ //$NON-NLS-2$
-			throw new TranslatorException(msg);
-
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25060, new Object[] { fd.getName() }));
 		}
 		
 		Table t = addTable(mf, c, d);
 		t.setNameInSource(rootTable.getNameInSource()); 
-		t.setProperty(ENTITYCLASS, c.getName());	
-
 			
 		List<FieldDescriptor> fields = fd.getMessageType().getFields();
 		for (FieldDescriptor f:fields) {
 
 			// need to use the repeated descriptor, fd, as the prefix to the NIS in order to perform query
-			addSubColumn(mf, getJavaType(f), f, SearchType.Searchable, fd.getName(), t, true);	
+			addSubColumn(mf, getJavaType(f), f, SearchType.Searchable, fd.getName(), t, true, true);	
 		}
 		
 		if (pkMethod != null) {
@@ -254,16 +220,12 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			List<String> referencedKeyColumns = new ArrayList<String>();
 			referencedKeyColumns.add(methodName);
 			String fkName = "FK_" + rootTable.getName().toUpperCase();
-    		addRootColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false);
+    		addRootColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false, false);
 			ForeignKey fk = mf.addForiegnKey(fkName, keyColumns, referencedKeyColumns, rootTable.getName(), t);
 			fk.setNameInSource(mName);
 
 		}
 	}	
-	
-	private String getTableName(Descriptor descriptor) {
-		return descriptor.getName();
-	}
 	
 	private Class<?> getRegisteredClass(String name, InfinispanConnection conn) throws TranslatorException {
 		List<Class<?>> registeredClasses = conn.getClassRegistry().getRegisteredClasses();
@@ -273,24 +235,17 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			}
 		}
 		
-		throw new TranslatorException("No registered marshall class had a name of " + name);
+		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, new Object[] { name }));
 	}	
-	
-	/**
-	 * @return boolean
-	 */
-	private boolean isUpdateable() {
-		return this.isUpdatable;
-	}
 
 	private Column addRootColumn(MetadataFactory mf, Class<?> type, FieldDescriptor fd,
-			 SearchType searchType, String entityName, Table rootTable, boolean selectable) {
+			 SearchType searchType, String entityName, Table rootTable, boolean selectable, boolean updateable) {
 		
-		return addRootColumn(mf, type, fd.getFullName(), fd.getName(), searchType, entityName, rootTable, selectable);
+		return addRootColumn(mf, type, fd.getFullName(), fd.getName(), searchType, entityName, rootTable, selectable, updateable);
 
 	}
 	private Column addRootColumn(MetadataFactory mf, Class<?> type, String columnFullName, String columnName,
-			 SearchType searchType, String entityName, Table rootTable, boolean selectable) {
+			 SearchType searchType, String entityName, Table rootTable, boolean selectable, boolean updateable) {
 		String attributeName;
 		String nis;
 		
@@ -321,27 +276,29 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			nis = "this";
 		}
 	
-		return addColumn(mf, type, attributeName, nis, searchType, rootTable, selectable);
+		return addColumn(mf, type, attributeName, nis, searchType, rootTable, selectable, updateable);
 
 	}
 	
 	private Column addSubColumn(MetadataFactory mf, Class<?> type, FieldDescriptor fd,
-			 SearchType searchType, String nisPrefix, Table rootTable, boolean selectable) {
+			 SearchType searchType, String nisPrefix, Table rootTable, boolean selectable, boolean updateable) {
 		String attributeName = fd.getName();
 		String nis = nisPrefix + "." + fd.getName();
 
-		return addColumn(mf, type, attributeName, nis, searchType, rootTable, selectable);
+		return addColumn(mf, type, attributeName, nis, searchType, rootTable, selectable, updateable);
 
 	}	
 	
-	private Column addColumn(MetadataFactory mf, Class<?> type, String attributeName, String nis, SearchType searchType, Table rootTable, boolean selectable) {
+	private Column addColumn(MetadataFactory mf, Class<?> type, String attributeName, String nis, SearchType searchType, Table rootTable, boolean selectable, boolean updateable) {
+		if (rootTable.getColumnByName(attributeName) != null) return rootTable.getColumnByName(attributeName);
+		
 		Column c = mf.addColumn(attributeName, TypeFacility.getDataTypeName(TypeFacility.getRuntimeType(type)), rootTable);
 		
 		if (nis != null) {
 			c.setNameInSource(nis);
 		}
 		
-		c.setUpdatable(isUpdateable());
+		c.setUpdatable(updateable);
 		c.setSearchType(searchType);
 		c.setNativeType(type.getName());
 		c.setSelectable(selectable);

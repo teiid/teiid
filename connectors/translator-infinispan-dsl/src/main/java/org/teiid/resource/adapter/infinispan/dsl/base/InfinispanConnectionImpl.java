@@ -90,8 +90,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		if (type != null) {
 			return type;
 		}
-        final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.typeNotFoundForCache", (cacheName != null ? cacheName : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
-        throw new TranslatorException(msg);
+		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040, (cacheName != null ? cacheName : "Default")));
+
 	}
 	
 	@Override
@@ -124,9 +124,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 			throws TranslatorException {
 		Descriptor d = ctx.getMessageDescriptor(config.getMessageDescriptor());
 		if (d == null) {
-			throw new TranslatorException(
-					InfinispanPlugin.Util
-							.getString("InfinispanManagedConnectionFactory.noDescriptorFoundForCache", config.getMessageDescriptor(), cacheName)); //$NON-NLS-1$
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), cacheName));			
 		}
 		
 		return d;
@@ -135,9 +133,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings({ "unused", "rawtypes" })
 	@Override
 	public QueryFactory getQueryFactory(String cacheName) throws TranslatorException {
-		RemoteCache rc =  getCache(cacheName);
 		
-		return Search.getQueryFactory(rc);
+		return Search.getQueryFactory(getCache(cacheName));
 	}
 	
 	@Override

@@ -216,8 +216,7 @@ public class InfinispanExecution implements ResultSetExecution {
 		}
 		
 		if (numForeignKeys > 1) {
-            final String msg = InfinispanPlugin.Util.getString("InfinispanExecution.mulitpleCollectionsInQueryNotAllowed", new Object[] {query}); //$NON-NLS-1$
-			throw new TranslatorException(msg);		
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25000, new Object[] {query}));
 		}
 		
 		colObjects = new Object[colSize];
@@ -238,9 +237,7 @@ public class InfinispanExecution implements ResultSetExecution {
 					// nis with a period indicates an internal class to the root
 			} else if (nis.indexOf(".") > 0)  {
 					if (fk == null) {
-			            final String msg = InfinispanPlugin.Util.getString("InfinispanExecution.noForeignKeyDefinedOnTable", new Object[] {query.getFrom()}); //$NON-NLS-1$
-						throw new TranslatorException(msg);		
-
+						throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25001, new Object[] {query.getFrom()}));
 					}
 						DepthNode dn = new DepthNode(fk.getNameInSource() + "." + name, col);
  						colObjects[col] = dn;
@@ -263,10 +260,6 @@ public class InfinispanExecution implements ResultSetExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-				"InfinsipanExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
-
 	
 		String nameInSource = getNameInSource(((NamedTable)query.getFrom().get(0)).getMetadataObject());
 	    
@@ -290,7 +283,6 @@ public class InfinispanExecution implements ResultSetExecution {
 		
 			// return the next row in the cache 
 			return (List<Object>) cacheResultsIt.next();
-
 		} 
 		
 		cacheResultsIt = null;
@@ -299,8 +291,7 @@ public class InfinispanExecution implements ResultSetExecution {
 		if (objResultsItr.hasNext()) {
 			List<Object> r = new ArrayList<Object>(colSize);
 			final Object o = objResultsItr.next();
-			sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
-			
+			sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);			
 			
 			if (depth > 0) {
 				// this contains the object returned from a node that has depth

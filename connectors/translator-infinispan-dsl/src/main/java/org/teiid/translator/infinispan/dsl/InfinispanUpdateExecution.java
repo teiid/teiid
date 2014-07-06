@@ -31,9 +31,9 @@ import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
+import org.infinispan.client.hotrod.RemoteCache;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.language.BatchedUpdates;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
@@ -44,6 +44,8 @@ import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.eval.TeiidScriptEngine;
@@ -51,7 +53,6 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.infinispan.dsl.metadata.ProtobufMetadataProcessor;
 
 /**
  */
@@ -98,7 +99,6 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 //			}
 //		}
 
-
 		if (command instanceof Update) {
 			handleUpdate((Update) command);
 		} else if (command instanceof Delete) {
@@ -106,9 +106,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		} else if (command instanceof Insert) {
 			handleInsert((Insert) command);
 		} else {
-			final String msg = InfinispanPlugin.Util
-					.getString("InfinispanUpdateExecution.incorrectCommandError"); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25002, new Object[] {command.getClass().getName()}));
 		}
 	}
 
@@ -122,23 +120,10 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	private void handleInsert(Insert insert) throws TranslatorException {
 		try {
 
-			// get the className defined as the entity_class on the table being
-			// updated
-			String className = insert.getTable().getMetadataObject()
-					.getProperty(ProtobufMetadataProcessor.ENTITYCLASS, false);
-			if (className == null) {
-				throw new TranslatorException(
-						ProtobufMetadataProcessor.ENTITYCLASS
-								+ " property not found defined for table "
-								+ insert.getTable().getName());
-			}
-
 			// get the class to instantiate instance
-			Class<?> clz = this.connection.getClassRegistry()
-					.getRegisteredClass(className);
+			Class<?> clz = this.connection.getClassRegistry().getRegisteredClassToTable(insert.getTable().getName());
 			if (clz == null) {
-				throw new TranslatorException("Registered Class not found for "
-						+ className);
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, new Object[] {insert.getTable().getName()}));
 			}
 
 			Object entity = null;
@@ -166,10 +151,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			} 
 			
 			if (fkeyColNIS == null && keyCol == null) {
-				final String msg = InfinispanPlugin.Util
-						.getString(
-								"InfinispanUpdateExecution.noPrimaryOrForeignKeyForTable", insert.getTable().getName()); //$NON-NLS-1$
-				throw new TranslatorException(msg);
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {insert.getTable().getName()}));
 			}
 
 			List<ColumnReference> columns = insert.getColumns();
@@ -177,11 +159,13 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					.getValueSource()).getValues();
 			if (columns.size() != values.size()) {
 				throw new TranslatorException(
-						"Column and Value Size's don't match");
+						"Program error, Column and Value Size's don't match");
 			}
 
 			Object keyValue = null;
 			Object fkeyValue = null;
+			String keyColumnType = null;
+			
 
 			for (int i = 0; i < columns.size(); i++) {
 				Column column = columns.get(i).getMetadataObject();
@@ -189,6 +173,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 
 				// do not add the foreign key columns
 				if (fkeyColNIS != null && fkeyColNIS.equals(column.getName()) ) {
+					keyColumnType = column.getNativeType();
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
 						fkeyValue = literalValue.getValue();
@@ -197,12 +182,20 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					}
 					
 				} else if ( keyCol != null && keyCol.getName().equals(column.getName()) ) {
+					keyColumnType = column.getNativeType();
+
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
-						keyValue = literalValue.getValue();
+						PropertiesUtils.setBeanProperty(entity,
+								column.getName(), literalValue.getValue());
+
 					} else {
-						keyValue = value;
+						PropertiesUtils.setBeanProperty(entity,
+								column.getName(), value);
+
 					}
+					
+					keyValue = evaluate(entity, keyCol.getName());
 
 				} else {
 					
@@ -217,8 +210,14 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				}
 			}
 			
-			Map<Object, Object> cache = connection.getCache(cacheName);
+			RemoteCache cache = (RemoteCache) connection.getCache(cacheName);
 			if (keyCol != null) {
+				Object rootObject = this.executionFactory.performKeySearch(cacheName, keyCol.getNameInSource(), keyValue, connection, context);
+
+				if (rootObject != null) {
+					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25009, new Object[] {insert.getTable().getName(), keyValue}));
+				}
+				
 				cache.put(keyValue, entity);
 			} else {
 				Object rootObject = this.executionFactory.performKeySearch(cacheName, fkeyColNIS, fkeyValue, connection, context);
@@ -233,10 +232,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					PropertiesUtils.setBeanProperty(rootObject, fk_nis, c);
 
 				} else if (Map.class.isAssignableFrom(childrenObjects.getClass())) {
-					final String msg = InfinispanPlugin.Util
-							.getString(
-									"InfinispanUpdateExecution.mapsNotSupported"); //$NON-NLS-1$
-					throw new TranslatorException(msg);						
+					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25005, new Object[] {insert.getTable().getName()}));
 
 				} else if (childrenObjects.getClass().isArray()) {
 					Object[] a = (Object[]) childrenObjects;
@@ -278,13 +274,8 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		String cacheName = delete.getTable().getMetadataObject().getNameInSource();
 
 		if (fkeyColNIS == null && keyCol == null) {
-			final String msg = InfinispanPlugin.Util
-					.getString(
-							"InfinispanUpdateExecution.noPrimaryOrForeignKeyForTable", delete.getTable().getName()); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {delete.getTable().getName()}));
 		}		
-
-		Map<Object, Object> cache = connection.getCache(cacheName);
 
 		// Find all the objects that meet the criteria for deletion
 		List<Object> toDelete = this.executionFactory.search(delete, cacheName,
@@ -294,24 +285,34 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		if (keyCol != null) {
 			// if this is the root class (no foreign key), then for each object, obtain
 			// the primary key value and use it to be removed from the cache
+			@SuppressWarnings("rawtypes")
+			RemoteCache cache = (RemoteCache) connection.getCache(cacheName);
+
 			
 			try {
+				
+				
 				cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + keyCol.getName());
 	
 				for (Object o : toDelete) {
 					sc.setAttribute(ClassRegistry.OBJECT_NAME, o,
 							ScriptContext.ENGINE_SCOPE);
-					final Object v = cs.eval(sc);
-					cache.remove(v);
-					++updateCnt;
+					Object v = cs.eval(sc);
+					
+					if (cache.containsKey(v) ) {
+						cache.removeAsync(v);
+					//	remove(v);
+						++updateCnt;
+					}
 				}
 	
 			} catch (ScriptException e1) {
-				final String msg = InfinispanPlugin.Util
-						.getString("InfinispanUpdateExecution.scriptExecutionFailure"); //$NON-NLS-1$
-				throw new TranslatorException(e1, msg);
+				throw new TranslatorException(e1);
 			}
-		} 
+		} else {
+			throw new TranslatorException("Deleting container class is TBD");
+
+		}
 		
 		// TODO:  delete container class 
 //		else {
@@ -390,6 +391,8 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				connection, this.context);
 		
 		if (toUpdate == null || toUpdate.size() == 0){
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+					"InfinispanUpdateExecution.update: no objects found to update based on - " + update.toString()); //$NON-NLS-1$
 			return;
 		}
 		
@@ -407,13 +410,11 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		}		
 		
 		if (fkeyColNIS == null && keyCol == null) {
-			final String msg = InfinispanPlugin.Util
-					.getString(
-							"InfinispanUpdateExecution.noPrimaryOrForeignKeyForTable", update.getTable().getName()); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {update.getTable().getName()}));
 		}
 	
-		Map<Object, Object> cache = connection.getCache(cacheName);	
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		RemoteCache<Object, Object> cache = (RemoteCache) connection.getCache(cacheName);
 		
 		Object keyValue = null;
 		Object fkeyValue = null;
@@ -423,47 +424,43 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		if (keyCol != null) {
 			for (Object entity:toUpdate) {
 				
+				keyValue = evaluate(entity, keyCol.getName());
+				
 				for (SetClause sc:updateList) {
 					Column column = sc.getSymbol().getMetadataObject();
 					Object value = sc.getValue();
 					
 					if ( keyCol.getName().equals(column.getName()) ) {
-						if (value instanceof Literal) {
-							Literal literalValue = (Literal) value;
-							keyValue = literalValue.getValue();
-						} else {
-							keyValue = value;
-						}
-		
+						throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25006, new Object[] {keyCol.getName(),update.getTable().getName()}));						
+					}
+					
+					if (value instanceof Literal) {
+						Literal literalValue = (Literal) value;
+						PropertiesUtils.setBeanProperty(entity,
+								column.getName(), literalValue.getValue());
 					} else {
-						
-						if (value instanceof Literal) {
-							Literal literalValue = (Literal) value;
-							PropertiesUtils.setBeanProperty(entity,
-									column.getName(), literalValue.getValue());
-						} else {
-							PropertiesUtils.setBeanProperty(entity,
-									column.getName(), value);
-						}	
-					}			
+						PropertiesUtils.setBeanProperty(entity,
+								column.getName(), value);
+					}	
+			
 				}
 				
-				cache.put(keyValue, entity);
+				cache.replace(keyValue, entity);
+//				put(keyValue, entity);
 				++updateCnt;
 			
 			}
 			
-		} else {
-			
-		}
-
-		++updateCnt;
+		} 
+			//logic for updating container classes
 	}
 
+	@Override
 	public void cancel() throws TranslatorException {
 		close();
 	}
 
+	@Override
 	public void close() {
 		this.connection = null;
 		this.command = null;
