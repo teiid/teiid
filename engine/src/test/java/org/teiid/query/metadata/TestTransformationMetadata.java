@@ -90,7 +90,7 @@ public class TestTransformationMetadata {
 		table.setResourcePath("/a/b/doc.xmi");
 		
 		HashMap<String, VDBResources.Resource> resources = new HashMap<String, VDBResources.Resource>();
-		resources.put("/x.xsd", new VDBResources.Resource(VFS.getRootVirtualFile(), true));
+		resources.put("/x.xsd", new VDBResources.Resource(VFS.getRootVirtualFile()));
 		
 		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.asMetadataStore(), mf1.asMetadataStore()));
 		

@@ -47,7 +47,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	protected String modelType = Type.PHYSICAL.name();
 	protected String description;	
 	protected String path; 
-    protected Boolean visible = true;
+    protected boolean visible = true;
     protected List<Message> messages;
     protected transient List<Message> runtimeMessages;
     protected String schemaSourceType;
@@ -130,7 +130,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return getName() + this.sources;
     }
     
-    public void setVisible(Boolean value) {
+    public void setVisible(boolean value) {
     	this.visible = value;
     }    
 

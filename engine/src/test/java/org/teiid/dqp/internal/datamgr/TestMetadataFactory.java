@@ -24,7 +24,7 @@
  */
 package org.teiid.dqp.internal.datamgr;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.Closeable;
 import java.io.File;
@@ -45,7 +45,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
-import org.teiid.query.metadata.VDBResources.Resource;
 
 @SuppressWarnings("nls")
 public class TestMetadataFactory {
@@ -74,7 +73,7 @@ public class TestMetadataFactory {
     	vdbMetaData.setName("foo"); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
     	Map<String, VDBResources.Resource> vdbEntries = new LinkedHashMap<String, VDBResources.Resource>();
-    	vdbEntries.put(MY_RESOURCE_PATH, new VDBResources.Resource(root.getChild("foo"), true));
+    	vdbEntries.put(MY_RESOURCE_PATH, new VDBResources.Resource(root.getChild("foo")));
         metadataFactory = new RuntimeMetadataImpl(new TransformationMetadata(vdbMetaData, store, vdbEntries, null, null));
     }
     

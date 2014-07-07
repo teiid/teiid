@@ -27,9 +27,7 @@ import java.io.InputStream;
 import java.util.LinkedHashMap;
 
 import org.jboss.vfs.VirtualFile;
-import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.VDBResource;
 
 public class VDBResources {
@@ -41,9 +39,8 @@ public class VDBResources {
 	public final static String MODEL_EXT = ".xmi";     //$NON-NLS-1$
 	
 	public static class Resource implements VDBResource {
-		public Resource(VirtualFile file, boolean visible) {
+		public Resource(VirtualFile file) {
 			this.file = file;
-			this.visible = visible;
 		}
 		VirtualFile file;
 		boolean visible;
@@ -58,10 +55,6 @@ public class VDBResources {
 		@Override
 		public String getName() {
 			return file.getName();
-		}
-		@Override
-		public boolean isVisible() {
-			return visible;
 		}
 		public VirtualFile getFile() {
 			return file;
@@ -79,43 +72,10 @@ public class VDBResources {
 				if (!path.startsWith("/")) { //$NON-NLS-1$
 					path = "/" + path; //$NON-NLS-1$
 				}
-				visibilityMap.put(path, new VDBResources.Resource(f, isFileVisible(f.getPathName(), vdb))); 
+				visibilityMap.put(path, new VDBResources.Resource(f)); 
 			}
 		}
 		this.vdbEntries = visibilityMap;
-	}
-	
-	private boolean isFileVisible(String pathInVDB, VDBMetaData vdb) {
-
-		if (pathInVDB.endsWith(".xmi")) { //$NON-NLS-1$
-			String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
-	
-			if (vdb != null) {
-				ModelMetaData model = vdb.getModel(modelName);
-				if (model != null) {
-					return model.isVisible();
-				}
-			}
-		}
-		
-		if (pathInVDB.startsWith("META-INF/")) {//$NON-NLS-1$
-			return false;
-		}
-		
-        String entry = StringUtil.getLastToken(pathInVDB, "/"); //$NON-NLS-1$
-        
-        // index files should not be visible
-		if( entry.endsWith(INDEX_EXT) || entry.endsWith(SEARCH_INDEX_EXT)) {
-			return false;
-		}
-
-		// deployment file should not be visible
-        if(entry.equalsIgnoreCase(DEPLOYMENT_FILE)) {
-            return false;
-        }
-        
-        // any other file should be visible
-        return true;		
 	}
 	
 	public LinkedHashMap<String, VDBResources.Resource> getEntriesPlusVisibilities(){
