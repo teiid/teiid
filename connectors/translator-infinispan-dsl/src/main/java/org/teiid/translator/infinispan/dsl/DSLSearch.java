@@ -69,7 +69,7 @@ public final class DSLSearch   {
 		if (results.size() == 1) {
 			return results.get(0);
 		} else if (results.size() > 1) {
-			throw new TranslatorException("Multiple objects found for key: " + value.toString());
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25053, value.toString()));
 		}
 		
 		return null;
@@ -184,9 +184,7 @@ public final class DSLSearch   {
 				break;
 
 			default:
-				final String msg = InfinispanPlugin.Util
-						.getString("LuceneSearch.invalidOperator", new Object[] { op, "And, Or" }); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new TranslatorException(msg);
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25050, new Object[] { op, "And, Or" }));
 			}
 
 		} else if (criteria instanceof Comparison) {
@@ -205,6 +203,9 @@ public final class DSLSearch   {
 
 		} else if (criteria instanceof IsNull) {
 			fcc = visit( (IsNull) criteria, queryBuilder, fcbc);
+		} else {
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25054, criteria.toString()));
+
 		}
 		// else if (criteria instanceof Not) {
 		//			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing NOT criteria."); //$NON-NLS-1$
@@ -248,9 +249,7 @@ public final class DSLSearch   {
 		}
 
 		if (value == null) {
-			final String msg = InfinispanPlugin.Util
-					.getString("LuceneSearch.unsupportedComparingByNull"); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25051));
 		}
 
 		
@@ -294,9 +293,7 @@ public final class DSLSearch   {
 			return fcbc.having(getNameInSource(mdIDElement)).lte(value);
 
 		default:
-			final String msg = InfinispanPlugin.Util
-					.getString("LuceneSearch.invalidOperator", new Object[] { op, "NE, EQ, GT, GE, LT, LE" }); //$NON-NLS-1$ //$NON-NLS-2$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25050, new Object[] { op, "NE, EQ, GT, GE, LT, LE" }));
 		}
 
 	}
@@ -321,10 +318,7 @@ public final class DSLSearch   {
 				v.add(value);
 				createdQuery = true;
 			} else {
-				String msg = InfinispanPlugin.Util.getString(
-						"LuceneSearch.Unsupported_expression", //$NON-NLS-1$
-						new Object[] { expr, "IN" }); //$NON-NLS-1$
-				throw new TranslatorException(msg);
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25052, new Object[] { expr, "IN" }));
 			}
 		}
 		
@@ -367,10 +361,7 @@ public final class DSLSearch   {
 			}
 			return fcbc.having(getNameInSource(c)).like(value);
 		} 
-		final String msg = InfinispanPlugin.Util.getString(
-				"LuceneSearch.Unsupported_expression", //$NON-NLS-1$
-				new Object[] { literalExp.toString(), "LIKE" }); //$NON-NLS-1$
-		throw new TranslatorException(msg);
+		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25052, new Object[] { literalExp.toString(), "LIKE" }));
 
 	}
 	

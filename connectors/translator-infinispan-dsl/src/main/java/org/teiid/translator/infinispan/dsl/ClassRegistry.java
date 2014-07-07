@@ -48,6 +48,7 @@ public class ClassRegistry {
 	private TeiidScriptEngine readEngine = new TeiidScriptEngine();
 	
 	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>();
+	private Map<String, Class<?>> classTableMap = new HashMap<String, Class<?>>();
 	
 	public synchronized void registerClass(Class<?> clz) throws TranslatorException {
 		try {
@@ -55,6 +56,7 @@ public class ClassRegistry {
 			readEngine.getMethodMap(clz);
 			
 			registeredClasses.put(clz.getName(), clz);	
+			classTableMap.put(clz.getSimpleName(), clz);	
 		} catch (ScriptException e) {
 			throw new TranslatorException(e);
 		}	
@@ -80,5 +82,9 @@ public class ClassRegistry {
 	public List<Class<?>> getRegisteredClasses() {
 		return new ArrayList<Class<?>>(registeredClasses.values());
 	}
+	
+	public Class<?> getRegisteredClassToTable(String tableName) {
+		return classTableMap.get(tableName);
+	}	
 
 }

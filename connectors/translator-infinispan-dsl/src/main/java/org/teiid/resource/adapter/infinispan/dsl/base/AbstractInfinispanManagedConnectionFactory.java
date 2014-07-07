@@ -86,41 +86,29 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			throws ResourceException {
 		
 		if (protobinFile == null) {
-			throw new InvalidPropertyException(
-					InfinispanPlugin.Util
-							.getString("InfinispanManagedConnectionFactory.invalidProtobinFile")); //$NON-NLS-1$			
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25030));
 		}
 
 		if (messageMarshallers == null) {
-			throw new InvalidPropertyException(
-					InfinispanPlugin.Util
-							.getString("InfinispanManagedConnectionFactory.invalidMessagenMarshallers")); //$NON-NLS-1$			
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25029));
 		}
 		
 		if (messageDescriptor == null) {
-			throw new InvalidPropertyException(
-					InfinispanPlugin.Util
-							.getString("InfinispanManagedConnectionFactory.invalidMessageDescriptor")); //$NON-NLS-1$			
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020));
 		}
 		
 		if (this.cacheTypes == null) {
-			throw new InvalidPropertyException(
-					InfinispanPlugin.Util
-							.getString("InfinispanManagedConnectionFactory.cacheTypeMapNotSet")); //$NON-NLS-1$
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25021));
 		}
 
 		if (remoteServerList == null
 				&& hotrodClientPropertiesFile == null && cacheJndiName == null) {
-			throw new InvalidPropertyException(
-					InfinispanPlugin.Util
-							.getString("InfinispanManagedConnectionFactory.invalidServerConfiguration")); //$NON-NLS-1$	
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25023));
 		}
 
 		determineCacheType();
 		if (cacheType == null) {
-			throw new InvalidPropertyException(
-					InfinispanPlugin.Util
-							.getString("InfinispanManagedConnectionFactory.invalidServerConfiguration")); //$NON-NLS-1$			
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
 		}
 		
 		/*
@@ -412,9 +400,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		for (String type : types) {
 			List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
 			if (mapped.size() != 2) {
-				throw new InvalidPropertyException(
-						InfinispanPlugin.Util
-								.getString("InfinispanManagedConnectionFactory.invalidCacheTypeMap")); //$NON-NLS-1$ 
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
 			}
 			final String cacheName = mapped.get(0);
 			String className = mapped.get(1);
@@ -435,9 +421,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			
 			List<String> mapped = StringUtil.getTokens(mm, ":"); //$NON-NLS-1$
 			if (mapped.size() != 2) {
-				throw new InvalidPropertyException(
-						InfinispanPlugin.Util
-								.getString("InfinispanManagedConnectionFactory.invalidMarshallerMapping")); //$NON-NLS-1$ 
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25031, new Object[] {mm}));
 			}
 			final String className = mapped.get(0);
 			final String m = mapped.get(1);
@@ -541,10 +525,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		}
 
 		if (cache == null) {
-			throw new ResourceException(
-					InfinispanPlugin.Util
-							.getString(
-									"InfinispanManagedConnectionFactory.unableToFindCacheUsingJNDI", jndiName)); //$NON-NLS-1$
+			throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25025, jndiName));
 		}
 		
 		
@@ -555,10 +536,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			return cacheContainer;
 		}
 
-		throw new ResourceException(
-			InfinispanPlugin.Util
-					.getString(
-							"InfinispanManagedConnectionFactory.JNDInotInstanceOfRemoteCacheManager", cacheContainer.getClass().getName())); //$NON-NLS-1$
+		throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25026, cacheContainer.getClass().getName()));
 
 	}
 	
@@ -627,7 +605,6 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public void cleanUp() {
 
 		messageMarshallerMap = null;
-//		registeredClasses=null;
 		typeMap = null;
 		cacheContainer = null;
 		pkMap = null;
