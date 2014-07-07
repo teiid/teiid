@@ -644,6 +644,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			boolean success;
 			QueryProcessor qp;
 			boolean closed;
+			boolean errored;
 		
 			@Override
 			protected TupleSource createTupleSource() throws TeiidComponentException,
@@ -684,6 +685,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				} catch (BlockedException e) {
 					throw e;
 				} catch (Exception e) {
+					errored = true;
 					LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
 					closeSource();
 					rethrow(e);
@@ -695,6 +697,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			public void closeSource() {
 				if (closed) {
 					return;
+				}
+				if (!errored) {
+					LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31153, tableName));
 				}
 				closed = true;
 				if (!success) {
