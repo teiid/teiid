@@ -49,7 +49,6 @@
               <configuration>
                <instructions>
                 <Import-Package>!org.jboss.*,*</Import-Package>
-                <Export-Package>org.teiid.*</Export-Package>
                </instructions>
               </configuration>
             </plugin>            
