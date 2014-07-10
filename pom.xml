@@ -85,7 +85,8 @@
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
-        <version.org.infinispan.6>6.0.1.Final</version.org.infinispan.6>
+        <version.org.infinispan.6>6.0.2.Final</version.org.infinispan.6>
+<!--        <version.org.infinispan.6>6.0.1.Final</version.org.infinispan.6-->
         <version.olap4j>1.1.0</version.olap4j>
         <version.accumulo>1.5.0</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
@@ -104,6 +105,10 @@
         
         <derby.version>10.2.1.6</derby.version>
 		<mysql.connector.version>5.1.5</mysql.connector.version>
+		
+		<version.com.google.protobuf>2.5.0</version.com.google.protobuf>
+        <version.org.infinispan.protostream>1.0.0.Final</version.org.infinispan.protostream>  <!--  1.0.0.CR1-redhat-1 is what works in EAP  -->
+
         
 	</properties>
 	<scm>
@@ -414,7 +419,18 @@
             	<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
 				<version>${project.version}</version>
-			</dependency>        	      	   
+			</dependency>  
+			<dependency>
+				<groupId>org.jboss.teiid.connectors</groupId>
+				<artifactId>translator-infinispan-dsl</artifactId>
+                <version>${project.version}</version>
+			</dependency>        
+			<dependency>
+				<groupId>org.jboss.teiid.connectors</groupId>
+				<artifactId>translator-infinispan-dsl</artifactId>
+				<type>test-jar</type>
+                <version>${project.version}</version>
+			</dependency>       			      	      	   
             <dependency>
       	    	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>google-api</artifactId>
