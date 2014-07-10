@@ -1,0 +1,42 @@
+NOTES:
+
+
+Each JDG cache is defined by a protobuf descriptor and corresponding registered classes.   These are what will
+be used to generate the metadata that will enable querying the cache.   This metadata will be generated for a 
+dynamic VDB or if using the Teiid Designer - use the Teiid Connection Importer to import the metadata and model the object cache.
+
+Metadata
+
+-  	Each google registered class in the cache will have a corresponding table created. 
+-   The table for the root class, must have a primary key defined, which must map to an attribute in the class.
+-	The table "name in source" (NIS) will be the name of the JDG cache this table/class is stored
+- 	The table columns will be created from the google protobuf definition, that corresponds to a registered class.
+-   Attributes defined as repeatable (i.e., collections, arrays, etc.) or a container class, will be supported as 1-to-* relationships, 
+	and will have corresponding registered class (if they are to be searched).
+-	A 1-to-* relationship class must have a foreign key to map to the root class/table, where the name in source for the foreign key
+	is the name of the root class method to access those child objects.  Note, this is the class method, not
+	a reference in the google protobuf definition.
+-   A container/child class will have attributes where the NIS contain a period.  Example:  phone.number
+	This is because this maps to to google protobuf definition and what is expected to be used in the DSL query.
+	
+-  1-to-Many, currently only supports Collection or Array, not Map's'
+
+
+
+Supports -
+
+Reads:
+
+a.	Order By
+b.  EQ, LT, GT, LE, GE
+c.  And/Or
+d.  Like, In, IsNull
+
+Writes:
+Update/Insert/Delete  non-transactional (transactions not supported by remote JDG)
+
+
+
+TODO:
+-  support deleting containing class(s) (i.e., person --> phones, delete a phone)
+-  support updating containing class(s)

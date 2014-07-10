@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.translator.infinispan.dsl">
+    <resources>
+        <resource-root path="translator-infinispan-dsl-${project.version}.jar" />
+
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" />
+        <module name="org.jboss.teiid" />
+        <module name="javax.persistence.api"/>
+        
+        <module name="org.infinispan.hotrod" slot="6.2" export="true"/>
+        
+        <module name="org.jboss.modules"/>
+    </dependencies>   
+</module>
