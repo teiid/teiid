@@ -134,6 +134,7 @@ public class CompositeVDB {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40083, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40083, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion()));
 			}
 			VDBMetaData childVDB = importedVDB.getVDB();
+			newMergedVDB.getVisibilityOverrides().putAll(childVDB.getVisibilityOverrides());
 			toSearch[i++] = childVDB.getAttachment(ClassLoader.class);
 			this.children.put(new VDBKey(childVDB.getName(), childVDB.getVersion()), importedVDB);
 			
@@ -151,6 +152,11 @@ public class CompositeVDB {
 					throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40085, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40085, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), m.getName()));
 				}
 				newMergedVDB.getImportedModels().add(m.getName());
+				String visibilityOverride = newMergedVDB.getPropertyValue(m.getName() + ".visible"); //$NON-NLS-1$
+				if (visibilityOverride != null) {
+					boolean visible = Boolean.valueOf(visibilityOverride);
+					newMergedVDB.setVisibilityOverride(m.getName(), visible);
+				}
 			}
 			ConnectorManagerRepository childCmr = childVDB.getAttachment(ConnectorManagerRepository.class);
 			if (childCmr == null) {

@@ -51,6 +51,8 @@ public interface Model extends AdminObject {
     /**
      * Determine whether this model is exposed for querying.
      * 
+     * <br>Note: for imported models, this may be overriden.  See {@link VDB#isVisible(String)}
+     * 
      * @return <code>true</code> if the model is visible
      * for querying.
      */

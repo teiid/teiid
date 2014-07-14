@@ -119,4 +119,11 @@ public interface VDB extends AdminObject, DomainAware {
      * @return
      */
     public List<? extends Entry> getEntries();
+
+    /**
+     * Whether the model is visible
+     * @param modelName
+     * @return
+     */
+	boolean isVisible(String modelName);
 }

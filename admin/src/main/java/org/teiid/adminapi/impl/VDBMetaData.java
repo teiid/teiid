@@ -24,8 +24,10 @@ package org.teiid.adminapi.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
@@ -57,6 +59,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private long queryTimeout = Long.MIN_VALUE;
 	private Set<String> importedModels = Collections.emptySet();
+	private Map<String, Boolean> visibilityOverrides = new HashMap<String, Boolean>(2);
 
 	public String getFullName() {
 		return getName() + VERSION_DELIM + getVersion();
@@ -187,9 +190,19 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		return getName()+VERSION_DELIM+getVersion()+ models.values(); 
 	}
 	
+	@Override
 	public boolean isVisible(String modelName) {
 		ModelMetaData model = getModel(modelName);
-		return model == null || model.isVisible();
+		if (model == null) {
+			return true;
+		}
+		if (!visibilityOverrides.isEmpty()) {
+			Boolean result = visibilityOverrides.get(modelName);
+			if (result != null) {
+				return result;
+			}
+		}
+		return model.isVisible();
 	}
 
 	public ModelMetaData getModel(String modelName) {
@@ -281,9 +294,18 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 			clone.attachments = new CopyOnWriteLinkedHashMap<Class<?>, Object>();
 			clone.attachments.putAll(attachments);
 			clone.dataPolicies = new LinkedHashMap<String, DataPolicyMetadata>(dataPolicies);
+			clone.visibilityOverrides = new HashMap<String, Boolean>(visibilityOverrides);
 			return clone;
 		} catch (CloneNotSupportedException e) {
 			throw new TeiidRuntimeException(e);
 		}
+	}
+
+	public void setVisibilityOverride(String name, boolean visible) {
+		this.visibilityOverrides.put(name, visible);
+	}
+	
+	public Map<String, Boolean> getVisibilityOverrides() {
+		return visibilityOverrides;
 	}
 }

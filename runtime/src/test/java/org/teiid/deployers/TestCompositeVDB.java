@@ -154,6 +154,29 @@ public class TestCompositeVDB {
 		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
 	}
 	
+	@Test public void testImportVisibility() throws Exception {
+		VDBRepository repo = new VDBRepository();
+		repo.setSystemStore(RealMetadataFactory.example1Cached().getMetadataStore());
+		repo.setSystemFunctionManager(RealMetadataFactory.SFM);
+		MetadataStore metadataStore = RealMetadataFactory.exampleBQTCached().getMetadataStore();
+		VDBMetaData vdb = createVDBMetadata(metadataStore, "bqt");
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
+		
+		vdb = createVDBMetadata(RealMetadataFactory.exampleBusObjStore(), "example1");
+		vdb.addProperty("BQT1.visible", "false");
+		VDBImportMetadata vdbImport = new VDBImportMetadata();
+		vdbImport.setName("bqt");
+		vdb.getVDBImports().add(vdbImport);
+		
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
+		
+		assertTrue(vdb.isVisible("BQT1"));
+		
+		vdb = repo.getLiveVDB("example1");
+		
+		assertFalse(vdb.isVisible("BQT1"));
+	}
+	
 	@Test public void testDeepNesting() throws Exception {
 		VDBRepository repo = new VDBRepository();
 		repo.setSystemStore(RealMetadataFactory.example1Cached().getMetadataStore());
