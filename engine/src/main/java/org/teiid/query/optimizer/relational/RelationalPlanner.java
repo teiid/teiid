@@ -236,6 +236,7 @@ public class RelationalPlanner {
         }
         result.setOutputElements(topCols);
         this.sourceHint = previous;
+        this.withPlanningState = saved;
         return result;
     }
 
