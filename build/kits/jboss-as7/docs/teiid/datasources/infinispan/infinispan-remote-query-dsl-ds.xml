@@ -1,0 +1,31 @@
+#  this resource adapter is using the Infinispan remote query feature, that uses Google protobuf's for serialization.
+
+#  Note:  The RemoteServerList host:port may have to be changed, depending on your JDG deployment.  Also, the port is based on running it locally and incrementing the ports
+
+#  Also, didn't create a CLI script at this time, because 'slot' could not be specified in the CLI script and therefore, still required manual editing of the configuration.
+
+                <resource-adapter id="infinispanRemQSDSL">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.dsl"/>
+                    <connection-definitions>
+                        <connection-definition class-name="org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteDSL" enabled="true" use-java-context="true" pool-name="infinispanRemoteDSL">
+                            <config-property name="CacheTypeMap">
+                                addressbook:org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;id
+                            </config-property>
+                            <config-property name="ProtobinFile">
+                                /addressbook.protobin
+                            </config-property>
+                            <config-property name="MessageDescriptor">
+                                quickstart.Person
+                            </config-property>
+                            <config-property name="Module">
+                                com.client.quickstart.addressbook.pojos
+                            </config-property>
+                            <config-property name="MessageMarshallers">
+                                org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PersonMarshaller,org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PhoneNumberMarshaller,org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneType:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PhoneTypeMarshaller
+                            </config-property>
+                            <config-property name="RemoteServerList">
+                                127.0.0.1:11322
+                            </config-property>
+                        </connection-definition>
+                    </connection-definitions>
+                </resource-adapter>

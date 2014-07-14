@@ -72,6 +72,7 @@ connect
 /subsystem=teiid/translator=solr:add(module=org.jboss.teiid.translator.solr)
 /subsystem=teiid/translator=excel:add(module=org.jboss.teiid.translator.excel)
 /subsystem=teiid/translator=impala:add(module=org.jboss.teiid.translator.hive)
+/subsystem=teiid/translator=infinispan-cache-dsl:add(module=org.jboss.teiid.translator.infinispan.dsl)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -85,5 +86,7 @@ connect
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
+/subsystem=resource-adapters/resource-adapter=infinispan-dsl:add(module=org.jboss.teiid.resource-adapter.infinispan.dsl)
+
 
 /:reload
