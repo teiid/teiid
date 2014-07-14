@@ -22,7 +22,7 @@
     <files>
         <file>
             <source>${project.build.directory}/${project.artifactId}-${project.version}-lib.jar</source>
-            <outputDirectory>optional/infinispan-6.2</outputDirectory>
+            <outputDirectory>optional/infinispan-6</outputDirectory>
         </file>
     </files>
 

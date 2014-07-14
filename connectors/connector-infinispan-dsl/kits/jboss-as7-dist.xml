@@ -37,7 +37,7 @@
         </fileSet>
         <fileSet>
             <directory>${project.build.directory}/rar-unpack</directory>
-            <outputDirectory>${jbossas-module-root}/org/infinispan/hotrod/6.2</outputDirectory>
+            <outputDirectory>${jbossas-module-root}/org/infinispan/hotrod/6.3</outputDirectory>
             <filtered>false</filtered>
             <includes>
                 <include>**/infinispan-client-hotrod*.jar</include>

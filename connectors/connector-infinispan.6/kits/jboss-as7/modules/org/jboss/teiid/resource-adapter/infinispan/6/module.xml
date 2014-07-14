@@ -1,0 +1,20 @@
+<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.infinispan" slot="6">
+   
+    <resources>
+        <resource-root path="connector-infinispan.6-${project.version}.jar"/>
+        <resource-root path="." />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"/>
+        <module name="org.jboss.teiid.api"/>
+        <module name="org.jboss.teiid.translator.object"/>
+        <module name="org.jboss.modules"/>
+        <module name="org.jboss.marshalling"/>
+        <module name="org.jboss.marshalling.river"/>
+
+        <module name="org.infinispan.hotrod" slot="6.3" />
+    </dependencies>
+</module>

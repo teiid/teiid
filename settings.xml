@@ -126,6 +126,24 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
                 </pluginRepository>
             </pluginRepositories>
         </profile>
+		<profile>
+		  <id>JDG6</id>
+		  <repositories>
+			<repository>
+			  <id>JDG6</id>
+			  <name>JBoss DG 6</name>
+			  <url>http://download.eng.bos.redhat.com/brewroot/repos/jb-edg-6-rhel-6-build/latest/maven/</url>
+			  <layout>default</layout>
+			  <releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			  </releases>
+			  <snapshots>
+				<enabled>false</enabled>
+			  </snapshots>
+			</repository>
+		  </repositories>
+		</profile>                
     </profiles>
 
     <activeProfiles>
@@ -134,6 +152,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         <activeProfile>jboss-eap-alpha</activeProfile>
         <activeProfile>jboss-eap-63</activeProfile>
         <activeProfile>redhat-techpreview-all-repository</activeProfile>
+        <activeProfile>JDG6</activeProfile>
     </activeProfiles>
 
 </settings>

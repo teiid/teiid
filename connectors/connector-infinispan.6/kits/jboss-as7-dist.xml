@@ -21,7 +21,7 @@
         </fileSet>
         <fileSet>
             <directory>${project.build.directory}/rar-unpack</directory>
-            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/infinispan/6.2</outputDirectory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/infinispan/6</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>
