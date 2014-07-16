@@ -25,6 +25,7 @@ package org.teiid.query.sql.symbol;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageVisitor;
 
 /**
@@ -52,8 +53,6 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     private boolean isTempTable;
     private boolean isGlobalTable;
     private boolean isProcedure;
-    
-    private Object modelMetadataId;
     
     private String outputDefinition;
     private String schema;
@@ -85,11 +84,10 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	}
 	
 	public Object getModelMetadataId() {
-		return modelMetadataId;
-	}
-	
-	public void setModelMetadataId(Object modelMetadataId) {
-		this.modelMetadataId = modelMetadataId;
+		if (getMetadataID() instanceof TempMetadataID) {
+			return ((TempMetadataID)getMetadataID()).getTableData().getModel();
+		}
+		return null;
 	}
 	
 	public String getNonCorrelationName() {
@@ -195,7 +193,6 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
         copy.outputDefinition = this.outputDefinition;
         copy.outputName = this.outputName;
         copy.isGlobalTable = isGlobalTable;
-        copy.modelMetadataId = modelMetadataId;
 		return copy;
 	}
 

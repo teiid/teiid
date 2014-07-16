@@ -26,13 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-    <li>TEIID-2647 <b>Translator for Cloudera's Impala</b> data warehouse has been added.  See the reference for more.</li>
-    <li>TEIID-2902 <b>More incremental joins</b> where the whole dataset does not need fully sorted or even read.</li>
-    <li>TEIID-2263 <b>More control over MAKE (NOT) DEP hints</b> via syntax that allows for traversing views.  See the reference for more.</li>
-    <li>TEIID-2263 <b>Common Table (WITH) planning improvements</b> such that the usage of a WITH clause in a view or inline view no longer inhibits planning as part of the larger query.</li>
-    <li>TEIID-2980 <b>XMLTable Array Support</b> - XMLTABLE may now return arrays for sequence values.</li>
-    <li>TEIID-1675 <b>Updatable LDAP multi-valued attributes</b> - using an array type mapping, LDAP multi-valued attributes can be inserted/updated.
-    <li>TEIID-3018 <b>System tables for view/procedure defintions</b> - the SYSADMIN Views and StoredProcedures tables can be used to access the defintions of the views/procedures.
+    <li>TEIID-3009 <b>WITH project minimization</b> - common table expressions will have their project columns minimized.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

@@ -39,6 +39,7 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -147,6 +148,20 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
         
 		if (root.getChildCount() == 0) {
+			//update temp access
+			if (root.getType() == NodeConstants.Types.SOURCE && root.getGroups().size() == 1) {
+				GroupSymbol gs = root.getGroups().iterator().next();
+				if (gs.getMetadataID() instanceof TempMetadataID) {
+					for (Expression ex : outputElements) {
+						if (ex instanceof ElementSymbol) {
+							Object id = ((ElementSymbol)ex).getMetadataID();
+							if (id instanceof TempMetadataID) {
+								((TempMetadataID) id).setAccessed(true);
+							}
+						}
+					}
+				}
+			}
             return;
         }
 

@@ -101,7 +101,8 @@ public class Select implements LanguageObject {
      * @param symbols list of SelectSymbol in SELECT
      */
     public void setSymbols(List<? extends Expression> symbols) {
-        this.symbols = new ArrayList<Expression>(symbols);
+    	this.symbols.clear();
+    	this.addSymbols(symbols);
     }    
 
     /**

@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.common.buffer.LobManager;
@@ -72,7 +73,6 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
-import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
@@ -80,6 +80,7 @@ import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -165,7 +166,7 @@ public class RelationalPlanner {
 	
 	private static class WithPlanningState {
 		List<WithQueryCommand> withList = new ArrayList<WithQueryCommand>();
-		Map<String, WithQueryCommand> pushdownWith = new LinkedHashMap<String, WithQueryCommand>();
+		LinkedHashMap<String, WithQueryCommand> pushdownWith = new LinkedHashMap<String, WithQueryCommand>();
 	}
 	
     public RelationalPlan optimize(
@@ -173,7 +174,7 @@ public class RelationalPlanner {
         throws
             QueryPlannerException,
             QueryMetadataException,
-            TeiidComponentException {
+            TeiidComponentException, QueryResolverException {
 
         boolean debug = analysisRecord.recordDebug();
 		if(debug) {
@@ -197,6 +198,8 @@ public class RelationalPlanner {
 			 throw new QueryPlannerException(e);
 		}
 		
+		planWith(plan, command);
+		
 		if (plan.getType() == NodeConstants.Types.SOURCE) {
 			//this was effectively a rewrite
 			return (RelationalPlan)plan.getProperty(Info.PROCESSOR_PLAN);
@@ -208,7 +211,7 @@ public class RelationalPlanner {
 
         // Connect ProcessorPlan to SubqueryContainer (if any) of SELECT or PROJECT nodes
 		connectSubqueryContainers(plan, this.withPlanningState.pushdownWith); //TODO: merge with node creation
-        
+		
         // Set top column information on top node
         List<Expression> topCols = Util.deepClone(command.getProjectedSymbols(), Expression.class);
 
@@ -236,13 +239,101 @@ public class RelationalPlanner {
         }
         result.setOutputElements(topCols);
         this.sourceHint = previous;
+        this.withPlanningState = saved;
         return result;
     }
+
+	private void planWith(PlanNode plan, Command command) throws QueryPlannerException,
+			QueryMetadataException, TeiidComponentException,
+			QueryResolverException {
+		if (this.withPlanningState.withList.isEmpty()) {
+			return;
+		}
+		//TODO: merge this logic inline with the main rule execution.
+		RuleStack stack = new RuleStack();
+		stack.push(new RuleAssignOutputElements(false));
+		if (hints.hasRowBasedSecurity) {
+			stack.push(new RuleApplySecurity());
+		}
+		executeRules(stack, plan);
+		//discover all of the usage
+		List<Command> commands = CommandCollectorVisitor.getCommands(command);
+		while (!commands.isEmpty()) {
+			Command cmd = commands.remove(commands.size() - 1);
+			commands.addAll(CommandCollectorVisitor.getCommands(cmd));
+			try {
+				//skip xml commands as they cannot be planned here and cannot directly reference with tables,
+				//but their subqueries still can
+				if (!(cmd instanceof Query) || !((Query)cmd).getIsXML()) {
+					PlanNode temp = generatePlan((Command) cmd.clone());
+					stack.push(new RuleAssignOutputElements(false));
+					executeRules(stack, temp);
+				}
+			} catch (TeiidProcessingException e) {
+				throw new QueryPlannerException(e);
+			}
+		}
+		//plan an minimize projection
+		for (WithQueryCommand with : this.withPlanningState.withList) {
+			QueryCommand subCommand = with.getCommand();
+			
+			//there are no columns to remove for xml
+			if (subCommand instanceof Query && ((Query)subCommand).getIsXML()) {
+				ProcessorPlan subPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+				subCommand.setProcessorPlan(subPlan);
+				continue;
+			}
+			
+			TempMetadataID tid = (TempMetadataID) with.getGroupSymbol().getMetadataID();
+			List<TempMetadataID> elements = tid.getElements();
+			List<Integer> toRemove = new ArrayList<Integer>();
+			for (int i = elements.size()-1; i >= 0; i--) {
+				TempMetadataID elem = elements.get(i);
+				if (!elem.isAccessed()) {
+					toRemove.add(i);
+				}
+			}
+			//the strategy here is to replace the actual projections with null.  this keeps
+			//the definition of the with clause consistent
+			if (!toRemove.isEmpty()) {
+				GroupSymbol gs = new GroupSymbol("x"); //$NON-NLS-1$
+				gs = RulePlaceAccess.recontextSymbol(gs, context.getGroups());
+				Query query = QueryRewriter.createInlineViewQuery(gs, subCommand, metadata, ResolverUtil.resolveElementsInGroup(with.getGroupSymbol(), metadata));
+				for (int i : toRemove) {
+					query.getSelect().getSymbols().set(i, new ExpressionSymbol(elements.get(i).getName(), new Constant(null, elements.get(i).getType())));
+				}
+				subCommand = query;
+				with.setCommand(subCommand);
+			}
+		    RelationalPlan subPlan = optimize(subCommand);
+		    subCommand.setProcessorPlan(subPlan);
+		    RelationalPlan procPlan = subPlan;
+		    RelationalNode root = procPlan.getRootNode();
+		    Number planCardinality = root.getEstimateNodeCardinality();
+		    if (planCardinality != null) {
+		    	((TempMetadataID)with.getGroupSymbol().getMetadataID()).setCardinality(planCardinality.intValue());
+		    }
+		    AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(procPlan);
+		    if (aNode == null) {
+		    	continue;
+		    }
+			Object modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode, false);
+			QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+		    if (modelID == null || withCommand == null) {
+		    	continue;
+		    }
+			if (!CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
+				continue;
+			}
+			WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);
+			((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(modelID);
+			this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
+		}
+	}
 
 	private void processWith(final QueryCommand command, List<WithQueryCommand> withList)
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException {
-		Map<String, WithQueryCommand> pushdownWith = null;
 		for (int i = 0; i < withList.size(); i++) {
 			WithQueryCommand with = withList.get(i);
 			final GroupSymbol old = with.getGroupSymbol();
@@ -273,47 +364,11 @@ public class RelationalPlanner {
 				};
 				PreOrPostOrderNavigator.doVisit(command, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
 			}
-			QueryCommand subCommand = with.getCommand();
-			if (subCommand instanceof Query && ((Query)subCommand).getIsXML()) {
-				ProcessorPlan plan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
-				subCommand.setProcessorPlan(plan);
-				continue;
-			}
-		    RelationalPlan plan = optimize(subCommand);
-		    subCommand.setProcessorPlan(plan);
-		    RelationalPlan procPlan = plan;
-		    RelationalNode root = procPlan.getRootNode();
-		    Number planCardinality = root.getEstimateNodeCardinality();
-		    if (planCardinality != null) {
-		    	((TempMetadataID)with.getGroupSymbol().getMetadataID()).setCardinality(planCardinality.intValue());
-		    }
-		    AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(procPlan);
-		    if (aNode == null) {
-		    	continue;
-		    }
-			Object modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode, false);
-			QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
-		    if (modelID == null || withCommand == null) {
-		    	continue;
-		    }
-			if (!CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
-				continue;
-			}
-			WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);
-			with.getGroupSymbol().setModelMetadataId(modelID);
-			if (pushdownWith == null) {
-				pushdownWith = new LinkedHashMap<String, WithQueryCommand>();
-			}
-			pushdownWith.put(with.getGroupSymbol().getName(), wqc);
-		}
-		if (pushdownWith != null) {
-			addModelIds(command, pushdownWith);
-			this.withPlanningState.pushdownWith.putAll(pushdownWith);
 		}
 		this.withPlanningState.withList.addAll(withList);
 	}
     
-    private void assignWithClause(RelationalNode node, Map<String, WithQueryCommand> pushdownWith) {
+    private void assignWithClause(RelationalNode node, LinkedHashMap<String, WithQueryCommand> pushdownWith) {
         if(node instanceof AccessNode) {
             AccessNode accessNode = (AccessNode) node;
             Map<GroupSymbol, RelationalPlan> subplans = accessNode.getSubPlans();
@@ -331,14 +386,19 @@ public class RelationalPlanner {
             	}
             	GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, this.withGroups);
             	List<WithQueryCommand> with = new ArrayList<WithQueryCommand>();
-            	for (GroupSymbol groupSymbol : this.withGroups) {
-            		WithQueryCommand clause = pushdownWith.get(groupSymbol.getNonCorrelationName());
-            		if (clause != null) {
-            			with.add(clause.clone());
-            			command.setSourceHint(SourceHint.combine(command.getSourceHint(), clause.getCommand().getSourceHint()));
-            		}
-				}
+            	discoverWith(pushdownWith, command, with, new ArrayList<GroupSymbol>(this.withGroups));
             	if (!with.isEmpty()) {
+            		final Map<GroupSymbol, Integer> order = new HashMap<GroupSymbol, Integer>();
+            		for (WithQueryCommand withQueryCommand : pushdownWith.values()) {
+            			order.put(withQueryCommand.getGroupSymbol(), order.size());
+            		}
+            		Collections.sort(with, new Comparator<WithQueryCommand>() {
+            			@Override
+            			public int compare(WithQueryCommand o1,
+            					WithQueryCommand o2) {
+            				return order.get(o1.getGroupSymbol()).compareTo(order.get(o2.getGroupSymbol()));
+            			}
+					});
             		QueryCommand query = (QueryCommand)command;
             		if (query.getWith() != null) {
             			//we need to accumulate as a with clause could have been used at a lower scope
@@ -357,23 +417,21 @@ public class RelationalPlanner {
         }
     }
 
-    /**
-     * mark all relevant group symbols as being from the modelid
-     * @param command
-     * @param modelID
-     * @param names
-     */
-	private void addModelIds(Command command, final Map<String, WithQueryCommand> with) {
-		PreOrPostOrderNavigator.doVisit(command, new LanguageVisitor() {
-			@Override
-			public void visit(UnaryFromClause obj) {
-				GroupSymbol group = obj.getGroup();
-				WithQueryCommand wqc = with.get(group.getNonCorrelationName());
-				if (wqc != null) {
-					group.setModelMetadataId(wqc.getGroupSymbol().getModelMetadataId());
-				}
+	private void discoverWith(
+			LinkedHashMap<String, WithQueryCommand> pushdownWith,
+			Command command, List<WithQueryCommand> with, Collection<GroupSymbol> groups) {
+		for (GroupSymbol groupSymbol : groups) {
+			WithQueryCommand clause = pushdownWith.get(groupSymbol.getNonCorrelationName());
+			if (clause == null) {
+				continue;
 			}
-		}, PreOrPostOrderNavigator.POST_ORDER, true);  
+			TreeSet<GroupSymbol> temp = new TreeSet<GroupSymbol>(nonCorrelatedComparator);
+			GroupCollectorVisitor.getGroupsIgnoreInlineViews(clause.getCommand(), temp);
+			temp.removeAll(this.withGroups);
+			discoverWith(pushdownWith, command, with, temp);
+			with.add(clause.clone());
+			command.setSourceHint(SourceHint.combine(command.getSourceHint(), clause.getCommand().getSourceHint()));
+		}
 	}
 
 	public void initialize(Command command, IDGenerator idGenerator,
@@ -387,7 +445,7 @@ public class RelationalPlanner {
     	this.context = context;
 	}
 
-    private void connectSubqueryContainers(PlanNode plan, Map<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    private void connectSubqueryContainers(PlanNode plan, LinkedHashMap<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
 
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT)) {
@@ -398,7 +456,7 @@ public class RelationalPlanner {
     }
 
 	public void planSubqueries(
-			Map<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groupSymbols,
+			LinkedHashMap<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groupSymbols,
 			PlanNode node, List<SubqueryContainer<?>> subqueryContainers, boolean isStackEntry)
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException {
@@ -426,12 +484,12 @@ public class RelationalPlanner {
 			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
 			    ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
 			    if (procPlan instanceof RelationalPlan && pushdownWith != null && !pushdownWith.isEmpty()) {
-			    	Map<String, WithQueryCommand> parentPushdownWith = pushdownWith;
+			    	LinkedHashMap<String, WithQueryCommand> parentPushdownWith = pushdownWith;
 			    	if (subCommand instanceof QueryCommand) {
 			    		QueryCommand query = (QueryCommand)subCommand;
 			    		List<WithQueryCommand> with = query.getWith();
 			    		if (with != null && !with.isEmpty()) {
-			    			parentPushdownWith = new HashMap<String, WithQueryCommand>(parentPushdownWith);
+			    			parentPushdownWith = new LinkedHashMap<String, WithQueryCommand>(parentPushdownWith);
 			    			for (WithQueryCommand withQueryCommand : with) {
 			    				parentPushdownWith.remove(withQueryCommand.getGroupSymbol().getNonCorrelationName());
 							}
@@ -655,7 +713,7 @@ public class RelationalPlanner {
         	//do initial filtering to make merging and optional join logic easier
             rules.push(new RuleAssignOutputElements(false));
         }
-        if (hints.hasRowBasedSecurity) {
+        if (hints.hasRowBasedSecurity && this.withPlanningState.withList.isEmpty()) {
         	rules.push(new RuleApplySecurity());
         }
         rules.push(RuleConstants.PLACE_ACCESS);
@@ -1109,9 +1167,6 @@ public class RelationalPlanner {
         		}
             }
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
-            if (group.getModelMetadataId() != null) {
-            	node.setProperty(Info.MODEL_ID, group.getModelMetadataId());
-            }
             if (ufc.isNoUnnest()) {
             	node.setProperty(Info.NO_UNNEST, Boolean.TRUE);
             }

@@ -143,9 +143,13 @@ public final class RulePlaceAccess implements
                 accessNode.setProperty(NodeConstants.Info.IS_OPTIONAL, hint);
             }
             
-            Object modelId = sourceNode.removeProperty(NodeConstants.Info.MODEL_ID);
-            if (modelId != null) {
-                accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
+            Object modelId = null;
+            if (sourceNode.getGroups().size() == 1) {
+            	GroupSymbol gs = sourceNode.getGroups().iterator().next();
+            	modelId = gs.getModelMetadataId();
+            	if (modelId != null) {
+            		accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
+            	}
             }
             if (req instanceof Create || req instanceof Drop) {
             	modelId = TempMetadataAdapter.TEMP_MODEL;
