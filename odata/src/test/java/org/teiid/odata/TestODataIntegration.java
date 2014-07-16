@@ -21,21 +21,21 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
 
@@ -49,7 +49,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.odata4j.core.*;
+import org.odata4j.core.OEntities;
+import org.odata4j.core.OEntity;
+import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OProperties;
+import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmSimpleType;
@@ -57,7 +61,11 @@ import org.odata4j.edm.EdmType;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.Responses;
-import org.odata4j.producer.resources.*;
+import org.odata4j.producer.resources.EntitiesRequestResource;
+import org.odata4j.producer.resources.EntityRequestResource;
+import org.odata4j.producer.resources.MetadataResource;
+import org.odata4j.producer.resources.ODataBatchProvider;
+import org.odata4j.producer.resources.ServiceDocumentResource;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -543,6 +551,11 @@ public class TestODataIntegration extends BaseResourceTest {
 	        contentHandler.value = null;
 			parser.parse(response.getEntity(), contentHandler);
 	        assertNotNull(contentHandler.value);
+	        
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x/$count"));
+	        response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        assertEquals("2", response.getEntity());
 		} finally {
 			es.stop();
 		}

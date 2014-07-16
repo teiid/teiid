@@ -81,6 +81,7 @@ public class TeiidProducer implements ODataProducer {
 
 	@Override
 	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, final QueryInfo queryInfo) {
+		checkExpand(queryInfo);
 		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
@@ -108,6 +109,12 @@ public class TeiidProducer implements ODataProducer {
 				return entities.nextToken();
 			}
 		};
+	}
+
+	private void checkExpand(QueryInfo queryInfo) {
+		if (queryInfo != null && queryInfo.expand != null && !queryInfo.expand.isEmpty()) {
+			throw new UnsupportedOperationException("Expand is not supported"); //$NON-NLS-1$
+		}
 	}
 
 	private EdmEntitySet getEntitySet(String entitySetName) {
@@ -263,6 +270,7 @@ public class TeiidProducer implements ODataProducer {
 	public BaseResponse callFunction(ODataContext context,
 			EdmFunctionImport function, Map<String, OFunctionParameter> params,
 			QueryInfo queryInfo) {
+		checkExpand(queryInfo);
 		EdmEntityContainer eec = findEntityContainer(function);
 		StringBuilder sql = new StringBuilder();
 		// fully qualify the procedure name
