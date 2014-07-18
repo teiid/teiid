@@ -110,7 +110,7 @@ class JoinCriteriaVisitor extends HierarchyVisitor {
 			switch(obj.getOperator()) {
 			case EQ:
 				if (join.getJoinType().equals(JoinType.LEFT_OUTER_JOIN)) {
-					if (left.embeds(right)) {
+					if (left.contains(right)) {
 						// if nesting is simple flat hierary then there is nothing to be done. However if
 						// document is array is $unwind behavior is strange, it does not include the document
 						// that has empty or null child document. So, we need to simulate such that there is 
@@ -123,7 +123,7 @@ class JoinCriteriaVisitor extends HierarchyVisitor {
 						// right is parent; left is child. However, left does not exist with out its parent
 						// so in "MERGE" scenario, this is equal to a INNER JOIN
 						if (left.isMerged()) {
-							match = QueryBuilder.start(left.getTable().getName()).exists("true").get(); //$NON-NLS-1$							
+							match = QueryBuilder.start(left.getTable().getName()).exists("true").notEquals(null).get(); //$NON-NLS-1$							
 						}
 						else {
 							//so, right is parent, now this is un-supported
@@ -132,11 +132,11 @@ class JoinCriteriaVisitor extends HierarchyVisitor {
 					}
 				}
 				else if (join.getJoinType().equals(JoinType.INNER_JOIN)){
-					if (left.embeds(right)) {
-						match = QueryBuilder.start(right.getTable().getName()).exists("true").get(); //$NON-NLS-1$
+					if (left.contains(right)) {
+						match = QueryBuilder.start(right.getTable().getName()).exists("true").notEquals(null).get(); //$NON-NLS-1$
 					}
 					else {
-						match = QueryBuilder.start(left.getTable().getName()).exists("true").get(); //$NON-NLS-1$ 				
+						match = QueryBuilder.start(left.getTable().getName()).exists("true").notEquals(null).get(); //$NON-NLS-1$ 				
 					}
 				}
 				else if (join.getJoinType().equals(JoinType.CROSS_JOIN) || join.getJoinType().equals(JoinType.FULL_OUTER_JOIN)){
