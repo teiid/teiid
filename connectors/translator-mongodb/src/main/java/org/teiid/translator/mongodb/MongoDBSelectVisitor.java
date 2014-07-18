@@ -47,11 +47,10 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	private Select command;
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-	protected Stack<DBObject> onGoingPullCriteria = new Stack<DBObject>();
 	protected Stack<Object> onGoingExpression  = new Stack<Object>();
-	protected ConcurrentHashMap<Object, ColumnAlias> expressionMap = new ConcurrentHashMap<Object, ColumnAlias>();
+	protected ConcurrentHashMap<Object, ColumnDetail> expressionMap = new ConcurrentHashMap<Object, ColumnDetail>();
 	private HashMap<String, BasicDBObject> groupByProjections = new HashMap<String, BasicDBObject>();
-	protected ColumnAlias onGoingAlias;
+	protected ColumnDetail onGoingAlias;
 	protected MongoDocument mongoDoc;
 
 	// derived stuff
@@ -145,7 +144,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 		Object expr = this.onGoingExpression.pop();
 
-		ColumnAlias previousAlias = this.expressionMap.put(expr, this.onGoingAlias);
+		ColumnDetail previousAlias = this.expressionMap.put(expr, this.onGoingAlias);
 		if (previousAlias == null) {
 			previousAlias = this.onGoingAlias;
 		}
@@ -182,107 +181,168 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		this.onGoingAlias = null;
 	}
 
-	private ColumnAlias buildAlias(String alias) {
-		if (alias == null) {
-			String str = "_m"+this.aliasCount.getAndIncrement(); //$NON-NLS-1$
-			return new ColumnAlias(str, str, str, str, null);
-		}
-		return new ColumnAlias(alias, alias,alias,  alias, null);
+	private ColumnDetail buildAlias() {
+	    return buildAlias("_m"+this.aliasCount.getAndIncrement()); //$NON-NLS-1$
+	}
+	
+	private ColumnDetail buildAlias(String alias) {
+	    if (alias == null) {
+	        return buildAlias();
+	    }
+	    ColumnDetail detail =  new ColumnDetail();
+		detail.projectedName = alias;
+		return detail;
 	}
 
 	@Override
 	public void visit(ColumnReference obj) {
 		try {
-			String elementName = getColumnName(obj);
-
 			if (obj.getMetadataObject() == null) {
 				for (Object expr:this.expressionMap.keySet()) {
-					ColumnAlias alias = this.expressionMap.get(expr);
-					if (alias.projectedName.equals(elementName)) {
+					ColumnDetail alias = this.expressionMap.get(expr);
+					if (alias.projectedName.equals(getColumnName(obj))) {
 						this.onGoingExpression.push(expr);
 						break;
 					}
 				}
 			}
 			else {
+			    // do not allow array type in where clauses etc.
 			    if (!this.processingDerivedColumn) {
 			        if (DataTypeManager.isArrayType(obj.getMetadataObject().getRuntimeType())){
-			            this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18027, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18027, elementName)));
+			            this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18027, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18027, getColumnName(obj))));
 			        }
 			    }
-				String selectionName = elementName;
-				String columnName = obj.getMetadataObject().getName();
-				String pullColumnName = obj.getMetadataObject().getName();
 
-				MongoDocument columnDocument = getDocument(obj.getTable().getMetadataObject());
-				MongoDocument targetDocument = this.mongoDoc.getTargetDocument();
-				String tableName = null;
-
-				// column is on the same collection
-				if (columnDocument.equals(targetDocument)) {
-					// check if this is primary key
-					if (columnDocument.isPartOfPrimaryKey(columnName)) {
-						if (columnDocument.hasCompositePrimaryKey()) {
-							elementName = "_id."+columnName; //$NON-NLS-1$
-							selectionName = elementName;
-							pullColumnName = "_id."+columnName; //$NON-NLS-1$
-						}
-						else {
-							elementName = "_id"; //$NON-NLS-1$
-							selectionName = elementName;
-							pullColumnName = "_id"; //$NON-NLS-1$
-						}
-					}
-					if (columnDocument.isPartOfForeignKey(columnName)) {
-						// if this column is foreign key on same table then access must be "key.$id" because it is DBRef
-						selectionName = elementName + ".$id"; //$NON-NLS-1$
-						if (columnDocument.isMultiKeyForeignKey(columnName)) {
-							selectionName = selectionName+"."+columnName; //$NON-NLS-1$
-						}
-						pullColumnName = columnName+".$id"; //$NON-NLS-1$
-					}
-				}
-				else if (targetDocument.embeds(columnDocument)){
-					// if this is embddable/embedIn table, then we need to use the embedded collection name
-					MutableDBRef ref = targetDocument.getEmbeddedDocumentReferenceKey(columnDocument);
-					elementName = ref.getAlias()+"."+columnName; //$NON-NLS-1$
-					tableName = columnDocument.getTable().getName();
-					selectionName = elementName;
-					
-					if (columnDocument.isPartOfPrimaryKey(columnName)) {
-						if (columnDocument.hasCompositePrimaryKey()) {
-							elementName = ref.getAlias()+"."+"_id."+columnName; //$NON-NLS-1$ //$NON-NLS-2$
-							selectionName = elementName;
-							pullColumnName = "_id."+columnName; //$NON-NLS-1$
-						}
-						else {
-							elementName = ref.getAlias()+"."+"_id"; //$NON-NLS-1$ //$NON-NLS-2$
-							selectionName = elementName;
-							pullColumnName = "_id"; //$NON-NLS-1$
-						}
-					}
-					if (columnDocument.isPartOfForeignKey(columnName)) {
-						// if this column is foreign key on same table then access must be "key.$id" because it is DBRef
-						selectionName = elementName + ".$id"; //$NON-NLS-1$
-						if (columnDocument.isMultiKeyForeignKey(columnName)) {
-							selectionName = selectionName+"."+columnName; //$NON-NLS-1$
-						}
-						pullColumnName = columnName+".$id"; //$NON-NLS-1$
-					}
-				}
-
-				String mongoExpr = "$"+elementName; //$NON-NLS-1$
+			    ColumnDetail columnInfo = buildColumnDetail(obj);
+				Object mongoExpr = columnInfo.expression; 
 				this.onGoingExpression.push(mongoExpr);
 
 				if (this.onGoingAlias == null) {
-					this.expressionMap.putIfAbsent(mongoExpr, new ColumnAlias("_c"+this.columnCount.getAndIncrement(), selectionName, columnName, pullColumnName, tableName)); //$NON-NLS-1$
+				    columnInfo.projectedName = "_c"+this.columnCount.getAndIncrement(); //$NON-NLS-1$
+					this.expressionMap.putIfAbsent(mongoExpr, columnInfo); 
+				}
+				else {
+				    this.onGoingAlias.expression = columnInfo.expression;
+				    this.onGoingAlias.targetDocumentFieldName = columnInfo.targetDocumentFieldName;
+				    this.onGoingAlias.targetDocumentName = columnInfo.targetDocumentName;
 				}
 			}
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 			return;
 		}
+	}
+	
+	ColumnDetail buildColumnDetail(ColumnReference obj) throws TranslatorException {
+        MongoDocument columnDocument = getDocument(obj.getTable().getMetadataObject());
+        MongoDocument targetDocument = this.mongoDoc.getTargetDocument();
+        
+        String columnName = obj.getMetadataObject().getName();
+        String documentFieldName = obj.getMetadataObject().getName();
+        String documentQueryFieldName = obj.getMetadataObject().getName();
+        String targetDocumentFieldName = obj.getMetadataObject().getName();
+        String tableName = columnDocument.getTable().getName();
+        String parentTableName = columnDocument.getTable().getName();
+        
+        // column is on the same collection
+        if (columnDocument.equals(targetDocument)) {
+            // check if this is primary key
+            if (columnDocument.isPartOfPrimaryKey(columnName)) {
+                if (columnDocument.hasCompositePrimaryKey()) {
+                    documentFieldName = "_id."+columnName; //$NON-NLS-1$
+                    documentQueryFieldName = documentFieldName;
+                    targetDocumentFieldName = documentFieldName;
+                }
+                else {
+                    documentFieldName = "_id"; //$NON-NLS-1$
+                    documentQueryFieldName = documentFieldName;
+                    targetDocumentFieldName = documentFieldName;
+                }
+            }
+        }
+        else if (targetDocument.embeds(columnDocument)){
+            // if this is embddable table, then we need to use the embedded collection name
+            MutableDBRef ref = targetDocument.getEmbeddedDocumentReferenceKey(columnDocument);
+            documentFieldName = ref.getAlias()+"."+columnName; //$NON-NLS-1$
+            documentQueryFieldName = documentFieldName;
+            
+            if (columnDocument.isPartOfPrimaryKey(columnName)) {
+            	// if this is primary key then key must be in parent document
+                if (columnDocument.hasCompositePrimaryKey()) {
+                    documentFieldName = ref.getAlias()+"."+"_id."+columnName; //$NON-NLS-1$ //$NON-NLS-2$
+                    documentQueryFieldName = ref.getParentColumnName(columnName);
+                    targetDocumentFieldName = ref.getParentColumnName(columnName);                            
+                }
+                else {
+                    documentFieldName = ref.getAlias()+"."+"_id"; //$NON-NLS-1$ //$NON-NLS-2$
+                    documentQueryFieldName = ref.getParentColumnName(columnName);
+                    targetDocumentFieldName = ref.getParentColumnName(columnName);
+                }                       
+            }
+            if (columnDocument.isPartOfForeignKey(columnName)) {
+                // if this column is foreign key on same table then access must be "key.$id" because it is DBRef
+                documentQueryFieldName = ref.getParentColumnName(columnName);
+                targetDocumentFieldName = ref.getParentColumnName(columnName);
+            }
+        }
+        else if (targetDocument.merges(columnDocument)){
+            // if this is merge table, then we need to use the merge collection name
+            MutableDBRef ref = targetDocument.getEmbeddedDocumentReferenceKey(columnDocument);
+            documentFieldName = ref.getAlias()+"."+columnName; //$NON-NLS-1$
+            documentQueryFieldName = documentFieldName;
 
+            // one-2-one
+            if (columnDocument.isPartOfPrimaryKey(columnName) && 
+                    ref.getAssociation() == MutableDBRef.Association.ONE) {
+                documentFieldName = "_id"; //$NON-NLS-1$
+                if (columnDocument.hasCompositePrimaryKey()) {
+                    documentFieldName = "_id."+columnName; //$NON-NLS-1$
+                }
+                documentQueryFieldName = documentFieldName;
+                targetDocumentFieldName = documentFieldName;     
+                parentTableName = targetDocument.getTable().getName();
+            }
+            else if (columnDocument.isPartOfPrimaryKey(columnName) && 
+                    ref.getAssociation() == MutableDBRef.Association.MANY) {
+                if (columnDocument.hasCompositePrimaryKey()) {
+                    documentFieldName = ref.getAlias()+"."+"_id."+columnName; //$NON-NLS-1$ //$NON-NLS-2$
+                    documentQueryFieldName = documentFieldName;
+                    targetDocumentFieldName = "_id."+columnName; //$NON-NLS-1$
+                }
+                else {
+                    documentFieldName = ref.getAlias()+"."+"_id"; //$NON-NLS-1$ //$NON-NLS-2$
+                    documentQueryFieldName = documentFieldName;
+                    targetDocumentFieldName = "_id"; //$NON-NLS-1$
+                }
+            }
+
+            if (columnDocument.isPartOfForeignKey(columnName)) {
+                String parentColumnName = ref.getParentColumnName(columnName);
+                if (parentColumnName != null && targetDocument.isPartOfPrimaryKey(parentColumnName)) {
+                    documentFieldName = "_id"; //$NON-NLS-1$
+                    if (ref.isNested()) {
+                        documentFieldName = ref.getParentTable()+"._id"; //$NON-NLS-1$
+                    }
+                    if (columnDocument.isCompositeForeignKey(columnName)) {
+                        documentFieldName = "_id."+columnName; //$NON-NLS-1$
+                    }
+                    documentQueryFieldName = documentFieldName;
+                    targetDocumentFieldName = parentColumnName;  
+                    parentTableName = ref.getParentTable();
+                }
+            }
+        }	   
+        ColumnDetail detail = new ColumnDetail();
+        detail.documentFieldName = documentFieldName;
+        detail.projectedName = documentFieldName;
+        detail.documentQueryFieldName = documentQueryFieldName;
+        detail.columnName = columnName;
+        detail.targetDocumentFieldName = targetDocumentFieldName;
+        detail.tableName=tableName;
+        detail.targetDocumentName = parentTableName;
+        detail.expression = "$"+documentFieldName; //$NON-NLS-1$
+        return detail;
 	}
 
     private MongoDocument getDocument(Table table) {
@@ -330,21 +390,22 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		}
     }
 
-	private ColumnAlias addToProject(Object expr, boolean addExprAsProject) {
-		ColumnAlias previousAlias = this.expressionMap.get(expr);
+	private ColumnDetail addToProject(Object expr, boolean addExprAsProject) {
+		ColumnDetail previousAlias = this.expressionMap.get(expr);
 		if (previousAlias == null) {
 			// if expression is in having clause there is will be no alias; however mongo expects this
 			// to be elevated to grouping clause
 			previousAlias = this.onGoingAlias;
 			if (this.onGoingAlias == null) {
 				this.projectBeforeMatch = true;
-				previousAlias = buildAlias(null);
+				previousAlias = buildAlias();
 			}
 			this.expressionMap.putIfAbsent(expr, previousAlias);
 		}
-
+		previousAlias.expression = expr;
+		
 		if (this.project.get(previousAlias.projectedName) == null && !this.project.values().contains(expr)) {
-			this.project.append(previousAlias.projectedName, addExprAsProject?expr:1);
+			this.project.append(previousAlias.projectedName, addExprAsProject?expr:1);			
 		}
 		return previousAlias;
 	}
@@ -448,12 +509,12 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     		}
     	}
 		
-		if (left.embeds(right)) {
+		if (left.contains(right)) {
 			this.mongoDoc = left;
 			this.joinedDocuments.add(right);
 			configureUnwind(right, null);
 		}
-		else if (right.embeds(left)) {
+		else if (right.contains(left)) {
 			this.mongoDoc = right;
 			this.joinedDocuments.add(left);
 			configureUnwind(left, null);
@@ -462,7 +523,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			if (this.mongoDoc != null) {
 				// this is for nested grand kids
 				for (MongoDocument child:this.joinedDocuments) {
-					if (child.embeds(right)) {
+					if (child.contains(right)) {
 						this.joinedDocuments.add(right);
 						configureUnwind(right, null);
 						return;
@@ -563,17 +624,17 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
     }
 	
-	private ColumnAlias implicitProject(Expression teiidExpr, Object mongoExpr) {
+	private ColumnDetail implicitProject(Expression teiidExpr, Object mongoExpr) {
         if (teiidExpr instanceof ColumnReference) {
-            ColumnAlias alias = this.expressionMap.get(mongoExpr);
+            ColumnDetail alias = this.expressionMap.get(mongoExpr);
             if (alias == null) {
-                alias = buildAlias(null);
+                alias = buildAlias();
                 this.expressionMap.put(mongoExpr, alias);
             }
             return alias;
         }
         else if (teiidExpr instanceof AggregateFunction) {
-            ColumnAlias alias = addToProject(mongoExpr, false);
+            ColumnDetail alias = addToProject(mongoExpr, false);
             if (!this.group.values().contains(mongoExpr)) {
                 this.group.put(alias.projectedName, mongoExpr);
             }
@@ -609,7 +670,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
         
         // this for the normal where clause
-		ColumnAlias exprAlias = getExpressionAlias(obj.getLeftExpression());
+		ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
 
         append(obj.getRightExpression());
 
@@ -617,47 +678,40 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         if (this.expressionMap.get(rightExpr) != null) {
         	rightExpr = this.expressionMap.get(rightExpr).projectedName;
         }
-    	
-		QueryBuilder query = QueryBuilder.start(exprAlias.selectionName);
-		QueryBuilder pullQuery = QueryBuilder.start(exprAlias.pullColumnName);
-    	
-    	switch(obj.getOperator()) {
-        case EQ:
-        	query.is(rightExpr);
-        	pullQuery.is(rightExpr);
-        	break;
-        case NE:
-        	query.notEquals(rightExpr);
-        	pullQuery.notEquals(rightExpr);
-        	break;
-        case LT:
-        	query.lessThan(rightExpr);
-        	pullQuery.lessThan(rightExpr);
-        	break;
-        case LE:
-        	query.lessThanEquals(rightExpr);
-        	pullQuery.lessThanEquals(rightExpr);
-        	break;
-        case GT:
-        	query.greaterThan(rightExpr);
-        	pullQuery.greaterThan(rightExpr);
-        	break;
-        case GE:
-        	query.greaterThanEquals(rightExpr);
-        	pullQuery.greaterThanEquals(rightExpr);
-        	break;
-        }
+        
+        QueryBuilder query = exprAlias.getQueryBuilder();
+        buildComparisionQuery(obj, rightExpr, query);
     	this.onGoingExpression.push(query.get());
-    	
-        if (obj.getLeftExpression() instanceof ColumnReference) {
-        	ColumnReference colum = (ColumnReference)obj.getLeftExpression();
-			this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), exprAlias.columnName, rightExpr);
-        }
 
-        // build pull criteria for delete
-       	this.onGoingPullCriteria.push(pullQuery.get());
+    	if (obj.getLeftExpression() instanceof ColumnReference) {
+            ColumnReference colum = (ColumnReference)obj.getLeftExpression();
+            this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), exprAlias.columnName, rightExpr);
+        }    	
 	}
-
+	
+    protected void buildComparisionQuery(Comparison obj, Object rightExpr, QueryBuilder query) {
+        switch(obj.getOperator()) {
+        case EQ:
+            query.is(rightExpr);
+            break;
+        case NE:
+            query.notEquals(rightExpr);
+            break;
+        case LT:
+            query.lessThan(rightExpr);
+            break;
+        case LE:
+            query.lessThanEquals(rightExpr);
+            break;
+        case GT:
+            query.greaterThan(rightExpr);
+            break;
+        case GE:
+            query.greaterThanEquals(rightExpr);
+            break;
+        }
+    }	
+	
 	private void visitDerivedExpression(Comparison obj) {
 		append(obj.getLeftExpression());
 		Object leftExpr = this.onGoingExpression.pop();
@@ -671,27 +725,21 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		switch(obj.getOperator()) {
 		case EQ:
 			this.onGoingExpression.push(new BasicDBObject("$eq", values)); //$NON-NLS-1$
-			this.onGoingPullCriteria.push(new BasicDBObject("$eq", values)); //$NON-NLS-1$
 			break;
 		case NE:
 			this.onGoingExpression.push(new BasicDBObject("$ne", values)); //$NON-NLS-1$
-			this.onGoingPullCriteria.push(new BasicDBObject("$ne", values)); //$NON-NLS-1$
 			break;
 		case LT:
 			this.onGoingExpression.push(new BasicDBObject("$lt", values)); //$NON-NLS-1$
-			this.onGoingPullCriteria.push(new BasicDBObject("$lt", values)); //$NON-NLS-1$
 			break;
 		case LE:
 			this.onGoingExpression.push(new BasicDBObject("$lte", values)); //$NON-NLS-1$
-			this.onGoingPullCriteria.push(new BasicDBObject("$lte", values)); //$NON-NLS-1$
 			break;
 		case GT:
 			this.onGoingExpression.push(new BasicDBObject("$gt", values)); //$NON-NLS-1$
-			this.onGoingPullCriteria.push(new BasicDBObject("$gt", values)); //$NON-NLS-1$
 			break;
 		case GE:
 			this.onGoingExpression.push(new BasicDBObject("$gte", values)); //$NON-NLS-1$
-			this.onGoingPullCriteria.push(new BasicDBObject("$gte", values)); //$NON-NLS-1$
 			break;
 		}
 	}
@@ -703,19 +751,14 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         DBObject right = (DBObject)this.onGoingExpression.pop();
         DBObject left = (DBObject) this.onGoingExpression.pop();
 
-        DBObject pullRight = this.onGoingPullCriteria.pop();
-        DBObject pullLeft = this.onGoingPullCriteria.pop();
-
         switch(obj.getOperator()) {
         case AND:
         	this.onGoingExpression.push(QueryBuilder.start().and(left, right).get());
-        	this.onGoingPullCriteria.push(QueryBuilder.start().and(pullLeft, pullRight).get());
         	break;
         case OR:
         	this.onGoingExpression.push(QueryBuilder.start().or(left, right).get());
-        	this.onGoingPullCriteria.push(QueryBuilder.start().or(pullLeft, pullRight).get());
         	break;
-        }
+        }       
     }
 	
 	@Override
@@ -739,38 +782,33 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(In obj) {
-		ColumnAlias exprAlias = getExpressionAlias(obj.getLeftExpression());
-		QueryBuilder query = QueryBuilder.start(exprAlias.selectionName);
-		QueryBuilder pullQuery = QueryBuilder.start(exprAlias.pullColumnName);
-
-    	append(obj.getRightExpressions());
-
+		ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+		QueryBuilder query = exprAlias.getQueryBuilder();
+		this.onGoingExpression.push(buildInQuery(obj, query).get());
+	}
+	
+    protected QueryBuilder buildInQuery(In obj, QueryBuilder query) {
+        append(obj.getRightExpressions());
         BasicDBList values = new BasicDBList();
         for (int i = 0; i < obj.getRightExpressions().size(); i++) {
-        	values.add(0, this.onGoingExpression.pop());
+            values.add(0, this.onGoingExpression.pop());
         }
+        if (obj.isNegated()) {
+            query.notIn(values);
+        } else {
+            query.in(values);
+        }
+        return query;
+    }	
 
-		if (query != null) {
-			if (obj.isNegated()) {
-				query.notIn(values);
-				pullQuery.notIn(values);
-			} else {
-				query.in(values);
-				pullQuery.in(values);
-			}
-			this.onGoingExpression.push(query.get());
-			this.onGoingPullCriteria.push(pullQuery.get());
-		}
-	}
-
-	private ColumnAlias getExpressionAlias(Expression obj) {
+	ColumnDetail getExpressionAlias(Expression obj) {
 		// the way DBRef names handled in projection vs selection is different.
 		// in projection we want to see as "col" mapped to "col.$_id" as it is treated as sub-document
 		// where as in selection it will should be "col._id".
 		append(obj);
 
 		Object expr = this.onGoingExpression.pop();
-		ColumnAlias exprAlias = implicitProject(obj, expr);
+		ColumnDetail exprAlias = implicitProject(obj, expr);
 //		if (exprAlias == null) {
 //			exprAlias = buildAlias(null);
 //			this.expressionMap.put(expr, exprAlias);
@@ -783,71 +821,66 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(IsNull obj) {
-		ColumnAlias exprAlias = getExpressionAlias(obj.getExpression());
-		QueryBuilder query = QueryBuilder.start(exprAlias.selectionName);
-		QueryBuilder pullQuery = QueryBuilder.start(exprAlias.pullColumnName);
-
-		if (query != null) {
-			if (obj.isNegated()) {
-				query.notEquals(null);
-				pullQuery.notEquals(null);
-			}
-			else {
-				query.is(null);
-				pullQuery.is(null);
-			}
-			this.onGoingExpression.push(query.get());
-			this.onGoingPullCriteria.push(pullQuery.get());
-		}
+		ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
+		QueryBuilder query = exprAlias.getQueryBuilder();
+		this.onGoingExpression.push(buildIsNullQuery(obj, query).get());
 	}
+	
+    protected QueryBuilder buildIsNullQuery(IsNull obj, QueryBuilder query) {
+        if (obj.isNegated()) {
+            query.notEquals(null);
+        }
+        else {
+            query.is(null);
+        }
+        return query;
+    }	
 
 	@Override
 	public void visit(Like obj) {
-		ColumnAlias exprAlias = getExpressionAlias(obj.getLeftExpression());
-		QueryBuilder query = QueryBuilder.start(exprAlias.selectionName);
-		QueryBuilder pullQuery = QueryBuilder.start(exprAlias.pullColumnName);
-
-		if (query != null) {
-			if (obj.isNegated()) {
-				query.not();
-				pullQuery.not();
-			}
-
-			append(obj.getRightExpression());
-
-			StringBuilder value = new StringBuilder((String)this.onGoingExpression.pop());
-			int idx = -1;
-			while (true) {
-				idx = value.indexOf("%", idx+1);//$NON-NLS-1$
-				if (idx != -1 && idx == 0) {
-					continue;
-				}
-				if (idx != -1 && idx == value.length()-1) {
-					continue;
-				}
-
-				if (idx == -1) {
-					break;
-				}
-				value.replace(idx, idx+1, ".*"); //$NON-NLS-1$
-			}
-
-			if (value.charAt(0) != '%') {
-				value.insert(0, '^');
-			}
-
-			idx = value.length();
-			if (value.charAt(idx-1) != '%') {
-				value.insert(idx, '$');
-			}
-
-			String regex = value.toString().replaceAll("%", ""); //$NON-NLS-1$ //$NON-NLS-2$
-			query.is(Pattern.compile(regex));
-			pullQuery.is(Pattern.compile(regex));
-			this.onGoingExpression.push(query.get());
-			this.onGoingPullCriteria.push(pullQuery.get());
-		}
+		ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+		QueryBuilder query = exprAlias.getQueryBuilder();
+		buildLikeQuery(obj, query);
+		this.onGoingExpression.push(query.get());
 	}
+
+    protected QueryBuilder buildLikeQuery(Like obj, QueryBuilder query) {
+		if (obj.isNegated()) {
+			query.not();
+		}
+
+		append(obj.getRightExpression());
+
+		StringBuilder value = new StringBuilder((String)this.onGoingExpression.pop());
+		int idx = -1;
+		while (true) {
+			idx = value.indexOf("%", idx+1);//$NON-NLS-1$
+			if (idx != -1 && idx == 0) {
+				continue;
+			}
+			if (idx != -1 && idx == value.length()-1) {
+				continue;
+			}
+
+			if (idx == -1) {
+				break;
+			}
+			value.replace(idx, idx+1, ".*"); //$NON-NLS-1$
+		}
+
+		if (value.charAt(0) != '%') {
+			value.insert(0, '^');
+		}
+
+		idx = value.length();
+		if (value.charAt(idx-1) != '%') {
+			value.insert(idx, '$');
+		}
+
+		String regex = value.toString().replaceAll("%", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		query.is(Pattern.compile(regex));	
+		return query;
+    }
 
 	@Override
 	public void visit(Limit obj) {
@@ -866,7 +899,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	public void visit(SortSpecification obj) {
 		append(obj.getExpression());
 		Object expr = this.onGoingExpression.pop();
-		ColumnAlias alias = this.expressionMap.get(expr);
+		ColumnDetail alias = this.expressionMap.get(expr);
 		if (this.sort == null) {
 			this.sort =  new BasicDBObject(alias.projectedName, (obj.getOrdering() == Ordering.ASC)?1:-1);
 		}
@@ -880,7 +913,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		if (obj.getElements().size() == 1) {
 			append(obj.getElements().get(0));
 			Object mongoExpr = this.onGoingExpression.pop();
-			ColumnAlias alias = this.expressionMap.get(mongoExpr);
+			ColumnDetail alias = this.expressionMap.get(mongoExpr);
 			this.group.put("_id", new BasicDBObject(alias.projectedName, mongoExpr)); //$NON-NLS-1$
 			this.groupByProjections.put("_id", new BasicDBObject(alias.projectedName, "$_id."+alias.projectedName)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -890,7 +923,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			for (Expression expr : obj.getElements()) {
 				append(expr);
 				Object mongoExpr = this.onGoingExpression.pop();
-				ColumnAlias alias = this.expressionMap.get(mongoExpr);
+				ColumnDetail alias = this.expressionMap.get(mongoExpr);
 				exprs.put(alias.projectedName, mongoExpr);
 				fields.put(alias.projectedName, "$_id."+alias.projectedName); //$NON-NLS-1$
 			}

@@ -106,7 +106,7 @@ CREATE FOREIGN TABLE Orders (
 CREATE FOREIGN TABLE OrderDetails (
   odID integer NOT NULL,
   ProductID integer NOT NULL,
-  UnitPrice float default '0',
+  UnitPrice double default '0',
   Quantity integer default '1',
   Discount float default '0',
   FOREIGN KEY (odID) REFERENCES Orders (OrderID),
