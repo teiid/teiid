@@ -41,7 +41,6 @@
         <dependency>
             <groupId>org.odata4j</groupId>
             <artifactId>odata4j-core</artifactId>
-            <classifier>redhat</classifier>
         </dependency>
         <dependency>
             <artifactId>core4j</artifactId>
