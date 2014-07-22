@@ -33,19 +33,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import net.sf.saxon.lib.ConversionRules;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.SequenceTool;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ConversionResult;
+import net.sf.saxon.type.Converter;
 import net.sf.saxon.type.ValidationException;
 import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.CalendarValue;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.value.Value;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
@@ -339,7 +341,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 			}
 			BuiltInAtomicType bat = typeMapping.get(type);
 			if (bat != null) {
-				ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);
+				AtomicValue av = new StringValue(i.getStringValueCS());
+				ConversionResult cr = Converter.convert(av, bat, new ConversionRules());
 				value = cr.asAtomic();
 				value = getValue((AtomicValue)value);
 				if (value instanceof Item) {
@@ -366,7 +369,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				return new Timestamp(cal.getTime().getTime());
 			}
 		}
-		return Value.convertToJava(value);
+		return SequenceTool.convertToJava(value);
 	}
 	
 	@Override

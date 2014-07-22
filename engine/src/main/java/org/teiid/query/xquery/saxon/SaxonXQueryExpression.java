@@ -41,16 +41,15 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.stax.StAXSource;
 
 import net.sf.saxon.Configuration;
-import net.sf.saxon.expr.AxisExpression;
 import net.sf.saxon.expr.ContextItemExpression;
 import net.sf.saxon.expr.Expression;
-import net.sf.saxon.expr.PathMap;
 import net.sf.saxon.expr.RootExpression;
-import net.sf.saxon.expr.PathMap.PathMapArc;
-import net.sf.saxon.expr.PathMap.PathMapNode;
-import net.sf.saxon.expr.PathMap.PathMapNodeSet;
-import net.sf.saxon.expr.PathMap.PathMapRoot;
-import net.sf.saxon.om.Axis;
+import net.sf.saxon.expr.parser.PathMap;
+import net.sf.saxon.expr.parser.PathMap.PathMapArc;
+import net.sf.saxon.expr.parser.PathMap.PathMapNode;
+import net.sf.saxon.expr.parser.PathMap.PathMapNodeSet;
+import net.sf.saxon.expr.parser.PathMap.PathMapRoot;
+import net.sf.saxon.om.AxisInfo;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
@@ -67,6 +66,7 @@ import net.sf.saxon.trace.ExpressionPresenter;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.ItemType;
 import net.sf.saxon.type.TypeHierarchy;
+import net.sf.saxon.value.EmptySequence;
 import net.sf.saxon.value.SequenceType;
 
 import org.teiid.api.exception.query.QueryResolverException;
@@ -159,11 +159,9 @@ public class SaxonXQueryExpression {
 		protected int computeCardinality() {
 			return 0;
 		}
-
-		@Override
-		public PathMapNodeSet addToPathMap(PathMap pathMap,
-				PathMapNodeSet pathMapNodeSet) {
-			return pathMapNodeSet;
+		
+		public PathMapNodeSet addToPathMap(PathMap arg0, PathMapNodeSet arg1) {
+			return arg1;
 		}
 	};
 
@@ -216,7 +214,7 @@ public class SaxonXQueryExpression {
         		continue;
         	}
         	try {
-				context.declareGlobalVariable(StructuredQName.fromClarkName(derivedColumn.getAlias()), SequenceType.ANY_SEQUENCE, null, true);
+				context.declareGlobalVariable(StructuredQName.fromClarkName(derivedColumn.getAlias()), SequenceType.ANY_SEQUENCE, EmptySequence.getInstance(), true);
 			} catch (XPathException e) {
 				//this is always expected to work
 				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30153, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30153));
@@ -269,7 +267,7 @@ public class SaxonXQueryExpression {
 		}
 		PathMapRoot parentRoot;
 		try {
-			parentRoot = map.getContextRoot();
+			parentRoot = map.getContextDocumentRoot();
 		} catch (IllegalStateException e) {
 			if (record.recordAnnotations()) {
 				record.addAnnotation(XQUERY_PLANNING, "Multiple context items exist " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
@@ -302,7 +300,7 @@ public class SaxonXQueryExpression {
 			} else {
 				for (Iterator<PathMapNode> iter = finalNodes.iterator(); iter.hasNext(); ) {
 	                PathMapNode subNode = iter.next();
-	                subNode.createArc(new AxisExpression(Axis.DESCENDANT_OR_SELF, AnyNodeTest.getInstance()));
+	                subNode.createArc(AxisInfo.DESCENDANT_OR_SELF, AnyNodeTest.getInstance());
 	            }
 			}
 		} 
@@ -360,18 +358,18 @@ public class SaxonXQueryExpression {
 					subContextRoot = root;
 				}
 			}
-	    	if (subContextRoot == null) {
-	    		//special case for handling '.', which the pathmap logic doesn't consider as a root
-	    		if (internalExpression instanceof ContextItemExpression) {
-	    			addReturnedArcs(xmlColumn, finalNode);
-	    		}
-	    		continue;
-	    	}
+    		//special case for handling '.', which the pathmap logic doesn't consider as a root
+    		if (internalExpression instanceof ContextItemExpression) {
+    			addReturnedArcs(xmlColumn, finalNode);
+    		}
+    		if (subContextRoot == null) {
+    			continue;
+    		}
 	    	for (PathMapArc arc : subContextRoot.getArcs()) {
 	    		if (streamingPath != null && !validateColumnForStreaming(record, xmlColumn, arc)) {
 	    			streamingPath = null;
 	    		}
-				finalNode.createArc(arc.getStep(), arc.getTarget());
+				finalNode.createArc(arc.getAxis(), arc.getNodeTest(), arc.getTarget());
 			}
 	    	HashSet<PathMapNode> subFinalNodes = new HashSet<PathMapNode>();
 			getReturnableNodes(subContextRoot, subFinalNodes);
@@ -392,7 +390,7 @@ public class SaxonXQueryExpression {
 			newRoot.setHasUnknownDependencies();
 		}
 		for (PathMapArc arc : parentRoot.getArcs()) {
-			newRoot.createArc(arc.getStep(), arc.getTarget());
+			newRoot.createArc(arc.getAxis(), arc.getNodeTest(), arc.getTarget());
 		}
 		return newMap.reduceToDownwardsAxes(newRoot);
 	}
@@ -404,10 +402,10 @@ public class SaxonXQueryExpression {
 		arcStack.add(arc);
 		while (!arcStack.isEmpty()) {
 			PathMapArc current = arcStack.removeFirst();
-			byte axis = current.getStep().getAxis();
+			byte axis = current.getAxis();
 			if (ancestor) {
 				if (current.getTarget().isReturnable()) {
-					if (axis != Axis.NAMESPACE && axis != Axis.ATTRIBUTE) {
+					if (axis != AxisInfo.NAMESPACE && axis != AxisInfo.ATTRIBUTE) {
 						if (record.recordAnnotations()) {
 							record.addAnnotation(XQUERY_PLANNING, "The column path contains an invalid reverse axis " + xmlColumn.getPath(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 						}
@@ -420,10 +418,10 @@ public class SaxonXQueryExpression {
 					}
 					return false;
 				}
-			} else if (!Axis.isSubtreeAxis[axis]) {
-				if (axis == Axis.PARENT 
-						|| axis == Axis.ANCESTOR
-						|| axis == Axis.ANCESTOR_OR_SELF) {
+			} else if (!AxisInfo.isSubtreeAxis[axis]) {
+				if (axis == AxisInfo.PARENT 
+						|| axis == AxisInfo.ANCESTOR
+						|| axis == AxisInfo.ANCESTOR_OR_SELF) {
 					if (current.getTarget().isReturnable()) {
 						if (record.recordAnnotations()) {
 							record.addAnnotation(XQUERY_PLANNING, "The column path contains an invalid reverse axis " + xmlColumn.getPath(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
@@ -447,10 +445,10 @@ public class SaxonXQueryExpression {
 
 	private void addReturnedArcs(XMLColumn xmlColumn, PathMapNode subNode) {
 		if (xmlColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-			subNode.createArc(new AxisExpression(Axis.DESCENDANT_OR_SELF, AnyNodeTest.getInstance()));
+			subNode.createArc(AxisInfo.DESCENDANT_OR_SELF, AnyNodeTest.getInstance());
 		} else {
 			//this may not always be needed, but it doesn't harm anything
-			subNode.createArc(new AxisExpression(Axis.CHILD, NodeKindTest.TEXT));
+			subNode.createArc(AxisInfo.CHILD, NodeKindTest.TEXT);
 			subNode.setAtomized();
 		}
 	}
@@ -549,7 +547,8 @@ public class SaxonXQueryExpression {
 			char[] pad = new char[level*2];
 			Arrays.fill(pad, ' ');
 			sb.append(new String(pad));
-			sb.append(pathMapArc.getStep());
+			sb.append(AxisInfo.axisName[pathMapArc.getAxis()]);
+			sb.append(pathMapArc.getNodeTest());
 			sb.append('\n');
 			node = pathMapArc.getTarget();
 			showArcs(sb, node, level + 1);

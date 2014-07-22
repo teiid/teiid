@@ -32,11 +32,13 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stax.StAXSource;
 
-import net.sf.saxon.AugmentedSource;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.event.FilterFactory;
 import net.sf.saxon.event.ProxyReceiver;
+import net.sf.saxon.event.Receiver;
 import net.sf.saxon.evpull.PullEventSource;
 import net.sf.saxon.evpull.StaxToEventBridge;
+import net.sf.saxon.lib.AugmentedSource;
 import net.sf.saxon.om.DocumentInfo;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.query.DynamicQueryContext;
@@ -106,9 +108,14 @@ public class XQueryEvaluator {
 	        	source = wrapStax(source, xquery.getConfig());
 	            if (xquery.contextRoot != null) {
 	            	//create our own filter as this logic is not provided in the free saxon
-	                ProxyReceiver filter = new PathMapFilter(xquery.contextRoot);
 	                AugmentedSource sourceInput = AugmentedSource.makeAugmentedSource(source);
-	                sourceInput.addFilter(filter);
+	                sourceInput.addFilter(new FilterFactory() {
+						
+						@Override
+						public ProxyReceiver makeFilter(Receiver arg0) {
+							return new PathMapFilter(xquery.contextRoot, arg0);
+						}
+					});
 	                source = sourceInput;
 	
 	            	//use streamable processing instead

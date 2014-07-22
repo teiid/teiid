@@ -61,7 +61,7 @@
         
         <!-- Teiid specific properties -->
         <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
-        <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
+        <version.net.sf.saxon>9.5.1-6</version.net.sf.saxon>
         <version.json-simple>1.1</version.json-simple>
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
@@ -733,9 +733,9 @@
                 <version>${arquillian-container-version}</version>
             </dependency>              
 			<dependency>
-				<groupId>net.sourceforge.saxon</groupId>
-				<artifactId>saxonhe</artifactId>
-				<version>${version.net.sourceforge.saxon}</version>
+				<groupId>net.sf.saxon</groupId>
+				<artifactId>Saxon-HE</artifactId>
+				<version>${version.net.sf.saxon}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.netty</groupId>

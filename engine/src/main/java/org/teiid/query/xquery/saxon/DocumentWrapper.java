@@ -1,9 +1,9 @@
 package org.teiid.query.xquery.saxon;
 
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.om.DocumentInfo;
@@ -32,9 +32,11 @@ public class DocumentWrapper extends NodeWrapper implements DocumentInfo {
 
 	protected String baseURI;
 
-	protected int documentNumber;
+	protected long documentNumber;
 
     private HashMap idIndex;
+
+	private Map<String, Object> userData = new HashMap<String, Object>();
 
 	/**
 	 * Create a Saxon wrapper for a XOM root node
@@ -86,7 +88,7 @@ public class DocumentWrapper extends NodeWrapper implements DocumentInfo {
 
 	public void setConfiguration(Configuration config) {
 		this.config = config;
-		this.documentNumber = allocateDocumentNumber(config);
+		this.documentNumber = config.getDocumentNumberAllocator().allocateDocumentNumber();
 	}
 	
     /**
@@ -193,42 +195,6 @@ public class DocumentWrapper extends NodeWrapper implements DocumentInfo {
 		return null;
 	}
 
-	private static final Method saxon85Method = findAllocateDocumentNumberMethod85();
-
-	// work-around for incompatibility introduced in saxon-8.5.1
-	private int allocateDocumentNumber(Configuration config) {
-		if (saxon85Method == null) {
-			try { // saxon >= 8.5.1
-				return allocateDocumentNumber851(config);
-			} catch (Throwable t) {
-				throw new RuntimeException(t);
-			}
-		}
-		
-		// saxon < 8.5.1
-		try { 
-			// return config.getNamePool().allocateDocumentNumber(this);
-			Object result = saxon85Method.invoke(config.getNamePool(), new Object[] {this});
-			return ((Integer) result).intValue();
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
-		}
-		
-	}
-
-	// saxon >= 8.5.1
-	private int allocateDocumentNumber851(Configuration config) {
-		return config.getDocumentNumberAllocator().allocateDocumentNumber();
-	}
-	
-	private static Method findAllocateDocumentNumberMethod85() {
-		try {
-			return NamePool.class.getMethod("allocateDocumentNumber", new Class[] {NodeInfo.class});
-		} catch (Throwable t) {
-			return null;
-		}
-	}
-
 	@Override
 	public Iterator getUnparsedEntityNames() {
 		return Collections.EMPTY_LIST.iterator();
@@ -251,6 +217,21 @@ public class DocumentWrapper extends NodeWrapper implements DocumentInfo {
 
 	@Override
 	public boolean isNilled() {
+		return false;
+	}
+	
+	@Override
+	public Object getUserData(String arg0) {
+		return this.userData.get(arg0);
+	}
+	
+	@Override
+	public void setUserData(String arg0, Object arg1) {
+		this.userData.put(arg0, arg1);
+	}
+	
+	@Override
+	public boolean isTyped() {
 		return false;
 	}
 

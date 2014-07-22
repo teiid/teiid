@@ -106,8 +106,8 @@
         </dependency>
 
 		<dependency>
-			<groupId>net.sourceforge.saxon</groupId>
-			<artifactId>saxonhe</artifactId>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>Saxon-HE</artifactId>
 		</dependency>
 		
 		<dependency>

@@ -4,15 +4,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 import net.sf.saxon.event.ProxyReceiver;
-import net.sf.saxon.expr.AxisExpression;
-import net.sf.saxon.expr.PathMap.PathMapArc;
-import net.sf.saxon.expr.PathMap.PathMapNode;
-import net.sf.saxon.expr.PathMap.PathMapRoot;
-import net.sf.saxon.om.Axis;
-import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.StandardNames;
+import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.PathMap.PathMapArc;
+import net.sf.saxon.expr.parser.PathMap.PathMapNode;
+import net.sf.saxon.expr.parser.PathMap.PathMapRoot;
+import net.sf.saxon.om.AxisInfo;
+import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NodeName;
 import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.SchemaType;
+import net.sf.saxon.type.SimpleType;
 import net.sf.saxon.type.Type;
 
 /**
@@ -38,8 +40,7 @@ class PathMapFilter extends ProxyReceiver {
 		}
 
 		void processArc(PathMapArc arc) {
-			AxisExpression ae = arc.getStep();
-			NodeTest test = ae.getNodeTest();
+			NodeTest test = arc.getNodeTest();
 			if (test == null) {
 				addAnyNodeArc(arc);
 			} else {
@@ -63,7 +64,7 @@ class PathMapFilter extends ProxyReceiver {
 		}
 
 		private void addAnyNodeArc(PathMapArc arc) {
-			if (arc.getStep().getAxis() == Axis.ATTRIBUTE) {
+			if (arc.getAxis() == AxisInfo.ATTRIBUTE) {
 				addAttributeArc(arc);
 				return;	
 			}
@@ -91,55 +92,52 @@ class PathMapFilter extends ProxyReceiver {
 	private boolean closed;
 	private LinkedList<MatchContext> matchContext = new LinkedList<MatchContext>();
 	
-	public PathMapFilter(PathMapRoot root) {
+	public PathMapFilter(PathMapRoot root, Receiver receiver) {
+		super(receiver);
 		MatchContext mc = new MatchContext();
 		mc.bulidContext(root);
 		matchContext.add(mc);
 	}
 	
 	@Override
-	public void startElement(int nameCode, int typeCode,
-			int locationId, int properties)
-			throws XPathException {
+	public void startElement(NodeName elemName, SchemaType typeCode,
+			int locationId, int properties) throws XPathException {
 		MatchContext mc = matchContext.getLast();
 		MatchContext newContext = new MatchContext();
 		if (mc.elementArcs != null) {
 			for (PathMapArc arc : mc.elementArcs) {
-				AxisExpression ae = arc.getStep();
-				NodeTest test = ae.getNodeTest();
-				if (test == null || test.matches(Type.ELEMENT, nameCode, typeCode)) {
+				NodeTest test = arc.getNodeTest();
+				if (test == null || test.matches(Type.ELEMENT, elemName, typeCode.getFingerprint())) {
 					newContext.bulidContext(arc.getTarget());
 					newContext.matchedElement = true;
 				} 
-				if (ae.getAxis() == Axis.DESCENDANT || ae.getAxis() == Axis.DESCENDANT_OR_SELF) {
+				if (arc.getAxis() == AxisInfo.DESCENDANT || arc.getAxis() == AxisInfo.DESCENDANT_OR_SELF) {
 					newContext.processArc(arc);
 				}
 			}
 		}
 		matchContext.add(newContext);
 		if (newContext.matchedElement) {
-			super.startElement(nameCode, typeCode, locationId, properties);
+			super.startElement(elemName, typeCode, locationId, properties);
 		}
 	}
 	
 	@Override
-	public void attribute(int nameCode, int typeCode,
+	public void attribute(NodeName nameCode, SimpleType typeCode,
 			CharSequence value, int locationId, int properties)
 			throws XPathException {
 		MatchContext mc = matchContext.getLast();
 		if (!mc.matchedElement) {
 			return;
 		}
-		int fp = nameCode & NamePool.FP_MASK;
-		if (fp == StandardNames.XSI_NIL || fp == StandardNames.XSI_TYPE) {
+		if (nameCode.isInNamespace(javax.xml.XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)) {
 			super.attribute(nameCode, typeCode, value, locationId, properties);
 			return;
 		}
 		if (mc.attributeArcs != null) {
 			for (PathMapArc arc : mc.attributeArcs) {
-				AxisExpression ae = arc.getStep();
-				NodeTest test = ae.getNodeTest();
-				if (test == null || test.matches(Type.ATTRIBUTE, nameCode, typeCode)) {
+				NodeTest test = arc.getNodeTest();
+				if (test == null || test.matches(Type.ATTRIBUTE, nameCode, typeCode.getFingerprint())) {
 					super.attribute(nameCode, typeCode, value, locationId, properties);
 					return;
 				} 
@@ -176,11 +174,11 @@ class PathMapFilter extends ProxyReceiver {
 	}
 
 	@Override
-	public void namespace(int namespaceCode, int properties)
+	public void namespace(NamespaceBinding namespaceBinding, int properties)
 			throws XPathException {
 		MatchContext context = matchContext.getLast();
 		if (context.matchedElement) {
-			super.namespace(namespaceCode, properties);
+			super.namespace(namespaceBinding, properties);
 		}
 	}
 

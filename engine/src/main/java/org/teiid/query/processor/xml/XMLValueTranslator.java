@@ -155,7 +155,7 @@ public final class XMLValueTranslator {
 				} catch (TransformerException e) {
 					 throw new TransformationException(QueryPlugin.Event.TEIID30209, e, e.getMessage());
 				}
-                	valueStr = new GYearMonthValue(dtv.getYear(), dtv.getMonth(), dtv.getTimezoneInMinutes()).getStringValue();
+                	valueStr = new GYearMonthValue(dtv.getYear(), dtv.getMonth(), dtv.getTimezoneInMinutes(), true).getStringValue();
                     break;
                 default:
                     valueStr = defaultTranslation(value);

@@ -70,7 +70,6 @@ import net.sf.saxon.expr.JPConverter;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.Name11Checker;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
@@ -671,7 +670,7 @@ public class XMLSystemFunctions {
         	java.util.Date d = (java.util.Date)value;
         	DateTimeValue tdv = DateTimeValue.fromJavaDate(d);
         	if (value instanceof Date) {
-        		value = new DateValue(tdv.getYear(), tdv.getMonth(), tdv.getDay(), tdv.getTimezoneInMinutes());
+        		value = new DateValue(tdv.getYear(), tdv.getMonth(), tdv.getDay(), tdv.getTimezoneInMinutes(), true);
         	} else if (value instanceof Time) {
         		value = new TimeValue(tdv.getHour(), tdv.getMinute(), tdv.getSecond(), tdv.getMicrosecond(), tdv.getTimezoneInMinutes());
         	} else if (value instanceof Timestamp) {
@@ -825,7 +824,7 @@ public class XMLSystemFunctions {
 	public static boolean isNull(Item i) {
 		if (i instanceof NodeInfo) {
 			NodeInfo ni = (NodeInfo)i;
-			return ni.getNodeKind() == net.sf.saxon.type.Type.ELEMENT && !ni.hasChildNodes() && Boolean.valueOf(ni.getAttributeValue(StandardNames.XSI_NIL));
+			return ni.getNodeKind() == net.sf.saxon.type.Type.ELEMENT && !ni.hasChildNodes() && Boolean.valueOf(ni.getAttributeValue(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil")); //$NON-NLS-1$
 			/* ideally we'd be able to check for nilled, but that doesn't work without validation
 			 if (ni.isNilled()) {
 				tuple.add(null);
