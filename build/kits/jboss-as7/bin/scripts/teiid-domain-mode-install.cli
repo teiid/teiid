@@ -52,7 +52,7 @@
 
 /profile=full-ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /profile=full-ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
-/profile=full-ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=teiid:add(code=org.jboss.security.auth.spi.UsersRolesLoginModule, flag=required, module-options={usersProperties="${jboss.domain.config.dir}/teiid-security-users.properties", rolesProperties="${jboss.domain.config.dir}/teiid-security-roles.properties"}) 
+/profile=full-ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")]) 
 /profile=full-ha/subsystem=threads/unbounded-queue-thread-pool=teiid-async:add(max-threads=4)
 
 
