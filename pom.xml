@@ -861,7 +861,6 @@
               <groupId>org.odata4j</groupId>
               <artifactId>odata4j-core</artifactId>
               <version>${version.org.odata4j}</version>
-              <classifier>redhat</classifier>
               <exclusions>                
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
