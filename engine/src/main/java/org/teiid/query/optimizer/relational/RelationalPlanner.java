@@ -432,11 +432,6 @@ public class RelationalPlanner {
 			with.add(clause.clone());
 			command.setSourceHint(SourceHint.combine(command.getSourceHint(), clause.getCommand().getSourceHint()));
 		}
-		for (Command cmd : CommandCollectorVisitor.getCommands(command)) {
-			TreeSet<GroupSymbol> temp = new TreeSet<GroupSymbol>(nonCorrelatedComparator);
-			GroupCollectorVisitor.getGroupsIgnoreInlineViews(cmd, temp);
-			discoverWith(pushdownWith, cmd, with, temp);
-		}
 	}
 
 	public void initialize(Command command, IDGenerator idGenerator,
