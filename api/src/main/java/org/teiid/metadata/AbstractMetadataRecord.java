@@ -24,6 +24,7 @@ package org.teiid.metadata;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,6 +40,8 @@ import org.teiid.core.util.StringUtil;
  * AbstractMetadataRecord
  */
 public abstract class AbstractMetadataRecord implements Serializable {
+	
+	private static final Collection<AbstractMetadataRecord> EMPTY_INCOMING = Collections.emptyList();
 	
 	public interface Modifiable {
 		long getLastModified();
@@ -61,6 +64,8 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	
 	private volatile Map<String, String> properties;
 	private String annotation;
+	
+	private Collection<AbstractMetadataRecord> incomingObjects;
 
 	public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
 	
@@ -234,5 +239,16 @@ public abstract class AbstractMetadataRecord implements Serializable {
     public int hashCode() {
         return getUUID().hashCode();
     }
+    
+    public Collection<AbstractMetadataRecord> getIncomingObjects() {
+    	if (incomingObjects == null) {
+    		return EMPTY_INCOMING;
+    	}
+		return incomingObjects;
+	}
+    
+    public void setIncomingObjects(Collection<AbstractMetadataRecord> incomingObjects) {
+		this.incomingObjects = incomingObjects;
+	}
         
 }

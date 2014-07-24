@@ -34,6 +34,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -43,13 +44,17 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.AlterProcedure;
 import org.teiid.query.sql.lang.AlterTrigger;
 import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 public class DdlPlan extends ProcessorPlan {
@@ -123,17 +128,38 @@ public class DdlPlan extends ProcessorPlan {
     }
 
 	public static void alterView(VDBMetaData vdb, Table t, String sql) {
+		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+		
+		try {
+			Command command = QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
+			QueryResolver.resolveCommand(command, metadata);
+			MetadataValidator.determineDependencies(t, command);
+		} catch (TeiidException e) {
+			//should have been caught in validation, but this logic
+			//is also not mature so since there is no lock on the vdb
+			//it is possible that the plan is no longer valid at this point due
+			//to a concurrent execution
+		}
 		t.setSelectTransformation(sql);
 		t.setLastModified(System.currentTimeMillis());
-		TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
-		indexMetadata.addToMetadataCache(t, "transformation/"+SQLConstants.Reserved.SELECT, null); //$NON-NLS-1$
+		metadata.addToMetadataCache(t, "transformation/"+SQLConstants.Reserved.SELECT, null); //$NON-NLS-1$
 	}
 
 	public static void alterProcedureDefinition(VDBMetaData vdb, Procedure p, String sql) {
+		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+		try {
+			Command command = QueryParser.getQueryParser().parseProcedure(p.getQueryPlan(), false);
+			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
+			MetadataValidator.determineDependencies(p, command);
+		} catch (TeiidException e) {
+			//should have been caught in validation, but this logic
+			//is also not mature so since there is no lock on the vdb
+			//it is possible that the plan is no longer valid at this point due
+			//to a concurrent execution
+		}
 		p.setQueryPlan(sql);
 		p.setLastModified(System.currentTimeMillis());
-		TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
-		indexMetadata.addToMetadataCache(p, "transformation/"+StoredProcedure.class.getSimpleName().toUpperCase(), null); //$NON-NLS-1$
+		metadata.addToMetadataCache(p, "transformation/"+StoredProcedure.class.getSimpleName().toUpperCase(), null); //$NON-NLS-1$
 	}
 
 	public static void alterInsteadOfTrigger(VDBMetaData vdb, Table t,

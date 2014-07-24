@@ -1,3 +1,18 @@
+CREATE FOREIGN TABLE Usage (
+    VDBName string(255) NOT NULL,
+    UID string(50) NOT NULL,
+    object_type string(50) NOT NULL,
+    SchemaName string(255) NOT NULL,
+    Name string(255) NOT NULL,
+    ElementName string(255) NOT NULL,
+    Uses_UID string(50) NOT NULL,
+    Uses_object_type string(50) NOT NULL,
+    Uses_SchemaName string(255) NOT NULL,
+    Uses_Name string(255) NOT NULL,
+    Uses_ElementName string(255) NOT NULL,
+    PRIMARY KEY (UID, Uses_UID)
+);
+
 CREATE FOREIGN TABLE MatViews (
 	VDBName string(255) NOT NULL,
 	SchemaName string(255) NOT NULL,

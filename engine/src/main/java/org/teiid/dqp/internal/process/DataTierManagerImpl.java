@@ -80,6 +80,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.Table.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
@@ -193,7 +194,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		VDBRESOURCES,
 		TRIGGERS,
 		VIEWS,
-		STOREDPROCEDURES
+		STOREDPROCEDURES,
+		USAGE
 	}
 	
 	private enum SystemAdminProcs {
@@ -733,12 +735,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			CommandContext cc, SimpleIterator<List<?>> iter) {
         		row.add(vdb.getName());
         		ForeignKey key = (ForeignKey) record.get(0);
-        		Table pkTable = key.getPrimaryKey().getParent();
+        		Table pkTable = key.getReferenceKey().getParent();
         		Column column = (Column) record.get(1);
         		Short pos = (Short) record.get(2);
 				row.add(pkTable.getParent().getName());
 				row.add(pkTable.getName());
-				row.add(key.getPrimaryKey().getColumns().get(pos-1).getName());
+				row.add(key.getReferenceKey().getColumns().get(pos-1).getName());
 				row.add(vdb.getName());
 				row.add(key.getParent().getParent().getName());
 				row.add(key.getParent().getName());
@@ -747,7 +749,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(DatabaseMetaData.importedKeyNoAction);
 				row.add(DatabaseMetaData.importedKeyNoAction);
 				row.add(key.getName());
-				row.add(key.getPrimaryKey().getName());
+				row.add(key.getReferenceKey().getName());
 				row.add(DatabaseMetaData.importedKeyInitiallyDeferred);
         	}
         	
@@ -764,6 +766,81 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		return cols;
         	}
         });
+        name = SystemAdminTables.USAGE.name();
+        columns = getColumns(tm, name);
+        systemAdminTables.put(SystemAdminTables.USAGE, new ChildRecordExtractionTable<AbstractMetadataRecord, AbstractMetadataRecord>(
+        		new RecordTable<AbstractMetadataRecord>(new int[] {0}, columns.subList(1, 2)) {
+        			@Override
+        			protected void fillRow(AbstractMetadataRecord s,
+        					List<Object> rowBuffer) {
+        				rowBuffer.add(s.getUUID());
+        			}
+        			
+        			@Override
+        			public SimpleIterator<AbstractMetadataRecord> processQuery(
+        					VDBMetaData vdb, CompositeMetadataStore metadataStore,
+        					BaseIndexInfo<?> ii) {
+        				return processQuery(vdb, metadataStore.getOids(), ii);
+        			}
+        			
+        			@Override
+        			protected AbstractMetadataRecord extractRecord(Object val) {
+        				if (val != null) {
+        					return ((RecordHolder)val).getRecord();
+        				}
+        				return null;
+        			}
+        		}, columns) {
+        	
+        	@Override
+        	public void fillRow(List<Object> row, AbstractMetadataRecord entry, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<AbstractMetadataRecord> iter) {
+				AbstractMetadataRecord currentParent = ((ExpandingSimpleIterator<AbstractMetadataRecord, AbstractMetadataRecord>)iter).getCurrentParent();
+				row.add(vdb.getName());
+				row.add(currentParent.getUUID());
+				row.add(getType(currentParent));
+				row.add(currentParent.getParent().getName());
+				row.add(currentParent.getName());
+				row.add(null); //column usage not yet supported
+				row.add(entry.getUUID());
+				row.add(getType(entry));
+				if (entry instanceof Column) {
+					row.add(entry.getParent().getParent().getName());
+					row.add(entry.getParent().getName());
+					row.add(entry.getName()); 
+				} else {
+					row.add(entry.getParent().getName());
+					row.add(entry.getName());
+					row.add(null);
+				}
+        	}
+        	
+        	private String getType(AbstractMetadataRecord record) {
+        		if (record instanceof Table) {
+        			Table t = (Table)record;
+        			if (t.getTableType() == Type.Table && t.isVirtual()) {
+        				//TODO: this change should be on the Table object as well
+        				return "View"; //$NON-NLS-1$
+        			}
+        			return t.getTableType().name();
+        		}
+        		if (record instanceof Procedure) {
+        			Procedure p = (Procedure)record;
+        			if (p.isFunction()) {
+            			return p.getType().name();
+        			}
+        			if (p.isVirtual()) {
+        				return "StoredProcedure"; //$NON-NLS-1$
+        			}
+        			return "ForeignProcedure"; //$NON-NLS-1$
+        		}
+        		return record.getClass().getSimpleName();
+        	}
+        	
+        	@Override
+        	protected Collection<AbstractMetadataRecord> getChildren(AbstractMetadataRecord parent) {
+        		return parent.getIncomingObjects();
+        	}
+		});
     }        
 
 	private List<ElementSymbol> getColumns(TransformationMetadata tm,

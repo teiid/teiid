@@ -21,9 +21,11 @@
  */
 package org.teiid.query.metadata;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +34,9 @@ import java.util.TreeSet;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
@@ -54,10 +58,13 @@ import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
@@ -274,13 +281,15 @@ public class MetadataValidator {
     			Command command = parser.parseProcedure(p.getQueryPlan(), false);
     			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
     			resolverReport =  Validator.validate(command, metadata);
+    			determineDependencies(p, command);
     		} else if (record instanceof Table) {
     			Table t = (Table)record;
     			
     			GroupSymbol symbol = new GroupSymbol(t.getFullName());
     			ResolverUtil.resolveGroup(symbol, metadata);    			
-    			if (t.isVirtual() && (t.getColumns() == null || t.getColumns().isEmpty())) {
-    				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
+    			String selectTransformation = t.getSelectTransformation();
+				if (t.isVirtual() && (t.getColumns() == null || t.getColumns().isEmpty())) {
+    				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(selectTransformation);
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
     				if(!resolverReport.hasItems()) {
@@ -292,6 +301,16 @@ public class MetadataValidator {
 								log(report, model, e.getMessage());
 							}
     					}
+    				}
+    				determineDependencies(t, command);
+    				if (t.getInsertPlan() != null && t.isInsertPlanEnabled()) {
+	    				validateUpdatePlan(model, report, metadata, t, t.getInsertPlan());
+    				}
+    				if (t.getUpdatePlan() != null && t.isUpdatePlanEnabled()) {
+    					validateUpdatePlan(model, report, metadata, t, t.getUpdatePlan());
+    				}
+    				if (t.getDeletePlan() != null && t.isDeletePlanEnabled()) {
+    					validateUpdatePlan(model, report, metadata, t, t.getDeletePlan());
     				}
     			}
     			
@@ -330,23 +349,66 @@ public class MetadataValidator {
     			}
     			
     			// this seems to parse, resolve and validate.
-    			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
+    			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata);
     			CacheHint cacheHint = node.getCommand().getCacheHint();
 				Long ttl = -1L;
 				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint) {
 					ttl = cacheHint.getTtl();
-					t.setProperty("{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL", String.valueOf(ttl)); //$NON-NLS-1$
+					t.setProperty(AbstractMetadataRecord.RELATIONAL_URI + "MATVIEW_TTL", String.valueOf(ttl)); //$NON-NLS-1$
 				}
     		}
-			if(resolverReport != null && resolverReport.hasItems()) {
-				for (ValidatorFailure v:resolverReport.getItems()) {
-					log(report, model, v.getStatus() == ValidatorFailure.Status.ERROR?Severity.ERROR:Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), v.getMessage()));
-				}
-			}
+			processReport(model, record, report, resolverReport);
 		} catch (TeiidException e) {
 			log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getMessage()));
 		}
     }
+
+	public static void determineDependencies(AbstractMetadataRecord p, Command command) {
+		Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, true);
+		LinkedHashSet<AbstractMetadataRecord> values = new LinkedHashSet<AbstractMetadataRecord>();
+		for (GroupSymbol group : groups) {
+			Object mid = group.getMetadataID();
+			if (mid instanceof TempMetadataAdapter) {
+				mid = ((TempMetadataID)mid).getOriginalMetadataID();
+			}
+			if (mid instanceof AbstractMetadataRecord) {
+				values.add((AbstractMetadataRecord)mid);
+			}
+		}
+		Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(command, true, true);
+		for (ElementSymbol elem : elems) {
+			Object mid = elem.getMetadataID();
+			if (mid instanceof TempMetadataAdapter) {
+				mid = ((TempMetadataID)mid).getOriginalMetadataID();
+			}
+			if (mid instanceof AbstractMetadataRecord) {
+				values.add((AbstractMetadataRecord)mid);
+			}
+		}
+		p.setIncomingObjects(new ArrayList<AbstractMetadataRecord>(values));
+	}
+
+	private void validateUpdatePlan(ModelMetaData model,
+			ValidatorReport report,
+			QueryMetadataInterface metadata, 
+			Table t, String plan) throws QueryParserException, QueryResolverException,
+			TeiidComponentException {
+		QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(plan);
+		QueryResolver.resolveCommand(command, metadata);
+		//determineDependencies(t, command); -- these should be tracked against triggers
+		ValidatorReport resolverReport = Validator.validate(command, metadata);
+		processReport(model, t, report, resolverReport);
+	}
+
+	private void processReport(ModelMetaData model,
+			AbstractMetadataRecord record, ValidatorReport report,
+			ValidatorReport resolverReport) {
+		if(resolverReport != null && resolverReport.hasItems()) {
+			for (ValidatorFailure v:resolverReport.getItems()) {
+				log(report, model, v.getStatus() == ValidatorFailure.Status.ERROR?Severity.ERROR:Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), v.getMessage()));
+			}
+		}
+	}
 
 	private Column addColumn(String name, Class<?> type, Table table, MetadataFactory mf) throws TranslatorException {
 		if (type == null) {

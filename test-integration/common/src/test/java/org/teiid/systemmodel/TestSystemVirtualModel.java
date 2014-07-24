@@ -248,4 +248,8 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testStoredProcedures", "select Name, Body from StoredProcedures order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
+	@Test public void testUsage() throws Exception {
+		checkResult("testUsgae", "select * from usage"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
 }
