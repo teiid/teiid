@@ -56,8 +56,13 @@
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-ws-policy</artifactId>
             <scope>provided</scope>        
-        </dependency> 
-    </dependencies>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-bundle</artifactId>
+            <scope>provided</scope>
+        </dependency>        
+        </dependencies>
     <build>
         <plugins>
             <plugin>
