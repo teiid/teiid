@@ -315,15 +315,18 @@ public class TranslatorUtil {
             Class clazz) {
         Map<Method, TranslatorProperty> tps = TranslatorUtil.getTranslatorProperties(clazz);
         for (Method m:tps.keySet()) {
+            
         	Object defaultValue = getDefaultValue(instance, m, tps.get(m));
-        	if (defaultValue != null) {
-        		metadata.addProperty(getPropertyName(m), defaultValue.toString());
-        	}
         	
         	TranslatorProperty tp = tps.get(m);
+        	boolean importProperty = tp.category()==TranslatorProperty.PropertyType.IMPORT;
+            if (defaultValue != null && !importProperty) {
+                metadata.addProperty(getPropertyName(m), defaultValue.toString());
+            }
+        	
         	ExtendedPropertyMetadata epm = new ExtendedPropertyMetadata();
         	epm.category = tp.category().name();
-        	epm.name = tp.category()==TranslatorProperty.PropertyType.IMPORT?"importer."+getPropertyName(m):getPropertyName(m); //$NON-NLS-1$
+        	epm.name = importProperty?"importer."+getPropertyName(m):getPropertyName(m); //$NON-NLS-1$
         	epm.description = tp.description();
         	epm.advanced = tp.advanced();
         	if (defaultValue != null) {
