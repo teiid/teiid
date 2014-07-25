@@ -60,6 +60,9 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.net.socket.SocketUtil;
+import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.TestEmbeddedServer;
+import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
 
 @SuppressWarnings("nls")
 public class TestODBCSocketTransport {
@@ -127,7 +130,9 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		}
 		
 	}
-	
+
+	private static final MockTransactionManager TRANSACTION_MANAGER = new TestEmbeddedServer.MockTransactionManager();
+
 	static class FakeOdbcServer {
 		InetSocketAddress addr;
 		ODBCSocketListener odbcTransport;
@@ -142,7 +147,10 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			addr = new InetSocketAddress(0);
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(addr.getPort());
-			server = new FakeServer(true);
+			server = new FakeServer(false);
+			EmbeddedConfiguration ec = new EmbeddedConfiguration();
+			ec.setTransactionManager(TRANSACTION_MANAGER);
+			server.start(ec, false);
 			LogonImpl logon = Mockito.mock(LogonImpl.class);
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
@@ -170,6 +178,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	
 	@Before public void setUp() throws Exception {
 		String database = "parts";
+		TRANSACTION_MANAGER.reset();
 		connect(database);
 	}
 
@@ -575,6 +584,14 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertTrue(rs.next());
 		String value = rs.getString(1);
 		assertEquals("bar", value);
+	}
+	
+	@Test public void testTransactionCycleDisabled() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("set disableLocalTxn true");
+		conn.setAutoCommit(false); 
+		assertTrue(s.execute("select * from tables order by name"));
+		conn.setAutoCommit(true);
 	}
 
 }
