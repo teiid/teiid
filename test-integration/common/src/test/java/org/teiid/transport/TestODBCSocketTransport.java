@@ -52,11 +52,17 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.net.socket.SocketUtil;
+import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.TestEmbeddedServer;
+import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
 
 @SuppressWarnings("nls")
 public class TestODBCSocketTransport {
@@ -124,6 +130,8 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		}
 		
 	}
+
+	private static final MockTransactionManager TRANSACTION_MANAGER = new TestEmbeddedServer.MockTransactionManager();
 	
 	static class FakeOdbcServer {
 		InetSocketAddress addr;
@@ -139,7 +147,10 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			addr = new InetSocketAddress(0);
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(addr.getPort());
-			server = new FakeServer(true);
+			server = new FakeServer(false);
+			EmbeddedConfiguration ec = new EmbeddedConfiguration();
+			ec.setTransactionManager(TRANSACTION_MANAGER);
+			server.start(ec, false);
 			LogonImpl logon = Mockito.mock(LogonImpl.class);
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
@@ -166,11 +177,17 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	Connection conn;
 	
 	@Before public void setUp() throws Exception {
+		String database = "parts";
+		TRANSACTION_MANAGER.reset();
+		connect(database);
+	}
+
+	private void connect(String database) throws SQLException {
 		Driver d = new Driver();
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
-		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/"+database, p);
 	}
 	
 	@After public void tearDown() throws Exception {
@@ -216,17 +233,17 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	 * tests that the portal max is handled correctly
 	 */
 	@Test public void testMultibatchSelectPrepared() throws Exception {
-		PreparedStatement s = conn.prepareStatement("select * from tables t1, tables t2 where t1.name > ?");
+		PreparedStatement s = conn.prepareStatement("select * from (select * from tables order by name desc limit 21) t1, (select * from tables order by name desc limit 21) t2 where t1.name > ?");
 		conn.setAutoCommit(false);
 		s.setFetchSize(100);
-		s.setString(1, "a");
+		s.setString(1, "0");
 		ResultSet rs = s.executeQuery();
 		int i = 0;
 		while (rs.next()) {
 			i++;
 			rs.getString(1);
 		}
-		assertEquals(462, i);
+		assertEquals(441, i);
 	}
 	
 	@Test public void testBlob() throws Exception {
@@ -547,4 +564,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		String value = rs.getString(1);
 		assertNotNull(value);
 	}
+	
+	@Test public void testTransactionCycleDisabled() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("set disableLocalTxn true");
+		conn.setAutoCommit(false);
+		assertTrue(s.execute("select * from tables order by name"));
+		conn.setAutoCommit(true);
+	}
+
 }
