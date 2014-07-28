@@ -2206,6 +2206,32 @@ public class TestProcedureProcessor {
         getProcedurePlan(sql, tm);
     }
     
+    @Test public void testDepJoinFullProcessing() throws Exception {
+    	String sql = " BEGIN"
+    			+ "\n    create local temporary table ssid_version (sysplex varchar, lpar varchar, ssid varchar, version varchar);"
+    			+ "\n  insert into ssid_version(sysplex, lpar, ssid, version) values ('plex1', 'ca11', 'd91a', 'v5');"
+    			+ "\n    insert into ssid_version(sysplex, lpar, ssid, version) values ('plex1', 'ca11', 'd91b', 'v6');"
+    			+ "\n create local temporary table table_spaces_v5 (sysplex varchar, lpar varchar, ssid varchar, table_space_id varchar);"
+    			+ "\n    insert into table_spaces_v5 (sysplex, lpar, ssid, table_space_id) values ('plex1', 'ca11', 'd91a', 'ts1');"
+    			+ "\n create local temporary table table_spaces_v6 (sysplex varchar, lpar varchar, ssid varchar, table_space_id varchar);"
+    			+ "\n    insert into table_spaces_v6 (sysplex, lpar, ssid, table_space_id) values ('plex1', 'ca11', 'd91b', 'ts2');"
+    			+ "\n select table_space_id from ( select * from (select v.sysplex, v.lpar, v.ssid, t.table_space_id from ssid_version v join table_spaces_v5 t on t.sysplex=v.sysplex and t.lpar=v.lpar and t.ssid=v.ssid option makedep table_spaces_v5) t"
+    			+ " union all select * from (select v.sysplex, v.lpar, v.ssid, t.table_space_id from ssid_version v join table_spaces_v6 t on t.sysplex=v.sysplex and t.lpar=v.lpar and t.ssid=v.ssid option makedep table_spaces_v6) t"
+    			+ " ) t where ssid='d91a';"
+    			//+ " exception e"
+    			//+ " raise e.exception;"
+    			+ "\n   END";
+    	
+    	TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT g1.e1 FROM g1", new List<?>[] {Arrays.asList("a")});
+        List[] expected = new List[] { Arrays.asList("ts1") }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+   
+    
     @Test public void testDynamicCommandWithIntoExpressionInNestedBlock() throws Exception {
 		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
 		String query = "BEGIN\n"

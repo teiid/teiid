@@ -93,6 +93,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		IndexedTupleSource ts;
 		List<?> currentRow;
 		TupleBuffer resultsBuffer;
+		public boolean returning;
 	}
 	
 	static final ElementSymbol ROWCOUNT =
@@ -336,6 +337,24 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
             inst = program.getCurrentInstruction();
 	        if (inst == null){
 	        	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Finished program", program); //$NON-NLS-1$
+        		//look ahead to see if we need to process in place
+        		VariableContext vc = this.cursorStates.getParentContext();
+        		CursorState last = (CursorState) this.cursorStates.getValue(null);
+                if(last != null){
+                	if (last.resultsBuffer == null) {
+                		last.resultsBuffer = bufferMgr.createTupleBuffer(last.processor.getOutputElements(), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
+                		last.returning = true;
+                	}
+                	if (last.returning) {
+	                	while (last.ts.hasNext()) {
+	                		List<?> tuple = last.ts.nextTuple();
+	                		last.resultsBuffer.addTuple(tuple);
+	                	}
+	                	last.resultsBuffer.close();
+	                	last.ts = last.resultsBuffer.createIndexedTupleSource(true);
+	                	last.returning = false;
+                	}
+                }
                 this.pop(true);
                 continue;
             }
