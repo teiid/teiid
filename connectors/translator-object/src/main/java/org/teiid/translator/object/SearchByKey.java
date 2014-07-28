@@ -45,6 +45,9 @@ public  class SearchByKey  {
 
 	public  List<Object> search(Select command, Class<?> rootClass, String cacheName, CacheContainerWrapper cache)
 			throws TranslatorException {
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+				"Perform search by key."); //$NON-NLS-1$
+		
 		Condition criterion = command.getWhere();
 		List<Object> results = new ArrayList<Object>();
 
