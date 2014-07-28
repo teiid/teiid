@@ -66,21 +66,6 @@ public class ObjectExecutionFactory extends
 	}
 
 	@Override
-	public boolean supportsInnerJoins() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOuterJoins() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsFullOuterJoins() {
-		return false;
-	}
-
-	@Override
     public boolean supportsCompareCriteriaEquals() {
 		return true;
 	}
@@ -94,6 +79,7 @@ public class ObjectExecutionFactory extends
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
+	
 	public  List<Object> search(Select command, String cacheName, ObjectConnection connection,ExecutionContext executionContext) throws TranslatorException {
 		  SearchByKey sbk = new SearchByKey();
 		  Class<?> type = connection.getType(cacheName);

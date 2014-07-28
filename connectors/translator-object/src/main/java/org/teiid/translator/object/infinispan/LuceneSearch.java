@@ -56,6 +56,9 @@ public final class LuceneSearch   {
 
 	public static List<Object> performSearch(Select command, Class<?> type, String cacheName, CacheContainerWrapper cache)
 			throws TranslatorException {
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+				"Perform lucene search."); //$NON-NLS-1$
+		
 		//Map<?, ?> cache, 
 		SearchManager searchManager = Search
 				.getSearchManager((Cache<?, ?>) cache.getCache(cacheName) );
