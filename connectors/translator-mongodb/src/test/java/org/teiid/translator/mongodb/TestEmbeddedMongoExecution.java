@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
 
+import org.junit.Ignore;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -45,6 +46,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 
 @SuppressWarnings("nls")
+@Ignore
 public class TestEmbeddedMongoExecution {
     private static MongoDBExecutionFactory translator;
     private static TranslationUtility utility;
