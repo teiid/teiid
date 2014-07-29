@@ -63,8 +63,23 @@ public class DataRolePolicyDecider implements PolicyDecider {
 					}
 					DataPolicyMetadata policy = (DataPolicyMetadata)policies.get(j);
 					if (policy.isGrantAll()) {
-						resources.clear();
-						return resources;
+						if (policy.getSchemas() == null) {
+							resources.clear();
+							return resources;
+						}
+						if (action == PermissionType.LANGUAGE) {
+							iter.remove();
+							continue outer;
+						}
+						//imported grant all must be checked against the schemas
+						if (resource.indexOf('.') > 0) {
+							continue;
+						}
+						if (policy.getSchemas().contains(resource)) {
+							iter.remove();
+							continue outer;
+						}
+						continue;
 					}
 					Boolean allows = policy.allows(resource, action);
 					if (allows != null) {
