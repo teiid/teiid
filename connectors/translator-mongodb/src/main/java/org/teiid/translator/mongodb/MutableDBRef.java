@@ -43,8 +43,9 @@ public class MutableDBRef implements Cloneable {
 	private String idReference;
 	private String referenceName;
 	private String alias;
+	private boolean nested;
 
-	public String getAlias() {
+    public String getAlias() {
 		if (this.alias != null) {
 			return alias;
 		}
@@ -71,7 +72,7 @@ public class MutableDBRef implements Cloneable {
 	public void setName(String name) {
 		this.name = name;
 	}
-
+	
 	public DBRef getDBRef(DB db, boolean push) {
 		if (this.id != null) {
 			if (this.idReference != null) {
@@ -81,7 +82,14 @@ public class MutableDBRef implements Cloneable {
 		}
 		return null;
 	}
-
+	
+	public Object getValue() {
+		if (this.id != null) {
+			return this.id.getValue();
+		}
+		return null;
+	}	
+	
 	public String getParentTable() {
 		return this.parentTable;
 	}
@@ -146,6 +154,23 @@ public class MutableDBRef implements Cloneable {
 	public void setIdReference(String idReference) {
 		this.idReference = idReference;
 	}
+	
+    public boolean isNested() {
+        return nested;
+    }
+
+    public void setNested(boolean nested) {
+        this.nested = nested;
+    }	
+    
+    public String getParentColumnName(String columnName) {
+        for(int i = 0; i< this.columns.size(); i++) {
+            if (this.columns.get(i).equalsIgnoreCase(columnName)) {
+                return this.referenceColumns.get(i);
+            }
+        }
+        return null;
+    }
 
 	@Override
 	public String toString() {
@@ -171,6 +196,7 @@ public class MutableDBRef implements Cloneable {
 		clone.idReference = this.idReference;
 		clone.referenceName = this.referenceName;
 		clone.alias = this.alias;
+		clone.nested = this.nested;
 		return clone;
 	}
 }

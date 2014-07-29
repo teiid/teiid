@@ -96,6 +96,7 @@
         <version.org.jboss.spec.jboss-javaee-6.0>1.0.0.Final</version.org.jboss.spec.jboss-javaee-6.0>
         <version.com.google.protobuf>2.5.0</version.com.google.protobuf>
         <version.org.infinispan.protostream>1.0.0.Final</version.org.infinispan.protostream>  <!--  1.0.0.CR1-redhat-1 is what works in EAP  -->
+        <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1301,6 +1302,11 @@
                 <version>${version.org.jboss.spec.jboss-javaee-6.0}</version>
                 <type>pom</type>
             </dependency>
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.mongo</artifactId>
+                <version>${version.de.flapdoodle.embed.mongo}</version>
+            </dependency>             
         </dependencies>
 	</dependencyManagement>
 	<modules>

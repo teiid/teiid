@@ -82,10 +82,10 @@ public class TestMongoDBUpdateVisitor {
     	assertEquals(collection, visitor.mongoDoc.getTargetTable().getName());
 
     	if (cmd instanceof Insert) {
-    		assertEquals("wrong insert", expected, visitor.getInsert(null, this.docs).toString());
+    		assertEquals("wrong insert", expected, visitor.getInsert(this.docs).toString());
     	}
     	else if (cmd instanceof Update) {
-    		assertEquals("wrong update", expected, visitor.getUpdate(null, this.docs).toString());
+    		assertEquals("wrong update", expected, visitor.getUpdate(this.docs).toString());
     	}
     	else if (cmd instanceof Delete) {
     	}
@@ -108,7 +108,7 @@ public class TestMongoDBUpdateVisitor {
 	@Test
 	public void testInsert() throws Exception {
 		helpExecute("insert into users (id, user_id, age, status) values (1, 'johndoe', 34, 'A')", "users",
-				"{ \"user_id\" : { \"$ref\" : \"Customers\" , \"$id\" : \"johndoe\"} , \"age\" : 34 , \"status\" : \"A\" , \"_id\" : 1}",
+				"{ \"user_id\" : \"johndoe\" , \"age\" : 34 , \"status\" : \"A\" , \"_id\" : 1}",
 				null, null, null);
 	}
 
@@ -125,17 +125,17 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("insert into Products (ProductID, ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued) " +
 				"values (1, 'hammer', 34, 24, 12, 12.50, 3, 4, 2, 1)",
 				"Products",
-				"{ \"ProductName\" : \"hammer\" , \"SupplierID\" : { \"$ref\" : \"Suppliers\" , \"$id\" : 34} , \"CategoryID\" : { \"$ref\" : \"Categories\" , \"$id\" : 24} , \"QuantityPerUnit\" : \"12\" , \"UnitPrice\" : 12.5 , \"UnitsInStock\" : 3 , \"UnitsOnOrder\" : 4 , \"ReorderLevel\" : 2 , \"Discontinued\" : 1 , \"_id\" : 1 , \"Categories\" : { \"categoryK\" : \"categoryV\"} , \"Suppliers\" : { \"SuppliersK\" : \"SuppliersV\"}}",
+				"{ \"ProductName\" : \"hammer\" , \"SupplierID\" : 34 , \"CategoryID\" : 24 , \"QuantityPerUnit\" : \"12\" , \"UnitPrice\" : 12.5 , \"UnitsInStock\" : 3 , \"UnitsOnOrder\" : 4 , \"ReorderLevel\" : 2 , \"Discontinued\" : 1 , \"_id\" : 1 , \"Categories\" : { \"categoryK\" : \"categoryV\"} , \"Suppliers\" : { \"SuppliersK\" : \"SuppliersV\"}}",
 				null, null,	pull);
 	}
 
 
 	@Test
-	public void testEmbeddedInsert() throws Exception {
+	public void testMergeInsert() throws Exception {
 		helpExecute("insert into OrderDetails (odID, ProductID, UnitPrice, Quantity, Discount) " +
 				"values (2, 3, 1.50, 12, 1.0)",
 				"Orders",
-				"{ \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 3} , \"odID\" : { \"$ref\" : \"Orders\" , \"$id\" : 2}}}",
+				"{ \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"ProductID\" : 3 , \"odID\" : 2}}",
 				null, buildKey("FK1", "Orders", "OrderDetails", "2"), null);
 	}
 
@@ -149,7 +149,7 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute(
 				"update users set user_id = 'billybob'",
 				"users",
-				"{ \"user_id\" : { \"$ref\" : \"Customers\" , \"$id\" : \"billybob\"}}",
+				"{ \"user_id\" : \"billybob\"}",
 				null, null, null);
 	}
 
@@ -158,7 +158,7 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute(
 				"update users set user_id = 'billybob' WHERE age > 50",
 				"users",
-				"{ \"user_id\" : { \"$ref\" : \"Customers\" , \"$id\" : \"billybob\"}}",
+				"{ \"user_id\" : \"billybob\"}",
 				"{ \"age\" : { \"$gt\" : 50}}", null, null);
 	}
 
@@ -176,18 +176,18 @@ public class TestMongoDBUpdateVisitor {
 	}
 
 	@Test
-	public void testUpdateEmbedddedInReferenceUpdate() throws Exception {
+	public void testUpdateMergeReferenceUpdate() throws Exception {
 		helpExecute("UPDATE OrderDetails SET ProductID = 4", "Orders",
-				"{ \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4}}",
+				"{ \"ProductID\" : 4}",
 				null, buildKey("FK1", "Orders", "OrderDetails", null),
 				null);
 	}
 
 	@Test
-	public void testUpdateEmbedddedInReferenceUpdateWhere() throws Exception {
+	public void testUpdateMergeReferenceUpdateWhere() throws Exception {
 		helpExecute("UPDATE OrderDetails SET ProductID = 4 WHERE ProductID = 3",
 				"Orders",
-				"{ \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4}}", "{ \"OrderDetails._id.ProductID.$id\" : 3}",
+				"{ \"ProductID\" : 4}", "{ \"OrderDetails._id.ProductID\" : 3}",
 				buildKey("OrderDetails", "Orders", "OrderDetails", null), null);
 	}
 
@@ -210,7 +210,7 @@ public class TestMongoDBUpdateVisitor {
 		pull.add(buildKey("Suppliers", "Products", "Suppliers", null));
 
 		helpExecute("UPDATE Products SET CategoryID = 4",  "Products",
-				"{ \"CategoryID\" : { \"$ref\" : \"Categories\" , \"$id\" : 4} , \"Categories\" : { \"categoryK\" : \"categoryV\"}}",
+				"{ \"CategoryID\" : 4 , \"Categories\" : { \"categoryK\" : \"categoryV\"}}",
 				null,null,pull);
 	}
 
@@ -247,18 +247,18 @@ public class TestMongoDBUpdateVisitor {
 	@Test
 	public void testCompositeFKKeyInsert() throws Exception {
 		helpExecute("insert into G2 (e1, e2, e3) values (1,2,3)", "G2",
-				"{ \"e1\" : { \"$ref\" : \"G1\" , \"$id\" : { \"e1\" : 1 , \"e2\" : 2}} , \"e2\" : { \"$ref\" : \"G1\" , \"$id\" : { \"e1\" : 1 , \"e2\" : 2}} , \"e3\" : 3}",
+				"{ \"e1\" : 1 , \"e2\" : 2 , \"e3\" : 3}",
 				null, null, null);
 	}
 
 	@Test
 	public void testCompositeFKUpdate() throws Exception {
-		helpExecute("update G2 set e1=47, e2 = 48",  "G2", "{ \"e1\" : { \"$ref\" : \"G1\" , \"$id\" : { \"e1\" : 47 , \"e2\" : 48}} , \"e2\" : { \"$ref\" : \"G1\" , \"$id\" : { \"e1\" : 47 , \"e2\" : 48}}}", null, null, null);
+		helpExecute("update G2 set e1=47, e2 = 48",  "G2", "{ \"e1\" : 47 , \"e2\" : 48}", null, null, null);
 	}
 
 	@Test
 	public void testCompositeFKUpdateNonKey() throws Exception {
-		helpExecute("update G2 set e3=0 where e2 = 48",  "G2", "{ \"e3\" : 0}", "{ \"e2.$id.e2\" : 48}", null, null);
+		helpExecute("update G2 set e3=0 where e2 = 48",  "G2", "{ \"e3\" : 0}", "{ \"e2\" : 48}", null, null);
 	}
 
 }

@@ -30,11 +30,9 @@ import org.teiid.GeneratedKeys;
 import org.teiid.language.Command;
 import org.teiid.language.Insert;
 import org.teiid.language.Update;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.metadata.*;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -43,20 +41,13 @@ import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.mongodb.MongoDocument.MergeDetails;
 import org.teiid.translator.mongodb.MutableDBRef.Association;
 
-import com.mongodb.AggregationOutput;
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
+import com.mongodb.*;
 
 public class MongoDBUpdateExecution extends MongoDBBaseExecution implements UpdateExecution {
 	private Command command;
 	private MongoDBUpdateVisitor visitor;
 	private MongoDBExecutionFactory executionFactory;
-	private int[] results;
+	private int[] results = new int[] {0};
 
 	public MongoDBUpdateExecution(MongoDBExecutionFactory executionFactory,
 			Command command,
@@ -102,18 +93,30 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 
 			// check if this document need to be embedded in any other document
 			if (mongoDoc.isMerged()) {
-				MergeDetails mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getInsert(this.mongoDB, embeddedDocuments), false);
+				MergeDetails mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getInsert(embeddedDocuments), false);
 
 				if (mergeInfo.association.equals(Association.MANY)) {
+				    removeParentKey(mongoDoc, (BasicDBObject)mergeInfo.update.get(mergeInfo.embeddedDocument));
+				    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$match\": {"+mergeInfo.match+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+				    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$push\": {"+mergeInfo.update+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
 					result = collection.update(mergeInfo.match, new BasicDBObject("$push", mergeInfo.update), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 				}
 				else {
+				    ((BasicDBObject)mergeInfo.update.get(mergeInfo.embeddedDocument)).remove("_id"); //$NON-NLS-1$
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$match\": {"+mergeInfo.match+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$push\": {"+mergeInfo.update+"}}"); //$NON-NLS-1$ //$NON-NLS-2$				    
 					result = collection.update(mergeInfo.match, new BasicDBObject("$set", mergeInfo.update), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 				}
 			}
 			else {
+			    for (String docName:embeddedDocuments.keySet()) {
+			        DBObject embeddedDoc = embeddedDocuments.get(docName);
+			        embeddedDoc.removeField("_id"); //$NON-NLS-1$
+			    }
 				// gets its own collection
-				result = collection.insert(this.visitor.getInsert(this.mongoDB, embeddedDocuments), WriteConcern.ACKNOWLEDGED);
+			    BasicDBObject in = this.visitor.getInsert(embeddedDocuments);
+			    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "{\"insert\": {"+in+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+				result = collection.insert(in, WriteConcern.ACKNOWLEDGED);
 			}
 		}
 		else if (this.command instanceof Update) {
@@ -125,34 +128,45 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 			}
 
 			if (mongoDoc.isMerged()) {
-				MergeDetails mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getUpdate(this.mongoDB, embeddedDocuments), false);
+				MergeDetails mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getUpdate(embeddedDocuments), false);
 				if (mergeInfo.nested) {
 					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18016));
 				}
 				// multi items in array update not available, http://jira.mongodb.org/browse/SERVER-1243
-				// this work-around for above issue, re-writes whole array but atomic.
+				// this work-around for above issue
 				Iterator<DBObject> output = collection.aggregate(new BasicDBObject("$match", match)).results().iterator(); //$NON-NLS-1$
 				while(output.hasNext()) {
 					DBObject row = output.next();
 					if (mergeInfo.association.equals(Association.MANY)) {
-						BasicDBList previousMerge = (BasicDBList)row.get(mongoDoc.getTable().getName());
-						BasicDBList updatedDoc = this.visitor.updateMerge(this.mongoDB, previousMerge);
-						if (updatedDoc.size() != 0) {
-							result = collection.update(new BasicDBObject("_id", row.get("_id")), new BasicDBObject("$set", new BasicDBObject(mongoDoc.getTable().getName(), updatedDoc)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						BasicDBList previousRows = (BasicDBList)row.get(mongoDoc.getTable().getName());
+						BasicDBList updatedDoc = new BasicDBList();
+						boolean update = this.visitor.updateMerge(mongoDoc.getTable().getName(), previousRows, parentKey(mongoDoc, row.get("_id")), updatedDoc); //$NON-NLS-1$
+						if (update) {
+						    BasicDBObject m = new BasicDBObject("_id", row.get("_id"));//$NON-NLS-1$ //$NON-NLS-2$
+						    BasicDBObject u = new BasicDBObject(mongoDoc.getTable().getName(), updatedDoc);
+		                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$match\": {"+m+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+		                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$set\": {"+u+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+							result = collection.update(m, new BasicDBObject("$set", u), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ 
 						}
 					}
 					else {
-						BasicDBObject previousMerge = (BasicDBObject)row.get(mongoDoc.getTable().getName());
-						if (previousMerge != null) {
-							BasicDBObject updatedDoc = this.visitor.updateMerge(this.mongoDB, previousMerge);
+						BasicDBObject previousRows = (BasicDBObject)row.get(mongoDoc.getTable().getName());
+						if (previousRows != null) {
+							BasicDBObject updatedDoc = this.visitor.updateMerge(mongoDoc.getTable().getName(), previousRows, parentKey(mongoDoc, row.get("_id"))); //$NON-NLS-1$
 							result = collection.update(new BasicDBObject("_id", row.get("_id")), new BasicDBObject("$set", new BasicDBObject(mongoDoc.getTable().getName(), updatedDoc)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						}
 					}
 				}
-				//result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 			}
 			else {
-				result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+                for (String docName:embeddedDocuments.keySet()) {
+                    DBObject embeddedDoc = embeddedDocuments.get(docName);
+                    embeddedDoc.removeField("_id"); //$NON-NLS-1$
+                }
+			    BasicDBObject u = this.visitor.getUpdate(embeddedDocuments);
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$match\": {"+match+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$set\": {"+u+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+				result = collection.update(match, new BasicDBObject("$set", u), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 			}
 
 			// if the update is for the "embeddable" table, then since it is copied to other tables
@@ -178,7 +192,8 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 					if (row != null) {
 						for (MutableDBRef ref:mongoDoc.getEmbeddedInReferences()) {
 							DBCollection parent = getCollection(ref.getParentTable());
-							AggregationOutput referenceOutput = parent.aggregate(new BasicDBObject("$match", new BasicDBObject(ref.getReferenceName()+".$id", row.get("_id")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+							DBObject parentMatch = buildParentMatch(row, ref);
+							AggregationOutput referenceOutput = parent.aggregate(new BasicDBObject("$match", parentMatch)); //$NON-NLS-1$
 							if (referenceOutput.results().iterator().hasNext()) {
 								throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18010, this.visitor.mongoDoc.getTargetTable().getName(), ref.getParentTable()));
 							}
@@ -192,14 +207,26 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 				if (mergeInfo.nested) {
 					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18016));
 				}
-				if (mergeInfo.association.equals(Association.MANY)) { 
-					result = collection.update(mergeInfo.match, new BasicDBObject("$pull", this.visitor.getPullQuery()), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+				
+				if (mergeInfo.association.equals(Association.MANY)) {
+				    BasicDBObject doc = (BasicDBObject)this.visitor.getPullQuery().get(mergeInfo.embeddedDocument);
+				    if (doc == null) {
+				        doc = new BasicDBObject();
+				    }
+				    BasicDBObject pull = new BasicDBObject(mongoDoc.getTable().getName(), doc);
+	                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$match\": {"+mergeInfo.match+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+	                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$set\": {"+pull+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+			        result = collection.update(mergeInfo.match, new BasicDBObject("$pull", pull), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 				}
 				else {
-					result = collection.update(mergeInfo.match, new BasicDBObject("$unset", new BasicDBObject(mongoDoc.getTable().getName(), "")), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$					
+				    BasicDBObject unset = new BasicDBObject(mongoDoc.getTable().getName(), "");//$NON-NLS-1$ 
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$match\": {"+mergeInfo.match+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "update - {\"$unset\": {"+unset+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+					result = collection.update(mergeInfo.match, new BasicDBObject("$unset", unset), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ 
 				}
 			}
 			else {
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "remove - {\"$match\": {"+match+"}}"); //$NON-NLS-1$ //$NON-NLS-2$			    
 				result = collection.remove(match, WriteConcern.ACKNOWLEDGED);
 			}
 		}
@@ -219,7 +246,43 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 		}
 	}
 
-	private void updateReferenceTables(DBCollection collection, MongoDocument mongoDoc, DBObject match) throws TranslatorException {
+	private void removeParentKey(MongoDocument document, BasicDBObject row) throws TranslatorException {
+        Table source = document.getTable();
+        Table target = document.getTargetTable();
+        
+        for (ForeignKey fk:source.getForeignKeys()) {
+            if (fk.getReferenceTableName().equals(target.getName())){
+                for (int i = 0; i < fk.getColumns().size(); i++) {
+                    if (row != null) {
+                        row.remove(fk.getColumns().get(i).getName());
+                    }
+                }
+            }
+        }        
+    }
+
+    private BasicDBObject parentKey(MongoDocument document, Object keyValue) throws TranslatorException {
+	    Table source = document.getTable();
+	    Table target = document.getTargetTable();
+	    
+	    BasicDBObject key = new BasicDBObject();
+	    
+	    for (ForeignKey fk:source.getForeignKeys()) {
+	        if (fk.getReferenceTableName().equals(target.getName())){
+	            if (fk.getColumns().size() == 1) {
+	                key.append(fk.getColumns().get(0).getName(), keyValue);
+	            }
+	            else {
+	                for (int i = 0; i < fk.getColumns().size(); i++) {
+	                    key.append(fk.getColumns().get(i).getName(), ((BasicDBObject)keyValue).get(fk.getReferenceColumns().get(i)));
+	                }
+	            }
+	        }
+	    }
+	    return key;
+    }
+	
+    private void updateReferenceTables(DBCollection collection, MongoDocument mongoDoc, DBObject match) throws TranslatorException {
 		AggregationOutput output = collection.aggregate(new BasicDBObject("$match", match)); //$NON-NLS-1$
 		Iterator<DBObject> resultset = output.results().iterator();
 		while(resultset.hasNext()) {
@@ -227,7 +290,9 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 			if (row != null) {
 				for (MutableDBRef ref:mongoDoc.getEmbeddedInReferences()) {
 					DBCollection parent = getCollection(ref.getParentTable());
-					DBObject parentmatch = new BasicDBObject(ref.getReferenceName()+".$id", row.get("_id")); //$NON-NLS-1$ //$NON-NLS-2$
+					//DBObject parentmatch = new BasicDBObject(ref.getReferenceName()+".$id", row.get("_id")); //$NON-NLS-1$ //$NON-NLS-2$
+					DBObject parentmatch = buildParentMatch(row, ref);
+					row.removeField("_id"); //$NON-NLS-1$
 					WriteResult update = parent.update(parentmatch, new BasicDBObject("$set",new BasicDBObject(ref.getName(), row)), //$NON-NLS-1$
 							false, true, WriteConcern.ACKNOWLEDGED);
 
@@ -244,6 +309,21 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 				}
 			}
 		}
+	}
+
+	private DBObject buildParentMatch(DBObject row, MutableDBRef ref) {
+		DBObject parentmatch = new BasicDBObject();
+		Object rowid = row.get("_id"); //$NON-NLS-1$
+		if (rowid instanceof BasicDBObject) {
+			// composite key..
+			for (int i = 0; i < ref.getColumns().size(); i++) {
+				parentmatch.put(ref.getColumns().get(i), ((BasicDBObject) rowid).get(ref.getReferenceColumns().get(i)));
+			}						
+		}
+		else {
+			parentmatch.put(ref.getColumns().get(0), rowid);
+		}
+		return parentmatch;
 	}
 
 	private LinkedHashMap<String, DBObject> fetchEmbeddedDocuments() {

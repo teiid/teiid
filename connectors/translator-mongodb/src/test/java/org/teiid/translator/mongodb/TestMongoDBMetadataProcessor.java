@@ -28,6 +28,7 @@ public class TestMongoDBMetadataProcessor {
         DBCollection dbCollection = Mockito.mock(DBCollection.class);
         HashSet<String> tables = new HashSet<String>();
         tables.add("table");
+        tables.add("embedded");
         
         DB db = Mockito.mock(DB.class);
         
@@ -47,8 +48,12 @@ public class TestMongoDBMetadataProcessor {
         BasicDBObject child = new BasicDBObject();
         child.append("col1", "one");
         child.append("col2", "two");
-        
         row.append("child", child);
+        
+        BasicDBObject embedded = new BasicDBObject();
+        embedded.append("col1", "one");
+        embedded.append("col2", "two");
+        row.append("embedded", embedded);
         
         Mockito.stub(db.getCollectionNames()).toReturn(tables);
         Mockito.stub(db.getCollection(Mockito.anyString())).toReturn(dbCollection);
@@ -61,9 +66,18 @@ public class TestMongoDBMetadataProcessor {
         String expected = "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n\n" +
         		"CREATE FOREIGN TABLE child (\n" + 
         		"\tcol1 string,\n" + 
-        		"\tcol2 string\n" + 
+        		"\tcol2 string,\n" + 
+        	    "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
+        	    "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n"+        		
         		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
         		"\n" + 
+        		"CREATE FOREIGN TABLE embedded (\n" + 
+        		"\tcol1 string,\n" + 
+        		"\tcol2 string,\n" + 
+        		"\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
+        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
+        		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
+        		"\n" +
         		"CREATE FOREIGN TABLE \"table\" (\n" + 
         		"\t\"_id\" integer,\n" + 
         		"\tcol2 double,\n" + 
@@ -75,7 +89,5 @@ public class TestMongoDBMetadataProcessor {
         		"\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
         		") OPTIONS (UPDATABLE TRUE);";
         assertEquals(expected, metadataDDL);
-
     }
-
 }
