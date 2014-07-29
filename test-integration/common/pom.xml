@@ -18,44 +18,47 @@
   			<groupId>com.h2database</groupId>
   			<artifactId>h2</artifactId>
 		</dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-        </dependency>        
+         	<dependency>
+                	<groupId>org.apache.cxf</groupId>
+                	<artifactId>cxf-bundle</artifactId>
+            	</dependency>		
+        	<dependency>
+            		<groupId>org.apache.cxf</groupId>
+            		<artifactId>cxf-rt-frontend-jaxrs</artifactId>
+        	</dependency>        
 		<dependency>
   			<artifactId>teiid-jboss-integration</artifactId>
 			<groupId>org.jboss.teiid</groupId>
 		</dependency>
-		 <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-runtime</artifactId>
-            <type>test-jar</type>
-        </dependency>
 		<dependency>
-            <artifactId>translator-ws</artifactId>
-            <groupId>org.jboss.teiid.connectors</groupId>
-        </dependency>
+            		<groupId>org.jboss.teiid</groupId>
+            		<artifactId>teiid-runtime</artifactId>
+            		<type>test-jar</type>
+        	</dependency>
 		<dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
+            		<artifactId>translator-ws</artifactId>
+            		<groupId>org.jboss.teiid.connectors</groupId>
+        	</dependency>
+		<dependency>
+            		<groupId>commons-logging</groupId>
+            		<artifactId>commons-logging</artifactId>
 		</dependency>
-        <dependency>
-              <groupId>org.jboss.arquillian.junit</groupId>
-              <artifactId>arquillian-junit-container</artifactId>
-              <scope>test</scope>
-            </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <scope>test</scope>
-        </dependency>
+        	<dependency>
+              		<groupId>org.jboss.arquillian.junit</groupId>
+              		<artifactId>arquillian-junit-container</artifactId>
+              		<scope>test</scope>
+            	</dependency>
+        	<dependency>
+            		<groupId>junit</groupId>
+            		<artifactId>junit</artifactId>
+            		<scope>test</scope>
+        	</dependency>
+        	<dependency>
+            		<groupId>org.hibernate</groupId>
+            		<artifactId>hibernate-core</artifactId>
+            		<scope>test</scope>
+        	</dependency>
 	</dependencies>
-    
     <profiles>
     <profile>
         <id>arquillian-tests</id>
