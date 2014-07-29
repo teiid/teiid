@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -139,16 +138,20 @@ public class CompositeVDB {
 			this.children.put(new VDBKey(childVDB.getName(), childVDB.getVersion()), importedVDB);
 			
 			if (vdbImport.isImportDataPolicies()) {
-				for (DataPolicy role : importedVDB.getVDB().getDataPolicies()) {
-					if (newMergedVDB.addDataPolicy((DataPolicyMetadata)role) != null) {
+				for (DataPolicy dp : importedVDB.getVDB().getDataPolicies()) {
+					DataPolicyMetadata role = (DataPolicyMetadata)dp;
+					if (newMergedVDB.addDataPolicy(role) != null) {
 						throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40084, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40084, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), role.getName()));
+					}
+					if (role.isGrantAll()) {
+						role.setSchemas(childVDB.getModelMetaDatas().keySet());
 					}
 				}
 			}
 			
 			// add models
-			for (Model m:childVDB.getModels()) {
-				if (newMergedVDB.addModel((ModelMetaData)m) != null) {
+			for (ModelMetaData m:childVDB.getModelMetaDatas().values()) {
+				if (newMergedVDB.addModel(m) != null) {
 					throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40085, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40085, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), m.getName()));
 				}
 				newMergedVDB.getImportedModels().add(m.getName());

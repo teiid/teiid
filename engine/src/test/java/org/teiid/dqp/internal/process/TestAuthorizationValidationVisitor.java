@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -450,5 +451,22 @@ public class TestAuthorizationValidationVisitor {
         } catch (QueryValidatorException e) {
         	
         }
+    }
+    
+    @Test public void testInheritedGrantAll() throws Exception {
+    	String sql = "select * from pm1.g1";
+    	
+    	DataPolicyMetadata svc = new DataPolicyMetadata();
+    	svc.setName("test"); //$NON-NLS-1$
+    	
+    	svc.setGrantAll(true);
+    	
+    	svc.setSchemas(Collections.singleton("pm1"));
+    	
+        helpTest(sql, RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        sql = "select e1 from pm2.g1";
+        
+        helpTest(sql, RealMetadataFactory.example1Cached(), new String[] {"pm2.g1.e1", "pm2.g1"}, RealMetadataFactory.example1VDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
     }
 }
