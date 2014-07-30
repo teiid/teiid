@@ -21,10 +21,14 @@
  */
 package org.teiid.translator.mongodb;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Stack;
 
 import org.teiid.language.*;
+import org.teiid.language.AndOr.Operator;
+import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Association;
@@ -37,7 +41,9 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	private DB mongoDB;
 	private BasicDBObject pull;
 	private Condition condition;
-
+	protected Stack<DBObject> onGoingPullCriteria = new Stack<DBObject>();
+	protected TranslatorException pullException;
+	
 	public MongoDBUpdateVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata, DB mongoDB) {
 		super(executionFactory, metadata);
 		this.mongoDB = mongoDB;
@@ -90,7 +96,8 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 		// if this FK column, replace with reference rather than simple key value
 		if (this.mongoDoc.isPartOfForeignKey(colName)) {
-			this.columnValues.put(colName, this.mongoDoc.getFKReference(colName));
+			MutableDBRef ref = this.mongoDoc.getFKReference(colName);
+			this.columnValues.put(colName, ref.clone());
 		}
 	}
 
@@ -128,7 +135,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
         }
 	}
 
-	public BasicDBObject getInsert(DB db, LinkedHashMap<String, DBObject> embeddedDocuments) {
+	public BasicDBObject getInsert(LinkedHashMap<String, DBObject> embeddedDocuments) {
 		IDRef pk = null;
 
 		BasicDBObject insert = new BasicDBObject();
@@ -136,7 +143,8 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			Object obj = this.columnValues.get(key);
 
 			if (obj instanceof MutableDBRef) {
-				obj =  ((MutableDBRef)obj).getDBRef(db, true);
+				//obj =  ((MutableDBRef)obj).getDBRef(db, true);
+				obj =  ((MutableDBRef)obj).getValue();
 			}
 
 			if (this.mongoDoc.isPartOfPrimaryKey(key)) {
@@ -146,7 +154,17 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 				pk.addColumn(key, obj);
 			}
 			else {
-				insert.append(key, obj);
+				if (this.mongoDoc.isPartOfForeignKey(key)) {
+					if (obj instanceof BasicDBObject) {
+						insert.append(key, ((BasicDBObject) obj).get(key));
+					}
+					else {
+						insert.append(key, obj);
+					}
+				}
+				else {
+					insert.append(key, obj);
+				}
 			}
 		}
 
@@ -165,7 +183,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		return insert;
 	}
 
-	public BasicDBObject getUpdate(DB db, LinkedHashMap<String, DBObject> embeddedDocuments) throws TranslatorException {
+	public BasicDBObject getUpdate(LinkedHashMap<String, DBObject> embeddedDocuments) throws TranslatorException {
 		BasicDBObject update = new BasicDBObject();
 
 		String embeddedDocumentName = null;
@@ -186,18 +204,29 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 					}
 				}
 
-				update.append(key, ref.getDBRef(db, true));
-
+				//update.append(key, ref.getDBRef(db, true));
+				if (this.mongoDoc.isPartOfForeignKey(key)) {
+					if (ref.getValue() instanceof BasicDBObject) {
+						update.append(key, ((BasicDBObject) ref.getValue()).get(key));
+					}
+					else {
+						update.append(key, ref.getValue());
+					}
+				}
+				else {
+					update.append(key, ref.getValue());
+				}				
+				
 				// also update the embedded document
 				if (this.mongoDoc.hasEmbeddedDocuments()) {
 					for (MutableDBRef docKey: this.mongoDoc.getEmbeddableReferences()) {
 						if (ref.getParentTable().equals(docKey.getEmbeddedTable())) {
 							DBObject embedDoc = embeddedDocuments.get(docKey.getName());
-							if (embedDoc != null) {
-								update.append(docKey.getName(), embedDoc);
+							if (embedDoc == null || ref.getValue() == null) {
+								update.append(docKey.getName(), null);
 							}
 							else {
-								update.append(docKey.getName(), null);
+								update.append(docKey.getName(), embedDoc);
 							}
 						}
 					}
@@ -230,49 +259,52 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		return update;
 	}
 
-	public DBObject getPullQuery() {
-		if (this.match == null) {
-			return QueryBuilder.start(mongoDoc.getTable().getName()).exists("true").get(); //$NON-NLS-1$
-		}
+	public BasicDBObject getPullQuery() throws TranslatorException {
+	    if (this.pullException != null) {
+	        throw this.pullException;
+	    }
 		if (this.pull == null) {
-			this.pull =  new BasicDBObject(this.mongoDoc.getTable().getName(), this.onGoingPullCriteria.pop());
+		    if (this.onGoingPullCriteria.isEmpty()) {
+		        this.pull = new BasicDBObject();
+		    }
+		    else {
+		        this.pull =  new BasicDBObject(this.mongoDoc.getTable().getName(), this.onGoingPullCriteria.pop());
+		    }
 		}
 		return this.pull;
-
 	}
 
-	public BasicDBList updateMerge(DB db, BasicDBList previousRows) throws TranslatorException {
-		BasicDBList updated = new BasicDBList();
-
+	public boolean updateMerge(String childTableName, BasicDBList previousRows, BasicDBObject parentKey, BasicDBList updated) throws TranslatorException {
+	    boolean update = false;
 		for (int i = 0; i < previousRows.size(); i++) {
 			BasicDBObject row = (BasicDBObject)previousRows.get(i);
-			if (this.match == null || ExpressionEvaluator.matches(this.condition, row)) {
+			if (this.match == null && getPullQuery() == null || ExpressionEvaluator.matches(this.condition, row, parentKey, childTableName)) {
+			    update = true;
 				for (String key:this.columnValues.keySet()) {
 					Object obj = this.columnValues.get(key);
 
 					if (obj instanceof MutableDBRef) {
 						MutableDBRef ref = ((MutableDBRef)obj);
-						row.put(key, ref.getDBRef(db, true));
+						row.put(key, ref.getValue());
 					}
 					else {
 						row.put(key, obj);
 					}
-				}
-				updated.add(row);
+				}				
 			}
+			updated.add(row);
 		}
-
-		return updated;
+		return update;
 	}
 	
-	public BasicDBObject updateMerge(DB db, BasicDBObject previousRow) throws TranslatorException {
-		if (this.match == null || ExpressionEvaluator.matches(this.condition, previousRow)) {
+	public BasicDBObject updateMerge(String childTableName, BasicDBObject previousRow, BasicDBObject parentKey) throws TranslatorException {
+		if (this.match == null || ExpressionEvaluator.matches(this.condition, previousRow, parentKey, childTableName)) {
 			for (String key:this.columnValues.keySet()) {
 				Object obj = this.columnValues.get(key);
 	
 				if (obj instanceof MutableDBRef) {
 					MutableDBRef ref = ((MutableDBRef)obj);
-					previousRow.put(key, ref.getDBRef(db, true));
+					previousRow.put(key, ref.getValue());
 				}
 				else {
 					previousRow.put(key, obj);
@@ -282,4 +314,177 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		return previousRow;
 	}	
 
+	
+    @Override
+    public void visit(Comparison obj) {
+        if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
+            super.visit(obj);
+            return;
+        }
+        
+        try {
+            // this for the normal where clause
+            ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+    
+            append(obj.getRightExpression());
+    
+            Object rightExpr = this.onGoingExpression.pop();
+            if (this.expressionMap.get(rightExpr) != null) {
+                rightExpr = this.expressionMap.get(rightExpr).projectedName;
+            }
+            // build pull criteria for delete; the pull criteria only applies in merge scenario
+            // and only columns in the embedded document.       
+            boolean buildPullQuery = (includeInPullCriteria(obj.getLeftExpression()) && includeInPullCriteria(obj.getRightExpression()));
+        
+            if (!buildPullQuery) {
+                QueryBuilder query = exprAlias.getQueryBuilder();
+                buildComparisionQuery(obj, rightExpr, query);
+                this.onGoingExpression.push(query.get());
+            }
+            else {
+                QueryBuilder pullQuery = exprAlias.getPullQueryBuilder();
+                buildComparisionQuery(obj, rightExpr, pullQuery);
+                this.onGoingPullCriteria.push(pullQuery.get());
+            }
+            
+            if (obj.getLeftExpression() instanceof ColumnReference) {
+                ColumnReference colum = (ColumnReference)obj.getLeftExpression();
+                this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), exprAlias.columnName, rightExpr);
+            }             
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
+    }
+    
+    private boolean includeInPullCriteria(Expression expr) throws TranslatorException {
+        if (!this.mongoDoc.isMerged()) {
+            return false;
+        }
+        Collection<ColumnReference> columns = CollectorVisitor.collectElements(expr);
+        for (ColumnReference column:columns) {
+            ColumnDetail detail = buildColumnDetail(column);
+            if (!detail.targetDocumentName.equals(this.mongoDoc.getTable().getName())) {
+                return false;
+            }
+        }
+        return true;
+    }    
+    
+    @Override
+    public void visit(AndOr obj) {
+        if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
+            super.visit(obj);
+            return;
+        }
+        
+        append(obj.getLeftCondition());
+        append(obj.getRightCondition());
+
+        boolean valid = false;
+        if (this.onGoingExpression.size() >= 2) {
+            DBObject right = (DBObject)this.onGoingExpression.pop();
+            DBObject left = (DBObject) this.onGoingExpression.pop();
+            
+            switch(obj.getOperator()) {
+            case AND:
+                this.onGoingExpression.push(QueryBuilder.start().and(left, right).get());
+                break;
+            case OR:
+                this.onGoingExpression.push(QueryBuilder.start().or(left, right).get());
+                break;
+            }
+            valid = true;
+        }
+
+        if (this.onGoingPullCriteria.size() >= 2) {
+            DBObject pullRight = this.onGoingPullCriteria.pop();
+            DBObject pullLeft = this.onGoingPullCriteria.pop();            
+            switch(obj.getOperator()) {
+            case AND:
+                this.onGoingPullCriteria.push(QueryBuilder.start().and(pullLeft, pullRight).get());
+                break;
+            case OR:
+                this.onGoingPullCriteria.push(QueryBuilder.start().or(pullLeft, pullRight).get());
+                break;
+            }
+            valid = true;
+        }        
+        if (!valid && obj.getOperator() == Operator.OR) {
+            this.pullException = new TranslatorException(MongoDBPlugin.Event.TEIID18029, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18029));
+        }
+    }    
+    
+    @Override
+    public void visit(Function obj) {
+        if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
+            super.visit(obj);
+            return;
+        }
+        this.pullException = new TranslatorException(MongoDBPlugin.Event.TEIID18028, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18028));
+    }    
+    
+    @Override
+    public void visit(In obj) {
+        if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
+            super.visit(obj);
+            return;
+        }
+        try {
+            boolean buildPullQuery = includeInPullCriteria(obj.getLeftExpression());
+            if (buildPullQuery) {
+                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+                this.onGoingPullCriteria.push(buildInQuery(obj, exprAlias.getPullQueryBuilder()).get());
+            }
+            else {
+                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+                this.onGoingExpression.push(buildInQuery(obj, exprAlias.getQueryBuilder()).get());
+            }
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
+    }
+    
+    @Override
+    public void visit(IsNull obj) {
+        if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
+            super.visit(obj);
+            return;
+        }
+        
+        try {
+            boolean buildPullQuery = includeInPullCriteria(obj.getExpression());
+            if (buildPullQuery) {
+                ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
+                this.onGoingPullCriteria.push(buildIsNullQuery(obj, exprAlias.getPullQueryBuilder()).get());
+            }
+            else {
+                ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
+                this.onGoingExpression.push(buildIsNullQuery(obj, exprAlias.getQueryBuilder()).get());
+            }
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }        
+    }
+        
+    @Override
+    public void visit(Like obj) {
+        if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
+            super.visit(obj);
+            return;
+        }
+        
+        try {
+            boolean buildPullQuery = includeInPullCriteria(obj.getLeftExpression());
+            if (buildPullQuery) {
+                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+                this.onGoingPullCriteria.push(buildLikeQuery(obj, exprAlias.getPullQueryBuilder()).get());
+            }
+            else {
+                ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
+                this.onGoingExpression.push(buildLikeQuery(obj, exprAlias.getQueryBuilder()).get());
+            }
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }              
+    }    
 }

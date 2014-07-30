@@ -185,7 +185,7 @@ public class TestMongoDBQueryExecution {
 		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 3);
 
 	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$OrderDetails._id.odID");
+	    result.append( "_m0","$_id");
 	    result.append( "_m1","$OrderDetails._id.ProductID");
 	    result.append( "_m2","$OrderDetails.UnitPrice");
 	    result.append( "_m3","$OrderDetails.Quantity");
@@ -194,7 +194,7 @@ public class TestMongoDBQueryExecution {
 
 		Mockito.verify(dbCollection).aggregate(
 						new BasicDBObject("$unwind","$OrderDetails"),
-						new BasicDBObject("$match", new BasicDBObject("OrderDetails._id.odID.$id", 10248)),
+						new BasicDBObject("$match", new BasicDBObject("_id", 10248)),
 						new BasicDBObject("$project", result));
 	}
 	
@@ -209,7 +209,7 @@ public class TestMongoDBQueryExecution {
 
 		Mockito.verify(dbCollection).aggregate(
 						new BasicDBObject("$unwind","$OrderDetails"),
-						new BasicDBObject("$match", new BasicDBObject("OrderDetails.UnitPrice", 0.99F)),
+						new BasicDBObject("$match", new BasicDBObject("OrderDetails.UnitPrice", 0.99)),
 						new BasicDBObject("$project", result));
 	}	
 	
@@ -220,7 +220,7 @@ public class TestMongoDBQueryExecution {
 		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$address._id");
+	    result.append( "_m0","$_id");
 	    result.append( "_m1","$address.zip");
 
 		Mockito.verify(dbCollection).aggregate(
@@ -241,7 +241,7 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$address.zip");
 
 		Mockito.verify(dbCollection).aggregate(
-						new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true"))),
+						new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 						new BasicDBObject("$project", result));
 	}	
 	
@@ -252,7 +252,7 @@ public class TestMongoDBQueryExecution {
 		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$address._id");
+	    result.append( "_m0","$_id");
 	    result.append( "_m1","$address.zip");
 
 		Mockito.verify(dbCollection).aggregate(
@@ -271,7 +271,7 @@ public class TestMongoDBQueryExecution {
 
 		Mockito.verify(dbCollection).aggregate(
 						new BasicDBObject("$unwind","$OrderDetails"),
-						new BasicDBObject("$match", QueryBuilder.start("OrderDetails").exists("true").get()),
+						new BasicDBObject("$match", QueryBuilder.start("OrderDetails").exists("true").notEquals(null).get()),
 						new BasicDBObject("$project", result));
 	}
 
@@ -287,7 +287,7 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$Categories.CategoryName");
 
 		Mockito.verify(dbCollection).aggregate(
-						new BasicDBObject("$match", QueryBuilder.start("Categories").exists("true").get()),
+						new BasicDBObject("$match", QueryBuilder.start("Categories").exists("true").notEquals(null).get()),
 						new BasicDBObject("$project", result));
 	}
 
@@ -303,11 +303,11 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Categories.CategoryName");
 
-	    DBObject exists = QueryBuilder.start("Categories").exists("true").get();
-	    DBObject p1 = QueryBuilder.start("CategoryID.$id").is(1).get();
-	    DBObject p2 =  QueryBuilder.start("Categories._id").is(1).get();
+	    DBObject exists = QueryBuilder.start("Categories").exists("true").notEquals(null).get();
+	    DBObject p1 = QueryBuilder.start("CategoryID").is(1).get();
+	    DBObject p2 =  QueryBuilder.start("CategoryID").is(1).get();
 
-	    DBObject match = QueryBuilder.start().and(exists, p1, p2).get();
+	    DBObject match = QueryBuilder.start().and(exists, p1, p2).get(); // duplicate criteria, mongo should ignore it
 		Mockito.verify(dbCollection).aggregate(
 						new BasicDBObject("$match", match),
 						new BasicDBObject("$project", result));
@@ -326,8 +326,8 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$OrderDetails._id.ProductID");
 	    result.append( "_m2","$Shippers.CompanyName");
 
-	    DBObject match = QueryBuilder.start().and(QueryBuilder.start("OrderDetails").exists("true").get(),
-	    		(QueryBuilder.start("Shippers").exists("true").get())).get();
+	    DBObject match = QueryBuilder.start().and(QueryBuilder.start("OrderDetails").exists("true").notEquals(null).get(),
+	    		(QueryBuilder.start("Shippers").exists("true").notEquals(null).get())).get();
 
 	    
 	    Mockito.verify(dbCollection).aggregate(
@@ -340,7 +340,7 @@ public class TestMongoDBQueryExecution {
 	public void testLeftOuterJoin() throws Exception {
 		String query = "SELECT Orders.CustomerID, OrderDetails.ProductID FROM Orders " +
 				"LEFT OUTER JOIN OrderDetails ON Orders.OrderID = OrderDetails.odID " +
-				"WHERE OrderDetails.odID IS NOT NULL";
+				"WHERE OrderDetails.UnitPrice IS NOT NULL";
 		
 		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 4);
 
@@ -357,7 +357,7 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$CustomerID");
 	    result.append( "_m1","$__NN_OrderDetails._id.ProductID");
 
-	    DBObject match = QueryBuilder.start("__NN_OrderDetails._id.odID.$id").notEquals(null).get();
+	    DBObject match = QueryBuilder.start("__NN_OrderDetails.UnitPrice").notEquals(null).get();
 	    Mockito.verify(dbCollection).aggregate(
 	    				new BasicDBObject("$project", projection),
 						new BasicDBObject("$unwind","$__NN_OrderDetails"),
@@ -377,8 +377,8 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$T2._id");
 	    result.append( "_m2","$T2.T3._id");
 
-	    DBObject match = QueryBuilder.start().and(QueryBuilder.start("T2").exists("true").get(),
-	    		(QueryBuilder.start("T3").exists("true").get())).get();
+	    DBObject match = QueryBuilder.start().and(QueryBuilder.start("T2").exists("true").notEquals(null).get(),
+	    		(QueryBuilder.start("T3").exists("true").notEquals(null).get())).get();
 	    Mockito.verify(dbCollection).aggregate(
 	    		new BasicDBObject("$match", match),
 	    		new BasicDBObject("$project", result));
@@ -417,7 +417,7 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$Suppliers.CompanyName");
 
 	    Mockito.verify(dbCollection).aggregate(
-				new BasicDBObject("$match", QueryBuilder.start("Suppliers").exists("true").get()),
+				new BasicDBObject("$match", QueryBuilder.start("Suppliers").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
     }
     
@@ -436,7 +436,7 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$Suppliers.CompanyName");
 
 	    Mockito.verify(dbCollection).aggregate(
-				new BasicDBObject("$match", QueryBuilder.start("Suppliers").exists("true").get()),
+				new BasicDBObject("$match", QueryBuilder.start("Suppliers").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
     }    
     
@@ -516,7 +516,7 @@ public class TestMongoDBQueryExecution {
     
     @Test // merge where one to many relation 
     public void testMERGE_ONE_TO_MANY_Join_INNER()  throws Exception {
-    	String query = "SELECT c.name,n.Comment " +
+    	String query = "SELECT c.name,n.Comment,n.CustomerId " +
     			"FROM customer c " +
     			"JOIN " +
     			"Notes n " +
@@ -527,10 +527,11 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$Notes.Comment");
+	    result.append( "_m2","$_id");
 
 	    Mockito.verify(dbCollection).aggregate(
 	    		new BasicDBObject("$unwind", "$Notes"),
-				new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").get()),
+				new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
     }
     
@@ -576,7 +577,7 @@ public class TestMongoDBQueryExecution {
 		
 	    Mockito.verify(dbCollection).aggregate(
 	    		new BasicDBObject("$unwind", "$Notes"),
-	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").get()),
+	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
     }    
     
@@ -597,7 +598,7 @@ public class TestMongoDBQueryExecution {
 		
 	    Mockito.verify(dbCollection).aggregate(
 	    		new BasicDBObject("$unwind", "$Notes"),
-	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").get()),
+	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
     }    
     
@@ -723,7 +724,7 @@ public class TestMongoDBQueryExecution {
 	    group.append( "_c1","$address.zip");	    
 
 	    Mockito.verify(dbCollection).aggregate(
-	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true"))),
+	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
 				new BasicDBObject("$project", project));
     }	
@@ -752,7 +753,7 @@ public class TestMongoDBQueryExecution {
 	    sort.append( "_m1",1);
 	    
 	    Mockito.verify(dbCollection).aggregate(
-	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true"))),
+	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
 				new BasicDBObject("$project", project),
 				new BasicDBObject("$sort", sort),

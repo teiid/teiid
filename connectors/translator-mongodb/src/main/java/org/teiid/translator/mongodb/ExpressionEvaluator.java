@@ -36,11 +36,13 @@ import com.mongodb.DBRef;
 
 public class ExpressionEvaluator extends HierarchyVisitor {
 	private BasicDBObject row;
+	private BasicDBObject parentKey;
+	private String tableName;
 	protected Stack<Boolean> match = new Stack<Boolean>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-	public static boolean matches(Condition condition, BasicDBObject row) throws TranslatorException {
-		ExpressionEvaluator evaluator = new ExpressionEvaluator(row);
+	public static boolean matches(Condition condition, BasicDBObject row, BasicDBObject parentKey, String tableName) throws TranslatorException {
+		ExpressionEvaluator evaluator = new ExpressionEvaluator(row, parentKey, tableName);
 		evaluator.append(condition);
 		if (!evaluator.exceptions.isEmpty()) {
 			throw evaluator.exceptions.get(0);
@@ -52,8 +54,10 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 		}
 	}
 
-	private ExpressionEvaluator(BasicDBObject row) {
+	private ExpressionEvaluator(BasicDBObject row, BasicDBObject parentKey, String tableName) {
 		this.row = row;
+		this.parentKey = parentKey;
+		this.tableName = tableName;
 	}
 
 	@Override
@@ -93,12 +97,12 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 		}
 		ColumnReference column = (ColumnReference)obj;
 		
-		Object value = null;
-		if (MongoDBSelectVisitor.isPartOfPrimaryKey(column.getTable().getMetadataObject(), column.getName())) {
+		Object value = this.parentKey.get(column.getName());
+		if (value == null && MongoDBSelectVisitor.isPartOfPrimaryKey(column.getTable().getMetadataObject(), column.getName())) {
 			value = this.row.get("_id"); //$NON-NLS-1$
 		}
-		else {
-			value = this.row.get(column.getName());
+		if (value == null) {
+		    value = this.row.get(column.getName());
 		}
 		if (value instanceof DBRef) {
 			value = ((DBRef)value).getId();
