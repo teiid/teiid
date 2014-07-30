@@ -92,11 +92,6 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	}
 	
 	@Override
-	public boolean supportsOnlyLiteralComparison() {
-	    return false;
-	}
-	
-	@Override
 	public List<Object> search(Select command, String cacheName,
 			ObjectConnection connection, ExecutionContext executionContext)
 			throws TranslatorException {
