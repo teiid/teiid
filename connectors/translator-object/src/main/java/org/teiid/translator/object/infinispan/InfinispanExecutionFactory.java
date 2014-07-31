@@ -82,7 +82,8 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	
 	@Override
 	public boolean supportsNotCriteria() {
-		return isFullTextSearchingSupported();	}
+		return isFullTextSearchingSupported();
+	}
 
 	@Override
 	public boolean supportsLikeCriteria() {
