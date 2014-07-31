@@ -21,7 +21,7 @@
 
 /subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /subsystem=security/security-domain=teiid-security/authentication=classic:add()
-/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RelamDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
+/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
 /subsystem=threads/unbounded-queue-thread-pool=teiid-async:add(max-threads=4)
 
 /subsystem=teiid:add(async-thread-pool=teiid-async, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
