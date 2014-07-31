@@ -102,6 +102,18 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 		performTest(command, 2, 1);
 	}
 	
+	@Test public void testQueryRangeAbove2() throws Exception {     
+	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId > 1"); //$NON-NLS-1$
+	                                       
+	    performTest(command, 2, 1);
+	}
+
+	@Test public void testQueryRangeBelow() throws Exception {     
+	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId < 3"); //$NON-NLS-1$
+	                                       
+	    performTest(command, 2, 1);
+	}
+	
 	@Test public void testQueryAnd() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId > '1' and Settled = 'false'"); //$NON-NLS-1$
 					

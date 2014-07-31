@@ -86,7 +86,7 @@ import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
-	private final class MockTransactionManager implements TransactionManager {
+	public static final class MockTransactionManager implements TransactionManager {
 		ThreadLocal<Transaction> txns = new ThreadLocal<Transaction>();
 		List<Transaction> txnHistory = new ArrayList<Transaction>();
 
@@ -162,6 +162,11 @@ public class TestEmbeddedServer {
 			Transaction t = Mockito.mock(Transaction.class);
 			txnHistory.add(t);
 			txns.set(t);
+		}
+
+		public void reset() {
+			txnHistory.clear();
+			txns = new ThreadLocal<Transaction>();
 		}
 	}
 

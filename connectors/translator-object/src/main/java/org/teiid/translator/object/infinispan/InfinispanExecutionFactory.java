@@ -81,6 +81,11 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	}
 	
 	@Override
+	public boolean supportsNotCriteria() {
+		return isFullTextSearchingSupported();
+	}
+
+	@Override
 	public boolean supportsLikeCriteria() {
 		// at this point, i've been unable to get the Like to work.
 		return false;

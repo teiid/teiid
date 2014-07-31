@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
@@ -217,5 +218,33 @@ public class TestCompositeVDB {
 	public void testNonQualifiedDuplicate() throws Exception {
 		helpResolve("SELECT duplicate_func(BQT1.SmallA.INTKEY) FROM BQT1.SmallA");
 	}		
+	
+	@Test public void testRoleInherit() throws Exception {
+		VDBRepository repo = new VDBRepository();
+		repo.setSystemStore(RealMetadataFactory.example1Cached().getMetadataStore());
+		repo.setSystemFunctionManager(RealMetadataFactory.SFM);
+		MetadataStore metadataStore = new MetadataStore();
+		RealMetadataFactory.createPhysicalModel("x", metadataStore);
+		VDBMetaData vdb = createVDBMetadata(metadataStore, "bqt");
+		DataPolicyMetadata dpm = new DataPolicyMetadata();
+		dpm.setName("x");
+		dpm.setGrantAll(true);
+		vdb.addDataPolicy(dpm);
+		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
+		cmr.addConnectorManager("x", new ConnectorManager("y", "z"));
+		repo.addVDB(vdb, metadataStore, null, null, cmr, false);
+		
+		metadataStore = new MetadataStore();
+		RealMetadataFactory.createPhysicalModel("y", metadataStore);
+		vdb = createVDBMetadata(metadataStore, "ex");
+		VDBImportMetadata vdbImport = new VDBImportMetadata();
+		vdbImport.setName("bqt");
+		vdbImport.setImportDataPolicies(true);
+		vdb.getVDBImports().add(vdbImport);
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
+		
+		vdb = repo.getLiveVDB("ex");
+		assertEquals(1, vdb.getDataPolicyMap().get("x").getSchemas().size());
+	}
 	
 }

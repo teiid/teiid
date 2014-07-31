@@ -190,7 +190,7 @@ public class TestODataSQLStringVisitor {
 		TransformationMetadata metadata = RealMetadataFactory.example1();
 		ODataSQLBuilder visitor = new ODataSQLBuilder(metadata.getMetadataStore(), false);
 		QueryInfo qi = buildQueryInfo(filter, select, orderby, top);
-		Query query = visitor.countStarString(tableName, qi);
+		Query query = visitor.selectString(tableName, qi, null, null, true);
 		assertEquals(expected, query.toString()); // comma inserted by visitor
 	}	
 
@@ -229,7 +229,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testSelectCount() throws Exception {
 		testSelectCountStar(
-				"SELECT COUNT(*) FROM pm1.g1 WHERE (e1 >= 10) AND (e1 < 20)",
+				"SELECT COUNT(*) FROM pm1.g1 AS g0 WHERE (g0.e1 >= 10) AND (g0.e1 < 20)",
 				"pm1.g1", "e1 ge 10 and e1 lt 20", "e1,x5", "e1 desc, e2", 10);
 	}
 	

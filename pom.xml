@@ -103,12 +103,10 @@
         <version.postgresql>9.1-901.jdbc4</version.postgresql> <!-- overriding v8 -->
         
         <derby.version>10.2.1.6</derby.version>
-		<mysql.connector.version>5.1.5</mysql.connector.version>
-		
+		<mysql.connector.version>5.1.5</mysql.connector.version>		
 		<version.com.google.protobuf>2.5.0</version.com.google.protobuf>
         <version.org.infinispan.protostream>1.0.2.Final-redhat-1</version.org.infinispan.protostream>  <!--  1.0.0.CR1-redhat-1 is what works in EAP  -->
-
-        
+        <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -861,7 +859,6 @@
               <groupId>org.odata4j</groupId>
               <artifactId>odata4j-core</artifactId>
               <version>${version.org.odata4j}</version>
-              <classifier>redhat</classifier>
               <exclusions>                
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
@@ -1007,7 +1004,7 @@
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-bundle</artifactId>
-                <version>2.6.8</version>
+                <version>${version.org.apache.cxf}</version>
             </dependency>
             <dependency>
                 <groupId>com.datastax.cassandra</groupId>
@@ -1183,6 +1180,11 @@
 				<artifactId>dbunit</artifactId>
 				<version>2.2</version>
 			</dependency>				 		                                                                                 
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.mongo</artifactId>
+                <version>${version.de.flapdoodle.embed.mongo}</version>
+            </dependency>             
         </dependencies>
 	</dependencyManagement>
 	<modules>

@@ -36,6 +36,7 @@ import org.teiid.translator.TypeFacility;
 import com.mongodb.*;
 
 public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnection> {
+
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Merge Into Table", description="Declare the name of table that this table needs to be merged into. No separate copy maintained")
     public static final String MERGE = MetadataFactory.MONGO_URI+"MERGE"; //$NON-NLS-1$
 
@@ -44,6 +45,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
 
     private static final String ID = "_id"; //$NON-NLS-1$
     private static final String TOP_LEVEL_DOC = "TOP_LEVEL_DOC"; //$NON-NLS-1$
+    private static final String ASSOSIATION = "ASSOSIATION"; //$NON-NLS-1$
 
     @Override
     public void process(MetadataFactory metadataFactory, MongoDBConnection connection) throws TranslatorException {
@@ -57,6 +59,13 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             // top level documents can not be seen as merged
             table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));
         }
+
+        for (Table table:metadataFactory.getSchema().getTables().values()) {
+            String merge = table.getProperty(MERGE, false);
+            if (merge != null) {
+                addForeignKey(metadataFactory, table, metadataFactory.getSchema().getTable(merge));
+            }
+        }
         
         for (Table table:metadataFactory.getSchema().getTables().values()) {
             String top = table.getProperty(TOP_LEVEL_DOC, false);
@@ -65,7 +74,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 table.setProperty(TOP_LEVEL_DOC, null);
                 if (merge != null) {
                     table.setProperty(MERGE, null);
-                    table.setProperty(EMBEDDABLE, merge);
+                    table.setProperty(EMBEDDABLE, "true"); //$NON-NLS-1$
                 }
             }
         }
@@ -109,12 +118,14 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             // embedded doc - one to one
             Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value);
             childTable.setProperty(MERGE, table.getName());
+            childTable.setProperty(ASSOSIATION, MutableDBRef.Association.ONE.name()); 
         }
         else if (value instanceof BasicDBList) {
             // embedded doc, list one to many
             if (((BasicDBList)value).get(0) instanceof BasicDBObject) {
                 Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0));
                 childTable.setProperty(MERGE, table.getName());
+                childTable.setProperty(ASSOSIATION, MutableDBRef.Association.MANY.name());
             }
             else {
                 column = metadataFactory.addColumn(columnKey, TypeFacility.RUNTIME_NAMES.OBJECT+"[]", table); //$NON-NLS-1$
@@ -148,6 +159,39 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         return column;
     }
     
+    private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
+        MutableDBRef.Association association = MutableDBRef.Association.valueOf(childTable.getProperty(ASSOSIATION, false));
+        childTable.setProperty(ASSOSIATION, null);
+        if (association == MutableDBRef.Association.ONE) {
+            KeyRecord record = table.getPrimaryKey();
+            if (record != null) {
+                ArrayList<String> pkColumns = new ArrayList<String>(); 
+                for (Column column:record.getColumns()) {
+                    Column c = metadataFactory.getSchema().getTable(childTable.getName()).getColumnByName(column.getName());
+                    if (c == null) {
+                        c = metadataFactory.addColumn(column.getName(), column.getRuntimeType(), childTable);
+                    }
+                    pkColumns.add(c.getName());
+                }
+                metadataFactory.addPrimaryKey("PK0", pkColumns, childTable); //$NON-NLS-1$
+            }
+        }
+        else {
+            KeyRecord record = table.getPrimaryKey();
+            if (record != null) {
+                ArrayList<String> pkColumns = new ArrayList<String>(); 
+                for (Column column:record.getColumns()) {
+                    Column c = metadataFactory.getSchema().getTable(childTable.getName()).getColumnByName(table.getName()+"_"+column.getName()); //$NON-NLS-1$
+                    if (c == null) {
+                        c = metadataFactory.addColumn(table.getName()+"_"+column.getName(), column.getRuntimeType(), childTable); //$NON-NLS-1$
+                    }
+                    pkColumns.add(c.getName());
+                }
+                metadataFactory.addForiegnKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$                
+            }            
+        }
+    }
+
     private String getDataType(Object value) {
         if (value instanceof Integer) {
             return TypeFacility.RUNTIME_NAMES.INTEGER;

@@ -205,29 +205,31 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			visitNode(info.filter);
 		}
 
-		// order by
-		List<OrderByExpression> orderBy = info.orderBy;
-		if (orderBy != null && !orderBy.isEmpty()) {
-			for (OrderByExpression expr:info.orderBy) {
-				visitNode(expr);
+		if (!countStar) {
+			// order by
+			List<OrderByExpression> orderBy = info.orderBy;
+			if (orderBy != null && !orderBy.isEmpty()) {
+				for (OrderByExpression expr:info.orderBy) {
+					visitNode(expr);
+				}
+				query.setOrderBy(this.orderBy);
 			}
-			query.setOrderBy(this.orderBy);
+			else {
+				KeyRecord record = resultEntityTable.getPrimaryKey();
+				if (record == null) {
+					// if PK is not available there MUST at least one unique key
+					record = resultEntityTable.getUniqueKeys().get(0);
+				}
+				// provide implicit ordering for cursor logic
+				for (Column column:record.getColumns()) {
+					OrderByExpression expr = org.odata4j.expression.Expression.orderBy(org.odata4j.expression.Expression.simpleProperty(column.getName()), Direction.ASCENDING);
+					visitNode(expr);
+				}
+				query.setOrderBy(this.orderBy);
+			}
+	
+			select.setDistinct(this.distinct);
 		}
-		else {
-			KeyRecord record = resultEntityTable.getPrimaryKey();
-			if (record == null) {
-				// if PK is not available there MUST at least one unique key
-				record = resultEntityTable.getUniqueKeys().get(0);
-			}
-			// provide implicit ordering for cursor logic
-			for (Column column:record.getColumns()) {
-				OrderByExpression expr = org.odata4j.expression.Expression.orderBy(org.odata4j.expression.Expression.simpleProperty(column.getName()), Direction.ASCENDING);
-				visitNode(expr);
-			}
-			query.setOrderBy(this.orderBy);
-		}
-
-		select.setDistinct(this.distinct);
 		From from = new From();
 		from.addClause(this.fromCluse);
 		query.setSelect(select);
@@ -366,20 +368,6 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			}
 		}
 		return select;
-	}
-
-	public Query countStarString(String entityName, QueryInfo info) {
-		Table table = findTable(entityName, metadata);
-		AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null);
-
-		query.setSelect(new Select(Arrays.asList(aggregateSymbol)));
-    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol(table.getFullName())))));
-		
-		if (info.filter != null) {
-			visitNode(info.filter);
-		}
-		query.setCriteria(this.criteria);
-		return this.query;
 	}
 
 	@Override

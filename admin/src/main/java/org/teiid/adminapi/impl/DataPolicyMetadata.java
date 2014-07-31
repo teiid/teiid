@@ -53,6 +53,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     private Set<String> hasRowPermissions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
 	private boolean grantAll;
+	
+	private Set<String> schemas;
 
 	@Override
     public String getName() {
@@ -499,5 +501,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     	clone.permissions.putAll(this.permissions);
     	return clone;
     }
+    
+    public Set<String> getSchemas() {
+		return schemas;
+	}
+    
+    public void setSchemas(Set<String> schemas) {
+		this.schemas = schemas;
+	}
     
 }

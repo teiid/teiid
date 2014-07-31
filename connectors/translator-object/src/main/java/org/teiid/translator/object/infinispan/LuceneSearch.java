@@ -56,6 +56,10 @@ public final class LuceneSearch   {
 
 	public static List<Object> performSearch(Select command, Class<?> type, String cacheName, CacheContainerWrapper cache)
 			throws TranslatorException {
+		
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+				"Using Lucene Searching."); //$NON-NLS-1$
+		
 		//Map<?, ?> cache, 
 		SearchManager searchManager = Search
 				.getSearchManager((Cache<?, ?>) cache.getCache(cacheName) );
@@ -330,8 +334,7 @@ public final class LuceneSearch   {
 			boolean not, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.keyword()
 				.onField(ObjectExecution.getNameInSource(column))
-				// .matching(value.toString() + "*")
-				.matching(value.toString()).createQuery();
+				.matching(value).createQuery();
 
 		if (not) {
 			junction.must(queryKey).not();
@@ -348,7 +351,7 @@ public final class LuceneSearch   {
 
 		Query queryKey = queryBuilder.range()
 				.onField(ObjectExecution.getNameInSource(column))
-				.above(value.toString()).excludeLimit().createQuery();
+				.above(value).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
 	}
@@ -358,7 +361,7 @@ public final class LuceneSearch   {
 
 		Query queryKey = queryBuilder.range()
 				.onField(ObjectExecution.getNameInSource(column))
-				.below(value.toString()).excludeLimit().createQuery();
+				.below(value).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
 	}
