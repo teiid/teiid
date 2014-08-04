@@ -21,21 +21,51 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.Array;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.GroupBy;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Join;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.OrderBy;
+import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Association;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 
@@ -50,7 +80,6 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	protected Stack<Object> onGoingExpression  = new Stack<Object>();
 	protected ConcurrentHashMap<Object, ColumnDetail> expressionMap = new ConcurrentHashMap<Object, ColumnDetail>();
 	private HashMap<String, BasicDBObject> groupByProjections = new HashMap<String, BasicDBObject>();
-	protected ColumnDetail onGoingAlias;
 	protected MongoDocument mongoDoc;
 
 	// derived stuff
@@ -134,53 +163,61 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(DerivedColumn obj) {
-		this.onGoingAlias = buildAlias(obj.getAlias());
-		
-		Expression originalExpr = obj.getExpression();
+		Expression teiidExpression = obj.getExpression();
+		String alias = getAlias(obj.getAlias()); 
 		
 		this.processingDerivedColumn = true;
-		append(originalExpr);
-		this.processingDerivedColumn = false;
+		append(teiidExpression);
+		
+		Object mongoExpression = this.onGoingExpression.pop();
 
-		Object expr = this.onGoingExpression.pop();
-
-		ColumnDetail previousAlias = this.expressionMap.put(expr, this.onGoingAlias);
-		if (previousAlias == null) {
-			previousAlias = this.onGoingAlias;
+		ColumnDetail exprDetails = this.expressionMap.get(mongoExpression);
+		if (exprDetails == null) {
+			exprDetails = new ColumnDetail();
+			exprDetails.projectedName = alias;
+			this.expressionMap.put(mongoExpression, exprDetails);
 		}
-
-		if (originalExpr instanceof ColumnReference) {
-			String elementName = getColumnName((ColumnReference)obj.getExpression());
-			this.selectColumnReferences.add(elementName);
-			// the the expression is already part of group by then the projection should be $_id.{name}
+		
+		// the the expression is already part of group by then the projection should be $_id.{name}
+		this.selectColumns.add(alias);
+		if (exprDetails.partOfGroupBy) {
 			BasicDBObject id = this.groupByProjections.get("_id"); //$NON-NLS-1$
-			if (id == null) {
-				if (this.command.isDistinct() || this.groupByProjections.get(previousAlias.projectedName) != null) {
-					// this is DISTINCT case
-					this.project.append(this.onGoingAlias.projectedName, "$_id."+previousAlias.projectedName); //$NON-NLS-1$
-					this.selectColumns.add(this.onGoingAlias.projectedName);
-					// if group by does not exist then build the group root id based on distinct
-					this.group.put(this.onGoingAlias.projectedName, expr);
-				}
-				else {
-					this.project.append(this.onGoingAlias.projectedName, expr);
-					this.selectColumns.add(this.onGoingAlias.projectedName);					
-				}
-			}
-			else {
-				this.project.append(this.onGoingAlias.projectedName, id.get(previousAlias.projectedName)); 
-				this.selectColumns.add(this.onGoingAlias.projectedName);					
-			}			
+			this.project.append(alias, id.get(exprDetails.projectedName));
+			exprDetails.projectedName = alias;
 		}
 		else {
-		    implicitProject(originalExpr, expr);
-			// what user sees as project
-			this.selectColumns.add(previousAlias.projectedName);
-			this.selectColumnReferences.add(previousAlias.projectedName);
+			exprDetails.projectedName = alias;
+			exprDetails.partOfProject = true;
+			if (teiidExpression instanceof ColumnReference) {
+				String elementName = getColumnName((ColumnReference)obj.getExpression());
+				this.selectColumnReferences.add(elementName);
+				// the the expression is already part of group by then the projection should be $_id.{name}
+				if (this.command.isDistinct() || this.groupByProjections.get(exprDetails.projectedName) != null) {
+					// this is DISTINCT case
+					this.project.append(alias, "$_id."+exprDetails.projectedName); //$NON-NLS-1$
+					// if group by does not exist then build the group root id based on distinct
+					this.group.put(alias, mongoExpression);
+				}
+				else {
+					this.project.append(alias, mongoExpression);
+				}			
+			}
+			else {
+			    implicitProject(teiidExpression, mongoExpression, exprDetails);
+				// what user sees as project
+				this.selectColumnReferences.add(exprDetails.projectedName);
+			}
 		}
-		this.onGoingAlias = null;
+		this.processingDerivedColumn = false;		
 	}
 
+	private String getAlias(String alias) {
+		if (alias == null) {
+			return "_m"+this.aliasCount.getAndIncrement(); //$NON-NLS-1$
+		}
+		return alias;
+	}
+	
 	private ColumnDetail buildAlias() {
 	    return buildAlias("_m"+this.aliasCount.getAndIncrement()); //$NON-NLS-1$
 	}
@@ -199,8 +236,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		try {
 			if (obj.getMetadataObject() == null) {
 				for (Object expr:this.expressionMap.keySet()) {
-					ColumnDetail alias = this.expressionMap.get(expr);
-					if (alias.projectedName.equals(getColumnName(obj))) {
+					ColumnDetail columnInfo = this.expressionMap.get(expr);
+					if (columnInfo.projectedName.equals(getColumnName(obj))) {
 						this.onGoingExpression.push(expr);
 						break;
 					}
@@ -217,16 +254,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			    ColumnDetail columnInfo = buildColumnDetail(obj);
 				Object mongoExpr = columnInfo.expression; 
 				this.onGoingExpression.push(mongoExpr);
-
-				if (this.onGoingAlias == null) {
-				    columnInfo.projectedName = "_c"+this.columnCount.getAndIncrement(); //$NON-NLS-1$
-					this.expressionMap.putIfAbsent(mongoExpr, columnInfo); 
-				}
-				else {
-				    this.onGoingAlias.expression = columnInfo.expression;
-				    this.onGoingAlias.targetDocumentFieldName = columnInfo.targetDocumentFieldName;
-				    this.onGoingAlias.targetDocumentName = columnInfo.targetDocumentName;
-				}
+				this.expressionMap.putIfAbsent(mongoExpr, columnInfo); 
 			}
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
@@ -390,46 +418,71 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		}
     }
 
-	private ColumnDetail addToProject(Object expr, boolean addExprAsProject) {
-		ColumnDetail previousAlias = this.expressionMap.get(expr);
-		if (previousAlias == null) {
-			// if expression is in having clause there is will be no alias; however mongo expects this
-			// to be elevated to grouping clause
-			previousAlias = this.onGoingAlias;
-			if (this.onGoingAlias == null) {
+	private ColumnDetail addToProject(Object expr, boolean addExprAsProject, ColumnDetail detail, boolean needsProjection) {
+		if (detail == null) {
+			// if expression is in having/where clause there is will be no alias; however mongo expects some functions
+			// to be elevated to project before $match can be run
+			if (needsProjection) {
 				this.projectBeforeMatch = true;
-				previousAlias = buildAlias();
 			}
-			this.expressionMap.putIfAbsent(expr, previousAlias);
+			detail = buildAlias();
+			this.expressionMap.putIfAbsent(expr, detail);
 		}
-		previousAlias.expression = expr;
+		detail.expression = expr;
 		
-		if (this.project.get(previousAlias.projectedName) == null && !this.project.values().contains(expr)) {
-			this.project.append(previousAlias.projectedName, addExprAsProject?expr:1);			
+		if (needsProjection) {
+			if (this.project.get(detail.projectedName) == null && !this.project.values().contains(expr)) {
+				this.project.append(detail.projectedName, addExprAsProject?expr:1);			
+			}
+			detail.partOfProject = true;
 		}
-		return previousAlias;
+		else {
+			detail.partOfProject = false;
+		}
+		return detail;
 	}
 
 	@Override
 	public void visit(Function obj) {
-    	if (this.executionFactory.getFunctionModifiers().containsKey(obj.getName())) {
-            this.executionFactory.getFunctionModifiers().get(obj.getName()).translate(obj);
+		String functionName = obj.getName();
+		if (functionName.indexOf('.') != -1) {
+			functionName = functionName.substring(functionName.indexOf('.')+1);
+		}
+    	if (this.executionFactory.getFunctionModifiers().containsKey(functionName)) {
+            List<?> parts =  this.executionFactory.getFunctionModifiers().get(functionName).translate(obj);
+            if (parts != null) {
+            	obj = (Function)parts.get(0);
+            }
     	}
     	BasicDBObject expr = null;
-    	List<Expression> args = obj.getParameters();
-		if (args != null) {
-			BasicDBList params = new BasicDBList();
-			for (int i = 0; i < args.size(); i++) {
-				append(args.get(i));
-				Object param = this.onGoingExpression.pop();
-				params.add(param);
+    	if (isGeoSpatialFunction(functionName)) {
+			expr = (BasicDBObject)handleGeoSpatialFunction(functionName, obj);
+    	}
+    	else {
+	    	List<Expression> args = obj.getParameters();
+			if (args != null) {
+				BasicDBList params = new BasicDBList();
+				for (int i = 0; i < args.size(); i++) {
+					append(args.get(i));
+					Object param = this.onGoingExpression.pop();
+					params.add(param);
+				}
+				expr = new BasicDBObject(obj.getName(), params);
 			}
-			expr = new BasicDBObject(obj.getName(), params);
-		}
+    	}
 
 		if(expr != null) {			
 			this.onGoingExpression.push(expr);
 		}
+	}
+
+	private boolean isGeoSpatialFunction(String name) {
+		for (String func:MongoDBExecutionFactory.GEOSPATIAL_FUNCTIONS) {
+			if (name.equalsIgnoreCase(func)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -624,24 +677,20 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
     }
 	
-	private ColumnDetail implicitProject(Expression teiidExpr, Object mongoExpr) {
+	private ColumnDetail implicitProject(Expression teiidExpr, Object mongoExpr, ColumnDetail providedAlias) {
         if (teiidExpr instanceof ColumnReference) {
-            ColumnDetail alias = this.expressionMap.get(mongoExpr);
-            if (alias == null) {
-                alias = buildAlias();
-                this.expressionMap.put(mongoExpr, alias);
-            }
-            return alias;
+            return this.expressionMap.get(mongoExpr);
         }
         else if (teiidExpr instanceof AggregateFunction) {
-            ColumnDetail alias = addToProject(mongoExpr, false);
+            ColumnDetail alias = addToProject(mongoExpr, false, providedAlias, true);
             if (!this.group.values().contains(mongoExpr)) {
                 this.group.put(alias.projectedName, mongoExpr);
             }
             return alias;
         }
         else if (teiidExpr instanceof Function) {
-            return addToProject(mongoExpr, true);
+        	Boolean avoidProjection = Boolean.valueOf(((Function) teiidExpr).getMetadataObject().getProperty(MongoDBExecutionFactory.AVOID_PROJECTION, false));
+            return addToProject(mongoExpr, true, providedAlias, processingDerivedColumn||!avoidProjection);
         }
         else if (teiidExpr instanceof Condition) {
             // needs to be in the form "_mo: {$cond: [{$eq :["$city", "FREEDOM"]}, true, false]}}}"
@@ -649,11 +698,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             values.add(0, mongoExpr);
             values.add(1, true);
             values.add(2, false);
-            return addToProject(new BasicDBObject("$cond", values), true); //$NON-NLS-1$
+            return addToProject(new BasicDBObject("$cond", values), true, providedAlias, true); //$NON-NLS-1$
         }
         else if (teiidExpr instanceof Literal) {
             if (this.executionFactory.getVersion().compareTo(MongoDBExecutionFactory.TWO_6) >= 0) {
-                return addToProject(new BasicDBObject("$literal", mongoExpr), true); //$NON-NLS-1$
+                return addToProject(new BasicDBObject("$literal", mongoExpr), true, providedAlias, true); //$NON-NLS-1$
             }
             this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18026, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18026)));
         }
@@ -670,26 +719,47 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
         
         // this for the normal where clause
-		ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-
+		ColumnDetail leftExprDetails = getExpressionAlias(obj.getLeftExpression());
         append(obj.getRightExpression());
-
         Object rightExpr = this.onGoingExpression.pop();
         if (this.expressionMap.get(rightExpr) != null) {
         	rightExpr = this.expressionMap.get(rightExpr).projectedName;
         }
         
-        QueryBuilder query = exprAlias.getQueryBuilder();
+        QueryBuilder query = leftExprDetails.getQueryBuilder();
         buildComparisionQuery(obj, rightExpr, query);
-    	this.onGoingExpression.push(query.get());
-
+		
+		if (leftExprDetails.partOfProject || obj.getLeftExpression() instanceof ColumnReference) {
+	    	this.onGoingExpression.push(query.get());   	
+		}
+		else {
+			this.onGoingExpression.push(buildFunctionQuery(obj, (BasicDBObject)leftExprDetails.expression, rightExpr)); 
+		}
+		
     	if (obj.getLeftExpression() instanceof ColumnReference) {
             ColumnReference colum = (ColumnReference)obj.getLeftExpression();
-            this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), exprAlias.columnName, rightExpr);
-        }    	
+            this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), leftExprDetails.columnName, rightExpr);
+        }		
 	}
 	
-    protected void buildComparisionQuery(Comparison obj, Object rightExpr, QueryBuilder query) {
+	protected BasicDBObject buildFunctionQuery(Comparison obj, BasicDBObject leftExpr, Object rightExpr) {
+        switch(obj.getOperator()) {
+        case EQ:
+        	if (rightExpr instanceof Boolean && ((Boolean)rightExpr)) {
+        		return leftExpr;
+        	}
+			//$FALL-THROUGH$
+		case NE:
+        case LT:
+        case LE:
+        case GT:
+        case GE:
+        }
+        this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18030, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18030)));
+        return null; 
+    }	
+	
+	protected void buildComparisionQuery(Comparison obj, Object rightExpr, QueryBuilder query) {
         switch(obj.getOperator()) {
         case EQ:
             query.is(rightExpr);
@@ -766,7 +836,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	    append(array.getExpressions());
 	    BasicDBList values = new BasicDBList();
 	    for (int i = 0; i < array.getExpressions().size(); i++) {
-	        values.add(this.onGoingExpression.pop());
+	        values.add(0, this.onGoingExpression.pop());
 	    }
 	    this.onGoingExpression.push(values);
 	}	
@@ -782,9 +852,17 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(In obj) {
-		ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-		QueryBuilder query = exprAlias.getQueryBuilder();
-		this.onGoingExpression.push(buildInQuery(obj, query).get());
+		append(obj.getLeftExpression());
+		Object expr = this.onGoingExpression.pop();
+		ColumnDetail detail = this.expressionMap.get(expr);
+		QueryBuilder query = QueryBuilder.start();
+		if (detail == null) {
+	        this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18031, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18031)));
+		}
+		else {
+			query = detail.getQueryBuilder();
+			this.onGoingExpression.push(buildInQuery(obj, query).get());
+		}
 	}
 	
     protected QueryBuilder buildInQuery(In obj, QueryBuilder query) {
@@ -808,22 +886,26 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		append(obj);
 
 		Object expr = this.onGoingExpression.pop();
-		ColumnDetail exprAlias = implicitProject(obj, expr);
-//		if (exprAlias == null) {
-//			exprAlias = buildAlias(null);
-//			this.expressionMap.put(expr, exprAlias);
-//		}
+		ColumnDetail detail = implicitProject(obj, expr, this.expressionMap.get(expr));
 
 		// when expression shows up in a condition, but it is not a derived column
 		// then add implicit project on that alias.
-		return exprAlias;
+		return detail;
 	}
 
 	@Override
 	public void visit(IsNull obj) {
-		ColumnDetail exprAlias = getExpressionAlias(obj.getExpression());
-		QueryBuilder query = exprAlias.getQueryBuilder();
-		this.onGoingExpression.push(buildIsNullQuery(obj, query).get());
+		append(obj.getExpression());
+		Object expr = this.onGoingExpression.pop();
+		ColumnDetail detail = this.expressionMap.get(expr);
+		QueryBuilder query = QueryBuilder.start();
+		if (detail == null) {
+	        this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18032, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18032)));
+		}
+		else {
+			query = detail.getQueryBuilder();
+			this.onGoingExpression.push(buildIsNullQuery(obj, query).get());
+		}
 	}
 	
     protected QueryBuilder buildIsNullQuery(IsNull obj, QueryBuilder query) {
@@ -838,10 +920,18 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(Like obj) {
-		ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-		QueryBuilder query = exprAlias.getQueryBuilder();
-		buildLikeQuery(obj, query);
-		this.onGoingExpression.push(query.get());
+		append(obj.getLeftExpression());
+		Object expr = this.onGoingExpression.pop();
+		ColumnDetail detail = this.expressionMap.get(expr);
+		QueryBuilder query = QueryBuilder.start();
+		if (detail == null) {
+			this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18033, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18033)));
+		}
+		else {
+			query = detail.getQueryBuilder();
+			buildLikeQuery(obj, query);
+			this.onGoingExpression.push(query.get());
+		}
 	}
 
     protected QueryBuilder buildLikeQuery(Like obj, QueryBuilder query) {
@@ -910,12 +1000,16 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(GroupBy obj) {
+		// since grouping requires additional step, this is done at a different pipeline stage. 
+		// so, that requires additional in-direction.		
 		if (obj.getElements().size() == 1) {
 			append(obj.getElements().get(0));
 			Object mongoExpr = this.onGoingExpression.pop();
 			ColumnDetail alias = this.expressionMap.get(mongoExpr);
+			alias.projectedName = "_c"+this.columnCount.getAndIncrement(); //$NON-NLS-1$
 			this.group.put("_id", new BasicDBObject(alias.projectedName, mongoExpr)); //$NON-NLS-1$
 			this.groupByProjections.put("_id", new BasicDBObject(alias.projectedName, "$_id."+alias.projectedName)); //$NON-NLS-1$ //$NON-NLS-2$
+			alias.partOfGroupBy = true;
 		}
 		else {
 			BasicDBObject fields = new BasicDBObject();
@@ -924,8 +1018,10 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 				append(expr);
 				Object mongoExpr = this.onGoingExpression.pop();
 				ColumnDetail alias = this.expressionMap.get(mongoExpr);
+				alias.projectedName = "_c"+this.columnCount.getAndIncrement(); //$NON-NLS-1$
 				exprs.put(alias.projectedName, mongoExpr);
 				fields.put(alias.projectedName, "$_id."+alias.projectedName); //$NON-NLS-1$
+				alias.partOfGroupBy = true;
 			}
 			this.group.put("_id", exprs); //$NON-NLS-1$
 			this.groupByProjections.put("_id", fields); //$NON-NLS-1$
@@ -978,4 +1074,65 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		}
 		return names;
 	}
+	
+	static enum SpatialType {Point, LineString, Polygon, MultiPoint, MultiLineString};
+	
+	private DBObject handleGeoSpatialFunction(String functionName, Function function) {
+		if (functionName.equalsIgnoreCase(MongoDBExecutionFactory.FUNC_GEO_NEAR) || 
+				functionName.equalsIgnoreCase(MongoDBExecutionFactory.FUNC_GEO_NEAR_SPHERE)) {
+			return buildGeoNearFunction(function);
+		}
+		return buildGeoFunction(function);			
+	}
+
+	private DBObject buildGeoNearFunction(Function function) {
+		List<Expression> args = function.getParameters();
+
+		// Column Name		
+		int paramIndex = 0;
+		ColumnDetail column = getExpressionAlias(args.get(paramIndex++));
+
+		BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
+		builder.push(column.documentQueryFieldName);
+		builder.push(function.getName());						
+		builder.push("$geometry");//$NON-NLS-1$
+		builder.add("type", SpatialType.Point.name());//$NON-NLS-1$
+		
+		// walk the co-ordinates
+		append(args.get(paramIndex++));
+		BasicDBList coordinates = new BasicDBList();
+		coordinates.add(this.onGoingExpression.pop());
+		builder.add("coordinates", coordinates); //$NON-NLS-1$
+		
+		// maxdistance
+		append(args.get(paramIndex++));
+		builder.pop().add("$maxDistance", this.onGoingExpression.pop()); //$NON-NLS-1$
+		
+		return builder.get();
+	}
+
+	private DBObject buildGeoFunction(Function function) {
+		List<Expression> args = function.getParameters();
+
+		// Column Name		
+		int paramIndex = 0;
+		ColumnDetail column = getExpressionAlias(args.get(paramIndex++));
+
+		// Type: Point, LineString, Polygon..
+		append(args.get(paramIndex++));
+		SpatialType type = SpatialType.valueOf((String)this.onGoingExpression.pop());
+		
+		BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
+		builder.push(column.documentQueryFieldName);
+		builder.push(function.getName());			
+		builder.push("$geometry");//$NON-NLS-1$
+		builder.add("type", type.name());//$NON-NLS-1$
+		
+		// walk the co-ordinates
+		append(args.get(paramIndex++));
+		BasicDBList coordinates = new BasicDBList();
+		coordinates.add(this.onGoingExpression.pop());
+		builder.add("coordinates", coordinates); //$NON-NLS-1$
+		return builder.get();	
+	}	
 }

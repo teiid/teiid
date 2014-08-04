@@ -21,6 +21,7 @@
  */
 package org.teiid.translator.mongodb;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import org.junit.Before;
@@ -31,9 +32,15 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.mongodb.MongoDBConnection;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.UDFSource;
+import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
@@ -51,7 +58,13 @@ public class TestMongoDBQueryExecution {
     	this.translator.setDatabaseVersion("2.6");
     	this.translator.start();
 
-    	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "sakila", "northwind");
+    	MetadataFactory mf = TestDDLParser.helpParse(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind");
+
+    	TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "sakila", new FunctionTree("mongo", new UDFSource(translator.getPushDownFunctions())));
+    	ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
+    	if (report.hasItems()) {
+    		throw new RuntimeException(report.getFailureMessage());
+    	}
     	this.utility = new TranslationUtility(metadata);
     }
 
@@ -857,7 +870,7 @@ public class TestMongoDBQueryExecution {
 	    project.append( "total",1);
 
 	    BasicDBObject id = new BasicDBObject();
-	    id.append( "_c1","$user_id");
+	    id.append( "_c0","$user_id");
 
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
@@ -1003,4 +1016,47 @@ public class TestMongoDBQueryExecution {
         Mockito.verify(dbCollection).aggregate(
                 new BasicDBObject("$project", result));
     }    
+    
+    @Test
+    public void testGeoFunctionInWhere() throws Exception {
+        String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((1.0, 2.0),(3.0, 4.0))) or CategoryID=1";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
+        
+        BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
+        builder.push("CategoryName");
+        builder.push("$geoWithin");//$NON-NLS-1$
+		builder.push("$geometry");//$NON-NLS-1$
+		builder.add("type", "Polygon");//$NON-NLS-1$
+		BasicDBList coordinates = new BasicDBList();
+		
+		BasicDBList pointOne = new BasicDBList();
+		pointOne.add(new BigDecimal("1.0"));
+		pointOne.add(new BigDecimal("2.0"));
+
+		BasicDBList pointTwo = new BasicDBList();
+		pointTwo.add(new BigDecimal("3.0"));
+		pointTwo.add(new BigDecimal("4.0"));
+		
+		BasicDBList points = new BasicDBList();
+		points.add(pointOne);
+		points.add(pointTwo);
+		
+		coordinates.add(points);
+		builder.add("coordinates", coordinates); //$NON-NLS-1$
+		
+		QueryBuilder qb = QueryBuilder.start().or(builder.get(), new BasicDBObject("_id", 1));        
+		BasicDBObject result = new BasicDBObject();
+        result.append( "_m1", "$CategoryName");
+
+        Mockito.verify(dbCollection).aggregate(
+                        new BasicDBObject("$match", qb.get()),
+                        new BasicDBObject("$project", result));
+    }
+    
+    @Test(expected=TranslatorException.class)
+    public void testGeoFunctionInWhereWithFalse() throws Exception {
+        String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((1.0, 2.0),(3.0, 4.0))) = false";
+        helpExecute(query, new String[]{"Categories"}, 2);
+    }     
 }
