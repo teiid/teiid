@@ -37,6 +37,7 @@ import javax.resource.cci.ConnectionFactory;
 import org.teiid.core.types.*;
 import org.teiid.language.*;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.*;
@@ -53,8 +54,19 @@ import com.mongodb.gridfs.GridFSInputFile;
 
 @Translator(name="mongodb", description="MongoDB Translator, reads and writes the data to MongoDB")
 public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory, MongoDBConnection> {
-    public static final Version TWO_4 = Version.getVersion("2.4"); //$NON-NLS-1$
+	private static final String MONGO = "mongo"; //$NON-NLS-1$
+	public static final Version TWO_4 = Version.getVersion("2.4"); //$NON-NLS-1$
     public static final Version TWO_6 = Version.getVersion("2.6"); //$NON-NLS-1$
+    
+    public static final String FUNC_GEO_WITHIN = "geoWithin"; //$NON-NLS-1$
+	public static final String FUNC_GEO_INTERSECTS = "geoIntersects"; //$NON-NLS-1$
+	public static final String FUNC_GEO_NEAR = "geoNear"; //$NON-NLS-1$
+	public static final String FUNC_GEO_NEAR_SPHERE = "geoNearSphere"; //$NON-NLS-1$
+    public static final String FUNC_GEO_POLYGON_WITHIN = "geoPolygonWithin"; //$NON-NLS-1$
+	public static final String FUNC_GEO_POLYGON_INTERSECTS = "geoPolygonIntersects"; //$NON-NLS-1$
+	
+	public static final String[] GEOSPATIAL_FUNCTIONS = {FUNC_GEO_WITHIN, FUNC_GEO_INTERSECTS, FUNC_GEO_NEAR, FUNC_GEO_NEAR_SPHERE, FUNC_GEO_POLYGON_WITHIN, FUNC_GEO_POLYGON_INTERSECTS};
+	public static final String AVOID_PROJECTION = "AVOID_PROJECTION"; //$NON-NLS-1$
     
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 	private Version version = TWO_4;
@@ -66,7 +78,13 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		setSourceRequiredForMetadata(false);
 		setSupportsInnerJoins(true);
 		setSupportsOuterJoins(true);
-		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);		
+	}
+
+	@SuppressWarnings("nls")
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
 		
         registerFunctionModifier("+", new AliasModifier("$add"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("-", new AliasModifier("$subtract"));//$NON-NLS-1$ //$NON-NLS-2$
@@ -97,12 +115,62 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
         registerFunctionModifier(SourceSystemFunctions.HOUR, new AliasModifier("$hour"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.MINUTE, new AliasModifier("$minute"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SECOND, new AliasModifier("$second"));//$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("$ifNull")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("$ifNull")); //$NON-NLS-1$		
+		
+        FunctionMethod method = null;
+        method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
+        method.setProperty(AVOID_PROJECTION, "true");
+        method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
+        method.setProperty(AVOID_PROJECTION, "true");
+        method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+        method.setProperty(AVOID_PROJECTION, "true");
+        method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+        method.setProperty(AVOID_PROJECTION, "true");
+        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL); //$NON-NLS-1$ //$NON-NLS-2$
+        method.setProperty(AVOID_PROJECTION, "true");
+        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL); //$NON-NLS-1$ //$NON-NLS-2$
+        method.setProperty(AVOID_PROJECTION, "true");
+        
+        registerFunctionModifier(FUNC_GEO_NEAR, new AliasModifier("$near"));//$NON-NLS-1$
+        registerFunctionModifier(FUNC_GEO_NEAR_SPHERE, new AliasModifier("$nearSphere"));//$NON-NLS-1$
+        registerFunctionModifier(FUNC_GEO_WITHIN, new AliasModifier("$geoWithin"));//$NON-NLS-1$
+        registerFunctionModifier(FUNC_GEO_INTERSECTS, new AliasModifier("$geoIntersects"));//$NON-NLS-1$
+        registerFunctionModifier(FUNC_GEO_POLYGON_INTERSECTS, new GeoPolygonFunctionModifier("$geoIntersects"));//$NON-NLS-1$
+        registerFunctionModifier(FUNC_GEO_POLYGON_WITHIN, new GeoPolygonFunctionModifier("$geoWithin"));//$NON-NLS-1$
 	}
-
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
+	
+	private static class GeoPolygonFunctionModifier extends FunctionModifier {
+		private String functionName;
+		
+		public GeoPolygonFunctionModifier(String name) {
+			this.functionName = name;
+		}
+		
+		@Override
+		public List<?> translate(Function function) {
+			List<Expression> args = function.getParameters();
+			Expression north = args.get(1);
+			Expression east = args.get(2);
+			Expression west = args.get(3);
+			Expression south = args.get(4);
+			
+			ArrayList<Expression> points = new ArrayList<Expression>();
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(west, north)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(east, north)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(east, south)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(west, south)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(west, north)));
+			
+			Expression coordinates = new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL,  points);			
+			
+			Function func = LanguageFactory.INSTANCE.createFunction(this.functionName,
+					Arrays.asList(args.get(0), 
+							LanguageFactory.INSTANCE.createLiteral("Polygon", TypeFacility.RUNTIME_TYPES.STRING), //$NON-NLS-1$
+							coordinates
+					),
+                    Boolean.class);
+			return Arrays.asList(func);  
+		}
 	}
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
