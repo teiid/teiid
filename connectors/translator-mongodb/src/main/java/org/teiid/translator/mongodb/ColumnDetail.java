@@ -32,6 +32,8 @@ class ColumnDetail {
 	String columnName;
 	String targetDocumentName;
 	Object expression;
+	boolean partOfGroupBy;
+	boolean partOfProject;
 
 	public QueryBuilder getQueryBuilder() {
         QueryBuilder query = QueryBuilder.start(this.projectedName);
