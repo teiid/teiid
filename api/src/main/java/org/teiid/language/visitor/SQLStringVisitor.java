@@ -647,34 +647,38 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(NULL);
         } else {
             Class<?> type = obj.getType();
-            String val = obj.getValue().toString();
-            if(Number.class.isAssignableFrom(type)) {
-                buffer.append(val);
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-            	buffer.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-                buffer.append("{ts '") //$NON-NLS-1$
-                      .append(val)
-                      .append("'}"); //$NON-NLS-1$
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-                buffer.append("{t '") //$NON-NLS-1$
-                      .append(val)
-                      .append("'}"); //$NON-NLS-1$
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-                buffer.append("{d '") //$NON-NLS-1$
-                      .append(val)
-                      .append("'}"); //$NON-NLS-1$
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-            	buffer.append("X'") //$NON-NLS-1$
-            		  .append(val)
-            		  .append("'"); //$NON-NLS-1$
-            } else {
-                buffer.append(Tokens.QUOTE)
-                      .append(escapeString(val, Tokens.QUOTE))
-                      .append(Tokens.QUOTE);
-            }
+            appendLiteral(obj, type);
         }
     }
+
+	protected void appendLiteral(Literal obj, Class<?> type) {
+		String val = obj.getValue().toString();
+		if(Number.class.isAssignableFrom(type)) {
+		    buffer.append(val);
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+			buffer.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+		    buffer.append("{ts '") //$NON-NLS-1$
+		          .append(val)
+		          .append("'}"); //$NON-NLS-1$
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
+		    buffer.append("{t '") //$NON-NLS-1$
+		          .append(val)
+		          .append("'}"); //$NON-NLS-1$
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
+		    buffer.append("{d '") //$NON-NLS-1$
+		          .append(val)
+		          .append("'}"); //$NON-NLS-1$
+		} else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+			buffer.append("X'") //$NON-NLS-1$
+				  .append(val)
+				  .append("'"); //$NON-NLS-1$
+		} else {
+		    buffer.append(Tokens.QUOTE)
+		          .append(escapeString(val, Tokens.QUOTE))
+		          .append(Tokens.QUOTE);
+		}
+	}
 
     public void visit(Not obj) {
         buffer.append(NOT)

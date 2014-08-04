@@ -22,15 +22,15 @@
 
 package org.teiid.translator.cassandra;
 
-import static org.teiid.language.SQLConstants.Reserved.FROM;
-import static org.teiid.language.SQLConstants.Reserved.SELECT;
-import static org.teiid.language.SQLConstants.Reserved.WHERE;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import org.teiid.language.LanguageObject;
+import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.translator.TypeFacility;
 
 public class CassandraSQLVisitor extends SQLStringVisitor {
 
@@ -75,5 +75,21 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 			buffer.append(Tokens.SPACE);
 			append(obj.getLimit());
 		}
+	}
+	
+	@Override
+	public void visit(Literal obj) {
+		if (obj.getValue() == null) {
+			super.visit(obj);
+			return;
+		}
+		Class<?> type = obj.getType();
+		if (!Number.class.isAssignableFrom(type) 
+				&& type != TypeFacility.RUNTIME_TYPES.BOOLEAN 
+				&& type != TypeFacility.RUNTIME_TYPES.VARBINARY) {
+			//just handle as strings things like timestamp
+			type = TypeFacility.RUNTIME_TYPES.STRING;
+		}
+		super.appendLiteral(obj, type);
 	}
 }
