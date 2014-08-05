@@ -514,7 +514,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					Expression ex = (Expression) outputColumns.get(j).clone();
 					ExpressionMappingVisitor.mapExpressions(ex, childMap.asMap());
 					newCols.set(j, ex);
-					filteredIndex[j] = newSymbolIndex++;
+					if (i == 0) {
+						filteredIndex[j] = newSymbolIndex++;
+					}
 				}
             }
             

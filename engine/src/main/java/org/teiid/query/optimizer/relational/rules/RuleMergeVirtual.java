@@ -53,8 +53,10 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.SymbolMap;
@@ -316,14 +318,20 @@ public final class RuleMergeVirtual implements
         List<Expression> selectSymbols = (List<Expression>)parentProject.getProperty(NodeConstants.Info.PROJECT_COLS);
 
         // check that it only performs simple projection and that all required symbols are projected
-        LinkedHashSet<ElementSymbol> symbols = new LinkedHashSet<ElementSymbol>(); //ensuring there are no duplicates prevents problems with subqueries  
+        LinkedHashSet<Expression> symbols = new LinkedHashSet<Expression>(); //ensuring there are no duplicates prevents problems with subqueries  
         for (Expression symbol : selectSymbols) {
             Expression expr = SymbolMap.getExpression(symbol);
+            if (expr instanceof Constant) {
+            	if (!symbols.add(new ExpressionSymbol("const" + symbols.size(), expr))) { //$NON-NLS-1$
+                    return root;
+                }	
+            	continue;
+            }
             if (!(expr instanceof ElementSymbol)) {
                 return root;
             }
             requiredElements.remove(expr);
-            if (!symbols.add((ElementSymbol)expr)) {
+            if (!symbols.add(expr)) {
                 return root;
             }
         }

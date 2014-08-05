@@ -6877,7 +6877,7 @@ public class TestProcessor {
         
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder());
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -6891,7 +6891,7 @@ public class TestProcessor {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            0,      // Select
+            1,      // Select
             0,      // Sort
             0       // UnionAll
        });     

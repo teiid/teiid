@@ -63,6 +63,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -95,7 +96,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             		plan = removeUnnecessaryInlineView(plan, commandRoot);
             	}
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
-            	addDistinct(metadata, capFinder, accessNode, queryCommand);
+            	plan = addDistinct(metadata, capFinder, accessNode, plan, queryCommand);
                 command = queryCommand;
                 queryCommand.setSourceHint((SourceHint) accessNode.getProperty(Info.SOURCE_HINT));
                 queryCommand.getProjectedQuery().setSourceHint((SourceHint) accessNode.getProperty(Info.SOURCE_HINT));
@@ -131,13 +132,14 @@ public final class RuleCollapseSource implements OptimizerRule {
 	 * @throws QueryMetadataException
 	 * @throws TeiidComponentException
 	 */
-	private void addDistinct(QueryMetadataInterface metadata,
-			CapabilitiesFinder capFinder, PlanNode accessNode,
+	private PlanNode addDistinct(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, PlanNode accessNode, PlanNode root,
 			QueryCommand queryCommand) throws QueryMetadataException,
 			TeiidComponentException {
 		if (queryCommand.getLimit() != null) {
-			return; //TODO: could create an inline view
+			return root; //TODO: could create an inline view
 		}
+		boolean requireDupPush = false;
 		if (queryCommand.getOrderBy() == null) {
 			/* 
 			 * we're assuming that a pushed order by implies that the cost of the distinct operation 
@@ -148,15 +150,34 @@ public final class RuleCollapseSource implements OptimizerRule {
 			 * assume cost ~ c lg c for c' cardinality and a modification for associated bandwidth savings
 			 * recompute cost of processing plan with c' and see if new cost + c lg c < original cost
 			 */
-			return; 
+			PlanNode dupRemove = NodeEditor.findParent(accessNode, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE);
+			if (dupRemove != null) { //TODO: what about when sort/dup remove have been combined
+				PlanNode project = NodeEditor.findParent(accessNode, NodeConstants.Types.PROJECT, NodeConstants.Types.DUP_REMOVE);
+				if (project != null) {
+					List<Expression> projectCols = (List<Expression>) project.getProperty(Info.PROJECT_COLS);
+					for (Expression ex : projectCols) {
+						ex = SymbolMap.getExpression(ex);
+						if (!(ex instanceof ElementSymbol) && !(ex instanceof Constant) && !(EvaluatableVisitor.willBecomeConstant(ex, true))) {
+							return root;
+						}
+					}
+					/*
+					 * If we can simply move the dupremove below the projection, then we'll do that as well
+					 */
+					requireDupPush = true;
+				}
+			}
+			if (!requireDupPush) {
+				return root;
+			}
 		}
 		if (RuleRemoveOptionalJoins.useNonDistinctRows(accessNode.getParent())) {
-			return;
+			return root;
 		}
 		// ensure that all columns are comparable - they might not be if there is an intermediate project
 		for (Expression ses : queryCommand.getProjectedSymbols()) {
 			if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ses.getType()))) {
-				return;
+				return root;
 			}
 		}
 		/* 
@@ -170,9 +191,19 @@ public final class RuleCollapseSource implements OptimizerRule {
 			HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
 			ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
 			if (!QueryRewriter.isDistinctWithGroupBy(query) && !NewCalculateCostUtil.usesKey(query.getSelect().getProjectedSymbols(), keyPreservingGroups, metadata, true)) {
+				if (requireDupPush) { //remove the upper dup remove
+					PlanNode dupRemove = NodeEditor.findParent(accessNode, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE);
+					if (dupRemove.getParent() == null) {
+						dupRemove.getFirstChild().removeFromParent();
+						root = accessNode.getParent();
+					} else {
+						dupRemove.getParent().replaceChild(dupRemove, dupRemove.getFirstChild());
+					}
+				}
 				((Query)queryCommand).getSelect().setDistinct(true);
 			}
 		}
+		return root;
 	}
 
     private PlanNode removeUnnecessaryInlineView(PlanNode root, PlanNode accessNode) {
