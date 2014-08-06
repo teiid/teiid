@@ -240,6 +240,13 @@ public class TestTeiidLanguageToSolr {
 		assertEquals("fl=name,popularity&sort=popularity asc&q=*:*",
 				getSolrTranslation("select name,popularity from example order by popularity ASC"));
 	}
+	
+	@Test
+	public void testOrderByWithAlias() throws Exception {
+		assertEquals("fl=name,popularity&sort=popularity asc&q=*:*",
+				getSolrTranslation("select name as c_0,popularity c_1 from example order by c_1 ASC"));
+	}
+	
 	 
 	@Test
 	public void testDateField() throws Exception {
