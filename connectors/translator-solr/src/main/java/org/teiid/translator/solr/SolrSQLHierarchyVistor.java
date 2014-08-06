@@ -27,6 +27,7 @@ import static org.teiid.language.SQLConstants.Reserved.TRUE;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
@@ -38,7 +39,9 @@ import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.FunctionModifier;
+
 
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
@@ -50,6 +53,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private boolean limitInUse;
 	private SolrQuery query = new SolrQuery();
 	private SolrExecutionFactory ef;
+	private HashMap<String, String> columnAliasMap = new HashMap<String, String>();
+	private boolean countStarInUse;
 
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
@@ -59,7 +64,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(DerivedColumn obj) {
 		visitNode(obj.getExpression());
+		
 		String expr = this.onGoingExpression.pop();
+		if (obj.getAlias() != null) {
+			this.columnAliasMap.put(obj.getAlias(), expr);
+		}		
+		
 		query.addField(expr);
 		fieldNameList.add(expr);
 	}
@@ -67,7 +77,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(ColumnReference obj) {
-		this.onGoingExpression.push(obj.getMetadataObject().getName());
+		if (obj.getMetadataObject() != null) {
+			this.onGoingExpression.push(obj.getMetadataObject().getName());
+		}
+		else {
+			this.onGoingExpression.push(this.columnAliasMap.get(obj.getName()));	
+		}
 	}
 
 	/**
@@ -234,8 +249,10 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(Limit obj) {
 		this.limitInUse = true;
-		this.query.setRows(obj.getRowLimit());
-		this.query.setStart(obj.getRowOffset());
+		if (!countStarInUse) {
+			this.query.setRows(obj.getRowLimit());
+			this.query.setStart(obj.getRowOffset());
+		}
 	}
 	
 	@Override
@@ -271,6 +288,26 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		this.onGoingExpression.push(sb.toString());
 	}
 	
+	@Override
+	public void visit(AggregateFunction obj) {
+		if (obj.getName().equals(AggregateFunction.COUNT)) {
+	        // this is only true for count(*) case, so we need implicit group id clause
+			this.query.setRows(0);
+			this.countStarInUse = true;
+			this.onGoingExpression.push("1"); //$NON-NLS-1$
+		}
+		else if (obj.getName().equals(AggregateFunction.AVG)) {
+		}
+		else if (obj.getName().equals(AggregateFunction.SUM)) {
+		}
+		else if (obj.getName().equals(AggregateFunction.MIN)) {
+		}
+		else if (obj.getName().equals(AggregateFunction.MAX)) {
+		}
+		else {
+		}
+    }	
+	
 	private String formatSolrQuery(String solrQuery) {
 		solrQuery = solrQuery.replace("%", "*"); //$NON-NLS-1$ //$NON-NLS-2$
 		solrQuery = solrQuery.replace("'",""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -288,4 +325,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	public boolean isLimitInUse() {
 		return this.limitInUse;
 	}
+	
+	public boolean isCountStarInUse() {
+		return countStarInUse;
+	}
+	
 }
