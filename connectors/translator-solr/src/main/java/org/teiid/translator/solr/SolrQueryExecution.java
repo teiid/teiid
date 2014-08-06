@@ -46,6 +46,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 	private Class<?>[] expectedTypes;
 	private SolrExecutionFactory executionFactory;
 	private int offset = 0;
+	private Long resultSize;
 
 	public SolrQueryExecution(SolrExecutionFactory ef, Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -76,6 +77,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 		
 		QueryResponse queryResponse = connection.query(this.visitor.getSolrQuery());
 		SolrDocumentList docList = queryResponse.getResults();
+		this.resultSize = docList.getNumFound();
 		this.resultsItr = docList.iterator();
 	}
 
@@ -90,6 +92,12 @@ public class SolrQueryExecution implements ResultSetExecution {
 
 		final List<Object> row = new ArrayList<Object>();
 
+		if (this.visitor.isCountStarInUse() && this.resultsItr != null) {
+			row.add(this.resultSize);
+			this.resultsItr = null;
+			return row;
+		}
+		
 		// is there any solr docs
 		if (this.resultsItr != null && this.resultsItr.hasNext()) {
 			SolrDocument doc = this.resultsItr.next();
