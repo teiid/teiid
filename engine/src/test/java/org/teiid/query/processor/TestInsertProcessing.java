@@ -7,7 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.service.TransactionContext;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
@@ -24,6 +28,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -223,23 +228,31 @@ public class TestInsertProcessing {
         assertEquals(DataTypeManager.DefaultDataClasses.FLOAT, value1.getValue().getClass());
     }
     
-    @Test public void testInsertIntoWithSubquery_None() {
+    @Test public void testInsertIntoWithSubquery_None() throws Exception {
         helpInsertIntoWithSubquery( null );
     }    
     
-    @Test public void testInsertIntoWithSubquery_Batch() {
+    @Test public void testInsertIntoWithSubquery_Batch() throws Exception {
         helpInsertIntoWithSubquery( Capability.BATCHED_UPDATES );
     }
     
-    @Test public void testInsertIntoWithSubquery_Bulk() {
+    @Test public void testInsertIntoWithSubquery_Bulk() throws Exception {
         helpInsertIntoWithSubquery( Capability.INSERT_WITH_ITERATOR );
     }
     
-    @Test public void testInsertIntoWithSubquery_Pushdown() {
+    @Test public void testInsertIntoWithSubquery_Bulk1() throws Exception {
+        helpInsertIntoWithSubquery( Capability.INSERT_WITH_ITERATOR, false );
+    }
+    
+    @Test public void testInsertIntoWithSubquery_Pushdown() throws Exception {
         helpInsertIntoWithSubquery( Capability.INSERT_WITH_QUERYEXPRESSION );
     }
 
-    public void helpInsertIntoWithSubquery( Capability cap ) {
+    public void helpInsertIntoWithSubquery( Capability cap) throws Exception {
+    	helpInsertIntoWithSubquery(cap, true);
+    }
+    
+    public void helpInsertIntoWithSubquery( Capability cap, boolean txn ) throws Exception {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
@@ -251,18 +264,40 @@ public class TestInsertProcessing {
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
-        HardcodedDataManager dataManager = new HardcodedDataManager();
+        HardcodedDataManager dataManager = new HardcodedDataManager() {
+        	@Override
+        	public TupleSource registerRequest(CommandContext context,
+        			Command command, String modelName,
+        			RegisterRequestParameter parameterObject)
+        			throws TeiidComponentException {
+        		if (command instanceof Insert) {
+        			Insert insert = (Insert)command;
+        			if (insert.getTupleSource() != null) {
+        				TupleSource ts = insert.getTupleSource();
+        				int count = 0;
+        				try {
+							while (ts.nextTuple() != null) {
+								count++;
+							}
+							return CollectionTupleSource.createUpdateCountTupleSource(count);
+						} catch (TeiidProcessingException e) {
+							throw new RuntimeException(e);
+						}
+        			}
+        		}
+        		return super.registerRequest(context, command, modelName, parameterObject);
+        	}
+        };
 
-        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$ 
-                            new List[] { Arrays.asList(new Object[] { "1", new Integer(1), Boolean.FALSE, new Double(1)}),     //$NON-NLS-1$
-                                         Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
+    	List[] data = new List[txn?2:50];
+    	for (int i = 1; i <= data.length; i++) {
+    		data[i-1] = Arrays.asList(String.valueOf(i), i, (i%2==0)?Boolean.TRUE:Boolean.FALSE, Double.valueOf(i));
+    	}
+        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$
+        		data);
         
         if (cap != null) {
         	switch (cap) {
-	        case INSERT_WITH_ITERATOR:
-	            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
-	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
-	            break;
 	        case BATCHED_UPDATES:
 	            dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
 	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
@@ -286,10 +321,19 @@ public class TestInsertProcessing {
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
         List<?>[] expected = new List[] {   
-            Arrays.asList(new Object[] { new Integer(2) }), 
+            Arrays.asList(txn?2:50), 
         }; 
         
-        helpProcess(plan, dataManager, expected);
+        CommandContext cc = TestProcessor.createCommandContext();
+        if (!txn) {
+        	TransactionContext tc = new TransactionContext();
+        	tc.setNoTnx(true);
+        	cc.setTransactionContext(tc);
+        	cc.setBufferManager(null);
+        	cc.setProcessorBatchSize(2);
+        }
+        
+        helpProcess(plan, cc, dataManager, expected);
         
         // if not doBulkInsert and is doBatching,
         //    check the command hist to ensure it contains the expected commands

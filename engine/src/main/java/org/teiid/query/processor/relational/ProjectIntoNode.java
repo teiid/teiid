@@ -75,6 +75,7 @@ public class ProjectIntoNode extends RelationalNode {
     private boolean sourceDone;
     
     private TupleBuffer buffer;
+    private TupleBuffer last;
     private TupleBatch currentBatch;
         	
     private TupleSource tupleSource;
@@ -126,8 +127,6 @@ public class ProjectIntoNode extends RelationalNode {
         
         while(phase == REQUEST_CREATION) {
             
-            checkExitConditions();
-            
             /* If we don't have a batch to work, get the next
              */
             if (currentBatch == null) {
@@ -160,6 +159,10 @@ public class ProjectIntoNode extends RelationalNode {
                 }
             } 
             
+            if (mode != Mode.ITERATOR) { //delay the check in the iterator case to accumulate batches
+            	checkExitConditions(); 
+            }
+            
             int batchSize = currentBatch.getRowCount();
             int requests = 1;
             switch (mode) {
@@ -167,13 +170,30 @@ public class ProjectIntoNode extends RelationalNode {
             	if (buffer == null) {
             		buffer = getBufferManager().createTupleBuffer(intoElements, getConnectionID(), TupleSourceType.PROCESSOR);
             	}
-            	buffer.addTupleBatch(currentBatch, true);
+            	
+            	if (sourceDone) {
+            		//if there is a pending request we can't process the last until it is done
+            		checkExitConditions(); 
+            	}
+            	
+            	for (List<?> tuple : currentBatch.getTuples()) {
+            		buffer.addTuple(tuple);
+            	}
+            	
+            	try {
+            		checkExitConditions();
+            	} catch (BlockedException e) {
+            		//move to the next batch
+                    this.batchRow += batchSize;
+                	currentBatch = null;
+            		continue;
+            	}
+            	
             	if (currentBatch.getTerminationFlag() && (buffer.getRowCount() != 0 || intoGroup.isImplicitTempGroupSymbol())) {
-            		Insert insert = new Insert(intoGroup, intoElements, null);
-            		buffer.close();
-            		insert.setTupleSource(buffer.createIndexedTupleSource(true));
-                    // Register insert command against source 
-                    registerRequest(insert);
+            		registerIteratorRequest();
+            	} else if (buffer.getRowCount() >= buffer.getBatchSize() * 4 && getContext().getTransactionContext() != null 
+            			&& (getContext().getTransactionContext().getTransaction() != null || getContext().getTransactionContext().isNoTxn())) {
+        			registerIteratorRequest();
             	} else {
             		requests = 0;
             	}
@@ -207,11 +227,28 @@ public class ProjectIntoNode extends RelationalNode {
         
         checkExitConditions();
         
+        if (this.buffer != null) {
+        	this.buffer.remove();
+        	this.buffer = null;
+        }
+        
         // End this node's work
         addBatchRow(Arrays.asList(insertCount));
         terminateBatches();
         return pullBatch();                                                           
     }
+
+	private void registerIteratorRequest() throws TeiidComponentException,
+			TeiidProcessingException {
+		Insert insert = new Insert(intoGroup, intoElements, null);
+		buffer.close();
+		insert.setTupleSource(buffer.createIndexedTupleSource(true));
+		// Register insert command against source 
+		registerRequest(insert);
+        //remove the old buffer when the insert is complete
+        last = buffer;
+        buffer = null;
+	}
 
     private void checkExitConditions()  throws TeiidComponentException, BlockedException, TeiidProcessingException {
     	if (tupleSource != null) {
@@ -233,9 +270,9 @@ public class ProjectIntoNode extends RelationalNode {
     }
     
     private void closeRequest() {
-    	if (this.buffer != null) {
-    		this.buffer.remove();
-    		this.buffer = null;
+    	if (this.last != null) {
+    		this.last.remove();
+    		this.last = null;
     	}
         if (this.tupleSource != null) {
             tupleSource.closeSource();
@@ -295,6 +332,10 @@ public class ProjectIntoNode extends RelationalNode {
 	}
 
     public void closeDirect() {
+    	if (this.buffer != null) {
+    		this.buffer.remove();
+    		this.buffer = null;
+    	}
         closeRequest();
 	}
     
