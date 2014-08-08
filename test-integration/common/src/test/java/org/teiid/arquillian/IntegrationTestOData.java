@@ -27,6 +27,9 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import javax.ws.rs.core.Response;
 
@@ -44,6 +47,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
+import org.teiid.jdbc.TeiidDriver;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
@@ -85,7 +89,18 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		
 		int statusCode = response.getStatus();
 		assertEquals(200, statusCode);
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), ObjectConverterUtil.convertToString((InputStream)response.getEntity()));
+		
+		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:loopy@mm://localhost:31000;user=user;password=user", null);
+		
+		PreparedStatement ps = conn.prepareCall("select t.* from xmltable('/*:Edmx/*:DataServices/*:Schema[@Namespace=\"MarketData\"]' passing xmlparse(document cast(? as clob))) as t");
+		ps.setAsciiStream(1, (InputStream)response.getEntity());
+		
+		ResultSet rs = ps.executeQuery();
+		rs.next();
+
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), rs.getString(1));
+		
+		conn.close();
 		
 		//make sure that datetime works
 		client = WebClient.create("http://localhost:8080/odata/loopy.1/G1?$filter=e1%20eq%20datetime'2000-01-01T01:01:01'");
