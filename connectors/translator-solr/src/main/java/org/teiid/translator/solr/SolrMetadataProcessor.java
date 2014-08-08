@@ -73,7 +73,7 @@ public class SolrMetadataProcessor implements MetadataProcessor<SolrConnection>{
 					column.setSearchType(SearchType.Searchable);
 						
 					// create primary key; and unique keys
-					if (field.getDistinct() > 0) {
+					if (field.getDistinct() > 0 || field.getName().equals("id")) { //$NON-NLS-1$
 						if (table.getPrimaryKey() == null) {
 							metadataFactory.addPrimaryKey("PK0", Arrays.asList(field.getName()), table); //$NON-NLS-1$
 						}
