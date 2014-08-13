@@ -41,6 +41,7 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
@@ -159,7 +160,7 @@ class TransportAdd extends AbstractAddStepHandler {
         for (ServiceName name:names) {
     		if (scParent.isParentOf(name)) {
 	        	LogManager.logDetail(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50011, name.getSimpleName(), transportName));
-	        	transportBuilder.addDependency(name, SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, name.getSimpleName()));
+	        	transportBuilder.addDependency(DependencyType.OPTIONAL, name, SecurityDomainContext.class, new ConcurrentMapInjector<String,SecurityDomainContext>(transport.securityDomains, name.getSimpleName()));
     		}
         }
         
