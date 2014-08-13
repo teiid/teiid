@@ -101,7 +101,7 @@ public class SolrMetadataProcessor implements MetadataProcessor<SolrConnection>{
 			return DataTypeManager.DefaultDataTypes.BLOB;
 		}
 		else if (solrType.equals("date") || solrType.equals("tdate") || solrType.equals("pdate")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			return DataTypeManager.DefaultDataTypes.DATE;
+			return DataTypeManager.DefaultDataTypes.TIMESTAMP;
 		}
 		else if (solrType.equals("float") || solrType.equals("tfloat") || solrType.equals("pfloat")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			return DataTypeManager.DefaultDataTypes.FLOAT;
