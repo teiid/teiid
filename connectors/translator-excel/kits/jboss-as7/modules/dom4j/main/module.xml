@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="dom4j">
     <resources>
-        <resource-root path="dom4j-1.6.1.jar" />
+        <resource-root path="dom4j-${version.dom4j}.jar" />
         <!-- Insert resources here -->
     </resources>
 

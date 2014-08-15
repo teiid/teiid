@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.apache.xmlbeans">
     <resources>
-        <resource-root path="xmlbeans-2.3.0.jar" />
+        <resource-root path="xmlbeans-${version.org.apache.xmlbeans}.jar" />
         <!-- Insert resources here -->
     </resources>
 
