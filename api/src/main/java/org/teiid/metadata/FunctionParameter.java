@@ -22,9 +22,6 @@
 
 package org.teiid.metadata;
 
-import java.io.Serializable;
-
-import org.teiid.core.types.DataTypeManager;
 
 /**
  * A function parameter defines the name and description of an input or output
@@ -34,14 +31,11 @@ import org.teiid.core.types.DataTypeManager;
  * parameter should be one of the standard type names defined in 
  * {@link org.teiid.core.types.DataTypeManager.DefaultDataTypes}.
  */
-public class FunctionParameter implements Serializable {
+public class FunctionParameter extends BaseColumn {
 	private static final long serialVersionUID = -4696050948395485266L;
 
 	public static final String OUTPUT_PARAMETER_NAME = "result"; //$NON-NLS-1$
 	
-    private String name;  
-    private String type;
-    private String description;
     private boolean isVarArg;
 
     /**
@@ -77,27 +71,11 @@ public class FunctionParameter implements Serializable {
     }
     
     /**
-     * Return name of parameter.
-     * @return Name
-     */
-    public String getName() {
-        return this.name;
-    }
-    
-    /**
-     * Set name
-     * @param name Name
-     */
-    public void setName(String name) { 
-        this.name = name;
-    }
-    
-    /**
      * Get description of parameter
      * @return Description
      */
     public String getDescription() { 
-        return this.description;
+        return getAnnotation();
     }        
     
     /**
@@ -105,7 +83,7 @@ public class FunctionParameter implements Serializable {
      * @param description Description
      */
     public void setDescription(String description) { 
-        this.description = description;
+        this.setAnnotation(description);
     }
        
     /**
@@ -114,7 +92,7 @@ public class FunctionParameter implements Serializable {
      * @see org.teiid.core.types.DataTypeManager.DefaultDataTypes
      */
     public String getType() { 
-        return this.type;
+        return getRuntimeType();
     }        
     
     /**
@@ -123,11 +101,7 @@ public class FunctionParameter implements Serializable {
      * @see org.teiid.core.types.DataTypeManager.DefaultDataTypes
      */
     public void setType(String type) {
-        if(type == null) { 
-            this.type = null;
-        } else {
-            this.type = DataTypeManager.getCanonicalString(type.toLowerCase());
-        } 
+        setRuntimeType(type);
     }
        
     /**
@@ -138,10 +112,10 @@ public class FunctionParameter implements Serializable {
      * @return Hash code
      */   
     public int hashCode() { 
-        if(this.type == null) { 
+        if(this.getRuntimeType() == null) { 
             return 0;
         }
-        return this.type.hashCode();
+        return this.getRuntimeType().hashCode();
     }
     
     /**
@@ -168,7 +142,7 @@ public class FunctionParameter implements Serializable {
      * @return String representation of function parameter
      */ 
     public String toString() { 
-        return type + (isVarArg?"... ":" ") + name; //$NON-NLS-1$ //$NON-NLS-2$
+        return getRuntimeType() + (isVarArg?"... ":" ") + getName(); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 	public void setVarArg(boolean isVarArg) {

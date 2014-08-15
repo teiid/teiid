@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.InitialContext;
 
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -39,9 +40,11 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -67,6 +70,8 @@ public class ConnectorManager  {
 	
 	private volatile boolean stopped;
 	private final ExecutionFactory<Object, Object> executionFactory;
+
+	private List<FunctionMethod> functions;
 	
     public ConnectorManager(String translatorName, String connectionName) {
     	this(translatorName, connectionName, new ExecutionFactory<Object, Object>());
@@ -86,6 +91,14 @@ public class ConnectorManager  {
     	}
     	this.executionFactory = ef;
     	this.id = Arrays.asList(translatorName, connectionName);
+    	if (ef != null) {
+	    	functions = ef.getPushDownFunctions();
+	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
+	    	FunctionMetadataValidator.validateFunctionMethods(functions, report);
+			if(report.hasItems()) {
+			    throw new TeiidRuntimeException(report.getFailureMessage());
+			}
+    	}
 	}
 
 	public String getStausMessage() {
@@ -114,7 +127,7 @@ public class ConnectorManager  {
     }
     
 	public List<FunctionMethod> getPushDownFunctions(){
-    	return getExecutionFactory().getPushDownFunctions();
+    	return functions;
     }
     
     public SourceCapabilities getCapabilities() throws TranslatorException, TeiidComponentException {

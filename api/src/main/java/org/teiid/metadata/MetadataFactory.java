@@ -25,7 +25,14 @@ package org.teiid.metadata;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 
 import org.teiid.CommandContext;
 import org.teiid.adminapi.Model;
@@ -213,20 +220,19 @@ public class MetadataFactory implements Serializable {
 		table.addColumn(column);
 		column.setParent(table);
 		column.setPosition(table.getColumns().size()); //1 based indexing
-		setColumnType(type, column);
+		setDataType(type, column, this.dataTypes, false);
 		setUUID(column);
 		return column;
 	}
 
-	private Datatype setColumnType(String type,
-			BaseColumn column) {
+	public static Datatype setDataType(String type, BaseColumn column, Map<String, Datatype> dataTypes, boolean allowNull) {
 		int arrayDimensions = 0;
 		while (DataTypeManager.isArrayType(type)) {
 			arrayDimensions++;
 			type = type.substring(0, type.length()-2);
 		}
-		Datatype datatype = this.dataTypes.get(type);
-		if (datatype == null) {
+		Datatype datatype = dataTypes.get(type);
+		if (datatype == null && (!allowNull || !DataTypeManager.DefaultDataTypes.NULL.equals(type))) {
 			//TODO: potentially we want to check the enterprise types, but at
 			//this point we're keying them by name, not runtime name (which
 			// is an awkward difference to start with)
@@ -417,7 +423,7 @@ public class MetadataFactory implements Serializable {
 		setUUID(param);
 		param.setType(parameterType);
 		param.setProcedure(procedure);
-		setColumnType(type, param);
+		setDataType(type, param, this.dataTypes, false);
 		if (parameterType == Type.ReturnValue) {
 			procedure.getParameters().add(0, param);
 			for (int i = 0; i < procedure.getParameters().size(); i++) {

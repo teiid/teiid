@@ -275,7 +275,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
     
     /**
-     * Get ouput parameter.
+     * Get ouput/return parameter.
      * @return Output parameter or return argument
      */
     public FunctionParameter getOutputParameter() { 
@@ -283,7 +283,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
     
     /**
-     * Set ouput parameter.
+     * Set ouput/return parameter.
      * @param param Output Parameter
      */
     public void setOutputParameter(FunctionParameter param) {

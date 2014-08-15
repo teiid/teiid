@@ -25,7 +25,6 @@ package org.teiid.metadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -40,7 +39,7 @@ public class Schema extends AbstractMetadataRecord {
     
     private NavigableMap<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
 	private NavigableMap<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
-	private Map<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+	private NavigableMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
 	
 	private List<AbstractMetadataRecord> resolvingOrder = new ArrayList<AbstractMetadataRecord>();
 	
@@ -97,7 +96,7 @@ public class Schema extends AbstractMetadataRecord {
 	 * Get the functions defined in this schema in a map of uuid to {@link FunctionMethod}
 	 * @return
 	 */
-	public Map<String, FunctionMethod> getFunctions() {
+	public NavigableMap<String, FunctionMethod> getFunctions() {
 		return functions;
 	}
 	

@@ -87,12 +87,7 @@ public class TestCompositeVDB {
 		
 		Mockito.stub(ef.getPushDownFunctions()).toReturn(funcs);
 		
-		ConnectorManager cm = new ConnectorManager(translatorName,connectionName) { 
-			@Override
-			public ExecutionFactory getExecutionFactory() {
-				return ef;
-			}
-		};
+		ConnectorManager cm = new ConnectorManager(translatorName,connectionName, ef);
 		cm.start();
 		return cm;
 	}

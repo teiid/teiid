@@ -29,6 +29,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
@@ -109,6 +110,21 @@ class ProcedureSystemTable extends SchemaChildRecordTable<Procedure> {
 	@Override
 	protected NavigableMap<String, Procedure> getChildren(Schema s) {
 		return s.getProcedures();
+	}
+}
+
+class FunctionSystemTable extends SchemaChildRecordTable<FunctionMethod> {
+	public FunctionSystemTable(int schemaPkColumnIndex,
+			int tablePkColumnIndex, List<ElementSymbol> columns) {
+		super(schemaPkColumnIndex, tablePkColumnIndex, columns);
+	}
+
+	@Override
+	protected NavigableMap<String, FunctionMethod> getChildren(Schema s) {
+		/*if (s.getName().equals(CoreConstants.SYSTEM_MODEL)) {
+			
+		}*/
+		return s.getFunctions();
 	}
 }
 

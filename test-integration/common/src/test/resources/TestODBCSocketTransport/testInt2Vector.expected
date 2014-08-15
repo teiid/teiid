@@ -10,10 +10,14 @@ indkey
 1                                                                
 1 2 3 4                                                          
 1 2 3                                                            
-7                                                                
 29                                                               
 1                                                                
 15                                                               
+1 2 3 5                                                          
+1 2 3                                                            
+1 2 3                                                            
+1 2                                                              
+5                                                                
 1 2 3 4                                                          
 1 2 3                                                            
 8                                                                
@@ -22,7 +26,6 @@ indkey
 10                                                               
 1 2 3 4                                                          
 1 2 3                                                            
-5                                                                
 14                                                               
 1 2 3                                                            
 1 2                                                              
@@ -50,6 +53,6 @@ indkey
 1                                                                
 1                                                                
 1                                                                
-Row Count : 50
+Row Count : 53
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 indkey         1111                           java.lang.Object    indkey          int2vector                                      2147483647            2147483647    0         false            true             false       false                 2           false       true          false     true        

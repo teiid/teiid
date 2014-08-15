@@ -186,7 +186,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		KEYCOLUMNS,
 		PROCEDUREPARAMS,
 		REFERENCEKEYCOLUMNS,
-		PROPERTIES
+		PROPERTIES,
+		FUNCTIONS,
+		FUNCTIONPARAMS,
 	}
 	
 	private enum SystemAdminTables {
@@ -378,6 +380,27 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(null);
 			}
 		});
+        name = SystemTables.FUNCTIONS.name();
+        columns = getColumns(tm, name);
+        systemTables.put(SystemTables.FUNCTIONS, new RecordExtractionTable<FunctionMethod>(new FunctionSystemTable(1, 4, columns), columns) {
+			
+        	@Override
+        	public void fillRow(List<Object> row, FunctionMethod proc,
+        			VDBMetaData v, TransformationMetadata metadata,
+        			CommandContext cc, SimpleIterator<FunctionMethod> iter) {
+				row.add(v.getName());
+				if (proc.getParent() != null) {
+					row.add(proc.getParent().getName());
+				} else {
+					row.add(CoreConstants.SYSTEM_MODEL);
+				}
+				row.add(proc.getName());
+				row.add(proc.getNameInSource());
+				row.add(proc.getUUID());
+				row.add(proc.getAnnotation());
+				row.add(proc.isVarArgs());
+			}
+		});
         name = SystemTables.DATATYPES.name();
         columns = getColumns(tm, name);
         systemTables.put(SystemTables.DATATYPES, new RecordExtractionTable<Datatype>(new RecordTable<Datatype>(new int[] {0}, columns) {
@@ -479,6 +502,45 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		ArrayList<BaseColumn> result = new ArrayList<BaseColumn>(params.size() + rsColumns.size());
         		result.addAll(params);
         		result.addAll(rsColumns);
+        		return result;
+        	}
+        	
+        });
+        name = SystemTables.FUNCTIONPARAMS.name();
+        columns = getColumns(tm, name);
+        systemTables.put(SystemTables.FUNCTIONPARAMS, new ChildRecordExtractionTable<FunctionMethod, FunctionParameter>(new FunctionSystemTable(1, 3, columns), columns) {
+        	@Override
+        	public void fillRow(List<Object> row, FunctionParameter param,
+        			VDBMetaData vdb, TransformationMetadata metadata,
+        			CommandContext cc, SimpleIterator<FunctionParameter> iter) {
+				row.add(vdb.getName());
+				FunctionMethod parent = ((ExpandingSimpleIterator<FunctionMethod, FunctionParameter>)iter).getCurrentParent();
+				if (parent.getParent() == null) {
+					row.add(CoreConstants.SYSTEM_MODEL);
+				} else {
+					row.add(parent.getParent().getName());
+				}
+				row.add(parent.getName());
+				row.add(parent.getUUID());
+				row.add(param.getName());
+				row.add(param.getPosition()==0?"ReturnValue":"In"); //$NON-NLS-1$ //$NON-NLS-2$
+				row.add(param.getPosition());
+				row.add(param.getRuntimeType());
+				row.add(param.getPrecision());
+				row.add(param.getLength());
+				row.add(param.getScale());
+				row.add(param.getRadix());
+				row.add(param.getNullType().toString());
+				//row.add(param.getUUID());
+				row.add(param.getAnnotation());
+				row.add(null);
+        	}
+        	
+        	@Override
+        	protected Collection<? extends FunctionParameter> getChildren(final FunctionMethod parent) {
+        		ArrayList<FunctionParameter> result = new ArrayList<FunctionParameter>(parent.getInputParameters().size() + 1);
+        		result.addAll(parent.getInputParameters());
+        		result.add(parent.getOutputParameter());
         		return result;
         	}
         	

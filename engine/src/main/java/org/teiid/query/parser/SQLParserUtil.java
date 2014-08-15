@@ -578,13 +578,24 @@ public class SQLParserUtil {
 			if (pp.getType() == ProcedureParameter.Type.InOut || pp.getType() == ProcedureParameter.Type.Out) {
 				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_in", proc.getName())); //$NON-NLS-1$
 			}
-			
+			//copy the metadata
 			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getRuntimeType(), pp.getAnnotation());
+			fp.setDatatype(pp.getDatatype(), true, pp.getArrayDimensions());
+			fp.setLength(pp.getLength());
+			fp.setNameInSource(pp.getNameInSource());
+			fp.setNativeType(pp.getNativeType());
+			fp.setNullType(pp.getNullType());
+			fp.setProperties(pp.getProperties());
+			fp.setRadix(pp.getRadix());
+			fp.setScale(pp.getScale());
+			fp.setUUID(pp.getUUID());
 			if (pp.getType() == ProcedureParameter.Type.In) {
 				fp.setVarArg(pp.isVarArg());
 				ins.add(fp);
+				fp.setPosition(ins.size());
 			} else {
 				method.setOutputParameter(fp);
+				fp.setPosition(0);
 			}
 		}
 		method.setInputParameters(ins);

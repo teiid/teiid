@@ -141,7 +141,7 @@ public class ConnectorManagerRepository implements Serializable{
 	}
 
 	protected ConnectorManager createConnectorManager(String name,
-			String connection, ExecutionFactory<Object, Object> ef) {
+			String connection, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {
 		return new ConnectorManager(name, connection, ef);
 	}
 	

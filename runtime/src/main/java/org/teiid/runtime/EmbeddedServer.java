@@ -197,7 +197,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		
 		@Override
 		protected ConnectorManager createConnectorManager(
-				String translatorName, String connectionName, ExecutionFactory<Object, Object> ef) {
+				String translatorName, String connectionName, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {
 			return new ConnectorManager(translatorName, connectionName, ef) {
 				@Override
 				public Object getConnectionFactory() throws TranslatorException {

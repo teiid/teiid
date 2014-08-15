@@ -52,6 +52,7 @@ import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.net.ConnectionException;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.VDBResources;
@@ -237,6 +238,11 @@ public class VDBRepository implements Serializable{
 	private MetadataStore getODBCMetadataStore() {
 		try {
 			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(CoreConstants.ODBC_MODEL, getRuntimeTypeMap());
+			ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
+			FunctionMetadataValidator.validateFunctionMethods(pg.getSchema().getFunctions().values(), report);
+			if(report.hasItems()) {
+			    throw new MetadataException(report.getFailureMessage());
+			}
 			return pg.asMetadataStore();
 		} catch (MetadataException e) {
 			LogManager.logError(LogConstants.CTX_DQP, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40002));

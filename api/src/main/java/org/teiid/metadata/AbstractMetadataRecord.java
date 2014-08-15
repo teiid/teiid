@@ -250,5 +250,9 @@ public abstract class AbstractMetadataRecord implements Serializable {
     public void setIncomingObjects(Collection<AbstractMetadataRecord> incomingObjects) {
 		this.incomingObjects = incomingObjects;
 	}
+    
+    public boolean isUUIDSet() {
+    	return this.uuid != null;
+    }
         
 }

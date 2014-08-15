@@ -21,15 +21,18 @@
  */
 package org.teiid.query.metadata;
 
-import static org.teiid.language.SQLConstants.NonReserved.AUTO_INCREMENT;
-import static org.teiid.language.SQLConstants.NonReserved.INDEX;
-import static org.teiid.language.SQLConstants.NonReserved.SERIAL;
-import static org.teiid.language.SQLConstants.NonReserved.VIEW;
+import static org.teiid.language.SQLConstants.NonReserved.*;
 import static org.teiid.language.SQLConstants.Reserved.*;
 import static org.teiid.language.SQLConstants.Tokens.*;
 import static org.teiid.query.metadata.DDLConstants.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.teiid.adminapi.Admin.SchemaObjectType;
@@ -714,7 +717,7 @@ public class DDLStringVisitor {
 		if (param.isVarArg()) {
 			append(NonReserved.VARIADIC).append(SPACE);
 		}
-		append(SQLStringVisitor.escapeSinglePart(param.getName())).append(SPACE).append(param.getType());
+		appendColumn(param, true, true);
 	}
 
     @Override
