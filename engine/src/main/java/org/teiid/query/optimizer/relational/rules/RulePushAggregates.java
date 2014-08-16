@@ -876,6 +876,26 @@ public class RulePushAggregates implements
                 return null;
             }
             
+            //check for sideways correlation
+        	PlanNode other = null;
+        	if (planNode == parentJoin.getFirstChild()) {
+        		other = parentJoin.getLastChild();
+        	} else {
+        		other = parentJoin.getFirstChild();
+        	}
+        	SymbolMap map = (SymbolMap)other.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+        	if (map != null) {
+        		return null;
+        		//TODO: handle this case. the logic would look something like below,
+        		//but we would need to handle the updating of the symbol maps in addGroupBy
+        		/*filterExpressions(stagedGroupingSymbols, groups, map.getKeys(), true);
+        		for (ElementSymbol ex : map.getKeys()) {
+    				if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ex.getType()))) {
+    					return null;
+    				}
+	        	}*/
+        	}
+            
         	if (!parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS) || !parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)) {
         		List<Criteria> criteria = (List<Criteria>)parentJoin.getProperty(Info.JOIN_CRITERIA);
 	        	if (!findStagedGroupingExpressions(groups, criteria, stagedGroupingSymbols)) {
@@ -900,7 +920,7 @@ public class RulePushAggregates implements
                     }
                 }
         	}
-
+        	
             planNode = parentJoin;
             parentJoin = parentJoin.getParent();
         }
