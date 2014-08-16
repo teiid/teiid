@@ -1088,4 +1088,34 @@ public class TestAggregateProcessing {
     	helpProcess(plan, dataManager, expected);
     }
 	
+    @Test public void testSidewaysCorrelationBelowAggregation() throws Exception {
+    	String sql = "select e1 from (SELECT sc.e1 FROM pm1.g1 sc, table(exec pm1.vsp21(sc.e2+1) ) as f ) as x group by e1";
+    	
+    	Command command = helpParse(sql); //$NON-NLS-1$
+    	
+    	CapabilitiesFinder capFinder = TestOptimizer.getGenericFinder();
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", //$NON-NLS-1$ 
+    			new List[] {
+    				Arrays.asList(1, "1"), //$NON-NLS-1$
+    				Arrays.asList(2, "2"), //$NON-NLS-1$
+    			});
+    	
+    	dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", //$NON-NLS-1$ 
+    			new List[] {
+    				Arrays.asList("2", 2), //$NON-NLS-1$
+    			});
+    	
+    	ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
+    	
+    	List[] expected = new List[] { 
+                Arrays.asList("1"),
+                Arrays.asList("2"),
+            };    
+    	
+    	helpProcess(plan, dataManager, expected);
+    }
+
+	
 }
