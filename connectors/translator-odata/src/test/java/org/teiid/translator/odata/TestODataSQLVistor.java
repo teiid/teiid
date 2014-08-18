@@ -21,8 +21,7 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -90,7 +89,7 @@ public class TestODataSQLVistor {
 
     @Test
     public void testSelectStar() throws Exception {
-    	helpExecute("select * from customers", "Customers?$select=Mailing,ContactName,CustomerID,Shipping,CompanyName,ContactTitle");
+    	helpExecute("select * from customers", "Customers?$select=CustomerID,CompanyName,ContactName,ContactTitle,Mailing,Shipping");
     }
     
     @Test
@@ -105,7 +104,7 @@ public class TestODataSQLVistor {
     
     @Test
     public void testMultiKeyKeyBasedFilter() throws Exception {
-    	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and ProductID = 12 and Quantity = 2", "Order_Details(ProductID=12,OrderID=1)?$filter=Quantity eq 2&$select=UnitPrice");
+    	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and ProductID = 12 and Quantity = 2", "Order_Details(OrderID=1,ProductID=12)?$filter=Quantity eq 2&$select=UnitPrice");
     }    
     
     @Test
@@ -130,12 +129,12 @@ public class TestODataSQLVistor {
     
     @Test
     public void testJoinBasedTwoPK() throws Exception {
-    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 WHERE od.ProductID=1", "Orders(12)/Order_Details(ProductID=1,OrderID=12)?$select=UnitPrice");
+    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 WHERE od.ProductID=1", "Orders(12)/Order_Details(OrderID=12,ProductID=1)?$select=UnitPrice");
     }   
     
     @Test
     public void testJoinBasedTwoPKOnKey() throws Exception {
-    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 and od.ProductID=1", "Orders(12)/Order_Details(ProductID=1,OrderID=12)?$select=UnitPrice");
+    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 and od.ProductID=1", "Orders(12)/Order_Details(OrderID=12,ProductID=1)?$select=UnitPrice");
     }     
     
     @Test

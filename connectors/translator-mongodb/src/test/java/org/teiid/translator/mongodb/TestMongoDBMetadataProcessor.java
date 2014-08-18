@@ -1,9 +1,9 @@
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.Date;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Properties;
 
 import org.bson.types.Binary;
@@ -15,7 +15,11 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBRef;
 
 @SuppressWarnings("nls")
 public class TestMongoDBMetadataProcessor {
@@ -27,7 +31,7 @@ public class TestMongoDBMetadataProcessor {
         MetadataFactory mf = new MetadataFactory("vdb", 1, "mongodb", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         MongoDBConnection conn = Mockito.mock(MongoDBConnection.class);
         DBCollection dbCollection = Mockito.mock(DBCollection.class);
-        HashSet<String> tables = new HashSet<String>();
+        LinkedHashSet<String> tables = new LinkedHashSet<String>();
         tables.add("table");
         tables.add("embedded");
         

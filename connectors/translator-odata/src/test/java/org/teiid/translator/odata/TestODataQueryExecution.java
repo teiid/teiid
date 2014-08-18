@@ -21,9 +21,7 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -127,7 +125,7 @@ public class TestODataQueryExecution {
 	@Test
 	public void testSimpleSelectNoAssosiations() throws Exception {
 		String query = "SELECT CategoryID, CategoryName, Description FROM Categories";
-		String expectedURL = "Categories?$select=Description,CategoryName,CategoryID";
+		String expectedURL = "Categories?$select=CategoryID,CategoryName,Description";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
@@ -141,7 +139,7 @@ public class TestODataQueryExecution {
 	@Test
 	public void testSimpleSelectStar() throws Exception {
 		String query = "SELECT * FROM Categories";
-		String expectedURL = "Categories?$select=Picture,Description,CategoryName,CategoryID";
+		String expectedURL = "Categories?$select=CategoryID,CategoryName,Description,Picture";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
@@ -151,7 +149,7 @@ public class TestODataQueryExecution {
 	@Test
 	public void testSimpleSelectEmbedded() throws Exception {
 		String query = "SELECT * FROM Customers";
-		String expectedURL = "Customers?$select=Mailing,ContactName,CustomerID,Shipping,CompanyName,ContactTitle";
+		String expectedURL = "Customers?$select=CustomerID,CompanyName,ContactName,ContactTitle,Mailing,Shipping";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
@@ -161,7 +159,7 @@ public class TestODataQueryExecution {
 	@Test
 	public void testSimplePKWhere() throws Exception {
 		String query = "SELECT * FROM Categories Where CategoryId = 3";
-		String expectedURL = "Categories(3)?$select=Picture,Description,CategoryName,CategoryID";
+		String expectedURL = "Categories(3)?$select=CategoryID,CategoryName,Description,Picture";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
@@ -171,7 +169,7 @@ public class TestODataQueryExecution {
 	@Test
 	public void testSimpleWhere() throws Exception {
 		String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
-		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=Picture,Description,CategoryName,CategoryID";
+		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=CategoryID,CategoryName,Description,Picture";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
@@ -195,7 +193,7 @@ public class TestODataQueryExecution {
 	@Test
 	public void testNoResults() throws Exception {
 		String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
-		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=Picture,Description,CategoryName,CategoryID";
+		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=CategoryID,CategoryName,Description,Picture";
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, 404);
 		excution.execute();

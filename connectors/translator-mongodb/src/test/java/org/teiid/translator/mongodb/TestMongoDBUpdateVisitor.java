@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -135,7 +135,7 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("insert into OrderDetails (odID, ProductID, UnitPrice, Quantity, Discount) " +
 				"values (2, 3, 1.50, 12, 1.0)",
 				"Orders",
-				"{ \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"ProductID\" : 3 , \"odID\" : 2}}",
+				"{ \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"odID\" : 2 , \"ProductID\" : 3}}",
 				null, buildKey("FK1", "Orders", "OrderDetails", "2"), null);
 	}
 

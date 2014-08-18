@@ -21,12 +21,12 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import com.mongodb.BasicDBObject;
 
 public class IDRef implements Cloneable {
-	HashMap<String, Object> pk = new HashMap<String, Object>();
+	LinkedHashMap<String, Object> pk = new LinkedHashMap<String, Object>(); 
 
 	public void addColumn(String key, Object value) {
 		// only add if not added before
