@@ -34,6 +34,7 @@ import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.bson.types.Binary;
 import org.teiid.core.types.*;
 import org.teiid.language.*;
 import org.teiid.language.visitor.SQLStringVisitor;
@@ -418,6 +419,9 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		else if (value instanceof String && expectedClass.equals(Character.class)) {
 			return new Character(((String)value).charAt(0));
 		}
+		else if (value instanceof String && expectedClass.equals(BinaryType.class)) {
+			return new BinaryType(((String)value).getBytes());
+		}
 		else if (value instanceof String && expectedClass.equals(Blob.class)) {
 			GridFS gfs = new GridFS(mongoDB, fqn);
 			final GridFSDBFile resource = gfs.findOne((String)value);
@@ -507,6 +511,12 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 			else if (value instanceof java.sql.Timestamp) {
 				return new java.util.Date(((java.sql.Timestamp)value).getTime());
 			}
+			else if (value instanceof BinaryType) {
+				return new Binary(((BinaryType)value).getBytes());
+			}
+			else if (value instanceof byte[]) {
+				return new Binary((byte[])value);
+			}			
 			else if (value instanceof Blob) {
 				String uuid = UUID.randomUUID().toString();
 				GridFS gfs = new GridFS(mongoDB, fqn);
