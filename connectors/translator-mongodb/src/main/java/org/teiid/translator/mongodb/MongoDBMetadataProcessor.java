@@ -212,7 +212,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             return TypeFacility.RUNTIME_NAMES.TIMESTAMP;
         } 
         else if (value instanceof Binary || value instanceof byte[]) {
-            return TypeFacility.RUNTIME_NAMES.BLOB;
+            return TypeFacility.RUNTIME_NAMES.VARBINARY;
         }
         else {
             return TypeFacility.RUNTIME_NAMES.OBJECT;

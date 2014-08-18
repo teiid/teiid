@@ -217,9 +217,18 @@ public class TestExcelExecution {
     	FileConnection connection = Mockito.mock(FileConnection.class);
     	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 16,1");
-    	assertEquals("[[Matt]]", results.toString());
+    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 3,1");
+    	assertEquals("[[Sarah]]", results.toString());
 	}
+	
+	@Test
+	public void testExecutionLimit2() throws Exception {
+    	FileConnection connection = Mockito.mock(FileConnection.class);
+    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xls"));
+
+    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 1");
+    	assertEquals("[[John]]", results.toString());
+	}	
 
 	@Test
 	public void testExecutionAnd() throws Exception {

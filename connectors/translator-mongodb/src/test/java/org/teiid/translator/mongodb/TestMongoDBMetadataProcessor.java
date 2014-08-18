@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.util.HashSet;
 import java.util.Properties;
 
+import org.bson.types.Binary;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.metadata.MetadataFactory;
@@ -44,6 +45,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("col6", new Date(0L));
         row.append("col6", new DBRef(db, "ns", "one"));
         row.append("col7", array);
+        row.append("col8", new Binary("binary".getBytes()));
         
         BasicDBObject child = new BasicDBObject();
         child.append("col1", "one");
@@ -85,6 +87,7 @@ public class TestMongoDBMetadataProcessor {
         		"\tcol5 boolean,\n" + 
         		"\tcol6 string,\n" + 
         		"\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
+        		"\tcol8 varbinary,\n"+
         		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
         		"\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
         		") OPTIONS (UPDATABLE TRUE);";
