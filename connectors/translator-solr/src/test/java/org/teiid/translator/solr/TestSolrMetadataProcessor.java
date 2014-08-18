@@ -21,10 +21,10 @@
  */
 package org.teiid.translator.solr;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.EnumSet;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.apache.solr.client.solrj.request.LukeRequest;
@@ -58,7 +58,7 @@ public class TestSolrMetadataProcessor {
         Mockito.stub(conn.getCoreName()).toReturn("SomeTable");
         
         
-        HashMap<String, FieldInfo> fields = new HashMap<String, LukeResponse.FieldInfo>();
+        LinkedHashMap<String, FieldInfo> fields = new LinkedHashMap<String, LukeResponse.FieldInfo>();
         fields.put("col1", buildField("col1", "string", EnumSet.of(FieldFlag.STORED, FieldFlag.INDEXED)));
         fields.put("col2", buildField("col2", "int", EnumSet.of(FieldFlag.STORED, FieldFlag.INDEXED)));
         fields.put("col3", buildField("col3", "int", EnumSet.of(FieldFlag.STORED, FieldFlag.INDEXED, FieldFlag.MULTI_VALUED)));
@@ -73,10 +73,10 @@ public class TestSolrMetadataProcessor {
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         String expected = "CREATE FOREIGN TABLE SomeTable (\n" + 
-        		"	id long OPTIONS (SEARCHABLE 'Searchable'),\n" + 
         		"	col1 string OPTIONS (SEARCHABLE 'Searchable'),\n" + 
-        		"	col3 integer[] OPTIONS (SEARCHABLE 'Searchable'),\n" + 
         		"	col2 integer OPTIONS (SEARCHABLE 'Searchable'),\n" + 
+        		"	col3 integer[] OPTIONS (SEARCHABLE 'Searchable'),\n" + 
+        		"	id long OPTIONS (SEARCHABLE 'Searchable'),\n" + 
         		"	CONSTRAINT PK0 PRIMARY KEY(id)\n" + 
         		") OPTIONS (UPDATABLE TRUE);";
         assertEquals(expected, metadataDDL);

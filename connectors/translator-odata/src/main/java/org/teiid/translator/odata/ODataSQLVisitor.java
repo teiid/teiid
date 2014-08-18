@@ -21,15 +21,14 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.DESC;
-import static org.teiid.language.SQLConstants.Reserved.NOT;
-import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -106,7 +105,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     	}
 
     	if (!this.selectColumns.isEmpty()) {
-    		HashSet<String> select = new HashSet<String>();
+    		LinkedHashSet<String> select = new LinkedHashSet<String>();
     		for (Column column:this.selectColumns) {
     			select.add(getColumnName(column));
     		}
@@ -422,7 +421,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
     static class Entity {
     	Table table;
-    	Map<Column, Literal> pkValues = new HashMap<Column, Literal>();
+    	Map<Column, Literal> pkValues = new LinkedHashMap<Column, Literal>();
     	boolean hasValidKey = false;
     	List<Object[]> relations = new ArrayList<Object[]>();
 
