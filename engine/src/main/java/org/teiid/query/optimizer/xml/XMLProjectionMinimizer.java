@@ -114,12 +114,13 @@ public class XMLProjectionMinimizer {
 					if (element != null) {
 						elementSymbol = element.getMappedSymbol(elementSymbol);
 					}
-					while (parent != null) {
-						if (parent.getActualResultSetName().equalsIgnoreCase(elementSymbol.getGroupSymbol().getNonCorrelationName())) {
-							collectElementSymbol(parent, elementSymbol);
+					MappingSourceNode nextParent = parent;
+					while (nextParent != null) {
+						if (nextParent.getActualResultSetName().equalsIgnoreCase(elementSymbol.getGroupSymbol().getNonCorrelationName())) {
+							collectElementSymbol(nextParent, elementSymbol);
 							break;
 						}
-						parent = parent.getParentSourceNode();
+						nextParent = nextParent.getParentSourceNode();
 					}
 				}
 			}
