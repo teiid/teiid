@@ -214,6 +214,7 @@ public class ExcelExecution implements ResultSetExecution {
      */
     List<Object> projectRow(Row row) throws TranslatorException {
         ArrayList output = new ArrayList();
+        boolean allNulls = true;
         
         int id = row.getRowNum()+1;
         
@@ -232,7 +233,7 @@ public class ExcelExecution implements ResultSetExecution {
         		output.add(null);
         		continue;
         	}
-
+        	allNulls = false;
         	switch (this.evaluator.evaluateInCell(cell).getCellType()) {
                 case Cell.CELL_TYPE_NUMERIC:
                     output.add(convertFromExcelType(cell.getNumericCellValue(), cell, this.expectedColumnTypes[i]));
@@ -252,6 +253,10 @@ public class ExcelExecution implements ResultSetExecution {
                 	output.add(null);
                     break;
             }   
+        }
+        
+        if (allNulls) {
+        	return null;
         }
         
         return output;    

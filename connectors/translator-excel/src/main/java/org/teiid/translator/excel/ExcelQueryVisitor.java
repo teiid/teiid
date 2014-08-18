@@ -234,7 +234,10 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(Limit obj) {
-		this.firstDataRowNumber = new Integer(obj.getRowOffset()-1);
+		int offset = obj.getRowOffset();
+		if (offset != 0) {
+			this.firstDataRowNumber = offset + this.firstDataRowNumber;
+		}
 		this.filters.add(new CompareFilter(this.firstDataRowNumber, Operator.GE));
 		this.filters.add(new CompareFilter(this.firstDataRowNumber+obj.getRowLimit(), Operator.LT));
 	}	
