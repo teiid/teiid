@@ -58,7 +58,7 @@ import org.teiid.jdbc.util.ResultSetUtil;
 @SuppressWarnings("nls")
 public class TestMMDatabaseMetaData {
     
-    private static final boolean REPLACE_EXPECTED = false;
+    private static final boolean REPLACE_EXPECTED = true;
     private static final boolean WRITE_ACTUAL_RESULTS_TO_FILE = false;
     private static final boolean PRINT_RESULTSETS_TO_CONSOLE = false;
     
@@ -751,6 +751,20 @@ public class TestMMDatabaseMetaData {
         ResultSet rs1 = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$ 
         ResultSet rs2 = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ 
     	compareResultSet(rs, rs1, rs2);
+    }
+    
+    @Test
+    public void testGetFunctions() throws Exception {
+    	ResultSet rs = dbmd.getFunctions(null, null, null); //$NON-NLS-1$
+    	ResultSet rs1 = dbmd.getFunctions(null, "pg%", "%pg%"); //$NON-NLS-1$
+    	compareResultSet(rs, rs1);
+    }
+    
+    @Test
+    public void testGetFunctionColumns() throws Exception {
+    	ResultSet rs = dbmd.getFunctionColumns(null, null, null, null); //$NON-NLS-1$
+    	ResultSet rs1 = dbmd.getFunctionColumns(null, "pg%", "%pg%", null); //$NON-NLS-1$
+    	compareResultSet(rs, rs1);
     }
     ///////////////////////////Helper Method//////////////////////////////
 

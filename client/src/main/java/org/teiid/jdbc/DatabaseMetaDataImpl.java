@@ -255,6 +255,29 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" AND UCASE(Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" ORDER BY TABLE_SCHEM").toString(); //$NON-NLS-1$
+
+	private static final String QUERY_FUNCTIONS = new StringBuffer("SELECT VDBName AS Function_CAT, SchemaName AS FUNCTION_SCHEM, " //$NON-NLS-1$
+			+ "Name AS FUNCTION_NAME, Description as REMARKS, 1 as FUNCTION_TYPE, UID AS SPECIFIC_NAME") //$NON-NLS-1$
+    	.append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Functions") //$NON-NLS-1$ //$NON-NLS-2$
+    	.append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+    	.append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+    	.append(" AND UCASE(Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
+    	.append(" ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME").toString(); //$NON-NLS-1$
+	
+	private static final String QUERY_FUNCTION_COLUMNS = new StringBuffer("SELECT VDBName AS Function_CAT, SchemaName AS FUNCTION_SCHEM, ") //$NON-NLS-1$
+		.append("FunctionName AS FUNCTION_NAME, Name as COLUMN_NAME, CASE WHEN Type = 'ReturnValue' Then 4 WHEN Type = 'In' Then 1 ELSE 0 END AS COLUMN_TYPE") //$NON-NLS-1$
+		.append(", 1 AS DATA_TYPE") //$NON-NLS-1$
+	    .append(", DataType AS TYPE_NAME, \"Precision\" AS \"PRECISION\", TypeLength  AS LENGTH, convert(Scale, short) AS SCALE") //$NON-NLS-1$
+	    .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
+	    .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
+	    .append(", Description AS REMARKS, NULL AS CHAR_OCTET_LENGTH, Position AS ORDINAL_POSITION,") //$NON-NLS-1$
+	    .append(IS_NULLABLE).append(", FunctionUID as SPECIFIC_NAME") //$NON-NLS-1$
+	    .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".FunctionParams") //$NON-NLS-1$ //$NON-NLS-2$
+	    .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+	    .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+	    .append(" AND UCASE(FunctionName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+	    .append(" AND UCASE(Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
+	    .append(" ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME, ORDINAL_POSITION").toString(); //$NON-NLS-1$
     
     private final String TABLE_TYPE;
     
@@ -2267,12 +2290,121 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 	public ResultSet getFunctionColumns(String catalog, String schemaPattern,
 			String functionNamePattern, String columnNamePattern)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		if (catalog == null) {
+            catalog = PERCENT;
+        }
+        
+        if (schemaPattern == null) {
+            schemaPattern = PERCENT;
+        }
+        
+        if (functionNamePattern == null) {
+            functionNamePattern = PERCENT;
+        }
+        
+        if (columnNamePattern == null) {
+        	columnNamePattern = PERCENT;
+        }
+        
+        List records = new ArrayList ();
+
+        ResultSetMetaData rmetadata = null;
+        ResultSetImpl results = null;
+        PreparedStatementImpl prepareQuery = null;
+        try {
+            prepareQuery = driverConnection.prepareStatement(QUERY_FUNCTION_COLUMNS);
+            prepareQuery.setString(1, catalog.toUpperCase());
+            prepareQuery.setString(2, schemaPattern.toUpperCase());
+            prepareQuery.setString(3, functionNamePattern.toUpperCase());
+            prepareQuery.setString(4, columnNamePattern.toUpperCase());
+            results = prepareQuery.executeQuery();
+            // Get the metadata for the results
+            rmetadata = results.getMetaData();
+            int cols = rmetadata.getColumnCount();
+            while (results.next ()) {
+                List currentRow = new ArrayList (cols);
+                for(int i=0; i < cols; i++) {
+                    currentRow.add(results.getObject(i+1));
+                }
+                String typeName = (String)currentRow.get(6);
+                Integer length = (Integer)currentRow.get(8);
+                Integer precision = (Integer)currentRow.get(7);
+                if (precision != null && precision <= 0) {
+        			currentRow.set(7, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
+            	}
+                if (length != null && length <= 0) {
+        			currentRow.set(8, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
+        		}
+                if (typeName != null) {
+                	currentRow.set(5, JDBCSQLTypeInfo.getSQLType(typeName));
+                } else {
+                	currentRow.set(5, null);                	
+                }
+                // add the current row to the list of records.
+                records.add(currentRow);
+            }// end of while
+
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getfunctioncolumns_success")); //$NON-NLS-1$
+
+            // construct results object from column values and their metadata
+            return dummyStatement().createResultSet(records, rmetadata);
+        } catch(Exception e) {
+            throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getfunctioncolumns_error", e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
+        }
 	}
 
 	public ResultSet getFunctions(String catalog, String schemaPattern,
 			String functionNamePattern) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		if (catalog == null) {
+            catalog = PERCENT;
+        }
+        
+        if (schemaPattern == null) {
+            schemaPattern = PERCENT;
+        }
+        
+        if (functionNamePattern == null) {
+            functionNamePattern = PERCENT;
+        }
+        List records = new ArrayList ();
+
+        ResultSetMetaData rmetadata = null;
+        ResultSetImpl results = null;
+        PreparedStatementImpl prepareQuery = null;
+        try {
+            prepareQuery = driverConnection.prepareStatement(QUERY_FUNCTIONS);
+            prepareQuery.setString(1, catalog.toUpperCase());
+            prepareQuery.setString(2, schemaPattern.toUpperCase());
+            prepareQuery.setString(3, functionNamePattern.toUpperCase());
+            results = prepareQuery.executeQuery();
+            // Get the metadata for the results
+            rmetadata = results.getMetaData();
+            int cols = rmetadata.getColumnCount();
+            while (results.next ()) {
+                List currentRow = new ArrayList(cols);
+
+                for(int i = 0; i < cols; i++) {
+                    currentRow.add(results.getObject(i+1));
+                }
+
+                records.add(currentRow);
+            }
+
+            logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getfunctions_success")); //$NON-NLS-1$
+
+            // construct results object from column values and their metadata
+            return dummyStatement().createResultSet(records, rmetadata);
+        } catch(Exception e) {
+            throw TeiidSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getfunctions_error", e.getMessage())); //$NON-NLS-1$
+        } finally {
+        	if (prepareQuery != null) {
+        		prepareQuery.close();
+        	}
+        }
 	}
 
 	public RowIdLifetime getRowIdLifetime() throws SQLException {

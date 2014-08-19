@@ -523,9 +523,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(parent.getName());
 				row.add(parent.getUUID());
 				row.add(param.getName());
-				row.add(param.getPosition()==0?"ReturnValue":"In"); //$NON-NLS-1$ //$NON-NLS-2$
-				row.add(param.getPosition());
 				row.add(param.getRuntimeType());
+				row.add(param.getPosition());
+				row.add(param.getPosition()==0?"ReturnValue":"In"); //$NON-NLS-1$ //$NON-NLS-2$
 				row.add(param.getPrecision());
 				row.add(param.getLength());
 				row.add(param.getScale());

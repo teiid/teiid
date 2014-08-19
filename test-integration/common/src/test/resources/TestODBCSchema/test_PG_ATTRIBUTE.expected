@@ -93,7 +93,7 @@ oid          attrelid     attname                                               
 173          162          Scale                                                              23           4       11      8            true        false         false    
 174          162          Radix                                                              23           4       12      8            true        false         false    
 175          162          NullType                                                           1043         -1      13      14           true        false         false    
-176          162          Description                                                        1043         -1      14      259          false       false         false    
+176          162          Description                                                        1043         -1      14      4004         false       false         false    
 178          177          VDBName                                                            1043         -1      1       259          true        false         false    
 179          177          SchemaName                                                         1043         -1      2       259          false       false         false    
 180          177          FunctionName                                                       1043         -1      3       259          true        false         false    
@@ -103,7 +103,7 @@ oid          attrelid     attname                                               
 189          186          Name                                                               1043         -1      3       259          true        false         false    
 190          186          NameInSource                                                       1043         -1      4       259          false       false         false    
 191          186          UID                                                                1043         -1      5       54           true        false         false    
-192          186          Description                                                        1043         -1      6       259          false       false         false    
+192          186          Description                                                        1043         -1      6       4004         false       false         false    
 193          186          IsVarArgs                                                          16           1       7       5            false       false         false    
 195          194          VDBName                                                            1043         -1      1       259          true        false         false    
 196          194          SchemaName                                                         1043         -1      2       259          false       false         false    
