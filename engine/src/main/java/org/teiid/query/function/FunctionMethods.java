@@ -1486,7 +1486,7 @@ public final class FunctionMethods {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
-	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism=Determinism.NONDETERMINISTIC)
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
 	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException {
 		if (!validity) {
 			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
