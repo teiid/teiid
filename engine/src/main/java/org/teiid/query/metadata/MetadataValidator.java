@@ -320,7 +320,7 @@ public class MetadataValidator {
 				Long ttl = -1L;
 				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint) {
 					ttl = cacheHint.getTtl();
-					t.setProperty("{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL", String.valueOf(ttl)); //$NON-NLS-1$
+					t.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, String.valueOf(ttl));
 				}
     		}
 			if(resolverReport != null && resolverReport.hasItems()) {
