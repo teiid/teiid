@@ -354,7 +354,7 @@ public class MetadataValidator {
 				Long ttl = -1L;
 				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint) {
 					ttl = cacheHint.getTtl();
-					t.setProperty(AbstractMetadataRecord.RELATIONAL_URI + "MATVIEW_TTL", String.valueOf(ttl)); //$NON-NLS-1$
+					t.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, String.valueOf(ttl));
 				}
     		}
 			processReport(model, record, report, resolverReport);
