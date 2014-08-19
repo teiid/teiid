@@ -224,7 +224,7 @@ public class SolrUpdateExecution implements UpdateExecution {
 					request = new UpdateRequest();
 				}
 			}
-			if (!request.getDocuments().isEmpty()) {
+			if (request.getDocuments()!= null && !request.getDocuments().isEmpty()) {
 				// write the mutation
 				UpdateResponse response = this.connection.update(request);
 				if (response.getStatus() != 0) {
