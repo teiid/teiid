@@ -34,12 +34,23 @@ import java.util.Stack;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.Like;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 
@@ -74,14 +85,32 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		fieldNameList.add(expr);
 	}
 
+	public static String getRecordName(AbstractMetadataRecord object) {
+		String nameInSource = object.getNameInSource();
+        if(nameInSource != null && nameInSource.length() > 0) {
+            return nameInSource;
+        }
+        return object.getName();
+    }
+
+	public static String getColumnName(ColumnReference obj) {
+		String elemShortName = null;
+		AbstractMetadataRecord elementID = obj.getMetadataObject();
+        if(elementID != null) {
+            elemShortName = getRecordName(elementID);
+        } else {
+            elemShortName = obj.getName();
+        }
+		return elemShortName;
+	}	
 	
 	@Override
 	public void visit(ColumnReference obj) {
 		if (obj.getMetadataObject() != null) {
-			this.onGoingExpression.push(obj.getMetadataObject().getName());
+			this.onGoingExpression.push(getColumnName(obj));
 		}
 		else {
-			this.onGoingExpression.push(this.columnAliasMap.get(obj.getName()));	
+			this.onGoingExpression.push(this.columnAliasMap.get(getColumnName(obj)));	
 		}
 	}
 
@@ -218,7 +247,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             Class<?> type = obj.getType();
             Object val = obj.getValue();
             if(Number.class.isAssignableFrom(type)) {
-            	this.onGoingExpression.push(String.valueOf(val));
+            	this.onGoingExpression.push(escapeString(String.valueOf(val))); //$NON-NLS-1$
             } 
             else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
             	this.onGoingExpression.push(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
@@ -233,7 +262,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             	this.onGoingExpression.push(new SimpleDateFormat("yyyy-MM-DD").format(val)); //$NON-NLS-1$            	
             }  
             else {
-            	this.onGoingExpression.push(escapeString(val.toString(), "\""));//$NON-NLS-1$ 
+            	this.onGoingExpression.push(escapeString(val.toString()));//$NON-NLS-1$
             }
         }
 	}
@@ -243,9 +272,17 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
      * @param str the input string
      * @return a SQL-safe string
      */
-    protected String escapeString(String str, String quote) {
-        return StringUtil.replaceAll(str, quote, quote + quote);
+    protected String escapeString(String str) {
+    	// needs escaping + - && || ! ( ) { } [ ] ^ " ~ * ? :
+    	// source: http://khaidoan.wikidot.com/solr
+    	String[] array = {"+", "-", "&&", "||", "!", "(", ")", "{", "}", "[", "]", "^", "\"", "~",  "*", "?", ":"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
+
+    	for (int i = 0; i < array.length; i++) {
+    		str = StringUtil.replaceAll(str, array[i],  "\\" + array[i]); //$NON-NLS-1$
+    	}
+    	return str;
     }	
+    
 	@Override
 	public void visit(Limit obj) {
 		this.limitInUse = true;
