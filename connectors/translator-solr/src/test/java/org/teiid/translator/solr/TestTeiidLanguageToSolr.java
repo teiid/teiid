@@ -73,7 +73,7 @@ public class TestTeiidLanguageToSolr {
 	@Test
 	public void testSelectStar() throws Exception {
 		// column test, all columns translates to price, weight and popularity
-		assertEquals("fl=price,weight,popularity,name,purchasedate&q=*:*", getSolrTranslation("select * from example"));
+		assertEquals("fl=price,weight,popularity,name,purchasedate,nis&q=*:*", getSolrTranslation("select * from example"));
 	}
 
 	@Test
@@ -86,6 +86,12 @@ public class TestTeiidLanguageToSolr {
 		assertEquals("fl=price,weight,popularity&q=price:1.0", 
 				getSolrTranslation("select price,weight,popularity from example where price=1"));
 	}
+	
+	@Test
+	public void testSelectWhereEQNegitive() throws Exception {
+		assertEquals("fl=price,weight,popularity&q=price:\\-1.0", 
+				getSolrTranslation("select price,weight,popularity from example where price=-1"));
+	}	
 
 	@Test
 	public void testSelectWhereNE() throws Exception {
