@@ -39,19 +39,12 @@
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>translator-file</artifactId>
-			<!-- The version line will move to parent pom.xml when parent version update to Alpha2  
-			<version>${project.version}</version>
-			<scope>test</scope>-->
 		</dependency>
 
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-file</artifactId>
 			<classifier>lib</classifier>
-			<!-- The version line will move to parent pom.xml when parent version update to Alpha2  
-			<version>${project.version}</version>
-			
-			<scope>test</scope>-->
 		</dependency>
 	</dependencies>
 	
