@@ -44,7 +44,7 @@ public class TeiidPlatform extends DatabasePlatform{
 		this.printOuterJoinInWhereClause = false;
 	}
 
-	
+	@Override
 	protected Hashtable buildFieldTypes() {
 		
 		Hashtable fieldTypeMapping = super.buildFieldTypes();
@@ -80,34 +80,42 @@ public class TeiidPlatform extends DatabasePlatform{
 	/**
 	 * Avoid alter/create Constraint/index
 	 */
+	@Override
 	public boolean supportsDeleteOnCascade() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsForeignKeyConstraints() {
 		return false;
 	}
 
+	@Override
 	public boolean requiresUniqueConstraintCreationOnTableCreate() {
 		return false;
 	}
 	
+	@Override
 	public boolean supportsIndexes() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsTempTables() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsLocalTempTables() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsGlobalTempTables() {
 		return false;
 	}
 
+	@Override
 	public String getCreateViewString() {
 		throw new RuntimeException("Teiid Server don't support create view in runtime");
 	}
