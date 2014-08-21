@@ -77,6 +77,9 @@ public abstract class AbstractVDBDeployer {
 	
 	protected void assignMetadataRepositories(VDBMetaData deployment, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+			if (model.getModelType() != Type.OTHER && (model.getName() == null || model.getName().indexOf('.') >= 0)) {
+				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40121, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40121, model.getName(), deployment.getName(), deployment.getVersion()));
+			}
 			if (model.isSource() && model.getSourceNames().isEmpty()) {
 	    		throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40093, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40093, model.getName(), deployment.getName(), deployment.getVersion()));
 	    	}
