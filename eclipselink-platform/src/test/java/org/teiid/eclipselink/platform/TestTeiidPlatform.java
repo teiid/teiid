@@ -27,7 +27,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -47,20 +48,17 @@ import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.file.FileExecutionFactory;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.WireProtocol;
 
+@SuppressWarnings("nls")
 public class TestTeiidPlatform {
 	
 	static EmbeddedServer server;
 	static EntityManagerFactory factory;
 	
-	
 	@BeforeClass 
-	public static void init() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, FileNotFoundException, IOException, ResourceException {
+	public static void init() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, FileNotFoundException, IOException, ResourceException, SQLException {
 		
 		server = new EmbeddedServer();
-		
 		FileExecutionFactory executionFactory = new FileExecutionFactory();
 		server.addTranslator("file", executionFactory);
 		
@@ -71,26 +69,14 @@ public class TestTeiidPlatform {
 		ConnectionFactoryProvider<ConnectionFactory> connectionFactoryProvider = new EmbeddedServer.SimpleConnectionFactoryProvider<ConnectionFactory>(connectionFactory);
 		server.addConnectionFactoryProvider("java:/marketdata-file", connectionFactoryProvider);
 		
-		SocketConfiguration s = new SocketConfiguration();
-		InetSocketAddress addr = new InetSocketAddress("localhost", 31234);
-		s.setBindAddress(addr.getHostName());
-		s.setPortNumber(addr.getPort());
-		s.setProtocol(WireProtocol.teiid);
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
-		config.addTransport(s);
 		server.start(config);
+		DriverManager.registerDriver(server.getDriver());
 		
 		path = TestTeiidPlatform.class.getClassLoader().getResource("vdb").getPath() + File.separator + "marketdata-vdb.xml" ;
 		server.deployVDB(new FileInputStream(new File(path)));
 		
 		factory = Persistence.createEntityManagerFactory("org.teiid.eclipselink.test");
-	}
-	
-	@Test
-	public void testSchema() {
-		assertNotNull(server.getSchemaDdl("Marketdata", "Stocks"));
-		assertNotNull(server.getSchemaDdl("Marketdata", "SYS"));
-		assertNotNull(server.getSchemaDdl("Marketdata", "SYSADMIN"));
 	}
 	
 	@Test
@@ -110,12 +96,14 @@ public class TestTeiidPlatform {
 		em.close();
 	}
 	
-	
-	
 	@AfterClass 
 	public static void destory() {
 		
 		factory.close();
+		try {
+			DriverManager.deregisterDriver(server.getDriver());
+		} catch (SQLException e) {
+		}
 		server.stop();
 	}
 

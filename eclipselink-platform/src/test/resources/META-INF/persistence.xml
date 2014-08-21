@@ -11,7 +11,7 @@
       
       <properties>
       <property name="javax.persistence.jdbc.driver" value="org.teiid.jdbc.TeiidDriver" />
-      <property name="javax.persistence.jdbc.url" value="jdbc:teiid:Marketdata@mm://localhost:31234;version=1" />
+      <property name="javax.persistence.jdbc.url" value="jdbc:teiid:Marketdata" />
       <property name="javax.persistence.jdbc.user" value="" />
       <property name="javax.persistence.jdbc.password" value="" />
 
