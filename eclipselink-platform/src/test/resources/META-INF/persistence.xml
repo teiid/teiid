@@ -11,7 +11,7 @@
       
       <properties>
       <property name="javax.persistence.jdbc.driver" value="org.teiid.jdbc.TeiidDriver" />
-      <property name="javax.persistence.jdbc.url" value="jdbc:teiid:Marketdata@mm://localhost:31000;version=1" />
+      <property name="javax.persistence.jdbc.url" value="jdbc:teiid:Marketdata@mm://localhost:31234;version=1" />
       <property name="javax.persistence.jdbc.user" value="" />
       <property name="javax.persistence.jdbc.password" value="" />
 
@@ -19,7 +19,7 @@
       <property name="eclipselink.ddl-generation" value="create-tables" />
       <property name="eclipselink.ddl-generation.output-mode" value="database" />
       <!--  -->
-      <property name="eclipselink.target-database" value="org.teiid.eclipselink.platform.TeiidServerPlatform"/>
+      <property name="eclipselink.target-database" value="org.teiid.eclipselink.platform.TeiidPlatform"/>
       
       <property name="eclipselink.logging.level.sql" value="FINE"/>
       

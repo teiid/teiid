@@ -557,7 +557,20 @@
 				<artifactId>translator-infinispan-dsl</artifactId>
 				<type>test-jar</type>
                 <version>${project.version}</version>
-			</dependency>        
+			</dependency>
+	    <dependency>
+               <groupId>org.jboss.teiid.connectors</groupId>
+               <artifactId>translator-file</artifactId>
+               <version>${project.version}</version>
+               <scope>test</scope>
+           </dependency>
+           <dependency>
+               <groupId>org.jboss.teiid.connectors</groupId>
+               <artifactId>connector-file</artifactId>
+               <version>${project.version}</version>
+               <classifier>lib</classifier>
+               <scope>test</scope>
+           </dependency>        
       <!-- External dependencies -->
       
 			<dependency>
@@ -858,22 +871,18 @@
               <artifactId>odata4j-core</artifactId>
               <version>${version.org.odata4j}</version>
               <exclusions>
-		    <!--                
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
                         <artifactId>javax.persistence</artifactId>
                     </exclusion>
-		    -->
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>jsr311-api</artifactId>
                     </exclusion>
-		    <!--
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
                         <artifactId>eclipselink</artifactId>
                     </exclusion>
-		    -->  
                     <!-- 
                     <exclusion>
                         <groupId>joda-time</groupId>
@@ -1311,27 +1320,12 @@
                 <groupId>de.flapdoodle.embed</groupId>
                 <artifactId>de.flapdoodle.embed.mongo</artifactId>
                 <version>${version.de.flapdoodle.embed.mongo}</version>
-            </dependency>   
+            </dependency>
 	    <dependency>
-               <groupId>org.jboss.teiid.connectors</groupId>
-               <artifactId>translator-file</artifactId>
-               <!-- The version line will updated when parent version update to Alpha2  -->
-               <version>8.9.0.Alpha2-SNAPSHOT</version>
-               <scope>test</scope>
-           </dependency>
-           <dependency>
-               <groupId>org.jboss.teiid.connectors</groupId>
-               <artifactId>connector-file</artifactId>
-               <!-- The version line will updated when parent version update to Alpha2  -->
-               <version>8.9.0.Alpha2-SNAPSHOT</version>
-               <classifier>lib</classifier>
-               <scope>test</scope>
-           </dependency>
-            <dependency>
-               <groupId>org.eclipse.persistence</groupId>
-                <artifactId>eclipselink</artifactId>
-                <version>${version.org.eclipse.persistence}</version>
-             </dependency>           
+		<groupId>org.eclipse.persistence</groupId>
+		<artifactId>eclipselink</artifactId>
+		<version>${version.org.eclipse.persistence}</version>
+	    </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>
