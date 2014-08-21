@@ -59,7 +59,6 @@ import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -416,8 +415,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			    		}
 			    		model.addRuntimeError(errorMsg);
 			    		model.setMetadataStatus(Model.MetadataStatus.FAILED);
-			    		//log the exception of a non-teiid runtime exception as it may indicate a problem 
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, (ex instanceof RuntimeException && !(ex instanceof TeiidRuntimeException))?ex:null, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, ex, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
 						if (ex instanceof RuntimeException) {
 							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, VDBService.this.shutdownListener.isBootInProgress());
 						} else {
