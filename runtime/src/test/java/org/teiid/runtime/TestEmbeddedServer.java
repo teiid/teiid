@@ -304,6 +304,16 @@ public class TestEmbeddedServer {
 		assertNull(es.getSchemaDdl("empty", "xxx"));
 	}
 	
+	@Test(expected=VirtualDatabaseException.class) public void testInvalidName() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("virt.1");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create view \"my-view\" as select 1");
+		es.deployVDB("x", mmd1);
+	}
+	
 	@Test public void testDeployZip() throws Exception {
 		es.start(new EmbeddedConfiguration());
 		

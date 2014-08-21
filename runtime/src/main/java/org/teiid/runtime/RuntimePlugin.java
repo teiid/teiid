@@ -131,6 +131,7 @@ public class RuntimePlugin {
     	TEIID40117, 
     	TEIID40118,
     	TEIID40119,
-    	TEIID40120,
+    	TEIID40120, 
+    	TEIID40121, //invalid model name
     }
 }
