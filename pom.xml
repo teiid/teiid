@@ -10,7 +10,7 @@
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-        <version>8.9.0.Alpha2-SNAPSHOT</version>
+        <version>8.9.0.Alpha2</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -106,7 +106,7 @@
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
         <developerConnection>scm:git:git@github.com:teiid/teiid.git</developerConnection>
         <url>http://github.com/teiid/teiid</url>
-	<tag>HEAD</tag>
+	<tag>teiid-parent-8.9.0.Alpha2</tag>
   </scm>
 	<licenses>
 		<license>
