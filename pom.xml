@@ -15,6 +15,9 @@
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
 	    
+	    <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
+	    <version.release.plugin>2.5</version.release.plugin>
+	    
 	    <!-- commenting out to use jboss bom versions -->
         <version.org.jboss.resteasy>2.3.6.Final</version.org.jboss.resteasy>
         <version.org.hibernate>4.1.6.Final</version.org.hibernate>
