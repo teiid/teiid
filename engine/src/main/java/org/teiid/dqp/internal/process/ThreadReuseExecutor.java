@@ -161,7 +161,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		this.poolName = name;
 		
 		tpe = new ThreadPoolExecutor(0,
-				maximumPoolSize, 2, TimeUnit.MINUTES,
+				Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
 				new SynchronousQueue<Runnable>(), new NamedThreadFactory("Worker")) { //$NON-NLS-1$ 
 			@Override
 			protected void afterExecute(Runnable r, Throwable t) {
@@ -178,24 +178,20 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	}
 
 	private void executeDirect(final PrioritizedRunnable command) {
-		boolean atMaxThreads = false;
 		synchronized (poolLock) {
 			checkForTermination();
 			submittedCount++;
-			atMaxThreads = activeCount == maximumPoolSize;
+			boolean atMaxThreads = activeCount == maximumPoolSize;
 			if (atMaxThreads) {
 				queue.add(command);
 				int queueSize = queue.size();
 				if (queueSize > highestQueueSize) {
 					highestQueueSize = queueSize;
 				}
-			} else {
-				activeCount++;
-				highestActiveCount = Math.max(activeCount, highestActiveCount);
+				return;
 			}
-		}
-		if (atMaxThreads) {
-			return;
+			activeCount++;
+			highestActiveCount = Math.max(activeCount, highestActiveCount);
 		}
 		tpe.execute(new Runnable() {
 			@Override
