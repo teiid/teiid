@@ -3,7 +3,7 @@
 	<parent>
     	<groupId>org.jboss.integration-platform</groupId>
     	<artifactId>jboss-integration-platform-parent</artifactId>
-    	<version>6.0.0.CR8</version>
+    	<version>6.0.0.CR10</version>
     <!--parent>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-parent</artifactId>
@@ -53,7 +53,7 @@
 
         
         <!-- jboss bom overrides -->
-        <version.org.jboss.integration-platform>6.0.0.CR8</version.org.jboss.integration-platform>
+        <version.org.jboss.integration-platform>6.0.0.CR10</version.org.jboss.integration-platform>
         <version.org.jboss.jboss-common-core>2.2.17.GA-redhat-2</version.org.jboss.jboss-common-core>
         <version.org.jboss.as>7.4.0.Final-redhat-4</version.org.jboss.as>
         <version.org.jboss.jboss-dmr>1.2.0.Final-redhat-1</version.org.jboss.jboss-dmr>
