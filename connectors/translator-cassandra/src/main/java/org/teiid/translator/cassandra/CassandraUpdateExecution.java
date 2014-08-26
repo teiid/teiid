@@ -22,6 +22,8 @@
 package org.teiid.translator.cassandra;
 
 import org.teiid.language.Command;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -57,9 +59,11 @@ public class CassandraUpdateExecution implements UpdateExecution {
 	public void execute() throws TranslatorException {
 		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
 		visitor.translateSQL(this.command);
+		String cql = visitor.getTranslatedSQL();
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
 		try {
-			connection.executeQuery(visitor.getTranslatedSQL());
-		} catch(Throwable t) {
+			connection.executeQuery(cql);
+		} catch(Exception t) {
 			throw new TranslatorException(t);
 		}
 	}

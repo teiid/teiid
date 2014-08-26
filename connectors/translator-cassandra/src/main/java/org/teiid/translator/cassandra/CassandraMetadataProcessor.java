@@ -22,7 +22,6 @@
 
 package org.teiid.translator.cassandra;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,7 +95,10 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
 			String type = TypeFacility.getDataTypeName(teiidRuntimeTypeFromJavaClass);
 			
 			if (column.getType().getName().equals(com.datastax.driver.core.DataType.Name.TIMESTAMP)) {
-				type = TypeFacility.getDataTypeName(Timestamp.class);
+				type = TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+			} else if (column.getType().getName().equals(com.datastax.driver.core.DataType.Name.CUSTOM)
+					|| column.getType().getName().equals(com.datastax.driver.core.DataType.Name.BLOB)) {
+				type = TypeFacility.RUNTIME_NAMES.VARBINARY;
 			}
 			
 			Column c = factory.addColumn(column.getName(), type, table);

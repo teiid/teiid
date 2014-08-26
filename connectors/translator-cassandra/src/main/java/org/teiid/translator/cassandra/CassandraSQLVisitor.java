@@ -24,6 +24,8 @@ package org.teiid.translator.cassandra;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
+import java.util.UUID;
+
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
@@ -83,7 +85,32 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 			super.visit(obj);
 			return;
 		}
+		//cassandra directly parses uuids
+		if (obj.getValue() instanceof UUID) {
+			buffer.append(obj.getValue());
+			return;
+		}
+		//TODO: only supported with Cassandra 2 or later
+		/*if (obj.isBindEligible() 
+				|| obj.getType() == TypeFacility.RUNTIME_TYPES.OBJECT
+				|| type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+			if (values == null) {
+				values = new ArrayList<Object>();
+			}
+			buffer.append('?');
+			if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+				values.add(ByteBuffer.wrap(((BinaryType)obj.getValue()).getBytesDirect()));
+			} else {
+				values.add(obj.getValue());
+			}
+			return;
+		}*/
 		Class<?> type = obj.getType();
+		if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+			buffer.append("0x") //$NON-NLS-1$
+			  .append(obj.getValue());
+			return;
+		}
 		if (!Number.class.isAssignableFrom(type) 
 				&& type != TypeFacility.RUNTIME_TYPES.BOOLEAN 
 				&& type != TypeFacility.RUNTIME_TYPES.VARBINARY) {
