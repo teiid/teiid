@@ -58,7 +58,7 @@ import org.teiid.jdbc.util.ResultSetUtil;
 @SuppressWarnings("nls")
 public class TestMMDatabaseMetaData {
     
-    private static final boolean REPLACE_EXPECTED = true;
+    private static final boolean REPLACE_EXPECTED = false;
     private static final boolean WRITE_ACTUAL_RESULTS_TO_FILE = false;
     private static final boolean PRINT_RESULTSETS_TO_CONSOLE = false;
     
