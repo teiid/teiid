@@ -159,7 +159,9 @@ public class PlanToProcessConverter {
 		// Call convertPlan recursively on children
 		for (PlanNode childNode : planNode.getChildren()) {
 			RelationalNode child = convertPlan(childNode);
-			if (planNode.getType() == NodeConstants.Types.SET_OP && childNode.getType() == NodeConstants.Types.SET_OP && childNode.hasBooleanProperty(Info.USE_ALL)) {
+			if (planNode.getType() == NodeConstants.Types.SET_OP && nextParent instanceof UnionAllNode
+					&& childNode.getProperty(Info.SET_OPERATION) == childNode.getProperty(Info.SET_OPERATION)
+					&& childNode.getType() == NodeConstants.Types.SET_OP && childNode.hasBooleanProperty(Info.USE_ALL)) {
 				for (RelationalNode grandChild : child.getChildren()) {
 					if (grandChild != null) {
 						nextParent.addChild(grandChild);
