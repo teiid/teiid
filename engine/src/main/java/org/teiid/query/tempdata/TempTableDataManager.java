@@ -49,6 +49,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
@@ -123,6 +124,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	}
 	
 	private static final String REFRESHMATVIEWROW = ".refreshmatviewrow"; //$NON-NLS-1$
+	private static final String REFRESHMATVIEWROWS = ".refreshmatviewrows"; //$NON-NLS-1$
 	private static final String REFRESHMATVIEW = ".refreshmatview"; //$NON-NLS-1$
 	public static final String CODE_PREFIX = "#CODE_"; //$NON-NLS-1$
 	private static String REFRESH_SQL = SQLConstants.Reserved.CALL + ' ' + CoreConstants.SYSTEM_ADMIN_MODEL + REFRESHMATVIEW + "(?, ?)"; //$NON-NLS-1$
@@ -365,7 +367,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			GroupSymbol matTable = new GroupSymbol(matTableName);
 			matTable.setMetadataID(matTableId);
 			return loadGlobalTable(context, matTable, matTableName, globalStore);
-		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
+		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROWS)) {
 			final Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
 			TempMetadataID matTableId = context.getGlobalTableStore().getGlobalTempTableMetadataId(groupID);
 			final GlobalTableStore globalStore = getGlobalStore(context, matTableId);
@@ -375,55 +377,108 @@ public class TempTableDataManager implements ProcessorDataManager {
 				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30230, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30230, matViewName));
 			}
 			List<?> ids = metadata.getElementIDsInKey(pk);
+			Object[][] params = (Object[][]) ((ArrayImpl) ((Constant)proc.getParameter(3).getExpression()).getValue()).getValues();
+			return updateMatviewRows(context, metadata, groupID, globalStore, matViewName, ids, params);
+		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
+			final Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
+			TempMetadataID matTableId = context.getGlobalTableStore().getGlobalTempTableMetadataId(groupID);
+			final GlobalTableStore globalStore = getGlobalStore(context, matTableId);
+			Object pk = metadata.getPrimaryKey(groupID);
+			final String matViewName = metadata.getFullName(groupID);
+			if (pk == null) {
+				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30230, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30230, matViewName));
+			}
+			List<?> ids = metadata.getElementIDsInKey(pk);
 			Constant key = (Constant)proc.getParameter(3).getExpression();
 			Object initialValue = key.getValue();
 			SPParameter keyOther = proc.getParameter(4);
-			Object[] otherCols = null;
-			int length = 1;
+			Object[] param = null;
 			if (keyOther != null) {
-				otherCols = ((ArrayImpl) ((Constant)keyOther.getExpression()).getValue()).getValues();
+				Object[] otherCols = ((ArrayImpl) ((Constant)keyOther.getExpression()).getValue()).getValues();
 				if (otherCols != null) {
-					length += otherCols.length;
+					param = new Object[1 + otherCols.length];
+					param[0] = initialValue;
+					for (int i = 0; i < otherCols.length; i++) {
+						param[i+1] = otherCols[i];
+					}
 				}
 			}
-			if (ids.size() != length) {
-				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30231, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30231, matViewName, ids.size(), length));
+			if (param == null) {
+				param = new Object[] {initialValue};
 			}
-			final String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
-			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
-			if (!info.isValid()) {
-				return CollectionTupleSource.createUpdateCountTupleSource(-1);
-			}
-			TempTable tempTable = globalStore.getTempTable(matTableName);
-			if (!tempTable.isUpdatable()) {
-				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30232, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30232, matViewName));
-			}
-			Iterator<?> iter = ids.iterator();
-			final Object[] params = new Object[length];
-			StringBuilder criteria = new StringBuilder();
-			for (int i = 0; i < length; i++) {
-				Object id = iter.next();
-				String targetTypeName = metadata.getElementType(id);
-				Object value = i==0?initialValue:otherCols[i-1];
-				value = DataTypeManager.transformValue(value, DataTypeManager.getDataTypeClass(targetTypeName));
-				params[i] = value;
-				if (i != 0) {
-					criteria.append(" AND "); //$NON-NLS-1$
-				}
-				criteria.append(metadata.getFullName(id)).append(" = ?"); //$NON-NLS-1$
-			}
-			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, Arrays.toString(params)));
 			
-			String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
-				criteria.toString() + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; 
-			final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, params);
-			final TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
-			return new ProxyTupleSource() {
+			Object[][] params = new Object[][] {param};
+			
+			return updateMatviewRows(context, metadata, groupID, globalStore,
+					matViewName, ids, params);
+		}
+		return null;
+	}
 
-				@Override
-				protected TupleSource createTupleSource()
-						throws TeiidComponentException,
-						TeiidProcessingException {
+	private TupleSource updateMatviewRows(final CommandContext context,
+			final QueryMetadataInterface metadata, final Object groupID,
+			final GlobalTableStore globalStore, final String matViewName,
+			List<?> ids, Object[][] params) throws QueryProcessingException,
+			TeiidComponentException, QueryMetadataException,
+			TransformationException {
+		final String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
+		MatTableInfo info = globalStore.getMatTableInfo(matTableName);
+		if (!info.isValid()) {
+			return CollectionTupleSource.createUpdateCountTupleSource(-1);
+		}
+		TempTable tempTable = globalStore.getTempTable(matTableName);
+		if (!tempTable.isUpdatable()) {
+			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30232, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30232, matViewName));
+		}
+		
+		List<Object[]> converted = new ArrayList<Object[]>();
+		for (Object[] param : params) {
+			if (param == null || ids.size() != param.length) {
+				throw new QueryProcessingException(QueryPlugin.Event.TEIID30231, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30231, matViewName, ids.size(), param == null ? 0 : param.length));
+			}
+			final Object[] vals = new Object[param.length];
+			for (int i = 0; i < ids.size(); i++) {
+				Object value = param[i];
+				String targetTypeName = metadata.getElementType(ids.get(i));
+				value = DataTypeManager.transformValue(value, DataTypeManager.getDataTypeClass(targetTypeName));
+				vals[i] = value;
+			}
+			converted.add(vals);
+		}
+		final Iterator<Object[]> paramIter = converted.iterator();
+		
+		Iterator<?> iter = ids.iterator();
+		StringBuilder criteria = new StringBuilder();
+		for (int i = 0; i < ids.size(); i++) {
+			Object id = iter.next();
+			String targetTypeName = metadata.getElementType(id);
+			if (i != 0) {
+				criteria.append(" AND "); //$NON-NLS-1$
+			}
+			criteria.append(metadata.getFullName(id)).append(" = ?"); //$NON-NLS-1$
+		}
+		
+		final String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
+			criteria.toString() + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE;
+
+		return new ProxyTupleSource() {
+			private QueryProcessor qp;
+			private TupleSource ts;
+			private Object[] params;
+			private int count;
+
+			@Override
+			protected TupleSource createTupleSource()
+					throws TeiidComponentException,
+					TeiidProcessingException {
+				while (true) {
+					if (qp == null) {
+						params = paramIter.next();
+						LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, Arrays.toString(params)));
+						qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, params);
+						ts = new BatchCollector.BatchProducerTupleSource(qp);
+					}
+					
 					List<?> tuple = ts.nextTuple();
 					boolean delete = false;
 					if (tuple == null) {
@@ -433,21 +488,35 @@ public class TempTableDataManager implements ProcessorDataManager {
 						tuple = new ArrayList<Object>(tuple); //ensure the list is serializable 
 					}
 					List<?> result = globalStore.updateMatViewRow(matTableName, tuple, delete);
+					
+					if (result != null) {
+						count++;
+					}
+					
 					if (eventDistributor != null) {
 						eventDistributor.updateMatViewRow(context.getVdbName(), context.getVdbVersion(), metadata.getName(metadata.getModelID(groupID)), metadata.getName(groupID), tuple, delete);
 					}
-					return CollectionTupleSource.createUpdateCountTupleSource(result != null ? 1 : 0);
+					
+					qp.closeProcessing();
+					qp = null;
+					ts = null;
+					
+					if (!paramIter.hasNext()) {
+						break;
+					}
 				}
 				
-				@Override
-				public void closeSource() {
-					super.closeSource();
+				return CollectionTupleSource.createUpdateCountTupleSource(count);
+			}
+
+			@Override
+			public void closeSource() {
+				super.closeSource();
+				if (qp != null) {
 					qp.closeProcessing();
 				}
-				
-			};
-		}
-		return null;
+			}
+		};
 	}
 
 	private Object validateMatView(QueryMetadataInterface metadata,	String viewName) throws TeiidComponentException,

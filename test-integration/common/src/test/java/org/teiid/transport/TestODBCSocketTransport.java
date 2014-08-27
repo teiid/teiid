@@ -365,7 +365,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			while (rs.next()) {
 				rowCount++;
 			}
-			assertEquals(6, rowCount);
+			assertEquals(7, rowCount);
 			stmt.execute("close \"foo\"");
 		} finally {
 			ExtendedQueryExectutorImpl.simplePortal = null;
@@ -405,7 +405,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			while (rs.next()) {
 				rowCount++;
 			}
-			assertEquals(6, rowCount);
+			assertEquals(7, rowCount);
 			stmt.execute("close \"foo\"");
 		} finally {
 			ExtendedQueryExectutorImpl.simplePortal = null;

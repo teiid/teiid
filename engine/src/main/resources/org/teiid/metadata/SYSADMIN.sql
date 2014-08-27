@@ -75,7 +75,10 @@ CREATE FOREIGN PROCEDURE refreshMatView(OUT RowsUpdated integer NOT NULL RESULT,
 OPTIONS (UPDATECOUNT 0)
 
 CREATE FOREIGN PROCEDURE refreshMatViewRow(OUT RowsUpdated integer NOT NULL RESULT, IN ViewName string NOT NULL, IN Key object NOT NULL, VARIADIC KeyOther object)
-OPTIONS (UPDATECOUNT 0)
+OPTIONS (UPDATECOUNT 1)
+
+CREATE FOREIGN PROCEDURE refreshMatViewRows(OUT RowsUpdated integer NOT NULL RESULT, IN ViewName string NOT NULL, VARIADIC Key object[] NOT NULL)
+OPTIONS (UPDATECOUNT 1)
 
 CREATE FOREIGN PROCEDURE setColumnStats(IN tableName string NOT NULL, IN columnName string NOT NULL, IN distinctCount long, IN nullCount long, IN max string, IN min string)
 OPTIONS (UPDATECOUNT 0)

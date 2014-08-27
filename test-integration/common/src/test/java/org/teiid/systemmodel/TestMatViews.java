@@ -389,5 +389,39 @@ public class TestMatViews {
 		assertEquals(1, rs.getInt(1));
 		assertFalse(rs.next());
 	}
+	
+	@Test public void testCompositeRowsUpdate() throws Exception {
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setSchemaSourceType("DDL");
+		mmd2.setSchemaText("CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) OPTIONS (MATERIALIZED true) AS /*+ cache(updatable) */ select 1, current_database()");
+		server.deployVDB("comp", mmd2);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("select * from v1");
+		rs.next();
+		assertEquals("1", rs.getString(1));
+		
+		try {
+			rs = s.executeQuery("select * from (call refreshMatViewRows('view1.v1', (0,))) p");
+			fail();
+		} catch (SQLException e) {
+			//not enough key parameters
+		}
+		
+		rs = s.executeQuery("select * from (call refreshMatViewRows('view1.v1', (0, 'a'))) p");
+		assertTrue(rs.next());
+		//row doesn't exist
+		assertEquals(0, rs.getInt(1));
+		assertFalse(rs.next());
+		
+		rs = s.executeQuery("select * from (call refreshMatViewRows('view1.v1', ('1', 'comp'), ('2', 'comp'))) p");
+		assertTrue(rs.next());
+		//row does exist
+		assertEquals(1, rs.getInt(1));
+		assertFalse(rs.next());
+	}
 
 }
