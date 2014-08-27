@@ -379,7 +379,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		try {
 			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc;"));
 			assertFalse(stmt.execute("move 5 in \"foo\""));
-			stmt.execute("fetch 10 in \"foo\"");
+			stmt.execute("fetch 6 in \"foo\"");
 			ResultSet rs = stmt.getResultSet();
 			int rowCount = 0;
 			while (rs.next()) {
@@ -399,7 +399,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		try {
 			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor with hold for select * from pg_proc;"));
 			assertFalse(stmt.execute("move 5 in \"foo\""));
-			stmt.execute("fetch 10 in \"foo\"");
+			stmt.execute("fetch 7 in \"foo\"");
 			ResultSet rs = stmt.getResultSet();
 			int rowCount = 0;
 			while (rs.next()) {

@@ -150,6 +150,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     				flushResults(done);
     				processNext = !done;
     				if (done) {
+    					if (sql != null) {
+    						sendCommandComplete(sql, rowsSent);
+    					}
     					result.getResultsReceiver().receiveResults(rowsSent);
     				}
     			} else {
