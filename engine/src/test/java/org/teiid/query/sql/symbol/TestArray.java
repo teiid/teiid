@@ -57,6 +57,10 @@ public class TestArray {
 		ArrayImpl a1 = new ArrayImpl(new Object[] {1, "x'2", 3});
 		
 		assertEquals("(1, 'x''2', 3)", SQLStringVisitor.getSQLString(new Constant(a1)));
+		
+		a1 = new ArrayImpl((Object[])new Object[][] {{1, "x'2"}, {"c"}});
+		
+		assertEquals("(('1', 'x''2'), ('c',))", SQLStringVisitor.getSQLString(new Constant(a1)));
 	}
 	
 	@Test public void testArrayClone() {
@@ -71,8 +75,8 @@ public class TestArray {
 	
 	@SuppressWarnings("unchecked")
 	@Test public void testArrayValueSerialization() throws Exception {
-		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, null, 3});
-		ArrayImpl a2 = new ArrayImpl(null);
+		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, null, 3});
+		ArrayImpl a2 = new ArrayImpl((Object[])null);
 		String[] types = TupleBuffer.getTypeNames(Arrays.asList(new Array(Integer.class, null)));
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -91,7 +95,7 @@ public class TestArray {
 	}
 	
 	@Test public void testZeroBasedArray() throws Exception {
-		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
+		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, 2, 3});
 		a1.setZeroBased(true);
 		assertEquals(2, java.lang.reflect.Array.get(a1.getArray(1, 1), 0));
 	}
@@ -101,12 +105,12 @@ public class TestArray {
 	 * @throws Exception
 	 */
 	@Test(expected=IndexOutOfBoundsException.class) public void testIndexOutOfBounds() throws Exception {
-		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
+		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, 2, 3});
 		a1.getArray(-1, 1);
 	}
 	
 	@Test public void testSerialize() throws Exception {
-		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
+		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, 2, 3});
 		a1 = UnitTestUtil.helpSerialize(a1);
 		assertEquals(1, a1.getValues()[0]);
 	}
