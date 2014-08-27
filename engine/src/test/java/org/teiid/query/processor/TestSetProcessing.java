@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 
@@ -77,6 +76,38 @@ public class TestSetProcessing {
             Arrays.asList(new Object[] {"a", 3}), //$NON-NLS-1$
             Arrays.asList(new Object[] {"b", 2}), //$NON-NLS-1$
             Arrays.asList(new Object[] {"c", 1}), //$NON-NLS-1$
+            };
+
+        FakeDataManager manager = new FakeDataManager();
+        TestProcessor.sampleData1(manager);
+        TestProcessor.helpProcess(plan, manager, expected);
+    }
+    
+    @Test public void testUnionExcept() {
+        String sql = "(select 'a' union select 'b' union select 'c') except select 'c'"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {}); 
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                0,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                4,      // Project
+                0,      // Select
+                0,      // Sort
+                2       // UnionAll
+            });
+        
+        List<?>[] expected = new List[] {
+            Arrays.asList(new Object[] {"a"}), //$NON-NLS-1$
+            Arrays.asList(new Object[] {"b"}), //$NON-NLS-1$
             };
 
         FakeDataManager manager = new FakeDataManager();
