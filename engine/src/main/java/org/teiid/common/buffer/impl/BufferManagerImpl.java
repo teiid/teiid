@@ -106,11 +106,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				impl.cleaning.set(true);
 				try {
 					long evicted = impl.doEvictions(impl.maxProcessingBytes, false, impl.initialEvictionQueue);
-					if (evicted != 0) {
-						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-							LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
-						}
-						continue;
+					if (evicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
 					}
 				} catch (Throwable t) {
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, t, "Exception during cleaning run"); //$NON-NLS-1$
@@ -868,14 +865,20 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			boolean evicted = true;
 			try {
 				evicted = evict(ce);
+				if (!evicted && !checkActiveBatch) {
+					//there's not much more that we should do as the head is being evicted by someone else
+					break; 
+				}
 			} catch (Throwable e) {
 				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30017, ce.getId() ));
 			} finally {
-				synchronized (ce) {
-					if (evicted && memoryEntries.remove(ce.getId()) != null) {
-						freed += ce.getSizeEstimate();
-						activeBatchBytes.addAndGet(-ce.getSizeEstimate());
-						queue.remove(ce); //ensures that an intervening get will still be cleaned
+				if (evicted) {
+					synchronized (ce) {
+						if (memoryEntries.remove(ce.getId()) != null) {
+							freed += ce.getSizeEstimate();
+							activeBatchBytes.addAndGet(-ce.getSizeEstimate());
+							queue.remove(ce); //ensures that an intervening get will still be cleaned
+						}
 					}
 				}
 			}
