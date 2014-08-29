@@ -49,7 +49,7 @@ final class PhysicalInfo extends BaseCacheEntry {
 	boolean loading; //used by tier 1 cache to prevent double loads
 	boolean adding; //used to prevent double adds
 	
-	PhysicalInfo(Long gid, Long id, int inode, int lastAccess) {
+	PhysicalInfo(Long gid, Long id, int inode, long lastAccess) {
 		super(new CacheKey(id, lastAccess, 0));
 		this.inode = inode;
 		this.gid = gid;
