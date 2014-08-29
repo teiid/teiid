@@ -220,7 +220,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				totalSize += sizeEstimate;
 				rowsSampled += batch.size();
 			}
-			CacheKey key = new CacheKey(oid, (int)readAttempts.get(), old!=null?old.getKey().getOrderingValue():0);
+			CacheKey key = new CacheKey(oid, readAttempts.get(), old!=null?old.getKey().getOrderingValue():0);
 			CacheEntry ce = new CacheEntry(key, sizeEstimate, batch, this.ref, false);
 			if (!cache.addToCacheGroup(id, ce.getId())) {
 				this.remove();
