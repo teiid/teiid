@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BaseCacheEntry;
+import org.teiid.common.buffer.CacheKey;
 
 public class TestLrfuEvictionQueue {
 	
@@ -40,5 +41,13 @@ public class TestLrfuEvictionQueue {
 			value = valueNext;
 		}
 	}
-
+	
+	@Test public void testKeyCompare() {
+		CacheKey key = new CacheKey(-5600000000000000000l, 0l, 0l);
+		CacheKey key1 = new CacheKey(3831662765844904176l, 0l, 0l);
+		CacheKey key2 = new CacheKey(0l, 0l, 0l);
+		assertTrue(key.compareTo(key1) < 0);
+		assertTrue(key1.compareTo(key) > 0);
+	}
+	
 }

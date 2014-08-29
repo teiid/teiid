@@ -631,7 +631,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 						if (!map.containsKey(entry.getId())) {
 							return true; //already removed
 						}
-						info = new PhysicalInfo(s.getId(), entry.getId(), EMPTY_ADDRESS, (int)readAttempts.get());
+						info = new PhysicalInfo(s.getId(), entry.getId(), EMPTY_ADDRESS, readAttempts.get());
 						info.adding = true;
 						map.put(entry.getId(), info);
 					}
