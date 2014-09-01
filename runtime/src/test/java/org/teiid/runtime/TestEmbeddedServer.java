@@ -968,5 +968,38 @@ public class TestEmbeddedServer {
 		}
 		
 	}
+	
+	@Test
+	public void testMultipleEmbeddedServerInOneVM() throws TranslatorException {
+		es.addTranslator(MyEFES1.class);
+		es.start(new EmbeddedConfiguration());
+		assertTrue(isES1started);
+
+		EmbeddedServer es2 = new EmbeddedServer();
+		es2.start(new EmbeddedConfiguration());
+		es2.addTranslator(MyEFES2.class);
+		assertTrue(isES2started);
+		es2.stop();
+	}
+
+	public static boolean isES1started;
+	public static boolean isES2started;
+
+	public static class MyEFES1 extends ExecutionFactory<Void, Void> {
+
+		@Override
+		public void start() throws TranslatorException {
+			isES1started = true;
+		}
+	}
+
+	public static class MyEFES2 extends ExecutionFactory<Void, Void> {
+
+		@Override
+		public void start() throws TranslatorException {
+			isES2started = true;
+		}
+	}
+
 
 }
