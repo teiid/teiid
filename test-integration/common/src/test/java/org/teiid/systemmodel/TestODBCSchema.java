@@ -15,6 +15,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.translator.ExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestODBCSchema extends AbstractMMQueryTestCase {
@@ -133,4 +134,28 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 			execute("select * from pg_catalog." + name);
 		}
 	}
+	
+	@Test public void testSameNameConstraint() throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("Beaker");
+		mmd.setSchemaSourceType("ddl");
+		mmd.setSchemaText("CREATE foreign TABLE osmajor (osmajor varchar(255) DEFAULT 'NULL', constraint osmajor UNIQUE (osmajor));"
+				+ "create foreign procedure osmajor (in osmajor string);");
+		mmd.addSourceMapping("x", "xyz", null);
+		server.addTranslator("xyz", new ExecutionFactory() { 
+			@Override
+			public boolean isSourceRequired() {
+				return false;
+			}});
+		server.deployVDB("dup", mmd);
+		try {
+			this.internalConnection = server.createConnection("jdbc:teiid:dup"); //$NON-NLS-1$ //$NON-NLS-2$
+			String sql = "select * from matpg_relatt where attname= 'osmajor'";
+			execute(sql);
+			assertRowCount(1);
+		} finally {
+			server.undeployVDB("dup");
+		}
+	}
+	
 }
