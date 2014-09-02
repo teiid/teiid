@@ -47,12 +47,12 @@ import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 @Translator(name="modeshape", description="A translator for the open source Modeshape JCR Repository")
 public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	
-	private static final String JCR = "JCR"; //$NON-NLS-1$
-	private static final String JCR_REFERENCE = "JCR_REFERENCE";//$NON-NLS-1$
-	private static final String JCR_CONTAINS = "JCR_CONTAINS";//$NON-NLS-1$
-	private static final String JCR_ISSAMENODE = "JCR_ISSAMENODE";//$NON-NLS-1$
-	private static final String JCR_ISDESCENDANTNODE = "JCR_ISDESCENDANTNODE";//$NON-NLS-1$
-	private static final String JCR_ISCHILDNODE = "JCR_ISCHILDNODE";//$NON-NLS-1$
+	static final String JCR = "JCR"; //$NON-NLS-1$
+	static final String JCR_REFERENCE = "JCR_REFERENCE";//$NON-NLS-1$
+	static final String JCR_CONTAINS = "JCR_CONTAINS";//$NON-NLS-1$
+	static final String JCR_ISSAMENODE = "JCR_ISSAMENODE";//$NON-NLS-1$
+	static final String JCR_ISDESCENDANTNODE = "JCR_ISDESCENDANTNODE";//$NON-NLS-1$
+	static final String JCR_ISCHILDNODE = "JCR_ISCHILDNODE";//$NON-NLS-1$
 	
 	public ModeShapeExecutionFactory() {
 		setUseBindVariables(false);
@@ -107,6 +107,11 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.UCASE); 
 		supportedFunctions.add(SourceSystemFunctions.LCASE); 
 		supportedFunctions.add(SourceSystemFunctions.LENGTH);
+		supportedFunctions.add(JCR_ISCHILDNODE); 
+		supportedFunctions.add(JCR_ISDESCENDANTNODE); 
+		supportedFunctions.add(JCR_ISSAMENODE);
+		supportedFunctions.add(JCR_REFERENCE); 
+		supportedFunctions.add(JCR_CONTAINS);
 		return supportedFunctions;
     }
     

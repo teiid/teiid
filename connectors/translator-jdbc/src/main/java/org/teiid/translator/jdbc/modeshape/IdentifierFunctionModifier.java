@@ -41,7 +41,8 @@ import org.teiid.translator.jdbc.FunctionModifier;
  */
 public class IdentifierFunctionModifier extends FunctionModifier {
 
-    public List<?> translate(Function function) {
+    @Override
+	public List<?> translate(Function function) {
     	
     	List<Object> objs = new ArrayList<Object>();
     	
