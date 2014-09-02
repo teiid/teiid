@@ -531,7 +531,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		String transformation = "select pg_class.oid as attrelid, attnum, attname, relname, nspname, IsAutoIncremented as autoinc, cast((select p.value from SYS.Properties p where p.name = 'pg_type:oid' and p.uid = SYS.Columns.uid) as integer) as typoid " + //$NON-NLS-1$
 				"from pg_catalog.pg_attribute, pg_catalog.pg_class, pg_catalog.pg_namespace, SYS.Columns " + //$NON-NLS-1$
 				"where pg_attribute.attrelid = pg_class.oid and pg_namespace.oid = relnamespace" + //$NON-NLS-1$
-				" and SchemaName = nspname and TableName = relname and Name = attname";  //$NON-NLS-1$
+				" and SchemaName = nspname and TableName = relname and Name = attname and pg_class.relkind in ('r', 'v')";  //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;

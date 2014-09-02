@@ -1,7 +1,7 @@
 string                                                             clob                                                             
 Name                                                               Body                                                             
 matpg_datatype                                                     Clob[454]                                                        
-matpg_relatt                                                       Clob[455]                                                        
+matpg_relatt                                                       Clob[490]                                                        
 pg_am                                                              Clob[34]                                                         
 pg_attrdef                                                         Clob[360]                                                        
 pg_attribute                                                       Clob[1549]                                                       
