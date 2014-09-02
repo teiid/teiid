@@ -22,8 +22,13 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 
@@ -43,5 +48,51 @@ public class ModeShapeJDBCMetdataProcessor extends JDBCMetdataProcessor {
 		setImportForeignKeys(false);
 		setColumnNamePattern("%"); //$NON-NLS-1$
 	}
+	
+	@Override
+	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
+			throws SQLException {
+			super.getConnectorMetadata(conn, metadataFactory);
+			addModeShapeProcedures(metadataFactory);
+	}	
+	
+	protected void addModeShapeProcedures(MetadataFactory metadataFactory)  {
+		String[] names = new String[] {"path1", "path2"};
+		String[] types = new String[] {"String", "String"};
+		int[] lengths = new int[] {4000, 4000};
+		createFunctionMethod(metadataFactory, ModeShapeExecutionFactory.JCR_ISCHILDNODE, "ModeShape ISCHILDNODE JCR Call", "JCR", "boolean", names, types, lengths, true );
+
+		createFunctionMethod(metadataFactory, ModeShapeExecutionFactory.JCR_ISSAMENODE, "ModeShape ISSAMENODE JCR Call", "JCR", "boolean", names, types, lengths, true );
+
+		createFunctionMethod(metadataFactory, ModeShapeExecutionFactory.JCR_ISDESCENDANTNODE, "ModeShape ISDESCENDANTNODE JCR Call", "JCR", "boolean", names, types, lengths, true);
+
+		names = new String[] {"selectOrProperty"};
+		types = new String[] {"String"};
+		lengths = new int[] {4000};
+		createFunctionMethod(metadataFactory, ModeShapeExecutionFactory.JCR_REFERENCE, "ModeShape REFERENCE JCR Call", "JCR", "boolean", names, types, lengths, true );
+
+		names = new String[] {"selectOrProperty", "searchExpr"};
+		types = new String[] {"String", "String"};
+		lengths = new int[] {4000, 4000};
+		createFunctionMethod(metadataFactory, ModeShapeExecutionFactory.JCR_CONTAINS, "ModeShape CONTAINS JCR Call", "JCR", "boolean", names, types, lengths, false );
+
+	}
+
+	private void createFunctionMethod(MetadataFactory metadataFactory, String name, String description, String category, String returnType, String[] names, String[] parameterTypes, int[] length, boolean deterministic) {
+		FunctionParameter[] params = new FunctionParameter[parameterTypes.length];
+		for (int i = 0; i < parameterTypes.length; i++) {
+			params[i] = new FunctionParameter(names[i], parameterTypes[i]); //$NON-NLS-1$
+			Datatype dt =  metadataFactory.getDataTypes().get(parameterTypes[i]);
+			params[i].setDatatype(dt);
+		}
+
+		FunctionParameter returnParm = new FunctionParameter("result", returnType);
+		returnParm.setName("result");
+		FunctionMethod method = new FunctionMethod(name, description, category, params, returnParm); //$NON-NLS-1$
+		method.setNameInSource(name);
+		method.setDeterministicBoolean(Boolean.valueOf(deterministic));
+		
+		metadataFactory.getSchema().addFunction(method);	
+	}	
 	
 }
