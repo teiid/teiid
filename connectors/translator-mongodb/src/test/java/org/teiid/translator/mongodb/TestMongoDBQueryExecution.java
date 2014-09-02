@@ -1019,7 +1019,7 @@ public class TestMongoDBQueryExecution {
     
     @Test
     public void testGeoFunctionInWhere() throws Exception {
-        String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((1.0, 2.0),(3.0, 4.0))) or CategoryID=1";
+        String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) or CategoryID=1";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
         
@@ -1031,12 +1031,12 @@ public class TestMongoDBQueryExecution {
 		BasicDBList coordinates = new BasicDBList();
 		
 		BasicDBList pointOne = new BasicDBList();
-		pointOne.add(new BigDecimal("1.0"));
-		pointOne.add(new BigDecimal("2.0"));
+		pointOne.add(new Double("1.0"));
+		pointOne.add(new Double("2.0"));
 
 		BasicDBList pointTwo = new BasicDBList();
-		pointTwo.add(new BigDecimal("3.0"));
-		pointTwo.add(new BigDecimal("4.0"));
+		pointTwo.add(new Double("3.0"));
+		pointTwo.add(new Double("4.0"));
 		
 		BasicDBList points = new BasicDBList();
 		points.add(pointOne);
@@ -1056,7 +1056,7 @@ public class TestMongoDBQueryExecution {
     
     @Test(expected=TranslatorException.class)
     public void testGeoFunctionInWhereWithFalse() throws Exception {
-        String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((1.0, 2.0),(3.0, 4.0))) = false";
+        String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) = false";
         helpExecute(query, new String[]{"Categories"}, 2);
     }     
 }

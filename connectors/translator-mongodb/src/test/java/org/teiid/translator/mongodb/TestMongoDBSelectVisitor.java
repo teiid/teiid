@@ -405,7 +405,7 @@ public class TestMongoDBSelectVisitor {
     
     @Test
     public void testGeoWithinPloygonFunction() throws Exception {
-    	String query = "SELECT mongo.geoWithin(user_id, 'LineString', ((1.0, 2.0), (1.0, 2.0))) FROM users";
+    	String query = "SELECT mongo.geoWithin(user_id, 'LineString', ((cast(1.0 as double), cast(2.0 as double)), (cast(1.0 as double), cast(2.0 as double)))) FROM users";
 		helpExecute(query, "users",
 				"{ \"_m0\" : { \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\" , \"coordinates\" : [ [ [ 1.0 , 2.0] , [ 1.0 , 2.0]]]}}}}}",
 				null);
@@ -413,7 +413,7 @@ public class TestMongoDBSelectVisitor {
     
     @Test
     public void testGeoNearFunction() throws Exception {
-    	String query = "SELECT mongo.geonear(user_id, (1.0, 2.0), 22) FROM users";
+    	String query = "SELECT mongo.geonear(user_id, (cast(1.0 as double), cast(2.0 as double)), 22) FROM users";
 		helpExecute(query, "users",
 				"{ \"_m0\" : { \"user_id\" : { \"$near\" : { \"$geometry\" : { \"type\" : \"Point\" , \"coordinates\" : [ [ 1.0 , 2.0]]} , \"$maxDistance\" : 22}}}}",
 				null);
@@ -421,7 +421,7 @@ public class TestMongoDBSelectVisitor {
     
     @Test
     public void testGeoWithinPloygonFunctionInWhere() throws Exception {
-    	String query = "SELECT user_id FROM users where mongo.geoWithin(user_id, 'LineString', ((1.0, 2.0), (1.0, 2.0)))";
+    	String query = "SELECT user_id FROM users where mongo.geoWithin(user_id, 'LineString', ((cast(1.0 as double), cast(2.0 as double)), (cast(1.0 as double), cast(2.0 as double))))";
 		helpExecute(query, "users",
 				"{ \"_m1\" : \"$user_id\"}",
 				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\" , \"coordinates\" : [ [ [ 1.0 , 2.0] , [ 1.0 , 2.0]]]}}}}"				
