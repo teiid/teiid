@@ -43,7 +43,12 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 	private String coreName;
 
 	public SolrConnectionImpl(SolrManagedConnectionFactory config) {
-		this.server = new HttpSolrServer(config.getUrl());
+		String url = config.getUrl();
+		if (!url.endsWith("/")) { //$NON-NLS-1$
+			url = config.getUrl()+"/"; //$NON-NLS-1$
+		}
+		url = url + config.getCoreName();
+		this.server = new HttpSolrServer(url);
 
 		if (config.getSoTimeout() != null) {
 			this.server.setSoTimeout(config.getSoTimeout());
