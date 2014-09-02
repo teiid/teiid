@@ -51,6 +51,7 @@ import org.teiid.json.simple.ParseException;
 import org.teiid.json.simple.SimpleContentHandler;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -134,7 +135,10 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 	        if (customHeaders != null) {
 	        	httpHeaders.putAll(customHeaders);
 	        }
-	        if (arguments.size() > 5) {
+	        if (arguments.size() > 5
+	        		//designer modeled the return value as an out, which will add an argument in the 5th position that is an out
+	        		&& this.procedure.getMetadataObject() != null
+	        		&& this.procedure.getMetadataObject().getParameters().get(0).getType() == Type.ReturnValue) {
 	        	Clob headers = (Clob)arguments.get(5).getArgumentValue().getValue();
 	        	if (headers != null) {
 	        		parseHeader(httpHeaders, headers);
