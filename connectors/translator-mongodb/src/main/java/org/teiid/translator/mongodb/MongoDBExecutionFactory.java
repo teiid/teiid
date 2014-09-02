@@ -119,17 +119,17 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("$ifNull")); //$NON-NLS-1$		
 		
         FunctionMethod method = null;
-        method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$ //$NON-NLS-2$
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL,TypeFacility.RUNTIME_NAMES.BIG_DECIMAL); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$ //$NON-NLS-2$
         method.setProperty(AVOID_PROJECTION, "true");
         
         registerFunctionModifier(FUNC_GEO_NEAR, new AliasModifier("$near"));//$NON-NLS-1$
@@ -156,13 +156,13 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 			Expression south = args.get(4);
 			
 			ArrayList<Expression> points = new ArrayList<Expression>();
-			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(west, north)));
-			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(east, north)));
-			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(east, south)));
-			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(west, south)));
-			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, Arrays.asList(west, north)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.DOUBLE, Arrays.asList(west, north)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.DOUBLE, Arrays.asList(east, north)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.DOUBLE, Arrays.asList(east, south)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.DOUBLE, Arrays.asList(west, south)));
+			points.add(new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.DOUBLE, Arrays.asList(west, north)));
 			
-			Expression coordinates = new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL,  points);			
+			Expression coordinates = new org.teiid.language.Array(TypeFacility.RUNTIME_TYPES.DOUBLE,  points);			
 			
 			Function func = LanguageFactory.INSTANCE.createFunction(this.functionName,
 					Arrays.asList(args.get(0), 
