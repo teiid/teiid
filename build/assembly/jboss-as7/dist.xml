@@ -116,7 +116,34 @@
         <unpack>false</unpack>
         <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
       </binaries>
-    </moduleSet>    
+    </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-olingo</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/olingo/main</outputDirectory>       
+      </binaries>
+    </moduleSet>
+
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        <includes>
+            <include>org.jboss.teiid:teiid-olingo</include>
+        </includes>
+        <binaries>
+            <includeDependencies>false</includeDependencies>
+            <unpack>false</unpack>
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
+            <includes>
+                <include>org.jboss.teiid:teiid-olingo:war</include>
+            </includes>
+        </binaries>
+    </moduleSet>           
 
     <!-- These are Teiid internal dependencies; to make JCA work -->
     <moduleSet>
@@ -164,7 +191,9 @@
         <outputDirectory>modules/system/layers/base/org/jboss/teiid/admin/main</outputDirectory>
       </binaries>
     </moduleSet>    
-    
+
+  
+     
     <!-- ******************************************************** 
         These are built in resource-adapters  
         *********************************************************-->
@@ -205,5 +234,4 @@
     </moduleSet>
         
     </moduleSets>  
-    
 </assembly>

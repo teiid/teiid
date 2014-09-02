@@ -1,0 +1,155 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>teiid-parent</artifactId>
+    <groupId>org.jboss.teiid</groupId>
+        <version>8.9.0.Alpha3-SNAPSHOT</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>teiid-olingo</artifactId>
+  <name>teiid-olingo</name>
+  <description>Teiid OData4 Server module</description>
+  <packaging>war</packaging>
+  
+  
+  <build>
+  <plugins>
+  <plugin>
+     <groupId>org.apache.maven.plugins</groupId>
+     <artifactId>maven-war-plugin</artifactId>
+     <configuration>
+         <archive>
+             <manifestFile>src/main/webapp/META-INF/MANIFEST.MF</manifestFile>             
+         </archive>
+         <archiveClasses>true</archiveClasses>
+         <!-- 
+         <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
+         -->
+     </configuration>
+     <!-- 
+    <executions>
+        <execution>
+            <id>create-assemblies</id>
+            <phase>package</phase>
+            <goals>
+                <goal>war</goal>
+            </goals>
+        </execution>
+    </executions>
+     -->     
+  </plugin>
+  </plugins>
+  </build>
+  
+  <dependencies>
+
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+               
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-client</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-admin</artifactId>
+      <scope>provided</scope>
+    </dependency>    
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-runtime</artifactId>
+      <scope>provided</scope>
+    </dependency>      
+    
+    <dependency>
+      <groupId>org.apache.olingo</groupId>
+      <artifactId>olingo-commons-api</artifactId>
+    </dependency>  
+    
+    <dependency>
+      <groupId>org.apache.olingo</groupId>
+      <artifactId>olingo-commons-core</artifactId>
+    </dependency> 
+        
+    <dependency>
+      <groupId>org.apache.olingo</groupId>
+      <artifactId>olingo-server-api</artifactId>
+    </dependency>  
+    
+    <dependency>
+      <groupId>org.apache.olingo</groupId>
+      <artifactId>olingo-server-core</artifactId>
+    </dependency>          
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-runtime</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency> 
+    
+    <dependency>
+        <groupId>org.jboss.spec.javax.servlet</groupId>
+        <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+        <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>    
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>     
+            
+    <dependency>
+    	<groupId>org.eclipse.jetty</groupId>
+    	<artifactId>jetty-server</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-http</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-client</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <artifactId>translator-loopback</artifactId>
+        <groupId>org.jboss.teiid.connectors</groupId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <artifactId>translator-jdbc</artifactId>
+        <groupId>org.jboss.teiid.connectors</groupId>
+        <scope>test</scope>
+    </dependency>    
+  </dependencies>
+  
+</project>
