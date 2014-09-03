@@ -24,7 +24,6 @@ package org.teiid.jboss;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -70,8 +69,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
     	SecurityHelper ms = buildSecurityHelper();
         
         String domains = "testFile";
-        Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
-        SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
+        final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
         AuthenticationManager authManager = new AuthenticationManager() {
 			public String getSecurityDomain() {
 				return null;
@@ -94,9 +92,15 @@ public class TestJBossSessionServiceImpl extends TestCase {
 		};
         
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
-        securityDomainMap.put("testFile", securityContext); //$NON-NLS-1$
         
-        JBossSessionService jss = new JBossSessionService(securityDomainMap);
+        JBossSessionService jss = new JBossSessionService() {
+        	public SecurityDomainContext getSecurityDomain(String securityDomain) {
+        		if (securityDomain.equals("testFile")) {
+        			return securityContext;
+        		}
+        		return null;
+        	}
+        };
         jss.setSecurityHelper(ms);
         jss.setSecurityDomain(domains);
         
@@ -109,9 +113,8 @@ public class TestJBossSessionServiceImpl extends TestCase {
     	SecurityHelper ms = buildSecurityHelper();
     	
         String domain = "passthrough";
-        Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
 
-        JBossSessionService jss = new JBossSessionService(securityDomainMap);
+        JBossSessionService jss = new JBossSessionService();
         jss.setSecurityHelper(ms);
         jss.setSecurityDomain(domain);
         
@@ -126,21 +129,25 @@ public class TestJBossSessionServiceImpl extends TestCase {
 		final ArrayList<String> domains = new ArrayList<String>();
 		domains.add("somedomain");				
 	
-		Map<String, SecurityDomainContext> securityDomainMap = new HashMap<String, SecurityDomainContext>();
-        SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
+        final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
         
         AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
         Mockito.stub(authManager.isValid(new SimplePrincipal("steve"), "pass1", new Subject())).toReturn(true);
         
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
-        securityDomainMap.put("somedomain", securityContext); //$NON-NLS-1$
 		
-        JBossSessionService jss = new JBossSessionService(securityDomainMap) {
+        JBossSessionService jss = new JBossSessionService() {
         	@Override
         	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
         			throws SessionServiceException {
         		return Mockito.mock(VDBMetaData.class);
         	}
+        	public SecurityDomainContext getSecurityDomain(String securityDomain) {
+        		if (securityDomain.equals("somedomain")) {
+        			return securityContext;
+        		}
+        		return null;
+        	}        	
         };
         jss.setSecurityHelper(buildSecurityHelper());
 		jss.setSecurityDomain("somedomain");
