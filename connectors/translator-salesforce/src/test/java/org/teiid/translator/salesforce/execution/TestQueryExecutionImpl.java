@@ -57,7 +57,7 @@ public class TestQueryExecutionImpl {
 		SObject so = new SObject();
 		so.setType("Account");
 		Element elem = Mockito.mock(Element.class);
-		Mockito.stub(elem.getLocalName()).toReturn("AccountName");
+		Mockito.stub(elem.getLocalName()).toReturn("Name");
 		so.getAny().add(elem);
 		qr.getRecords().add(so);
 		qr.setDone(false);
@@ -65,7 +65,7 @@ public class TestQueryExecutionImpl {
 		so.getAny().add(elem);
 		finalQr.getRecords().add(so);
 		finalQr.setDone(true);
-		Mockito.stub(sfc.query("SELECT Account.AccountName FROM Account", 0, false)).toReturn(qr);
+		Mockito.stub(sfc.query("SELECT Account.Name FROM Account", 0, false)).toReturn(qr);
 		Mockito.stub(sfc.queryMore(null, 0)).toReturn(finalQr);
 		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
 		qei.execute();
