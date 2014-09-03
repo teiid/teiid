@@ -1,6 +1,11 @@
 package org.teiid.translator.salesforce;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.resource.ResourceException;
 
@@ -11,17 +16,26 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.*;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 
-import com.sforce.soap.partner.*;
+import com.sforce.soap.partner.ChildRelationship;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeGlobalSObjectResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
+import com.sforce.soap.partner.Field;
+import com.sforce.soap.partner.FieldType;
+import com.sforce.soap.partner.PicklistEntry;
 
 public class SalesForceMetadataProcessor implements MetadataProcessor<SalesforceConnection>{
 	private MetadataFactory metadataFactory;
 	private SalesforceConnection connection;
 	
 	private Map<String, Table> tableMap = new HashMap<String, Table>();
-	private List<Relationship> relationships = new ArrayList<Relationship>();
+	private Map<String, List<ChildRelationship>> relationships = new LinkedHashMap<String, List<ChildRelationship>>();
 	private boolean hasUpdateableColumn = false;
 	private List<Column> columns;
 	private boolean auditModelFields = false;
@@ -52,6 +66,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	static final String TABLE_SUPPORTS_RETRIEVE = MetadataFactory.SF_URI+"Supports Retrieve"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Search")
 	static final String TABLE_SUPPORTS_SEARCH = MetadataFactory.SF_URI+"Supports Search"; //$NON-NLS-1$
+	@ExtensionMetadataProperty(applicable={Table.class}, datatype=String.class, display="The plural name")
+	public static final String TABLE_LABEL_PLURAL = MetadataFactory.SF_URI+"label_plural"; //$NON-NLS-1$
 	
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Defaulted on Create")
 	static final String COLUMN_DEFAULTED = MetadataFactory.SF_URI+"Defaulted on Create"; //$NON-NLS-1$
@@ -67,7 +83,11 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         
         processMetadata();
         
-        Procedure p1 = metadataFactory.addProcedure("GetUpdated"); //$NON-NLS-1$
+        addProcedrues(metadataFactory);         
+	}
+
+	public static void addProcedrues(MetadataFactory metadataFactory) {
+		Procedure p1 = metadataFactory.addProcedure("GetUpdated"); //$NON-NLS-1$
         p1.setAnnotation("Gets the updated objects"); //$NON-NLS-1$
         ProcedureParameter param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
         param.setAnnotation("ObjectName"); //$NON-NLS-1$
@@ -93,7 +113,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
         param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$       
         metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p2); //$NON-NLS-1$     
-        metadataFactory.addProcedureResultSetColumn("DeletedDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p2); //$NON-NLS-1$        
+        metadataFactory.addProcedureResultSetColumn("DeletedDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p2); //$NON-NLS-1$
 	}
 	
 	public void processMetadata() throws TranslatorException {
@@ -119,43 +139,40 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	}
 
 	private void addRelationships() {
-		for (Iterator<Relationship> iterator = relationships.iterator(); iterator.hasNext();) {
-			Relationship relationship = iterator.next();
-			if (!isModelAuditFields() && isAuditField(relationship.getForeignKeyField())) {
-                continue;
-            }
-
-			Table parent = tableMap.get(NameUtil.normalizeName(relationship.getParentTable()));
-			KeyRecord pk = parent.getPrimaryKey();
-			if (null == pk) {
-                throw new RuntimeException("ERROR !!primary key column not found!!"); //$NON-NLS-1$
-            }
-			ArrayList<String> columnNames = new ArrayList<String>();
-			columnNames.add(pk.getName());
+		for (Map.Entry<String, List<ChildRelationship>> entry : this.relationships.entrySet()) {
+			for (ChildRelationship relationship : entry.getValue()) {
 			
-			
-			Table child = tableMap.get(NameUtil.normalizeName(relationship.getChildTable()));
-			
-			Column col = null;
-			columns = child.getColumns();
-			for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
-				Column column = colIter.next();
-				if(column.getName().equals(relationship.getForeignKeyField())) {
-					col = column;
+				if (!isModelAuditFields() && isAuditField(relationship.getField())) {
+	                continue;
+	            }
+	
+				Table parent = tableMap.get(NameUtil.normalizeName(entry.getKey()));
+				KeyRecord pk = parent.getPrimaryKey();
+				if (null == pk) {
+	                throw new RuntimeException("ERROR !!primary key column not found!!"); //$NON-NLS-1$
+	            }
+				
+				Table child = tableMap.get(NameUtil.normalizeName(relationship.getChildSObject()));
+				
+				Column col = null;
+				columns = child.getColumns();
+				for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
+					Column column = colIter.next();
+					if(column.getName().equals(relationship.getField())) {
+						col = column;
+					}
 				}
+				if (null == col) throw new RuntimeException(
+	                    "ERROR !!foreign key column not found!! " + child.getName() + relationship.getField()); //$NON-NLS-1$
+	
+				
+				String name = "FK_" + parent.getName() + "_" + col.getName();//$NON-NLS-1$ //$NON-NLS-2$
+				ArrayList<String> columnNames = new ArrayList<String>();
+				columnNames.add(col.getName());	
+				ForeignKey fk = metadataFactory.addForiegnKey(name, columnNames, parent.getName(), child);
+				//fk.setNameInSource(relationship.getRelationshipName()); //TODO: only needed for custom relationships 
 			}
-			if (null == col) throw new RuntimeException(
-                    "ERROR !!foreign key column not found!! " + child.getName() + relationship.getForeignKeyField()); //$NON-NLS-1$
-
-			
-			String columnName = "FK_" + parent.getName() + "_" + col.getName();//$NON-NLS-1$ //$NON-NLS-2$
-			ArrayList<String> columnNames2 = new ArrayList<String>();
-			columnNames2.add(col.getName());	
-			metadataFactory.addForiegnKey(columnName, columnNames2, parent.getName(), child);
-	        
-			}
-			
-		
+		}
 	}
 
 	public static boolean isAuditField(String name) {
@@ -193,6 +210,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		table.setProperty(TABLE_SUPPORTS_REPLICATE, String.valueOf(objectMetadata.isReplicateable()));
 		table.setProperty(TABLE_SUPPORTS_RETRIEVE, String.valueOf(objectMetadata.isRetrieveable()));
 		table.setProperty(TABLE_SUPPORTS_SEARCH, String.valueOf(objectMetadata.isSearchable()));
+		table.setProperty(TABLE_LABEL_PLURAL, objectMetadata.getLabelPlural());
+		
 
 		hasUpdateableColumn = false;
 		addColumns(objectMetadata, table);
@@ -206,14 +225,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	private void getRelationships(DescribeSObjectResult objectMetadata) {
 		List<ChildRelationship> children = objectMetadata.getChildRelationships();
 		if(children != null && children.size() != 0) {
-			for (ChildRelationship childRelation : children) {
-				Relationship newRelation = new RelationshipImpl();
-				newRelation.setParentTable(objectMetadata.getName());
-				newRelation.setChildTable(childRelation.getChildSObject());
-				newRelation.setForeignKeyField(childRelation.getField());
-				newRelation.setCascadeDelete(childRelation.isCascadeDelete());
-				relationships.add(newRelation);
-			}
+			this.relationships.put(objectMetadata.getName(), children);
 		}
 	}
 
