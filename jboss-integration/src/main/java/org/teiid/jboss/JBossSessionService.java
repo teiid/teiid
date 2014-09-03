@@ -138,7 +138,7 @@ public class JBossSessionService extends SessionServiceImpl {
 		throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50103, securityDomain));
 	} 	
 	
-	private SecurityDomainContext getSecurityDomain(String securityDomain) {
+	public SecurityDomainContext getSecurityDomain(String securityDomain) {
 		if (securityDomain != null && !securityDomain.isEmpty()) {
 			ServiceName name = ServiceName.JBOSS.append("security", "security-domain", securityDomain); //$NON-NLS-1$ //$NON-NLS-2$
 			ServiceController<SecurityDomainContext> controller = (ServiceController<SecurityDomainContext>) CurrentServiceContainer.getServiceContainer().getService(name);
