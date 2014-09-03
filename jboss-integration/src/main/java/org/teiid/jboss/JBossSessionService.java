@@ -22,7 +22,6 @@
 package org.teiid.jboss;
 
 import java.security.Principal;
-import java.util.Map;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
@@ -30,6 +29,9 @@ import javax.security.auth.login.LoginException;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSException;
 import org.jboss.as.security.plugins.SecurityDomainContext;
+import org.jboss.as.server.CurrentServiceContainer;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.security.AuthenticationManager;
 import org.jboss.security.SecurityContext;
 import org.jboss.security.SimplePrincipal;
@@ -44,13 +46,7 @@ import org.teiid.services.SessionServiceImpl;
 import org.teiid.services.TeiidLoginContext;
 
 public class JBossSessionService extends SessionServiceImpl {
-
-	private Map<String, SecurityDomainContext> securityDomainMap;
 	
-	public JBossSessionService(Map<String, SecurityDomainContext> securityDomainMap) {
-		this.securityDomainMap = securityDomainMap;
-	}
-		
 	@Override
 	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, String domain)
 			throws LoginException {
@@ -59,7 +55,7 @@ public class JBossSessionService extends SessionServiceImpl {
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
     		// this is the configured login for teiid
-    	SecurityDomainContext securityDomainContext = securityDomainMap.get(domain);
+    	SecurityDomainContext securityDomainContext = getSecurityDomain(domain);
     	if (securityDomainContext != null) {
     		AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
     		if (authManager != null) {
@@ -81,7 +77,7 @@ public class JBossSessionService extends SessionServiceImpl {
 	@Override
 	public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
 		
-		SecurityDomainContext securityDomainContext = securityDomainMap.get(securityDomain);
+		SecurityDomainContext securityDomainContext = getSecurityDomain(securityDomain);
 		if (securityDomainContext != null) {
 			AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
 
@@ -141,4 +137,15 @@ public class JBossSessionService extends SessionServiceImpl {
 		}
 		throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50103, securityDomain));
 	} 	
+	
+	private SecurityDomainContext getSecurityDomain(String securityDomain) {
+		if (securityDomain != null && !securityDomain.isEmpty()) {
+			ServiceName name = ServiceName.JBOSS.append("security", "security-domain", securityDomain); //$NON-NLS-1$ //$NON-NLS-2$
+			ServiceController<SecurityDomainContext> controller = (ServiceController<SecurityDomainContext>) CurrentServiceContainer.getServiceContainer().getService(name);
+			if (controller != null) {
+				return controller.getService().getValue();
+			}
+		}
+		return null;
+	}
 }
