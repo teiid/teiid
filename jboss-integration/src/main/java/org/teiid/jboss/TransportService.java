@@ -29,11 +29,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.jboss.as.network.SocketBinding;
-import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
@@ -75,7 +72,6 @@ import org.teiid.transport.WireProtocol;
 public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
 	private transient LogonImpl logon;
 	private SocketConfiguration socketConfig;
-	final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
 	private String authenticationDomain;	
 	private long sessionMaxLimit;
 	private long sessionExpirationTimeLimit;
@@ -117,7 +113,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	public void start(StartContext context) throws StartException {
 		this.setSecurityHelper(new JBossSecurityHelper());
 		this.setVDBRepository(this.getVdbRepository());
-		this.sessionService = new JBossSessionService(this.securityDomains);
+		this.sessionService = new JBossSessionService();
 		if (this.authenticationDomain != null) {
 			this.sessionService.setSecurityDomain(this.authenticationDomain);			
 		}
