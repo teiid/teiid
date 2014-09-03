@@ -173,6 +173,18 @@ public class TestFunctionTree {
     	String hello = "hello";
     	assertEquals(hello, fd.invokeFunction(new Object[] {new BinaryType(hello.getBytes())}, null, null));
     }
+    
+    @Test public void testMultiPartName() throws Exception {
+    	FunctionMethod method = new FunctionMethod(
+    			"x.y.dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+	 	    	Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)), //$NON-NLS-1$ 
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+	 	    	true, Determinism.DETERMINISTIC);
+    	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
+    	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    	assertNotNull(fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
+    	assertNotNull(fl.findFunction("y.dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
+    }
 	
 /*
 
