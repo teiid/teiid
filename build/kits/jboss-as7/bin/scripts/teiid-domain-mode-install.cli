@@ -47,7 +47,7 @@
 
 /profile=ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
-/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
+/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")]) 
 /profile=ha/subsystem=threads/unbounded-queue-thread-pool=teiid-async:add(max-threads=4)
 
 /profile=full-ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
