@@ -193,7 +193,6 @@ public class FunctionTree {
         // Look up function in function map
         functions.add(method);
         
-        int index = -1;
         while(true) {
 	        // Add method to list by function name
 	        List<FunctionMethod> knownMethods = functionsByName.get(methodName);
@@ -230,7 +229,7 @@ public class FunctionTree {
 	        // Store the leaf descriptor in the tree
 	        node.put(DESCRIPTOR_KEY, descriptor);
 	        
-	        index = methodName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR, index+1);
+	        int index = methodName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
 	        if (index == -1) {
 	        	break;
 	        }
