@@ -21,6 +21,16 @@
         <param-name>resteasy.document.expand.entity.references</param-name>
         <param-value>false</param-value>
     </context-param>
+    
+    <!--
+    If you want to restrict access to single VDB, uncomment and provide the VDB name(must be in format vdbName.vdbVersion), 
+    and provide a context name in jboss-web.xml that is not "odata"
+    <context-param>
+        <param-name>allow-vdb</param-name>
+        <param-value>vdbName.1</param-value>
+    </context-param>
+    -->
+     
     <!--   
     In cloud environment or if under a proxy, update the below url with address of the proxy to generate 
     odata links correctly.
