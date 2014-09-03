@@ -44,7 +44,6 @@ import org.teiid.language.Select;
 import org.teiid.language.TableReference;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
@@ -227,7 +226,7 @@ public class InfinispanExecution implements ResultSetExecution {
 			String name = cr.getName();
 			
 			Column c = cr.getMetadataObject();
-			String nis = getNameInSource(c);
+			String nis = c.getSourceName();
 
 			if (nis.equalsIgnoreCase("this")) { //$NON-NLS-1$
 					// the object in cache is being requested
@@ -261,7 +260,7 @@ public class InfinispanExecution implements ResultSetExecution {
 	@Override
 	public void execute() throws TranslatorException {
 	
-		String nameInSource = getNameInSource(((NamedTable)query.getFrom().get(0)).getMetadataObject());
+		String nameInSource = ((NamedTable)query.getFrom().get(0)).getMetadataObject().getSourceName();
 	    
 		// column NIS for a column will be used to query the cache
 	    List<Object> objResults = factory.search(query, nameInSource, connection, executionContext);
@@ -558,15 +557,6 @@ public class InfinispanExecution implements ResultSetExecution {
 	
 	private CompiledScript getCompiledNode(String nodeName) throws ScriptException {
 		return scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + nodeName);
-	}
-	
-
-	private static String getNameInSource(AbstractMetadataRecord c) {
-		String name = c.getNameInSource();
-		if (name == null || name.trim().isEmpty()) {
-			return c.getName();
-		}
-		return name;
 	}
 	
 }

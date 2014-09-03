@@ -1,6 +1,6 @@
 package org.teiid.translator.infinispan.dsl.metadata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -41,16 +41,16 @@ public class TestProtobufMetadataProcessor {
 		System.out.println("Schema: " + metadataDDL);
 		String expected =  "CREATE FOREIGN TABLE Person (\n"
 				+ "\tPersonObject object OPTIONS (NAMEINSOURCE 'this', UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.Object'),\n"
-				+ "\tid integer NOT NULL OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
-				+ "\tname string OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
-				+ "\temail string OPTIONS (SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
+				+ "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
+				+ "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
+				+ "\temail string OPTIONS (NAMEINSOURCE 'email', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\tCONSTRAINT PK_ID PRIMARY KEY(id)\n"
 				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', UPDATABLE TRUE);\n"
 				+ "\n"
 				+ "CREATE FOREIGN TABLE PhoneNumber (\n"
 				+ "\tnumber string OPTIONS (NAMEINSOURCE 'phone.number', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\ttype string OPTIONS (NAMEINSOURCE 'phone.type', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
-				+ "\tid integer NOT NULL OPTIONS (SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
+				+ "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
 				+ "\tCONSTRAINT FK_PERSON FOREIGN KEY(id) REFERENCES Person (id) OPTIONS (NAMEINSOURCE 'phones')\n"
 				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', UPDATABLE TRUE);"
 				;

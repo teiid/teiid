@@ -594,24 +594,6 @@ public class IQueryToLdapSearchParser {
 	}
 	
 	/** 
-	 * Method to get name from the supplied Element
-	 * @param e the supplied Element
-	 * @return the name
-	 */
-    // GHH 20080326 - found that code to fall back on Name if NameInSource
-	// was null wasn't working properly, so replaced with tried and true
-	// code from another custom connector.
-	public static String getNameFromElement(Column e) {
-		String ldapAttributeName = null;
-		ldapAttributeName = e.getNameInSource();
-		if (ldapAttributeName == null || ldapAttributeName.equals("")) { //$NON-NLS-1$
-			ldapAttributeName = e.getName();
-			// If name in source is not set, then fall back to the column name.
-		}
-		return ldapAttributeName;
-	}
-	
-	/** 
 	 * Method to get SELECT Element list from the supplied query
 	 * @param query the supplied Query
 	 * @return the list of SELECT elements

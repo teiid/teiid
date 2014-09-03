@@ -327,7 +327,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	private void addResultToRow(Column modelElement, String resultDistinguishedName, Attributes attrs, List<Object> row) throws TranslatorException {
 
 		String strResult = null;
-		String modelAttrName = IQueryToLdapSearchParser.getNameFromElement(modelElement);
+		String modelAttrName = modelElement.getSourceName();
 		Class<?> modelAttrClass = modelElement.getJavaType();
 		
 		String multivalAttr = modelElement.getDefaultValue();

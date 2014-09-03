@@ -38,7 +38,6 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
@@ -75,7 +74,7 @@ public class ObjectExecution implements ResultSetExecution {
 			String name = null;
 			if (cr.getMetadataObject() != null) {
 				Column c = cr.getMetadataObject();
-				name = getNameInSource(c);
+				name = c.getSourceName();
 			} else {
 				name = cr.getName();
 			}
@@ -97,7 +96,7 @@ public class ObjectExecution implements ResultSetExecution {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
 
-		String nameInSource = getNameInSource(((NamedTable)query.getFrom().get(0)).getMetadataObject());
+		String nameInSource = ((NamedTable)query.getFrom().get(0)).getMetadataObject().getSourceName();
 	    
 	    List<Object> results = factory.search(query, nameInSource, connection, executionContext);
 	    
@@ -150,12 +149,4 @@ public class ObjectExecution implements ResultSetExecution {
 	public void cancel() throws TranslatorException {
 	}
 	
-	public static String getNameInSource(AbstractMetadataRecord c) {
-		String name = c.getNameInSource();
-		if (name == null || name.trim().isEmpty()) {
-			return c.getName();
-		}
-		return name;
-	}
-
 }

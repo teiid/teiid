@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.mongodb;
 
+import static org.teiid.language.visitor.SQLStringVisitor.*;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -32,7 +34,11 @@ import org.teiid.language.Insert;
 import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -41,7 +47,14 @@ import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.mongodb.MongoDocument.MergeDetails;
 import org.teiid.translator.mongodb.MutableDBRef.Association;
 
-import com.mongodb.*;
+import com.mongodb.AggregationOutput;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoException;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 
 public class MongoDBUpdateExecution extends MongoDBBaseExecution implements UpdateExecution {
 	private Command command;
@@ -377,7 +390,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 	private void createIndex(DBCollection collection, KeyRecord record, boolean unique) {
 		BasicDBObject key = new BasicDBObject();
 		for (Column c:record.getColumns()) {
-			key.append(MongoDBSelectVisitor.getRecordName(c), 1);
+			key.append(getRecordName(c), 1);
 		}
 		collection.ensureIndex(key, record.getName(), unique);
 	}

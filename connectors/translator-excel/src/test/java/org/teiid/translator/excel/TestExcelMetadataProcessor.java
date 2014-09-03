@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.excel;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -80,7 +80,7 @@ public class TestExcelMetadataProcessor {
 				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" + 
 				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '13');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '13');";
 		
 		assertEquals(expectedDDL, ddl);
 	}
@@ -99,7 +99,7 @@ public class TestExcelMetadataProcessor {
 				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
 				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '1');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '1');";
 		
 		assertEquals(expectedDDL, ddl);
 	}	
@@ -119,7 +119,7 @@ public class TestExcelMetadataProcessor {
 				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" + 
 				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '14');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '14');";
 		
 		assertEquals(expectedDDL, ddl);
 	}
@@ -138,7 +138,7 @@ public class TestExcelMetadataProcessor {
 				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
 				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
 		
 		assertEquals(expectedDDL, ddl);
 	}		
@@ -158,7 +158,7 @@ public class TestExcelMetadataProcessor {
 				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" + 
 				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '15');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '15');";
 		
 		assertEquals(expectedDDL, ddl);
 	}
@@ -178,7 +178,7 @@ public class TestExcelMetadataProcessor {
 				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
 				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '3');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '3');";
 		
 		assertEquals(expectedDDL, ddl);
 	}	
@@ -199,7 +199,7 @@ public class TestExcelMetadataProcessor {
 				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" + 
 				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '15');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '15');";
 		
 		assertEquals(expectedDDL, ddl);
 	}
@@ -218,7 +218,7 @@ public class TestExcelMetadataProcessor {
 				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
 				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
 				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '3');";
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '3');";
 		
 		assertEquals(expectedDDL, ddl);
 	}
@@ -237,7 +237,7 @@ public class TestExcelMetadataProcessor {
                 "\tLastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
                 "\tAge double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
                 "\tCONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n"+
-                ") OPTIONS (\"teiid_excel:FILE\" 'multi_sheet_empty_names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
+                ") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'multi_sheet_empty_names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
         
         assertEquals(expectedDDL, ddl);
     }	

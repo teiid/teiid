@@ -100,7 +100,7 @@ public class TestIQueryToLdapSearchParser {
     	Iterator<Column> iter = attrList.iterator();
     	Iterator<String> eIter = expectedAttrNameList.iterator();
     	while(iter.hasNext()&&eIter.hasNext()) {
-			String actualName = IQueryToLdapSearchParser.getNameFromElement(iter.next());
+			String actualName = iter.next().getSourceName();
 			String expectedName = eIter.next();
 			assertEquals(actualName, expectedName);
     	}

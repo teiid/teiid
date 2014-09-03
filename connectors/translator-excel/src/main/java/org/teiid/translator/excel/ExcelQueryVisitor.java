@@ -155,10 +155,7 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 	public void visit(NamedTable obj) {
 		this.table = obj.getMetadataObject();
 		this.xlsPath = this.table.getProperty(ExcelMetadataProcessor.FILE, false);
-		this.sheetName = this.table.getNameInSource();
-		if (this.sheetName == null) {
-			this.sheetName = this.table.getName();
-		}
+		this.sheetName = this.table.getSourceName();
 		String firstRow = this.table.getProperty(ExcelMetadataProcessor.FIRST_DATA_ROW_NUMBER, false);
 		if (firstRow != null) {
 			// -1 make it zero based index

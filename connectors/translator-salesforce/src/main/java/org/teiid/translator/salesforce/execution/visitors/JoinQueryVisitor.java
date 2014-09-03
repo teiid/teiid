@@ -54,15 +54,15 @@ public class JoinQueryVisitor extends SelectVisitor {
 			Expression rExp = criteria.getRightExpression();
 			if (isIdColumn(rExp) || isIdColumn(lExp)) {
 				Column rColumn = ((ColumnReference) rExp).getMetadataObject();
-				String rTableName = rColumn.getParent().getNameInSource();
+				String rTableName = rColumn.getParent().getSourceName();
 
 				Column lColumn = ((ColumnReference) lExp).getMetadataObject();
-				String lTableName = lColumn.getParent().getNameInSource();
+				String lTableName = lColumn.getParent().getSourceName();
 
-				if (leftTableInJoin.getNameInSource().equals(rTableName)
-						|| leftTableInJoin.getNameInSource().equals(lTableName)
-						&& rightTableInJoin.getNameInSource().equals(rTableName)
-						|| rightTableInJoin.getNameInSource().equals(lTableName)
+				if (leftTableInJoin.getSourceName().equals(rTableName)
+						|| leftTableInJoin.getSourceName().equals(lTableName)
+						&& rightTableInJoin.getSourceName().equals(rTableName)
+						|| rightTableInJoin.getSourceName().equals(lTableName)
 						&& !rTableName.equals(lTableName)) {
 					// This is the join criteria, the one that is the ID is the parent.
 					Expression fKey = !isIdColumn(lExp) ? lExp : rExp; 
@@ -91,22 +91,22 @@ public class JoinQueryVisitor extends SelectVisitor {
 		}
 		StringBuilder select = new StringBuilder();
 		select.append(SELECT).append(SPACE);
-		addSelect(leftTableInJoin.getNameInSource(), select, true);
+		addSelect(leftTableInJoin.getSourceName(), select, true);
 		select.append(OPEN);
 		
 		StringBuilder subselect = new StringBuilder();
 		subselect.append(SELECT).append(SPACE);
-		addSelect(rightTableInJoin.getNameInSource(), subselect, false);
+		addSelect(rightTableInJoin.getSourceName(), subselect, false);
 		subselect.append(SPACE);
 
 		subselect.append(FROM).append(SPACE);
-		subselect.append(rightTableInJoin.getNameInSource()).append('s');
+		subselect.append(rightTableInJoin.getSourceName()).append('s');
     	subselect.append(CLOSE).append(SPACE);
     	
     	select.append(subselect);
 		
     	select.append(FROM).append(SPACE);
-		select.append(leftTableInJoin.getNameInSource()).append(SPACE);
+		select.append(leftTableInJoin.getSourceName()).append(SPACE);
 		addCriteriaString(select);
 		appendGroupByHaving(select);
 		select.append(limitClause);
@@ -123,7 +123,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 			Expression expression = symbol.getExpression();
 			if (expression instanceof ColumnReference) {
 				Column element = ((ColumnReference) expression).getMetadataObject();
-				String tableName = element.getParent().getNameInSource();
+				String tableName = element.getParent().getSourceName();
 				if(!isParentToChildJoin() && !tableNameInSource.equals(tableName)) {
 					continue;
 				}

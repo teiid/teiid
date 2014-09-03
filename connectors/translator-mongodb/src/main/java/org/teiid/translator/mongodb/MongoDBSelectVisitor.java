@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.mongodb;
 
+import static org.teiid.language.visitor.SQLStringVisitor.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,27 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.Array;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.GroupBy;
-import org.teiid.language.In;
-import org.teiid.language.IsNull;
-import org.teiid.language.Join;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Like;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.OrderBy;
-import org.teiid.language.Select;
-import org.teiid.language.SortSpecification;
+import org.teiid.language.*;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -140,14 +122,6 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
                 append(items[i]);
             }
         }
-    }
-
-	public static String getRecordName(AbstractMetadataRecord object) {
-		String nameInSource = object.getNameInSource();
-        if(nameInSource != null && nameInSource.length() > 0) {
-            return nameInSource;
-        }
-        return object.getName();
     }
 
 	public String getColumnName(ColumnReference obj) {

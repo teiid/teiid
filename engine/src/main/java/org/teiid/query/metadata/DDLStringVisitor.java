@@ -261,7 +261,7 @@ public class DDLStringVisitor {
 		if (record.getAnnotation() != null) {
 			addOption(sb, ANNOTATION, record.getAnnotation());
 		}
-		if (record.getNameInSource() != null && !record.getNameInSource().equals(record.getName())) {
+		if (record.getNameInSource() != null) {
 			addOption(sb, NAMEINSOURCE, record.getNameInSource());
 		}
 	}

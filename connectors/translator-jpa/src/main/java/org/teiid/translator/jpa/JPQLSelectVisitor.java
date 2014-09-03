@@ -272,19 +272,19 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     		}
     		else {
 	    		for (ForeignKey fk:customer.getMetadataObject().getForeignKeys()){
-	    			if (fk.getPrimaryKey().getParent().equals(address.getMetadataObject())) {
+	    			if (fk.getReferenceKey().getParent().equals(address.getMetadataObject())) {
 	    				this.parent = customer;
 	    				this.child = address;
-	    				this.childAttributeName = fk.getNameInSource();
+	    				this.childAttributeName = fk.getSourceName();
 	    				this.parentAttributeName = customer.getName();
 	    			}
 	    		}
 	    		if (this.parent == null) {
 	        		for (ForeignKey fk:address.getMetadataObject().getForeignKeys()){
-	        			if (fk.getPrimaryKey().getParent().equals(customer.getMetadataObject())) {
+	        			if (fk.getReferenceKey().getParent().equals(customer.getMetadataObject())) {
 	            			this.parent = address;
 	            			this.child = customer;
-	        				this.childAttributeName = fk.getNameInSource();
+	        				this.childAttributeName = fk.getSourceName();
 	        				this.parentAttributeName = customer.getName();
 	        			}
 	        		}    			

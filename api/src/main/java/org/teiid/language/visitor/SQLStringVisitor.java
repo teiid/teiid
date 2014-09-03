@@ -71,12 +71,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         return getRecordName(object);
     }
 
+    /**
+	 * Get the name in source or the name if
+	 * the name in source is not set.
+	 * @return
+	 */
 	public static String getRecordName(AbstractMetadataRecord object) {
-		String nameInSource = object.getNameInSource();
-        if(nameInSource != null && nameInSource.length() > 0) {
-            return nameInSource;
-        }
-        return object.getName();
+		return object.getSourceName();
     }
     
     /**

@@ -66,10 +66,7 @@ public class SpreadsheetSQLVisitor extends SQLStringVisitor {
 		append(obj.getDerivedColumns());
 		if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
 			NamedTable table = ((NamedTable)obj.getFrom().get(0));
-			this.worksheetTitle = table.getName();
-			if (table.getMetadataObject().getNameInSource() != null) {
-				this.worksheetTitle = table.getMetadataObject().getNameInSource();
-			}
+			this.worksheetTitle = table.getMetadataObject().getSourceName();
 		}
 		if (obj.getWhere() != null) {
 			buffer.append(Tokens.SPACE).append(WHERE).append(Tokens.SPACE);

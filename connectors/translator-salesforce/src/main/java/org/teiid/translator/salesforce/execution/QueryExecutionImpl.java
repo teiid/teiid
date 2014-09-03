@@ -251,18 +251,18 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
 				Column element = ((ColumnReference)visitor.getSelectSymbolMetadata(j)).getMetadataObject();
 				AbstractMetadataRecord table = element.getParent();
-				if(table.getNameInSource().equals(sObjectName)) {
-					Integer index = visitor.getSelectSymbolIndex(sObjectName + ':' + element.getNameInSource());
+				if(table.getSourceName().equals(sObjectName)) {
+					Integer index = visitor.getSelectSymbolIndex(sObjectName + ':' + element.getSourceName());
 					// id gets dropped from the result if it is not the
 					// first field in the querystring. Add it back in.
 					if (null == index) {
-						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
+						if (element.getSourceName().equalsIgnoreCase("id")) { //$NON-NLS-1$
 							setElementValueInColumn(j, sObject.getElementsByTagName(SF_ID), row);
 						} else {
 							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
 						}
 					} else {
-						Object cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0); //$NON-NLS-1$
+						Object cell = sObject.getElementsByTagName("sf:" + element.getSourceName()).item(0); //$NON-NLS-1$
 						setElementValueInColumn(j, cell, row);
 					}
 				}
@@ -280,18 +280,18 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			if (ex instanceof ColumnReference) {
 				Column element = ((ColumnReference)ex).getMetadataObject();
 				Table table = (Table)element.getParent();
-				if(table.getNameInSource().equals(sObject.getType()) || AGGREGATE_RESULT.equalsIgnoreCase(sObject.getType())) {
-					Integer index = fieldToIndexMap.get(element.getNameInSource());
+				if(table.getSourceName().equals(sObject.getType()) || AGGREGATE_RESULT.equalsIgnoreCase(sObject.getType())) {
+					Integer index = fieldToIndexMap.get(element.getSourceName());
 					// id gets dropped from the result if it is not the
 					// first field in the querystring. Add it back in.
 					if (null == index) {
-						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
+						if (element.getSourceName().equalsIgnoreCase("id")) { //$NON-NLS-1$
 							setValueInColumn(j, sObject.getId(), result);
 						} else {
-							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
+							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getSourceName()); //$NON-NLS-1$
 						}
 					} else {
-						Object cell = getCellDatum(element.getNameInSource(), element.getJavaType(), (Element)fields.get(index));
+						Object cell = getCellDatum(element.getSourceName(), element.getJavaType(), (Element)fields.get(index));
 						setValueInColumn(j, cell, result);
 					}
 				}

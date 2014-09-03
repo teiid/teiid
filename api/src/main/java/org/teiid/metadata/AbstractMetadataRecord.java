@@ -89,6 +89,18 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	}
 	
 	/**
+	 * Get the name in source or the name if
+	 * the name in source is not set.
+	 * @return
+	 */
+	public String getSourceName() {
+		if (this.nameInSource != null && this.nameInSource.length() > 0) {
+			return this.nameInSource;
+		}
+		return getName();
+	}
+	
+	/**
      * WARNING - The name returned by this method may be ambiguous and
      * is not SQL safe - it may need quoted/escaped
      */

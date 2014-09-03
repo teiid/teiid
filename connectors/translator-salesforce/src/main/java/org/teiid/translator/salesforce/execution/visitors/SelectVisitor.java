@@ -82,13 +82,9 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			selectSymbolIndexToElement.put(index, expression);
 			if (expression instanceof ColumnReference) {
 				Column element = ((ColumnReference) expression).getMetadataObject();
-				String qualifiedName = element.getParent().getNameInSource() + ':' + element.getNameInSource();
+				String qualifiedName = element.getParent().getSourceName() + ':' + element.getSourceName();
 				selectSymbolNameToIndex .put(qualifiedName, index);
-				String nameInSource = element.getNameInSource();
-				if (null == nameInSource || nameInSource.length() == 0) {
-					exceptions.add(new TranslatorException("name in source is null or empty for column "+ symbol.toString())); //$NON-NLS-1$
-					continue;
-				}
+				String nameInSource = element.getSourceName();
 				if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
 					idIndex = index;
 				}
@@ -118,7 +114,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	        String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
 	        objectSupportsRetrieve = Boolean.valueOf(table.getProperty(Constants.SUPPORTS_RETRIEVE, true));
 	        if (!Boolean.valueOf(supportsQuery)) {
-	            throw new TranslatorException(table.getNameInSource() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
+	            throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 			loadColumnMetadata(obj);
 		} catch (TranslatorException ce) {
@@ -149,7 +145,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		result.append(SPACE);
 
 		result.append(FROM).append(SPACE);
-		result.append(table.getNameInSource()).append(SPACE);
+		result.append(table.getSourceName()).append(SPACE);
 		addCriteriaString(result);
 		appendGroupByHaving(result);
 		//result.append(orderByClause).append(SPACE);

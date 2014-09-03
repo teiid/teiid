@@ -290,7 +290,7 @@ public class BaseQueryExecution {
 					if (isComplex) {
 						List<OProperty<?>> embeddedProperties = (List<OProperty<?>>)value;
 						for (OProperty prop:embeddedProperties) {
-							if (prop.getName().equals(columns[i].getNameInSource())) {
+							if (prop.getName().equals(columns[i].getSourceName())) {
 								value = prop.getValue();
 								break;
 							}

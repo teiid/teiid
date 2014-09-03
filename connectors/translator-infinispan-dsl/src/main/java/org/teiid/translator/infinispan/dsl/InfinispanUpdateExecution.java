@@ -34,16 +34,7 @@ import javax.script.SimpleScriptContext;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.SetClause;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -136,8 +127,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			} catch (IllegalAccessException e) {
 			}
 
-			String cacheName = insert.getTable().getMetadataObject()
-					.getNameInSource();
+			String cacheName = insert.getTable().getMetadataObject().getSourceName();
 
 			ForeignKey fk = getForeignKeyColumn(insert.getTable());
 			String fkeyColNIS = null;
@@ -271,7 +261,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			fkeyColNIS = getForeignKeyNIS(delete.getTable(), fk);			
 		}		
 			
-		String cacheName = delete.getTable().getMetadataObject().getNameInSource();
+		String cacheName = delete.getTable().getMetadataObject().getSourceName();
 
 		if (fkeyColNIS == null && keyCol == null) {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {delete.getTable().getName()}));
@@ -384,7 +374,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	// Private method to actually do an update operation. 
 	private void handleUpdate(Update update) throws TranslatorException {
 
-		String cacheName = update.getTable().getMetadataObject().getNameInSource();
+		String cacheName = update.getTable().getMetadataObject().getSourceName();
 
 		// Find all the objects that meet the criteria for updating
 		List<Object> toUpdate = this.executionFactory.search(update, cacheName,
@@ -487,7 +477,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		if (fk != null) {
 			if (fk.getReferenceKey() != null) {
 				Column fkeyCol = fk.getReferenceKey().getColumns().get(0);
-				fkeyColNIS = fkeyCol.getNameInSource();
+				fkeyColNIS = fkeyCol.getSourceName();
 			} else if (fk.getReferenceColumns() != null) {
 				fkeyColNIS = fk.getReferenceColumns().get(0);
 			}

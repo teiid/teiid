@@ -58,7 +58,7 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		result.append(SELECT).append(SPACE);
 		result.append("Id").append(SPACE); //$NON-NLS-1$
 		result.append(FROM).append(SPACE);
-		result.append(table.getNameInSource()).append(SPACE);
+		result.append(table.getSourceName()).append(SPACE);
 		addCriteriaString(result);
 		return result.toString();
 	}

@@ -74,7 +74,7 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 
 	@Override
 	public void execute() throws TranslatorException {
-		String name = getCommand().getMetadataObject().getNameInSource();
+		String name = getCommand().getMetadataObject().getSourceName();
 		if (name == null) {
 			name = getCommand().getProcedureName();
 		}

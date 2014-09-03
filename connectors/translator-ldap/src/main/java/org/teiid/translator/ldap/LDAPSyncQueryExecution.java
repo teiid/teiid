@@ -162,7 +162,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 		ArrayList<Column> modelAttrList = searchDetails.getElementList();
 		String[] attrs = new String[modelAttrList.size()];
 		for (int i = 0; i < attrs.length; i++) {
-			attrs[i] = (IQueryToLdapSearchParser.getNameFromElement(modelAttrList.get(i)));
+			attrs[i] = modelAttrList.get(i).getSourceName();
 		}
 
 		ctrls.setSearchScope(searchDetails.getSearchScope());

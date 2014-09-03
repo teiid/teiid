@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.solr;
 
+import static org.teiid.language.visitor.SQLStringVisitor.*;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -87,7 +89,7 @@ public class SolrUpdateExecution implements UpdateExecution {
 	private void performUpdate(Delete obj) throws TranslatorException {
 		Table table = obj.getTable().getMetadataObject();
 		KeyRecord pk = table.getPrimaryKey();
-		final String id = SolrSQLHierarchyVistor.getRecordName(pk.getColumns().get(0));
+		final String id = getRecordName(pk.getColumns().get(0));
 
 		if (obj.getParameterValues() != null) {
 			throw new TranslatorException(SolrPlugin.Event.TEIID20008, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20008));
@@ -237,12 +239,12 @@ public class SolrUpdateExecution implements UpdateExecution {
 	private Select buildSelectQuery(Insert insert) throws TranslatorException {
 		Table table = insert.getTable().getMetadataObject();
 		KeyRecord pk = table.getPrimaryKey();
-		final String id = SolrSQLHierarchyVistor.getRecordName(pk.getColumns().get(0));
+		final String id = getRecordName(pk.getColumns().get(0));
 		
 		NamedTable g = insert.getTable(); 
         List<DerivedColumn> symbols = new ArrayList<DerivedColumn>();
         for (Column column:table.getColumns()){
-        	String columnName = SolrSQLHierarchyVistor.getRecordName(column);
+        	String columnName = getRecordName(column);
         	symbols.add(new DerivedColumn(columnName, new ColumnReference(g, columnName, column, column.getJavaType()))); 	
         }
         

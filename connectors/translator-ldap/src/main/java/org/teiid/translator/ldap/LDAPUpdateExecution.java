@@ -394,21 +394,11 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// This is an exact copy of the method with the same name in
 	// IQueryToLdapSearchParser - really should be in a utility class
 	private String getNameFromElement(ColumnReference e) {
-		String ldapAttributeName = null;
-		String elementNameDirect = e.getName();
-		if (elementNameDirect == null) {
-		} else {
-		}
 		AbstractMetadataRecord mdObject = e.getMetadataObject();
 		if (mdObject == null) {
 			return "";  //$NON-NLS-1$
 		}
-		ldapAttributeName = mdObject.getNameInSource();
-		if(ldapAttributeName == null || ldapAttributeName.equals("")) {	   //$NON-NLS-1$	
-			ldapAttributeName = mdObject.getName();
-			//	If name in source is not set, then fall back to the column name.
-		}
-		return ldapAttributeName;
+		return mdObject.getSourceName();
 	}
 
 

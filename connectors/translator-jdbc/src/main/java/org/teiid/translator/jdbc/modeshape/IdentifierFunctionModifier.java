@@ -59,10 +59,10 @@ public class IdentifierFunctionModifier extends FunctionModifier {
     			ColumnReference cr = (ColumnReference)expr;
     			Column c = cr.getMetadataObject();
     			if (c != null) {
-    				if ("\"mode:properties\"".equalsIgnoreCase(c.getNameInSource())) { //$NON-NLS-1$
+    				if ("\"mode:properties\"".equalsIgnoreCase(c.getSourceName())) { //$NON-NLS-1$
     					dotAll = true;
     					useSelector = true;
-    				} else if ("\"jcr:path\"".equalsIgnoreCase(c.getNameInSource())) { //$NON-NLS-1$
+    				} else if ("\"jcr:path\"".equalsIgnoreCase(c.getSourceName())) { //$NON-NLS-1$
     					useSelector = true;
     				}
     			}

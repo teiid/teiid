@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.infinispan.dsl;
 
+import static org.teiid.language.visitor.SQLStringVisitor.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,11 +36,8 @@ import org.infinispan.query.dsl.SortOrder;
 import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
-
-
 
 /**
  * DSLSearch will parse the WHERE criteria and build the search query(s)
@@ -101,7 +100,7 @@ public final class DSLSearch   {
 		    for (SortSpecification spec:sss) {
 		    	Expression exp = spec.getExpression();
 		    	Column mdIDElement = ((ColumnReference) exp).getMetadataObject();
-		    	qb = qb.orderBy(mdIDElement.getNameInSource(), SortOrder.DESC);
+		    	qb = qb.orderBy(mdIDElement.getSourceName(), SortOrder.DESC);
 		    }
 	    }
 	    	
@@ -257,40 +256,40 @@ public final class DSLSearch   {
 		switch (op) {
 		case NE:
 			if (fcbc == null) {
-				return queryBuilder.not().having(getNameInSource(mdIDElement)).eq(value);
+				return queryBuilder.not().having(getRecordName(mdIDElement)).eq(value);
 			} 
-			return fcbc.not().having(getNameInSource(mdIDElement)).eq(value);
+			return fcbc.not().having(getRecordName(mdIDElement)).eq(value);
 			
 
 		case EQ:
 			if (fcbc == null ) {
-				return queryBuilder.having(getNameInSource(mdIDElement)).eq(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).eq(value);
 			}
-			return fcbc.having(getNameInSource(mdIDElement)).eq(value);
+			return fcbc.having(getRecordName(mdIDElement)).eq(value);
 
 		case GT:
 			if (fcbc == null) {
-				return queryBuilder.having(getNameInSource(mdIDElement)).gt(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).gt(value);
 			}
-			return fcbc.having(getNameInSource(mdIDElement)).gt(value);
+			return fcbc.having(getRecordName(mdIDElement)).gt(value);
 
 		case GE:
 			if (fcbc == null) {
-				return queryBuilder.having(getNameInSource(mdIDElement)).gte(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).gte(value);
 			}
-			return fcbc.having(getNameInSource(mdIDElement)).gte(value);
+			return fcbc.having(getRecordName(mdIDElement)).gte(value);
 
 		case LT:
 			if (fcbc == null) {
-				return queryBuilder.having(getNameInSource(mdIDElement)).lt(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).lt(value);
 			}
-			return fcbc.having(getNameInSource(mdIDElement)).lt(value);
+			return fcbc.having(getRecordName(mdIDElement)).lt(value);
 			
 		case LE:
 			if (fcbc == null) {
-				return queryBuilder.having(getNameInSource(mdIDElement)).lte(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).lte(value);
 			}
-			return fcbc.having(getNameInSource(mdIDElement)).lte(value);
+			return fcbc.having(getRecordName(mdIDElement)).lte(value);
 
 		default:
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25050, new Object[] { op, "NE, EQ, GT, GE, LT, LE" }));
@@ -326,9 +325,9 @@ public final class DSLSearch   {
 			Column col = ((ColumnReference) lhs).getMetadataObject();
 
 			if (fcbc == null) {
-				return  queryBuilder.having(getNameInSource(col)).in(v);
+				return  queryBuilder.having(getRecordName(col)).in(v);
 			}
-			return fcbc.having(getNameInSource(col)).in(v);
+			return fcbc.having(getRecordName(col)).in(v);
 		}
 		return null;
 	}
@@ -357,9 +356,9 @@ public final class DSLSearch   {
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
 			if (fcbc == null) {
-				return queryBuilder.having(getNameInSource(c)).like(value);
+				return queryBuilder.having(getRecordName(c)).like(value);
 			}
-			return fcbc.having(getNameInSource(c)).like(value);
+			return fcbc.having(getRecordName(c)).like(value);
 		} 
 		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25052, new Object[] { literalExp.toString(), "LIKE" }));
 
@@ -374,9 +373,9 @@ public final class DSLSearch   {
 		Column c =  ((ColumnReference) exp).getMetadataObject();
 
 		if (fcbc == null) {
-			return queryBuilder.having(getNameInSource(c)).isNull();
+			return queryBuilder.having(getRecordName(c)).isNull();
 		}
-		return fcbc.having(getNameInSource(c)).isNull();
+		return fcbc.having(getRecordName(c)).isNull();
 
 	}	
 
@@ -414,12 +413,4 @@ public final class DSLSearch   {
 		return sb.toString();
 	}
 	
-	public static String getNameInSource(AbstractMetadataRecord c) {
-		String name = c.getNameInSource();
-		if (name == null || name.trim().isEmpty()) {
-			return c.getName();
-		}
-		return name;
-	}
-
 }

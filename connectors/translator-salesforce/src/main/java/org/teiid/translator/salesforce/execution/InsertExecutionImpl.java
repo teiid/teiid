@@ -131,7 +131,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 		List<JAXBElement> elements = new ArrayList<JAXBElement>();
 		for(int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();
-			QName qname = new QName(column.getNameInSource());
+			QName qname = new QName(column.getSourceName());
 			Object value = values.get(i);
 			
 			if (value == null) {
@@ -177,17 +177,17 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 				Column column = element.getMetadataObject();
 				Object value = values.get(i);
 				if (value == null) {
-					sobj.setField(column.getNameInSource(),  null);
+					sobj.setField(column.getSourceName(),  null);
 					continue;
 				}
 				if (DataTypeManager.getRuntimeType(value.getClass()).equals(DataTypeManager.DefaultDataClasses.STRING)) {
-					sobj.setField(column.getNameInSource(),  Util.stripQutes((String)value));	
+					sobj.setField(column.getSourceName(),  Util.stripQutes((String)value));	
 				}
 				else if (DataTypeManager.getRuntimeType(value.getClass()).equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-					sobj.setField(column.getNameInSource(), SDF.format(value));
+					sobj.setField(column.getSourceName(), SDF.format(value));
 				}
 				else {
-					sobj.setField(column.getNameInSource(), value.toString());
+					sobj.setField(column.getSourceName(), value.toString());
 				}
 			}
 			rows.add(sobj);

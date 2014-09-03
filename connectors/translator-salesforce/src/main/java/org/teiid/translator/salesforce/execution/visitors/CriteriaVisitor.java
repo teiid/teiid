@@ -184,7 +184,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         Expression columnExpression = expressions.get(0);
         Column column = ((ColumnReference)columnExpression).getMetadataObject();
         StringBuffer criterion = new StringBuffer();
-        criterion.append(column.getNameInSource()).append(SPACE).append(funcName);
+        criterion.append(column.getSourceName()).append(SPACE).append(funcName);
         addFunctionParams((Literal)expressions.get(1), criterion);
         criteriaList.add(criterion.toString());
     }
@@ -192,7 +192,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     private void appendMultiselectIn( Column column,
                                       In criteria ) {
         StringBuffer result = new StringBuffer();
-        result.append(column.getNameInSource()).append(SPACE);
+        result.append(column.getSourceName()).append(SPACE);
         if (criteria.isNegated()) {
             result.append(EXCLUDES).append(SPACE);
         } else {
@@ -260,7 +260,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
             queryString.append(getValue(rExp, false));
             criteriaList.add(queryString.toString());
 
-            if (lExpr instanceof ColumnReference && "IsDeleted".equalsIgnoreCase(((ColumnReference)lExpr).getMetadataObject().getNameInSource())) { //$NON-NLS-1$
+            if (lExpr instanceof ColumnReference && "IsDeleted".equalsIgnoreCase(((ColumnReference)lExpr).getMetadataObject().getSourceName())) { //$NON-NLS-1$
                 Literal isDeletedLiteral = (Literal)compCriteria.getRightExpression();
                 Boolean isDeleted = (Boolean)isDeletedLiteral.getValue();
                 if (isDeleted) {
@@ -272,9 +272,9 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 
 	void appendColumnReference(StringBuilder queryString,
 			ColumnReference ref) {
-		queryString.append(ref.getMetadataObject().getParent().getNameInSource());
+		queryString.append(ref.getMetadataObject().getParent().getSourceName());
 		queryString.append('.');
-		queryString.append(ref.getMetadataObject().getNameInSource());
+		queryString.append(ref.getMetadataObject().getSourceName());
 	}
 
     private void appendCriteria( In criteria ) {
@@ -372,12 +372,12 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         table = group.getMetadataObject();
         String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
         if (!Boolean.valueOf(supportsQuery)) {
-            throw new TranslatorException(table.getNameInSource() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
         }
         List<Column> columnIds = table.getColumns();
         for (Column element : columnIds) {
             // influences queryAll behavior
-            if (element.getNameInSource().equals("IsDeleted")) { //$NON-NLS-1$
+            if (element.getSourceName().equals("IsDeleted")) { //$NON-NLS-1$
                 String isDeleted = element.getDefaultValue();
                 if (Boolean.parseBoolean(isDeleted)) {
                     this.queryAll = true;
@@ -390,7 +390,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         boolean result = false;
         if (expression instanceof ColumnReference) {
             Column element = ((ColumnReference)expression).getMetadataObject();
-            String nameInSource = element.getNameInSource();
+            String nameInSource = element.getSourceName();
             if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
                 result = true;
             }
@@ -433,7 +433,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     }
 
     public String getTableName() throws TranslatorException {
-        return table.getNameInSource();
+        return table.getSourceName();
     }
     
     protected void addCriteriaString(StringBuilder result) {

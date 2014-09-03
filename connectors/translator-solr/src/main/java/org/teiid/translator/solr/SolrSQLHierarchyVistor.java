@@ -21,9 +21,8 @@
  */
 package org.teiid.translator.solr;
 
-import static org.teiid.language.SQLConstants.Reserved.FALSE;
-import static org.teiid.language.SQLConstants.Reserved.NULL;
-import static org.teiid.language.SQLConstants.Reserved.TRUE;
+import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,25 +33,13 @@ import java.util.Stack;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.Like;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.OrderBy;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.jdbc.FunctionModifier;
-
 
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
@@ -84,14 +71,6 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		query.addField(expr);
 		fieldNameList.add(expr);
 	}
-
-	public static String getRecordName(AbstractMetadataRecord object) {
-		String nameInSource = object.getNameInSource();
-        if(nameInSource != null && nameInSource.length() > 0) {
-            return nameInSource;
-        }
-        return object.getName();
-    }
 
 	public static String getColumnName(ColumnReference obj) {
 		String elemShortName = null;

@@ -35,8 +35,8 @@ import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
@@ -64,7 +64,7 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 				ColumnReference element = clause.getSymbol();
 				Column column = element.getMetadataObject();
 				String val = ((Literal) clause.getValue()).toString();
-				JAXBElement messageElem = new JAXBElement(new QName(column.getNameInSource()), String.class, Util.stripQutes(val));
+				JAXBElement messageElem = new JAXBElement(new QName(column.getSourceName()), String.class, Util.stripQutes(val));
 				elements.add(messageElem);
 			}
 
