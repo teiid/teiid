@@ -36,6 +36,7 @@ public class ODataServlet extends HttpServletDispatcher {
 
 	private ODataServletContainerDispatcher dispatcher;
 	private ServletBootstrap bootstrap;
+	private boolean changeRoot = true;
 	
 	@Override
 	public void init(ServletConfig servletConfig) throws ServletException {
@@ -45,18 +46,21 @@ public class ODataServlet extends HttpServletDispatcher {
 		this.bootstrap = new ServletBootstrap(servletConfig);
 		this.servletContainerDispatcher.init(servletConfig.getServletContext(),bootstrap, this, this);
 		this.servletContainerDispatcher.getDispatcher().getDefaultContextObjects().put(ServletConfig.class, servletConfig);
+		this.changeRoot = (servletConfig.getServletContext().getInitParameter("allow-vdb") == null); //$NON-NLS-1$
 	}
 
 	public void service(String httpMethod, HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String path = request.getPathInfo();
-		int idx = path.indexOf('/', 1);
-		if (idx != -1) {
-			String vdb = path.substring(1, idx);
-			this.dispatcher.setServletMapping(vdb);
-		}
-		else {
-			String vdb = path.substring(1);
-			this.dispatcher.setServletMapping(vdb);			
+		if (this.changeRoot) {
+			String path = request.getPathInfo();
+			int idx = path.indexOf('/', 1);
+			if (idx != -1) {
+				String vdb = path.substring(1, idx);
+				this.dispatcher.setServletMapping(vdb);
+			}
+			else {
+				String vdb = path.substring(1);
+				this.dispatcher.setServletMapping(vdb);			
+			}
 		}
 		this.dispatcher.service(httpMethod, request, response, true);
 	}

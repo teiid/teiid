@@ -64,12 +64,17 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 		int version = 1;
 		String uri = uriInfo.getBaseUri().getRawPath();
 		int idx = uri.indexOf("/odata/"); //$NON-NLS-1$
-		int endIdx = uri.indexOf('/', idx+7);
-		if (endIdx == -1) {
-			vdbName = uri.substring(idx+7);
-		}
+		if (idx != -1) {
+			int endIdx = uri.indexOf('/', idx+7);
+			if (endIdx == -1) {
+				vdbName = uri.substring(idx+7);
+			}
+			else {
+				vdbName = uri.substring(idx+7, endIdx);
+			}
+		} 
 		else {
-			vdbName = uri.substring(idx+7, endIdx);
+			vdbName = getInitParameters().getProperty("allow-vdb"); //$NON-NLS-1$		
 		}
 		
 		int versionIdx = vdbName.indexOf('.');
