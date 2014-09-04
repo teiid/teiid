@@ -41,9 +41,8 @@ CREATE FOREIGN TABLE Account (
     SLASerialNumber__c string(10) OPTIONS (NAMEINSOURCE 'SLASerialNumber__c', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
     SLAExpirationDate__c date OPTIONS (NAMEINSOURCE 'SLAExpirationDate__c', NATIVE_TYPE 'date', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Account', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Accounts', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'true', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'ChildAccounts')
+) OPTIONS (NAMEINSOURCE 'Account', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'true', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE AccountContactRole (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -53,9 +52,9 @@ CREATE FOREIGN TABLE AccountContactRole (
     Role string(40) OPTIONS (NAMEINSOURCE 'Role', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Business User,Decision Maker,Economic Buyer,Economic Decision Maker,Evaluator,Executive Sponsor,Influencer,Technical Buyer,Other'),
     IsPrimary boolean OPTIONS (NAMEINSOURCE 'IsPrimary', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id)
-) OPTIONS (NAMEINSOURCE 'AccountContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Account Contact Role', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'AccountContactRoles'),
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'AccountContactRoles')
+) OPTIONS (NAMEINSOURCE 'AccountContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AccountFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -75,10 +74,8 @@ CREATE FOREIGN TABLE AccountFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'AccountFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Account Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'AccountFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AccountHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -88,8 +85,8 @@ CREATE FOREIGN TABLE AccountHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id)
-) OPTIONS (NAMEINSOURCE 'AccountHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Account History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'AccountHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AccountPartner (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -101,11 +98,10 @@ CREATE FOREIGN TABLE AccountPartner (
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ReversePartnerId string(18) OPTIONS (NAMEINSOURCE 'ReversePartnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountFromId FOREIGN KEY(AccountFromId) REFERENCES Account (Id),
-    CONSTRAINT FK_Account_AccountToId FOREIGN KEY(AccountToId) REFERENCES Account (Id),
-    CONSTRAINT FK_AccountPartner_ReversePartnerId FOREIGN KEY(ReversePartnerId) REFERENCES AccountPartner (Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id)
-) OPTIONS (NAMEINSOURCE 'AccountPartner', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Account Partner', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountFromId FOREIGN KEY(AccountFromId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'AccountPartnersFrom'),
+    CONSTRAINT FK_Account_AccountToId FOREIGN KEY(AccountToId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'AccountPartnersTo'),
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'AccountPartners')
+) OPTIONS (NAMEINSOURCE 'AccountPartner', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AccountShare (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -118,10 +114,8 @@ CREATE FOREIGN TABLE AccountShare (
     RowCause string(40) OPTIONS (NAMEINSOURCE 'RowCause', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Owner,Manual,Rule,ImplicitChild,ImplicitParent,Team,Territory,TerritoryManual,TerritoryRule'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'AccountShare', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Account Share', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Shares')
+) OPTIONS (NAMEINSOURCE 'AccountShare', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ActivityHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -149,18 +143,17 @@ CREATE FOREIGN TABLE ActivityHistory (
     ReminderDateTime timestamp OPTIONS (NAMEINSOURCE 'ReminderDateTime', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsReminderSet boolean OPTIONS (NAMEINSOURCE 'IsReminderSet', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ActivityHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Activity History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories'),
+    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'ActivityHistories')
+) OPTIONS (NAMEINSOURCE 'ActivityHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AdditionalNumber (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -169,14 +162,13 @@ CREATE FOREIGN TABLE AdditionalNumber (
     Name string(80) OPTIONS (NAMEINSOURCE 'Name', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Phone string(40) OPTIONS (NAMEINSOURCE 'Phone', NATIVE_TYPE 'phone', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_CallCenter_CallCenterId FOREIGN KEY(CallCenterId) REFERENCES CallCenter (Id)
-) OPTIONS (NAMEINSOURCE 'AdditionalNumber', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Additional Directory Numbers', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'AdditionalNumber', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AggregateResult (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'AggregateResult', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Aggregate Result', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'AggregateResult', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ApexClass (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -189,7 +181,7 @@ CREATE FOREIGN TABLE ApexClass (
     Body string(1000000) OPTIONS (NAMEINSOURCE 'Body', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LengthWithoutComments integer OPTIONS (NAMEINSOURCE 'LengthWithoutComments', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'ApexClass', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Apex Classes', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+) OPTIONS (NAMEINSOURCE 'ApexClass', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE ApexComponent (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -202,7 +194,7 @@ CREATE FOREIGN TABLE ApexComponent (
     ControllerKey string(255) OPTIONS (NAMEINSOURCE 'ControllerKey', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Markup string(1048576) OPTIONS (NAMEINSOURCE 'Markup', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'ApexComponent', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Visualforce Components', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+) OPTIONS (NAMEINSOURCE 'ApexComponent', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE ApexLog (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -215,9 +207,8 @@ CREATE FOREIGN TABLE ApexLog (
     DurationMilliseconds integer OPTIONS (NAMEINSOURCE 'DurationMilliseconds', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     StartTime timestamp OPTIONS (NAMEINSOURCE 'StartTime', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Location string(40) OPTIONS (NAMEINSOURCE 'Location', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Monitoring,SystemLog,HeapDump,Preserved'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__LogUserId FOREIGN KEY(LogUserId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ApexLog', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Apex Debug Log', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'ApexLog', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ApexPage (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -230,7 +221,7 @@ CREATE FOREIGN TABLE ApexPage (
     ControllerKey string(255) OPTIONS (NAMEINSOURCE 'ControllerKey', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Markup string(1048576) OPTIONS (NAMEINSOURCE 'Markup', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'ApexPage', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Visualforce Pages', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+) OPTIONS (NAMEINSOURCE 'ApexPage', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE ApexTrigger (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -252,7 +243,7 @@ CREATE FOREIGN TABLE ApexTrigger (
     Body string(1000000) OPTIONS (NAMEINSOURCE 'Body', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LengthWithoutComments integer OPTIONS (NAMEINSOURCE 'LengthWithoutComments', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'ApexTrigger', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Apex Triggers', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+) OPTIONS (NAMEINSOURCE 'ApexTrigger', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE Approval (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -263,9 +254,8 @@ CREATE FOREIGN TABLE Approval (
     RequestComment string OPTIONS (NAMEINSOURCE 'RequestComment', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ApproveComment string OPTIONS (NAMEINSOURCE 'ApproveComment', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Approval', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Approval', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'Approvals')
+) OPTIONS (NAMEINSOURCE 'Approval', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Asset (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -284,10 +274,10 @@ CREATE FOREIGN TABLE Asset (
     Quantity double OPTIONS (NAMEINSOURCE 'Quantity', NATIVE_TYPE 'double', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Description string(32000) OPTIONS (NAMEINSOURCE 'Description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Product2_Product2Id FOREIGN KEY(Product2Id) REFERENCES Product2 (Id)
-) OPTIONS (NAMEINSOURCE 'Asset', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Assets', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Assets'),
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Assets'),
+    CONSTRAINT FK_Product2_Product2Id FOREIGN KEY(Product2Id) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'Assets')
+) OPTIONS (NAMEINSOURCE 'Asset', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE AssetFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -307,10 +297,8 @@ CREATE FOREIGN TABLE AssetFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'AssetFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Asset Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'AssetFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AssignmentRule (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -318,7 +306,7 @@ CREATE FOREIGN TABLE AssignmentRule (
     SobjectType string(40) OPTIONS (NAMEINSOURCE 'SobjectType', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Case,Lead'),
     Active boolean OPTIONS (NAMEINSOURCE 'Active', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'AssignmentRule', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Assignment Rules', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'AssignmentRule', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE AsyncApexJob (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -334,10 +322,8 @@ CREATE FOREIGN TABLE AsyncApexJob (
     ParentJobId string(18) OPTIONS (NAMEINSOURCE 'ParentJobId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LastProcessed string(15) OPTIONS (NAMEINSOURCE 'LastProcessed', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LastProcessedOffset integer OPTIONS (NAMEINSOURCE 'LastProcessedOffset', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ApexClass_ApexClassId FOREIGN KEY(ApexClassId) REFERENCES ApexClass (Id),
-    CONSTRAINT FK_AsyncApexJob_ParentJobId FOREIGN KEY(ParentJobId) REFERENCES AsyncApexJob (Id)
-) OPTIONS (NAMEINSOURCE 'AsyncApexJob', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Apex Jobs', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'AsyncApexJob', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Attachment (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -351,21 +337,20 @@ CREATE FOREIGN TABLE Attachment (
     OwnerId string(18) OPTIONS (NAMEINSOURCE 'OwnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     Description string(500) OPTIONS (NAMEINSOURCE 'Description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_EmailTemplate_ParentId FOREIGN KEY(ParentId) REFERENCES EmailTemplate (Id),
-    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Attachment', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Attachments', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_EmailTemplate_ParentId FOREIGN KEY(ParentId) REFERENCES EmailTemplate (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'Attachments'),
+    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id) OPTIONS (NAMEINSOURCE 'Attachments')
+) OPTIONS (NAMEINSOURCE 'Attachment', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE BrandTemplate (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -376,7 +361,7 @@ CREATE FOREIGN TABLE BrandTemplate (
     Value_ string(32000) OPTIONS (NAMEINSOURCE 'Value', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NamespacePrefix string(15) OPTIONS (NAMEINSOURCE 'NamespacePrefix', UPDATABLE FALSE, NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'BrandTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Letterheads', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'BrandTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE BusinessHours (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -399,7 +384,7 @@ CREATE FOREIGN TABLE BusinessHours (
     SaturdayEndTime time OPTIONS (NAMEINSOURCE 'SaturdayEndTime', NATIVE_TYPE 'time', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     TimeZoneSidKey string(40) OPTIONS (NAMEINSOURCE 'TimeZoneSidKey', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Pacific/Kiritimati,Pacific/Enderbury,Pacific/Tongatapu,Pacific/Chatham,Asia/Kamchatka,Pacific/Auckland,Pacific/Fiji,Pacific/Norfolk,Pacific/Guadalcanal,Australia/Lord_Howe,Australia/Brisbane,Australia/Sydney,Australia/Adelaide,Australia/Darwin,Asia/Seoul,Asia/Tokyo,Asia/Hong_Kong,Asia/Kuala_Lumpur,Asia/Manila,Asia/Shanghai,Asia/Singapore,Asia/Taipei,Australia/Perth,Asia/Bangkok,Asia/Ho_Chi_Minh,Asia/Jakarta,Asia/Rangoon,Asia/Dhaka,Asia/Yekaterinburg,Asia/Kathmandu,Asia/Colombo,Asia/Kolkata,Asia/Karachi,Asia/Tashkent,Asia/Kabul,Asia/Tehran,Asia/Dubai,Asia/Tbilisi,Europe/Moscow,Africa/Nairobi,Asia/Baghdad,Asia/Jerusalem,Asia/Kuwait,Asia/Riyadh,Europe/Athens,Europe/Bucharest,Europe/Helsinki,Europe/Istanbul,Europe/Minsk,Africa/Cairo,Africa/Johannesburg,Europe/Amsterdam,Europe/Berlin,Europe/Brussels,Europe/Paris,Europe/Prague,Europe/Rome,Africa/Algiers,Europe/Dublin,Europe/Lisbon,Europe/London,GMT,Atlantic/Cape_Verde,Atlantic/South_Georgia,America/St_Johns,America/Argentina/Buenos_Aires,America/Halifax,America/Sao_Paulo,Atlantic/Bermuda,America/Indiana/Indianapolis,America/New_York,America/Puerto_Rico,America/Santiago,America/Caracas,America/Bogota,America/Chicago,America/Lima,America/Mexico_City,America/Panama,America/Denver,America/El_Salvador,America/Los_Angeles,America/Phoenix,America/Tijuana,America/Anchorage,Pacific/Honolulu,Pacific/Niue,Pacific/Pago_Pago'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'BusinessHours', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Business Hours', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'BusinessHours', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE BusinessProcess (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -409,7 +394,7 @@ CREATE FOREIGN TABLE BusinessProcess (
     TableEnumOrId string(40) OPTIONS (NAMEINSOURCE 'TableEnumOrId', UPDATABLE FALSE, NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Case,Lead,Opportunity,Solution'),
     IsActive boolean OPTIONS (NAMEINSOURCE 'IsActive', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'BusinessProcess', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Business Process', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'BusinessProcess', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CallCenter (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -417,7 +402,7 @@ CREATE FOREIGN TABLE CallCenter (
     InternalName string(240) OPTIONS (NAMEINSOURCE 'InternalName', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Version double OPTIONS (NAMEINSOURCE 'Version', NATIVE_TYPE 'double', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'CallCenter', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Call Centers', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'CallCenter', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Campaign (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -447,10 +432,8 @@ CREATE FOREIGN TABLE Campaign (
     LastActivityDate date OPTIONS (NAMEINSOURCE 'LastActivityDate', UPDATABLE FALSE, NATIVE_TYPE 'date', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CampaignMemberRecordTypeId string(18) OPTIONS (NAMEINSOURCE 'CampaignMemberRecordTypeId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_RecordType_CampaignMemberRecordTypeId FOREIGN KEY(CampaignMemberRecordTypeId) REFERENCES RecordType (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Campaign', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Campaigns', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'ChildCampaigns')
+) OPTIONS (NAMEINSOURCE 'Campaign', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE CampaignFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -470,10 +453,8 @@ CREATE FOREIGN TABLE CampaignFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CampaignFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Campaign Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'CampaignFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CampaignMember (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -485,10 +466,10 @@ CREATE FOREIGN TABLE CampaignMember (
     HasResponded boolean OPTIONS (NAMEINSOURCE 'HasResponded', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     FirstRespondedDate date OPTIONS (NAMEINSOURCE 'FirstRespondedDate', UPDATABLE FALSE, NATIVE_TYPE 'date', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Campaign_CampaignId FOREIGN KEY(CampaignId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Lead_LeadId FOREIGN KEY(LeadId) REFERENCES Lead (Id)
-) OPTIONS (NAMEINSOURCE 'CampaignMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Campaign Members', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Campaign_CampaignId FOREIGN KEY(CampaignId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'CampaignMembers'),
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'CampaignMembers'),
+    CONSTRAINT FK_Lead_LeadId FOREIGN KEY(LeadId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'CampaignMembers')
+) OPTIONS (NAMEINSOURCE 'CampaignMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CampaignMemberStatus (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -498,9 +479,8 @@ CREATE FOREIGN TABLE CampaignMemberStatus (
     SortOrder integer OPTIONS (NAMEINSOURCE 'SortOrder', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDefault boolean OPTIONS (NAMEINSOURCE 'IsDefault', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     HasResponded boolean OPTIONS (NAMEINSOURCE 'HasResponded', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Campaign_CampaignId FOREIGN KEY(CampaignId) REFERENCES Campaign (Id)
-) OPTIONS (NAMEINSOURCE 'CampaignMemberStatus', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Campaign Member Status', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'CampaignMemberStatus', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CampaignShare (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -510,10 +490,8 @@ CREATE FOREIGN TABLE CampaignShare (
     RowCause string(40) OPTIONS (NAMEINSOURCE 'RowCause', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Owner,Manual,Rule,ImplicitChild,ImplicitParent,Team,Territory,TerritoryManual,TerritoryRule'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Campaign_CampaignId FOREIGN KEY(CampaignId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CampaignShare', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Campaign Share', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Campaign_CampaignId FOREIGN KEY(CampaignId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'Shares')
+) OPTIONS (NAMEINSOURCE 'CampaignShare', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Case_ (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -543,12 +521,11 @@ CREATE FOREIGN TABLE Case_ (
     Product__c string(255) OPTIONS (NAMEINSOURCE 'Product__c', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'GC1040,GC1060,GC3020,GC3040,GC3060,GC5020,GC5040,GC5060,GC1020'),
     PotentialLiability__c string(255) OPTIONS (NAMEINSOURCE 'PotentialLiability__c', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'No,Yes'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_AssetId FOREIGN KEY(AssetId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Case', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Cases', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Cases'),
+    CONSTRAINT FK_Asset_AssetId FOREIGN KEY(AssetId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'Cases'),
+    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'Cases'),
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Cases')
+) OPTIONS (NAMEINSOURCE 'Case', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE CaseComment (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -557,8 +534,8 @@ CREATE FOREIGN TABLE CaseComment (
     CommentBody string OPTIONS (NAMEINSOURCE 'CommentBody', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id)
-) OPTIONS (NAMEINSOURCE 'CaseComment', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Comments', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'CaseComments')
+) OPTIONS (NAMEINSOURCE 'CaseComment', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE CaseContactRole (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -567,9 +544,9 @@ CREATE FOREIGN TABLE CaseContactRole (
     Role string(40) OPTIONS (NAMEINSOURCE 'Role', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Technical Contact,Business Contact,Decision Maker,Other'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__CasesId FOREIGN KEY(CasesId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id)
-) OPTIONS (NAMEINSOURCE 'CaseContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Contact Role', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Case__CasesId FOREIGN KEY(CasesId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'CaseContactRoles'),
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'CaseContactRoles')
+) OPTIONS (NAMEINSOURCE 'CaseContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -589,10 +566,8 @@ CREATE FOREIGN TABLE CaseFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CaseFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'CaseFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -602,8 +577,8 @@ CREATE FOREIGN TABLE CaseHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__CaseId FOREIGN KEY(CaseId) REFERENCES Case_ (Id)
-) OPTIONS (NAMEINSOURCE 'CaseHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Case__CaseId FOREIGN KEY(CaseId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'CaseHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseShare (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -613,10 +588,8 @@ CREATE FOREIGN TABLE CaseShare (
     RowCause string(40) OPTIONS (NAMEINSOURCE 'RowCause', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Owner,Manual,Rule,ImplicitChild,ImplicitParent,Team,Territory,TerritoryManual,TerritoryRule'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__CaseId FOREIGN KEY(CaseId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CaseShare', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Share', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Case__CaseId FOREIGN KEY(CaseId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'Shares')
+) OPTIONS (NAMEINSOURCE 'CaseShare', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseSolution (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -624,9 +597,9 @@ CREATE FOREIGN TABLE CaseSolution (
     SolutionId string(18) OPTIONS (NAMEINSOURCE 'SolutionId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__CaseId FOREIGN KEY(CaseId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Solution_SolutionId FOREIGN KEY(SolutionId) REFERENCES Solution (Id)
-) OPTIONS (NAMEINSOURCE 'CaseSolution', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Solution', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Case__CaseId FOREIGN KEY(CaseId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'CaseSolutions'),
+    CONSTRAINT FK_Solution_SolutionId FOREIGN KEY(SolutionId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'CaseSolutions')
+) OPTIONS (NAMEINSOURCE 'CaseSolution', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseStatus (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -635,7 +608,7 @@ CREATE FOREIGN TABLE CaseStatus (
     IsDefault boolean OPTIONS (NAMEINSOURCE 'IsDefault', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsClosed boolean OPTIONS (NAMEINSOURCE 'IsClosed', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'CaseStatus', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Status Value', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'CaseStatus', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseTeamMember (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -644,10 +617,8 @@ CREATE FOREIGN TABLE CaseTeamMember (
     TeamTemplateMemberId string(18) OPTIONS (NAMEINSOURCE 'TeamTemplateMemberId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     TeamRoleId string(18) OPTIONS (NAMEINSOURCE 'TeamRoleId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_MemberId FOREIGN KEY(MemberId) REFERENCES Contact (Id),
-    CONSTRAINT FK_User__MemberId FOREIGN KEY(MemberId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CaseTeamMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Team Member', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'TeamMembers')
+) OPTIONS (NAMEINSOURCE 'CaseTeamMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseTeamRole (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -655,42 +626,38 @@ CREATE FOREIGN TABLE CaseTeamRole (
     AccessLevel string(40) OPTIONS (NAMEINSOURCE 'AccessLevel', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'None,Read,Edit'),
     PreferencesVisibleInCSP boolean OPTIONS (NAMEINSOURCE 'PreferencesVisibleInCSP', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'CaseTeamRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Case Team Member Role', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'CaseTeamRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseTeamTemplate (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     Name string(80) OPTIONS (NAMEINSOURCE 'Name', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Description string(300) OPTIONS (NAMEINSOURCE 'Description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'CaseTeamTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Predefined Case Team', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'CaseTeamTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseTeamTemplateMember (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     TeamTemplateId string(18) OPTIONS (NAMEINSOURCE 'TeamTemplateId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     MemberId string(18) OPTIONS (NAMEINSOURCE 'MemberId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     TeamRoleId string(18) OPTIONS (NAMEINSOURCE 'TeamRoleId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_MemberId FOREIGN KEY(MemberId) REFERENCES Contact (Id),
-    CONSTRAINT FK_User__MemberId FOREIGN KEY(MemberId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CaseTeamTemplateMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Predefined Case Team Member', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'CaseTeamTemplateMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CaseTeamTemplateRecord (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ParentId string(18) OPTIONS (NAMEINSOURCE 'ParentId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     TeamTemplateId string(18) OPTIONS (NAMEINSOURCE 'TeamTemplateId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id)
-) OPTIONS (NAMEINSOURCE 'CaseTeamTemplateRecord', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Predefined Case Team Record', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'TeamTemplateRecords')
+) OPTIONS (NAMEINSOURCE 'CaseTeamTemplateRecord', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CategoryData (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CategoryNodeId string(18) OPTIONS (NAMEINSOURCE 'CategoryNodeId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     RelatedSobjectId string(18) OPTIONS (NAMEINSOURCE 'RelatedSobjectId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_CategoryNode_CategoryNodeId FOREIGN KEY(CategoryNodeId) REFERENCES CategoryNode (Id),
-    CONSTRAINT FK_Solution_RelatedSobjectId FOREIGN KEY(RelatedSobjectId) REFERENCES Solution (Id)
-) OPTIONS (NAMEINSOURCE 'CategoryData', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Category Data', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'CategoryData', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CategoryNode (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -698,9 +665,8 @@ CREATE FOREIGN TABLE CategoryNode (
     MasterLabel string(40) OPTIONS (NAMEINSOURCE 'MasterLabel', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     SortOrder integer OPTIONS (NAMEINSOURCE 'SortOrder', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     SortStyle string(40) OPTIONS (NAMEINSOURCE 'SortStyle', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'custom,alphabetical'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_CategoryNode_ParentId FOREIGN KEY(ParentId) REFERENCES CategoryNode (Id)
-) OPTIONS (NAMEINSOURCE 'CategoryNode', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Category Nodes', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'CategoryNode', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ClientBrowser (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -708,9 +674,8 @@ CREATE FOREIGN TABLE ClientBrowser (
     FullUserAgent string(1024) OPTIONS (NAMEINSOURCE 'FullUserAgent', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ProxyInfo string(1024) OPTIONS (NAMEINSOURCE 'ProxyInfo', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LastUpdate timestamp OPTIONS (NAMEINSOURCE 'LastUpdate', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__UsersId FOREIGN KEY(UsersId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ClientBrowser', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Client Browser', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'ClientBrowser', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CollaborationGroup (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -725,9 +690,8 @@ CREATE FOREIGN TABLE CollaborationGroup (
     InformationTitle string(30) OPTIONS (NAMEINSOURCE 'InformationTitle', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InformationBody string(1000) OPTIONS (NAMEINSOURCE 'InformationBody', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     HasPrivateFieldsAccess boolean OPTIONS (NAMEINSOURCE 'HasPrivateFieldsAccess', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CollaborationGroup', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Groups', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'CollaborationGroup', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE CollaborationGroupFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -747,10 +711,8 @@ CREATE FOREIGN TABLE CollaborationGroupFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CollaborationGroupFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Group Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'CollaborationGroupFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CollaborationGroupMember (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -758,9 +720,9 @@ CREATE FOREIGN TABLE CollaborationGroupMember (
     MemberId string(18) OPTIONS (NAMEINSOURCE 'MemberId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NotificationFrequency string(40) OPTIONS (NAMEINSOURCE 'NotificationFrequency', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true', "teiid_sf:Picklist Values" 'P,D,W,N'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_CollaborationGroup_CollaborationGroupId FOREIGN KEY(CollaborationGroupId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_User__MemberId FOREIGN KEY(MemberId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CollaborationGroupMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Group Members', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_CollaborationGroup_CollaborationGroupId FOREIGN KEY(CollaborationGroupId) REFERENCES CollaborationGroup (Id) OPTIONS (NAMEINSOURCE 'GroupMembers'),
+    CONSTRAINT FK_User__MemberId FOREIGN KEY(MemberId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'GroupMemberships')
+) OPTIONS (NAMEINSOURCE 'CollaborationGroupMember', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CollaborationGroupMemberRequest (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -769,9 +731,8 @@ CREATE FOREIGN TABLE CollaborationGroupMemberRequest (
     ResponseMessage string(255) OPTIONS (NAMEINSOURCE 'ResponseMessage', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Status string(40) OPTIONS (NAMEINSOURCE 'Status', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Pending,Accepted,Declined'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_CollaborationGroup_CollaborationGroupId FOREIGN KEY(CollaborationGroupId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_User__RequesterId FOREIGN KEY(RequesterId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CollaborationGroupMemberRequest', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Group Member Requests', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_CollaborationGroup_CollaborationGroupId FOREIGN KEY(CollaborationGroupId) REFERENCES CollaborationGroup (Id) OPTIONS (NAMEINSOURCE 'GroupMemberRequests')
+) OPTIONS (NAMEINSOURCE 'CollaborationGroupMemberRequest', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CollaborationInvitation (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -782,12 +743,8 @@ CREATE FOREIGN TABLE CollaborationInvitation (
     InvitedUserEmailNormalized string(80) OPTIONS (NAMEINSOURCE 'InvitedUserEmailNormalized', NATIVE_TYPE 'email', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Status string(40) OPTIONS (NAMEINSOURCE 'Status', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Sent,Accepted,Canceled'),
     OptionalMessage string(255) OPTIONS (NAMEINSOURCE 'OptionalMessage', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_CollaborationGroup_SharedEntityId FOREIGN KEY(SharedEntityId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_CollaborationInvitation_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationInvitation (Id),
-    CONSTRAINT FK_User__InviterId FOREIGN KEY(InviterId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__SharedEntityId FOREIGN KEY(SharedEntityId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CollaborationInvitation', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Chatter Invitations', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'CollaborationInvitation', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Community (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -795,7 +752,7 @@ CREATE FOREIGN TABLE Community (
     Description string(1000) OPTIONS (NAMEINSOURCE 'Description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsActive boolean OPTIONS (NAMEINSOURCE 'IsActive', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'Community', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Zones', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'Community', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Contact (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -840,10 +797,8 @@ CREATE FOREIGN TABLE Contact (
     Level__c string(255) OPTIONS (NAMEINSOURCE 'Level__c', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Secondary,Tertiary,Primary'),
     Languages__c string(100) OPTIONS (NAMEINSOURCE 'Languages__c', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Contact_ReportsToId FOREIGN KEY(ReportsToId) REFERENCES Contact (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Contact', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contacts', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'true', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Contacts')
+) OPTIONS (NAMEINSOURCE 'Contact', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'true', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE ContactFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -863,10 +818,8 @@ CREATE FOREIGN TABLE ContactFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ContactFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contact Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'ContactFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContactHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -876,8 +829,8 @@ CREATE FOREIGN TABLE ContactHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id)
-) OPTIONS (NAMEINSOURCE 'ContactHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contact History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'ContactHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContactShare (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -887,10 +840,8 @@ CREATE FOREIGN TABLE ContactShare (
     RowCause string(40) OPTIONS (NAMEINSOURCE 'RowCause', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Owner,Manual,Rule,ImplicitChild,ImplicitParent,Team,Territory,TerritoryManual,TerritoryRule'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ContactShare', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contact Share', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Shares')
+) OPTIONS (NAMEINSOURCE 'ContactShare', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContentDocument (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -899,10 +850,8 @@ CREATE FOREIGN TABLE ContentDocument (
     Title string(255) OPTIONS (NAMEINSOURCE 'Title', UPDATABLE FALSE, NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     PublishStatus string(40) OPTIONS (NAMEINSOURCE 'PublishStatus', UPDATABLE FALSE, NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'U,P,R'),
     LatestPublishedVersionId string(18) OPTIONS (NAMEINSOURCE 'LatestPublishedVersionId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_LatestPublishedVersionId FOREIGN KEY(LatestPublishedVersionId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ContentDocument', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Content', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'ContentDocument', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContentDocumentFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -922,10 +871,8 @@ CREATE FOREIGN TABLE ContentDocumentFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ContentDocumentFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'ContentDocument Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'ContentDocumentFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContentDocumentHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -935,8 +882,8 @@ CREATE FOREIGN TABLE ContentDocumentHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentDocument_ContentDocumentId FOREIGN KEY(ContentDocumentId) REFERENCES ContentDocument (Id)
-) OPTIONS (NAMEINSOURCE 'ContentDocumentHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Content Document History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_ContentDocument_ContentDocumentId FOREIGN KEY(ContentDocumentId) REFERENCES ContentDocument (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'ContentDocumentHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContentDocumentLink (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -945,28 +892,8 @@ CREATE FOREIGN TABLE ContentDocumentLink (
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ShareType string(40) OPTIONS (NAMEINSOURCE 'ShareType', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'V,C,I'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_CollaborationGroup_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_Contact_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContentDocument_ContentDocumentId FOREIGN KEY(ContentDocumentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentWorkspace_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES ContentWorkspace (Id),
-    CONSTRAINT FK_Contract_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Dashboard_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_DashboardComponent_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_Event_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Organization_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Organization (Id),
-    CONSTRAINT FK_Product2_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Report_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Report (Id),
-    CONSTRAINT FK_Site_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Site (Id),
-    CONSTRAINT FK_Solution_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__LinkedEntityId FOREIGN KEY(LinkedEntityId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ContentDocumentLink', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Content Document Link', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_ContentDocument_ContentDocumentId FOREIGN KEY(ContentDocumentId) REFERENCES ContentDocument (Id) OPTIONS (NAMEINSOURCE 'ContentDocumentLinks')
+) OPTIONS (NAMEINSOURCE 'ContentDocumentLink', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContentVersion (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -995,29 +922,8 @@ CREATE FOREIGN TABLE ContentVersion (
     FirstPublishLocationId string(18) OPTIONS (NAMEINSOURCE 'FirstPublishLocationId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Origin string(40) OPTIONS (NAMEINSOURCE 'Origin', UPDATABLE FALSE, NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'C,H'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_CollaborationGroup_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_Contact_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContentDocument_ContentDocumentId FOREIGN KEY(ContentDocumentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentWorkspace_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES ContentWorkspace (Id),
-    CONSTRAINT FK_Contract_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Dashboard_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_DashboardComponent_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_Event_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Report_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Report (Id),
-    CONSTRAINT FK_Site_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Site (Id),
-    CONSTRAINT FK_Solution_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__ContentModifiedById FOREIGN KEY(ContentModifiedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__FirstPublishLocationId FOREIGN KEY(FirstPublishLocationId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ContentVersion', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Content', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_ContentDocument_ContentDocumentId FOREIGN KEY(ContentDocumentId) REFERENCES ContentDocument (Id) OPTIONS (NAMEINSOURCE 'ContentVersions')
+) OPTIONS (NAMEINSOURCE 'ContentVersion', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE ContentVersionHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1027,8 +933,8 @@ CREATE FOREIGN TABLE ContentVersionHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_ContentVersionId FOREIGN KEY(ContentVersionId) REFERENCES ContentVersion (Id)
-) OPTIONS (NAMEINSOURCE 'ContentVersionHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Content Version History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_ContentVersion_ContentVersionId FOREIGN KEY(ContentVersionId) REFERENCES ContentVersion (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'ContentVersionHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContentWorkspace (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1038,9 +944,8 @@ CREATE FOREIGN TABLE ContentWorkspace (
     DefaultRecordTypeId string(18) OPTIONS (NAMEINSOURCE 'DefaultRecordTypeId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsRestrictContentTypes boolean OPTIONS (NAMEINSOURCE 'IsRestrictContentTypes', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsRestrictLinkedContentTypes boolean OPTIONS (NAMEINSOURCE 'IsRestrictLinkedContentTypes', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_RecordType_DefaultRecordTypeId FOREIGN KEY(DefaultRecordTypeId) REFERENCES RecordType (Id)
-) OPTIONS (NAMEINSOURCE 'ContentWorkspace', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Libraries', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'ContentWorkspace', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContentWorkspaceDoc (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1048,10 +953,8 @@ CREATE FOREIGN TABLE ContentWorkspaceDoc (
     ContentDocumentId string(18) OPTIONS (NAMEINSOURCE 'ContentDocumentId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsOwner boolean OPTIONS (NAMEINSOURCE 'IsOwner', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentDocument_ContentDocumentId FOREIGN KEY(ContentDocumentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentWorkspace_ContentWorkspaceId FOREIGN KEY(ContentWorkspaceId) REFERENCES ContentWorkspace (Id)
-) OPTIONS (NAMEINSOURCE 'ContentWorkspaceDoc', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Library Documents', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'ContentWorkspaceDoc', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Contract (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1082,12 +985,10 @@ CREATE FOREIGN TABLE Contract (
     LastApprovedDate timestamp OPTIONS (NAMEINSOURCE 'LastApprovedDate', UPDATABLE FALSE, NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LastActivityDate date OPTIONS (NAMEINSOURCE 'LastActivityDate', UPDATABLE FALSE, NATIVE_TYPE 'date', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Contact_CustomerSignedId FOREIGN KEY(CustomerSignedId) REFERENCES Contact (Id),
-    CONSTRAINT FK_User__ActivatedById FOREIGN KEY(ActivatedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__CompanySignedId FOREIGN KEY(CompanySignedId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Contract', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contracts', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Contracts'),
+    CONSTRAINT FK_Contact_CustomerSignedId FOREIGN KEY(CustomerSignedId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'ContractsSigned'),
+    CONSTRAINT FK_User__CompanySignedId FOREIGN KEY(CompanySignedId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'ContractsSigned')
+) OPTIONS (NAMEINSOURCE 'Contract', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE ContractContactRole (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1097,9 +998,9 @@ CREATE FOREIGN TABLE ContractContactRole (
     IsPrimary boolean OPTIONS (NAMEINSOURCE 'IsPrimary', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_ContractId FOREIGN KEY(ContractId) REFERENCES Contract (Id)
-) OPTIONS (NAMEINSOURCE 'ContractContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contract Contact Role', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'ContractContactRoles'),
+    CONSTRAINT FK_Contract_ContractId FOREIGN KEY(ContractId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'ContractContactRoles')
+) OPTIONS (NAMEINSOURCE 'ContractContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContractFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1119,10 +1020,8 @@ CREATE FOREIGN TABLE ContractFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ContractFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contract Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'ContractFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContractHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1132,8 +1031,8 @@ CREATE FOREIGN TABLE ContractHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contract_ContractId FOREIGN KEY(ContractId) REFERENCES Contract (Id)
-) OPTIONS (NAMEINSOURCE 'ContractHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contract History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contract_ContractId FOREIGN KEY(ContractId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'ContractHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ContractStatus (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1142,7 +1041,7 @@ CREATE FOREIGN TABLE ContractStatus (
     IsDefault boolean OPTIONS (NAMEINSOURCE 'IsDefault', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     StatusCode string(40) OPTIONS (NAMEINSOURCE 'StatusCode', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Draft,InApproval,Activated,Terminated,Expired'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'ContractStatus', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Contract Status Value', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'ContractStatus', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE CronTrigger (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1155,9 +1054,8 @@ CREATE FOREIGN TABLE CronTrigger (
     TimeZoneSidKey string(40) OPTIONS (NAMEINSOURCE 'TimeZoneSidKey', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Pacific/Kiritimati,Pacific/Enderbury,Pacific/Tongatapu,Pacific/Chatham,Asia/Kamchatka,Pacific/Auckland,Pacific/Fiji,Pacific/Norfolk,Pacific/Guadalcanal,Australia/Lord_Howe,Australia/Brisbane,Australia/Sydney,Australia/Adelaide,Australia/Darwin,Asia/Seoul,Asia/Tokyo,Asia/Hong_Kong,Asia/Kuala_Lumpur,Asia/Manila,Asia/Shanghai,Asia/Singapore,Asia/Taipei,Australia/Perth,Asia/Bangkok,Asia/Ho_Chi_Minh,Asia/Jakarta,Asia/Rangoon,Asia/Dhaka,Asia/Yekaterinburg,Asia/Kathmandu,Asia/Colombo,Asia/Kolkata,Asia/Karachi,Asia/Tashkent,Asia/Kabul,Asia/Tehran,Asia/Dubai,Asia/Tbilisi,Europe/Moscow,Africa/Nairobi,Asia/Baghdad,Asia/Jerusalem,Asia/Kuwait,Asia/Riyadh,Europe/Athens,Europe/Bucharest,Europe/Helsinki,Europe/Istanbul,Europe/Minsk,Africa/Cairo,Africa/Johannesburg,Europe/Amsterdam,Europe/Berlin,Europe/Brussels,Europe/Paris,Europe/Prague,Europe/Rome,Africa/Algiers,Europe/Dublin,Europe/Lisbon,Europe/London,GMT,Atlantic/Cape_Verde,Atlantic/South_Georgia,America/St_Johns,America/Argentina/Buenos_Aires,America/Halifax,America/Sao_Paulo,Atlantic/Bermuda,America/Indiana/Indianapolis,America/New_York,America/Puerto_Rico,America/Santiago,America/Caracas,America/Bogota,America/Chicago,America/Lima,America/Mexico_City,America/Panama,America/Denver,America/El_Salvador,America/Los_Angeles,America/Phoenix,America/Tijuana,America/Anchorage,Pacific/Honolulu,Pacific/Niue,Pacific/Pago_Pago'),
     OwnerId string(18) OPTIONS (NAMEINSOURCE 'OwnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     TimesTriggered integer OPTIONS (NAMEINSOURCE 'TimesTriggered', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'CronTrigger', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Scheduled Jobs', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'CronTrigger', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Dashboard (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1178,19 +1076,16 @@ CREATE FOREIGN TABLE Dashboard (
     BackgroundEnd integer OPTIONS (NAMEINSOURCE 'BackgroundEnd', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     BackgroundDirection string(40) OPTIONS (NAMEINSOURCE 'BackgroundDirection', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'TopToBottom,LeftToRight,Diagonal'),
     Type string(40) OPTIONS (NAMEINSOURCE 'Type', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'SpecifiedUser,LoggedInUser,MyTeamUser'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Folder_FolderId FOREIGN KEY(FolderId) REFERENCES Folder (Id),
-    CONSTRAINT FK_User__FolderId FOREIGN KEY(FolderId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__RunningUserId FOREIGN KEY(RunningUserId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Dashboard', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Dashboards', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Dashboard', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE DashboardComponent (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     Name string(80) OPTIONS (NAMEINSOURCE 'Name', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     DashboardId string(18) OPTIONS (NAMEINSOURCE 'DashboardId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Dashboard_DashboardId FOREIGN KEY(DashboardId) REFERENCES Dashboard (Id)
-) OPTIONS (NAMEINSOURCE 'DashboardComponent', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Dashboard Components', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Dashboard_DashboardId FOREIGN KEY(DashboardId) REFERENCES Dashboard (Id) OPTIONS (NAMEINSOURCE 'DashboardComponents')
+) OPTIONS (NAMEINSOURCE 'DashboardComponent', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE DashboardComponentFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1210,10 +1105,8 @@ CREATE FOREIGN TABLE DashboardComponentFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'DashboardComponentFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Dashboard Component Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'DashboardComponentFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE DashboardFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1233,10 +1126,8 @@ CREATE FOREIGN TABLE DashboardFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'DashboardFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Dashboard Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'DashboardFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Document (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1256,21 +1147,16 @@ CREATE FOREIGN TABLE Document (
     IsInternalUseOnly boolean OPTIONS (NAMEINSOURCE 'IsInternalUseOnly', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     AuthorId string(18) OPTIONS (NAMEINSOURCE 'AuthorId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsBodySearchable boolean OPTIONS (NAMEINSOURCE 'IsBodySearchable', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Folder_FolderId FOREIGN KEY(FolderId) REFERENCES Folder (Id),
-    CONSTRAINT FK_User__AuthorId FOREIGN KEY(AuthorId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__FolderId FOREIGN KEY(FolderId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Document', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Documents', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Document', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE DocumentAttachmentMap (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ParentId string(18) OPTIONS (NAMEINSOURCE 'ParentId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     DocumentId string(18) OPTIONS (NAMEINSOURCE 'DocumentId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     DocumentSequence integer OPTIONS (NAMEINSOURCE 'DocumentSequence', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Document_DocumentId FOREIGN KEY(DocumentId) REFERENCES Document (Id),
-    CONSTRAINT FK_EmailTemplate_ParentId FOREIGN KEY(ParentId) REFERENCES EmailTemplate (Id)
-) OPTIONS (NAMEINSOURCE 'DocumentAttachmentMap', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Document Entity Map', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'DocumentAttachmentMap', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE EmailServicesAddress (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1281,9 +1167,8 @@ CREATE FOREIGN TABLE EmailServicesAddress (
     RunAsUserId string(18) OPTIONS (NAMEINSOURCE 'RunAsUserId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     FunctionId string(18) OPTIONS (NAMEINSOURCE 'FunctionId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_EmailServicesFunction_FunctionId FOREIGN KEY(FunctionId) REFERENCES EmailServicesFunction (Id),
-    CONSTRAINT FK_User__RunAsUserId FOREIGN KEY(RunAsUserId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'EmailServicesAddress', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Email Services Address', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_EmailServicesFunction_FunctionId FOREIGN KEY(FunctionId) REFERENCES EmailServicesFunction (Id) OPTIONS (NAMEINSOURCE 'Addresses')
+) OPTIONS (NAMEINSOURCE 'EmailServicesAddress', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE EmailServicesFunction (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1303,9 +1188,8 @@ CREATE FOREIGN TABLE EmailServicesFunction (
     IsErrorRoutingEnabled boolean OPTIONS (NAMEINSOURCE 'IsErrorRoutingEnabled', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ErrorRoutingAddress string(270) OPTIONS (NAMEINSOURCE 'ErrorRoutingAddress', NATIVE_TYPE 'email', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsTextAttachmentsAsBinary boolean OPTIONS (NAMEINSOURCE 'IsTextAttachmentsAsBinary', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ApexClass_ApexClassId FOREIGN KEY(ApexClassId) REFERENCES ApexClass (Id)
-) OPTIONS (NAMEINSOURCE 'EmailServicesFunction', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Email Services', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'EmailServicesFunction', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE EmailStatus (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1316,10 +1200,9 @@ CREATE FOREIGN TABLE EmailStatus (
     LastOpenDate timestamp OPTIONS (NAMEINSOURCE 'LastOpenDate', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     EmailTemplateName string(80) OPTIONS (NAMEINSOURCE 'EmailTemplateName', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Task_TaskId FOREIGN KEY(TaskId) REFERENCES Task (Id)
-) OPTIONS (NAMEINSOURCE 'EmailStatus', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Email Status', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'EmailStatuses'),
+    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'EmailStatuses')
+) OPTIONS (NAMEINSOURCE 'EmailStatus', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE EmailTemplate (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1341,13 +1224,8 @@ CREATE FOREIGN TABLE EmailTemplate (
     LastUsedDate timestamp OPTIONS (NAMEINSOURCE 'LastUsedDate', UPDATABLE FALSE, NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ApiVersion double OPTIONS (NAMEINSOURCE 'ApiVersion', NATIVE_TYPE 'double', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Markup string(1048576) OPTIONS (NAMEINSOURCE 'Markup', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_BrandTemplate_BrandTemplateId FOREIGN KEY(BrandTemplateId) REFERENCES BrandTemplate (Id),
-    CONSTRAINT FK_Folder_FolderId FOREIGN KEY(FolderId) REFERENCES Folder (Id),
-    CONSTRAINT FK_Organization_FolderId FOREIGN KEY(FolderId) REFERENCES Organization (Id),
-    CONSTRAINT FK_User__FolderId FOREIGN KEY(FolderId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'EmailTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Email Templates', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'EmailTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE EntitySubscription (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1355,27 +1233,27 @@ CREATE FOREIGN TABLE EntitySubscription (
     SubscriberId string(18) OPTIONS (NAMEINSOURCE 'SubscriberId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id),
-    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__SubscriberId FOREIGN KEY(SubscriberId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'EntitySubscription', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Entity Subscriptions', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptionsForEntity'),
+    CONSTRAINT FK_User__SubscriberId FOREIGN KEY(SubscriberId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'FeedSubscriptions')
+) OPTIONS (NAMEINSOURCE 'EntitySubscription', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Event (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1413,20 +1291,18 @@ CREATE FOREIGN TABLE Event (
     ReminderDateTime timestamp OPTIONS (NAMEINSOURCE 'ReminderDateTime', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsReminderSet boolean OPTIONS (NAMEINSOURCE 'IsReminderSet', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Account_WhatId FOREIGN KEY(WhatId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Event_RecurrenceActivityId FOREIGN KEY(RecurrenceActivityId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Event', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Events', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_WhatId FOREIGN KEY(WhatId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Event_RecurrenceActivityId FOREIGN KEY(RecurrenceActivityId) REFERENCES Event (Id) OPTIONS (NAMEINSOURCE 'RecurringEvents'),
+    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'Events'),
+    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'Events')
+) OPTIONS (NAMEINSOURCE 'Event', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE EventAttendee (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1437,11 +1313,8 @@ CREATE FOREIGN TABLE EventAttendee (
     Response string(255) OPTIONS (NAMEINSOURCE 'Response', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_AttendeeId FOREIGN KEY(AttendeeId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Event_EventId FOREIGN KEY(EventId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_AttendeeId FOREIGN KEY(AttendeeId) REFERENCES Lead (Id),
-    CONSTRAINT FK_User__AttendeeId FOREIGN KEY(AttendeeId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'EventAttendee', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Event Attendee', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Event_EventId FOREIGN KEY(EventId) REFERENCES Event (Id) OPTIONS (NAMEINSOURCE 'EventAttendees')
+) OPTIONS (NAMEINSOURCE 'EventAttendee', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE EventFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1461,10 +1334,8 @@ CREATE FOREIGN TABLE EventFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'EventFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Event Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'EventFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE FeedComment (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1474,49 +1345,29 @@ CREATE FOREIGN TABLE FeedComment (
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_AccountFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AccountFeed (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_AssetFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AssetFeed (Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_CampaignFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CampaignFeed (Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_CaseFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CaseFeed (Id),
-    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_CollaborationGroupFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CollaborationGroupFeed (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContactFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContactFeed (Id),
-    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentDocumentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContentDocumentFeed (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_ContractFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContractFeed (Id),
-    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_DashboardComponentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardComponentFeed (Id),
-    CONSTRAINT FK_DashboardFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardFeed (Id),
-    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id),
-    CONSTRAINT FK_EventFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES EventFeed (Id),
-    CONSTRAINT FK_FeedItem_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES FeedItem (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_LeadFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES LeadFeed (Id),
-    CONSTRAINT FK_NewsFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES NewsFeed (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_OpportunityFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES OpportunityFeed (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Product2Feed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES Product2Feed (Id),
-    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id),
-    CONSTRAINT FK_ReportFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ReportFeed (Id),
-    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id),
-    CONSTRAINT FK_SiteFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SiteFeed (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id),
-    CONSTRAINT FK_SolutionFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SolutionFeed (Id),
-    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id),
-    CONSTRAINT FK_TaskFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES TaskFeed (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id),
-    CONSTRAINT FK_UserFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserFeed (Id),
-    CONSTRAINT FK_UserProfileFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserProfileFeed (Id)
-) OPTIONS (NAMEINSOURCE 'FeedComment', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Feed Comments', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_AccountFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AccountFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_AssetFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AssetFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_CampaignFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CampaignFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_CaseFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CaseFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_CollaborationGroupFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CollaborationGroupFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_ContactFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContactFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_ContentDocumentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContentDocumentFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_ContractFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContractFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_DashboardComponentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardComponentFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_DashboardFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_EventFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES EventFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_FeedItem_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES FeedItem (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_LeadFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES LeadFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_NewsFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES NewsFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_OpportunityFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES OpportunityFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_Product2Feed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES Product2Feed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_ReportFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ReportFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_SiteFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SiteFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_SolutionFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SolutionFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_TaskFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES TaskFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_UserFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments'),
+    CONSTRAINT FK_UserProfileFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserProfileFeed (Id) OPTIONS (NAMEINSOURCE 'FeedComments')
+) OPTIONS (NAMEINSOURCE 'FeedComment', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE FeedItem (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1535,29 +1386,8 @@ CREATE FOREIGN TABLE FeedItem (
     ContentType string(120) OPTIONS (NAMEINSOURCE 'ContentType', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id),
-    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'FeedItem', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Feed Items', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'FeedItem', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE FeedLike (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1565,30 +1395,29 @@ CREATE FOREIGN TABLE FeedLike (
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_AccountFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AccountFeed (Id),
-    CONSTRAINT FK_AssetFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AssetFeed (Id),
-    CONSTRAINT FK_CampaignFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CampaignFeed (Id),
-    CONSTRAINT FK_CaseFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CaseFeed (Id),
-    CONSTRAINT FK_CollaborationGroupFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CollaborationGroupFeed (Id),
-    CONSTRAINT FK_ContactFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContactFeed (Id),
-    CONSTRAINT FK_ContentDocumentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContentDocumentFeed (Id),
-    CONSTRAINT FK_ContractFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContractFeed (Id),
-    CONSTRAINT FK_DashboardComponentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardComponentFeed (Id),
-    CONSTRAINT FK_DashboardFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardFeed (Id),
-    CONSTRAINT FK_EventFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES EventFeed (Id),
-    CONSTRAINT FK_FeedItem_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES FeedItem (Id),
-    CONSTRAINT FK_LeadFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES LeadFeed (Id),
-    CONSTRAINT FK_NewsFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES NewsFeed (Id),
-    CONSTRAINT FK_OpportunityFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES OpportunityFeed (Id),
-    CONSTRAINT FK_Product2Feed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES Product2Feed (Id),
-    CONSTRAINT FK_ReportFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ReportFeed (Id),
-    CONSTRAINT FK_SiteFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SiteFeed (Id),
-    CONSTRAINT FK_SolutionFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SolutionFeed (Id),
-    CONSTRAINT FK_TaskFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES TaskFeed (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_UserFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserFeed (Id),
-    CONSTRAINT FK_UserProfileFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserProfileFeed (Id)
-) OPTIONS (NAMEINSOURCE 'FeedLike', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Feed Likes', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_AccountFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AccountFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_AssetFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AssetFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_CampaignFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CampaignFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_CaseFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CaseFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_CollaborationGroupFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CollaborationGroupFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_ContactFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContactFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_ContentDocumentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContentDocumentFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_ContractFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContractFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_DashboardComponentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardComponentFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_DashboardFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_EventFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES EventFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_FeedItem_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES FeedItem (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_LeadFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES LeadFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_NewsFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES NewsFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_OpportunityFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES OpportunityFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_Product2Feed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES Product2Feed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_ReportFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ReportFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_SiteFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SiteFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_SolutionFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SolutionFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_TaskFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES TaskFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_UserFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes'),
+    CONSTRAINT FK_UserProfileFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserProfileFeed (Id) OPTIONS (NAMEINSOURCE 'FeedLikes')
+) OPTIONS (NAMEINSOURCE 'FeedLike', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE FeedTrackedChange (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1597,29 +1426,29 @@ CREATE FOREIGN TABLE FeedTrackedChange (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_AccountFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AccountFeed (Id),
-    CONSTRAINT FK_AssetFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AssetFeed (Id),
-    CONSTRAINT FK_CampaignFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CampaignFeed (Id),
-    CONSTRAINT FK_CaseFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CaseFeed (Id),
-    CONSTRAINT FK_CollaborationGroupFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CollaborationGroupFeed (Id),
-    CONSTRAINT FK_ContactFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContactFeed (Id),
-    CONSTRAINT FK_ContentDocumentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContentDocumentFeed (Id),
-    CONSTRAINT FK_ContractFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContractFeed (Id),
-    CONSTRAINT FK_DashboardComponentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardComponentFeed (Id),
-    CONSTRAINT FK_DashboardFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardFeed (Id),
-    CONSTRAINT FK_EventFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES EventFeed (Id),
-    CONSTRAINT FK_FeedItem_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES FeedItem (Id),
-    CONSTRAINT FK_LeadFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES LeadFeed (Id),
-    CONSTRAINT FK_NewsFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES NewsFeed (Id),
-    CONSTRAINT FK_OpportunityFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES OpportunityFeed (Id),
-    CONSTRAINT FK_Product2Feed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES Product2Feed (Id),
-    CONSTRAINT FK_ReportFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ReportFeed (Id),
-    CONSTRAINT FK_SiteFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SiteFeed (Id),
-    CONSTRAINT FK_SolutionFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SolutionFeed (Id),
-    CONSTRAINT FK_TaskFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES TaskFeed (Id),
-    CONSTRAINT FK_UserFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserFeed (Id),
-    CONSTRAINT FK_UserProfileFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserProfileFeed (Id)
-) OPTIONS (NAMEINSOURCE 'FeedTrackedChange', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Feed Tracked Changes', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_AccountFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AccountFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_AssetFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES AssetFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_CampaignFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CampaignFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_CaseFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CaseFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_CollaborationGroupFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES CollaborationGroupFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_ContactFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContactFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_ContentDocumentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContentDocumentFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_ContractFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ContractFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_DashboardComponentFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardComponentFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_DashboardFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES DashboardFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_EventFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES EventFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_FeedItem_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES FeedItem (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_LeadFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES LeadFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_NewsFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES NewsFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_OpportunityFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES OpportunityFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_Product2Feed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES Product2Feed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_ReportFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES ReportFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_SiteFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SiteFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_SolutionFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES SolutionFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_TaskFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES TaskFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_UserFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges'),
+    CONSTRAINT FK_UserProfileFeed_FeedItemId FOREIGN KEY(FeedItemId) REFERENCES UserProfileFeed (Id) OPTIONS (NAMEINSOURCE 'FeedTrackedChanges')
+) OPTIONS (NAMEINSOURCE 'FeedTrackedChange', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE FiscalYearSettings (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1636,9 +1465,8 @@ CREATE FOREIGN TABLE FiscalYearSettings (
     PeriodPrefix string(40) OPTIONS (NAMEINSOURCE 'PeriodPrefix', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Period,FP,P,Month'),
     WeekStartDay integer OPTIONS (NAMEINSOURCE 'WeekStartDay', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Period_PeriodId FOREIGN KEY(PeriodId) REFERENCES Period (Id)
-) OPTIONS (NAMEINSOURCE 'FiscalYearSettings', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Fiscal Year Settings', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'FiscalYearSettings', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Folder (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1649,7 +1477,7 @@ CREATE FOREIGN TABLE Folder (
     Type string(40) OPTIONS (NAMEINSOURCE 'Type', UPDATABLE FALSE, NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Document,Email,Report,Dashboard'),
     NamespacePrefix string(15) OPTIONS (NAMEINSOURCE 'NamespacePrefix', UPDATABLE FALSE, NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'Folder', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Folders', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'Folder', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ForecastShare (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1658,11 +1486,8 @@ CREATE FOREIGN TABLE ForecastShare (
     AccessLevel string(40) OPTIONS (NAMEINSOURCE 'AccessLevel', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Read,Edit,All'),
     CanSubmit boolean OPTIONS (NAMEINSOURCE 'CanSubmit', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     RowCause string(40) OPTIONS (NAMEINSOURCE 'RowCause', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Owner,Manual,Rule,ImplicitChild,ImplicitParent,Team,Territory,TerritoryManual,TerritoryRule'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id),
-    CONSTRAINT FK_UserRole_UserRoleId FOREIGN KEY(UserRoleId) REFERENCES UserRole (Id)
-) OPTIONS (NAMEINSOURCE 'ForecastShare', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Forecast Share', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'ForecastShare', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Group_ (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1673,22 +1498,16 @@ CREATE FOREIGN TABLE Group_ (
     OwnerId string(18) OPTIONS (NAMEINSOURCE 'OwnerId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     DoesSendEmailToMembers boolean OPTIONS (NAMEINSOURCE 'DoesSendEmailToMembers', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     DoesIncludeBosses boolean OPTIONS (NAMEINSOURCE 'DoesIncludeBosses', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Organization_OwnerId FOREIGN KEY(OwnerId) REFERENCES Organization (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__RelatedId FOREIGN KEY(RelatedId) REFERENCES User_ (Id),
-    CONSTRAINT FK_UserRole_RelatedId FOREIGN KEY(RelatedId) REFERENCES UserRole (Id)
-) OPTIONS (NAMEINSOURCE 'Group', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Group', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Group', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE GroupMember (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     GroupId string(18) OPTIONS (NAMEINSOURCE 'GroupId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     UserOrGroupId string(18) OPTIONS (NAMEINSOURCE 'UserOrGroupId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Group__GroupId FOREIGN KEY(GroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'GroupMember', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Group Member', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Group__GroupId FOREIGN KEY(GroupId) REFERENCES Group_ (Id) OPTIONS (NAMEINSOURCE 'GroupMembers')
+) OPTIONS (NAMEINSOURCE 'GroupMember', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Holiday (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1708,7 +1527,7 @@ CREATE FOREIGN TABLE Holiday (
     RecurrenceInstance string(40) OPTIONS (NAMEINSOURCE 'RecurrenceInstance', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'First,Second,Third,Fourth,Last'),
     RecurrenceMonthOfYear string(40) OPTIONS (NAMEINSOURCE 'RecurrenceMonthOfYear', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'January,February,March,April,May,June,July,August,September,October,November,December'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'Holiday', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Holidays', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'Holiday', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Idea (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1727,11 +1546,8 @@ CREATE FOREIGN TABLE Idea (
     LastCommentId string(18) OPTIONS (NAMEINSOURCE 'LastCommentId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ParentIdeaId string(18) OPTIONS (NAMEINSOURCE 'ParentIdeaId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsHtml boolean OPTIONS (NAMEINSOURCE 'IsHtml', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Community_CommunityId FOREIGN KEY(CommunityId) REFERENCES Community (Id),
-    CONSTRAINT FK_Idea_ParentIdeaId FOREIGN KEY(ParentIdeaId) REFERENCES Idea (Id),
-    CONSTRAINT FK_IdeaComment_LastCommentId FOREIGN KEY(LastCommentId) REFERENCES IdeaComment (Id)
-) OPTIONS (NAMEINSOURCE 'Idea', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Ideas', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Idea', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE IdeaComment (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1740,8 +1556,8 @@ CREATE FOREIGN TABLE IdeaComment (
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsHtml boolean OPTIONS (NAMEINSOURCE 'IsHtml', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Idea_IdeaId FOREIGN KEY(IdeaId) REFERENCES Idea (Id)
-) OPTIONS (NAMEINSOURCE 'IdeaComment', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Idea Comments', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Idea_IdeaId FOREIGN KEY(IdeaId) REFERENCES Idea (Id) OPTIONS (NAMEINSOURCE 'Comments')
+) OPTIONS (NAMEINSOURCE 'IdeaComment', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE Lead (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1786,12 +1602,8 @@ CREATE FOREIGN TABLE Lead (
     Primary__c string(255) OPTIONS (NAMEINSOURCE 'Primary__c', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'No,Yes'),
     CurrentGenerators__c string(100) OPTIONS (NAMEINSOURCE 'CurrentGenerators__c', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
     NumberofLocations__c double OPTIONS (NAMEINSOURCE 'NumberofLocations__c', NATIVE_TYPE 'double', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ConvertedAccountId FOREIGN KEY(ConvertedAccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Contact_ConvertedContactId FOREIGN KEY(ConvertedContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Opportunity_ConvertedOpportunityId FOREIGN KEY(ConvertedOpportunityId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Lead', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Leads', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'true', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Lead', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'true', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE LeadFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1811,10 +1623,8 @@ CREATE FOREIGN TABLE LeadFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'LeadFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Lead Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'LeadFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE LeadHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1824,8 +1634,8 @@ CREATE FOREIGN TABLE LeadHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Lead_LeadId FOREIGN KEY(LeadId) REFERENCES Lead (Id)
-) OPTIONS (NAMEINSOURCE 'LeadHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Lead History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Lead_LeadId FOREIGN KEY(LeadId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'LeadHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE LeadShare (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1835,10 +1645,8 @@ CREATE FOREIGN TABLE LeadShare (
     RowCause string(40) OPTIONS (NAMEINSOURCE 'RowCause', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Owner,Manual,Rule,ImplicitChild,ImplicitParent,Team,Territory,TerritoryManual,TerritoryRule'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_Lead_LeadId FOREIGN KEY(LeadId) REFERENCES Lead (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'LeadShare', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Lead Share', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Lead_LeadId FOREIGN KEY(LeadId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'Shares')
+) OPTIONS (NAMEINSOURCE 'LeadShare', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE LeadStatus (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1847,7 +1655,7 @@ CREATE FOREIGN TABLE LeadStatus (
     IsDefault boolean OPTIONS (NAMEINSOURCE 'IsDefault', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsConverted boolean OPTIONS (NAMEINSOURCE 'IsConverted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'LeadStatus', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Lead Status Value', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'LeadStatus', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE LoginHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1863,9 +1671,8 @@ CREATE FOREIGN TABLE LoginHistory (
     ClientVersion string(64) OPTIONS (NAMEINSOURCE 'ClientVersion', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ApiType string(64) OPTIONS (NAMEINSOURCE 'ApiType', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ApiVersion string(32) OPTIONS (NAMEINSOURCE 'ApiVersion', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__UserId FOREIGN KEY(UserId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'LoginHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Login History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'LoginHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE LoginIp (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1873,9 +1680,8 @@ CREATE FOREIGN TABLE LoginIp (
     SourceIp string(39) OPTIONS (NAMEINSOURCE 'SourceIp', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsAuthenticated boolean OPTIONS (NAMEINSOURCE 'IsAuthenticated', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ChallengeSentDate timestamp OPTIONS (NAMEINSOURCE 'ChallengeSentDate', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__UsersId FOREIGN KEY(UsersId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'LoginIp', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Login IP', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'LoginIp', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE MailmergeTemplate (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1887,7 +1693,7 @@ CREATE FOREIGN TABLE MailmergeTemplate (
     Body blob OPTIONS (NAMEINSOURCE 'Body', UPDATABLE FALSE, NATIVE_TYPE 'base64', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LastUsedDate timestamp OPTIONS (NAMEINSOURCE 'LastUsedDate', UPDATABLE FALSE, NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'MailmergeTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Mail Merge Template', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'MailmergeTemplate', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Name (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1903,10 +1709,8 @@ CREATE FOREIGN TABLE Name (
     Email string(80) OPTIONS (NAMEINSOURCE 'Email', NATIVE_TYPE 'email', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Phone string(40) OPTIONS (NAMEINSOURCE 'Phone', NATIVE_TYPE 'phone', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Username string(80) OPTIONS (NAMEINSOURCE 'Username', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Profile_ProfileId FOREIGN KEY(ProfileId) REFERENCES Profile (Id),
-    CONSTRAINT FK_UserRole_UserRoleId FOREIGN KEY(UserRoleId) REFERENCES UserRole (Id)
-) OPTIONS (NAMEINSOURCE 'Name', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Names', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Name', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE NewsFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1925,29 +1729,8 @@ CREATE FOREIGN TABLE NewsFeed (
     ContentType string(120) OPTIONS (NAMEINSOURCE 'ContentType', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id),
-    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'NewsFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'News Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'NewsFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Note (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1958,15 +1741,14 @@ CREATE FOREIGN TABLE Note (
     Body string(32000) OPTIONS (NAMEINSOURCE 'Body', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     OwnerId string(18) OPTIONS (NAMEINSOURCE 'OwnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Note', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Notes', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Notes'),
+    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'Notes'),
+    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Notes'),
+    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'Notes'),
+    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'Notes'),
+    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Notes'),
+    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'Notes')
+) OPTIONS (NAMEINSOURCE 'Note', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE NoteAndAttachment (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -1977,15 +1759,14 @@ CREATE FOREIGN TABLE NoteAndAttachment (
     IsPrivate boolean OPTIONS (NAMEINSOURCE 'IsPrivate', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     OwnerId string(18) OPTIONS (NAMEINSOURCE 'OwnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'NoteAndAttachment', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Notes and Attachments', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'NotesAndAttachments'),
+    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'NotesAndAttachments'),
+    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'NotesAndAttachments'),
+    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'NotesAndAttachments'),
+    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'NotesAndAttachments'),
+    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'NotesAndAttachments'),
+    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'NotesAndAttachments')
+) OPTIONS (NAMEINSOURCE 'NoteAndAttachment', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpenActivity (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2013,18 +1794,17 @@ CREATE FOREIGN TABLE OpenActivity (
     ReminderDateTime timestamp OPTIONS (NAMEINSOURCE 'ReminderDateTime', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsReminderSet boolean OPTIONS (NAMEINSOURCE 'IsReminderSet', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'OpenActivity', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Open Activities', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'OpenActivities'),
+    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'OpenActivities')
+) OPTIONS (NAMEINSOURCE 'OpenActivity', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Opportunity (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2060,11 +1840,10 @@ CREATE FOREIGN TABLE Opportunity (
     CurrentGenerators__c string(100) OPTIONS (NAMEINSOURCE 'CurrentGenerators__c', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
     MainCompetitors__c string(100) OPTIONS (NAMEINSOURCE 'MainCompetitors__c', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Campaign_CampaignId FOREIGN KEY(CampaignId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Pricebook2_Pricebook2Id FOREIGN KEY(Pricebook2Id) REFERENCES Pricebook2 (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Opportunity', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunities', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Opportunities'),
+    CONSTRAINT FK_Campaign_CampaignId FOREIGN KEY(CampaignId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'Opportunities'),
+    CONSTRAINT FK_Pricebook2_Pricebook2Id FOREIGN KEY(Pricebook2Id) REFERENCES Pricebook2 (Id) OPTIONS (NAMEINSOURCE 'Opportunities')
+) OPTIONS (NAMEINSOURCE 'Opportunity', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE OpportunityCompetitor (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2074,8 +1853,8 @@ CREATE FOREIGN TABLE OpportunityCompetitor (
     Weaknesses string(1000) OPTIONS (NAMEINSOURCE 'Weaknesses', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityCompetitor', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity: Competitor', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'OpportunityCompetitors')
+) OPTIONS (NAMEINSOURCE 'OpportunityCompetitor', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityContactRole (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2085,9 +1864,9 @@ CREATE FOREIGN TABLE OpportunityContactRole (
     IsPrimary boolean OPTIONS (NAMEINSOURCE 'IsPrimary', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity Contact Role', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'OpportunityContactRoles'),
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'OpportunityContactRoles')
+) OPTIONS (NAMEINSOURCE 'OpportunityContactRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2107,10 +1886,8 @@ CREATE FOREIGN TABLE OpportunityFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'OpportunityFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityFieldHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2120,8 +1897,8 @@ CREATE FOREIGN TABLE OpportunityFieldHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityFieldHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity Field History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'OpportunityFieldHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2134,8 +1911,8 @@ CREATE FOREIGN TABLE OpportunityHistory (
     ForecastCategory string(40) OPTIONS (NAMEINSOURCE 'ForecastCategory', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Omitted,Pipeline,BestCase,Forecast,Closed'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'OpportunityHistories')
+) OPTIONS (NAMEINSOURCE 'OpportunityHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityLineItem (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2150,9 +1927,9 @@ CREATE FOREIGN TABLE OpportunityLineItem (
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_PricebookEntry_PricebookEntryId FOREIGN KEY(PricebookEntryId) REFERENCES PricebookEntry (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityLineItem', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity Product', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'OpportunityLineItems'),
+    CONSTRAINT FK_PricebookEntry_PricebookEntryId FOREIGN KEY(PricebookEntryId) REFERENCES PricebookEntry (Id) OPTIONS (NAMEINSOURCE 'OpportunityLineItems')
+) OPTIONS (NAMEINSOURCE 'OpportunityLineItem', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityPartner (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2163,10 +1940,9 @@ CREATE FOREIGN TABLE OpportunityPartner (
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ReversePartnerId string(18) OPTIONS (NAMEINSOURCE 'ReversePartnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountToId FOREIGN KEY(AccountToId) REFERENCES Account (Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_OpportunityPartner_ReversePartnerId FOREIGN KEY(ReversePartnerId) REFERENCES OpportunityPartner (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityPartner', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity Partner', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountToId FOREIGN KEY(AccountToId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'OpportunityPartnersTo'),
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'OpportunityPartnersFrom')
+) OPTIONS (NAMEINSOURCE 'OpportunityPartner', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityShare (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2176,10 +1952,8 @@ CREATE FOREIGN TABLE OpportunityShare (
     RowCause string(40) OPTIONS (NAMEINSOURCE 'RowCause', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Owner,Manual,Rule,ImplicitChild,ImplicitParent,Team,Territory,TerritoryManual,TerritoryRule'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Group__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_User__UserOrGroupId FOREIGN KEY(UserOrGroupId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityShare', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity Share', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Shares')
+) OPTIONS (NAMEINSOURCE 'OpportunityShare', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OpportunityStage (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2193,7 +1967,7 @@ CREATE FOREIGN TABLE OpportunityStage (
     DefaultProbability double OPTIONS (NAMEINSOURCE 'DefaultProbability', NATIVE_TYPE 'percent', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'OpportunityStage', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Opportunity Stage', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'OpportunityStage', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Organization (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2230,7 +2004,7 @@ CREATE FOREIGN TABLE Organization (
     MonthlyPageViewsUsed integer OPTIONS (NAMEINSOURCE 'MonthlyPageViewsUsed', UPDATABLE FALSE, NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     MonthlyPageViewsEntitlement integer OPTIONS (NAMEINSOURCE 'MonthlyPageViewsEntitlement', UPDATABLE FALSE, NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'Organization', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Organizations', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'Organization', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE OrgWideEmailAddress (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2238,7 +2012,7 @@ CREATE FOREIGN TABLE OrgWideEmailAddress (
     DisplayName string(300) OPTIONS (NAMEINSOURCE 'DisplayName', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsAllowAllProfiles boolean OPTIONS (NAMEINSOURCE 'IsAllowAllProfiles', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'OrgWideEmailAddress', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Organization-wide From Email Addresses', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'OrgWideEmailAddress', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Partner (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2250,11 +2024,10 @@ CREATE FOREIGN TABLE Partner (
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     ReversePartnerId string(18) OPTIONS (NAMEINSOURCE 'ReversePartnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountFromId FOREIGN KEY(AccountFromId) REFERENCES Account (Id),
-    CONSTRAINT FK_Account_AccountToId FOREIGN KEY(AccountToId) REFERENCES Account (Id),
-    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Partner_ReversePartnerId FOREIGN KEY(ReversePartnerId) REFERENCES Partner (Id)
-) OPTIONS (NAMEINSOURCE 'Partner', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Partner', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_AccountFromId FOREIGN KEY(AccountFromId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'PartnersFrom'),
+    CONSTRAINT FK_Account_AccountToId FOREIGN KEY(AccountToId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'PartnersTo'),
+    CONSTRAINT FK_Opportunity_OpportunityId FOREIGN KEY(OpportunityId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Partners')
+) OPTIONS (NAMEINSOURCE 'Partner', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE PartnerRole (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2262,7 +2035,7 @@ CREATE FOREIGN TABLE PartnerRole (
     SortOrder integer OPTIONS (NAMEINSOURCE 'SortOrder', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ReverseRole string(40) OPTIONS (NAMEINSOURCE 'ReverseRole', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'System Integrator,Agency,Advertiser,VAR/Reseller,Distributor,Developer,Broker,Lender,Supplier,Institution,Contractor,Dealer,Consultant'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'PartnerRole', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Partner Role Value', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'PartnerRole', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Period (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2275,8 +2048,8 @@ CREATE FOREIGN TABLE Period (
     PeriodLabel string(40) OPTIONS (NAMEINSOURCE 'PeriodLabel', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" ''),
     Number integer OPTIONS (NAMEINSOURCE 'Number', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_FiscalYearSettings_FiscalYearSettingsId FOREIGN KEY(FiscalYearSettingsId) REFERENCES FiscalYearSettings (Id)
-) OPTIONS (NAMEINSOURCE 'Period', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Period', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_FiscalYearSettings_FiscalYearSettingsId FOREIGN KEY(FiscalYearSettingsId) REFERENCES FiscalYearSettings (Id) OPTIONS (NAMEINSOURCE 'Periods')
+) OPTIONS (NAMEINSOURCE 'Period', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE PermissionSet (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2363,18 +2136,17 @@ CREATE FOREIGN TABLE PermissionSet (
     PermissionsEmailAdministration boolean OPTIONS (NAMEINSOURCE 'PermissionsEmailAdministration', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     PermissionsManageNetworks boolean OPTIONS (NAMEINSOURCE 'PermissionsManageNetworks', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_UserLicense_UserLicenseId FOREIGN KEY(UserLicenseId) REFERENCES UserLicense (Id)
-) OPTIONS (NAMEINSOURCE 'PermissionSet', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Permission Sets', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'PermissionSet', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE PermissionSetAssignment (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     PermissionSetId string(18) OPTIONS (NAMEINSOURCE 'PermissionSetId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     AssigneeId string(18) OPTIONS (NAMEINSOURCE 'AssigneeId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_PermissionSet_PermissionSetId FOREIGN KEY(PermissionSetId) REFERENCES PermissionSet (Id),
-    CONSTRAINT FK_User__AssigneeId FOREIGN KEY(AssigneeId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'PermissionSetAssignment', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Permission Set Assignments', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_PermissionSet_PermissionSetId FOREIGN KEY(PermissionSetId) REFERENCES PermissionSet (Id) OPTIONS (NAMEINSOURCE 'Assignments'),
+    CONSTRAINT FK_User__AssigneeId FOREIGN KEY(AssigneeId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'PermissionSetAssignments')
+) OPTIONS (NAMEINSOURCE 'PermissionSetAssignment', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Pricebook2 (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2384,7 +2156,7 @@ CREATE FOREIGN TABLE Pricebook2 (
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsStandard boolean OPTIONS (NAMEINSOURCE 'IsStandard', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'Pricebook2', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Price Books', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'Pricebook2', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Pricebook2History (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2394,8 +2166,8 @@ CREATE FOREIGN TABLE Pricebook2History (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Pricebook2_Pricebook2Id FOREIGN KEY(Pricebook2Id) REFERENCES Pricebook2 (Id)
-) OPTIONS (NAMEINSOURCE 'Pricebook2History', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Price Book History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Pricebook2_Pricebook2Id FOREIGN KEY(Pricebook2Id) REFERENCES Pricebook2 (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'Pricebook2History', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE PricebookEntry (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2408,9 +2180,9 @@ CREATE FOREIGN TABLE PricebookEntry (
     ProductCode string(255) OPTIONS (NAMEINSOURCE 'ProductCode', UPDATABLE FALSE, NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Pricebook2_Pricebook2Id FOREIGN KEY(Pricebook2Id) REFERENCES Pricebook2 (Id),
-    CONSTRAINT FK_Product2_Product2Id FOREIGN KEY(Product2Id) REFERENCES Product2 (Id)
-) OPTIONS (NAMEINSOURCE 'PricebookEntry', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Price Book Entries', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Pricebook2_Pricebook2Id FOREIGN KEY(Pricebook2Id) REFERENCES Pricebook2 (Id) OPTIONS (NAMEINSOURCE 'PricebookEntries'),
+    CONSTRAINT FK_Product2_Product2Id FOREIGN KEY(Product2Id) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'PricebookEntries')
+) OPTIONS (NAMEINSOURCE 'PricebookEntry', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ProcessDefinition (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2422,7 +2194,7 @@ CREATE FOREIGN TABLE ProcessDefinition (
     LockType string(40) OPTIONS (NAMEINSOURCE 'LockType', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Total,Admin,Owner,Workitem,Node,none'),
     State string(40) OPTIONS (NAMEINSOURCE 'State', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Active,Inactive,Obsolete'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'ProcessDefinition', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Process Definition', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'ProcessDefinition', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ProcessInstance (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2431,18 +2203,17 @@ CREATE FOREIGN TABLE ProcessInstance (
     Status string(40) OPTIONS (NAMEINSOURCE 'Status', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Approved,Rejected,Removed,Fault,Pending,Held,Reassigned,Started,NoResponse'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Lead_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_ProcessDefinition_ProcessDefinitionId FOREIGN KEY(ProcessDefinitionId) REFERENCES ProcessDefinition (Id),
-    CONSTRAINT FK_Product2_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Solution_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Solution (Id)
-) OPTIONS (NAMEINSOURCE 'ProcessInstance', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Process Instance', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Asset_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Campaign_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Case__TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Contact_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Contract_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Lead_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Opportunity_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Product2_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances'),
+    CONSTRAINT FK_Solution_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'ProcessInstances')
+) OPTIONS (NAMEINSOURCE 'ProcessInstance', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ProcessInstanceHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2456,20 +2227,18 @@ CREATE FOREIGN TABLE ProcessInstanceHistory (
     Comments string OPTIONS (NAMEINSOURCE 'Comments', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Lead_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_ProcessInstance_ProcessInstanceId FOREIGN KEY(ProcessInstanceId) REFERENCES ProcessInstance (Id),
-    CONSTRAINT FK_Product2_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Solution_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Solution (Id),
-    CONSTRAINT FK_User__ActorId FOREIGN KEY(ActorId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__OriginalActorId FOREIGN KEY(OriginalActorId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ProcessInstanceHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Process Instance History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Account_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Asset_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Campaign_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Case__TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Contact_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Contract_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Lead_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Opportunity_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_ProcessInstance_ProcessInstanceId FOREIGN KEY(ProcessInstanceId) REFERENCES ProcessInstance (Id) OPTIONS (NAMEINSOURCE 'StepsAndWorkitems'),
+    CONSTRAINT FK_Product2_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps'),
+    CONSTRAINT FK_Solution_TargetObjectId FOREIGN KEY(TargetObjectId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'ProcessSteps')
+) OPTIONS (NAMEINSOURCE 'ProcessInstanceHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'false', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'false', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ProcessInstanceStep (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2479,10 +2248,8 @@ CREATE FOREIGN TABLE ProcessInstanceStep (
     ActorId string(18) OPTIONS (NAMEINSOURCE 'ActorId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Comments string OPTIONS (NAMEINSOURCE 'Comments', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ProcessInstance_ProcessInstanceId FOREIGN KEY(ProcessInstanceId) REFERENCES ProcessInstance (Id),
-    CONSTRAINT FK_User__ActorId FOREIGN KEY(ActorId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__OriginalActorId FOREIGN KEY(OriginalActorId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ProcessInstanceStep', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Process Instance Step', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_ProcessInstance_ProcessInstanceId FOREIGN KEY(ProcessInstanceId) REFERENCES ProcessInstance (Id) OPTIONS (NAMEINSOURCE 'Steps')
+) OPTIONS (NAMEINSOURCE 'ProcessInstanceStep', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ProcessInstanceWorkitem (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2491,10 +2258,8 @@ CREATE FOREIGN TABLE ProcessInstanceWorkitem (
     ActorId string(18) OPTIONS (NAMEINSOURCE 'ActorId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ProcessInstance_ProcessInstanceId FOREIGN KEY(ProcessInstanceId) REFERENCES ProcessInstance (Id),
-    CONSTRAINT FK_User__ActorId FOREIGN KEY(ActorId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__OriginalActorId FOREIGN KEY(OriginalActorId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ProcessInstanceWorkitem', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Approval Requests', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_ProcessInstance_ProcessInstanceId FOREIGN KEY(ProcessInstanceId) REFERENCES ProcessInstance (Id) OPTIONS (NAMEINSOURCE 'Workitems')
+) OPTIONS (NAMEINSOURCE 'ProcessInstanceWorkitem', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE ProcessNode (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2502,9 +2267,8 @@ CREATE FOREIGN TABLE ProcessNode (
     DeveloperName string(80) OPTIONS (NAMEINSOURCE 'DeveloperName', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ProcessDefinitionId string(18) OPTIONS (NAMEINSOURCE 'ProcessDefinitionId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Description string(1000) OPTIONS (NAMEINSOURCE 'Description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ProcessDefinition_ProcessDefinitionId FOREIGN KEY(ProcessDefinitionId) REFERENCES ProcessDefinition (Id)
-) OPTIONS (NAMEINSOURCE 'ProcessNode', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Process Node', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'ProcessNode', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Product2 (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2515,7 +2279,7 @@ CREATE FOREIGN TABLE Product2 (
     Family string(40) OPTIONS (NAMEINSOURCE 'Family', NATIVE_TYPE 'picklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" ''),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'Product2', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Products', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+) OPTIONS (NAMEINSOURCE 'Product2', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE Product2Feed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2535,10 +2299,8 @@ CREATE FOREIGN TABLE Product2Feed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Product2Feed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Product Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'Product2Feed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Profile (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2625,9 +2387,8 @@ CREATE FOREIGN TABLE Profile (
     UserLicenseId string(18) OPTIONS (NAMEINSOURCE 'UserLicenseId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     UserType string(40) OPTIONS (NAMEINSOURCE 'UserType', UPDATABLE FALSE, NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Standard,PowerPartner,PowerCustomerSuccess,CustomerSuccess,Guest,CSPLitePortal,CSNOnly,SelfService'),
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_UserLicense_UserLicenseId FOREIGN KEY(UserLicenseId) REFERENCES UserLicense (Id)
-) OPTIONS (NAMEINSOURCE 'Profile', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Profile', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Profile', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE PushTopic (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2637,15 +2398,15 @@ CREATE FOREIGN TABLE PushTopic (
     Description string(400) OPTIONS (NAMEINSOURCE 'Description', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'PushTopic', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Push Topics', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'PushTopic', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE QueueSobject (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     QueueId string(18) OPTIONS (NAMEINSOURCE 'QueueId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     SobjectType string(40) OPTIONS (NAMEINSOURCE 'SobjectType', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Case,Lead'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Group__QueueId FOREIGN KEY(QueueId) REFERENCES Group_ (Id)
-) OPTIONS (NAMEINSOURCE 'QueueSobject', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Queue Sobjects', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Group__QueueId FOREIGN KEY(QueueId) REFERENCES Group_ (Id) OPTIONS (NAMEINSOURCE 'QueueSobjects')
+) OPTIONS (NAMEINSOURCE 'QueueSobject', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE RecordType (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2656,9 +2417,8 @@ CREATE FOREIGN TABLE RecordType (
     BusinessProcessId string(18) OPTIONS (NAMEINSOURCE 'BusinessProcessId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     SobjectType string(40) OPTIONS (NAMEINSOURCE 'SobjectType', UPDATABLE FALSE, NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Account,Announcement,Campaign,CampaignMember,Case,CollaborationFolder,CollaborationFolderMember,Contact,ContentVersion,Contract,Event,Idea,InboundSocialPost,Lead,Opportunity,Pricebook2,Product2,Solution,Task'),
     IsActive boolean OPTIONS (NAMEINSOURCE 'IsActive', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_BusinessProcess_BusinessProcessId FOREIGN KEY(BusinessProcessId) REFERENCES BusinessProcess (Id)
-) OPTIONS (NAMEINSOURCE 'RecordType', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Record Type', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'RecordType', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Report (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2669,11 +2429,8 @@ CREATE FOREIGN TABLE Report (
     DeveloperName string(80) OPTIONS (NAMEINSOURCE 'DeveloperName', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NamespacePrefix string(15) OPTIONS (NAMEINSOURCE 'NamespacePrefix', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     LastRunDate timestamp OPTIONS (NAMEINSOURCE 'LastRunDate', NATIVE_TYPE 'datetime', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Folder_OwnerId FOREIGN KEY(OwnerId) REFERENCES Folder (Id),
-    CONSTRAINT FK_Organization_OwnerId FOREIGN KEY(OwnerId) REFERENCES Organization (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Report', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Reports', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Report', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE ReportFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2693,10 +2450,8 @@ CREATE FOREIGN TABLE ReportFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'ReportFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Report Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'ReportFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Site (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2721,16 +2476,16 @@ CREATE FOREIGN TABLE Site (
     DailyRequestTimeUsed integer OPTIONS (NAMEINSOURCE 'DailyRequestTimeUsed', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     MonthlyPageViewsEntitlement integer OPTIONS (NAMEINSOURCE 'MonthlyPageViewsEntitlement', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__AdminId FOREIGN KEY(AdminId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Site', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Sites', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_User__AdminId FOREIGN KEY(AdminId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'UserSites')
+) OPTIONS (NAMEINSOURCE 'Site', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE SiteDomain (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     SiteId string(18) OPTIONS (NAMEINSOURCE 'SiteId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Domain string(765) OPTIONS (NAMEINSOURCE 'Domain', NATIVE_TYPE 'url', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Site_SiteId FOREIGN KEY(SiteId) REFERENCES Site (Id)
-) OPTIONS (NAMEINSOURCE 'SiteDomain', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Site Domains', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Site_SiteId FOREIGN KEY(SiteId) REFERENCES Site (Id) OPTIONS (NAMEINSOURCE 'SiteDomains')
+) OPTIONS (NAMEINSOURCE 'SiteDomain', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE SiteFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2750,10 +2505,8 @@ CREATE FOREIGN TABLE SiteFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'SiteFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Site', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'SiteFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE SiteHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2763,8 +2516,8 @@ CREATE FOREIGN TABLE SiteHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Site_SiteId FOREIGN KEY(SiteId) REFERENCES Site (Id)
-) OPTIONS (NAMEINSOURCE 'SiteHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Site History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Site_SiteId FOREIGN KEY(SiteId) REFERENCES Site (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'SiteHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Solution (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2779,9 +2532,8 @@ CREATE FOREIGN TABLE Solution (
     OwnerId string(18) OPTIONS (NAMEINSOURCE 'OwnerId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     TimesUsed integer OPTIONS (NAMEINSOURCE 'TimesUsed', UPDATABLE FALSE, NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     IsHtml boolean OPTIONS (NAMEINSOURCE 'IsHtml', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Solution', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Solutions', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Solution', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE SolutionFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2801,10 +2553,8 @@ CREATE FOREIGN TABLE SolutionFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'SolutionFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Solution Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'SolutionFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE SolutionHistory (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2814,8 +2564,8 @@ CREATE FOREIGN TABLE SolutionHistory (
     OldValue string(255) OPTIONS (NAMEINSOURCE 'OldValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     NewValue string(255) OPTIONS (NAMEINSOURCE 'NewValue', NATIVE_TYPE 'anyType', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Solution_SolutionId FOREIGN KEY(SolutionId) REFERENCES Solution (Id)
-) OPTIONS (NAMEINSOURCE 'SolutionHistory', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Solution History', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Solution_SolutionId FOREIGN KEY(SolutionId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'Histories')
+) OPTIONS (NAMEINSOURCE 'SolutionHistory', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE SolutionStatus (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2824,7 +2574,7 @@ CREATE FOREIGN TABLE SolutionStatus (
     IsDefault boolean OPTIONS (NAMEINSOURCE 'IsDefault', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsReviewed boolean OPTIONS (NAMEINSOURCE 'IsReviewed', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'SolutionStatus', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Solution Status Value', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'SolutionStatus', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE StaticResource (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2836,7 +2586,7 @@ CREATE FOREIGN TABLE StaticResource (
     Description string(255) OPTIONS (NAMEINSOURCE 'Description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'textarea', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CacheControl string(40) OPTIONS (NAMEINSOURCE 'CacheControl', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Private,Public'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'StaticResource', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Static Resources', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'StaticResource', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE Task (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2870,20 +2620,18 @@ CREATE FOREIGN TABLE Task (
     RecurrenceInstance string(40) OPTIONS (NAMEINSOURCE 'RecurrenceInstance', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'First,Second,Third,Fourth,Last'),
     RecurrenceMonthOfYear string(40) OPTIONS (NAMEINSOURCE 'RecurrenceMonthOfYear', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'January,February,March,April,May,June,July,August,September,October,November,December'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_Account_WhatId FOREIGN KEY(WhatId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_RecurrenceActivityId FOREIGN KEY(RecurrenceActivityId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__OwnerId FOREIGN KEY(OwnerId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'Task', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Tasks', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Account_WhatId FOREIGN KEY(WhatId) REFERENCES Account (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Asset_WhatId FOREIGN KEY(WhatId) REFERENCES Asset (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Campaign_WhatId FOREIGN KEY(WhatId) REFERENCES Campaign (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Case__WhatId FOREIGN KEY(WhatId) REFERENCES Case_ (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Contact_WhoId FOREIGN KEY(WhoId) REFERENCES Contact (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Contract_WhatId FOREIGN KEY(WhatId) REFERENCES Contract (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Lead_WhoId FOREIGN KEY(WhoId) REFERENCES Lead (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Opportunity_WhatId FOREIGN KEY(WhatId) REFERENCES Opportunity (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Product2_WhatId FOREIGN KEY(WhatId) REFERENCES Product2 (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Solution_WhatId FOREIGN KEY(WhatId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'Tasks'),
+    CONSTRAINT FK_Task_RecurrenceActivityId FOREIGN KEY(RecurrenceActivityId) REFERENCES Task (Id) OPTIONS (NAMEINSOURCE 'RecurringTasks')
+) OPTIONS (NAMEINSOURCE 'Task', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE TaskFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2903,10 +2651,8 @@ CREATE FOREIGN TABLE TaskFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'TaskFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Task Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'TaskFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE TaskPriority (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2915,7 +2661,7 @@ CREATE FOREIGN TABLE TaskPriority (
     IsDefault boolean OPTIONS (NAMEINSOURCE 'IsDefault', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsHighPriority boolean OPTIONS (NAMEINSOURCE 'IsHighPriority', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'TaskPriority', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Task Priority Value', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'TaskPriority', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE TaskStatus (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2924,7 +2670,7 @@ CREATE FOREIGN TABLE TaskStatus (
     IsDefault boolean OPTIONS (NAMEINSOURCE 'IsDefault', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsClosed boolean OPTIONS (NAMEINSOURCE 'IsClosed', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'TaskStatus', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Task Status Value', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'TaskStatus', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE User_ (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -2994,15 +2740,12 @@ CREATE FOREIGN TABLE User_ (
     DigestFrequency string(40) OPTIONS (NAMEINSOURCE 'DigestFrequency', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true', "teiid_sf:Picklist Values" 'D,W,N'),
     DefaultGroupNotificationFrequency string(40) OPTIONS (NAMEINSOURCE 'DefaultGroupNotificationFrequency', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true', "teiid_sf:Picklist Values" 'P,D,W,N'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_AccountId FOREIGN KEY(AccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_CallCenter_CallCenterId FOREIGN KEY(CallCenterId) REFERENCES CallCenter (Id),
-    CONSTRAINT FK_Contact_ContactId FOREIGN KEY(ContactId) REFERENCES Contact (Id),
-    CONSTRAINT FK_Group__DelegatedApproverId FOREIGN KEY(DelegatedApproverId) REFERENCES Group_ (Id),
-    CONSTRAINT FK_Profile_ProfileId FOREIGN KEY(ProfileId) REFERENCES Profile (Id),
-    CONSTRAINT FK_User__DelegatedApproverId FOREIGN KEY(DelegatedApproverId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__ManagerId FOREIGN KEY(ManagerId) REFERENCES User_ (Id),
-    CONSTRAINT FK_UserRole_UserRoleId FOREIGN KEY(UserRoleId) REFERENCES UserRole (Id)
-) OPTIONS (NAMEINSOURCE 'User', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Users', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT FK_Group__DelegatedApproverId FOREIGN KEY(DelegatedApproverId) REFERENCES Group_ (Id) OPTIONS (NAMEINSOURCE 'DelegatedUsers'),
+    CONSTRAINT FK_Profile_ProfileId FOREIGN KEY(ProfileId) REFERENCES Profile (Id) OPTIONS (NAMEINSOURCE 'Users'),
+    CONSTRAINT FK_User__DelegatedApproverId FOREIGN KEY(DelegatedApproverId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'DelegatedUsers'),
+    CONSTRAINT FK_User__ManagerId FOREIGN KEY(ManagerId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'ManagedUsers'),
+    CONSTRAINT FK_UserRole_UserRoleId FOREIGN KEY(UserRoleId) REFERENCES UserRole (Id) OPTIONS (NAMEINSOURCE 'Users')
+) OPTIONS (NAMEINSOURCE 'User', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE UserFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -3022,10 +2765,8 @@ CREATE FOREIGN TABLE UserFeed (
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'UserFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'User Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'Feeds')
+) OPTIONS (NAMEINSOURCE 'UserFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE UserLicense (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -3034,7 +2775,7 @@ CREATE FOREIGN TABLE UserLicense (
     MonthlyLoginsUsed integer OPTIONS (NAMEINSOURCE 'MonthlyLoginsUsed', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     MonthlyLoginsEntitlement integer OPTIONS (NAMEINSOURCE 'MonthlyLoginsEntitlement', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
-) OPTIONS (NAMEINSOURCE 'UserLicense', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'User Licenses', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+) OPTIONS (NAMEINSOURCE 'UserLicense', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE UserPreference (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -3042,8 +2783,8 @@ CREATE FOREIGN TABLE UserPreference (
     Preference string(40) OPTIONS (NAMEINSOURCE 'Preference', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" '57,58,91,92,93,94,96,97,98,99'),
     Value_ string(1333) OPTIONS (NAMEINSOURCE 'Value', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_User__UserId FOREIGN KEY(UserId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'UserPreference', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'User Preferences', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_User__UserId FOREIGN KEY(UserId) REFERENCES User_ (Id) OPTIONS (NAMEINSOURCE 'UserPreferences')
+) OPTIONS (NAMEINSOURCE 'UserPreference', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE UserProfileFeed (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -3062,29 +2803,8 @@ CREATE FOREIGN TABLE UserProfileFeed (
     ContentType string(120) OPTIONS (NAMEINSOURCE 'ContentType', NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     ContentSize integer OPTIONS (NAMEINSOURCE 'ContentSize', NATIVE_TYPE 'int', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     InsertedById string(18) OPTIONS (NAMEINSOURCE 'InsertedById', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_ParentId FOREIGN KEY(ParentId) REFERENCES Account (Id),
-    CONSTRAINT FK_Asset_ParentId FOREIGN KEY(ParentId) REFERENCES Asset (Id),
-    CONSTRAINT FK_Campaign_ParentId FOREIGN KEY(ParentId) REFERENCES Campaign (Id),
-    CONSTRAINT FK_Case__ParentId FOREIGN KEY(ParentId) REFERENCES Case_ (Id),
-    CONSTRAINT FK_CollaborationGroup_ParentId FOREIGN KEY(ParentId) REFERENCES CollaborationGroup (Id),
-    CONSTRAINT FK_Contact_ParentId FOREIGN KEY(ParentId) REFERENCES Contact (Id),
-    CONSTRAINT FK_ContentDocument_ParentId FOREIGN KEY(ParentId) REFERENCES ContentDocument (Id),
-    CONSTRAINT FK_ContentVersion_RelatedRecordId FOREIGN KEY(RelatedRecordId) REFERENCES ContentVersion (Id),
-    CONSTRAINT FK_Contract_ParentId FOREIGN KEY(ParentId) REFERENCES Contract (Id),
-    CONSTRAINT FK_Dashboard_ParentId FOREIGN KEY(ParentId) REFERENCES Dashboard (Id),
-    CONSTRAINT FK_DashboardComponent_ParentId FOREIGN KEY(ParentId) REFERENCES DashboardComponent (Id),
-    CONSTRAINT FK_Event_ParentId FOREIGN KEY(ParentId) REFERENCES Event (Id),
-    CONSTRAINT FK_Lead_ParentId FOREIGN KEY(ParentId) REFERENCES Lead (Id),
-    CONSTRAINT FK_Opportunity_ParentId FOREIGN KEY(ParentId) REFERENCES Opportunity (Id),
-    CONSTRAINT FK_Product2_ParentId FOREIGN KEY(ParentId) REFERENCES Product2 (Id),
-    CONSTRAINT FK_Report_ParentId FOREIGN KEY(ParentId) REFERENCES Report (Id),
-    CONSTRAINT FK_Site_ParentId FOREIGN KEY(ParentId) REFERENCES Site (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id),
-    CONSTRAINT FK_Task_ParentId FOREIGN KEY(ParentId) REFERENCES Task (Id),
-    CONSTRAINT FK_User__InsertedById FOREIGN KEY(InsertedById) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__ParentId FOREIGN KEY(ParentId) REFERENCES User_ (Id)
-) OPTIONS (NAMEINSOURCE 'UserProfileFeed', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'User Profile Feed', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'UserProfileFeed', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'false', "teiid_sf:Supports Delete" 'false', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'false', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE UserRole (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -3099,12 +2819,8 @@ CREATE FOREIGN TABLE UserRole (
     PortalAccountId string(18) OPTIONS (NAMEINSOURCE 'PortalAccountId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     PortalType string(40) OPTIONS (NAMEINSOURCE 'PortalType', UPDATABLE FALSE, NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'None,CustomerPortal,Partner'),
     PortalAccountOwnerId string(18) OPTIONS (NAMEINSOURCE 'PortalAccountOwnerId', UPDATABLE FALSE, NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Account_PortalAccountId FOREIGN KEY(PortalAccountId) REFERENCES Account (Id),
-    CONSTRAINT FK_User__ForecastUserId FOREIGN KEY(ForecastUserId) REFERENCES User_ (Id),
-    CONSTRAINT FK_User__PortalAccountOwnerId FOREIGN KEY(PortalAccountOwnerId) REFERENCES User_ (Id),
-    CONSTRAINT FK_UserRole_ParentRoleId FOREIGN KEY(ParentRoleId) REFERENCES UserRole (Id)
-) OPTIONS (NAMEINSOURCE 'UserRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Role', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'UserRole', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
 
 CREATE FOREIGN TABLE Vote (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -3112,10 +2828,10 @@ CREATE FOREIGN TABLE Vote (
     ParentId string(18) OPTIONS (NAMEINSOURCE 'ParentId', NATIVE_TYPE 'reference', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     Type string(40) OPTIONS (NAMEINSOURCE 'Type', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'Up,Down,1,2,3,4,5'),
     CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_Idea_ParentId FOREIGN KEY(ParentId) REFERENCES Idea (Id),
-    CONSTRAINT FK_IdeaComment_ParentId FOREIGN KEY(ParentId) REFERENCES IdeaComment (Id),
-    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id)
-) OPTIONS (NAMEINSOURCE 'Vote', "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Votes', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT FK_Idea_ParentId FOREIGN KEY(ParentId) REFERENCES Idea (Id) OPTIONS (NAMEINSOURCE 'Votes'),
+    CONSTRAINT FK_IdeaComment_ParentId FOREIGN KEY(ParentId) REFERENCES IdeaComment (Id) OPTIONS (NAMEINSOURCE 'Votes'),
+    CONSTRAINT FK_Solution_ParentId FOREIGN KEY(ParentId) REFERENCES Solution (Id) OPTIONS (NAMEINSOURCE 'Votes')
+) OPTIONS (NAMEINSOURCE 'Vote', "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
 
 CREATE FOREIGN TABLE WebLink (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
@@ -3141,6 +2857,5 @@ CREATE FOREIGN TABLE WebLink (
     DisplayType string(40) OPTIONS (NAMEINSOURCE 'DisplayType', NATIVE_TYPE 'restrictedpicklist', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false', "teiid_sf:Picklist Values" 'L,B,M'),
     RequireRowSelection boolean OPTIONS (NAMEINSOURCE 'RequireRowSelection', NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     NamespacePrefix string(15) OPTIONS (NAMEINSOURCE 'NamespacePrefix', UPDATABLE FALSE, NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
-    CONSTRAINT Id_PK PRIMARY KEY(Id),
-    CONSTRAINT FK_ApexPage_ScontrolId FOREIGN KEY(ScontrolId) REFERENCES ApexPage (Id)
-) OPTIONS (NAMEINSOURCE 'WebLink', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:label_plural" 'Custom Buttons or Links', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'WebLink', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');

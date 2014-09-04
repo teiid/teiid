@@ -10,10 +10,10 @@ import org.teiid.language.Join;
 import org.teiid.language.NamedTable;
 import org.teiid.language.TableReference;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 
 
 /**
@@ -34,6 +34,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 	private Table rightTableInJoin;
 	private Table childTable;
 	private String parentName;
+	private ForeignKey foreignKey;
 
 	public JoinQueryVisitor(RuntimeMetadata metadata) {
 		super(metadata);
@@ -75,6 +76,16 @@ public class JoinQueryVisitor extends SelectVisitor {
 					if (StringUtil.endsWithIgnoreCase(name, "id")) {
 						this.parentName = name.substring(0, name.length() - 2);
 					}
+					Table parent = leftTableInJoin;
+					if (isChildToParentJoin()) {
+						parent = rightTableInJoin;
+					}
+					for (ForeignKey fk : childTable.getForeignKeys()) {
+						if (fk.getReferenceKey().equals(parent.getPrimaryKey())) {
+							foreignKey = fk;
+							break;
+						}
+					}
 				} else {
 					// Only add the criteria to the query if it is not the join criteria.
 					// The join criteria is implicit in the salesforce syntax.
@@ -108,8 +119,11 @@ public class JoinQueryVisitor extends SelectVisitor {
 		subselect.append(SPACE);
 
 		subselect.append(FROM).append(SPACE);
-		String pluralName = rightTableInJoin.getProperty(SalesForceMetadataProcessor.TABLE_LABEL_PLURAL, false);
-		if (pluralName == null) {
+		
+		String pluralName = null;
+		if (this.foreignKey != null && this.foreignKey.getNameInSource() != null) {
+			pluralName = this.foreignKey.getNameInSource();
+		} else {
 			pluralName = rightTableInJoin.getNameInSource() + "s"; //$NON-NLS-1$
 		}
 		subselect.append(pluralName);

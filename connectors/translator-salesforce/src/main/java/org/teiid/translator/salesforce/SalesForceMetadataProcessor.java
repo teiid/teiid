@@ -36,7 +36,6 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	
 	private Map<String, Table> tableMap = new HashMap<String, Table>();
 	private Map<String, List<ChildRelationship>> relationships = new LinkedHashMap<String, List<ChildRelationship>>();
-	private boolean hasUpdateableColumn = false;
 	private List<Column> columns;
 	private boolean auditModelFields = false;
 
@@ -66,8 +65,6 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	static final String TABLE_SUPPORTS_RETRIEVE = MetadataFactory.SF_URI+"Supports Retrieve"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Search")
 	static final String TABLE_SUPPORTS_SEARCH = MetadataFactory.SF_URI+"Supports Search"; //$NON-NLS-1$
-	@ExtensionMetadataProperty(applicable={Table.class}, datatype=String.class, display="The plural name")
-	public static final String TABLE_LABEL_PLURAL = MetadataFactory.SF_URI+"label_plural"; //$NON-NLS-1$
 	
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Defaulted on Create")
 	static final String COLUMN_DEFAULTED = MetadataFactory.SF_URI+"Defaulted on Create"; //$NON-NLS-1$
@@ -141,7 +138,9 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	private void addRelationships() {
 		for (Map.Entry<String, List<ChildRelationship>> entry : this.relationships.entrySet()) {
 			for (ChildRelationship relationship : entry.getValue()) {
-			
+				if (relationship.getRelationshipName() == null) {
+					continue; //not queryable
+				}
 				if (!isModelAuditFields() && isAuditField(relationship.getField())) {
 	                continue;
 	            }
@@ -170,7 +169,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				ArrayList<String> columnNames = new ArrayList<String>();
 				columnNames.add(col.getName());	
 				ForeignKey fk = metadataFactory.addForiegnKey(name, columnNames, parent.getName(), child);
-				//fk.setNameInSource(relationship.getRelationshipName()); //TODO: only needed for custom relationships 
+				fk.setNameInSource(relationship.getRelationshipName()); //TODO: only needed for custom relationships
 			}
 		}
 	}
@@ -210,11 +209,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		table.setProperty(TABLE_SUPPORTS_REPLICATE, String.valueOf(objectMetadata.isReplicateable()));
 		table.setProperty(TABLE_SUPPORTS_RETRIEVE, String.valueOf(objectMetadata.isRetrieveable()));
 		table.setProperty(TABLE_SUPPORTS_SEARCH, String.valueOf(objectMetadata.isSearchable()));
-		table.setProperty(TABLE_LABEL_PLURAL, objectMetadata.getLabelPlural());
-		
 
-		hasUpdateableColumn = false;
-		addColumns(objectMetadata, table);
+		boolean hasUpdateableColumn = addColumns(objectMetadata, table);
 		
 		// Some SF objects return true for isUpdateable() but have no updateable columns.
 		if(hasUpdateableColumn && objectMetadata.isUpdateable()) {
@@ -229,7 +225,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		}
 	}
 
-	private void addColumns(DescribeSObjectResult objectMetadata, Table table) throws TranslatorException {
+	private boolean addColumns(DescribeSObjectResult objectMetadata, Table table) throws TranslatorException {
+		boolean hasUpdateableColumn = false;
 		List<Field> fields = objectMetadata.getFields();
 		for (Field field : fields) {
 			String normalizedName = NameUtil.normalizeName(field.getName());
@@ -336,6 +333,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			column.setProperty(COLUMN_CUSTOM, String.valueOf(field.isCustom()));
 			column.setProperty(COLUMN_DEFAULTED, String.valueOf(field.isDefaultedOnCreate()));
 		}		
+		return hasUpdateableColumn;
 	}
 	
 	private String getPicklistValues(Field field) {
