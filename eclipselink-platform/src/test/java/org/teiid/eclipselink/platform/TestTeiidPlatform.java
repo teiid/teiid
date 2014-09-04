@@ -21,7 +21,8 @@
 */
 package org.teiid.eclipselink.platform;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,6 +41,7 @@ import javax.resource.cci.ConnectionFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
@@ -63,8 +65,7 @@ public class TestTeiidPlatform {
 		server.addTranslator("file", executionFactory);
 		
 		FileManagedConnectionFactory fileManagedconnectionFactory = new FileManagedConnectionFactory();
-		String path = TestTeiidPlatform.class.getClassLoader().getResource("file").getPath() ;
-		fileManagedconnectionFactory.setParentDirectory("src/test/resources/file");
+		fileManagedconnectionFactory.setParentDirectory(UnitTestUtil.getTestDataPath()+File.separator+"file");
 		ConnectionFactory connectionFactory = fileManagedconnectionFactory.createConnectionFactory();
 		ConnectionFactoryProvider<ConnectionFactory> connectionFactoryProvider = new EmbeddedServer.SimpleConnectionFactoryProvider<ConnectionFactory>(connectionFactory);
 		server.addConnectionFactoryProvider("java:/marketdata-file", connectionFactoryProvider);
@@ -73,8 +74,7 @@ public class TestTeiidPlatform {
 		server.start(config);
 		DriverManager.registerDriver(server.getDriver());
 		
-		path = TestTeiidPlatform.class.getClassLoader().getResource("vdb").getPath() + File.separator + "marketdata-vdb.xml" ;
-		server.deployVDB(new FileInputStream(new File(path)));
+		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("vdb"+File.separator+"marketdata-vdb.xml")));
 		
 		factory = Persistence.createEntityManagerFactory("org.teiid.eclipselink.test");
 	}

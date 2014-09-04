@@ -16,7 +16,7 @@
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>eclipselink</artifactId>
 		</dependency>
-
+        
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
@@ -47,6 +47,13 @@
 			<classifier>lib</classifier>
 			<scope>test</scope>
 		</dependency>
+        
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>        
 	</dependencies>
 	
 </project>
