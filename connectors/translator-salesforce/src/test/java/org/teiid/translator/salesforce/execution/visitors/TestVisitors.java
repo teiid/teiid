@@ -47,13 +47,14 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
@@ -109,7 +110,12 @@ public class TestVisitors {
             nativeProc.setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "search;select accountname from account where accountid = $1");
             nativeProc.setResultSet(RealMetadataFactory.createResultSet("rs", new String[] {"accountname"}, new String[] {TypeFacility.RUNTIME_NAMES.STRING}));
     		
-            return new TransformationMetadata(null, new CompositeMetadataStore(mf.asMetadataStore()), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
+            TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x");
+            ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
+        	if (report.hasItems()) {
+        		throw new RuntimeException(report.getFailureMessage());
+        	}
+        	return tm;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -280,6 +286,13 @@ public class TestVisitors {
 		String sql = "exec foo('1')";
 		String source = "select accountname from account where accountid = '1'";
 		helpTest(sql, source);
+	}
+	
+	@Test public void testPluralNameFromKey() throws Exception {
+		String sql = "SELECT CaseSolution.SolutionId, Case_.Origin FROM Case_ LEFT OUTER JOIN CaseSolution ON Case_.Id = CaseSolution.CaseId";
+		String source = "SELECT Case.Origin, (SELECT CaseSolution.SolutionId FROM CaseSolutions) FROM Case";
+		helpTest(sql, source);
+		
 	}
 	
 }
