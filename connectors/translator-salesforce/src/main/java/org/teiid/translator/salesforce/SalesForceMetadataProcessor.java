@@ -38,6 +38,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	private Map<String, List<ChildRelationship>> relationships = new LinkedHashMap<String, List<ChildRelationship>>();
 	private List<Column> columns;
 	private boolean auditModelFields = false;
+	private boolean normalizeNames = true;
 
 	// Audit Fields
 	public static final String AUDIT_FIELD_CREATED_BY_ID = "CreatedById"; //$NON-NLS-1$
@@ -145,19 +146,19 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	                continue;
 	            }
 	
-				Table parent = tableMap.get(NameUtil.normalizeName(entry.getKey()));
+				Table parent = tableMap.get(entry.getKey());
 				KeyRecord pk = parent.getPrimaryKey();
 				if (null == pk) {
 	                throw new RuntimeException("ERROR !!primary key column not found!!"); //$NON-NLS-1$
 	            }
 				
-				Table child = tableMap.get(NameUtil.normalizeName(relationship.getChildSObject()));
+				Table child = tableMap.get(relationship.getChildSObject());
 				
 				Column col = null;
 				columns = child.getColumns();
 				for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
 					Column column = colIter.next();
-					if(column.getName().equals(relationship.getField())) {
+					if(column.getNameInSource().equals(relationship.getField())) {
 						col = column;
 					}
 				}
@@ -194,11 +195,14 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			throw new TranslatorException(e);
 		}
 		
-		String name = NameUtil.normalizeName(objectMetadata.getName());
+		String name = objectMetadata.getName();
+		if (normalizeNames) {
+			name = NameUtil.normalizeName(name);
+		}
 		Table table = metadataFactory.addTable(name);
 		
 		table.setNameInSource(objectMetadata.getName());
-		tableMap.put(name, table);
+		tableMap.put(objectMetadata.getName(), table);
 		getRelationships(objectMetadata);
 
 		table.setProperty(TABLE_CUSTOM, String.valueOf(objectMetadata.isCustom()));
@@ -229,7 +233,10 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		boolean hasUpdateableColumn = false;
 		List<Field> fields = objectMetadata.getFields();
 		for (Field field : fields) {
-			String normalizedName = NameUtil.normalizeName(field.getName());
+			String normalizedName = field.getName();
+			if (normalizeNames) {
+				normalizedName = NameUtil.normalizeName(normalizedName);
+			}
 			FieldType fieldType = field.getType();
 			if(!isModelAuditFields() && isAuditField(field.getName())) {
 				continue;
@@ -359,4 +366,13 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     public void setModelAuditFields(boolean modelAuditFields) {
         this.auditModelFields = modelAuditFields;
     }	
+    
+    @TranslatorProperty(display="Normalize Names", category=PropertyType.IMPORT, description="Normalize the object/field names to not need quoting")
+    public boolean isNormalizeNames() {
+		return normalizeNames;
+	}
+    
+    public void setNormalizeNames(boolean normalizeNames) {
+		this.normalizeNames = normalizeNames;
+	}
 }
