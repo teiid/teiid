@@ -38,6 +38,7 @@ import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.CoreConstants;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -77,7 +78,10 @@ public abstract class AbstractVDBDeployer {
 	
 	protected void assignMetadataRepositories(VDBMetaData deployment, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
-			if (model.getModelType() != Type.OTHER && (model.getName() == null || model.getName().indexOf('.') >= 0)) {
+			if (model.getModelType() != Type.OTHER && (model.getName() == null || model.getName().indexOf('.') >= 0) 
+					|| model.getName().equalsIgnoreCase(CoreConstants.SYSTEM_MODEL)
+					|| model.getName().equalsIgnoreCase(CoreConstants.SYSTEM_ADMIN_MODEL)
+					|| model.getName().equalsIgnoreCase(CoreConstants.ODBC_MODEL)) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40121, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40121, model.getName(), deployment.getName(), deployment.getVersion()));
 			}
 			if (model.isSource() && model.getSourceNames().isEmpty()) {
