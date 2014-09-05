@@ -144,7 +144,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	    int nodeType = root.getType();
         
 		// Update this node's output columns based on parent's columns
-		root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
+	    List<Expression> oldOutput = (List<Expression>) root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
         
 		if (root.getChildCount() == 0) {
             return;
@@ -170,6 +170,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 						}
 	            	}
 		    	}
+		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
+		        break;
 		    case NodeConstants.Types.DUP_REMOVE:
 		    	if (root.getType() == NodeConstants.Types.DUP_REMOVE) {
 		    		//TODO there's an analog here for a non-partitioned union, but it would mean checking projections from each branch
@@ -190,28 +192,30 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			    		}
 		    		}
 		    	}
-		    case NodeConstants.Types.TUPLE_LIMIT:
 		    case NodeConstants.Types.SORT:
-		    	if (root.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
-		    		//add missing sort columns
-			    	OrderBy elements = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
+	    		//correct expression positions and update the unrelated flag
+		    	OrderBy order = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
+		    	if (order != null && (oldOutput == null || !oldOutput.equals(outputElements))) {
 			    	outputElements = new ArrayList<Expression>(outputElements);
 			    	boolean hasUnrelated = false;
-			    	for (OrderByItem item : elements.getOrderByItems()) {
-			    		if (item.getExpressionPosition() == -1) {
-			    			int index = outputElements.indexOf(item.getSymbol());
-			    			if (index != -1) {
-			    				item.setExpressionPosition(index);
-			    			} else {
-			    				hasUnrelated = true;
-			    				outputElements.add(item.getSymbol());
-			    			}
-						}
+			    	for (OrderByItem item : order.getOrderByItems()) {
+			    		int index = outputElements.indexOf(item.getSymbol());
+		    			if (index != -1) {
+		    				item.setExpressionPosition(index);
+		    			} else {
+		    				hasUnrelated = true;
+		    				outputElements.add(item.getSymbol());
+		    			}
 					}
 			    	if (!hasUnrelated) {
 			    		root.setProperty(NodeConstants.Info.UNRELATED_SORT, false);
+			    	} else {
+			    		root.setProperty(NodeConstants.Info.UNRELATED_SORT, true);
 			    	}
 		    	}
+		    	assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
+		        break;
+		    case NodeConstants.Types.TUPLE_LIMIT:
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.SOURCE: {

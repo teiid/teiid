@@ -1354,4 +1354,14 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(bsc),  //$NON-NLS-1$
                 new String[]{"SELECT COUNT(*) AS c_0 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); 
 	}
+	
+    @Test public void testOrderByUnrelatedInSubquery() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        String sql = "SELECT g1.e1 from pm1.g1 LEFT OUTER JOIN (SELECT g2.e1, AVG(g2.e2) from pm1.g2 GROUP BY g2.e1 ORDER BY AVG(g2.e2) LIMIT 2) j_Sub on g1.e1 = j_Sub.e1";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN (SELECT g_1.e1 AS c_0 FROM pm1.g2 AS g_1 GROUP BY g_1.e1 ORDER BY AVG(g_1.e2) LIMIT 2) AS v_0 ON g_0.e1 = v_0.c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+    }
 }
