@@ -96,7 +96,7 @@ public class TestExcelExecution {
     	Mockito.stub(connection.getFile("names.xlsx")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
 
     	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals("[[1, FirstName, LastName, Age], [2, John, Doe, 44.0], [3, Jane, Smith, 40.0], [4, Matt, Liek, 13.0], [5, Sarah, Byne, 10.0], [6, Rocky, Dog, 3.0]]", results.toString());
+    	assertEquals("[[1, FirstName, LastName, Age], [2, John, Doe, null], [3, Jane, Smith, 40.0], [4, Matt, Liek, 13.0], [5, Sarah, Byne, 10.0], [6, Rocky, Dog, 3.0]]", results.toString());
 	}	
 	
 	@Test
@@ -155,6 +155,7 @@ public class TestExcelExecution {
 			"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" + 
 			"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" + 
 			"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" + 
+			"	\"time\" time OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
 			"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
 			") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '14');";
 	
@@ -246,5 +247,14 @@ public class TestExcelExecution {
 
     	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID IN (13, 18)");
     	assertEquals("[[John], [Total]]", results.toString());
-	}		
+	}	
+	
+	@Test
+	public void testTime() throws Exception {
+    	FileConnection connection = Mockito.mock(FileConnection.class);
+    	Mockito.stub(connection.getFile("names.xls")).toReturn(UnitTestUtil.getTestDataFile("names.xlsx"));
+
+    	ArrayList results = helpExecute(commonDDL, connection, "select \"time\" from Sheet1");
+    	assertEquals("[[10:12:14]]", results.toString());
+	}	
 }
