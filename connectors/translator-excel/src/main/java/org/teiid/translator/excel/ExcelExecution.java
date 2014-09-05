@@ -33,6 +33,7 @@ import java.sql.Clob;
 import java.sql.SQLXML;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -281,7 +282,15 @@ public class ExcelExecution implements ResultSetExecution {
 		}
 		else if (expectedType.isAssignableFrom(java.sql.Time.class)) {
 			Date date = cell.getDateCellValue();
-			return new java.sql.Time(date.getTime());
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(date);
+			StringBuilder sb = new StringBuilder();
+			sb.append(calendar.get(Calendar.HOUR_OF_DAY))
+				.append(":") //$NON-NLS-1$
+				.append(calendar.get(Calendar.MINUTE))
+				.append(":") //$NON-NLS-1$
+				.append(calendar.get(Calendar.SECOND));
+			return java.sql.Time.valueOf(sb.toString());
 		}
 		
 		if (DataTypeManager.isTransformable(double.class, expectedType)) {

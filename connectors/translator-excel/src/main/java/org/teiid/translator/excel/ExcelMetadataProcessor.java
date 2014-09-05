@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import javax.resource.ResourceException;
 
@@ -163,6 +164,16 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 			for (int j = firstCellNumber; j < lastCellNumber; j++) {
 				Cell headerCell = headerRow.getCell(j);
 				Cell dataCell = dataRow.getCell(j);
+				// if the cell value is null; then advance the data row cursor to to find it 
+				if (dataCell == null) {
+					for (int rowNo = firstRowNumber+1; rowNo < firstRowNumber+10000; rowNo++) {
+						Row row = sheet.getRow(rowNo);
+						dataCell = row.getCell(j);
+						if (dataCell != null) {
+							break;
+						}
+					}
+				}
 				column = mf.addColumn(cellName(headerCell, columnCount), cellType(headerCell, dataCell), table);
 				column.setSearchType(SearchType.Unsearchable);
 				column.setProperty(ExcelMetadataProcessor.CELL_NUMBER, String.valueOf(j+1));
@@ -198,13 +209,16 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 	} 	
 	
 	private String getCellType(Cell cell) {
+		if (cell == null) {
+			return TypeFacility.RUNTIME_NAMES.STRING;
+		}
 		switch (cell.getCellType()) {
 		case Cell.CELL_TYPE_STRING:
 			return TypeFacility.RUNTIME_NAMES.STRING;
 		case Cell.CELL_TYPE_BOOLEAN:
 			return TypeFacility.RUNTIME_NAMES.BOOLEAN;
 		default:
-			return TypeFacility.RUNTIME_NAMES.DOUBLE;
+			return TypeFacility.RUNTIME_NAMES.DOUBLE;	
 		}
 	}
 	
