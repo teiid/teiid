@@ -22,7 +22,14 @@
 
 package org.teiid.query.function;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -35,8 +42,11 @@ import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 
 
 
@@ -93,6 +103,14 @@ public class FunctionLibrary {
 	public static final String JSONARRAY = "jsonarray"; //$NON-NLS-1$
 	
 	public static final String MVSTATUS = "mvstatus"; //$NON-NLS-1$
+	
+	public static final Set<String> INTERNAL_SCHEMAS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+	
+	static {
+		INTERNAL_SCHEMAS.add(CoreConstants.SYSTEM_MODEL);
+		INTERNAL_SCHEMAS.add(CoreConstants.SYSTEM_ADMIN_MODEL);
+		INTERNAL_SCHEMAS.add(CoreConstants.ODBC_MODEL);
+	}
 	
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;
@@ -215,7 +233,7 @@ public class FunctionLibrary {
         			//pushdown function takes presedence 
         			//TODO: there may be multiple translators contributing functions with the same name / types
         			//need "conformed" logic so that the right pushdown can occur
-        			if (descriptor.getMethod().getParent() == null || CoreConstants.SYSTEM_MODEL.equals(descriptor.getMethod().getParent().getName())) {
+        			if (CoreConstants.SYSTEM_MODEL.equals(descriptor.getSchema())) {
         				return Arrays.asList(descriptor);
         			}
         			result.add(descriptor);
@@ -267,6 +285,7 @@ public class FunctionLibrary {
         int bestScore = Integer.MAX_VALUE;
         boolean ambiguous = false;
         FunctionMethod result = null;
+        boolean isSystem = false;
                 
         outer: for (FunctionMethod nextMethod : functionMethods) {
             int currentScore = 0; 
@@ -339,6 +358,23 @@ public class FunctionLibrary {
             }
             
             boolean useNext = false;
+            
+        	boolean isSystemNext = nextMethod.getParent() == null || INTERNAL_SCHEMAS.contains(nextMethod.getParent().getName());
+        	if ((isSystem && isSystemNext) || (!isSystem && !isSystemNext && result != null)) {
+    			int partCount = partCount(result.getName());
+    			int nextPartCount = partCount(nextMethod.getName());
+    			if (partCount < nextPartCount) {
+    				//the current is more specific
+    				//this makes us more consistent with the table resolving logic
+    				continue outer; 
+    			}
+    			if (nextPartCount < partCount) {
+    				useNext = true;
+    			}
+        	} else if (isSystemNext) {
+        		useNext = true;
+        	}
+            
             if (currentScore == bestScore) {
             	ambiguous = true;
             	boolean useCurrent = false;
@@ -376,13 +412,14 @@ public class FunctionLibrary {
             
             if (currentScore < bestScore || useNext) {
             	ambiguous = false;
-                if (currentScore == 0) {
+                if (currentScore == 0 && isSystemNext) {
                     //this must be an exact match
                     return null;
                 }    
                 
                 bestScore = currentScore;
                 result = nextMethod;
+                isSystem = isSystemNext;
             }            
         }
         
@@ -393,6 +430,20 @@ public class FunctionLibrary {
 		return getConverts(result, types);
 	}
 	
+	private int partCount(String name) {
+		int result = 0;
+		int index = 0;
+		while (true) {
+			index = name.indexOf('.', index+1);
+			if (index > 0) {
+				result++;
+			} else {
+				break;
+			}
+		}
+		return result;
+	}
+
 	private FunctionDescriptor[] getConverts(FunctionMethod method, Class<?>[] types) {
         final List<FunctionParameter> methodTypes = method.getInputParameters();
         FunctionDescriptor[] result = new FunctionDescriptor[types.length];
