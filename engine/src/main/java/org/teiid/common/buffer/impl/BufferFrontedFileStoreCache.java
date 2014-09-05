@@ -748,6 +748,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		if (serializer == null) {
 			return null;
 		}
+		readAttempts.incrementAndGet();
 		InputStream is = null;
 		Lock lock = null;
 		ExtensibleBufferedInputStream eis = null;
