@@ -24,9 +24,9 @@ package org.teiid.common.buffer;
 
 public class CacheKey implements Comparable<CacheKey> {
 
-	private Long id;
-	protected long lastAccess;
-	protected long orderingValue;
+	final private Long id;
+	final protected long lastAccess;
+	final protected long orderingValue;
 	
 	public CacheKey(Long id, long lastAccess, long orderingValue) {
 		this.id = id;

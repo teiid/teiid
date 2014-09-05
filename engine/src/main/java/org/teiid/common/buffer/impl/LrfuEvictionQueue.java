@@ -39,8 +39,8 @@ import org.teiid.common.buffer.CacheKey;
  */
 public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
-	private static final long DEFAULT_HALF_LIFE = 1<<17;
-	private static final long MIN_INTERVAL = 1<<10;
+	private static final long DEFAULT_HALF_LIFE = 1<<16;
+	private static final long MIN_INTERVAL = 1<<9;
 	//TODO: until Java 7 ConcurrentSkipListMap has a scaling bug in that
 	//the level function limits the effective map size to ~ 2^16
 	//above which it performs comparably under multi-threaded load to a synchronized LinkedHashMap
@@ -105,13 +105,14 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	/**
      * Callers should be synchronized on value
      */
-	public void recordAccess(V value) {
+	void recordAccess(V value) {
 		CacheKey key = value.getKey();
 		long lastAccess = key.getLastAccess();
 		long currentClock = clock.get();
 		long orderingValue = key.getOrderingValue();
 		orderingValue = computeNextOrderingValue(currentClock, lastAccess,
 				orderingValue);
+		assert !this.evictionQueue.containsKey(value.getKey());
 		value.setKey(new CacheKey(key.getId(), currentClock, orderingValue));
 	}
 	
@@ -121,20 +122,14 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		if (delta > maxInterval) {
 			return currentTime;
 		}
-		long increase = Math.min(orderingValue, currentTime);
-		
 		//scale the increase based upon how hot we previously were
-		increase>>=1;
-		increase *= orderingValue/(double)lastAccess;
+		long increase = orderingValue + lastAccess;
 		
 		if (delta > halfLife) {
 			while ((delta-=halfLife) > halfLife && (increase>>=1) > 0) {
 			}
 		}
-		if (delta > 0 && increase > 0) {
-			//linear interpolate the rest of the delta (between 1 and 1/2)
-			increase = (long) (increase*(halfLife/((double)halfLife + delta)));
-		}
+		increase = Math.min(currentTime, increase);
 		return currentTime + increase;
 	}
 	
@@ -145,6 +140,22 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	
 	public int getSize() {
 		return size.get();
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		result.append("Size:").append(getSize()).append(" "); //$NON-NLS-1$ //$NON-NLS-2$
+		int max = 2000;
+		for (CacheKey e : evictionQueue.keySet()) {
+			result.append("(").append(e.getOrderingValue()).append(", ") //$NON-NLS-1$ //$NON-NLS-2$
+					.append(e.getLastAccess()).append(", ").append(e.getId()) //$NON-NLS-1$
+					.append(") "); //$NON-NLS-1$
+			if (--max == 0) {
+				result.append("..."); //$NON-NLS-1$
+			}
+		}
+		return result.toString();
 	}
 	
 }

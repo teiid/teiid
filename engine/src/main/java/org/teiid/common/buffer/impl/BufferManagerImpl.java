@@ -87,7 +87,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	 * Asynch cleaner attempts to age out old entries and to reduce the memory size when 
 	 * little is reserved.
 	 */
-	private static final int MAX_READ_AGE = 1<<17;
+	private static final int MAX_READ_AGE = 1<<19;
 	private static final class Cleaner extends TimerTask {
 		WeakReference<BufferManagerImpl> bufferRef;
 		
@@ -105,7 +105,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				}
 				impl.cleaning.set(true);
 				try {
-					long evicted = impl.doEvictions(impl.maxProcessingBytes, false, impl.initialEvictionQueue);
+					long evicted = impl.doEvictions(impl.maxProcessingBytes, true, impl.initialEvictionQueue);
 					if (evicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
 					}
@@ -823,52 +823,49 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			first = evictionQueue;
 			second = initialEvictionQueue;
 		}
-		maxToFree -= doEvictions(maxToFree, true, first);
+		maxToFree -= doEvictions(maxToFree, false, first);
 		if (maxToFree > 0) {
 			maxToFree = Math.min(maxToFree, activeBatchBytes.get() + overheadBytes.get() - reserveBatchBytes.get());
 			if (maxToFree > 0) {
-				doEvictions(maxToFree, true, second);
+				doEvictions(maxToFree, false, second);
 			}
 		}
 	}
 	
-	long doEvictions(long maxToFree, boolean checkActiveBatch, LrfuEvictionQueue<CacheEntry> queue) {
+	long doEvictions(long maxToFree, boolean ageOut, LrfuEvictionQueue<CacheEntry> queue) {
 		if (queue == evictionQueue) {
 			maxToFree = Math.min(maxToFree, this.maxProcessingBytes);
 		}
 		long freed = 0;
 		while (freed <= maxToFree && (
-				!checkActiveBatch //age out 
+				ageOut 
 				|| (queue == evictionQueue && activeBatchBytes.get() + overheadBytes.get() + this.maxReserveBytes/2 > reserveBatchBytes.get()) //nominal cleaning criterion 
 				|| (queue != evictionQueue && activeBatchBytes.get() + overheadBytes.get() + 3*this.maxReserveBytes/4 > reserveBatchBytes.get()))) { //assume that basically all initial batches will need to be written out at some point
-			CacheEntry ce = queue.firstEntry(checkActiveBatch);
+			CacheEntry ce = queue.firstEntry(!ageOut);
 			if (ce == null) {
 				break;
 			}
 			synchronized (ce) {
 				if (!memoryEntries.containsKey(ce.getId())) {
-					if (!checkActiveBatch) {
+					if (!ageOut) {
 						queue.remove(ce);
 					}
 					continue; //not currently a valid eviction
 				}
 			}
-			if (!checkActiveBatch) {
+			if (ageOut) {
 				long lastAccess = ce.getKey().getLastAccess();
 				long currentTime = readAttempts.get();
 				long age = currentTime - lastAccess;
 				if (age < MAX_READ_AGE) {
-					checkActiveBatch = true;
+					ageOut = false;
 					continue;
 				}
+				queue.remove(ce);
 			}
 			boolean evicted = true;
 			try {
 				evicted = evict(ce);
-				if (!evicted && !checkActiveBatch) {
-					//there's not much more that we should do as the head is being evicted by someone else
-					break; 
-				}
 			} catch (Throwable e) {
 				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30017, ce.getId() ));
 			} finally {
@@ -894,6 +891,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		boolean persist = false;
 		synchronized (ce) {
 			if (!ce.isPersistent()) {
+				//the entry should have been removed prior to being set as persistent
+				assert !initialEvictionQueue.remove(ce);
 				persist = true;
 				ce.setPersistent(true);
 			}
@@ -939,6 +938,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					//this call ensures that we won't leak
 					if (memoryEntries.containsKey(batch)) {
 						if (ce.isPersistent()) {
+							//invarient - once marked persistent the entry should not be in the initial eviction queue
+							assert !initialEvictionQueue.remove(ce);
 							evictionQueue.touch(ce);
 						} else {
 							initialEvictionQueue.touch(ce);
@@ -1014,11 +1015,10 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		synchronized (ce) {
 			boolean added = memoryEntries.put(ce.getId(), ce) == null;
 			if (initial) {
+				assert added;
 				initialEvictionQueue.add(ce);
-			} else if (added) {
-				evictionQueue.recordAccess(ce);
-				evictionQueue.add(ce);
 			} else {
+				assert ce.isPersistent();
 				evictionQueue.touch(ce);
 			}
 		}
