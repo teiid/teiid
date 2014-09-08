@@ -996,10 +996,10 @@ public class TestProcessor {
         
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null,  null }),
             Arrays.asList(new Object[] { "a",   "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null,  null }),
+            Arrays.asList(new Object[] { "c",   "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "b",   "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "c",   "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
         
         // Construct data manager with data
@@ -4286,10 +4286,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { "C", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "B", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "C", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -4309,10 +4309,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { null, null }),
+    		Arrays.asList(new Object[] { "C", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "B", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "C", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -4332,10 +4332,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { "c", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "b", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "c", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -4380,10 +4380,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { "c", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "b", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "c", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -7397,8 +7397,8 @@ public class TestProcessor {
         		Arrays.asList("a", "a"),
         		Arrays.asList("a", "a"),
         		Arrays.asList("a", "a"),
-        		Arrays.asList("b", "b"),
         		Arrays.asList("c", "c"),
+        		Arrays.asList("b", "b"),
         };    
     
         FakeDataManager dataManager = new FakeDataManager();

@@ -167,9 +167,7 @@ public class SortNode extends RelationalNode {
 	protected void getNodeString(StringBuffer str) {
 		super.getNodeString(str);
 		str.append("[").append(mode).append("] "); //$NON-NLS-1$ //$NON-NLS-2$
-		if (this.mode != Mode.DUP_REMOVE) {
-			str.append(this.items);
-		}
+		str.append(this.items);
 	}
 
 	protected void copyTo(SortNode target){
@@ -188,7 +186,7 @@ public class SortNode extends RelationalNode {
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         
-        if(this.mode != Mode.DUP_REMOVE && this.items != null) {
+        if(this.items != null) {
             props.addProperty(PROP_SORT_COLS, this.items.toString());
         }
         
@@ -219,7 +217,7 @@ public class SortNode extends RelationalNode {
     @Override
     public boolean hasBuffer(boolean requireFinal) {
     	if (this.getElements().size() == this.getChildren()[0].getElements().size()) {
-    		return !requireFinal || mode != Mode.DUP_REMOVE;
+    		return true;
     	}
     	return false;
     }

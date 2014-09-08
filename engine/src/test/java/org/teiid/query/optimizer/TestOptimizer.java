@@ -86,7 +86,6 @@ public class TestOptimizer {
     public interface SemiJoin {}
     public interface AntiSemiJoin {}
     public interface DependentProjectNode {}
-    public interface DupRemoveNode {}
     public interface DupRemoveSortNode {}
     
     public static final int[] FULL_PUSHDOWN = new int[] {
@@ -409,9 +408,6 @@ public class TestOptimizer {
         } else if (nodeType.equals(SortNode.class)) {
         	Mode mode = ((SortNode)relationalNode).getMode();
         	switch(mode) {
-        	case DUP_REMOVE:
-                updateCounts(DupRemoveNode.class, counts, types);
-        		break;
         	case DUP_REMOVE_SORT:
                 updateCounts(DupRemoveSortNode.class, counts, types);
         		break;

@@ -82,20 +82,14 @@ public class TestSortNode {
         sortNode.initialize(context, mgr, null);    
         
         sortNode.open();
-        if (mode == Mode.DUP_REMOVE) {
-        	assertFalse(sortNode.hasBuffer(true));
-        } else {
-        	assertTrue(sortNode.hasBuffer(true));
-        }
+    	assertTrue(sortNode.hasBuffer(true));
         int currentRow = 1;
         while(true) {
         	try {
 	            TupleBatch batch = sortNode.nextBatch();
-	            if (mode != Mode.DUP_REMOVE) {
-	                for(int row = currentRow; row <= batch.getEndRow(); row++) {
-	                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
-	                }
-	            }
+                for(int row = currentRow; row <= batch.getEndRow(); row++) {
+                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
+                }
 	            currentRow += batch.getRowCount();    
 	            if(batch.getTerminationFlag()) {
 	                break;
@@ -254,28 +248,6 @@ public class TestSortNode {
         helpTestBasicSort(expected, Mode.SORT);
     }
     
-    /**
-     * Note the ordering here is not stable
-     * @throws Exception
-     */
-    @Test public void testBasicSortRemoveDup() throws Exception {
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(1), "2" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(2), "1" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(3), "3" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(4), "3" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(5), "2" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(6), "1" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(7), "3" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(8), "2" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(9), "1" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(10), "4" }),    //$NON-NLS-1$
-        };
-
-        helpTestBasicSort(expected, Mode.DUP_REMOVE);
-    }   
-    
     @Test public void testBasicSortRemoveDupSort() throws Exception {
     	List[] expected = new List[] { 
                 Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
@@ -310,28 +282,6 @@ public class TestSortNode {
         helpTestAllSorts(1);
     }       
     
-    @Test public void testDupRemove() throws Exception {
-    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
-        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
-        tsid.addTuple(Arrays.asList(1));
-    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test", tsid.getSchema()); //$NON-NLS-1$
-    	TupleBuffer out = su.sort();
-    	TupleSource ts = out.createIndexedTupleSource();
-    	assertEquals(Arrays.asList(1), ts.nextTuple());
-    	try {
-    		ts.nextTuple();
-    		fail();
-    	} catch (BlockedException e) {
-    		
-    	}
-    	tsid.addTuple(Arrays.asList(2));
-    	tsid.addTuple(Arrays.asList(3));
-    	su.sort();
-    	assertEquals(Arrays.asList(2), ts.nextTuple());
-    }
-    
     @Test public void testDistinct() throws Exception {
     	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -345,39 +295,6 @@ public class TestSortNode {
     	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE_SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
     	su.sort();
     	assertFalse(su.isDistinct());
-    }
-    
-    @Test public void testDupRemoveLowMemory() throws Exception {
-    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
-        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        BufferManager bm = BufferManagerFactory.getTestBufferManager(0, 2);
-        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
-        tsid.addTuple(Arrays.asList(1));
-        tsid.addTuple(Arrays.asList(2));
-    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test", tsid.getSchema()); //$NON-NLS-1$
-    	TupleBuffer out = su.sort();
-    	TupleSource ts = out.createIndexedTupleSource();
-    	assertEquals(Arrays.asList(1), ts.nextTuple());
-    	assertEquals(Arrays.asList(2), ts.nextTuple());
-    	try {
-    		ts.nextTuple();
-    		fail();
-    	} catch (BlockedException e) {
-    		
-    	}
-    	tsid.addTuple(Arrays.asList(3));
-    	tsid.addTuple(Arrays.asList(4));
-    	tsid.addTuple(Arrays.asList(5));
-    	tsid.addTuple(Arrays.asList(6));
-    	tsid.addTuple(Arrays.asList(6));
-    	tsid.addTuple(Arrays.asList(6));
-    	tsid.close();
-    	su.sort();
-		ts.nextTuple();
-		ts.nextTuple();
-		assertNotNull(ts.nextTuple());
-		assertNotNull(ts.nextTuple());
-		assertNull(ts.nextTuple());
     }
     
     @Test public void testSortUsingWorkingBuffer() throws TeiidException { 

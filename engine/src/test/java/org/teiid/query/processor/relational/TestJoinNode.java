@@ -1104,4 +1104,55 @@ public class TestJoinNode {
         TestProcessor.helpProcess(plan, context, hdm, new List<?>[] {Arrays.asList("0", 0), Arrays.asList("0", 1), Arrays.asList("1", 0), Arrays.asList("1", 1)});
     }
     
+    @Test public void testDupRemoveUnderJoin() throws Exception {
+    	String sql = "select a.e1, b.e2 from pm1.g1 as a, (select distinct e1, e2 from pm2.g2) as b"; //$NON-NLS-1$
+
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        HardcodedDataManager hdm = new HardcodedDataManager() {
+        	public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException {
+        		final TupleSource source = super.registerRequest(context, command, modelName, parameterObject);
+        		return new TupleSource() {
+
+					private int block;
+
+					@Override
+					public List<?> nextTuple() throws TeiidComponentException,
+							TeiidProcessingException {
+						if (block++%2==0) {
+							throw BlockedException.INSTANCE;
+						}
+						return source.nextTuple();
+					}
+
+					@Override
+					public void closeSource() {
+						source.closeSource();
+					}
+        			
+        		};
+        	}
+        };
+        List<?>[] rows = new List<?>[1];
+        for (int i = 0; i < rows.length; i++) {
+        	rows[i] = Arrays.asList(String.valueOf(i));
+        }
+        hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
+        rows = new List<?>[1025];
+        for (int i = 0; i < rows.length; i++) {
+        	rows[i] = Arrays.asList(String.valueOf(i), i);
+        }
+        hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
+        BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
+        mgr.setTargetBytesPerRow(100);
+        CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
+        
+        List<?>[] results = new List<?>[1025];
+        
+        for (int i = 0; i < results.length; i++) {
+        	results[i] = Arrays.asList("0", i);
+        }
+        
+        TestProcessor.helpProcess(plan, context, hdm, results);
+    }
+    
 }

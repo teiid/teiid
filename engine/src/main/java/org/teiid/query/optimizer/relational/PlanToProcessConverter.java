@@ -474,18 +474,20 @@ public class PlanToProcessConverter {
 
 			case NodeConstants.Types.SORT:
 			case NodeConstants.Types.DUP_REMOVE:
-                SortNode sortNode = new SortNode(getID());
-                OrderBy orderBy = (OrderBy) node.getProperty(NodeConstants.Info.SORT_ORDER);
-				if (orderBy != null) {
-					sortNode.setSortElements(orderBy.getOrderByItems());
-				}
 				if (node.getType() == NodeConstants.Types.DUP_REMOVE) {
-					sortNode.setMode(Mode.DUP_REMOVE);
-				} else if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
-					sortNode.setMode(Mode.DUP_REMOVE_SORT);
+					processNode = new DupRemoveNode(getID());
+				} else {
+	                SortNode sortNode = new SortNode(getID());
+	                OrderBy orderBy = (OrderBy) node.getProperty(NodeConstants.Info.SORT_ORDER);
+					if (orderBy != null) {
+						sortNode.setSortElements(orderBy.getOrderByItems());
+					}
+					if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
+						sortNode.setMode(Mode.DUP_REMOVE_SORT);
+					}
+	
+					processNode = sortNode;
 				}
-
-				processNode = sortNode;
 				break;
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
@@ -494,7 +496,7 @@ public class PlanToProcessConverter {
 				gnode.setOutputMapping(groupingMap);
 				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
 				List<Expression> gCols = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
-				orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
+				OrderBy orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
 				if (orderBy == null) {
 			        if (gCols != null) {
 		                orderBy = new OrderBy(RuleChooseJoinStrategy.createExpressionSymbols(gCols));
@@ -595,10 +597,14 @@ public class PlanToProcessConverter {
                     if(useAll) {
                         processNode = unionAllNode;
                     } else {
-                    	SortNode sNode = new SortNode(getID());
                     	boolean onlyDupRemoval = node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL);
-                    	sNode.setMode(onlyDupRemoval?Mode.DUP_REMOVE:Mode.DUP_REMOVE_SORT);
-                        processNode = sNode;
+                    	if (onlyDupRemoval) {
+                    		processNode = new DupRemoveNode(getID());
+                    	} else {
+                        	SortNode sNode = new SortNode(getID());
+                        	sNode.setMode(Mode.DUP_REMOVE_SORT);
+                            processNode = sNode;
+                    	}
                         
                         unionAllNode.setElements( (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS) );
                         processNode.addChild(unionAllNode);

@@ -422,8 +422,8 @@ public class TestOptionalJoins {
             Arrays.asList(new Object[] { new Integer(6) }),
             Arrays.asList(new Object[] { new Integer(6) }),
             Arrays.asList(new Object[] { new Integer(5) }),
-            Arrays.asList(new Object[] { new Integer(6) }),
             Arrays.asList(new Object[] { new Integer(5) }),
+            Arrays.asList(new Object[] { new Integer(6) }),
         };    
     
         // Construct data manager with data
