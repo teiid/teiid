@@ -38,7 +38,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.DependentProjectNode;
 import org.teiid.query.optimizer.TestOptimizer.DependentSelectNode;
-import org.teiid.query.optimizer.TestOptimizer.DupRemoveNode;
 import org.teiid.query.optimizer.TestOptimizer.DupRemoveSortNode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;

@@ -325,7 +325,41 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         if(this.phase == COLLECTION) {
             collectionPhase();
         }
+        
+        /* if !removeDuplicates && !rollup && aggs don't need a full sort) {
+         *    ...
+         * }
+         * 
+         */
 
+    	/*if (true) {
+    	 * 
+    	 * 
+    		List<Expression> schema = new ArrayList<Expression>();
+    		schema.add(this.orderBy.get(0).getSymbol());
+    		ElementSymbol es = new ElementSymbol("x");
+    		es.setType(Object[].class);
+    		schema.add(es);
+    		STree tree = this.getBufferManager().createSTree(schema, this.getConnectionID(), 1);
+    		TupleSource ts = getCollectionTupleSource();
+    		List<?> tuple = null;
+    		while ((tuple = ts.nextTuple()) != null) {
+    			List<?> current = tree.find(tuple);
+    			if (current != null) {
+    				//updateAggregates(tuple);
+    			} else {
+    				List<Object> updated = new ArrayList<Object>(tuple);
+    				updated.add(new Object[]{1}); //actually this should be the modified form
+    				tree.insert(updated, InsertMode.NEW, -1); 
+    			}
+    		}
+    		
+    		//throw new AssertionError();
+    		this.addBatchRow(Arrays.asList("1", 500000));
+    		this.terminateBatches();
+    		return pullBatch();
+    	}*/
+        
         // If necessary, sort to determine groups (if no group cols, no need to sort)
         if(this.phase == SORT) {
             sortPhase();

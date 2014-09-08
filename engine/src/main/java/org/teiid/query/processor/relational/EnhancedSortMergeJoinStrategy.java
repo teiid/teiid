@@ -272,10 +272,10 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 				break;
 			}
 			if (parent instanceof SortNode) {
-				SortNode sort = (SortNode)parent;
-				if (sort.getMode() != Mode.DUP_REMOVE) {
-					break;
-				}
+				break;
+			}
+			if (parent instanceof DupRemoveNode) {
+				break;
 			}
 			parent = parent.getParent();
 		}

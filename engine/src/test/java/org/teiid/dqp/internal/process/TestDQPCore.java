@@ -410,10 +410,10 @@ public class TestDQPCore {
     	//the sql should return 100 rows
         String sql = "SELECT IntKey FROM texttable('1112131415' columns intkey integer width 2 no row delimiter) t " +
         		"union " +
-        		"SELECT IntKey FROM bqt1.smalla"; //$NON-NLS-1$
+        		"SELECT IntKey FROM bqt1.smalla order by intkey"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         String sessionid = "1"; //$NON-NLS-1$
-        agds.sleep = 500;
+        agds.sleep = 50;
         agds.setUseIntCounter(true);
         RequestMessage reqMsg = exampleRequestMessage(sql);
         reqMsg.setRowLimit(11);
@@ -425,7 +425,7 @@ public class TestDQPCore {
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(5, rm.getResultsList().size());
+        assertEquals(10, rm.getResultsList().size());
         
         message = core.processCursorRequest(reqMsg.getExecutionId(), 6, 5);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
@@ -530,24 +530,19 @@ public class TestDQPCore {
 	}
     
     @Test public void testUsingFinalBuffer() throws Exception {
-    	String sql = "select intkey from bqt1.smalla union select 1";
+    	String sql = "select intkey from bqt1.smalla order by intkey";
     	((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
-    	agds.sleep = 500;
+    	agds.sleep = 50;
         RequestMessage reqMsg = exampleRequestMessage(sql);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(1, rm.getResultsList().size());
+        assertEquals(10, rm.getResultsList().size());
 
         message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(1, rm.getResultsList().size());
-        
-        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
-        rm = message.get(500000, TimeUnit.MILLISECONDS);
-        assertNull(rm.getException());
-        assertEquals(0, rm.getResultsList().size());
+        assertEquals(2, rm.getResultsList().size());
     }
 
     @Test public void testPreparedPlanInvalidation() throws Exception {

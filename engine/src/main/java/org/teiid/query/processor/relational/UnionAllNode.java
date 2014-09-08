@@ -32,7 +32,6 @@ import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.util.CommandContext;
 
 
@@ -83,10 +82,7 @@ public class UnionAllNode extends RelationalNode {
         		}
         		break;
         	} else if (parent instanceof SortNode) {
-        		SortNode sort = (SortNode)parent;
-        		if (sort.getMode() != Mode.DUP_REMOVE) {
-        			break;
-        		}
+    			break;
         	} else if (!(parent instanceof SelectNode) || !(parent instanceof ProjectNode) || !(parent instanceof UnionAllNode)) {
         		break;
         	}
