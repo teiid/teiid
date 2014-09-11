@@ -1,11 +1,12 @@
 #!/bin/bash
+## Usage: ./install.sh
+## Description: Build Teiid and run install steps to produce standalone server.
 
 ## Parse Teiid version out of POM.
 TEIID_VERSION=$(xmllint --xpath '/*/*[local-name()="version"]/text()' pom.xml)
-#TEIID_VERSION=8.9.0.Beta1
+TEIID_DIST=teiid-${TEIID_VERSION}-jboss-dist.zip
 
 SOURCES=(
-    #"https://sourceforge.net/projects/teiid/files/teiid-${TEIID_VERSION}-jboss-dist.zip"
     "http://download.jboss.org/jbosseap/6/jboss-eap-6.1.0.Alpha/jboss-eap-6.1.0.Alpha.zip"
     "http://sourceforge.net/projects/resteasy/files/Resteasy%20JAX-RS/2.3.6.Final/resteasy-jaxrs-2.3.6.Final-all.zip"
     "http://sourceforge.net/projects/teiid/files/webconsole/1.2/Final/teiid-console-dist-1.2.0.Final-jboss-as7.zip"
@@ -13,10 +14,14 @@ SOURCES=(
 
 set -e
 
-echo "Building install for Teiid $TEIID_VERSION."
+echo "Making install for Teiid $TEIID_VERSION..."
 
-## Build Teiid.
-#mvn clean install -P release -s settings.xml
+if [ ! -e build/target/$TEIID_DIST ];
+then
+    echo "Running Maven because $TEIID_DIST not found."
+    mvn clean install -P release -s settings.xml
+    echo
+fi
 
 mkdir -p install
 cd install
@@ -24,7 +29,7 @@ cd install
 ## Download extra packages for server.
 echo "Downloading extra packages..."
 wget -nc ${SOURCES[@]}
-ln -sf ../build/target/teiid-${TEIID_VERSION}-jboss-dist.zip .
+ln -sf ../build/target/$TEIID_DIST .
 
 rm -rf temp
 mkdir temp
@@ -47,7 +52,7 @@ echo
 echo "Installing Teiid..."
 cd jboss-eap-6.1
 unzip -q -o ../../teiid-console-dist-1.2.0.Final-jboss-as7.zip
-unzip -q -o ../../teiid-${TEIID_VERSION}-jboss-dist.zip
+unzip -q -o ../../$TEIID_DIST
 cd ..
 echo
 
