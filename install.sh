@@ -32,9 +32,9 @@ cd install
 
 ## Download extra packages for server.
 echo "Downloading extra packages..."
-echo
 wget -nc ${SOURCES[@]}
 ln -sf ../build/target/$TEIID_DIST .
+echo
 
 rm -rf temp
 mkdir temp
