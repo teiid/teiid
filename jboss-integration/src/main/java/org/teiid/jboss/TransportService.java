@@ -145,6 +145,8 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 			}
     		*/
     		this.address = getSocketBindingInjector().getValue().getSocketAddress();
+    		this.socketConfig.setBindAddress(this.address.getHostName());
+    		this.socketConfig.setPortNumber(this.address.getPort());
     		boolean sslEnabled = false;
     		if (this.socketConfig.getSSLConfiguration() != null) {
     			sslEnabled = this.socketConfig.getSSLConfiguration().isSslEnabled();

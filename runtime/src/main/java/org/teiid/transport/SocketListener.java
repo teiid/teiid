@@ -52,7 +52,7 @@ public class SocketListener implements ChannelListenerFactory {
     
     public SocketListener(InetSocketAddress address, SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
 		this(address, config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
-		LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {config.getHostAddress().getHostAddress(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {address.getHostName(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
     }
     
     /**
