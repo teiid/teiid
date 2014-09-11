@@ -53,9 +53,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	private boolean multiValued;
 	private boolean bindEligible;
 
-	public static final String COLLATION_LOCALE = System.getProperties().getProperty("org.teiid.collationLocale"); //$NON-NLS-1$
-
-	public static final Comparator<Object> COMPARATOR = getComparator(COLLATION_LOCALE, DataTypeManager.PAD_SPACE);
+	public static final Comparator<Object> COMPARATOR = getComparator(DataTypeManager.COLLATION_LOCALE, DataTypeManager.PAD_SPACE);
 	
 	static Comparator<Object> getComparator(String localeString, final boolean padSpace) {
 		if (localeString == null) {

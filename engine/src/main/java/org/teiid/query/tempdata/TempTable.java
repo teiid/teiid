@@ -352,6 +352,7 @@ public class TempTable implements Cloneable, SearchableTable {
         	this.uniqueColIndex = primaryKeyLength;
         	tree = bm.createSTree(columns, sessionID, primaryKeyLength);
         }
+		this.tree.setMinStorageSize(0);
 		this.columnMap = RelationalNode.createLookupMap(columns);
 		this.columns = columns;
 		IntBuffer notNullList = IntBuffer.allocate(columns.size());

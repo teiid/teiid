@@ -22,6 +22,7 @@
 
 package org.teiid.query.function.aggregate;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
@@ -50,6 +51,22 @@ public class Count extends AggregateFunction {
      */
     public Object getResult(CommandContext commandContext) {
         return Integer.valueOf(count);
+    }
+    
+    @Override
+    public void getState(List<Object> state) {
+    	state.add(count);
+    }
+    
+    @Override
+    public int setState(List<?> state, int index) {
+    	count = (Integer) state.get(index);
+    	return index++;
+    }
+    
+    @Override
+    public List<? extends Class<?>> getStateTypes() {
+    	return Arrays.asList(Integer.class);
     }
 
 }

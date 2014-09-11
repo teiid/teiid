@@ -201,5 +201,13 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 		this.sortParameters = sortParameters;
 	}
     
+    public List<Boolean> getOrderTypes() {
+		return orderTypes;
+	}
+    
+    public void setOrderTypes(List<Boolean> orderTypes) {
+		this.orderTypes = orderTypes;
+	}
+    
 } // END CLASS    
 

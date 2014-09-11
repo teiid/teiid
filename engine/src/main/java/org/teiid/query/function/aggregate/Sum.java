@@ -137,4 +137,23 @@ public class Sum extends SingleArgumentAggregateFunction {
         }
         return this.sumBigDecimal;
     }
+    
+    /*@Override
+	public void getState(List<Object> state) {
+		state.add(count);
+		state.add(sum);
+		state.add(sumSq);
+	}
+	
+	@Override
+	public List<? extends Class<?>> getStateTypes() {
+		return Arrays.asList(Integer.class, Double.class, Double.class);
+	}
+	
+	@Override
+	public void setState(List<?> state, int index) {
+		count = (Integer) state.get(index);
+		sum = (Double) state.get(index+1);
+		sumSq = (Double) state.get(index+2);
+	}*/
 }

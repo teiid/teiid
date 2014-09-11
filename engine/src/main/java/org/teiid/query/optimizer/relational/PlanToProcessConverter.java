@@ -22,14 +22,7 @@
 
 package org.teiid.query.optimizer.relational;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -475,13 +468,21 @@ public class PlanToProcessConverter {
 				OrderBy orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
 				if (orderBy == null) {
 			        if (gCols != null) {
-		                orderBy = new OrderBy(RuleChooseJoinStrategy.createExpressionSymbols(gCols));
+			        	LinkedHashSet<Expression> exprs = new LinkedHashSet<Expression>();
+			        	for (Expression ex : gCols) {
+			        		exprs.add(SymbolMap.getExpression(ex));
+			        	}
+		                orderBy = new OrderBy(RuleChooseJoinStrategy.createExpressionSymbols(new ArrayList<Expression>(exprs)));
 			        }
 				} else {
+					HashSet<Expression> seen = new HashSet<Expression>();
 			        for (int i = 0; i < gCols.size(); i++) {
 			        	if (i < orderBy.getOrderByItems().size()) {
 			        		OrderByItem orderByItem = orderBy.getOrderByItems().get(i);
 							Expression ex = SymbolMap.getExpression(orderByItem.getSymbol());
+							if (!seen.add(ex)) {
+								continue;
+							}
 				        	if (ex instanceof ElementSymbol) {
 			            		ex = groupingMap.getMappedExpression((ElementSymbol) ex);
 			            		orderByItem.setSymbol(new ExpressionSymbol("expr", ex)); //$NON-NLS-1$

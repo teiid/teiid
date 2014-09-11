@@ -207,19 +207,34 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				cache.createCacheGroup(id);
 				cleanup = AutoCleanupUtil.setCleanupReference(this, new Remover(id, prefersMemory));
 			}
-			int sizeEstimate = getSizeEstimate(batch);
-			Long oid = batchAdded.getAndIncrement();
 			CacheEntry old = null;
+			int sizeEstimate = 0;
+			boolean updateEstimates = true;
 			if (previous != null) {
-				if (removeOld) {
-					old = BufferManagerImpl.this.remove(id, previous, prefersMemory.get());
-				} else {
-					old = fastGet(previous, prefersMemory.get(), true);
+				old = fastGet(previous, prefersMemory.get(), true);
+				//check to see if we can reuse the existing entry
+				if (removeOld && old != null) {
+					synchronized (old) {
+						int oldRowCount = ((List)old.getObject()).size();
+						if (!old.isPersistent() && (batch.size() > (oldRowCount>>2) && batch.size() < (oldRowCount<<1))) {
+							old.setObject(batch);
+							return previous;
+						}
+						totalSize -= old.getSizeEstimate();
+						rowsSampled -= oldRowCount;
+						updateEstimates = true;
+					}
+					BufferManagerImpl.this.remove(old, prefersMemory.get());
 				}
 			} else {
+				updateEstimates = true;
+			}
+			sizeEstimate = getSizeEstimate(batch);
+			if (updateEstimates) {
 				totalSize += sizeEstimate;
 				rowsSampled += batch.size();
 			}
+			Long oid = batchAdded.getAndIncrement();
 			CacheKey key = new CacheKey(oid, readAttempts.get(), old!=null?old.getKey().getOrderingValue():0);
 			CacheEntry ce = new CacheEntry(key, sizeEstimate, batch, this.ref, false);
 			if (!cache.addToCacheGroup(id, ce.getId())) {
@@ -796,11 +811,6 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		if (max <= 0) {
 			return;
 		}
-		if (!cleaning.get()) {
-			synchronized (cleaner) {
-				cleaner.notify();
-			}
-		}
 		long activeBatch = activeBatchBytes.get() + overheadBytes.get();
 		long reserveBatch = reserveBatchBytes.get();
 		long memoryCount = activeBatch + maxReserveBytes - reserveBatch;
@@ -811,6 +821,11 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			return;
 		} else if (DataTypeManager.USE_VALUE_CACHE) {
 			DataTypeManager.setValueCacheEnabled(true);
+		}
+		if (cleaning.compareAndSet(false, true)) {
+			synchronized (cleaner) {
+				cleaner.notify();
+			}
 		}
 		//we delay work here as there should be excess vm space, we are using an overestimate, and we want the cleaner to do the work if possible
 		//TODO: track sizes held by each queue independently

@@ -185,7 +185,7 @@ class SPage implements Cloneable {
 		if (values instanceof LightWeightCopyOnWriteList<?>) {
 			values = ((LightWeightCopyOnWriteList<List<?>>)values).getList();
 		}
-		if (values.size() < stree.minPageSize) {
+		if (values.size() < stree.minPageSize || stree.getRowCount() < stree.minStorageSize) {
 			setDirectValues(values);
 			return;
 		} else if (stree.batchInsert && children == null && values.size() < stree.leafSize) {

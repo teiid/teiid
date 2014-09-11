@@ -23,6 +23,7 @@
 package org.teiid.query.function.aggregate;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -95,6 +96,27 @@ public class Avg extends Sum {
                 throw new AssertionError("unknown accumulator type"); //$NON-NLS-1$
 
         }
+    }
+    
+    @Override
+    public List<? extends Class<?>> getStateTypes() {
+    	ArrayList<Class<?>> result = new ArrayList<Class<?>>();
+    	result.addAll(super.getStateTypes());
+    	result.add(Integer.class);
+    	return result;
+    }
+    
+    @Override
+    public void getState(List<Object> state) {
+    	super.getState(state);
+    	state.add(count);
+    }
+    
+    @Override
+    public int setState(List<?> state, int index) {
+    	index = super.setState(state, index);
+    	count = (Integer) state.get(index);
+    	return index++;
     }
 
 }

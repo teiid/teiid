@@ -22,6 +22,7 @@
 
 package org.teiid.query.function.aggregate;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -36,9 +37,15 @@ import org.teiid.query.util.CommandContext;
 public class Min extends SingleArgumentAggregateFunction {
 
     private Object minValue;
+    private Class<?> outputType;
 
     public void reset() {
         minValue = null;
+    }
+    
+    @Override
+    public void initialize(Class<?> dataType, Class<?> inputType) {
+    	this.outputType = inputType;
     }
 
     /**
@@ -65,5 +72,20 @@ public class Min extends SingleArgumentAggregateFunction {
         return this.minValue;
     }
 
+    @Override
+    public List<? extends Class<?>> getStateTypes() {
+    	return Arrays.asList(outputType);
+    }
+    
+    @Override
+    public void getState(List<Object> state) {
+    	state.add(minValue);
+    }
+    
+    @Override
+    public int setState(List<?> state, int index) {
+    	this.minValue = state.get(index);
+    	return index++;
+    }
 
 }
