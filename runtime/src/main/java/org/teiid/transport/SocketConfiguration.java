@@ -79,7 +79,9 @@ public class SocketConfiguration {
 				this.hostName = InetAddress.getLocalHost().getHostName();
 			}
 		} catch (UnknownHostException e) {
-			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
+			// TEIID-3124
+			// throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
+			this.hostName = "localhost" ;
 		}
 	}
 
