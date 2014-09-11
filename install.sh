@@ -15,11 +15,15 @@ SOURCES=(
 set -e
 
 echo "Making install for Teiid $TEIID_VERSION..."
+echo
 
 if [ ! -e build/target/$TEIID_DIST ];
 then
     echo "Running Maven because $TEIID_DIST not found."
     mvn clean install -P release -s settings.xml
+    echo
+else
+    echo "Skipping Maven because $TEIID_DIST found."
     echo
 fi
 
@@ -28,6 +32,7 @@ cd install
 
 ## Download extra packages for server.
 echo "Downloading extra packages..."
+echo
 wget -nc ${SOURCES[@]}
 ln -sf ../build/target/$TEIID_DIST .
 
