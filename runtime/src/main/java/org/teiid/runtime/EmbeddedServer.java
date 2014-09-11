@@ -32,6 +32,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -400,7 +401,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 	
 	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {
-		InetSocketAddress address = new InetSocketAddress(socketConfig.getHostAddress(), socketConfig.getPortNumber());
+		InetSocketAddress address = null;
+		try {
+			address = new InetSocketAddress(socketConfig.getResolvedHostAddress(), socketConfig.getPortNumber());
+		} catch (UnknownHostException e) {
+			throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
+		}
 		if (socketConfig.getProtocol() == WireProtocol.teiid) {
 			return new SocketListener(address, socketConfig, this.services, bm) {
 				@Override
