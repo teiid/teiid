@@ -208,12 +208,16 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		            Expression expr = entry.getValue();
 		            
 		            VariableContext context = getCurrentVariableContext();
+		            if (context.getVariableMap().containsKey(param)) {
+		            	continue;
+		            }
 		            Object value = this.evaluateExpression(expr);
 		
 		            //check constraint
 		            checkNotNull(param, value);
 		            setParameterValue(param, context, value);
 		        }
+		        this.evaluator.close();
     		} else if (runInContext) {
     			//if there are no params, this needs to run in the current variable context
             	this.currentVarContext.setParentContext(parentContext);
@@ -354,6 +358,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	            } else {
 	            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
 	                inst.process(this);
+	                this.evaluator.close();
 	            }
 	        } catch (RuntimeException e) {
 	        	throw e;
@@ -630,6 +635,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
      * @throws XATransactionException 
      */
     public void pop(boolean success) throws TeiidComponentException {
+    	this.evaluator.close();
     	Program program = this.programs.pop();
     	VariableContext vc = this.currentVarContext;
     	VariableContext cs = this.cursorStates;
@@ -672,6 +678,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	}
     
     public void push(Program program) throws XATransactionException {
+    	this.evaluator.close();
     	program.reset(this.getContext().getConnectionId());
 		program.setTrappingExceptions(program.getExceptionGroup() != null || (!this.programs.isEmpty() && this.programs.peek().isTrappingExceptions()));
     	TempTableStore tts = getTempTableStore();
@@ -794,16 +801,12 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 
     boolean evaluateCriteria(Criteria condition) throws BlockedException, TeiidProcessingException, TeiidComponentException {
     	evaluator.initialize(getContext(), getDataManager());
-		boolean result = evaluator.evaluate(condition, Collections.emptyList());
-		this.evaluator.close();
-		return result;
+		return evaluator.evaluate(condition, Collections.emptyList());
     }
     
     Object evaluateExpression(Expression expression) throws BlockedException, TeiidProcessingException, TeiidComponentException {
     	evaluator.initialize(getContext(), getDataManager());
-    	Object result = evaluator.evaluate(expression, Collections.emptyList());
-    	this.evaluator.close();
-    	return result;
+    	return evaluator.evaluate(expression, Collections.emptyList());
     }
                
     public Program peek() {

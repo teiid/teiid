@@ -23,6 +23,7 @@
 package org.teiid.query.processor.proc;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2240,6 +2241,16 @@ public class TestProcedureProcessor {
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         
     	helpTestProcess(plan, new List[] {Arrays.asList(2)}, dataManager, tm);
+    }
+    
+    @Test public void testSubqueryArguments() {
+        String sql = "select * from (EXEC pm1.sq3b((select min(e1) from pm1.g1), (select max(e2) from pm1.g1))) as x"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        fdm.setBlockOnce();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[] {Arrays.asList("a", 0), Arrays.asList("a", 3), Arrays.asList("a", 0), Arrays.asList("a", 3)});
     }
     
     private static final boolean DEBUG = false;
