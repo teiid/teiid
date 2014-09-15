@@ -444,6 +444,8 @@ public final class RuleCollapseSource implements OptimizerRule {
                 FromClause clause2 = clauses.get(lastClause);
 
                 //compensate if we only support outer and use a left outer join instead
+                //TODO: moved the handling for the primary driver, salesforce, back into the translator
+                //so this may not be needed moving forward
                 if (!joinType.isOuter() && !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_INNER, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
                 	joinType = JoinType.JOIN_LEFT_OUTER;
                 	if (!crits.isEmpty()) {

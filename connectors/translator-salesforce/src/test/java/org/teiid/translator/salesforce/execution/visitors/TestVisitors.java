@@ -185,6 +185,27 @@ public class TestVisitors {
 		assertEquals("SELECT (SELECT Contact.Name FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
+	@Test public void testInnerJoin() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
+		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Contact WHERE Contact.AccountId != NULL", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testInnerJoin1() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Contact inner join Account on Account.Id = Contact.AccountId"); //$NON-NLS-1$
+		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Contact WHERE Contact.AccountId != NULL", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testInnerJoin2() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Contact inner join Account on Contact.AccountId = Account.Id"); //$NON-NLS-1$
+		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Contact WHERE Contact.AccountId != NULL", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
 	@Test public void testInWithNameInSourceDifferent() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("SELECT Contacts.Name FROM Contacts WHERE Contacts.Name in ('x', 'y')"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
