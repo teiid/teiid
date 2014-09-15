@@ -1,14 +1,8 @@
 package org.teiid.translator.salesforce.execution.visitors;
 
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Join;
-import org.teiid.language.NamedTable;
-import org.teiid.language.TableReference;
+import org.teiid.language.*;
+import org.teiid.language.Join.JoinType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
@@ -35,7 +29,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 	private Table childTable;
 	private String parentName;
 	private ForeignKey foreignKey;
-
+	
 	public JoinQueryVisitor(RuntimeMetadata metadata) {
 		super(metadata);
 	}
@@ -69,7 +63,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 						|| rightTableInJoin.getNameInSource().equals(lTableName)
 						&& !rTableName.equals(lTableName)) {
 					// This is the join criteria, the one that is the ID is the parent.
-					Expression fKey = !isIdColumn(lExp) ? lExp : rExp; 
+					Expression fKey = !isIdColumn(lExp) ? lExp : rExp;
 					ColumnReference columnReference = (ColumnReference) fKey;
 					table = childTable =  (Table)columnReference.getMetadataObject().getParent();
 					String name = columnReference.getMetadataObject().getNameInSource();
@@ -85,6 +79,17 @@ public class JoinQueryVisitor extends SelectVisitor {
 							foreignKey = fk;
 							break;
 						}
+					}
+					//inner joins require special handling as relationship queries are outer by default
+					if (join.getJoinType() == JoinType.INNER_JOIN) {
+						if (!isChildToParentJoin()) {
+							//flip the relationship
+							Table t = leftTableInJoin;
+							this.leftTableInJoin = rightTableInJoin;
+							this.rightTableInJoin = t;
+						} 
+						//add is null criteria
+						visitNode(new Comparison(fKey, new Literal(null, fKey.getType()), Comparison.Operator.NE));
 					}
 				} else {
 					// Only add the criteria to the query if it is not the join criteria.
