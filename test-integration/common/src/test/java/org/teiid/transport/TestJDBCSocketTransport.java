@@ -36,6 +36,8 @@ import java.sql.Types;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelHandlerContext;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -57,6 +59,7 @@ import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
+import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.HardCodedExecutionFactory;
@@ -70,6 +73,7 @@ public class TestJDBCSocketTransport {
 	static InetSocketAddress addr;
 	static SocketListener jdbcTransport;
 	static FakeServer server;
+	static int delay;
 	
 	@BeforeClass public static void oneTimeSetup() throws Exception {
 		SocketConfiguration config = new SocketConfiguration();
@@ -88,7 +92,16 @@ public class TestJDBCSocketTransport {
 			@Override
 			protected SSLAwareChannelHandler createChannelPipelineFactory(
 					SSLConfiguration config, StorageManager storageManager) {
-				SSLAwareChannelHandler result = super.createChannelPipelineFactory(config, storageManager);
+				SSLAwareChannelHandler result = new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager) {
+					@Override
+					public void handleDownstream(ChannelHandlerContext ctx,
+							ChannelEvent e) throws Exception {
+						if (delay > 0) {
+							Thread.sleep(delay);
+						}
+						super.handleDownstream(ctx, e);
+					}
+				};
 				result.setMaxMessageSize(MAX_MESSAGE);
 				return result;
 			}
@@ -229,8 +242,6 @@ public class TestJDBCSocketTransport {
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
-		p.setProperty("org.teiid.sockets.soTimeout", "1000");
-		p.setProperty("org.teiid.sockets.SynchronousTtl", "500");
 		ConnectorManagerRepository cmr = server.getConnectorManagerRepository();
 		AutoGenDataService agds = new AutoGenDataService() {
 			@Override
@@ -306,6 +317,17 @@ public class TestJDBCSocketTransport {
 		ResultSet rs = s.executeQuery("select 1");
 		rs.next();
 		assertEquals(1, rs.getInt(1));
+	}
+	
+	@Test(expected=TeiidSQLException.class) public void testLoginTimeout() throws SQLException {
+		Properties p = new Properties();
+		p.setProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT, "1");
+		delay = 1500;
+		try {
+			conn = TeiidDriver.getInstance().connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +(jdbcTransport.getPort()), p);
+		} finally {
+			delay = 0;
+		}
 	}
 	
 }

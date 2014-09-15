@@ -22,10 +22,7 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,7 +110,7 @@ public class TestSocketRemoting {
 		private ResultsReceiver<Object> listener;
 
 		public FakeClientServerInstance(ClientServiceRegistryImpl server) throws UnknownHostException {
-			super(new HostInfo("foo", new InetSocketAddress(InetAddress.getLocalHost(), 1)), 1000);
+			super(new HostInfo("foo", new InetSocketAddress(InetAddress.getLocalHost(), 1)), 1000, 1000);
 			this.server = server;
 		}
 		

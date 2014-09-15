@@ -24,6 +24,7 @@ package org.teiid.net.socket;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
@@ -46,6 +47,8 @@ import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 
 public final class OioOjbectChannelFactory implements ObjectChannelFactory {
+	
+	public static ThreadLocal<Long> TIMEOUTS = new ThreadLocal<Long>();
 	
 	private final static int STREAM_BUFFER_SIZE = 1<<15;
 	private final static int DEFAULT_MAX_OBJECT_SIZE = 1 << 25;
@@ -114,6 +117,11 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 				try {
 					return inputStream.readObject();
 				} catch (SocketTimeoutException e) {
+					Long timeout = TIMEOUTS.get();
+					if (timeout != null && timeout < System.currentTimeMillis()) {
+						TIMEOUTS.set(null);
+						throw new InterruptedIOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20035));
+					}
 					throw e;
 		        } catch (IOException e) {
 		            close();
@@ -143,7 +151,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	private int receiveBufferSize = 0;
 	private int sendBufferSize = 0;
 	private boolean conserveBandwidth;
-	private int soTimeout = 3000;
+	private int soTimeout = 1000;
 	private volatile SSLSocketFactory sslSocketFactory;
 	private int maxObjectSize = DEFAULT_MAX_OBJECT_SIZE;
 

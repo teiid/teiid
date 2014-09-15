@@ -138,7 +138,7 @@ public class TestTeiidDriver {
     @Test public void testGetPropertyInfo1() throws Exception {        
         DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:teiid:vdb@mm://localhost:12345;applicationName=x", null); //$NON-NLS-1$
 
-        assertEquals(27, info.length);
+        assertEquals(28, info.length);
         assertEquals(false, info[1].required);
         assertEquals("ApplicationName", info[1].name); //$NON-NLS-1$
         assertEquals("x", info[1].value); //$NON-NLS-1$

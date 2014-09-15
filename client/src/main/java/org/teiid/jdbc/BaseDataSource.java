@@ -389,7 +389,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * @throws java.sql.SQLException if a database-access error occurs
      * @see javax.sql.DataSource#getLoginTimeout()
      */
-    public int getLoginTimeout() throws java.sql.SQLException {
+    public int getLoginTimeout() {
         return this.loginTimeout;
     }
 

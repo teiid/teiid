@@ -146,6 +146,10 @@ public class TeiidDataSource extends BaseDataSource {
         if (this.encryptRequests) {
         	props.setProperty(TeiidURL.CONNECTION.ENCRYPT_REQUESTS, Boolean.TRUE.toString());
         }
+        
+        if (getLoginTimeout() > 0) {
+        	props.setProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT, String.valueOf(getLoginTimeout()));
+        }
 
         return props;
     }

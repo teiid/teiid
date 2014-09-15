@@ -63,6 +63,7 @@ public class JDBCPlugin { // extends Plugin {
 		TEIID20031, 
 		TEIID20032,
 		TEIID20033, 
-		TEIID20034,
+		TEIID20034, 
+		TEIID20035,
 	}	
 }

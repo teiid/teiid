@@ -87,6 +87,7 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.JAAS_NAME,
     	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
     	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS,
+    	        TeiidURL.CONNECTION.LOGIN_TIMEOUT,
     	        DatabaseMetaDataImpl.REPORT_AS_VIEWS,
     	        ResultSetImpl.DISABLE_FETCH_SIZE));
     	props.addAll(EXECUTION_PROPERTIES.keySet());

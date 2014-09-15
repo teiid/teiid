@@ -273,7 +273,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				}
 			}
 		}
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, getSynchronousTtl());
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, getSynchronousTtl(), this.channelFactory.getSoTimeout());
 		ssii.connect(this.channelFactory);
 		if (useCache) {
 			key.actual = ssii;
