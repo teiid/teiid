@@ -180,6 +180,19 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     		markInvalid(windowFunction, "Window function distinct aggregate not supported by source"); //$NON-NLS-1$
             return;
     	}
+    	/* Some sources do not like this case. While we don't allow it to be entered directly,
+    	 * it can occur when raising a null node.
+    	 * TODO: support rewrites of the ordering/entire window function expression
+    	 */
+		OrderBy orderBy = windowFunction.getWindowSpecification().getOrderBy();
+		if (orderBy != null) {
+			for (OrderByItem item : orderBy.getOrderByItems()) {
+				if (EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(item.getSymbol()))) {
+					markInvalid(windowFunction, "Window function order by constant not supported."); //$NON-NLS-1$
+		            return;			
+				}
+			}
+		}
     	try {
 	    	if (!CapabilitiesUtil.checkElementsAreSearchable(windowFunction.getWindowSpecification().getPartition(), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
 	    		markInvalid(windowFunction, "not all source columns support search type"); //$NON-NLS-1$
