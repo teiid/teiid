@@ -22,8 +22,7 @@
 
 package org.teiid.translator.salesforce;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,8 +39,21 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
-import org.teiid.translator.salesforce.execution.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.salesforce.execution.DeleteExecutionImpl;
+import org.teiid.translator.salesforce.execution.DirectQueryExecution;
+import org.teiid.translator.salesforce.execution.InsertExecutionImpl;
+import org.teiid.translator.salesforce.execution.ProcedureExecutionParentImpl;
+import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
+import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 
 @Translator(name="salesforce", description="A translator for Salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
@@ -56,6 +68,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	    // Salesforce supports ORDER BY, but not on all column types
 		setSupportsOrderBy(false);
 		setSupportsOuterJoins(true);
+		setSupportsInnerJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
 	
