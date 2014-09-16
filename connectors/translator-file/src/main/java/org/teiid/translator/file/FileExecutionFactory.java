@@ -83,12 +83,9 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 		public void execute() throws TranslatorException {
 			String path = (String)command.getArguments().get(0).getArgumentValue().getValue();
 			try {
-				files = FileConnection.Util.getFiles(path, fc);
+				files = FileConnection.Util.getFiles(path, fc, exceptionIfFileNotFound);
 			} catch (ResourceException e) {
 				throw new TranslatorException(e);
-			}
-			if (files == null && exceptionIfFileNotFound) {
-				throw new TranslatorException(UTIL.getString("file_not_found", path)); //$NON-NLS-1$
 			}
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", files != null ? files.length : 0, "file(s)"); //$NON-NLS-1$ //$NON-NLS-2$
 			String name = command.getProcedureName();
