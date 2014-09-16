@@ -102,7 +102,7 @@ public class ExcelExecution implements ResultSetExecution {
     @Override
     public void execute() throws TranslatorException {
     	try {
-			this.xlsFiles = FileConnection.Util.getFiles(this.visitor.getXlsPath(), this.connection);
+			this.xlsFiles = FileConnection.Util.getFiles(this.visitor.getXlsPath(), this.connection, true);
 			this.rowIterator = readXLSFile(xlsFiles[fileCount.getAndIncrement()]);
 		} catch (ResourceException e) {
 			throw new TranslatorException(e);
@@ -349,10 +349,12 @@ public class ExcelExecution implements ResultSetExecution {
     
     @Override
     public void close() {
-    	try {
-			this.xlsFileStream.close();
-		} catch (IOException e) {
-		}
+    	if (this.xlsFileStream != null) {
+	    	try {
+				this.xlsFileStream.close();
+			} catch (IOException e) {
+			}
+    	}
     }
 
     @Override

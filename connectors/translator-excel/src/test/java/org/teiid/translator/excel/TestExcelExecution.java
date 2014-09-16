@@ -21,8 +21,9 @@
  */
 package org.teiid.translator.excel;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestExcelExecution {
@@ -52,17 +54,21 @@ public class TestExcelExecution {
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		
 		ResultSetExecution execution = translator.createResultSetExecution((QueryExpression)cmd, context, utility.createRuntimeMetadata(), connection);
-		execution.execute();
-		
-		ArrayList results = new ArrayList();
-		while (true) {
-			List<?> row = execution.next();
-			if (row == null) {
-				break;
+		try {
+			execution.execute();
+			
+			ArrayList results = new ArrayList();
+			while (true) {
+				List<?> row = execution.next();
+				if (row == null) {
+					break;
+				}
+				results.add(row);
 			}
-			results.add(row);
+			return results;
+		} finally {
+			execution.close();
 		}
-		return results;
 	}
 		
 	@Test
@@ -256,5 +262,13 @@ public class TestExcelExecution {
 
     	ArrayList results = helpExecute(commonDDL, connection, "select \"time\" from Sheet1");
     	assertEquals("[[10:12:14]]", results.toString());
+	}	
+	
+	@Test(expected=TranslatorException.class)
+	public void testExecutionNoFile() throws Exception {
+    	FileConnection connection = Mockito.mock(FileConnection.class);
+    	Mockito.stub(connection.getFile("names.xls")).toReturn(new File("does not exist"));
+
+    	helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
 	}	
 }

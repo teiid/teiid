@@ -26,6 +26,7 @@ import java.io.File;
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.util.FileUtils;
 
 /**
@@ -46,10 +47,11 @@ public interface FileConnection extends Connection {
 		 * Gets the file or files, if the path is a directory, at the given path.  The path may include
 		 * a trailing extension wildcard, such as foo/bar/*.txt to return only txt files at the given path.
 		 * Note the path can only refer to a single directory - directories are not recursively scanned.
+		 * @param exceptionIfFileNotFound 
 		 * @param path
 		 * @return
 		 */
-		public static File[] getFiles(String location, FileConnection fc) throws ResourceException {
+		public static File[] getFiles(String location, FileConnection fc, boolean exceptionIfFileNotFound) throws ResourceException {
 			File datafile = fc.getFile(location);
 	        
 	        if (datafile.isDirectory()) {
@@ -66,6 +68,9 @@ public interface FileConnection extends Connection {
 	            return FileUtils.findAllFilesInDirectoryHavingExtension(parentDir.getAbsolutePath(), "." + ext); //$NON-NLS-1$
 	        }
 	        if (!datafile.exists()) {
+	        	if (exceptionIfFileNotFound) {
+					throw new ResourceException(DataPlugin.Util.gs("file_not_found", location)); //$NON-NLS-1$
+	        	}
 	        	return null;
 	        }
 	        return new File[] {datafile};
