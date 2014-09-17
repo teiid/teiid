@@ -24,6 +24,9 @@ package org.teiid.query.optimizer;
 
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -33,11 +36,13 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestAggregatePushdown {
 
 	public static BasicSourceCapabilities getAggregateCapabilities() {
@@ -442,7 +447,7 @@ public class TestAggregatePushdown {
         }); 
     }
     
-    @Test public void testOuterJoinPreventsPushdown() throws Exception {
+    @Test public void testOuterJoinPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
@@ -451,7 +456,106 @@ public class TestAggregatePushdown {
         
         String sql = "SELECT count(y.e2) from pm1.g1 x left outer join pm2.g1 y on x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0", "SELECT g_0.e3, g_0.e1, g_0.e2 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0", "SELECT g_0.e3, g_0.e1, COUNT(g_0.e2) FROM pm2.g1 AS g_0 GROUP BY g_0.e3, g_0.e1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    }
+    
+    @Test public void testOuterJoinPushdown1() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        String sql = "SELECT count(x.e1) from pm1.g1 x left outer join pm2.g1 y on x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT g_0.e3, g_0.e2, COUNT(g_0.e1) FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", "SELECT g_0.e3, g_0.e1 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    }
+    
+    @Test public void testOuterJoinPushdown2() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        String sql = "SELECT x.e2, y.e1, count(*) from pm1.g1 x full outer join pm2.g1 y on x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT g_0.e3, g_0.e2, COUNT(*) FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", "SELECT g_0.e3, g_0.e1 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        
+        hdm.addData("SELECT g_0.e3, g_0.e2, COUNT(*) FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", Arrays.asList(true, 1, 3), Arrays.asList(true, 2, 2), Arrays.asList(null, 3, 4));
+        hdm.addData("SELECT g_0.e3, g_0.e1 FROM pm2.g1 AS g_0", Arrays.asList(false, "a"), Arrays.asList(true, "b"), Arrays.asList(true, "b"));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(null, "a", 1), Arrays.asList(1, "b", 6), Arrays.asList(2, "b", 4), Arrays.asList(3, null, 4)});
+    }
+    
+    /**
+     * Here we'll prevent pushdown since the agg expression is dependent upon nulls
+     * @throws Exception
+     */
+    @Test public void testOuterJoinPushdown3() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        caps.setFunctionSupport("ifnull", true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        String sql = "SELECT x.e2, y.e1, count(ifnull(y.e4, 1)), count(x.e4) from pm1.g1 x full outer join pm2.g1 y on x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT g_0.e3, g_0.e2, g_0.e4 FROM pm1.g1 AS g_0", "SELECT g_0.e3, g_0.e1, g_0.e4 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -486,7 +590,7 @@ public class TestAggregatePushdown {
               "select count(*), a.intnum from bqt1.smalla as a, bqt2.smallb as b where a.intkey = b.intkey group by a.intnum",  //$NON-NLS-1$
               metadata, null, capFinder,
               new String[] { 
-                "SELECT a.intkey, a.intnum FROM bqt1.smalla AS a", "SELECT b.intkey FROM bqt2.smallb AS b"},  //$NON-NLS-1$ //$NON-NLS-2$
+                "SELECT g_0.IntKey, g_0.IntNum, COUNT(*) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey, g_0.IntNum", "SELECT g_0.IntKey FROM BQT2.SmallB AS g_0"},  //$NON-NLS-1$ //$NON-NLS-2$
                 true); 
                   
         TestOptimizer.checkNodeTypes(plan, new int[] {

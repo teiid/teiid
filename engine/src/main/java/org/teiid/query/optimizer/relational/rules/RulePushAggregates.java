@@ -719,7 +719,7 @@ public class RulePushAggregates implements
             Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
             Collection<AggregateSymbol> aggregates = aggregateMap.get(planNode);
 
-            planNode = canPush(groupNode, stagedGroupingSymbols, planNode);
+            planNode = canPush(groupNode, stagedGroupingSymbols, planNode, aggregates, metadata);
             if (planNode == null) {
             	continue;
             }
@@ -865,20 +865,48 @@ public class RulePushAggregates implements
 
     /**
      * Ensures that we are only pushing through inner equi joins or cross joins.  Also collects the necessary staged grouping symbols
+     * @param aggregates 
+     * @param metadata 
      * @return null if we cannot push otherwise the target join node
      */
     private PlanNode canPush(PlanNode groupNode,
                             Set<Expression> stagedGroupingSymbols,
-                            PlanNode planNode) {
+                            PlanNode planNode, Collection<AggregateSymbol> aggregates, QueryMetadataInterface metadata) {
         PlanNode parentJoin = planNode.getParent();
         
         Set<GroupSymbol> groups = FrameUtil.findJoinSourceNode(planNode).getGroups();
         
         PlanNode result = planNode;
         while (parentJoin != groupNode) {
-            if (parentJoin.getType() != NodeConstants.Types.JOIN
-                || ((JoinType)parentJoin.getProperty(NodeConstants.Info.JOIN_TYPE)).isOuter()) {
+            if (parentJoin.getType() != NodeConstants.Types.JOIN) {
                 return null;
+            }
+            
+            JoinType joinType = (JoinType)parentJoin.getProperty(NodeConstants.Info.JOIN_TYPE);
+			if (joinType.isOuter() && aggregates != null) {
+            	for (AggregateSymbol as : aggregates) {
+            		if (as.getArgs().length != 1) {
+            			continue;
+            		}
+            		Collection<GroupSymbol> expressionGroups = GroupsUsedByElementsVisitor.getGroups(as.getArg(0));
+            		Collection<GroupSymbol> innerGroups = null;
+            		if (joinType == JoinType.JOIN_LEFT_OUTER) {
+            			innerGroups = FrameUtil.findJoinSourceNode(parentJoin.getLastChild()).getGroups();
+            		} else {
+            			//full outer
+            			innerGroups = parentJoin.getGroups();
+            		}
+            		if (Collections.disjoint(expressionGroups, innerGroups)) {
+            			continue;
+            		}
+            		if (as.getFunctionDescriptor() != null 
+            				&& as.getFunctionDescriptor().isNullDependent()) {
+            			return null;
+            		}
+            		if (as.getArgs().length == 1 && JoinUtil.isNullDependent(metadata, innerGroups, as.getArg(0))) {
+            			return null;
+            		}
+            	}
             }
             
             //check for sideways correlation
@@ -983,17 +1011,37 @@ public class RulePushAggregates implements
             return result;
         }
         for (T aggregateSymbol : expressions) {
+        	boolean countStar = false;
         	if (aggs) {
         		AggregateSymbol as = (AggregateSymbol)aggregateSymbol;
-        		if ((!as.canStage() && as.isCardinalityDependent()) || (as.getAggregateFunction() == Type.COUNT && as.getArgs().length == 0)) {
-            		return null; //count(*) is not yet handled.  a general approach would be count(*) => count(r.col) * count(l.col), but the logic here assumes a simpler initial mapping
+        		if ((!as.canStage() && as.isCardinalityDependent())) {
+            		return null;
+        		}
+        		if (as.getAggregateFunction() == Type.COUNT && as.getArgs().length == 0) {
+        			countStar = true;
         		}
         	}
-            Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(aggregateSymbol);
-            if (groups.isEmpty()) {
-            	continue;
-            }
-            PlanNode originatingNode = FrameUtil.findOriginatingNode(groupNode.getFirstChild(), groups);
+        	PlanNode originatingNode = null;
+        	Set<GroupSymbol> groups = null;
+        	if (countStar) {
+        		//TODO make a better choice as to the side
+        		PlanNode joinNode = NodeEditor.findAllNodes(groupNode, NodeConstants.Types.JOIN).get(0);
+        		float left = joinNode.getFirstChild().getCardinality();
+        		float right = joinNode.getLastChild().getCardinality();
+        		boolean useLeft = true;
+        		if (left != -1 && right != -1 && right > left) {
+    				useLeft = false;
+        		}
+        		groups = (useLeft?joinNode.getFirstChild():joinNode.getLastChild()).getGroups();
+        	} else {
+                groups = GroupsUsedByElementsVisitor.getGroups(aggregateSymbol);
+                if (groups.isEmpty()) {
+                	continue;
+                }
+                
+        	}
+        	originatingNode = FrameUtil.findOriginatingNode(groupNode.getFirstChild(), groups);
+            
             if (originatingNode == null) {
             	if (aggs) {
             		return null;  //should never happen
@@ -1049,7 +1097,14 @@ public class RulePushAggregates implements
             Type aggFunction = partitionAgg.getAggregateFunction();
             if (aggFunction == Type.COUNT) {
                 //COUNT(x) -> IFNULL(CONVERT(SUM(COUNT(x)), INTEGER), 0)
-                AggregateSymbol newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg); 
+            	AggregateSymbol newAgg = null;
+            	if (partitionAgg.getArgs().length == 0) {
+            		//count * case (if on the inner side of an outer join)
+            		Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {partitionAgg, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER)});
+            		newAgg = new AggregateSymbol(NonReserved.SUM, false, ifnull);
+            	} else {
+            		newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg);
+            	}
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
                 Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
                 Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {convertFunc, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER)});
