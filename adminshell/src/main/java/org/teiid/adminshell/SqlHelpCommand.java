@@ -25,11 +25,11 @@ package org.teiid.adminshell;
 import java.util.List;
 
 import org.codehaus.groovy.tools.shell.CommandSupport;
-import org.codehaus.groovy.tools.shell.Shell;
+import org.codehaus.groovy.tools.shell.Groovysh;
 
 public class SqlHelpCommand extends CommandSupport {
 
-	protected SqlHelpCommand(Shell shell) {
+	protected SqlHelpCommand(Groovysh shell) {
 		super(shell, "sqlhelp", "\\sh");  //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
