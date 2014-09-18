@@ -188,25 +188,24 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.DUP_REMOVE:
-		    	if (root.getType() == NodeConstants.Types.DUP_REMOVE) {
-		    		//TODO there's an analog here for a non-partitioned union, but it would mean checking projections from each branch
-		    		boolean allConstants = true;
-		    		for (Expression ex : outputElements) {
-		    			if (!(SymbolMap.getExpression(ex) instanceof Constant)) {
-		    				allConstants = false;
-		    				break;
-		    			}
+		    	//targeted optimization based upon swapping the dup remove for a limit 1
+		    	//TODO: may need to also check for grouping over constants
+	    		boolean allConstants = true;
+	    		for (Expression ex : outputElements) {
+	    			if (!(EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(ex)))) {
+	    				allConstants = false;
+	    				break;
+	    			}
+	    		}
+	    		if (allConstants && addLimit(rules, root, metadata, capFinder)) {
+	    			//TODO we could more gracefully handle the !addLimit case
+		    		PlanNode parent = root.getParent();
+		    		if (parent != null) {
+		    			NodeEditor.removeChildNode(root.getParent(), root);
+			    		execute(parent, metadata, capFinder, rules, analysisRecord, context);
+			    		return;
 		    		}
-		    		if (allConstants && addLimit(rules, root, metadata, capFinder)) {
-		    			//TODO we could more gracefully handle the !addLimit case
-			    		PlanNode parent = root.getParent();
-			    		if (parent != null) {
-			    			NodeEditor.removeChildNode(root.getParent(), root);
-				    		execute(parent, metadata, capFinder, rules, analysisRecord, context);
-				    		return;
-			    		}
-		    		}
-		    	}
+	    		}
 		    case NodeConstants.Types.SORT:
 	    		//correct expression positions and update the unrelated flag
 		    	OrderBy order = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
@@ -325,10 +324,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				if (NodeEditor.findParent(parent, NodeConstants.Types.SET_OP | NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS) != null) {
 					return false; //access node is too high
 				}
-				parent = accessNode.getParent();
-				if (parent == null) {
-					return false; //cannot modify the root - TODO could move this logic to another rule
-				}
+				parent = accessNode;
 			}
 		}
 		
@@ -339,7 +335,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			rules.push(RuleConstants.PUSH_LIMIT);
 		}
 		
-		parent.getFirstChild().addAsParent(limit);
+		if (parent.getParent() == null) {
+			if (parent.getType() == NodeConstants.Types.ACCESS) {
+				return false;
+			}
+			parent = parent.getFirstChild();
+		} 
+		parent.addAsParent(limit);
 		return true;
 	}
 

@@ -44,8 +44,11 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -224,8 +227,17 @@ public class RuleRemoveOptionalJoins implements
 					if (FrameUtil.isOrderedOrStrictLimit(parent)) {
 						return true;
 					}
+					break;
 				}
-				//we assume that projects of non-deterministic expressions do not matter
+				case NodeConstants.Types.PROJECT: {
+					List<Expression> projectCols = (List<Expression>)parent.getProperty(NodeConstants.Info.PROJECT_COLS);
+					for (Expression ex : projectCols) {
+						if (FunctionCollectorVisitor.isNonDeterministic(ex) || !ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
+							return true;
+						}
+					}
+					break;
+				}
 			}
 			parent = parent.getParent();
 		}
