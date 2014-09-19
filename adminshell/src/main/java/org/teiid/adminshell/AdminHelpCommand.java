@@ -25,15 +25,18 @@ package org.teiid.adminshell;
 import java.util.List;
 
 import org.codehaus.groovy.tools.shell.CommandSupport;
-import org.codehaus.groovy.tools.shell.Shell;
+import org.codehaus.groovy.tools.shell.Groovysh;
 
 public class AdminHelpCommand extends CommandSupport {
 
-	protected AdminHelpCommand(Shell shell) {
+	protected AdminHelpCommand(Groovysh shell) {
 		super(shell, "adminhelp", "\\ah");  //$NON-NLS-1$ //$NON-NLS-2$
 		
 		//hook to introduce default imports
-		shell.execute(GroovyAdminConsole.IMPORTS);
+		final String[] imports = GroovyAdminConsole.IMPORTS.split("\n");
+		for(String aimport : imports){
+			shell.execute(aimport);
+		}
 	}
 
 	@Override
