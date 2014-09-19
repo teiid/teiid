@@ -328,4 +328,9 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     	return getVersion().compareTo(EIGHT_5) >= 0;
     }
     
+    @Override
+    public boolean useScientificNotation() {
+    	return true;
+    }
+    
 }

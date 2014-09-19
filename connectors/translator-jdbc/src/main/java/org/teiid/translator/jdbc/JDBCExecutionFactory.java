@@ -1420,5 +1420,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public void setCommentFormat(String commentFormat) {
 		this.commentFormat = commentFormat;
 	}
+
+	/**
+	 * @return true if scientific notation should be used for float/double types
+	 */
+	public boolean useScientificNotation() {
+		return false;
+	}
 	
 }

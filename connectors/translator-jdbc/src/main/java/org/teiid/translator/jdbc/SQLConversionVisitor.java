@@ -29,10 +29,12 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,9 +60,9 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_URI + "non-prepared"; //$NON-NLS-1$
 
     private static DecimalFormat DECIMAL_FORMAT = 
-        new DecimalFormat("#############################0.0#############################"); //$NON-NLS-1$    
-    private static double SCIENTIC_LOW = Math.pow(10, -3);
-    private static double SCIENTIC_HIGH = Math.pow(10, 7);
+        new DecimalFormat("#############################0.0#############################", DecimalFormatSymbols.getInstance(Locale.US)); //$NON-NLS-1$    
+    private static double SCIENTIFIC_LOW = Math.pow(10, -3);
+    private static double SCIENTIFIC_HIGH = Math.pow(10, 7);
     
     private ExecutionContext context;
     private JDBCExecutionFactory executionFactory;
@@ -134,15 +136,16 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         } else {
             if(Number.class.isAssignableFrom(type)) {
                 boolean useFormatting = false;
-                
-                if (Double.class.isAssignableFrom(type)){
-                    double value = ((Double)obj).doubleValue();
-                    useFormatting = (value <= SCIENTIC_LOW || value >= SCIENTIC_HIGH); 
-                }
-                else if (Float.class.isAssignableFrom(type)){
-                    float value = ((Float)obj).floatValue();
-                    useFormatting = (value <= SCIENTIC_LOW || value >= SCIENTIC_HIGH);
-                }
+            	if (!executionFactory.useScientificNotation()) {
+	                if (Double.class.isAssignableFrom(type)){
+	                    double value = Math.abs(((Double)obj).doubleValue());
+	                    useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH); 
+	                }
+	                else if (Float.class.isAssignableFrom(type)){
+	                    float value = Math.abs(((Float)obj).floatValue());
+	                    useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH);
+	                }
+            	}
                 // The formatting is to avoid the so-called "scientic-notation"
                 // where toString will use for numbers greater than 10p7 and
                 // less than 10p-3, where database may not understand.
