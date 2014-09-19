@@ -498,5 +498,13 @@ public class TestSQLConversionVisitor {
                         "SELECT PARTS.PART_NAME, MAX(PARTS.PART_WEIGHT) FROM PARTS GROUP BY ROLLUP(PARTS.PART_NAME)", //$NON-NLS-1$
                         true); 
     }
+    
+    //previously would have failed in other locales
+    @Test public void testDoubleFormat() {
+        helpTestVisitor(getTestVDB(),
+                        "select 1.0e10, -1.0e2", //$NON-NLS-1$
+                        "SELECT 10000000000.0, -100.0", //$NON-NLS-1$
+                        true);
+    }
 
 }
