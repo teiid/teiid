@@ -59,6 +59,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.query.function.FunctionLibrary.ConversionResult;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
@@ -166,9 +167,13 @@ public class TestFunctionLibrary {
 
 		FunctionDescriptor[] actual;
 		try {
-			actual = library.determineNecessaryConversions(fname, null, new Expression[types.length], types, false);
-			if (actual == null) {
+			ConversionResult result = library.determineNecessaryConversions(fname, null, new Expression[types.length], types, false);
+			if (result.needsConverion) {
+				actual = library.getConverts(result.method, types);
+			} else if (result.method != null) {
 				actual = new FunctionDescriptor[types.length];
+			} else {
+				actual = null;
 			}
 		} catch (InvalidFunctionException e) {
 			actual = null;

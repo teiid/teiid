@@ -225,7 +225,31 @@ public class TestFunctionResolving {
 
     	func = (Function) QueryParser.getQueryParser().parseExpression(sql);
 		ResolverVisitor.resolveLanguageObject(func, tm);
-		System.out.println(func.getType());
 	}    
+	
+	@Test public void testImportedPushdown() throws Exception {     
+		RealMetadataFactory.example1Cached();
+        QueryMetadataInterface tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "create foreign function func(x object) returns object;"), new DDLHolder("z", "create foreign function func(x object) returns object;"));
+
+    	String sql = "func('a')";
+
+    	Function func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+    	try {
+    		ResolverVisitor.resolveLanguageObject(func, tm);
+    		fail("should be ambiguous");
+    	} catch (QueryResolverException e) {
+    		
+    	}
+    	
+    	tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "create foreign function func(x object) returns object options (\"teiid_rel:system-name\" 'f');"), new DDLHolder("z", "create foreign function func(x object) returns object options (\"teiid_rel:system-name\" 'f');"));
+
+    	func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+		ResolverVisitor.resolveLanguageObject(func, tm);
+		
+    	tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "create foreign function func() returns object options (\"teiid_rel:system-name\" 'f');"), new DDLHolder("z", "create foreign function func() returns object options (\"teiid_rel:system-name\" 'f');"));
+
+    	func = (Function) QueryParser.getQueryParser().parseExpression("func()");
+		ResolverVisitor.resolveLanguageObject(func, tm);
+	}
     
 }

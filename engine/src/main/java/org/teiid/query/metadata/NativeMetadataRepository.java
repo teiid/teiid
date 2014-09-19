@@ -88,6 +88,7 @@ public class NativeMetadataRepository extends MetadataRepository {
 					functions = (List<FunctionMethod>) ois.readObject();
 					for (FunctionMethod functionMethod : functions) {
 						factory.addFunction(functionMethod);
+						functionMethod.setProperty(FunctionMethod.SYSTEM_NAME, functionMethod.getName());
 					}
 				} catch (IOException e) {
 					throw new TeiidRuntimeException(e);

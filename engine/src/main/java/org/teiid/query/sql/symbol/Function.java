@@ -38,7 +38,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * descriptor.
  */
 public class Function implements Expression {
-
+	
 	private String name;
 	private Expression[] args;
 	private Class<?> type;

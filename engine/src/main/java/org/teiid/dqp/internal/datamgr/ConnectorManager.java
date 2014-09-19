@@ -93,11 +93,18 @@ public class ConnectorManager  {
     	this.id = Arrays.asList(translatorName, connectionName);
     	if (ef != null) {
 	    	functions = ef.getPushDownFunctions();
-	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
-	    	FunctionMetadataValidator.validateFunctionMethods(functions, report);
-			if(report.hasItems()) {
-			    throw new TeiidRuntimeException(report.getFailureMessage());
-			}
+	    	if (functions != null) {
+	    		//set the specific name to match against imported versions of
+	    		//the same function
+	    		for (FunctionMethod functionMethod : functions) {
+					functionMethod.setProperty(FunctionMethod.SYSTEM_NAME, functionMethod.getName());
+				}
+		    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
+		    	FunctionMetadataValidator.validateFunctionMethods(functions, report);
+				if(report.hasItems()) {
+				    throw new TeiidRuntimeException(report.getFailureMessage());
+				}
+	    	}
     	}
 	}
 

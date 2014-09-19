@@ -246,6 +246,14 @@ public class FunctionLibrary {
         }
         return Collections.emptyList();
 	}
+	
+	public static class ConversionResult {
+		public ConversionResult(FunctionMethod method) {
+			this.method = method;
+		}
+		public FunctionMethod method;
+		public boolean needsConverion;
+	}
 
 	/**
 	 * Get the conversions that are needed to call the named function with arguments
@@ -257,19 +265,10 @@ public class FunctionLibrary {
 	 * @param returnType
 	 * @param args 
 	 * @param types Existing types passed to the function
-     * @return Null if no conversion could be found, otherwise an array of conversions
-     * to apply to each argument.  The list should match 1-to-1 with the parameters.
-     * Parameters that do not need a conversion are null; parameters that do are
-     * FunctionDescriptors.
 	 * @throws InvalidFunctionException 
 	 * @throws QueryResolverException 
 	 */
-	public FunctionDescriptor[] determineNecessaryConversions(String name, Class<?> returnType, Expression[] args, Class<?>[] types, boolean hasUnknownType) throws InvalidFunctionException {
-		// Check for no args - no conversion necessary
-		if(types.length == 0) {
-			return null;
-		}
-
+	public ConversionResult determineNecessaryConversions(String name, Class<?> returnType, Expression[] args, Class<?>[] types, boolean hasUnknownType) throws InvalidFunctionException {
         //First find existing functions with same name and same number of parameters
         final Collection<FunctionMethod> functionMethods = new LinkedList<FunctionMethod>();
         functionMethods.addAll( this.systemFunctions.findFunctionMethods(name, types.length) );
@@ -407,14 +406,19 @@ public class FunctionLibrary {
             	}
 				if (useCurrent) {
 					ambiguous = false; //prefer narrower
+				} else {
+					String sysName = result.getProperty(FunctionMethod.SYSTEM_NAME, false);
+					String sysNameOther = nextMethod.getProperty(FunctionMethod.SYSTEM_NAME, false);
+					if (sysName != null && sysName.equalsIgnoreCase(sysNameOther)) {
+						ambiguous = false;
+					}
 				}
             }
             
             if (currentScore < bestScore || useNext) {
             	ambiguous = false;
                 if (currentScore == 0 && isSystemNext) {
-                    //this must be an exact match
-                    return null;
+                    return new ConversionResult(nextMethod);
                 }    
                 
                 bestScore = currentScore;
@@ -423,11 +427,15 @@ public class FunctionLibrary {
             }            
         }
         
-        if (ambiguous || result == null) {
-             throw GENERIC_EXCEPTION;
+        if (ambiguous) {
+        	throw GENERIC_EXCEPTION;
         }
         
-		return getConverts(result, types);
+        ConversionResult cr = new ConversionResult(result);
+        if (result != null) {
+        	cr.needsConverion = (bestScore != 0);
+        }
+        return cr;
 	}
 	
 	private int partCount(String name) {
@@ -444,7 +452,7 @@ public class FunctionLibrary {
 		return result;
 	}
 
-	private FunctionDescriptor[] getConverts(FunctionMethod method, Class<?>[] types) {
+	public FunctionDescriptor[] getConverts(FunctionMethod method, Class<?>[] types) {
         final List<FunctionParameter> methodTypes = method.getInputParameters();
         FunctionDescriptor[] result = new FunctionDescriptor[types.length];
         for(int i = 0; i < types.length; i++) {

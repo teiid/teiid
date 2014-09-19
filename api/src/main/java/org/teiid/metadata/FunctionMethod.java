@@ -56,6 +56,9 @@ import org.teiid.core.util.HashCodeUtil;
  * @see FunctionParameter
  */
 public class FunctionMethod extends AbstractMetadataRecord {
+	
+	public static final String SYSTEM_NAME = AbstractMetadataRecord.RELATIONAL_URI + "system-name"; //$NON-NLS-1$
+
 	private static final long serialVersionUID = -8039086494296455152L;
 
 	private static final String NOT_ALLOWED = "NOT_ALLOWED"; //$NON-NLS-1$

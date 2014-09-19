@@ -44,6 +44,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionLibrary.ConversionResult;
 import org.teiid.query.metadata.GroupInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
@@ -590,24 +591,33 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	
 	    // Attempt to get exact match of function for this signature
-	    List<FunctionDescriptor> fds = findWithImplicitConversions(library, function, args, types, hasArgWithoutType);
-	    
-	    // Function did not resolve - determine reason and throw exception
-	    if(fds.isEmpty()) {
-	        if(!library.hasFunctionMethod(function.getName(), args.length)) {
-	            // Unknown function form
-	             throw new QueryResolverException(QueryPlugin.Event.TEIID30068, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30068, function));
-	        }
-	        // Known function form - but without type information
+	    List<FunctionDescriptor> fds;
+		try {
+			fds = findWithImplicitConversions(library, function, args, types, hasArgWithoutType);
+			if(fds.isEmpty()) {
+		        if(!library.hasFunctionMethod(function.getName(), args.length)) {
+		            // Unknown function form
+		             throw new QueryResolverException(QueryPlugin.Event.TEIID30068, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30068, function));
+		        }
+		        // Known function form - but without type information
+		        if (hasArgWithoutType) {
+		             throw new QueryResolverException(QueryPlugin.Event.TEIID30069, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30069, function));
+		        }
+		        
+		        // Known function form - unable to find implicit conversions
+		        throw new QueryResolverException(QueryPlugin.Event.TEIID30070, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30070, function));
+		    }
+			if (fds.size() > 1) {
+				throw new QueryResolverException(QueryPlugin.Event.TEIID31150, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31150, function));
+			}
+		} catch (InvalidFunctionException e) {
+			// Known function form - but without type information
 	        if (hasArgWithoutType) {
 	             throw new QueryResolverException(QueryPlugin.Event.TEIID30069, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30069, function));
 	        }
-	        // Known function form - unable to find implicit conversions
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30070, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30070, function));
-	    }
-	    if (fds.size() > 1) {
-        	throw new QueryResolverException(QueryPlugin.Event.TEIID31150, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31150, function));
-	    }
+			throw new QueryResolverException(QueryPlugin.Event.TEIID31150, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31150, function));
+		}
+	    
 	    FunctionDescriptor fd = fds.get(0);
 	    if (fd.getMethod().isVarArgs() 
 	    		&& fd.getTypes().length == types.length 
@@ -664,20 +674,18 @@ public class ResolverVisitor extends LanguageVisitor {
 	 * @param types
 	 * @return
 	 * @throws TeiidComponentException 
+	 * @throws InvalidFunctionException 
 	 * @since 4.3
 	 */
-	private List<FunctionDescriptor> findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException {
-	    
+	private List<FunctionDescriptor> findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException, InvalidFunctionException {
 	    // Try to find implicit conversion path to still perform this function
-	    FunctionDescriptor[] conversions;
-		try {
-			conversions = library.determineNecessaryConversions(function.getName(), function.getType(), args, types, hasArgWithoutType);
-		} catch (InvalidFunctionException e) {
-			return Collections.emptyList();
-		}
+	    ConversionResult cr = library.determineNecessaryConversions(function.getName(), function.getType(), args, types, hasArgWithoutType);
+	    if (cr.method == null) {
+	    	return Collections.emptyList();
+	    }
 		Class<?>[] newSignature = types;
-	    
-	    if(conversions != null) {
+		if (cr.needsConverion) {
+			FunctionDescriptor[] conversions = library.getConverts(cr.method, types);
 		    newSignature = new Class[conversions.length];
 		    // Insert new conversion functions as necessary, while building new signature
 		    for(int i=0; i<conversions.length; i++) {
@@ -697,10 +705,11 @@ public class ResolverVisitor extends LanguageVisitor {
 		                    
 		        newSignature[i] = newType;
 		    }
-	    }
+		}
+	    String name = cr.method.getFullName();
 	
 	    // Now resolve using the new signature to get the function's descriptor
-	    return library.findAllFunctions(function.getName(), newSignature);
+	    return library.findAllFunctions(name, newSignature);
 	}
 
 	/**
