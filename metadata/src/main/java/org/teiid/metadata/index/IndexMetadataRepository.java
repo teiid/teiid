@@ -211,7 +211,7 @@ public class IndexMetadataRepository extends MetadataRepository {
     }
     
 	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
+	public synchronized void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
 			throws TranslatorException {
 		try {
 			loadAll(factory.getBuiltinDataTypes().values(), factory.getVDBResources());
