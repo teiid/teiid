@@ -731,6 +731,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		for (SocketListener socket:this.transports) {
 			socket.stop();
 		}
+		this.sessionService.stop();
 		this.transports.clear();
 		dqp.stop();
 		eventDistributorFactoryService.stop();

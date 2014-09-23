@@ -400,6 +400,7 @@ public class SessionServiceImpl implements SessionService {
 	public void stop(){
 		this.sessionMonitor.cancel();
 		this.sessionCache.clear();
+		this.sessionMonitor.cancel();
 	}
 
 	public void setVDBRepository(VDBRepository repo) {
