@@ -49,6 +49,7 @@ import org.teiid.vdb.runtime.VDBKey;
 
 public class ODataFilter implements Filter, VDBLifeCycleListener {
 
+	public static final String SCHEMA_NAME = "schema-name"; //$NON-NLS-1$
 	protected String proxyBaseURI;
 	protected Properties initProperties;
 	protected Map<VDBKey, SoftReference<Client>> clientMap = Collections.synchronizedMap(new LRUCache<VDBKey, SoftReference<Client>>());
@@ -90,6 +91,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 		VDBKey key = null;
 		String vdbName = null;
 		int version = 1;
+		String modelName = null;
 		
 		String uri = ((HttpServletRequest)request).getRequestURL().toString();
 		int idx = uri.indexOf("/odata4/"); //$NON-NLS-1$
@@ -101,13 +103,22 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 			
 			int endIdx = uri.indexOf('/', idx+8);
 			if (endIdx == -1) {
-				vdbName = uri.substring(idx+8);
+				throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
+			}
+
+			vdbName = uri.substring(idx+8, endIdx);
+			int modelIdx = uri.indexOf('/', endIdx+1);
+			if (modelIdx == -1) {
+				modelName = uri.substring(endIdx+1).trim();
+				if (modelName.isEmpty()) {
+					throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
+				}
 			}
 			else {
-				vdbName = uri.substring(idx+8, endIdx);
+				modelName = uri.substring(endIdx+1, modelIdx);
 			}
 			
-			contextPath = contextPath+"/"+vdbName; //$NON-NLS-1$
+			contextPath = contextPath+"/"+vdbName+"/"+modelName; //$NON-NLS-1$ //$NON-NLS-2$
 			
 			int versionIdx = vdbName.indexOf('.');
 			if (versionIdx != -1) {
@@ -119,6 +130,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 			if (vdbName.isEmpty()) {
 				throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
 			}
+			
 			ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);
 			contextAwareRequest.setContextPath(contextPath);
 			httpRequest = contextAwareRequest;
@@ -126,10 +138,18 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 		}
 		else {
 			if (this.initProperties.getProperty("vdb-name") == null || this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ //$NON-NLS-2$
-				throw new ServletException("Must configure VDB name and version to proceed");
+				throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
 			}
 			vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
 			version = Integer.parseInt(this.initProperties.getProperty("vdb-version")); //$NON-NLS-1$
+			int modelIdx = uri.indexOf('/', uri.indexOf('/'));
+			if (modelIdx == -1) {
+				modelName = uri.substring(uri.indexOf('/')+1).trim();
+				if (modelName.isEmpty()) {
+					throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+				}
+			}
+			modelName = uri.substring(uri.indexOf('/'), uri.indexOf('/', uri.indexOf('/')));
 		}
 		
 		SoftReference<Client> ref = this.clientMap.get(key);
@@ -167,6 +187,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 			this.clientMap.put(key, ref);
 		}	
 		httpRequest.setAttribute(Client.class.getName(), client);
+		httpRequest.setAttribute(SCHEMA_NAME, modelName);
 		chain.doFilter(httpRequest, response);
 	}
 

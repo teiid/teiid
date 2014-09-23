@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="Loopy" version="1">
+    <model name="PM1">
+        <source name="text-connector2" translator-name="loopback" />
+         <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY, e3 double);
+                CREATE FOREIGN TABLE G2 (e1 string, e2 integer PRIMARY KEY, CONSTRAINT FK0 FOREIGN KEY (e2) REFERENCES G1 (e2)) OPTIONS (UPDATABLE 'true');
+        ]]> </metadata>
+    </model>
+
+    <model name="PM2">
+        <source name="text-connector2" translator-name="loopback" />
+         <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY, e3 double);
+                CREATE FOREIGN TABLE G2 (e1 string PRIMARY KEY, e2 integer, CONSTRAINT FK0 FOREIGN KEY (e2) REFERENCES G1 (e2) ) OPTIONS (UPDATABLE 'true');
+        ]]> </metadata>
+    </model>
+
+    <model name="VM1" type="VIRTUAL">
+         <metadata type="DDL"><![CDATA[
+            CREATE VIEW G1 (e1 string, e2 integer PRIMARY KEY, e3 double) AS
+               SELECT e1, e2, e3 FROM PM1.G1
+               UNION ALL
+               SELECT e1, e2, e3 FROM PM2.G1;
+            
+            CREATE VIEW G2 (e1 string PRIMARY KEY, e2 integer, CONSTRAINT FK0 FOREIGN KEY (e2) REFERENCES G1 (e2)) AS
+               SELECT e1, e2 FROM PM1.G1
+               UNION ALL
+               SELECT e1, e2 FROM PM2.G1;
+               
+            CREATE VIRTUAL PROCEDURE proc (x string) returns string AS
+            BEGIN
+                return x;
+            END
+        ]]> </metadata>
+    </model>
+
+</vdb>

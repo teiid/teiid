@@ -75,23 +75,28 @@
     
     <dependency>
       <groupId>org.apache.olingo</groupId>
-      <artifactId>olingo-commons-api</artifactId>
+      <artifactId>odata-commons-api</artifactId>
     </dependency>  
     
     <dependency>
       <groupId>org.apache.olingo</groupId>
-      <artifactId>olingo-commons-core</artifactId>
+      <artifactId>odata-commons-core</artifactId>
     </dependency> 
         
     <dependency>
       <groupId>org.apache.olingo</groupId>
-      <artifactId>olingo-server-api</artifactId>
+      <artifactId>odata-server-api</artifactId>
     </dependency>  
     
     <dependency>
       <groupId>org.apache.olingo</groupId>
-      <artifactId>olingo-server-core</artifactId>
+      <artifactId>odata-server-core</artifactId>
     </dependency>          
+    
+    <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
@@ -149,7 +154,13 @@
         <artifactId>translator-jdbc</artifactId>
         <groupId>org.jboss.teiid.connectors</groupId>
         <scope>test</scope>
-    </dependency>    
+    </dependency>   
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>      
   </dependencies>
   
 </project>

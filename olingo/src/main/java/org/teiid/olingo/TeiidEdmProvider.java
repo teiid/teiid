@@ -21,8 +21,10 @@
  */
 package org.teiid.olingo;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.olingo.commons.api.ODataException;
@@ -39,17 +41,22 @@ import org.apache.olingo.server.api.edm.provider.EntityType;
 import org.apache.olingo.server.api.edm.provider.EnumType;
 import org.apache.olingo.server.api.edm.provider.Function;
 import org.apache.olingo.server.api.edm.provider.FunctionImport;
+import org.apache.olingo.server.api.edm.provider.Reference;
+import org.apache.olingo.server.api.edm.provider.Reference.Include;
 import org.apache.olingo.server.api.edm.provider.Schema;
 import org.apache.olingo.server.api.edm.provider.Singleton;
 import org.apache.olingo.server.api.edm.provider.Term;
 import org.apache.olingo.server.api.edm.provider.TypeDefinition;
+import org.teiid.metadata.MetadataStore;
 
 public class TeiidEdmProvider extends EdmProvider {
 	
-	Collection<Schema> edmSchemas;
+	private Schema edmSchema;
+	private MetadataStore metadataStore;
 
-	public TeiidEdmProvider(Collection<Schema> edmSchemas) {
-		this.edmSchemas = edmSchemas;
+	public TeiidEdmProvider(MetadataStore metadataStore, Schema edmSchema) {
+		this.edmSchema = edmSchema;
+		this.metadataStore = metadataStore;
 	}	
 	
 	@Override
@@ -67,12 +74,7 @@ public class TeiidEdmProvider extends EdmProvider {
 	@Override
 	public List<Function> getFunctions(FullQualifiedName fqn)
 			throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				return schema.getFunctions();
-			}
-		}
-		return null;
+		return edmSchema.getFunctions();
 	}
 
 	@Override
@@ -82,13 +84,11 @@ public class TeiidEdmProvider extends EdmProvider {
 
 	@Override
 	public EntitySet getEntitySet(FullQualifiedName fqn, String entitySetName) throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				EntityContainer ec = schema.getEntityContainer();
-				for (EntitySet es : ec.getEntitySets()) {
-					if (es.getName().equals(entitySetName)) {
-						return es;
-					}
+		EntityContainer ec = this.edmSchema.getEntityContainer();
+		if (ec.getEntitySets() != null) {
+			for (EntitySet es : ec.getEntitySets()) {
+				if (es.getName().equals(entitySetName)) {
+					return es;
 				}
 			}
 		}
@@ -96,15 +96,12 @@ public class TeiidEdmProvider extends EdmProvider {
 	}
 
 	@Override
-	public Singleton getSingleton(FullQualifiedName fqn,
-			String singletonName) throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				EntityContainer ec = schema.getEntityContainer();
-				for (Singleton es : ec.getSingletons()) {
-					if (es.getName().equals(singletonName)) {
-						return es;
-					}
+	public Singleton getSingleton(FullQualifiedName fqn, String singletonName) throws ODataException {
+		EntityContainer ec = this.edmSchema.getEntityContainer();
+		if (ec.getSingletons() != null) {
+			for (Singleton es : ec.getSingletons()) {
+				if (es.getName().equals(singletonName)) {
+					return es;
 				}
 			}
 		}
@@ -114,13 +111,11 @@ public class TeiidEdmProvider extends EdmProvider {
 	@Override
 	public ActionImport getActionImport(FullQualifiedName fqn,
 			String actionImportName) throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				EntityContainer ec = schema.getEntityContainer();
-				for (ActionImport es : ec.getActionImports()) {
-					if (es.getName().equals(actionImportName)) {
-						return es;
-					}
+		EntityContainer ec = edmSchema.getEntityContainer();
+		if (ec.getActionImports() != null) {
+			for (ActionImport es : ec.getActionImports()) {
+				if (es.getName().equals(actionImportName)) {
+					return es;
 				}
 			}
 		}
@@ -130,13 +125,11 @@ public class TeiidEdmProvider extends EdmProvider {
 	@Override
 	public FunctionImport getFunctionImport(FullQualifiedName fqn,
 			String functionImportName) throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				EntityContainer ec = schema.getEntityContainer();
-				for (FunctionImport es : ec.getFunctionImports()) {
-					if (es.getName().equals(functionImportName)) {
-						return es;
-					}
+		EntityContainer ec = this.edmSchema.getEntityContainer();
+		if (ec.getFunctionImports() != null) {
+			for (FunctionImport es : ec.getFunctionImports()) {
+				if (es.getName().equals(functionImportName)) {
+					return es;
 				}
 			}
 		}
@@ -144,16 +137,10 @@ public class TeiidEdmProvider extends EdmProvider {
 	}
 
 	@Override
-	public EntityContainerInfo getEntityContainerInfo(FullQualifiedName fqn) throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				EntityContainer ec = schema.getEntityContainer();
-				EntityContainerInfo info = new EntityContainerInfo();
-				info.setContainerName(new FullQualifiedName(schema.getNamespace(), fqn.getName()));
-				return info;
-			}
-		}
-		return null;
+	public EntityContainerInfo getEntityContainerInfo(FullQualifiedName fqn) throws ODataException {		
+		EntityContainerInfo info = new EntityContainerInfo();
+		info.setContainerName(new FullQualifiedName(this.edmSchema.getNamespace(), this.edmSchema.getNamespace()));
+		return info;
 	}
 
 	@Override
@@ -163,48 +150,62 @@ public class TeiidEdmProvider extends EdmProvider {
 
 	@Override
 	public EntityContainer getEntityContainer() throws ODataException {
-		throw new ODataException("bad method");
+		return edmSchema.getEntityContainer();
 	}
 
 	public List<Schema> getSchemas() throws ODataException {
-		return new ArrayList<Schema>(this.edmSchemas);
+		return Arrays.asList(this.edmSchema);
 	}
 
+	@Override
 	public EntityType getEntityType(final FullQualifiedName fqn)
 			throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				for (EntityType type : schema.getEntityTypes()) {
-					if (type.getName().equals(fqn.getName())) {
-						return type;
-					}
+		if (this.edmSchema.getEntityTypes() != null) {
+			for (EntityType type : this.edmSchema.getEntityTypes()) {
+				if (type.getName().equals(fqn.getName())) {
+					return type;
 				}
 			}
 		}
 		return null;
 	}
 
+	@Override
 	public ComplexType getComplexType(final FullQualifiedName fqn)
 			throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				for (ComplexType type : schema.getComplexTypes()) {
-					if (type.getName().equals(fqn.getName())) {
-						return type;
-					}
+		if (this.edmSchema.getComplexTypes() != null) {
+			for (ComplexType type : this.edmSchema.getComplexTypes()) {
+				if (type.getName().equals(fqn.getName())) {
+					return type;
 				}
 			}
 		}
 		return null;
 	}
 	
+	@Override
 	public List<Action> getActions(final FullQualifiedName fqn)
 			throws ODataException {
-		for (Schema schema : this.edmSchemas) {
-			if (schema.getNamespace().equals(fqn.getNamespace())) {
-				return schema.getActions();
-			}
-		}
-		return null;
+		return this.edmSchema.getActions();
 	}	
+
+	@Override
+	public List<Reference> getReferences() throws ODataException {
+		List<Reference> references = new ArrayList<Reference>();
+		try {
+			for(org.teiid.metadata.Schema teiidSchema:metadataStore.getSchemaList()) {
+				Reference ref = new Reference();
+				//TODO: this needs to be proper service URI based in coming URL
+				ref.setUri(new URI("http//:teiid.org/"+teiidSchema.getName()));
+				Include include = new Include(teiidSchema.getName());
+				include.setAlias(teiidSchema.getName());
+				ref.setIncludes(Arrays.asList(include));
+				
+				references.add(ref);
+			}
+		} catch (URISyntaxException e) {
+			//TODO:What needs to be done?
+		}
+		return references;
+	}
 }

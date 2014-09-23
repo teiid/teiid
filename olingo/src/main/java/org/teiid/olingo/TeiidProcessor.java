@@ -21,40 +21,41 @@
  */
 package org.teiid.olingo;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.ContextURL.Suffix;
-import org.apache.olingo.commons.api.data.Entity;
+import org.apache.olingo.commons.api.domain.ODataError;
 import org.apache.olingo.commons.api.edm.Edm;
-import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.format.ODataFormat;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.OData;
-import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.ODataRequest;
 import org.apache.olingo.server.api.ODataResponse;
-import org.apache.olingo.server.api.ODataTranslatedException;
+import org.apache.olingo.server.api.ODataServerError;
+import org.apache.olingo.server.api.processor.CountProcessor;
 import org.apache.olingo.server.api.processor.DefaultProcessor;
 import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
 import org.apache.olingo.server.api.processor.EntityProcessor;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
+import org.apache.olingo.server.api.serializer.ODataSerializerException;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
-import org.apache.olingo.server.api.uri.UriResource;
-import org.apache.olingo.server.api.uri.UriResourceEntitySet;
+import org.teiid.core.TeiidException;
 import org.teiid.query.sql.lang.Query;
 
-public class TeiidProducer extends DefaultProcessor implements EntityCollectionProcessor, EntityProcessor {
+public class TeiidProcessor extends DefaultProcessor implements EntityCollectionProcessor, EntityProcessor, CountProcessor {
 	private Client client;
+	private boolean prepared;
 	private OData odata;
 	private Edm edm;
 
-	public TeiidProducer(Client client) {
+	public TeiidProcessor(Client client, boolean prepared) {
 		this.client = client;
+		this.prepared = prepared;
 	}
 
 	@Override
@@ -63,50 +64,56 @@ public class TeiidProducer extends DefaultProcessor implements EntityCollectionP
 		this.odata = odata;
 		this.edm = edm;
 	}
-	/*
+	
 	@Override
-	public EntitiesResponse getEntities(ODataContext context, String entitySetName, QueryInfo queryInfo) {
-		return getNavProperty(context, entitySetName, null, null, queryInfo);
+	public void readCollection(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType format) {
+		readEntitySet(response, uriInfo, format, false);
 	}
 
-	@Override
-	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, final QueryInfo queryInfo) {
-		checkExpand(queryInfo);
-		getEntitySet(entitySetName); // validate entity
-		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
-		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
-		List<SQLParam> parameters = visitor.getParameters();
-		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), queryInfo);
-		return new EntitiesResponse() {
-			@Override
-			public List<OEntity> getEntities() {
-				return entities;
-			}
-			@Override
-			public EdmEntitySet getEntitySet() {
-				return entitySet;
-			}
-			@Override
-			public Integer getInlineCount() {
-				if (queryInfo.inlineCount == InlineCount.ALLPAGES) {
-					return entities.getCount();
-				}
-				return null;
-			}
-			@Override
-			public String getSkipToken() {
-				return entities.nextToken();
-			}
-		};
-	}
+	private void readEntitySet(ODataResponse response, UriInfo uriInfo, ContentType format, boolean singleRow) {
+		try {
+			checkExpand(uriInfo.asUriInfoResource());
+			ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared); 
+			visitor.visit(uriInfo);
+			Query query = visitor.selectQuery(false);
+			List<SQLParam> parameters = visitor.getParameters();
 
-	private void checkExpand(QueryInfo queryInfo) {
-		if (queryInfo != null && queryInfo.expand != null && !queryInfo.expand.isEmpty()) {
-			throw new UnsupportedOperationException("Expand is not supported"); //$NON-NLS-1$
+			EntityList result = new EntityList(client.getProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT), visitor.getEntitySet(), visitor.getProjectedColumns());
+			
+			this.client.executeSQL(query, parameters, visitor.isCountQuery(), visitor.getSkip(), visitor.getTop(), result);
+			
+			ODataSerializer serializer = this.odata.createSerializer(ODataFormat.fromContentType(format));
+			response.setContent(serializer.entitySet(visitor.getEntitySet(), result, getContextUrl(visitor.getEntitySet(), singleRow)));
+			response.setStatusCode(HttpStatusCode.OK.getStatusCode());
+			response.setHeader(HttpHeader.CONTENT_TYPE,format.toContentTypeString());
+		} catch (Exception e) {
+			handleException(response, format, e);
 		}
 	}
 
+	private void handleException(ODataResponse response, ContentType format,
+			Exception e) {
+		try {
+			ODataSerializer serializer = this.odata.createSerializer(ODataFormat.fromContentType(format));
+			ODataServerError error = new ODataServerError();
+			error.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode());
+			if (e instanceof TeiidException) {
+				error.setCode(((TeiidException)e).getCode());
+			}
+			error.setException(e);
+			serializer.error(error);
+		} catch (ODataSerializerException e1) {
+			response.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode());
+		}
+	}
+
+	private void checkExpand(UriInfoResource queryInfo) {
+		if (queryInfo.getExpandOption() != null && !queryInfo.getExpandOption().getExpandItems().isEmpty()) {
+			throw new UnsupportedOperationException("Expand is not supported"); //$NON-NLS-1$
+		}
+	}
+	
+	/*
 	private EdmEntitySet getEntitySet(String entitySetName) {
 		EdmDataServices eds = getMetadata();
 		EdmEntitySet entity =  eds.findEdmEntitySet(entitySetName);
@@ -116,6 +123,7 @@ public class TeiidProducer extends DefaultProcessor implements EntityCollectionP
 		return entity;
 	}
 
+	
 	@Override
 	public CountResponse getEntitiesCount(ODataContext context, String entitySetName, QueryInfo queryInfo) {
 		getEntitySet(entitySetName); // validate entity
@@ -128,36 +136,7 @@ public class TeiidProducer extends DefaultProcessor implements EntityCollectionP
 
 	@Override
 	public void readEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType format) {
-		if (!validateOptions(uriInfo.asUriInfoResource())) {
-			response.setStatusCode(HttpStatusCode.NOT_IMPLEMENTED.getStatusCode());
-			return;
-		}
-		
-		try {
-			final EdmEntitySet entitySet = getEdmEntitySet(uriInfo.asUriInfoResource());
-			if (entitySet == null) {
-				throw new ODataApplicationException(null, 0, null);
-			}
-			
-			ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-			Query query = visitor.selectString(entitySet.getName(), uriInfo);
-			List<SQLParam> parameters = visitor.getParameters();
-			List<Entity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), uriInfo);
-
-			if (entityList.isEmpty()) {
-				response.setStatusCode(HttpStatusCode.NOT_FOUND.getStatusCode());
-			}
-			
-			ODataSerializer serializer = this.odata.createSerializer(ODataFormat.fromContentType(format));
-			response.setContent(serializer.entity(entitySet, entityList.get(0), getContextUrl(entitySet, true)));
-			response.setStatusCode(HttpStatusCode.OK.getStatusCode());
-			response.setHeader(HttpHeader.CONTENT_TYPE,format.toContentTypeString());
-			
-		} catch (final ODataTranslatedException e) {
-			response.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode());
-		} catch (final ODataApplicationException e) {
-			response.setStatusCode(e.getStatusCode());
-		}	
+		readEntitySet(response, uriInfo, format, true);
 	}
 	
 /*	@Override
@@ -345,46 +324,30 @@ public class TeiidProducer extends DefaultProcessor implements EntityCollectionP
 		return null;
 	}
 	*/
-	
-	private boolean validateOptions(final UriInfoResource uriInfo) {
-		return uriInfo.getCountOption() == null
-				&& uriInfo.getCustomQueryOptions().isEmpty()
-				&& uriInfo.getExpandOption() == null
-				&& uriInfo.getFilterOption() == null
-				&& uriInfo.getIdOption() == null
-				&& uriInfo.getOrderByOption() == null
-				&& uriInfo.getSearchOption() == null
-				&& uriInfo.getSelectOption() == null
-				&& uriInfo.getSkipOption() == null
-				&& uriInfo.getSkipTokenOption() == null
-				&& uriInfo.getTopOption() == null;
-	}
-
-	private org.apache.olingo.commons.api.edm.EdmEntitySet getEdmEntitySet(final UriInfoResource uriInfo) throws ODataApplicationException {
-		final List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
-		if (resourcePaths.size() != 1) {
-			throw new ODataApplicationException("Invalid resource path.",HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
-		}
-		if (!(resourcePaths.get(0) instanceof UriResourceEntitySet)) {
-			throw new ODataApplicationException("Invalid resource type.",HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
-		}
-		final UriResourceEntitySet uriResource = (UriResourceEntitySet) resourcePaths.get(0);
-		if (uriResource.getTypeFilterOnCollection() != null|| uriResource.getTypeFilterOnEntry() != null) {
-			throw new ODataApplicationException("Type filters are not supported.",HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
-		}
-		return uriResource.getEntitySet();
-	}
 
 	private ContextURL getContextUrl(final org.apache.olingo.commons.api.edm.EdmEntitySet entitySet, final boolean isSingleEntity) {
 		return ContextURL.Builder.create().entitySet(entitySet).suffix(isSingleEntity ? Suffix.ENTITY : null).build();
 	}
 
-
 	@Override
-	public void readCollection(ODataRequest request, ODataResponse response,
-			UriInfo uriInfo, ContentType requestedContentType) {
-		// rameshTODO Auto-generated method stub
-		
+	public void readCount(ODataRequest request, ODataResponse response,
+			UriInfo uriInfo) {
+		try {
+			checkExpand(uriInfo.asUriInfoResource());
+			ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared); 
+			visitor.visit(uriInfo);
+			Query query = visitor.selectQuery(true);
+			List<SQLParam> parameters = visitor.getParameters();
+
+			CountResponse countResponse = this.client.executeCount(query, parameters);
+			ByteArrayInputStream bis = new ByteArrayInputStream(String.valueOf(countResponse.getCount()).getBytes());
+			response.setContent(bis);
+			response.setStatusCode(HttpStatusCode.OK.getStatusCode());
+			response.setHeader(HttpHeader.CONTENT_TYPE, ContentType.TEXT_PLAIN.toContentTypeString());
+		} catch (Exception e) {
+			handleException(response, ContentType.APPLICATION_JSON, e);
+		}
+
 	}
 }
 

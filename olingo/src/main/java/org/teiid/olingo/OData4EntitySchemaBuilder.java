@@ -22,84 +22,56 @@
 package org.teiid.olingo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.olingo.commons.api.edm.Edm;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.Target;
-import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.edm.provider.Action;
 import org.apache.olingo.server.api.edm.provider.ActionImport;
 import org.apache.olingo.server.api.edm.provider.ComplexType;
 import org.apache.olingo.server.api.edm.provider.EntityContainer;
 import org.apache.olingo.server.api.edm.provider.EntitySet;
 import org.apache.olingo.server.api.edm.provider.EntityType;
-import org.apache.olingo.server.api.edm.provider.Function;
-import org.apache.olingo.server.api.edm.provider.FunctionImport;
 import org.apache.olingo.server.api.edm.provider.NavigationProperty;
 import org.apache.olingo.server.api.edm.provider.NavigationPropertyBinding;
-import org.apache.olingo.server.api.edm.provider.Operation;
-import org.apache.olingo.server.api.edm.provider.OperationImport;
 import org.apache.olingo.server.api.edm.provider.Parameter;
 import org.apache.olingo.server.api.edm.provider.Property;
 import org.apache.olingo.server.api.edm.provider.PropertyRef;
 import org.apache.olingo.server.api.edm.provider.ReferentialConstraint;
 import org.apache.olingo.server.api.edm.provider.ReturnType;
-import org.teiid.adminapi.Model;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 
 public class OData4EntitySchemaBuilder {
 	
-	public static Edm buildMetadata(VDBMetaData vdb, MetadataStore metadataStore, OData odata) {
+	public static org.apache.olingo.server.api.edm.provider.Schema buildMetadata(org.teiid.metadata.Schema teiidSchema) {
 		try {
-		    Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas = new HashMap<String, org.apache.olingo.server.api.edm.provider.Schema>();
-			for (Schema schema:metadataStore.getSchemaList()) {
-				if (isVisible(vdb, schema)) {
-					edmSchemas.put(schema.getName(), new org.apache.olingo.server.api.edm.provider.Schema());
-				}
-			}
-			for (Schema schema:metadataStore.getSchemaList()) {
-				if (isVisible(vdb, schema)) {
-					buildEntityTypes(schema, edmSchemas.get(schema.getName()));
-				}
-			}
-			for (Schema schema:metadataStore.getSchemaList()) {
-				if (isVisible(vdb, schema)) {
-					buildActions(schema, edmSchemas.get(schema.getName()));
-				}
-			}
-			for (Schema schema:metadataStore.getSchemaList()) {
-				if (isVisible(vdb, schema)) {
-					buildNavigationProperties(schema, edmSchemas);
-				}
-			}
-			return odata.createEdm(new TeiidEdmProvider(edmSchemas.values()));
+		    org.apache.olingo.server.api.edm.provider.Schema edmSchema = new org.apache.olingo.server.api.edm.provider.Schema();
+
+		    buildEntityTypes(teiidSchema, edmSchema);
+			buildActions(teiidSchema, edmSchema);	
+
+			return edmSchema;
 		} catch (Exception e) {
 			throw new TeiidRuntimeException(e);
 		}
 	}
 	
-    private static boolean isVisible(VDBMetaData vdb, Schema schema) {
-        String schemaName = schema.getName();
-        Model model = vdb.getModel(schemaName);
-        if (model == null) {
-            return true;
-        }
-        return model.isVisible();
-    }	
-
-	static EntitySet findEntitySet(Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas, String schemaName, String enitityName) {
-		org.apache.olingo.server.api.edm.provider.Schema schema = findSchema(edmSchemas, schemaName);
-		EntityContainer entityContainter = schema.getEntityContainer();
+	static EntitySet findEntitySet(org.apache.olingo.server.api.edm.provider.Schema edmSchema, String enitityName) {
+		EntityContainer entityContainter = edmSchema.getEntityContainer();
 		for (EntitySet entitySet:entityContainter.getEntitySets()) {
 			if (entitySet.getName().equalsIgnoreCase(enitityName)) {
 				return entitySet;
@@ -178,6 +150,9 @@ public class OData4EntitySchemaBuilder {
 					.setType(new FullQualifiedName(schema.getName(), table.getName()))
 					.setIncludeInServiceDocument(true);
 
+			
+			buildNavigationProperties(table, entityType, entitySet);
+			
 			// add entity types for entity schema
 			entityTypes.add(entityType);
 			entitySets.add(entitySet);
@@ -229,63 +204,56 @@ public class OData4EntitySchemaBuilder {
 		}
 		return property;
 	}	
-
-	public static void buildNavigationProperties(Schema schema, Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas) {
-		
-		for (Table table: schema.getTables().values()) {
-			// skip if the table does not have the PK or unique
-			KeyRecord primaryKey = table.getPrimaryKey();
-			List<KeyRecord> uniques = table.getUniqueKeys();				
-			if (primaryKey == null && uniques.isEmpty()) {
-				continue;
-			}
-			
-			ArrayList<NavigationProperty> navigationProperties = new ArrayList<NavigationProperty>();
-			ArrayList<NavigationPropertyBinding> navigationBindingProperties = new ArrayList<NavigationPropertyBinding>();
-			EntitySet entitySet = findEntitySet(edmSchemas, schema.getName(), table.getName());
-			EntityType entityType = findEntityType(edmSchemas, schema.getName(), table.getName());
-			
-			// build Associations
-			for (ForeignKey fk:table.getForeignKeys()) {
-				String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
-				EntitySet refEntitySet = findEntitySet(edmSchemas, refSchemaName, fk.getReferenceTableName());
-				EntityType refEntityType = findEntityType(edmSchemas, refSchemaName, fk.getReferenceTableName());
-				
-				// check to see if fk is part of this table's pk, then it is 1 to 1 relation
-				boolean onetoone = sameColumnSet(table.getPrimaryKey(), fk);
-				
-				NavigationProperty navigaton = new NavigationProperty();
-				navigaton.setName(fk.getName())
-					.setType(new FullQualifiedName(refSchemaName, refEntityType.getName()));
-				
-				if (!onetoone) {
-					navigaton.setCollection(true);
-				}
-				else {
-					navigaton.setNullable(false);
-				}
-				
-				NavigationPropertyBinding navigationBinding = new NavigationPropertyBinding();
-				navigationBinding.setPath(fk.getName());
-				navigationBinding.setTarget(new Target().setTargetName(refEntitySet.getName()));
-				
-				ArrayList<ReferentialConstraint> constrainsts = new ArrayList<ReferentialConstraint>();
-				for (int i = 0; i < fk.getColumns().size(); i++) {
-					Column c = fk.getColumns().get(i);
-					String refColumn = fk.getReferenceColumns().get(i);
-					ReferentialConstraint constraint = new ReferentialConstraint();
-					constraint.setProperty(c.getName());
-					constraint.setReferencedProperty(refColumn);
-				}
-				navigaton.setReferentialConstraints(constrainsts);
-				navigationProperties.add(navigaton);
-				navigationBindingProperties.add(navigationBinding);
-			}
-			entityType.setNavigationProperties(navigationProperties);
-			entitySet.setNavigationPropertyBindings(navigationBindingProperties);
-		}
-	}	
 	
+	private static void buildNavigationProperties(Table table, EntityType entityType, EntitySet entitySet) {
+		// skip if the table does not have the PK or unique
+		KeyRecord primaryKey = table.getPrimaryKey();
+		List<KeyRecord> uniques = table.getUniqueKeys();				
+		if (primaryKey == null && uniques.isEmpty()) {
+			return;
+		}
+		
+		ArrayList<NavigationProperty> navigationProperties = new ArrayList<NavigationProperty>();
+		ArrayList<NavigationPropertyBinding> navigationBindingProperties = new ArrayList<NavigationPropertyBinding>();
+		
+		// build Associations
+		for (ForeignKey fk:table.getForeignKeys()) {
+			String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
+			
+			// check to see if fk is part of this table's pk, then it is 1 to 1 relation
+			boolean onetoone = sameColumnSet(table.getPrimaryKey(), fk);
+			
+			NavigationProperty navigaton = new NavigationProperty();
+			navigaton.setName(fk.getName())
+				.setType(new FullQualifiedName(refSchemaName, fk.getReferenceTableName()));
+			
+			if (!onetoone) {
+				navigaton.setCollection(true);
+			}
+			else {
+				navigaton.setNullable(false);
+			}
+			
+			NavigationPropertyBinding navigationBinding = new NavigationPropertyBinding();
+			navigationBinding.setPath(fk.getName());
+			navigationBinding.setTarget(new Target().setTargetName(fk.getReferenceTableName()));
+			
+			ArrayList<ReferentialConstraint> constrainsts = new ArrayList<ReferentialConstraint>();
+			for (int i = 0; i < fk.getColumns().size(); i++) {
+				Column c = fk.getColumns().get(i);
+				String refColumn = fk.getReferenceColumns().get(i);
+				ReferentialConstraint constraint = new ReferentialConstraint();
+				constraint.setProperty(c.getName());
+				constraint.setReferencedProperty(refColumn);
+			}
+			navigaton.setReferentialConstraints(constrainsts);
+			navigationProperties.add(navigaton);
+			navigationBindingProperties.add(navigationBinding);
+		}
+		entityType.setNavigationProperties(navigationProperties);
+		entitySet.setNavigationPropertyBindings(navigationBindingProperties);
+	}	
+
 	public static void buildActions(Schema schema, org.apache.olingo.server.api.edm.provider.Schema edmSchema) {
 		// procedures
 		ArrayList<ComplexType> complexTypes = new ArrayList<ComplexType>();

@@ -24,13 +24,32 @@ package org.teiid.olingo;
 import java.util.HashMap;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
-import org.apache.olingo.commons.api.edm.FullQualifiedName;
+import org.apache.olingo.commons.api.edm.EdmType;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmBoolean;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmByte;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTime;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDecimal;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDouble;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDuration;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmGuid;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmInt16;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmInt32;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmInt64;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmSByte;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmSingle;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
+import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.core.types.DataTypeManager;
 
 public class ODataTypeManager {
 
 	private static HashMap<String, EdmPrimitiveTypeKind> teiidkeyed = new HashMap<String, EdmPrimitiveTypeKind>();
-	private static HashMap<FullQualifiedName, String> odatakeyed = new HashMap<FullQualifiedName, String>();
+	private static HashMap<EdmPrimitiveTypeKind, String> odatakeyed = new HashMap<EdmPrimitiveTypeKind, String>();
 	
 	static {
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING, EdmPrimitiveTypeKind.String);
@@ -53,23 +72,25 @@ public class ODataTypeManager {
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML, EdmPrimitiveTypeKind.Stream);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.VARBINARY, EdmPrimitiveTypeKind.Stream);
 		
-		odatakeyed.put(EdmPrimitiveTypeKind.String.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.STRING);
-		odatakeyed.put(EdmPrimitiveTypeKind.Boolean.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.BOOLEAN);
-		odatakeyed.put(EdmPrimitiveTypeKind.Byte.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.SHORT);
-		odatakeyed.put(EdmPrimitiveTypeKind.SByte.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.BYTE);
-		odatakeyed.put(EdmPrimitiveTypeKind.Int16.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.SHORT);
-		odatakeyed.put(EdmPrimitiveTypeKind.Int32.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.INTEGER);
-		odatakeyed.put(EdmPrimitiveTypeKind.Int64.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.LONG);
-		odatakeyed.put(EdmPrimitiveTypeKind.Single.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.FLOAT);
-		odatakeyed.put(EdmPrimitiveTypeKind.Double.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.DOUBLE);
-		odatakeyed.put(EdmPrimitiveTypeKind.Decimal.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-		odatakeyed.put(EdmPrimitiveTypeKind.Time.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.TIME);
-		odatakeyed.put(EdmPrimitiveTypeKind.DateTime.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
-		odatakeyed.put(EdmPrimitiveTypeKind.Stream.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.BLOB);
-		odatakeyed.put(EdmPrimitiveTypeKind.Guid.getFullQualifiedName(), DataTypeManager.DefaultDataTypes.STRING);
+		odatakeyed.put(EdmPrimitiveTypeKind.String, DataTypeManager.DefaultDataTypes.STRING);
+		odatakeyed.put(EdmPrimitiveTypeKind.Boolean, DataTypeManager.DefaultDataTypes.BOOLEAN);
+		odatakeyed.put(EdmPrimitiveTypeKind.Byte, DataTypeManager.DefaultDataTypes.SHORT);
+		odatakeyed.put(EdmPrimitiveTypeKind.SByte, DataTypeManager.DefaultDataTypes.BYTE);
+		odatakeyed.put(EdmPrimitiveTypeKind.Int16, DataTypeManager.DefaultDataTypes.SHORT);
+		odatakeyed.put(EdmPrimitiveTypeKind.Int32, DataTypeManager.DefaultDataTypes.INTEGER);
+		odatakeyed.put(EdmPrimitiveTypeKind.Int64, DataTypeManager.DefaultDataTypes.LONG);
+		odatakeyed.put(EdmPrimitiveTypeKind.Single, DataTypeManager.DefaultDataTypes.FLOAT);
+		odatakeyed.put(EdmPrimitiveTypeKind.Double, DataTypeManager.DefaultDataTypes.DOUBLE);
+		odatakeyed.put(EdmPrimitiveTypeKind.Decimal, DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
+		odatakeyed.put(EdmPrimitiveTypeKind.Date, DataTypeManager.DefaultDataTypes.DATE);
+		odatakeyed.put(EdmPrimitiveTypeKind.Time, DataTypeManager.DefaultDataTypes.TIME);
+		odatakeyed.put(EdmPrimitiveTypeKind.DateTime, DataTypeManager.DefaultDataTypes.TIMESTAMP);
+		odatakeyed.put(EdmPrimitiveTypeKind.Stream, DataTypeManager.DefaultDataTypes.BLOB);
+		odatakeyed.put(EdmPrimitiveTypeKind.Guid, DataTypeManager.DefaultDataTypes.STRING);
+		odatakeyed.put(EdmPrimitiveTypeKind.Binary, DataTypeManager.DefaultDataTypes.BYTE+"[]"); //$NON-NLS-1$
 	}
 	
-	public static String teiidType(String odataType) {
+	public static String teiidType(EdmPrimitiveTypeKind odataType) {
 		return odatakeyed.get(odataType);
 	}
 	
@@ -78,6 +99,64 @@ public class ODataTypeManager {
 			return  odataType(DataTypeManager.getComponentType(teiidType));
 		}
 		return teiidkeyed.get(teiidType);
+	}
+
+	public static String teiidType(SingletonPrimitiveType type) {
+		if (type instanceof EdmBinary) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Binary);
+		}
+		else if (type instanceof EdmBoolean) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Boolean);
+		}
+		else if (type instanceof EdmByte) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Byte);
+		}
+		else if (type instanceof EdmDate) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Date);
+		}
+		else if (type instanceof EdmDateTime) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.DateTime);
+		}
+		else if (type instanceof EdmDateTimeOffset) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.DateTime);
+		}
+		else if (type instanceof EdmDecimal) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Decimal);
+		}
+		else if (type instanceof EdmDouble) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Double);
+		}
+		else if (type instanceof EdmDuration) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Int32);
+		}
+		else if (type instanceof EdmGuid) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.String);
+		}
+		else if (type instanceof EdmInt16) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Int16);
+		}
+		else if (type instanceof EdmInt32) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Int32);
+		}
+		else if (type instanceof EdmInt64) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Int64);
+		}
+		else if (type instanceof EdmSByte) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.SByte);
+		}
+		else if (type instanceof EdmSingle) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Single);
+		}
+		else if (type instanceof EdmStream) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Stream);
+		}
+		else if (type instanceof EdmString) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.String);
+		}
+		else if (type instanceof EdmTimeOfDay) {
+			return odatakeyed.get(EdmPrimitiveTypeKind.Time);
+		}
+		return null;
 	}
 	
 }

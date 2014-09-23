@@ -21,13 +21,14 @@
  */
 package org.teiid.olingo;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
-import org.apache.olingo.server.api.uri.UriInfo;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.TeiidException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
@@ -39,11 +40,13 @@ public interface Client {
 	
 	BaseResponse executeCall(String sql, List<SQLParam> sqlParams, SingletonPrimitiveType returnType);
 
-	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, List<ProjectedColumn> projectedColumns, UriInfo queryInfo);
+	void executeSQL(Query query, List<SQLParam> parameters, boolean countQuery, Integer skip, Integer top, QueryResponse respose);
 	
 	CountResponse executeCount(Query query, List<SQLParam> parameters);
 	
 	UpdateResponse executeUpdate(Command command, List<SQLParam> parameters);	
+	
+	String getProperty(String name);
 }
 
 interface UpdateResponse {
@@ -61,4 +64,11 @@ interface BaseResponse {
 interface ProjectedColumn {
 	String getName();
 	boolean isVisible();
+}
+
+interface QueryResponse {
+	void addRow(ResultSet rs) throws SQLException, TeiidException;
+	long size();
+	void setCount(long count);
+	void setNext(long row);
 }

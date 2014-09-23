@@ -34,24 +34,14 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.olingo.commons.api.data.ValueType;
-import org.apache.olingo.commons.api.edm.Edm;
-import org.apache.olingo.commons.api.edm.EdmElement;
-import org.apache.olingo.commons.api.edm.EdmEntitySet;
-import org.apache.olingo.commons.api.edm.EdmEntityType;
-import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
-import org.apache.olingo.commons.api.edm.EdmType;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.core.data.PropertyImpl;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
-import org.apache.olingo.server.api.uri.UriInfo;
-import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidRuntimeException;
@@ -73,9 +63,7 @@ import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.translator.CacheDirective;
 import org.teiid.transport.LocalServerConnection;
 
@@ -89,25 +77,21 @@ public class LocalClient implements Client {
 	private int vdbVersion;
 	private int batchSize;
 	private long cacheTime;
-	private String transportName;
 	private String connectionString;
 	private Properties connectionProperties = new Properties();
 	private Properties initProperties;
 	private TeiidDriver driver = TeiidDriver.getInstance();
-	private String invalidCharacterReplacement;
 
 	public LocalClient(String vdbName, int vdbVersion, Properties props) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
 		this.cacheTime = PropertiesUtils.getLongProperty(props, SKIPTOKEN_TIME, 300000L);
-		this.transportName = props.getProperty(EmbeddedProfile.TRANSPORT_NAME, "odata"); //$NON-NLS-1$
-		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
 		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		this.initProperties = props;
 		connectionProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-		connectionProperties.put(EmbeddedProfile.TRANSPORT_NAME, transportName); 
+		connectionProperties.put(EmbeddedProfile.TRANSPORT_NAME, props.getProperty(EmbeddedProfile.TRANSPORT_NAME, "odata")); //$NON-NLS-1$
 		connectionProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
 		this.connectionString = sb.toString();
 	}
@@ -217,7 +201,7 @@ public class LocalClient implements Client {
 	}
 
 	@Override
-	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, List<ProjectedColumn> projectedColumns, UriInfo uriInfo) {
+	public void executeSQL(Query query, List<SQLParam> parameters, boolean countQuery, Integer skipOption, Integer topOption, final QueryResponse respose) {
 		Connection connection = null;
 		try {
 			boolean cache = this.batchSize > 0; 
@@ -227,19 +211,7 @@ public class LocalClient implements Client {
 				hint.setScope(CacheDirective.Scope.USER);
 				query.setCacheHint(hint);
 			}
-			
-			UriInfoResource queryInfo = uriInfo.asUriInfoResource();
-			
-			boolean getCount = false; 
-			if (!getCount && (queryInfo.getTopOption() != null || queryInfo.getSkipOption() != null)) {
-				if (queryInfo.getTopOption() != null && queryInfo.getSkipOption() != null) {
-					query.setLimit(new Limit(new Constant(queryInfo.getSkipOption().getValue()), new Constant(queryInfo.getTopOption().getValue())));
-				}
-				else if (queryInfo.getTopOption() != null) {
-					query.setLimit(new Limit(new Constant(0), new Constant(queryInfo.getTopOption().getValue())));
-				}
-			}
-
+						
 			String sql = query.toString();
 
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
@@ -251,30 +223,18 @@ public class LocalClient implements Client {
 					stmt.setObject(i+1, parameters.get(i).value, parameters.get(i).sqlType);
 				}
 			}
-
-			final ResultSet rs = stmt.executeQuery();
-			
-			EntityList result = new EntityList(invalidCharacterReplacement);
-			
-			HashMap<String, EdmElement> propertyTypes = new HashMap<String, EdmElement>();
-			
-			EdmEntityType entityType = entitySet.getEntityType();
-			Iterator<String> propIter = entityType.getPropertyNames().iterator();
-			while(propIter.hasNext()) {
-				String prop = propIter.next();
-				propertyTypes.put(prop, entityType.getProperty(prop));
-			}
+			final ResultSet rs = stmt.executeQuery();		
 			
 			//skip to the initial position
 			int count = 0;
 			int skipSize = 0;
 			//skip based upon the skip value
-			if (getCount && queryInfo.getSkipOption() != null) {
-				skipSize = queryInfo.getSkipOption().getValue();
+			if (countQuery && skipOption != null) {
+				skipSize = skipOption;
 			}
 			//skip based upon the skipToken
-			if (queryInfo != null && queryInfo.getSkipOption() != null) {
-				skipSize += queryInfo.getSkipOption().getValue();
+			if (skipOption != null) {
+				skipSize += skipOption;
 			}
 			if (skipSize > 0) {
 				count += skip(cache, rs, skipSize);
@@ -283,8 +243,8 @@ public class LocalClient implements Client {
 			//determine the number of records to return
 			int size = batchSize;
 			int top = Integer.MAX_VALUE;
-			if (getCount && queryInfo.getTopOption() != null) {
-				top = queryInfo.getTopOption().getValue();
+			if (countQuery && topOption != null) {
+				top = topOption;
 				size = top; 
 				if (batchSize > 0) {
 					size = Math.min(batchSize, size);
@@ -295,15 +255,15 @@ public class LocalClient implements Client {
 			
 			//build the results
 			for (int i = 0; i < size; i++) {
-				count++;
 				if (!rs.next()) {
 					break;
 				}
-				result.addEntity(rs, propertyTypes, projectedColumns, entitySet);
+				count++;
+				respose.addRow(rs);
 			}
 			
 			//set the count
-			if (getCount) {
+			if (countQuery) {
 				if (!cache) {
 					while (rs.next()) {
 						count++;
@@ -313,22 +273,21 @@ public class LocalClient implements Client {
 					count = rs.getRow();
 				}
 			}
-			result.setCount(count);
+			respose.setCount(count);
 			
 			//set the skipToken if needed
-			if (cache && result.size() == this.batchSize) {
-				int end = skipSize + result.size();
-				if (getCount) {
+			if (cache && respose.size() == this.batchSize) {
+				long end = skipSize + respose.size();
+				if (countQuery) {
 					if (end < Math.min(top, count)) {
-						result.setSkipToken(String.valueOf(end));
+						respose.setNext(end);
 					}
 				} else if (rs.next()) {
-					result.setSkipToken(String.valueOf(end));
+					respose.setNext(end);
 					//will force the entry to cache or is effectively a no-op when already cached
 					rs.last();	
 				}
 			}
-			return result;
 		} catch (Exception e) {
 			throw new TeiidRuntimeException(e);
 		} finally {
@@ -448,85 +407,8 @@ public class LocalClient implements Client {
 		return keys;
 	}
 	
-	static PropertyImpl buildPropery(String propName, EdmType type, Object value, String invalidCharacterReplacement) throws TransformationException, SQLException, IOException {
-
-		if (!(type instanceof EdmPrimitiveType)) {
-			throw new AssertionError("non-simple types are not yet supported");
-		}
-
-		if (value instanceof Array) {
-			EdmPrimitiveType componentType = (EdmPrimitiveType)type;
-			value = ((Array)value).getArray();
-			
-			int length = java.lang.reflect.Array.getLength(value);
-			ArrayList values = new ArrayList();
-			for (int i = 0; i < length; i++) {
-				Object o = java.lang.reflect.Array.get(value, i);
-				Object p = getPropertyValue(componentType, o, invalidCharacterReplacement);
-				values.add(p);
-			}
-			return createCollection(propName, componentType, values);
-		}
-		EdmPrimitiveType expectedType = (EdmPrimitiveType)type;
-		return createPrimitive(propName, expectedType, getPropertyValue(expectedType, value, invalidCharacterReplacement));
-	}
-	
-	static Object getPropertyValue(EdmPrimitiveType expectedType, Object value, String invalidCharacterReplacement) throws SQLException, IOException, TransformationException {
-		if (value == null) {
-			return null;
-		}
-		Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
-		Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType.getName()));
-		if (sourceType != targetType) {
-			Transform t = DataTypeManager.getTransform(sourceType,targetType);
-			if (t == null && BlobType.class == targetType) {
-				if (sourceType == ClobType.class) {
-					return ClobType.getString((Clob)value).getBytes();
-				}
-				if (sourceType == SQLXML.class) {
-					return ((SQLXML)value).getString().getBytes();
-				}
-			}
-			value = t!=null?t.transform(value, targetType):value;
-			value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
-			return value;
-		}
-		value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
-		return value;
-	}
-
-	private static PropertyImpl createPrimitive(final String name, EdmPrimitiveType type, final Object value) {
-		return new PropertyImpl(type.getName(), name, ValueType.PRIMITIVE, value);
-	}	
-	
-	private static PropertyImpl createCollection(final String name, EdmPrimitiveType type, final Object... values) {
-		return new PropertyImpl(null, name, ValueType.COLLECTION_PRIMITIVE, Arrays.asList(values));
-	}	
-	
-	static Object replaceInvalidCharacters(EdmPrimitiveType expectedType, Object value, String invalidCharacterReplacement) {
-		if (!(expectedType instanceof EdmString) || invalidCharacterReplacement == null) {
-			return value;
-		}
-		if (value instanceof Character) {
-			value = value.toString();
-		}
-		String s = (String)value;
-		StringBuilder result = null;
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-			if (c <= 0x0020 && c != ' ' && c != '\n' && c != '\t' && c != '\r') {
-				if (result == null) {
-					result = new StringBuilder();
-					result.append(s.substring(0, i));
-				}
-				result.append(invalidCharacterReplacement);
-			} else if (result != null) {
-				result.append(c);
-			}
-		}
-		if (result == null) {
-			return value;
-		}
-		return result.toString();
+	@Override
+	public String getProperty(String name) {
+		return this.initProperties.getProperty(name);
 	}
 }

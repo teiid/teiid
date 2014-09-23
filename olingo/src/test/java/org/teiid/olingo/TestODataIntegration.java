@@ -21,6 +21,7 @@
  */
 package org.teiid.olingo;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
@@ -156,13 +157,7 @@ public class TestODataIntegration {
 	}	
 	
 	private static void deployVDB() throws IOException, ConnectorManagerException, VirtualDatabaseException, TranslatorException {
-		ModelMetaData mmd = new ModelMetaData();
-		mmd.setName("vw");
-		mmd.setSchemaSourceType("ddl");
-		mmd.setModelType(Type.PHYSICAL);
-		mmd.setSourceMappings(Arrays.asList(new SourceMappingMetadata("nw", "loopback", null)));
-		mmd.setSchemaText(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")));
-		teiid.deployVDB("northwind", mmd);
+		teiid.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("loopy-vdb.xml")));
 	}	
 	
 	@Test
@@ -174,10 +169,39 @@ public class TestODataIntegration {
 		transport.setHttpClient(http);
 		http.start();
 		
-		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/northwind/$metadata");
+		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/$metadata");
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("nw-edm-metadata.xml")), response.getContentAsString());
+        Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")), response.getContentAsString());
 	}
+	
+	@Test
+	public void tesSystemMetadata() throws Exception {
+		// for usage see
+		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
+		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
+		HttpClient http = new HttpClient(transport, null);
+		transport.setHttpClient(http);
+		http.start();
+		
+		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/SYS/$metadata");
+        Assert.assertEquals(200, response.getStatus());
+		response = http.GET("http://localhost:"+port+"/odata4/loopy/SYSADMIN/$metadata");
+        Assert.assertEquals(200, response.getStatus());
+	}	
+	
+	@Test
+	public void tesServiceMetadata() throws Exception {
+		// for usage see
+		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
+		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
+		HttpClient http = new HttpClient(transport, null);
+		transport.setHttpClient(http);
+		http.start();
+		
+		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/VM1");
+        Assert.assertEquals(200, response.getStatus());
+        //TODO: match the document here.. port is being random
+	}		
 	
 	@Test
 	public void testEntitySet() throws Exception {
@@ -188,11 +212,24 @@ public class TestODataIntegration {
 		transport.setHttpClient(http);
 		http.start();
 		
-		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/northwind/PM1.G1");
+		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/G1");
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("", response.getContentAsString());
 	}	
-
+	
+	@Test
+	public void testEntitySetWithKey() throws Exception {
+		// for usage see
+		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
+		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
+		HttpClient http = new HttpClient(transport, null);
+		transport.setHttpClient(http);
+		http.start();
+		
+		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/G1(0)");
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("", response.getContentAsString());
+	}
 	
 	/*
     protected Client mockClient2() {
