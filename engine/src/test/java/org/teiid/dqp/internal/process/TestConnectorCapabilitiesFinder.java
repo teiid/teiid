@@ -100,7 +100,7 @@ public class TestConnectorCapabilitiesFinder {
         
         // Test
         SourceCapabilities actual = finder.findCapabilities(modelName);
-        assertEquals(CachedFinder.INVALID_CAPS, actual); //$NON-NLS-1$
+        assertNotNull(actual); //$NON-NLS-1$
         assertFalse(finder.isValid(modelName)); 
     }
     

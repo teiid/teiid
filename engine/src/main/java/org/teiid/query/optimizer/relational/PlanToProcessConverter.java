@@ -306,12 +306,20 @@ public class PlanToProcessConverter {
                     AccessNode aNode = null;
                     Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
                     Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
-                    if (modelID != null && !capFinder.isValid(metadata.getFullName(modelID))) {
-                    	//TODO: we ideally want to handle the partial resutls case here differently
-                    	//      by adding a null node / and a source warning
-                    	//      for now it's just as easy to say that the user needs to take steps to
-                    	//      return static capabilities
-                    	throw new QueryPlannerException(QueryPlugin.Event.TEIID30498, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30498, metadata.getFullName(modelID)));
+					if (modelID != null) {
+						String fullName = metadata.getFullName(modelID);
+						if (!capFinder.isValid(fullName)) {
+	                    	//TODO: we ideally want to handle the partial resutls case here differently
+	                    	//      by adding a null node / and a source warning
+	                    	//      for now it's just as easy to say that the user needs to take steps to
+	                    	//      return static capabilities
+							SourceCapabilities caps = capFinder.findCapabilities(fullName);
+							Exception cause = null;
+							if (caps != null) {
+								cause = (Exception) caps.getSourceProperty(Capability.INVALID_EXCEPTION);
+							}
+	                    	throw new QueryPlannerException(QueryPlugin.Event.TEIID30498, cause, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30498, fullName));
+						}
                     }
                     EvaluatableVisitor ev = null;
                     if(node.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
