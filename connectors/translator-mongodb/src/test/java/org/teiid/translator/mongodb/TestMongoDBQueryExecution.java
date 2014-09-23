@@ -1018,6 +1018,21 @@ public class TestMongoDBQueryExecution {
     }    
     
     @Test
+    public void testArrtyTypeInWhere() throws Exception {
+        String query = "SELECT * FROM ArrayTest where column1 is not null";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"ArrayTest"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", "$id");
+        result.append("_m1", "$column1");
+
+        Mockito.verify(dbCollection).aggregate(
+        		new BasicDBObject("$match", QueryBuilder.start("column1").notEquals(null).get()),
+                new BasicDBObject("$project", result));
+    }     
+    
+    @Test
     public void testGeoFunctionInWhere() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) or CategoryID=1";
 
