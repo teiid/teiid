@@ -219,11 +219,13 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			}
 			else {
 			    // do not allow array type in where clauses etc.
+				/*
 			    if (!this.processingDerivedColumn) {
 			        if (DataTypeManager.isArrayType(obj.getMetadataObject().getRuntimeType())){
 			            this.exceptions.add(new TranslatorException(MongoDBPlugin.Event.TEIID18027, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18027, getColumnName(obj))));
 			        }
 			    }
+			    */
 
 			    ColumnDetail columnInfo = buildColumnDetail(obj);
 				Object mongoExpr = columnInfo.expression; 
