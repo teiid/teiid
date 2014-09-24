@@ -767,7 +767,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				if (closed) {
 					return;
 				}
-				if (!errored) {
+				if (!errored && !success) {
 					LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31153, tableName));
 				}
 				closed = true;
