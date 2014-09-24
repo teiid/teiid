@@ -379,6 +379,13 @@ public class TestNetezzaTranslatorCapabilities {
         String output = "SELECT SmallA.IntNum, SmallB.IntNum FROM SmallA LEFT OUTER JOIN SmallB ON SmallA.IntNum = SmallB.IntNum ORDER BY SmallA.IntNum"; 
                
         helpTestVisitor( input, output);        
+    }  
+    
+    @Test public void testLikeRegex() throws Exception {
+        String input = "SELECT BQT1.SmallA.IntNum FROM BQT1.SmallA where stringkey like_regex 'a.*' and stringkey not like_regex 'ab.*'"; 
+        String output = "SELECT SmallA.IntNum FROM SmallA WHERE REGEXP_LIKE(SmallA.StringKey, 'a.*') AND NOT(REGEXP_LIKE(SmallA.StringKey, 'ab.*'))"; 
+               
+        helpTestVisitor( input, output);        
     }   
     
 }
