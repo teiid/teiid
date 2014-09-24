@@ -320,7 +320,7 @@ public class TestWithClauseProcessing {
 	    helpProcess(plan, dataManager, expected);
 	}
 	
-	@Test public void testX() {
+	@Test public void testSubqueryWithGrouping() {
 		String sql = "select q.str_a, q.a from(WITH qry_0 as (SELECT e2 AS a1, e1 as str FROM pm1.g1 AS t) SELECT a1 as a, str as str_a from qry_0) as q group by q.str_a, q.a";
 		
 		List[] expected = new List[] {Arrays.asList("a", 1)};    
@@ -331,6 +331,21 @@ public class TestWithClauseProcessing {
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
 	    
 	    helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testFunctionEvaluation() throws Exception {
+		String sql = "with test as (select user() as u from pm1.g1) select u from test";
+		
+		List[] expected = new List[] {Arrays.asList("user")};    
+		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        
+		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    dataManager.addData("WITH test (u) AS (SELECT 'user' FROM g1 AS g_0) SELECT g_0.u FROM test AS g_0", Arrays.asList("user"));
+		CommandContext cc = TestProcessor.createCommandContext();
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc);
+	    
+	    helpProcess(plan, cc, dataManager, expected);
 	}
 
 }

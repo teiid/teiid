@@ -305,6 +305,8 @@ public class RelationalPlanner {
             		} else {
             			query.setWith(with);
             		}
+            		//TODO: this should be based upon whether any of the need evaluated
+            		accessNode.setShouldEvaluateExpressions(true); 
             	}
             }
         } 
