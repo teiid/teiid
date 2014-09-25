@@ -82,6 +82,7 @@ public class TestDQPCore {
 					try {
 						this.wait();
 					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
 					}
 				}
 			}
@@ -655,13 +656,14 @@ public class TestDQPCore {
         	public void onCompletion(ResultsFuture<ResultsMessage> future) {
         		try {
         			final BlobType bt = (BlobType)future.get().getResultsList().get(0).get(0);
-        			t.bt = bt;
-        			t.workContext = DQPWorkContext.getWorkContext();
         			synchronized (t) {
-            			t.notify();
+	        			t.bt = bt;
+	        			t.workContext = DQPWorkContext.getWorkContext();
+        				t.notify();
 					}
         			Thread.sleep(100); //give the Thread a chance to run
 				} catch (Exception e) {
+        			t.interrupt();
 					throw new RuntimeException(e);
 				}
         	}
