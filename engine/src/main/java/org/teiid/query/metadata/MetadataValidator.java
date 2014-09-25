@@ -421,6 +421,7 @@ public class MetadataValidator {
 	
 	// this class resolves the artifacts that are dependent upon objects from other schemas
 	// materialization sources, fk and data types (coming soon..)
+	// ensures that even if cached metadata is used that we resolve to a single instance
 	static class CrossSchemaResolver implements MetadataRule {
 		
 		private boolean keyMatches(List<String> names, KeyRecord record) {
@@ -450,8 +451,8 @@ public class MetadataValidator {
 
 				for (Table t:schema.getTables().values()) {
 					if (t.isVirtual()) {
-						if (t.isMaterialized() && t.getMaterializedTable() != null && t.getMaterializedTable().getParent() == null) {
-							String matTableName = t.getMaterializedTable().getName();
+						if (t.isMaterialized() && t.getMaterializedTable() != null) {
+							String matTableName = t.getMaterializedTable().getFullName();
 							int index = matTableName.indexOf(Table.NAME_DELIM_CHAR);
 							if (index == -1) {
 								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31088, matTableName, t.getFullName()));
@@ -487,23 +488,22 @@ public class MetadataValidator {
 					}
 					
 					for (ForeignKey fk:fks) {
-						if (fk.getReferenceKey() != null) {
-							//ensure derived fields are set
-							fk.setReferenceKey(fk.getReferenceKey());
-							continue;
-						}
-						
 						String referenceTableName = fk.getReferenceTableName();
-						if (referenceTableName == null){
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31091, t.getFullName()));
-							continue;
-						}
 						
+						Table referenceTable = null;
+						if (fk.getReferenceKey() == null) {
+							if (referenceTableName == null){
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31091, t.getFullName()));
+								continue;
+							}
+							//TODO there is an ambiguity here because we don't properly track the name parts
+							//so we have to first check for a table name that may contain .
+							referenceTable = schema.getTable(referenceTableName);
+						} else {
+							referenceTableName = fk.getReferenceKey().getParent().getFullName();
+						}
 						
 						String referenceSchemaName = schema.getName();
-						//TODO there is an ambiguity here because we don't properly track the name parts
-						//so we have to first check for a table name that may contain .
-						Table referenceTable = schema.getTable(referenceTableName);
 						int index = referenceTableName.indexOf(Table.NAME_DELIM_CHAR);
 						if (referenceTable == null) {
 							if (index != -1) {
@@ -523,6 +523,14 @@ public class MetadataValidator {
 
 						KeyRecord uniqueKey = null;
 						List<String> referenceColumns = fk.getReferenceColumns();
+						if (fk.getReferenceKey() != null) {
+							//index metadata logic sets the key prior to having the column names
+							List<Column> cols = fk.getReferenceKey().getColumns();
+							referenceColumns = new ArrayList<String>();
+							for (Column col : cols) {
+								referenceColumns.add(col.getName());
+							}
+						}
 						if (referenceColumns == null || referenceColumns.isEmpty()) {
 							if (referenceTable.getPrimaryKey() == null) {
 								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31094, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName));
@@ -530,7 +538,6 @@ public class MetadataValidator {
 							else {
 								uniqueKey = referenceTable.getPrimaryKey();										
 							}
-							
 						} else {
 							for (KeyRecord record : referenceTable.getUniqueKeys()) {
 								if (keyMatches(referenceColumns, record)) {
