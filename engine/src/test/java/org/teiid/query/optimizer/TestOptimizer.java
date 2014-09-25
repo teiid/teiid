@@ -6670,6 +6670,18 @@ public class TestOptimizer {
                     "SELECT 'const_col_2' AS c_0 FROM pm2.g2 AS g_0 LIMIT 1", "SELECT 'const_col_1' AS c_0 FROM pm1.g1 AS g_0 LIMIT 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
+    @Test public void testDistinctConstant4() throws Exception {
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+    	TestOptimizer.helpPlan("SELECT DISTINCT c1, null as c2, null as c3 FROM(SELECT c1, c2 FROM ("
+    			+ "SELECT 'const_col_1' as c1, e1 as c2 FROM pm1.g1 UNION ALL "
+    			+ "SELECT 'const_col_2' as c1, e1 as c2 FROM pm2.g2 ) as v ) as v1", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT g_0.e1 FROM pm2.g2 AS g_0 LIMIT 1", "SELECT g_0.e1 FROM pm1.g1 AS g_0 LIMIT 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
     @Test public void testPlanNodeAnnotation() throws Exception {
     	PlanNode pn = new PlanNode();
     	TransformationMetadata metadata = RealMetadataFactory.example1Cached();

@@ -140,36 +140,38 @@ public final class RuleCollapseSource implements OptimizerRule {
 		if (RuleRemoveOptionalJoins.useNonDistinctRows(accessNode.getParent())) {
 			return root;
 		}
-		boolean allConstants = true;
-		for (Expression ex : queryCommand.getProjectedQuery().getProjectedSymbols()) {
-			if (!(EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(ex)))) {
-				allConstants = false;
-				break;
-			}
-		}
-		if (allConstants && queryCommand instanceof Query) {
-			//distinct of all constants means just a single row
-			//see also the logic in RuleAssignOutputElements for a dupremove
-			Object mid = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
-			if (!CapabilitiesUtil.supports(Capability.ROW_LIMIT, mid, metadata, capabilitiesFinder)) {
-				PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
-				limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
-				limit.setProperty(NodeConstants.Info.OUTPUT_COLS, accessNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
-				if (accessNode.getParent() != null) {
-					accessNode.addAsParent(limit);
-					return root;
+		if (queryCommand instanceof Query) {
+			boolean allConstants = true;
+			for (Expression ex : (List<Expression>)accessNode.getProperty(Info.OUTPUT_COLS)) {
+				if (!(EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(ex)))) {
+					allConstants = false;
+					break;
 				}
-				limit.addFirstChild(accessNode);
-				return limit;
 			}
-			if (queryCommand.getLimit() != null) {
-				if (queryCommand.getLimit().getRowLimit() == null) {
-					queryCommand.getLimit().setRowLimit(new Constant(1));
-				} //else could have limit 0, so it takes more logic (case statement) to set this
-			} else {
-				queryCommand.setLimit(new Limit(null, new Constant(1)));
+			if (allConstants) {
+				//distinct of all constants means just a single row
+				//see also the logic in RuleAssignOutputElements for a dupremove
+				Object mid = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+				if (!CapabilitiesUtil.supports(Capability.ROW_LIMIT, mid, metadata, capabilitiesFinder)) {
+					PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+					limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
+					limit.setProperty(NodeConstants.Info.OUTPUT_COLS, accessNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
+					if (accessNode.getParent() != null) {
+						accessNode.addAsParent(limit);
+						return root;
+					}
+					limit.addFirstChild(accessNode);
+					return limit;
+				}
+				if (queryCommand.getLimit() != null) {
+					if (queryCommand.getLimit().getRowLimit() == null) {
+						queryCommand.getLimit().setRowLimit(new Constant(1));
+					} //else could have limit 0, so it takes more logic (case statement) to set this
+				} else {
+					queryCommand.setLimit(new Limit(null, new Constant(1)));
+				}
+				return root;
 			}
-			return root;
 		}
 		if (queryCommand.getLimit() != null) {
 			return root; //TODO: could create an inline view
