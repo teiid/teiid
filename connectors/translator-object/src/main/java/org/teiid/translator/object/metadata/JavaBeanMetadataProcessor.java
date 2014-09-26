@@ -145,6 +145,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	
 	/**
 	 * @param entity  
+	 * @return boolean
 	 */
 	protected boolean isUpdateable(Class<?> entity) {
 		return this.isUpdatable;
@@ -153,6 +154,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	/**
 	 * @param entity  
 	 * @param columnName 
+	 * @return boolean
 	 */
 	protected boolean isUpdateable(Class<?> entity, String columnName) {
 		return this.isUpdatable;

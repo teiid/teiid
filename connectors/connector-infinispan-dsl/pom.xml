@@ -23,6 +23,11 @@
 				<artifactId>infinispan-core</artifactId>
 			    <version>${version.org.infinispan.6}</version>
 			</dependency> 
+			<dependency>
+				<groupId>org.infinispan</groupId>
+				<artifactId>infinispan-commons</artifactId>
+			    <version>${version.org.infinispan.6}</version>
+			</dependency> 			
 			 <dependency>
 		  		<groupId>org.infinispan</groupId>
 		  		<artifactId>infinispan-remote-query-client</artifactId>
@@ -62,27 +67,38 @@
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
         </dependency>   
-		
+	 	
         <dependency>
           	<groupId>org.infinispan</groupId>
           	<artifactId>infinispan-client-hotrod</artifactId>
+          	<scope>provided</scope>
         </dependency>     
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
+            <scope>provided</scope>
         </dependency> 
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-commons</artifactId>
+            <scope>provided</scope>
+        </dependency>         
 		<dependency>
 		  <groupId>org.infinispan</groupId>
 		  <artifactId>infinispan-remote-query-client</artifactId>
+		  <scope>provided</scope>
 		</dependency>   
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-query-dsl</artifactId>
+		    <scope>provided</scope>
 		</dependency>  
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-query</artifactId>
-		</dependency> 		     
+		    <scope>provided</scope>
+		</dependency> 	
+			     
         <dependency>
             <groupId>org.jboss.modules</groupId>
             <artifactId>jboss-modules</artifactId>

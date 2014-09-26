@@ -61,7 +61,7 @@ public class ObjectExecution implements ResultSetExecution {
 	private ObjectExecutionFactory factory;
 	private ExecutionContext executionContext;
 
-	public ObjectExecution(Select query, @SuppressWarnings("unused") RuntimeMetadata metadata,
+	public ObjectExecution(Select query, RuntimeMetadata metadata,
 			ObjectExecutionFactory factory, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
 		this.factory = factory;
 		this.query = query;
@@ -146,7 +146,7 @@ public class ObjectExecution implements ResultSetExecution {
 	}
 
 	@Override
-	public void cancel() throws TranslatorException {
+	public void cancel()  {
 	}
 	
 }
