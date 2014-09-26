@@ -24,16 +24,15 @@
  */
 package org.teiid.query.sql.proc;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.LoopStatement;
+import org.teiid.query.sql.lang.TestSetQuery;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-
-import junit.framework.TestCase;
 
 
 public class TestLoopStatement  extends TestCase{
@@ -112,6 +111,13 @@ public class TestLoopStatement  extends TestCase{
         LoopStatement s2 = sample2();
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
+    }
+    
+    public void testCloneNonSimpleQuery(){
+    	Block block = TestBlock.sample1();
+        LoopStatement ls = new LoopStatement(block, TestSetQuery.sample1(), "cursor"); //$NON-NLS-1$
+        LoopStatement clone = (LoopStatement) ls.clone();
+        UnitTestUtil.helpTestEquivalence(0, ls, clone);
     }
 
 }
