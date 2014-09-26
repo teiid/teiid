@@ -225,6 +225,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(OrderByItem obj) {
     	validateSortable(obj.getSymbol());
+    	if (obj.getExpressionPosition() < 0) {
+    		for (SubqueryContainer subquery : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(obj)) {
+    			for (ElementSymbol es : ElementCollectorVisitor.getElements(obj, true, true)) {
+    				if (es.isExternalReference()) {
+    					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31156, subquery), obj);
+    				}
+    			}
+    		}
+    	}
     }
     
     public void visit(Query obj) {

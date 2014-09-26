@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -283,5 +284,29 @@ public class TestOrderByProcessing {
 		manager.addData("SELECT (SELECT SUM(g_1.e2) FROM g1 AS g_1 WHERE g_1.e1 = g_0.e1) AS c_0 FROM g2 AS g_0 ORDER BY c_0 DESC", new List[] {Arrays.asList(1)});
 		helpProcess(plan, manager, expected);
 	}
+	
+	//currently we prevent
+	@Test(expected=QueryValidatorException.class) public void testSubqueryOrderByUnrelated() throws Exception {
+		String sql = "SELECT * FROM pm1.g1 ORDER BY (select count(*) from pm1.g2 where e1 = pm1.g1.e1)"; //$NON-NLS-1$
 
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), createCommandContext());
+	}
+	
+	@Test public void testSubqueryOrderByRelated() throws Exception {
+		String sql = "SELECT pm1.g1.*, (select count(*) from pm1.g2 where e1 = pm1.g1.e1) FROM pm1.g1 ORDER BY (select count(*) from pm1.g2 where e1 = pm1.g1.e1)"; //$NON-NLS-1$
+
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), createCommandContext());
+		
+		List[] expected = new List[] { Arrays.asList("a", 1, true, 1.0, 1) };
+		
+		HardcodedDataManager manager = new HardcodedDataManager(metadata);
+		manager.addData("SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g1 AS g_0", new List[] {Arrays.asList("a", 1, true, 1.0)});
+		manager.addData("SELECT 1 FROM g2 AS g_0 WHERE g_0.e1 = 'a'", new List[] {Arrays.asList(1)});
+		helpProcess(plan, manager, expected);
+	}
+	
 }

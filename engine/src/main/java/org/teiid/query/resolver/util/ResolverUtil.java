@@ -44,11 +44,13 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -325,7 +327,7 @@ public class ResolverUtil {
 	 * @param metadata
 	 *            QueryMetadataInterface
 	 */
-    public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, QueryMetadataInterface metadata)
+    public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
 
     	List<Expression> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
@@ -408,6 +410,17 @@ public class ResolverUtil {
         	if (command instanceof SetQuery) {
     			 throw new QueryResolverException(QueryPlugin.Event.TEIID30086, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30086, sortKey));
     		}
+        	
+        	//resolve subqueries
+        	for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(sortKey)) {
+            	Command c = container.getCommand();
+                
+                QueryResolver.setChildMetadata(c, command);
+                c.pushNewResolvingContext(fromClauseGroups);
+                
+                QueryResolver.resolveCommand(c, metadata.getMetadata(), false);
+        	}
+            
         	for (ElementSymbol symbol : ElementCollectorVisitor.getElements(sortKey, false)) {
         		try {
         	    	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, command.getExternalGroupContexts(), metadata);
@@ -415,8 +428,9 @@ public class ResolverUtil {
         	    	 throw new QueryResolverException(QueryPlugin.Event.TEIID30087, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30087, symbol.getName()) );
         	    } 
 			}
-            ResolverVisitor.resolveLanguageObject(sortKey, metadata);
-            
+        	
+        	ResolverVisitor.resolveLanguageObject(sortKey, metadata);
+        	
             int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
             if (index == -1 && !isSimpleQuery) {
     	         throw new QueryResolverException(QueryPlugin.Event.TEIID30088, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30088, sortKey));
