@@ -46,7 +46,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created."); //$NON-NLS-1$
 	}
 	
-	public  CacheContainerWrapper getCacheContainer() throws TranslatorException {
+	@Override
+	public  CacheContainerWrapper getCacheContainer()  {
 		return config.getCacheContainer();
 	}
 	
@@ -63,6 +64,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	 * Will return <code>true</true> if the CacheContainer has been started.
 	 * @return boolean true if CacheContainer has been started
 	 */
+	@Override
 	public boolean isAlive() {
 		boolean alive = (config == null ? false : config.isAlive());
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Cache Connection is alive:", alive); //$NON-NLS-1$

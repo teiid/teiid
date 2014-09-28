@@ -1,8 +1,11 @@
 package org.teiid.translator.object.infinispan;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
-import org.infinispan.Cache;
+import org.infinispan.commons.api.BasicCache;
 import org.infinispan.manager.DefaultCacheManager;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheContainerWrapper;
@@ -66,7 +69,19 @@ class TestInfinispanCacheWrapper extends CacheContainerWrapper {
 	}
 
 	@Override
-	public Cache getCache(String cacheName) {
+	public BasicCache getCache(String cacheName) {
 		return dcm.getCache(cacheName);
+	}
+	
+	@SuppressWarnings({ "rawtypes" })
+	@Override
+	public Collection<Object> getAll(String cacheName) {
+		Collection<Object> objs = new ArrayList<Object>();
+		org.infinispan.commons.api.BasicCache bc = getCache(cacheName);
+		Iterator ksi = bc.keySet().iterator();
+		while (ksi.hasNext()) {
+			objs.add(ksi.next());
+		}
+		return objs;
 	}
 }

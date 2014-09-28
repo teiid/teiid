@@ -45,6 +45,11 @@
         <version.org.apache.httpcomponents.httpclient>${version.org.apache.httpcomponents}</version.org.apache.httpcomponents.httpclient>
         <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>${version.org.hibernate.javax.persistence}</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
 	     
+        
+        <!-- versions required by infinispan 6.1 -->
+        <version.org.hibernate>4.2.0.Final</version.org.hibernate>
+        <version.org.hibernate.search>4.5.0.Final</version.org.hibernate.search>
+        	     
 	    <version.org.apache.cxf-jaxrs>${version.org.apache.cxf}</version.org.apache.cxf-jaxrs>
 
 

@@ -24,8 +24,11 @@ package org.teiid.resource.adapter.infinispan.base;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -66,6 +69,18 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 				return ecm.getCache();
 			}
 			return ecm.getCache(cacheName);
+		}
+		
+		@SuppressWarnings({ "rawtypes" })
+		@Override
+		public Collection<Object> getAll(String cacheName) {
+			Collection<Object> objs = new ArrayList<Object>();
+			org.infinispan.commons.api.BasicCache bc = getCache(cacheName);
+			Iterator ksi = bc.keySet().iterator();
+			while (ksi.hasNext()) {
+				objs.add(ksi.next());
+			}
+			return objs;
 		}
 
 		// added to enable unit test to close the container
@@ -179,7 +194,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * Called to get the module(s) that are to be loaded
 	 * 
 	 * @see #setModule
-	 * @return
+	 * @return String
 	 */
 	public String getModule() {
 		return module;
@@ -219,7 +234,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * Set the list of remote servers that make up the Infinispan cluster. The
 	 * servers must be Infinispan HotRod servers. The list must be in the
 	 * appropriate format of <code>host:port[;host:port...]</code> that would be
-	 * used when defining an Infinispan {@link RemoteCacheManager} instance. If
+	 * used when defining an Infinispan RemoteCacheManager instance. If
 	 * the value is missing, <code>localhost:11311</code> is assumed.
 	 * 
 	 * @param remoteServerList
@@ -262,7 +277,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * configure a RemoteCacheManager remoteCacheManager.
 	 * 
 	 * @return the name of the HotRod client properties file to be used to
-	 *         configure {@link RemoteCacheContainer}
+	 *         configure RemoteCacheManager
 	 * @see #setHotRodClientPropertiesFile(String)
 	 */
 	public String getHotRodClientPropertiesFile() {
@@ -271,11 +286,11 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	/**
 	 * Set the name of the HotRod client properties file that should be used to
-	 * configure a {@link RemoteCacheManager remoteCacheManager}.
+	 * configure a remoteCacheManager.
 	 * 
 	 * @param propertieFileName
 	 *            the name of the HotRod client properties file that should be
-	 *            used to configure the {@link RemoteCacheContainer remote}
+	 *            used to configure the RemoteCacheManager
 	 *            container.
 	 * @see #getHotRodClientPropertiesFile()
 	 */
