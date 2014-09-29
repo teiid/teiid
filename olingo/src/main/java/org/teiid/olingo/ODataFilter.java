@@ -60,8 +60,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     public void init(FilterConfig config) throws ServletException {
         // handle proxy-uri in the case of cloud environments
         String proxyURI = config.getInitParameter("proxy-base-uri"); //$NON-NLS-1$
-        if (proxyURI != null
-                && proxyURI.startsWith("${") && proxyURI.endsWith("}")) { //$NON-NLS-1$ //$NON-NLS-2$
+        if (proxyURI != null && proxyURI.startsWith("${") && proxyURI.endsWith("}")) { //$NON-NLS-1$ //$NON-NLS-2$
             proxyURI = proxyURI.substring(2, proxyURI.length() - 1);
             proxyURI = System.getProperty(proxyURI);
         }
@@ -105,8 +104,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             int endIdx = uri.indexOf('/', idx + 8);
             if (endIdx == -1) {
-                throw new TeiidRuntimeException(
-                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
+                throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
             }
 
             vdbName = uri.substring(idx + 8, endIdx);
@@ -114,8 +112,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (modelIdx == -1) {
                 modelName = uri.substring(endIdx + 1).trim();
                 if (modelName.isEmpty()) {
-                    throw new TeiidRuntimeException(
-                            ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
+                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
                 }
             } else {
                 modelName = uri.substring(endIdx + 1, modelIdx);
@@ -131,19 +128,16 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             vdbName = vdbName.trim();
             if (vdbName.isEmpty()) {
-                throw new TeiidRuntimeException(
-                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+                throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
             }
 
-            ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(
-                    httpRequest);
+            ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);
             contextAwareRequest.setContextPath(contextPath);
             httpRequest = contextAwareRequest;
             key = new VDBKey(vdbName, version);
         } else {
             if (this.initProperties.getProperty("vdb-name") == null || this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ //$NON-NLS-2$
-                throw new ServletException(
-                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
+                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
             version = Integer.parseInt(this.initProperties
@@ -152,12 +146,10 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (modelIdx == -1) {
                 modelName = uri.substring(uri.indexOf('/') + 1).trim();
                 if (modelName.isEmpty()) {
-                    throw new TeiidRuntimeException(
-                            ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
                 }
             }
-            modelName = uri.substring(uri.indexOf('/'),
-                    uri.indexOf('/', uri.indexOf('/')));
+            modelName = uri.substring(uri.indexOf('/'), uri.indexOf('/', uri.indexOf('/')));
         }
 
         SoftReference<Client> ref = this.clientMap.get(key);
@@ -173,18 +165,13 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
                         ConnectionImpl connection = null;
                         if (client instanceof LocalClient) {
                             try {
-                                connection = ((LocalClient) client)
-                                        .getConnection();
-                                LocalServerConnection lsc = (LocalServerConnection) connection
-                                        .getServerConnection();
+                                connection = ((LocalClient) client).getConnection();
+                                LocalServerConnection lsc = (LocalServerConnection) connection.getServerConnection();
                                 lsc.addListener(this);
                                 this.listenerRegistered = true;
                             } catch (SQLException e) {
-                                LogManager
-                                        .logWarning(
-                                                LogConstants.CTX_ODATA,
-                                                ODataPlugin.Util
-                                                        .gs(ODataPlugin.Event.TEIID16014));
+                                LogManager.logWarning(LogConstants.CTX_ODATA,
+                                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014));
                             } finally {
                                 if (connection != null) {
                                     try {
@@ -230,7 +217,6 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     }
 
     @Override
-    public void added(String name, int version, CompositeVDB vdb,
-            boolean reloading) {
+    public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
     }
 }

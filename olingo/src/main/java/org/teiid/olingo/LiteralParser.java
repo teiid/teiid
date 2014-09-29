@@ -36,16 +36,11 @@ import org.apache.commons.codec.DecoderException;
 public class LiteralParser {
 
     private static final Pattern INT_PATTERN = Pattern.compile("[\\+|-]?\\d+");
-    private static final Pattern DOUBLE_PATTERN = Pattern
-            .compile("[\\+|-]?\\d+\\.\\d+((e|E) [\\+|-]? \\d+)?");
-    private static final Pattern BOOLEAN_PATTERN = Pattern
-            .compile("true|false|TRUE|FALSE");
-    private static final Pattern BINARY_PATTERN = Pattern
-            .compile("^binary\\s'([a-fA-f0-9]*)'$");
-    private static final Pattern DATE_PATTERN = Pattern
-            .compile("^(\\d{4})-(\\d{2})-(\\d{2})$");
-    private static final Pattern TIME_PATTERN = Pattern
-            .compile("^(\\d{2}):(\\d{2}):(\\d{2})$");
+    private static final Pattern DOUBLE_PATTERN = Pattern.compile("[\\+|-]?\\d+\\.\\d+((e|E) [\\+|-]? \\d+)?");
+    private static final Pattern BOOLEAN_PATTERN = Pattern.compile("true|false|TRUE|FALSE");
+    private static final Pattern BINARY_PATTERN = Pattern.compile("^binary\\s'([a-fA-f0-9]*)'$");
+    private static final Pattern DATE_PATTERN = Pattern.compile("^(\\d{4})-(\\d{2})-(\\d{2})$");
+    private static final Pattern TIME_PATTERN = Pattern.compile("^(\\d{2}):(\\d{2}):(\\d{2})$");
 
     // dateTimeOffsetValue = year "-" month "-" day "T" hour ":" minute [ ":"
     // second [ "." fractionalSeconds ] ] ( "Z" / sign hour ":" minute )
@@ -64,20 +59,15 @@ public class LiteralParser {
             "(((\\+|-)\\d{2}:\\d{2})|(Z))" + // group 3 (offset) / group 6 (utc)
             "$");
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
-            "yyyy-MM-dd");
-    private static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm");
-    private static final SimpleDateFormat DATETIME_WITH_SECONDS_FORMAT = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss");
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+    private static final SimpleDateFormat DATETIME_WITH_SECONDS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     private static final SimpleDateFormat DATETIME_WITH_MILLIS_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss.SSS");
-    private static final SimpleDateFormat DATETIMEOFFSET_XML = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ssZZ");
+    private static final SimpleDateFormat DATETIMEOFFSET_XML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZ");
     private static final SimpleDateFormat DATETIMEOFFSET_WITH_MILLIS_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
-    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat(
-            "HH:mm:ss");
+    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
 
     public static Object parseLiteral(String text) {
         if (text.equals("null")) {
@@ -98,8 +88,7 @@ public class LiteralParser {
             return Boolean.parseBoolean(text);
         } else if (BINARY_PATTERN.matcher(text).matches()) {
             try {
-                return org.apache.commons.codec.binary.Hex.decodeHex(text
-                        .toCharArray());
+                return org.apache.commons.codec.binary.Hex.decodeHex(text.toCharArray());
             } catch (DecoderException e) {
                 // fall through and returned as text
             }
@@ -157,11 +146,10 @@ public class LiteralParser {
 
         if (nanoSeconds.length() <= 4) {
             if (offset == null) {
-                return new Timestamp(DATETIME_WITH_MILLIS_FORMAT.parse(
-                        dateTime + seconds + nanoSeconds).getTime());
+                return new Timestamp(DATETIME_WITH_MILLIS_FORMAT.parse(dateTime + seconds + nanoSeconds).getTime());
             }
-            return new Timestamp(DATETIMEOFFSET_WITH_MILLIS_FORMAT.parse(
-                    dateTime + seconds + nanoSeconds + offset).getTime());
+            return new Timestamp(DATETIMEOFFSET_WITH_MILLIS_FORMAT.parse(dateTime + seconds + nanoSeconds + offset)
+                    .getTime());
         }
         if (offset == null) {
             return new Timestamp(adjustMillis(DATETIME_WITH_MILLIS_FORMAT
@@ -169,14 +157,12 @@ public class LiteralParser {
                     .getTime(), nanoSeconds));
         }
         return new Timestamp(adjustMillis(
-                DATETIME_WITH_MILLIS_FORMAT.parse(
-                        dateTime + seconds + nanoSeconds.substring(0, 4)
+                DATETIME_WITH_MILLIS_FORMAT.parse(dateTime + seconds + nanoSeconds.substring(0, 4)
                                 + offset).getTime(), nanoSeconds));
     }
 
     private static long adjustMillis(long dateTime, final String nanoSeconds) {
-        return Math.round(Double.parseDouble("0." + nanoSeconds.substring(4))) == 0 ? dateTime
-                : dateTime + 1;
+        return Math.round(Double.parseDouble("0." + nanoSeconds.substring(4))) == 0 ? dateTime : dateTime + 1;
     }
 
     private static Time parseTime(String value) throws ParseException {

@@ -71,9 +71,7 @@ public class OData4EntitySchemaBuilder {
         }
     }
 
-    static EntitySet findEntitySet(
-            org.apache.olingo.server.api.edm.provider.Schema edmSchema,
-            String enitityName) {
+    static EntitySet findEntitySet(org.apache.olingo.server.api.edm.provider.Schema edmSchema, String enitityName) {
         EntityContainer entityContainter = edmSchema.getEntityContainer();
         for (EntitySet entitySet : entityContainter.getEntitySets()) {
             if (entitySet.getName().equalsIgnoreCase(enitityName)) {
@@ -84,16 +82,13 @@ public class OData4EntitySchemaBuilder {
     }
 
     static org.apache.olingo.server.api.edm.provider.Schema findSchema(
-            Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas,
-            String schemaName) {
+            Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas, String schemaName) {
         return edmSchemas.get(schemaName);
     }
 
-    static EntityType findEntityType(
-            Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas,
+    static EntityType findEntityType(Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas,
             String schemaName, String enitityName) {
-        org.apache.olingo.server.api.edm.provider.Schema schema = findSchema(
-                edmSchemas, schemaName);
+        org.apache.olingo.server.api.edm.provider.Schema schema = findSchema(edmSchemas, schemaName);
         if (schema != null) {
             for (EntityType type : schema.getEntityTypes()) {
                 if (type.getName().equalsIgnoreCase(enitityName)) {
@@ -107,13 +102,11 @@ public class OData4EntitySchemaBuilder {
     static EntityContainer findEntityContainer(
             Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas,
             String schemaName) {
-        org.apache.olingo.server.api.edm.provider.Schema schema = edmSchemas
-                .get(schemaName);
+        org.apache.olingo.server.api.edm.provider.Schema schema = edmSchemas.get(schemaName);
         return schema.getEntityContainer();
     }
 
-    public static void buildEntityTypes(Schema schema,
-            org.apache.olingo.server.api.edm.provider.Schema edmSchema) {
+    public static void buildEntityTypes(Schema schema, org.apache.olingo.server.api.edm.provider.Schema edmSchema) {
         List<EntitySet> entitySets = new ArrayList<EntitySet>();
         List<EntityType> entityTypes = new ArrayList<EntityType>();
 
@@ -123,8 +116,7 @@ public class OData4EntitySchemaBuilder {
             KeyRecord primaryKey = table.getPrimaryKey();
             List<KeyRecord> uniques = table.getUniqueKeys();
             if (primaryKey == null && uniques.isEmpty()) {
-                LogManager.logDetail(
-                        LogConstants.CTX_ODATA,
+                LogManager.logDetail(LogConstants.CTX_ODATA,
                         ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017,
                                 table.getFullName()));
                 continue;
@@ -159,9 +151,7 @@ public class OData4EntitySchemaBuilder {
             // entity set one for one entity type
             EntitySet entitySet = new EntitySet()
                     .setName(table.getName())
-                    .setType(
-                            new FullQualifiedName(schema.getName(), table
-                                    .getName()))
+                    .setType(new FullQualifiedName(schema.getName(), table.getName()))
                     .setIncludeInServiceDocument(true);
 
             buildNavigationProperties(table, entityType, entitySet);
@@ -173,8 +163,7 @@ public class OData4EntitySchemaBuilder {
 
         // entity container is holder entity sets, association sets, function
         // imports
-        EntityContainer entityContainer = new EntityContainer().setName(
-                schema.getName()).setEntitySets(entitySets);
+        EntityContainer entityContainer = new EntityContainer().setName(schema.getName()).setEntitySets(entitySets);
 
         // build entity schema
         edmSchema.setNamespace(schema.getName()).setAlias(schema.getName())
@@ -184,8 +173,7 @@ public class OData4EntitySchemaBuilder {
 
     private static boolean hasStream(List<Property> properties) {
         for (Property p : properties) {
-            if (p.getType().equals(
-                    EdmPrimitiveTypeKind.Binary.getFullQualifiedName())) {
+            if (p.getType().equals(EdmPrimitiveTypeKind.Binary.getFullQualifiedName())) {
                 return true;
             }
         }
@@ -195,9 +183,7 @@ public class OData4EntitySchemaBuilder {
     private static Property buildProperty(Column c) {
         Property property = new Property()
                 .setName(c.getName())
-                .setType(
-                        ODataTypeManager.odataType(c.getRuntimeType())
-                                .getFullQualifiedName())
+                .setType(ODataTypeManager.odataType(c.getRuntimeType()).getFullQualifiedName())
                 .setNullable(c.getNullType() == NullType.Nullable);
 
         if (DataTypeManager.isArrayType(c.getRuntimeType())) {
@@ -208,10 +194,8 @@ public class OData4EntitySchemaBuilder {
             property.setMaxLength(c.getLength()).setUnicode(true);
         } else if (c.getRuntimeType().equals(
                 DataTypeManager.DefaultDataTypes.DOUBLE)
-                || c.getRuntimeType().equals(
-                        DataTypeManager.DefaultDataTypes.FLOAT)
-                || c.getRuntimeType().equals(
-                        DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.FLOAT)
+                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
             property.setPrecision(c.getPrecision());
             property.setScale(c.getScale());
         } else {
@@ -236,17 +220,14 @@ public class OData4EntitySchemaBuilder {
 
         // build Associations
         for (ForeignKey fk : table.getForeignKeys()) {
-            String refSchemaName = fk.getReferenceKey().getParent().getParent()
-                    .getName();
+            String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
 
             // check to see if fk is part of this table's pk, then it is 1 to 1
             // relation
             boolean onetoone = sameColumnSet(table.getPrimaryKey(), fk);
 
             NavigationProperty navigaton = new NavigationProperty();
-            navigaton.setName(fk.getName()).setType(
-                    new FullQualifiedName(refSchemaName, fk
-                            .getReferenceTableName()));
+            navigaton.setName(fk.getName()).setType(new FullQualifiedName(refSchemaName, fk.getReferenceTableName()));
 
             if (!onetoone) {
                 navigaton.setCollection(true);
@@ -256,8 +237,7 @@ public class OData4EntitySchemaBuilder {
 
             NavigationPropertyBinding navigationBinding = new NavigationPropertyBinding();
             navigationBinding.setPath(fk.getName());
-            navigationBinding.setTarget(new Target().setTargetName(fk
-                    .getReferenceTableName()));
+            navigationBinding.setTarget(new Target().setTargetName(fk.getReferenceTableName()));
 
             ArrayList<ReferentialConstraint> constrainsts = new ArrayList<ReferentialConstraint>();
             for (int i = 0; i < fk.getColumns().size(); i++) {
@@ -291,18 +271,14 @@ public class OData4EntitySchemaBuilder {
             ArrayList<Parameter> params = new ArrayList<Parameter>();
             for (ProcedureParameter pp : proc.getParameters()) {
                 if (pp.getName().equals("return")) { //$NON-NLS-1$
-                    edmAction
-                            .setReturnType(new ReturnType()
-                                    .setType(ODataTypeManager.odataType(
-                                            pp.getRuntimeType())
+                    edmAction.setReturnType(new ReturnType().setType(ODataTypeManager.odataType(pp.getRuntimeType())
                                             .getFullQualifiedName()));
                     continue;
                 }
 
                 Parameter param = new Parameter();
                 param.setName(pp.getName());
-                param.setType(ODataTypeManager.odataType(pp.getRuntimeType())
-                        .getFullQualifiedName());
+                param.setType(ODataTypeManager.odataType(pp.getRuntimeType()).getFullQualifiedName());
 
                 if (DataTypeManager.isArrayType(pp.getRuntimeType())) {
                     param.setCollection(true);
@@ -316,8 +292,7 @@ public class OData4EntitySchemaBuilder {
             ColumnSet<Procedure> returnColumns = proc.getResultSet();
             if (returnColumns != null) {
                 ComplexType complexType = new ComplexType();
-                String entityTypeName = proc.getName()
-                        + "_" + returnColumns.getName(); //$NON-NLS-1$
+                String entityTypeName = proc.getName() + "_" + returnColumns.getName(); //$NON-NLS-1$
                 complexType.setName(entityTypeName);
 
                 ArrayList<Property> props = new ArrayList<Property>();
@@ -327,14 +302,12 @@ public class OData4EntitySchemaBuilder {
                 complexType.setProperties(props);
 
                 complexTypes.add(complexType);
-                edmAction.setReturnType((new ReturnType()
-                        .setType(new FullQualifiedName(schema.getName(),
-                                complexType.getName())).setCollection(true)));
+                edmAction.setReturnType((new ReturnType().setType(new FullQualifiedName(schema.getName(), complexType
+                        .getName())).setCollection(true)));
             }
 
             ActionImport actionImport = new ActionImport();
-            actionImport.setName(proc.getName()).setAction(
-                    new FullQualifiedName(schema.getName(), proc.getName()));
+            actionImport.setName(proc.getName()).setAction(new FullQualifiedName(schema.getName(), proc.getName()));
 
             actions.add(edmAction);
             actionImports.add(actionImport);

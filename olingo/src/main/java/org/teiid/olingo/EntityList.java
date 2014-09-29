@@ -57,8 +57,7 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
     private final HashMap<String, EdmElement> propertyTypes;
     private final Collection<ProjectedColumn> projectedColumns;
 
-    public EntityList(String invalidCharacterReplacement,
-            EdmEntitySet edmEntitySet,
+    public EntityList(String invalidCharacterReplacement, EdmEntitySet edmEntitySet,
             Collection<ProjectedColumn> projectedColumns) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
         this.propertyTypes = new HashMap<String, EdmElement>();
@@ -83,8 +82,7 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
             Object value = rs.getObject(i + 1);
             String propName = rs.getMetaData().getColumnLabel(i + 1);
             EdmElement element = this.propertyTypes.get(propName);
-            if (!(element instanceof EdmProperty)
-                    && !((EdmProperty) element).isPrimitive()) {
+            if (!(element instanceof EdmProperty) && !((EdmProperty) element).isPrimitive()) {
                 throw new TeiidException(ODataPlugin.Event.TEIID16024,
                         ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16024));
             }
@@ -92,10 +90,9 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
             Property property;
             try {
                 property = buildPropery(propName, edmProperty.getTypeInfo()
-                        .getPrimitiveTypeKind(), value,
+.getPrimitiveTypeKind(), value,
                         invalidCharacterReplacement);
-                properties
-                        .put(rs.getMetaData().getColumnLabel(i + 1), property);
+                properties.put(rs.getMetaData().getColumnLabel(i + 1), property);
             } catch (IOException e) {
                 throw new TeiidException(e);
             }
@@ -106,9 +103,9 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
         /*
          * OEntityKey key = OEntityKey.infer(entitySet, new
          * ArrayList<Property<?>>(properties.values()));
-         * 
+         *
          * ArrayList<Link> links = new ArrayList<Link>();
-         * 
+         *
          * for (EdmNavigationProperty
          * navProperty:entitySet.getType().getNavigationProperties()) {
          * links.add
@@ -140,27 +137,23 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
             ArrayList values = new ArrayList();
             for (int i = 0; i < length; i++) {
                 Object o = java.lang.reflect.Array.get(value, i);
-                Object p = getPropertyValue(type, o,
-                        invalidCharacterReplacement);
+                Object p = getPropertyValue(type, o, invalidCharacterReplacement);
                 values.add(p);
             }
             return createCollection(propName, type, values);
         }
-        return createPrimitive(propName, type,
-                getPropertyValue(type, value, invalidCharacterReplacement));
+        return createPrimitive(propName, type, getPropertyValue(type, value, invalidCharacterReplacement));
     }
 
     private static PropertyImpl createPrimitive(final String name,
             EdmPrimitiveTypeKind type, final Object value) {
-        return new PropertyImpl(type.getFullQualifiedName()
-                .getFullQualifiedNameAsString(), name, ValueType.PRIMITIVE,
+        return new PropertyImpl(type.getFullQualifiedName().getFullQualifiedNameAsString(), name, ValueType.PRIMITIVE,
                 value);
     }
 
     private static PropertyImpl createCollection(final String name,
             EdmPrimitiveTypeKind type, final Object... values) {
-        return new PropertyImpl(type.getFullQualifiedName()
-                .getFullQualifiedNameAsString(), name,
+        return new PropertyImpl(type.getFullQualifiedName().getFullQualifiedNameAsString(), name,
                 ValueType.COLLECTION_PRIMITIVE, Arrays.asList(values));
     }
 
@@ -171,8 +164,7 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
             return null;
         }
         Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
-        Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager
-                .teiidType(expectedType));
+        Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType));
         if (sourceType != targetType) {
             Transform t = DataTypeManager.getTransform(sourceType, targetType);
             if (t == null && BlobType.class == targetType) {
@@ -184,19 +176,16 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
                 }
             }
             value = t != null ? t.transform(value, targetType) : value;
-            value = replaceInvalidCharacters(expectedType, value,
-                    invalidCharacterReplacement);
+            value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
             return value;
         }
-        value = replaceInvalidCharacters(expectedType, value,
-                invalidCharacterReplacement);
+        value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
         return value;
     }
 
     static Object replaceInvalidCharacters(EdmPrimitiveTypeKind expectedType,
             Object value, String invalidCharacterReplacement) {
-        if (expectedType != EdmPrimitiveTypeKind.String
-                || invalidCharacterReplacement == null) {
+        if (expectedType != EdmPrimitiveTypeKind.String || invalidCharacterReplacement == null) {
             return value;
         }
         if (value instanceof Character) {

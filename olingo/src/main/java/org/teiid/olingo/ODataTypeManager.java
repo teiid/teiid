@@ -51,77 +51,43 @@ public class ODataTypeManager {
     private static HashMap<EdmPrimitiveTypeKind, String> odatakeyed = new HashMap<EdmPrimitiveTypeKind, String>();
 
     static {
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING,
-                EdmPrimitiveTypeKind.String);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BOOLEAN,
-                EdmPrimitiveTypeKind.Boolean);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BYTE,
-                EdmPrimitiveTypeKind.Byte);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.SHORT,
-                EdmPrimitiveTypeKind.Int16);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CHAR,
-                EdmPrimitiveTypeKind.String);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.INTEGER,
-                EdmPrimitiveTypeKind.Int32);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.LONG,
-                EdmPrimitiveTypeKind.Int64);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER,
-                EdmPrimitiveTypeKind.Int64);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.FLOAT,
-                EdmPrimitiveTypeKind.Single);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DOUBLE,
-                EdmPrimitiveTypeKind.Double);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL,
-                EdmPrimitiveTypeKind.Decimal);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DATE,
-                EdmPrimitiveTypeKind.Date);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIME,
-                EdmPrimitiveTypeKind.Time);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,
-                EdmPrimitiveTypeKind.DateTime);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.OBJECT,
-                EdmPrimitiveTypeKind.Stream); // currently problematic
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BLOB,
-                EdmPrimitiveTypeKind.Stream);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CLOB,
-                EdmPrimitiveTypeKind.Stream);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML,
-                EdmPrimitiveTypeKind.Stream);
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.VARBINARY,
-                EdmPrimitiveTypeKind.Stream);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING, EdmPrimitiveTypeKind.String);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BOOLEAN, EdmPrimitiveTypeKind.Boolean);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BYTE, EdmPrimitiveTypeKind.Byte);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.SHORT, EdmPrimitiveTypeKind.Int16);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CHAR, EdmPrimitiveTypeKind.String);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.INTEGER, EdmPrimitiveTypeKind.Int32);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.LONG, EdmPrimitiveTypeKind.Int64);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, EdmPrimitiveTypeKind.Int64);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.FLOAT, EdmPrimitiveTypeKind.Single);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DOUBLE, EdmPrimitiveTypeKind.Double);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, EdmPrimitiveTypeKind.Decimal);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DATE, EdmPrimitiveTypeKind.Date);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIME, EdmPrimitiveTypeKind.Time);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, EdmPrimitiveTypeKind.DateTime);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.OBJECT, EdmPrimitiveTypeKind.Stream); // currently
+                                                                                              // problematic
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BLOB, EdmPrimitiveTypeKind.Stream);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CLOB, EdmPrimitiveTypeKind.Stream);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML, EdmPrimitiveTypeKind.Stream);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.VARBINARY, EdmPrimitiveTypeKind.Stream);
 
-        odatakeyed.put(EdmPrimitiveTypeKind.String,
-                DataTypeManager.DefaultDataTypes.STRING);
-        odatakeyed.put(EdmPrimitiveTypeKind.Boolean,
-                DataTypeManager.DefaultDataTypes.BOOLEAN);
-        odatakeyed.put(EdmPrimitiveTypeKind.Byte,
-                DataTypeManager.DefaultDataTypes.SHORT);
-        odatakeyed.put(EdmPrimitiveTypeKind.SByte,
-                DataTypeManager.DefaultDataTypes.BYTE);
-        odatakeyed.put(EdmPrimitiveTypeKind.Int16,
-                DataTypeManager.DefaultDataTypes.SHORT);
-        odatakeyed.put(EdmPrimitiveTypeKind.Int32,
-                DataTypeManager.DefaultDataTypes.INTEGER);
-        odatakeyed.put(EdmPrimitiveTypeKind.Int64,
-                DataTypeManager.DefaultDataTypes.LONG);
-        odatakeyed.put(EdmPrimitiveTypeKind.Single,
-                DataTypeManager.DefaultDataTypes.FLOAT);
-        odatakeyed.put(EdmPrimitiveTypeKind.Double,
-                DataTypeManager.DefaultDataTypes.DOUBLE);
-        odatakeyed.put(EdmPrimitiveTypeKind.Decimal,
-                DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-        odatakeyed.put(EdmPrimitiveTypeKind.Date,
-                DataTypeManager.DefaultDataTypes.DATE);
-        odatakeyed.put(EdmPrimitiveTypeKind.Time,
-                DataTypeManager.DefaultDataTypes.TIME);
-        odatakeyed.put(EdmPrimitiveTypeKind.DateTime,
-                DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        odatakeyed.put(EdmPrimitiveTypeKind.Stream,
-                DataTypeManager.DefaultDataTypes.BLOB);
-        odatakeyed.put(EdmPrimitiveTypeKind.Guid,
-                DataTypeManager.DefaultDataTypes.STRING);
-        odatakeyed.put(EdmPrimitiveTypeKind.Binary,
-                DataTypeManager.DefaultDataTypes.BYTE + "[]"); //$NON-NLS-1$
+        odatakeyed.put(EdmPrimitiveTypeKind.String, DataTypeManager.DefaultDataTypes.STRING);
+        odatakeyed.put(EdmPrimitiveTypeKind.Boolean, DataTypeManager.DefaultDataTypes.BOOLEAN);
+        odatakeyed.put(EdmPrimitiveTypeKind.Byte, DataTypeManager.DefaultDataTypes.SHORT);
+        odatakeyed.put(EdmPrimitiveTypeKind.SByte, DataTypeManager.DefaultDataTypes.BYTE);
+        odatakeyed.put(EdmPrimitiveTypeKind.Int16, DataTypeManager.DefaultDataTypes.SHORT);
+        odatakeyed.put(EdmPrimitiveTypeKind.Int32, DataTypeManager.DefaultDataTypes.INTEGER);
+        odatakeyed.put(EdmPrimitiveTypeKind.Int64, DataTypeManager.DefaultDataTypes.LONG);
+        odatakeyed.put(EdmPrimitiveTypeKind.Single, DataTypeManager.DefaultDataTypes.FLOAT);
+        odatakeyed.put(EdmPrimitiveTypeKind.Double, DataTypeManager.DefaultDataTypes.DOUBLE);
+        odatakeyed.put(EdmPrimitiveTypeKind.Decimal, DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
+        odatakeyed.put(EdmPrimitiveTypeKind.Date, DataTypeManager.DefaultDataTypes.DATE);
+        odatakeyed.put(EdmPrimitiveTypeKind.Time, DataTypeManager.DefaultDataTypes.TIME);
+        odatakeyed.put(EdmPrimitiveTypeKind.DateTime, DataTypeManager.DefaultDataTypes.TIMESTAMP);
+        odatakeyed.put(EdmPrimitiveTypeKind.Stream, DataTypeManager.DefaultDataTypes.BLOB);
+        odatakeyed.put(EdmPrimitiveTypeKind.Guid, DataTypeManager.DefaultDataTypes.STRING);
+        odatakeyed.put(EdmPrimitiveTypeKind.Binary, DataTypeManager.DefaultDataTypes.BYTE + "[]"); //$NON-NLS-1$
     }
 
     public static String teiidType(EdmPrimitiveTypeKind odataType) {

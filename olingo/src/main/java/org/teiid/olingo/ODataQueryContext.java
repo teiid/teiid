@@ -26,8 +26,6 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public interface ODataQueryContext {
     public String getNextAliasGroup();
-
     public Table getEdmEntityTable();
-
     public GroupSymbol getEdmEntityTableGroup();
 }

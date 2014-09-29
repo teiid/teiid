@@ -36,10 +36,9 @@ import org.teiid.query.sql.lang.Query;
 public interface Client {
     VDBMetaData getVDB();
     MetadataStore getMetadataStore();
-    BaseResponse executeCall(String sql, List<SQLParam> sqlParams,
-            SingletonPrimitiveType returnType);
-    void executeSQL(Query query, List<SQLParam> parameters, boolean countQuery,
-            Integer skip, Integer top, QueryResponse respose);
+    BaseResponse executeCall(String sql, List<SQLParam> sqlParams, SingletonPrimitiveType returnType);
+    void executeSQL(Query query, List<SQLParam> parameters, boolean countQuery, Integer skip, Integer top,
+            QueryResponse respose);
     CountResponse executeCount(Query query, List<SQLParam> parameters);
     UpdateResponse executeUpdate(Command command, List<SQLParam> parameters);
     String getProperty(String name);

@@ -42,21 +42,17 @@ public class ODataServlet extends HttpServlet {
     public void service(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         Client client = (Client) request.getAttribute(Client.class.getName());
-        String schemaName = (String) request
-                .getAttribute(ODataFilter.SCHEMA_NAME);
+        String schemaName = (String) request.getAttribute(ODataFilter.SCHEMA_NAME);
 
-        org.teiid.metadata.Schema teiidSchema = client.getMetadataStore()
-                .getSchema(schemaName);
+        org.teiid.metadata.Schema teiidSchema = client.getMetadataStore().getSchema(schemaName);
         if (teiidSchema == null || !isVisible(client.getVDB(), teiidSchema)) {
             // TODO: send error response, this is exception
-            throw new TeiidRuntimeException(
-                    ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16022));
+            throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16022));
         }
 
         OData odata = OData.newInstance();
         Schema schema = OData4EntitySchemaBuilder.buildMetadata(teiidSchema);
-        Edm edm = odata.createEdm(new TeiidEdmProvider(client
-                .getMetadataStore(), schema));
+        Edm edm = odata.createEdm(new TeiidEdmProvider(client.getMetadataStore(), schema));
 
         ODataHttpHandler handler = odata.createHandler(edm);
         boolean prepared = true;
@@ -67,8 +63,7 @@ public class ODataServlet extends HttpServlet {
         handler.process(request, response);
     }
 
-    private static boolean isVisible(VDBMetaData vdb,
-            org.teiid.metadata.Schema schema) {
+    private static boolean isVisible(VDBMetaData vdb, org.teiid.metadata.Schema schema) {
         String schemaName = schema.getName();
         Model model = vdb.getModel(schemaName);
         if (model == null) {
