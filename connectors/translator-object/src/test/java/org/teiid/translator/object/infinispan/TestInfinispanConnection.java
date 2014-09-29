@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.infinispan.commons.api.BasicCache;
+import org.infinispan.Cache;
 import org.infinispan.manager.DefaultCacheManager;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheContainerWrapper;
@@ -69,7 +69,7 @@ class TestInfinispanCacheWrapper extends CacheContainerWrapper {
 	}
 
 	@Override
-	public BasicCache getCache(String cacheName) {
+	public Cache getCache(String cacheName) {
 		return dcm.getCache(cacheName);
 	}
 	
