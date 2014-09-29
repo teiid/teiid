@@ -24,20 +24,21 @@ package org.teiid.olingo;
 import javax.servlet.http.HttpServletRequest;
 
 public class ContextAwareHttpSerlvetRequest extends HttpServletRequestDelegate {
-	private String contextPath;
-	
-	public ContextAwareHttpSerlvetRequest(HttpServletRequest delegate) {
-		super(delegate);
-	}
-	
-	public void setContextPath(String path) {
-		this.contextPath = path;
-	}
-	
-	public String getContextPath() {
-		if (contextPath != null) {
-			return contextPath;
-		}
-		return super.getContextPath();
-	}
+    private String contextPath;
+
+    public ContextAwareHttpSerlvetRequest(HttpServletRequest delegate) {
+        super(delegate);
+    }
+
+    public void setContextPath(String path) {
+        this.contextPath = path;
+    }
+
+    @Override
+    public String getContextPath() {
+        if (contextPath != null) {
+            return contextPath;
+        }
+        return super.getContextPath();
+    }
 }

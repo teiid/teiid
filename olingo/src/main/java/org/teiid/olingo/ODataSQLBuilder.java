@@ -191,14 +191,14 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 		if (info.getKeyPredicates() != null && !info.getKeyPredicates().isEmpty()) {
 			List<UriParameter> keys = info.getKeyPredicates();
 			try {
-				this.criteria = buildEntityKeyCriteria(info, this.edmEntityTable, this.edmEntityTableGroup, keys);
+				this.criteria = buildEntityKeyCriteria(this.edmEntityTable, this.edmEntityTableGroup, keys);
 			} catch (TeiidException e) {
 				this.exceptions.add(e);
 			}
 		}
 	}
 	
-	private Criteria buildEntityKeyCriteria(UriResourceEntitySet info, Table table, GroupSymbol entityGroup, List<UriParameter> keys) throws TeiidException {
+	private Criteria buildEntityKeyCriteria(Table table, GroupSymbol entityGroup, List<UriParameter> keys) throws TeiidException {
 		KeyRecord pk = table.getPrimaryKey();
 		
 		if (keys.size() == 1) {
@@ -346,24 +346,24 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
     			}
     			Table joinTable = findTable(type, this.metadata);
     			GroupSymbol joinGroup = new GroupSymbol(aliasGroup, joinTable.getFullName());
-    			
-    			this.fromClause = addJoinTable(JoinType.JOIN_INNER, joinGroup, this.edmEntityTableGroup, refColumns, getColumnNames(fk.getColumns()));
-    			this.edmEntityTableGroup = joinGroup;
-    			this.edmEntityTable = joinTable;
+    	    			
+    	    	List<UriParameter> keys = info.getKeyPredicates();
+    	    	try {
+					if (keys != null && keys.size() > 0) {
+						// here the previous entityset is verbose; need to be canonicalized
+					   	this.criteria = buildEntityKeyCriteria(joinTable, joinGroup, keys);
+					   	this.fromClause = new UnaryFromClause(joinGroup); 
+					}
+					else {    	    		
+						this.fromClause = addJoinTable(JoinType.JOIN_INNER, joinGroup, this.edmEntityTableGroup, refColumns, getColumnNames(fk.getColumns()));
+					}
+	    			this.edmEntityTableGroup = joinGroup;
+	    			this.edmEntityTable = joinTable;
+				} catch (TeiidException e) {
+					this.exceptions.add(e);
+				}
     			break;
     		}    		
-    	}
-    	
-    	List<UriParameter> keys = info.getKeyPredicates();
-    	if (keys != null) {
-    		/*
-            if (this.criteria != null) {
-            	this.criteria = new CompoundCriteria(CompoundCriteria.AND, this.criteria, buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key));
-            }
-            else {
-            	this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
-            }
-            */
     	}    	
 	}
 

@@ -153,6 +153,11 @@ public class TestODataSQLBuilder {
 	}
 	
 	@Test
+	public void testSimpleEntityID() throws Exception {
+		helpTest("/odata4/vdb/PM1/$entity?$id=G1(1)", "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e2 = 1 ORDER BY g0.e2");
+	}	
+	
+	@Test
 	public void testEntitySet$Select() throws Exception {
 		helpTest("/odata4/vdb/PM1/G1?$select=e1", "SELECT g0.e1 FROM PM1.G1 AS g0 ORDER BY g0.e2");
 	}
@@ -174,7 +179,7 @@ public class TestODataSQLBuilder {
 	@Test
 	public void testEntitySet$OrderByNotIn$Select() throws Exception {
 		helpTest("/odata4/vdb/PM1/G1?$orderby=e2&$select=e1", 
-				"SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 ORDER BY g0.e2");
+				"SELECT g0.e1 FROM PM1.G1 AS g0 ORDER BY g0.e2");
 	}	
 	
 	@Test
@@ -221,8 +226,14 @@ public class TestODataSQLBuilder {
 	
 	@Test
 	public void test$CountIn$OrderBy() throws Exception {
-		helpTest("/odata4/vdb/PM1/G2?$orderby=G1/$count", "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1");
+		helpTest("/odata4/vdb/PM1/G4?$orderby=FKX/$count", "SELECT g0.e1, g0.e2 FROM PM1.G4 AS g0 ORDER BY (SELECT COUNT(*) FROM PM1.G1 AS g1 WHERE g0.e2 = g1.e2)");
 	}
+	
+	@Test
+	public void testCanonicalQuery() throws Exception {
+		// this should be same as "/odata4/vdb/PM1/G1('1')"
+		helpTest("/odata4/vdb/PM1/G4('1')/FKX(1)", "SELECT g1.e1, g1.e2, g1.e3 FROM PM1.G1 AS g1 WHERE g1.e2 = 1 ORDER BY g1.e2");
+	}	
 	
 	@Test
 	public void testAlias() throws Exception {
@@ -364,7 +375,38 @@ public class TestODataSQLBuilder {
 				+ "ON g0.e2 = g1.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
 	}
 	
+	@Test
+	public void test$refCollection() throws Exception {
+		helpTest("/odata4/vdb/PM1/G2/$ref",
+				"SELECT g1.e1 FROM PM1.G2 as g0 INNER JOIN PM1.G1 as g1 "
+				+ "ON g0.e2 = g1.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
+	}
 	
+	@Test
+	public void test$refEntity() throws Exception {
+		helpTest(
+				"/odata4/vdb/PM1/G2(1)/$ref",
+				"SELECT g1.e1 FROM PM1.G2 as g0 INNER JOIN PM1.G1 as g1 "
+				+ "ON g0.e2 = g1.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
+	}
+	
+	@Test
+	public void testAddressingProperty() throws Exception {
+		helpTest("/odata4/vdb/PM1/G2(1)/e1","SELECT g1.e1 FROM PM1.G2");
+	}
+	
+	@Test
+	public void testAddressingPropertyValue() throws Exception {
+		helpTest("/odata4/vdb/PM1/G2(1)/e1/$value","SELECT g1.e1 FROM PM1.G2");
+	}	
+	
+	@Test
+	public void test$filter() throws Exception {
+		helpTest("/odata4/vdb/PM1/G2?$filter=e1 eq 1","SELECT g0.e1, g0.e2 FROM PM1.G2 AS g0 WHERE g0.e1 = 1 ORDER BY g0.e2");
+		helpTest("/odata4/vdb/PM1/G2?$filter=contains(e1, 'foo')","SELECT g0.e1, g0.e2 FROM PM1.G2 AS g0 WHERE LOCATE('foo', g0.e1, 1) >= 1 ORDER BY g0.e2");
+		helpTest("/odata4/vdb/PM1/G2?$filter=(4 add 5) mod (4 sub 1) eq 0","SELECT g0.e1, g0.e2 FROM PM1.G2 AS g0 WHERE MOD((4 + 5), (4 - 1)) = 0 ORDER BY g0.e2");
+	}	
+		
 	/*
 	@Test
 	public void testNavigationalQuery() throws Exception {
