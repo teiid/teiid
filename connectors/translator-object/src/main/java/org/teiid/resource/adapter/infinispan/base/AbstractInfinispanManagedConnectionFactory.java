@@ -75,7 +75,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		@Override
 		public Collection<Object> getAll(String cacheName) {
 			Collection<Object> objs = new ArrayList<Object>();
-			org.infinispan.commons.api.BasicCache bc = getCache(cacheName);
+			Cache bc = getCache(cacheName);
 			Iterator ksi = bc.keySet().iterator();
 			while (ksi.hasNext()) {
 				objs.add(ksi.next());
