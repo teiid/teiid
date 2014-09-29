@@ -73,6 +73,7 @@ public class LobWorkItem implements Work {
             
             // now get the chunk from stream
             chunk = stream.getNextChunk();
+            parent.dataBytes.addAndGet(chunk.getBytes().length);
             shouldClose = chunk.isLast();
         } catch (TeiidComponentException e) {            
             LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));

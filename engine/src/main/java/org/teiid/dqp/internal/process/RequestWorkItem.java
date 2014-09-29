@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
@@ -41,6 +43,7 @@ import org.teiid.client.ResizingArrayList;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
@@ -208,6 +211,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private boolean explicitSourceClose;
 	private int schemaSize;
+	
+	AtomicLong dataBytes = new AtomicLong();
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -923,6 +928,22 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             this.resultsReceiver = null;    
 		}
 		cancelCancelTask();
+		if (this.requestMsg.getShowPlan() != ShowPlan.OFF) {
+			int bytes;
+			try {
+				bytes = response.serialize();
+				dataBytes.addAndGet(bytes);
+			} catch (IOException e) {
+				TeiidComponentException tce = ExceptionUtil.getExceptionOfType(e, TeiidComponentException.class);
+				if (tce == null) {
+					throw new TeiidComponentException(e);
+				}
+				throw tce;
+			}
+			LogManager.logDetail(LogConstants.CTX_DQP, "Sending results for", requestID, "start row", //$NON-NLS-1$ //$NON-NLS-2$ 
+					response.getFirstRow(), "end row", response.getLastRow(), bytes, "bytes"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		setAnalysisRecords(response);
         receiver.receiveResults(response);
         return result;
 	}
@@ -959,7 +980,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
         result.setClientSerializationVersion(this.dqpWorkContext.getClientVersion().getClientSerializationVersion());
         result.setDelayDeserialization(this.requestMsg.isDelaySerialization() && this.originalCommand.returnsResultSet());
-        setAnalysisRecords(result);
         return result;
     }
     
@@ -967,7 +987,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		if(analysisRecord != null) {
         	if (requestMsg.getShowPlan() != ShowPlan.OFF) {
         		if (processor != null) {
-            		response.setPlanDescription(processor.getProcessorPlan().getDescriptionProperties());
+        			PlanNode node = processor.getProcessorPlan().getDescriptionProperties();
+        			node.addProperty(AnalysisRecord.PROP_DATA_BYTES_SENT, String.valueOf(dataBytes.get()));
+            		response.setPlanDescription(node);
         		}
         		if (analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
 		            response.setAnnotations(analysisRecord.getAnnotations());

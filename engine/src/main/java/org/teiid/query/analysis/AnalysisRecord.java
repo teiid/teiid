@@ -61,6 +61,7 @@ public class AnalysisRecord {
 
 	// Common 
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
+    public static final String PROP_DATA_BYTES_SENT = "Data Bytes Sent"; //$NON-NLS-1$
     
     // Relational
     public static final String PROP_CRITERIA = "Criteria"; //$NON-NLS-1$
