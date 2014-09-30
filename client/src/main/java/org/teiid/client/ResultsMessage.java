@@ -332,7 +332,7 @@ public class ResultsMessage implements Externalizable {
         }
         
         if (delayDeserialization && results != null) {
-            serialize();
+            serialize(true);
             out.writeInt(serializationBuffer.getCount());
             serializationBuffer.writeTo(out);
             serializationBuffer = null;
@@ -364,14 +364,18 @@ public class ResultsMessage implements Externalizable {
      * @return the size of the data bytes
      * @throws IOException
      */
-	public int serialize() throws IOException {
+	public int serialize(boolean keepSerialization) throws IOException {
 		if (serializationBuffer == null) {
 			serializationBuffer = new MultiArrayOutputStream(1 << 13);
 			CompactObjectOutputStream oos = new CompactObjectOutputStream(serializationBuffer);
 			BatchSerializer.writeBatch(oos, dataTypes, results, clientSerializationVersion);
 			oos.close();
 		}
-		return serializationBuffer.getCount();
+		int result = serializationBuffer.getCount();
+		if (!keepSerialization) {
+			serializationBuffer = null;
+		}
+		return result;
 	}
 
     /**
