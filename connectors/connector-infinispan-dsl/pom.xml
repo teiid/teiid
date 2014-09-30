@@ -66,22 +66,27 @@
         <dependency>
           	<groupId>org.infinispan</groupId>
           	<artifactId>infinispan-client-hotrod</artifactId>
+            <scope>provided</scope>
         </dependency>     
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
+            <scope>provided</scope>
         </dependency> 
 		<dependency>
 		  <groupId>org.infinispan</groupId>
 		  <artifactId>infinispan-remote-query-client</artifactId>
+            <scope>provided</scope>
 		</dependency>   
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-query-dsl</artifactId>
+            <scope>provided</scope>
 		</dependency>  
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-query</artifactId>
+            <scope>provided</scope>
 		</dependency> 		     
         <dependency>
             <groupId>org.jboss.modules</groupId>
