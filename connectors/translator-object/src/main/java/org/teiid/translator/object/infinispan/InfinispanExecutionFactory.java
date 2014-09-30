@@ -58,6 +58,7 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	/**
 	 * Indicates if Hibernate Search and Apache Lucene are used to index and
 	 * search objects
+	 * @return boolean
 	 * 
 	 * @since 6.1.0
 	 */

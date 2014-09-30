@@ -44,7 +44,7 @@ import org.teiid.translator.object.util.VDBUtility;
 @SuppressWarnings("nls")
 public class TestObjectExecutionFactory {
 	
-	private static ObjectConnection conn = TradesCacheSource.createConnection(TradesCacheSource.MAP_CACHE_WRAPPER);
+	private static ObjectConnection conn = TradesCacheSource.createConnection();
 	
 	public class TestFactory extends ObjectExecutionFactory {
 		public TestFactory() {

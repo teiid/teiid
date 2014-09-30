@@ -59,47 +59,21 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	
 	public static Map<String, Class<?>> mapOfCaches = new HashMap<String, Class<?>>(1);
 	
-	public static CacheContainerWrapper MAP_CACHE_WRAPPER =  new TestCacheWrapper();
-	
 	public static final int NUMLEGS = 10;
 	public static final int NUMTRADES = 3;
 	public static final int NUMTRANSACTIONS = 5;
 	
-	private static Map <Object, Object> OBJECTS = TradesCacheSource.loadCache();
-	
 	static {
 		mapOfCaches.put(TradesCacheSource.TRADES_CACHE_NAME, Trade.class);
 	}
-	
-	public static  class TestCacheWrapper extends CacheContainerWrapper {
 		
-		 public TestCacheWrapper() { 
-		 }
-
-		@Override
-		public Object get(String cacheName, Object key) {
-			return OBJECTS.get(key);
-		}
-
-		@Override
-		public List<Object> getAll(String cacheName) {
-			return new ArrayList<Object>(OBJECTS.values());
-		}
-		
-		@Override 
-		public  Map getCache(String cacheName) {
-			return OBJECTS;
-		}
-
-	 }
-	
-	public static ObjectConnection createConnection(final CacheContainerWrapper containerWrapper) {
+	public static ObjectConnection createConnection() {
 		return new ObjectConnection() {
 
 			@Override
 			public CacheContainerWrapper getCacheContainer() throws TranslatorException {
-				
-				return containerWrapper;
+				Map <String, Object> objects = TradesCacheSource.loadCache();
+				return new TestCacheWrapper(objects);
 			}	
 
 			@Override
@@ -170,5 +144,19 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 		objs.add(super.get(key));
 		return objs;
 	}	
+	
+	private static class TestCacheWrapper extends CacheContainerWrapper {
+		Map <String, Object> cache = null;
+		
+		 public TestCacheWrapper(Map <String, Object> objs) { 
+			 cache = objs;
+		 }
+		
+		@Override 
+		public  Map getCache(String cacheName) {
+			return cache;
+		}
+
+	 }
 	
 }

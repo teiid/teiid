@@ -3,7 +3,7 @@
 	<parent>
     	<groupId>org.jboss.integration-platform</groupId>
     	<artifactId>jboss-integration-platform-parent</artifactId>
-    	<version>6.0.0.CR8</version>
+    	<version>6.0.0.CR10</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
@@ -20,8 +20,11 @@
 	    
 	    <!-- commenting out to use jboss bom versions -->
         <version.org.jboss.resteasy>2.3.6.Final</version.org.jboss.resteasy>
-        <version.org.hibernate>4.1.6.Final</version.org.hibernate>
-        <version.org.hibernate.search>4.2.0.Final</version.org.hibernate.search>
+        
+        <!-- versions required by infinispan 6.1 -->
+        <version.org.hibernate>4.2.0.Final</version.org.hibernate>
+        <version.org.hibernate.search>4.4.0.Final</version.org.hibernate.search>
+        
         <version.javax.ws.rs>1.1</version.javax.ws.rs> 
         <version.org.infinispan>5.2.7.Final</version.org.infinispan>
         <version.org.apache.xmlbeans>2.3.0</version.org.apache.xmlbeans>
@@ -77,7 +80,8 @@
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
-        <version.org.infinispan.6>6.0.0.Final</version.org.infinispan.6>
+        <version.org.infinispan.6>6.0.2.Final</version.org.infinispan.6>        
+        
         <version.olap4j>1.1.0</version.olap4j>
         <version.accumulo>1.5.0</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>

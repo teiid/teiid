@@ -120,7 +120,6 @@
     <module>connector-salesforce</module>
     <module>connector-ldap</module>
     <module>connector-ws</module>
-    <module>connector-infinispan</module>
     <module>connector-mongodb</module>
     <module>connector-cassandra</module>
     <module>connector-infinispan.6</module>
