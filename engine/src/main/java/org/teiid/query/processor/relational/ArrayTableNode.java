@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
@@ -37,6 +38,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
@@ -114,6 +116,13 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		return Arrays.asList(this.table.getArrayValue());
+	}
+	
+	@Override
+	public PlanNode getDescriptionProperties() {
+		PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
+        return props;
 	}
 
 }

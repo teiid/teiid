@@ -36,12 +36,14 @@ import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -211,6 +213,13 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		return this.table.getPassing();
+	}
+	
+	@Override
+	public PlanNode getDescriptionProperties() {
+		PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
+        return props;
 	}
 
 }

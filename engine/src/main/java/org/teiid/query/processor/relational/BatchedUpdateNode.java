@@ -28,12 +28,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.optimizer.relational.RowBasedSecurityHelper;
 import org.teiid.query.processor.RegisterRequestParameter;
@@ -188,6 +190,13 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
     	return true;
+    }
+    
+    @Override
+    public PlanNode getDescriptionProperties() {
+    	PlanNode node = super.getDescriptionProperties();
+    	AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_SQL, this.updateCommands);
+    	return node;
     }
 
 }

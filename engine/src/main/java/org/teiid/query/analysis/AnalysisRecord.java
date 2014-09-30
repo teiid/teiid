@@ -84,7 +84,10 @@ public class AnalysisRecord {
     public static final String PROP_ROW_OFFSET = "Row Offset";  //$NON-NLS-1$
     public static final String PROP_ROW_LIMIT = "Row Limit";  //$NON-NLS-1$
     public static final String PROP_WITH = "With"; //$NON-NLS-1$
-    
+    public static final String PROP_WINDOW_FUNCTIONS = "Window Functions"; //$NON-NLS-1$
+    //Table functions
+	public static final String PROP_TABLE_FUNCTION = "Table Function"; //$NON-NLS-1$
+	
     // XML
     public static final String PROP_MESSAGE = "Message"; //$NON-NLS-1$
     public static final String PROP_TAG = "Tag"; //$NON-NLS-1$
@@ -234,7 +237,7 @@ public class AnalysisRecord {
 	    return Collections.emptyList();
 	}
 	
-	public static void addLanaguageObjects(PlanNode node, String key, List<? extends LanguageObject> objects) {
+	public static void addLanaguageObjects(PlanNode node, String key, Collection<? extends LanguageObject> objects) {
 		List<String> values = new ArrayList<String>();
 		int index = 0;
 		for (LanguageObject languageObject : objects) {

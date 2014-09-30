@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import java.lang.reflect.Array;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,6 +51,7 @@ import net.sf.saxon.value.CalendarValue;
 import net.sf.saxon.value.StringValue;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
@@ -63,6 +65,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.source.XMLSystemFunctions;
@@ -401,6 +404,13 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		return this.table.getPassing();
+	}
+	
+	@Override
+	public PlanNode getDescriptionProperties() {
+		PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
+        return props;
 	}
 
 }
