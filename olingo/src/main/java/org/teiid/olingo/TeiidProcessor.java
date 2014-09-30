@@ -26,7 +26,9 @@ import java.util.List;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.ContextURL.Suffix;
+import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.edm.Edm;
+import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.format.ODataFormat;
 import org.apache.olingo.commons.api.http.HttpHeader;
@@ -41,8 +43,10 @@ import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
 import org.apache.olingo.server.api.processor.EntityProcessor;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
 import org.apache.olingo.server.api.serializer.ODataSerializerException;
+import org.apache.olingo.server.api.serializer.ODataSerializerOptions;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
+import org.apache.olingo.server.api.uri.UriResourceProperty;
 import org.teiid.core.TeiidException;
 import org.teiid.query.sql.lang.Query;
 
@@ -66,270 +70,139 @@ public class TeiidProcessor extends DefaultProcessor implements
     }
 
     @Override
-    public void readCollection(ODataRequest request, ODataResponse response,
-            UriInfo uriInfo, ContentType format) {
+    public void readCollection(ODataRequest request, ODataResponse response,UriInfo uriInfo, ContentType format) {
         readEntitySet(response, uriInfo, format, false);
     }
 
-    private void readEntitySet(ODataResponse response, UriInfo uriInfo,
-            ContentType format, boolean singleRow) {
+    private void readEntitySet(ODataResponse response, UriInfo uriInfo, ContentType contentType, boolean singleRow) {
         try {
             checkExpand(uriInfo.asUriInfoResource());
-            ODataSQLBuilder visitor = new ODataSQLBuilder(
-                    this.client.getMetadataStore(), this.prepared);
+            ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared);
             visitor.visit(uriInfo);
             Query query = visitor.selectQuery(false);
             List<SQLParam> parameters = visitor.getParameters();
 
-            EntityList result = new EntityList(
-                    client.getProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT),
+            EntityList result = new EntityList(client.getProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT),
                     visitor.getEntitySet(), visitor.getProjectedColumns());
 
-            this.client.executeSQL(query, parameters, visitor.isCountQuery(),
-                    visitor.getSkip(), visitor.getTop(), result);
-
-            ODataSerializer serializer = this.odata
-                    .createSerializer(ODataFormat.fromContentType(format));
-            response.setContent(serializer.entitySet(visitor.getEntitySet(),
-                    result, getContextUrl(visitor.getEntitySet(), singleRow)));
-            response.setStatusCode(HttpStatusCode.OK.getStatusCode());
-            response.setHeader(HttpHeader.CONTENT_TYPE,
-                    format.toContentTypeString());
+            this.client.executeSQL(query, parameters, visitor.isCountQuery(),visitor.getSkip(), visitor.getTop(), result);
+            if (singleRow && result.getEntities().isEmpty()){
+                response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
+            }
+            else {
+                ODataFormat format = ODataFormat.fromContentType(contentType);
+                ODataSerializer serializer = this.odata.createSerializer(format);
+                ODataSerializerOptions options = getContextUrl(visitor.getEntitySet(), uriInfo, format,
+                        serializer, singleRow, new ContextURLHelper().buildURL(uriInfo));
+                response.setContent(serializer.entitySet(visitor.getEntitySet(),result, options));
+                response.setStatusCode(HttpStatusCode.OK.getStatusCode());
+                response.setHeader(HttpHeader.CONTENT_TYPE,contentType.toContentTypeString());
+            }
         } catch (Exception e) {
-            handleException(response, format, e);
+            handleException(response, contentType, e);
         }
     }
 
-    private void handleException(ODataResponse response, ContentType format,
-            Exception e) {
+    private void handleException(ODataResponse response, ContentType format, Exception e) {
         try {
-            ODataSerializer serializer = this.odata
-                    .createSerializer(ODataFormat.fromContentType(format));
+            ODataSerializer serializer = this.odata.createSerializer(ODataFormat.fromContentType(format));
             ODataServerError error = new ODataServerError();
-            error.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR
-                    .getStatusCode());
+            error.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode());
             if (e instanceof TeiidException) {
                 error.setCode(((TeiidException) e).getCode());
             }
             error.setException(e);
             serializer.error(error);
         } catch (ODataSerializerException e1) {
-            response.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR
-                    .getStatusCode());
+            response.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode());
         }
     }
 
     private void checkExpand(UriInfoResource queryInfo) {
-        if (queryInfo.getExpandOption() != null
-                && !queryInfo.getExpandOption().getExpandItems().isEmpty()) {
+        if (queryInfo.getExpandOption() != null && !queryInfo.getExpandOption().getExpandItems().isEmpty()) {
             throw new UnsupportedOperationException("Expand is not supported"); //$NON-NLS-1$
         }
     }
 
-    /*
-     * private EdmEntitySet getEntitySet(String entitySetName) { EdmDataServices
-     * eds = getMetadata(); EdmEntitySet entity =
-     * eds.findEdmEntitySet(entitySetName); if (entity == null) { throw new
-     * NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16011,
-     * entitySetName)); } return entity; }
-     * 
-     * 
-     * @Override public CountResponse getEntitiesCount(ODataContext context,
-     * String entitySetName, QueryInfo queryInfo) { getEntitySet(entitySetName);
-     * // validate entity ODataSQLBuilder visitor = new
-     * ODataSQLBuilder(this.client.getMetadataStore(), true); Query query =
-     * visitor.selectString(entitySetName, queryInfo, null, null, true);
-     * List<SQLParam> parameters = visitor.getParameters(); return
-     * this.client.executeCount(query, parameters); }
-     */
-
     @Override
-    public void readEntity(ODataRequest request, ODataResponse response,
-            UriInfo uriInfo, ContentType format) {
+    public void readEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType format) {
         readEntitySet(response, uriInfo, format, true);
     }
 
-    /*
-     * @Override public EntityResponse getEntity(ODataContext context, String
-     * entitySetName, OEntityKey entityKey, EntityQueryInfo queryInfo) {
-     * getEntitySet(entitySetName); // validate entity ODataSQLBuilder visitor =
-     * new ODataSQLBuilder(this.client.getMetadataStore(), true); Query query =
-     * visitor.selectString(entitySetName, queryInfo, entityKey, null, false);
-     * EdmEntitySet entitySet =
-     * getEntitySet(visitor.getEntityTable().getFullName()); List<SQLParam>
-     * parameters = visitor.getParameters(); List<OEntity> entityList =
-     * this.client.executeSQL(query, parameters, entitySet,
-     * visitor.getProjectedColumns(), null); if (entityList.isEmpty()) { return
-     * null; } return Responses.entity(entityList.get(0)); }
-     * 
-     * @Override public CountResponse getNavPropertyCount(ODataContext context,
-     * String entitySetName, OEntityKey entityKey, String navProp, QueryInfo
-     * queryInfo) { getEntitySet(entitySetName); // validate entity
-     * ODataSQLBuilder visitor = new
-     * ODataSQLBuilder(this.client.getMetadataStore(), true); Query query =
-     * visitor.selectString(entitySetName, queryInfo, entityKey, navProp, true);
-     * List<SQLParam> parameters = visitor.getParameters(); return
-     * this.client.executeCount(query, parameters); }
-     * 
-     * @Override public void close() { }
-     * 
-     * @Override public EntityResponse createEntity(ODataContext context, String
-     * entitySetName, OEntity entity) { EdmEntitySet entitySet =
-     * getEntitySet(entitySetName);
-     * 
-     * ODataSQLBuilder visitor = new
-     * ODataSQLBuilder(this.client.getMetadataStore(), true); Insert query =
-     * visitor.insert(entitySet, entity);
-     * 
-     * List<SQLParam> parameters = visitor.getParameters(); UpdateResponse
-     * response = this.client.executeUpdate(query, parameters); if
-     * (response.getUpdateCount() == 1) { visitor = new
-     * ODataSQLBuilder(this.client.getMetadataStore(), true); OEntityKey
-     * entityKey = visitor.buildEntityKey(entitySet, entity,
-     * response.getGeneratedKeys()); LogManager.log(MessageLevel.DETAIL,
-     * LogConstants.CTX_ODATA, null, "created entity = ", entitySetName,
-     * " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$ return
-     * getEntity(context, entitySetName, entityKey,
-     * EntityQueryInfo.newBuilder().build()); } return null; }
-     * 
-     * @Override public EntityResponse createEntity(ODataContext context, String
-     * entitySetName, OEntityKey entityKey, String navProp, OEntity entity) { //
-     * deep inserts are not currently supported. throw new
-     * UnsupportedOperationException("Deep inserts are not supported");
-     * //$NON-NLS-1$ }
-     * 
-     * @Override public void deleteEntity(ODataContext context, String
-     * entitySetName, OEntityKey entityKey) { EdmEntitySet entitySet =
-     * getEntitySet(entitySetName);
-     * 
-     * ODataSQLBuilder visitor = new
-     * ODataSQLBuilder(this.client.getMetadataStore(), true); Delete query =
-     * visitor.delete(entitySet, entityKey);
-     * 
-     * List<SQLParam> parameters = visitor.getParameters(); UpdateResponse
-     * response = this.client.executeUpdate(query, parameters); if
-     * (response.getUpdateCount() == 0) { LogManager.log(MessageLevel.INFO,
-     * LogConstants.CTX_ODATA, null, "no entity to delete in = ", entitySetName,
-     * " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$ } else
-     * if (response.getUpdateCount() == 1) { LogManager.log(MessageLevel.DETAIL,
-     * LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName,
-     * " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$ } else {
-     * //TODO: should this be an exception (a little too late, may need
-     * validation that we are dealing with a single entity first)
-     * LogManager.log(MessageLevel.WARNING, LogConstants.CTX_ODATA, null,
-     * "deleted multiple entities = ", entitySetName, " with key=",
-     * entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$ } }
-     * 
-     * @Override public void mergeEntity(ODataContext context, String
-     * entitySetName, OEntity entity) { int updateCount = update(entitySetName,
-     * entity); if (updateCount == 0) { createEntity(context, entitySetName,
-     * entity); } }
-     * 
-     * @Override public void updateEntity(ODataContext context, String
-     * entitySetName, OEntity entity) { int updateCount = update(entitySetName,
-     * entity); if (updateCount > 0) { LogManager.log(MessageLevel.DETAIL,
-     * LogConstants.CTX_ODATA, null, "updated entity = ", entitySetName,
-     * " with key=", entity.getEntityKey().toString()); //$NON-NLS-1$
-     * //$NON-NLS-2$ } }
-     * 
-     * private int update(String entitySetName, OEntity entity) { EdmEntitySet
-     * entitySet = getEntitySet(entitySetName);
-     * 
-     * ODataSQLBuilder visitor = new
-     * ODataSQLBuilder(this.client.getMetadataStore(), true); Update query =
-     * visitor.update(entitySet, entity);
-     * 
-     * List<SQLParam> parameters = visitor.getParameters(); UpdateResponse
-     * response = this.client.executeUpdate(query, parameters); return
-     * response.getUpdateCount(); }
-     * 
-     * @Override public EntityIdResponse getLinks(ODataContext context,
-     * OEntityId sourceEntity, String targetNavProp) { BaseResponse response =
-     * getNavProperty(context,sourceEntity.getEntitySetName(),
-     * sourceEntity.getEntityKey(),targetNavProp, new QueryInfo()); if (response
-     * instanceof EntitiesResponse) { EntitiesResponse er = (EntitiesResponse)
-     * response; return Responses.multipleIds(er.getEntities()); } if (response
-     * instanceof EntityResponse) { EntityResponse er = (EntityResponse)
-     * response; return Responses.singleId(er.getEntity()); } throw new
-     * NotImplementedException(sourceEntity + " " + targetNavProp);
-     * //$NON-NLS-1$ }
-     * 
-     * @Override public void createLink(ODataContext context, OEntityId
-     * sourceEntity, String targetNavProp, OEntityId targetEntity) { throw new
-     * UnsupportedOperationException(); }
-     * 
-     * @Override public void updateLink(ODataContext context, OEntityId
-     * sourceEntity, String targetNavProp, OEntityKey oldTargetEntityKey,
-     * OEntityId newTargetEntity) { throw new UnsupportedOperationException(); }
-     * 
-     * @Override public void deleteLink(ODataContext context, OEntityId
-     * sourceEntity, String targetNavProp, OEntityKey targetEntityKey) { throw
-     * new UnsupportedOperationException(); }
-     * 
-     * @Override public BaseResponse callFunction(ODataContext context,
-     * EdmFunctionImport function, Map<String, OFunctionParameter> params,
-     * QueryInfo queryInfo) { checkExpand(queryInfo); EdmEntityContainer eec =
-     * findEntityContainer(function); StringBuilder sql = new StringBuilder();
-     * // fully qualify the procedure name if (function.getReturnType() != null
-     * && function.getReturnType().isSimple()) { sql.append("{? = ");
-     * //$NON-NLS-1$ } else { sql.append("{"); //$NON-NLS-1$ }
-     * sql.append("call "
-     * ).append(eec.getName()+"."+SQLStringVisitor.escapeSinglePart
-     * (function.getName())); //$NON-NLS-1$ //$NON-NLS-2$ sql.append("(");
-     * //$NON-NLS-1$ List<SQLParam> sqlParams = new ArrayList<SQLParam>(); if
-     * (!params.isEmpty()) { List<EdmFunctionParameter> metadataParams =
-     * function.getParameters(); boolean first = true; for (EdmFunctionParameter
-     * edmFunctionParameter : metadataParams) { OFunctionParameter param =
-     * params.get(edmFunctionParameter.getName()); if (param == null) {
-     * continue; } if (!first) { sql.append(","); //$NON-NLS-1$ }
-     * sql.append(SQLStringVisitor
-     * .escapeSinglePart(edmFunctionParameter.getName())).append("=>?");
-     * //$NON-NLS-1$ first = false; Object value =
-     * ((OSimpleObject<?>)(param.getValue())).getValue(); Integer sqlType =
-     * JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(param.getType().
-     * getFullyQualifiedTypeName())); sqlParams.add(new
-     * SQLParam(ODataTypeManager.convertToTeiidRuntimeType(value), sqlType)); }
-     * } sql.append(")"); //$NON-NLS-1$ sql.append("}"); //$NON-NLS-1$ return
-     * this.client.executeCall(sql.toString(), sqlParams,
-     * function.getReturnType()); }
-     * 
-     * EdmEntityContainer findEntityContainer(EdmFunctionImport function) {
-     * EdmDataServices eds = getMetadata(); for (EdmSchema schema :
-     * eds.getSchemas()) { for (EdmEntityContainer
-     * eec:schema.getEntityContainers()) { for (EdmFunctionImport
-     * func:eec.getFunctionImports()) { if (func == function) { return eec; } }
-     * } } return null; }
-     */
-
-    private ContextURL getContextUrl(
-            final org.apache.olingo.commons.api.edm.EdmEntitySet entitySet,
-            final boolean isSingleEntity) {
-        return ContextURL.Builder.create().entitySet(entitySet)
-                .suffix(isSingleEntity ? Suffix.ENTITY : null).build();
+    private ODataSerializerOptions getContextUrl( final org.apache.olingo.commons.api.edm.EdmEntitySet entitySet,
+            final UriInfo uriInfo,
+            final ODataFormat format,
+            final ODataSerializer serializer,
+            final boolean isSingleEntity,
+            final String path) throws ODataSerializerException {
+        ContextURL contextUrl = ContextURL.with().entitySetOrSingletonOrType(path)
+                .selectList(serializer.buildContextURLSelectList(entitySet, uriInfo.getExpandOption(), uriInfo.getSelectOption()))
+                .suffix(isSingleEntity ? Suffix.ENTITY : null)
+                .build();
+        return ODataSerializerOptions.with()
+            .contextURL(format == ODataFormat.JSON_NO_METADATA ? null : contextUrl)
+            .count(uriInfo.getCountOption())
+            .expand(uriInfo.getExpandOption()).select(uriInfo.getSelectOption())
+            .build();
     }
 
     @Override
-    public void readCount(ODataRequest request, ODataResponse response,
-            UriInfo uriInfo) {
+    public void readCount(ODataRequest request, ODataResponse response,UriInfo uriInfo) {
         try {
             checkExpand(uriInfo.asUriInfoResource());
-            ODataSQLBuilder visitor = new ODataSQLBuilder(
-                    this.client.getMetadataStore(), this.prepared);
+            ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared);
             visitor.visit(uriInfo);
             Query query = visitor.selectQuery(true);
             List<SQLParam> parameters = visitor.getParameters();
 
-            CountResponse countResponse = this.client.executeCount(query,
-                    parameters);
-            ByteArrayInputStream bis = new ByteArrayInputStream(String.valueOf(
-                    countResponse.getCount()).getBytes());
+            CountResponse countResponse = this.client.executeCount(query,parameters);
+            ByteArrayInputStream bis = new ByteArrayInputStream(String.valueOf(countResponse.getCount()).getBytes());
             response.setContent(bis);
             response.setStatusCode(HttpStatusCode.OK.getStatusCode());
-            response.setHeader(HttpHeader.CONTENT_TYPE,
-                    ContentType.TEXT_PLAIN.toContentTypeString());
+            response.setHeader(HttpHeader.CONTENT_TYPE,ContentType.TEXT_PLAIN.toContentTypeString());
         } catch (Exception e) {
             handleException(response, ContentType.APPLICATION_JSON, e);
         }
+    }
 
+    @Override
+    public void readEntityProperty(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType contentType, boolean value) {
+        try {
+            checkExpand(uriInfo.asUriInfoResource());
+            ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared);
+            visitor.visit(uriInfo);
+            Query query = visitor.selectQuery(false);
+            List<SQLParam> parameters = visitor.getParameters();
+
+            EntityList result = new EntityList(client.getProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT),
+                    visitor.getEntitySet(), visitor.getProjectedColumns());
+
+            this.client.executeSQL(query, parameters, visitor.isCountQuery(),visitor.getSkip(), visitor.getTop(), result);
+            if (result.getEntities().isEmpty()){
+                response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
+            }
+            else {
+                UriResourceProperty uriProperty = (UriResourceProperty) uriInfo.getUriResourceParts().get(uriInfo.getUriResourceParts().size() - 1);
+                EdmProperty edmProperty = uriProperty.getProperty();
+                Property property = result.getEntities().get(0).getProperty(edmProperty.getName());
+                if (property == null) {
+                    response.setStatusCode(HttpStatusCode.NOT_FOUND.getStatusCode());
+                } else {
+                    if (property.isNull()) {
+                        response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
+                    } else {
+                        final ODataFormat format = ODataFormat.fromContentType(contentType);
+                        ODataSerializer serializer = odata.createSerializer(format);
+                        ODataSerializerOptions options = getContextUrl(visitor.getEntitySet(), uriInfo,
+                                format, serializer, false, new ContextURLHelper().buildURL(uriInfo));
+                        response.setContent(serializer.entityProperty(edmProperty, property, value, options));
+                        response.setStatusCode(HttpStatusCode.OK.getStatusCode());
+                        response.setHeader(HttpHeader.CONTENT_TYPE, contentType.toContentTypeString());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            handleException(response, contentType, e);
+        }
     }
 }

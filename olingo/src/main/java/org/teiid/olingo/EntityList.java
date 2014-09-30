@@ -29,9 +29,9 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
@@ -55,10 +55,9 @@ import org.teiid.core.types.TransformationException;
 public class EntityList extends EntitySetImpl implements QueryResponse {
     private final String invalidCharacterReplacement;
     private final HashMap<String, EdmElement> propertyTypes;
-    private final Collection<ProjectedColumn> projectedColumns;
+    private final List<ProjectedColumn> projectedColumns;
 
-    public EntityList(String invalidCharacterReplacement, EdmEntitySet edmEntitySet,
-            Collection<ProjectedColumn> projectedColumns) {
+    public EntityList(String invalidCharacterReplacement, EdmEntitySet edmEntitySet, List<ProjectedColumn> projectedColumns) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
         this.propertyTypes = new HashMap<String, EdmElement>();
         this.projectedColumns = projectedColumns;
@@ -77,22 +76,19 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
     }
 
     private Entity getEntity(ResultSet rs) throws SQLException, TeiidException {
-        HashMap<String, Property> properties = new HashMap<String, Property>();
+        HashMap<Integer, Property> properties = new HashMap<Integer, Property>();
         for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
             Object value = rs.getObject(i + 1);
             String propName = rs.getMetaData().getColumnLabel(i + 1);
             EdmElement element = this.propertyTypes.get(propName);
             if (!(element instanceof EdmProperty) && !((EdmProperty) element).isPrimitive()) {
-                throw new TeiidException(ODataPlugin.Event.TEIID16024,
-                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16024));
+                throw new TeiidException(ODataPlugin.Event.TEIID16024,ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16024));
             }
             EdmPropertyImpl edmProperty = (EdmPropertyImpl) element;
             Property property;
             try {
-                property = buildPropery(propName, edmProperty.getTypeInfo()
-.getPrimitiveTypeKind(), value,
-                        invalidCharacterReplacement);
-                properties.put(rs.getMetaData().getColumnLabel(i + 1), property);
+                property = buildPropery(propName, edmProperty.getTypeInfo().getPrimitiveTypeKind(), value, invalidCharacterReplacement);
+                properties.put(i, property);
             } catch (IOException e) {
                 throw new TeiidException(e);
             }
@@ -117,9 +113,10 @@ public class EntityList extends EntitySetImpl implements QueryResponse {
         // build links
         // filter those columns out.
         EntityImpl entity = new EntityImpl();
-        for (ProjectedColumn entry : this.projectedColumns) {
+        for (int i = 0; i < this.projectedColumns.size(); i++) {
+            ProjectedColumn entry = this.projectedColumns.get(i);
             if (entry.isVisible()) {
-                entity.addProperty(properties.get(entry.getName()));
+                entity.addProperty(properties.get(i));
             }
         }
         return entity;

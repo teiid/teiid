@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -23,10 +23,7 @@ package org.teiid.olingo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
@@ -72,16 +69,15 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor implements ODataQueryContext {
-	private MetadataStore metadata;
+	private final MetadataStore metadata;
 	private boolean prepared = true;
-	private Map<String, ProjectedColumn> projectedColumns = new HashMap<String, ProjectedColumn>();
-	private ArrayList<SQLParam> params = new ArrayList<SQLParam>();
-	private AtomicInteger groupCount = new AtomicInteger(1);
-	
+	private final List<ProjectedColumn> projectedColumns = new ArrayList<ProjectedColumn>();
+	private final ArrayList<SQLParam> params = new ArrayList<SQLParam>();
+	private final AtomicInteger groupCount = new AtomicInteger(1);
+
 	private FromClause fromClause;
 	private Criteria criteria;
-	private Select select = new Select();
-	private ArrayList<TeiidException> exceptions = new ArrayList<TeiidException>();
+	private final ArrayList<TeiidException> exceptions = new ArrayList<TeiidException>();
 	private EdmEntitySet edmEntitySet;
 	private Table edmEntityTable;
 	private GroupSymbol edmEntityTableGroup;
@@ -89,16 +85,17 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 	private TopOption topOption;
 	private boolean countOption;
 	private OrderBy orderBy;
-		
+	private boolean selectionComplete;
+
 	public ODataSQLBuilder(MetadataStore metadata, boolean prepared) {
 		this.metadata = metadata;
 		this.prepared = prepared;
 	}
-	
+
 	public EdmEntitySet getEntitySet() {
 		return this.edmEntitySet;
 	}
-	
+
 	@Override
 	public Table getEdmEntityTable() {
 		return this.edmEntityTable;
@@ -107,42 +104,47 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 	@Override
 	public GroupSymbol getEdmEntityTableGroup() {
 		return this.edmEntityTableGroup;
-	}	
-	
+	}
+
 	public boolean isCountQuery() {
 		return countOption;
 	}
-	
+
 	public Integer getSkip() {
 		if (skipOption == null) {
 			return null;
 		}
 		return skipOption.getValue();
 	}
-	
+
 	public Integer getTop() {
 		if (topOption == null) {
 			return null;
 		}
 		return topOption.getValue();
 	}
-	
+
 	public Query selectQuery(boolean countQuery) throws TeiidException {
 		if (!this.exceptions.isEmpty()) {
 			throw this.exceptions.get(0);
 		}
-		
+
+		Select select = new Select();//
+		for (ProjectedColumn column:this.projectedColumns) {
+		    select.addSymbol(column.getExpression());
+		}
+
 		Query query = new Query();
 		From from = new From();
 		from.addClause(this.fromClause);
-		query.setSelect(this.select);
+		query.setSelect(select);
 		query.setFrom(from);
 		query.setCriteria(this.criteria);
-		
+
 		if (countQuery) {
 			AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null);
-			this.select = new Select(Arrays.asList(aggregateSymbol));
-			query.setSelect(this.select);
+			select = new Select(Arrays.asList(aggregateSymbol));
+			query.setSelect(select);
 		}
 		else {
 			if (this.topOption != null && this.skipOption != null) {
@@ -152,21 +154,21 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 				query.setLimit(new Limit(new Constant(0), new Constant(this.topOption.getValue())));
 			}
 		}
-		
+
 		if (this.orderBy != null & !countQuery) {
 			query.setOrderBy(this.orderBy);
 		}
-		return query;		
+		return query;
 	}
-	
-	Collection<ProjectedColumn> getProjectedColumns(){
-		return this.projectedColumns.values();
+
+	List<ProjectedColumn> getProjectedColumns(){
+		return this.projectedColumns;
 	}
-	
+
 	private Table findTable(EdmEntitySet entitySet, MetadataStore store) {
 		return findTable(entitySet.getEntityType(), store);
 	}
-	
+
 	private Table findTable(EdmEntityType entityType, MetadataStore store) {
 		Schema schema = store.getSchema(entityType.getNamespace());
 		return schema.getTable(entityType.getName());
@@ -175,18 +177,18 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 	private Column findColumn(Table table, String propertyName) {
 		return table.getColumnByName(propertyName);
 	}
-	
+
 	public List<SQLParam> getParameters(){
 		return this.params;
 	}
-	
+
 	@Override
 	public void visit(UriResourceEntitySet info) {
 		this.edmEntitySet = info.getEntitySet();
 		this.edmEntityTable = findTable(edmEntitySet, this.metadata);
 		this.edmEntityTableGroup = new GroupSymbol("g0", this.edmEntityTable.getFullName()); //$NON-NLS-1$
 		this.fromClause = new UnaryFromClause(this.edmEntityTableGroup);
-		
+
 		// URL is like /entitySet(key)s
 		if (info.getKeyPredicates() != null && !info.getKeyPredicates().isEmpty()) {
 			List<UriParameter> keys = info.getKeyPredicates();
@@ -197,14 +199,14 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 			}
 		}
 	}
-	
+
 	private Criteria buildEntityKeyCriteria(Table table, GroupSymbol entityGroup, List<UriParameter> keys) throws TeiidException {
 		KeyRecord pk = table.getPrimaryKey();
-		
+
 		if (keys.size() == 1) {
 			if (pk.getColumns().size() != 1) {
 				throw new TeiidException(ODataPlugin.Event.TEIID16015, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, table.getFullName()));
-			}	
+			}
 			Column column = table.getPrimaryKey().getColumns().get(0);
 			ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(this, false, getUriInfo());
 			return new CompareCriteria(new ElementSymbol(column.getName(), entityGroup), CompareCriteria.EQ, visitor.getExpression(keys.get(0).getExpression()));
@@ -221,29 +223,32 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 			critList.add(new CompareCriteria(new ElementSymbol(column.getName(), entityGroup), CompareCriteria.EQ, visitor.getExpression(key.getExpression())));
 		}
 		return new CompoundCriteria(CompoundCriteria.AND, critList);
-	}	
-	
+	}
+
 	@Override
 	public void visit(SkipOption option) {
 		this.skipOption = option;
 	}
-	
+
 	@Override
 	public void visit(TopOption option) {
 		this.topOption = option;
 	}
-	
+
 	@Override
 	public void visit(CountOption info) {
 		this.countOption = info.getValue();
-	}	
-	
+	}
+
 	@Override
 	public void visit(SelectOption option) {
-		this.select = new Select();
+	    if (this.selectionComplete) {
+	        return;
+	    }
+
 		if (option == null) {
 			// default select columns
-			addAllColumns();			
+			addAllColumns();
 		}
 		else {
 			for (SelectItem si:option.getSelectItems()) {
@@ -251,34 +256,41 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 					addAllColumns();
 					continue;
 				}
-				
+
 				UriResource resource = ResourcePropertyCollector.getUriResource(si.getResourcePath());
 				if (resource.getKind() != UriResourceKind.primitiveProperty) {
 					this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16025, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16025)));
 					continue;
 				}
 				UriResourcePrimitiveProperty primitiveProp = (UriResourcePrimitiveProperty)resource;
-				addSelectColumn(primitiveProp.getProperty().getName());
+				addSelectColumn(new ElementSymbol(primitiveProp.getProperty().getName(), this.edmEntityTableGroup));
 			}
 		}
 	}
 
 	private void addAllColumns() {
 		for (final Column column : this.edmEntityTable.getColumns()) {
-			addSelectColumn(column.getName());
+			addSelectColumn(new ElementSymbol(column.getName(), this.edmEntityTableGroup));
 		}
 	}
 
-	private void addSelectColumn(final String columnName) {
-		this.select.addSymbol(new ElementSymbol(columnName, this.edmEntityTableGroup));
-		addProjectedColumn(columnName, true);
+	private void addSelectColumn(final Expression expr) {
+		addProjectedColumn(expr, true);
 	}
 
-	private void addProjectedColumn(final String columnName, final boolean visibility) {
-		this.projectedColumns.put(columnName, new ProjectedColumn() {
+	private void addProjectedColumn(final Expression expr, final boolean visibility) {
+	    int i = 0;
+	    for (i = 0; i < this.projectedColumns.size(); i++) {
+	        ProjectedColumn pc = this.projectedColumns.get(i);
+	        if (pc.getExpression().equals(expr)) {
+	            this.projectedColumns.remove(i);
+	            break;
+	        }
+	    }
+		this.projectedColumns.add(new ProjectedColumn() {
 			@Override
-			public String getName() {
-				return columnName;
+			public Expression getExpression() {
+				return expr;
 			}
 			@Override
 			public boolean isVisible() {
@@ -286,11 +298,11 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 			}
 		});
 	}
-	
+
 	@Override
 	public void visit(OrderByOption option) {
 		this.orderBy = new OrderBy();
-		
+
 		if (option == null || option.getOrders().isEmpty()) {
 			// provide implicit ordering for cursor logic
 			KeyRecord record = this.edmEntityTable.getPrimaryKey();
@@ -300,11 +312,9 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 			}
 			// provide implicit ordering for cursor logic
 			for (Column column:record.getColumns()) {
-				this.orderBy.addVariable(new ElementSymbol(column.getName(), this.edmEntityTableGroup));
-				ProjectedColumn pc = this.projectedColumns.get(column.getName());
-				if (pc == null) {
-					addProjectedColumn(column.getName(), false);
-				}
+			    ElementSymbol expr = new ElementSymbol(column.getName(), this.edmEntityTableGroup);
+				this.orderBy.addVariable(expr);
+				addProjectedColumn(expr, false);
 			}
 		}
 		else {
@@ -313,31 +323,26 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 				ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(this, false, getUriInfo());
 				Expression expr = visitor.getExpression(orderby.getExpression());
 				this.orderBy.addVariable(expr, !orderby.isDescending());
-				if (expr instanceof ElementSymbol) {
-					ProjectedColumn pc = this.projectedColumns.get(((ElementSymbol)expr).getName());
-					if (pc == null) {
-						addProjectedColumn(((ElementSymbol)expr).getName(), false);
-					}					
-				}
+				addProjectedColumn(expr, false);
 			}
 		}
 	}
-	
+
 	@Override
 	public void visit(FilterOption info) {
 		ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(this, this.prepared, getUriInfo());
 		this.criteria = (Criteria)visitor.getExpression(info.getExpression());
 	}
-	
+
 	@Override
 	public void visit(UriResourceNavigation info) {
 		// typically navigation only happens in $entity-id situations,
 		EdmNavigationProperty property = info.getProperty();
 		String navigationName = property.getName();
 		EdmEntityType type = property.getType();
-		    	
+
     	String aliasGroup = getNextAliasGroup();
-    	
+
     	for (ForeignKey fk : this.edmEntityTable.getForeignKeys()) {
     		if (fk.getName().equals(navigationName)) {
     			List<String> refColumns = fk.getReferenceColumns();
@@ -346,15 +351,15 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
     			}
     			Table joinTable = findTable(type, this.metadata);
     			GroupSymbol joinGroup = new GroupSymbol(aliasGroup, joinTable.getFullName());
-    	    			
+
     	    	List<UriParameter> keys = info.getKeyPredicates();
     	    	try {
 					if (keys != null && keys.size() > 0) {
 						// here the previous entityset is verbose; need to be canonicalized
 					   	this.criteria = buildEntityKeyCriteria(joinTable, joinGroup, keys);
-					   	this.fromClause = new UnaryFromClause(joinGroup); 
+					   	this.fromClause = new UnaryFromClause(joinGroup);
 					}
-					else {    	    		
+					else {
 						this.fromClause = addJoinTable(JoinType.JOIN_INNER, joinGroup, this.edmEntityTableGroup, refColumns, getColumnNames(fk.getColumns()));
 					}
 	    			this.edmEntityTableGroup = joinGroup;
@@ -363,8 +368,8 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 					this.exceptions.add(e);
 				}
     			break;
-    		}    		
-    	}    	
+    		}
+    	}
 	}
 
 	@Override
@@ -372,30 +377,36 @@ public class ODataSQLBuilder extends DefaultODataResourceURLHierarchyVisitor imp
 		String aliasGroup = "g"+this.groupCount.getAndIncrement(); //$NON-NLS-1$
 		return aliasGroup;
 	}
-	
-	
+
+
 	private FromClause addJoinTable(final JoinType joinType,
 			final GroupSymbol joinGroup, final GroupSymbol entityGroup, List<String> pkColumns,
 			List<String> refColumns) {
-		
+
 		List<Criteria> critList = new ArrayList<Criteria>();
 
 		for (int i = 0; i < refColumns.size(); i++) {
 			critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i), entityGroup), CompareCriteria.EQ, new ElementSymbol(refColumns.get(i), joinGroup)));
-		}         			
-		
+		}
+
 		Criteria crit = critList.get(0);
 		for (int i = 1; i < critList.size(); i++) {
 			crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
-		}		        			
+		}
 		return new JoinPredicate(this.fromClause, new UnaryFromClause(joinGroup), joinType, crit);
-	}	
-	
+	}
+
 	static List<String> getColumnNames(List<Column> columns){
 		ArrayList<String> columnNames = new ArrayList<String>();
 		for (Column column:columns) {
 			columnNames.add(column.getName());
 		}
 		return columnNames;
-	}	
+	}
+
+    @Override
+    public void visit(UriResourcePrimitiveProperty info) {
+        addSelectColumn(new ElementSymbol(info.getProperty().getName(), this.edmEntityTableGroup));
+        this.selectionComplete = true;
+    }
 }

@@ -32,15 +32,22 @@ import org.teiid.core.TeiidException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.symbol.Expression;
 
 public interface Client {
+
     VDBMetaData getVDB();
+
     MetadataStore getMetadataStore();
+
     BaseResponse executeCall(String sql, List<SQLParam> sqlParams, SingletonPrimitiveType returnType);
-    void executeSQL(Query query, List<SQLParam> parameters, boolean countQuery, Integer skip, Integer top,
-            QueryResponse respose);
+
+    void executeSQL(Query query, List<SQLParam> parameters, boolean countQuery, Integer skip, Integer top, QueryResponse respose);
+
     CountResponse executeCount(Query query, List<SQLParam> parameters);
+
     UpdateResponse executeUpdate(Command command, List<SQLParam> parameters);
+
     String getProperty(String name);
 }
 
@@ -57,7 +64,7 @@ interface BaseResponse {
 }
 
 interface ProjectedColumn {
-    String getName();
+    Expression getExpression();
     boolean isVisible();
 }
 
