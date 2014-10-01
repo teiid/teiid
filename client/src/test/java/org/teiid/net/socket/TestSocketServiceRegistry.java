@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
 import junit.framework.TestCase;
 
 import org.teiid.client.DQP;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.core.TeiidComponentException;
@@ -65,5 +66,13 @@ public class TestSocketServiceRegistry extends TestCase {
 		
 		assertTrue(t instanceof XATransactionException);
 	}
-	
+
+	public void testSubclass() throws Exception {
+		
+		Method m = DQP.class.getMethod("getMetadata", new Class[] {Long.TYPE});
+		
+		Throwable t = ExceptionUtil.convertException(m, new InvalidSessionException());
+		
+		assertTrue(t instanceof InvalidSessionException);
+	}
 }
