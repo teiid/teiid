@@ -38,7 +38,6 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ResultsFuture;
-import org.teiid.core.TeiidComponentException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.HostInfo;
 
@@ -146,8 +145,8 @@ public class TestSocketServerInstanceImpl {
 		try {
 			logon.logon(new Properties());
 			fail("Exception expected"); //$NON-NLS-1$
-		} catch (TeiidComponentException e) {
-			assertTrue(e.getCause().getCause() instanceof TimeoutException);
+		} catch (SingleInstanceCommunicationException e) {
+			assertTrue(e.getCause() instanceof TimeoutException);
 		}
 	}
 	

@@ -155,13 +155,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		this.maxFieldSize = maxFieldSize;
 	}
 	
-    /**
-     * Close this result set.
-     */
     public void close() throws SQLException{
     	if(!isClosed) {
             // close the the server's statement object (if necessary)
     		if(this.requestID >= 0){
+    			this.statement.checkStatement();
 	            try {
 					this.statement.getDQP().closeRequest(requestID);
 				} catch (TeiidProcessingException e) {
