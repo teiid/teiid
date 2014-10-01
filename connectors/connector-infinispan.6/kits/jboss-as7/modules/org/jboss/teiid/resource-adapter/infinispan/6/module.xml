@@ -1,4 +1,4 @@
-<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.infinispan" slot="6.2">
+<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.infinispan" slot="6">
    
     <resources>
         <resource-root path="connector-infinispan.6-${project.version}.jar"/>
@@ -17,7 +17,7 @@
             this 6.2 slot references the infinispan module installed as part of 
             connector-infinispan-dsl.
         -->
-        <module name="org.infinispan.hotrod" slot="6.2" />
+        <!--module name="org.infinispan.hotrod" slot="6.2" /-->
         <module name="org.jboss.modules"/>
     </dependencies>
 </module>
