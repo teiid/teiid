@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.hive;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -33,6 +33,7 @@ import org.teiid.language.LanguageFactory;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 @SuppressWarnings("nls")
@@ -60,5 +61,10 @@ public class TestImpalaExecutionFactory {
    
     @Test public void testConvertions() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Integer(12345), Integer.class), TypeFacility.RUNTIME_NAMES.DOUBLE, "cast(12345 AS double)");
+    }
+    
+    @Test public void testConversionSupport() {
+    	assertFalse(impalaTranslator.supportsConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME));
+    	assertTrue(impalaTranslator.supportsConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP));
     }
 }

@@ -21,10 +21,18 @@
  */
 package org.teiid.translator.hive;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 
-import org.teiid.language.*;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.Insert;
+import org.teiid.language.Limit;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
@@ -32,12 +40,15 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
+	
+	protected ConvertModifier convert = new ConvertModifier();
 
     @Override
     public JDBCUpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
@@ -244,5 +255,16 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsHaving() {
     	return false; //only having with group by
+    }
+    
+    @Override
+    public boolean supportsConvert(int fromType, int toType) {
+    	if (!super.supportsConvert(fromType, toType)) {
+    		return false;
+    	}
+    	if (convert.hasTypeMapping(toType)) {
+    		return true;
+    	}
+    	return false;
     }
 }
