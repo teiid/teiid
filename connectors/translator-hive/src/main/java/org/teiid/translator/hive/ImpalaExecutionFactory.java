@@ -30,7 +30,6 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.AliasModifier;
-import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name="impala", description="A translator for Coludera's Impala based database on HDFS")
@@ -42,7 +41,6 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public void start() throws TranslatorException {
         super.start();
 
-        ConvertModifier convert = new ConvertModifier();
         convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
         convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
         convert.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
@@ -193,4 +191,5 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
          */
         return true;
     }    
+    
 }

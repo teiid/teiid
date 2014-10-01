@@ -33,7 +33,6 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
-import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 
@@ -50,7 +49,6 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     public void start() throws TranslatorException {
         super.start();
 
-        ConvertModifier convert = new ConvertModifier();
         convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
         convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
         convert.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
