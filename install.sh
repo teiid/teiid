@@ -2,6 +2,8 @@
 ## Usage: ./install.sh
 ## Description: Build Teiid and run install steps to produce standalone server.
 
+set -e
+
 ## Parse Teiid version out of POM.
 TEIID_VERSION=$(xmllint --xpath '/*/*[local-name()="version"]/text()' pom.xml)
 TEIID_DIST=teiid-${TEIID_VERSION}-jboss-dist.zip
@@ -22,8 +24,6 @@ SOURCE_SHA1["resteasy-jaxrs.zip"]="cfcb2aaa60cd954d04e73cc7e99509ec38b5538a"
 
 SOURCE_URL["teiid-console-dist.zip"]="http://sourceforge.net/projects/teiid/files/webconsole/1.2/Final/teiid-console-dist-1.2.0.Final-jboss-as7.zip"
 SOURCE_SHA1["teiid-console-dist.zip"]="7b57b77520f2894b0f48a385f7dcff03898bb514"
-
-set -e
 
 echo "Making install for Teiid $TEIID_VERSION..."
 echo
@@ -78,21 +78,21 @@ cd temp
 
 ## Unpack JBoss container.
 echo "Unpacking JBoss..."
-unzip -q ../jboss-eap-6.1.0.Alpha.zip
+unzip -q ../jboss-eap.zip
 echo
 
 ## Patch JAX-RS.
 echo "Patching JAX-RS module..."
 rm -rf jboss-eap-6.1/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs
-unzip -q ../resteasy-jaxrs-2.3.6.Final-all.zip resteasy-jaxrs-2.3.6.Final/resteasy-jboss-modules-2.3.6.Final.zip
-unzip -q resteasy-jaxrs-2.3.6.Final/resteasy-jboss-modules-2.3.6.Final.zip
+unzip -qo ../resteasy-jaxrs.zip
+unzip -q resteasy-jaxrs-*/resteasy-jboss-modules-*.zip
 mv -f org/jboss/resteasy/resteasy-jaxrs jboss-eap-6.1/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs
 echo
 
 ## Install Teiid.
 echo "Installing Teiid..."
 cd jboss-eap-6.1
-unzip -q -o ../../teiid-console-dist-1.2.0.Final-jboss-as7.zip
+unzip -q -o ../../teiid-console-dist.zip
 unzip -q -o ../../$TEIID_DIST
 cd ..
 echo
