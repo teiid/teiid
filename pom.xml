@@ -1202,6 +1202,7 @@
               <groupId>org.infinispan</groupId>
               <artifactId>infinispan-query</artifactId>
               <version>${version.org.infinispan}</version>
+              <!-- 
                 <exclusions>                
                     <exclusion>
                         <groupId>org.hibernate</groupId>
@@ -1212,6 +1213,7 @@
                         <artifactId>hibernate-search-infinispan</artifactId>
                     </exclusion>                    
                 </exclusions>
+                 -->
             </dependency>
             <dependency>
             	<groupId>org.fusesource.jansi</groupId>
