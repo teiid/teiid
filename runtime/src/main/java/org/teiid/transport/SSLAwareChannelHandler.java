@@ -144,6 +144,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	private AtomicLong objectsWritten = new AtomicLong(0);
 	private volatile int maxChannels;
 	private int maxMessageSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxMessageSize", DEFAULT_MAX_MESSAGE_SIZE); //$NON-NLS-1$
+	private long maxLobSize = PropertiesUtils.getLongProperty(System.getProperties(), "org.teiid.maxStreamingLobSize", ObjectDecoder.MAX_LOB_SIZE); //$NON-NLS-1$
 	
 	private ChannelFutureListener completionListener = new ChannelFutureListener() {
 
@@ -231,7 +232,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 		    }
 		}
-	    pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, classLoader, storageManager)); //$NON-NLS-1$
+	    pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, maxLobSize, classLoader, storageManager)); //$NON-NLS-1$
 	    pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
 	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
 	    pipeline.addLast("handler", this); //$NON-NLS-1$
@@ -260,6 +261,10 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	
 	public void setMaxMessageSize(int maxMessageSize) {
 		this.maxMessageSize = maxMessageSize;
+	}
+	
+	public void setMaxLobSize(long maxLobSize) {
+		this.maxLobSize = maxLobSize;
 	}
 
 }

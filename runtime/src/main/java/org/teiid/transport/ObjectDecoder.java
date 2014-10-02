@@ -85,6 +85,8 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
     private FileStore store;
     private StreamCorruptedException error;
 
+	private long maxLobSize = MAX_LOB_SIZE;
+
     /**
      * Creates a new decoder with the specified maximum object size.
      *
@@ -95,10 +97,11 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
      * @param classLoader    the {@link ClassLoader} which will load the class
      *                       of the serialized object
      */
-    public ObjectDecoder(int maxObjectSize, ClassLoader classLoader, StorageManager storageManager) {
+    public ObjectDecoder(int maxObjectSize, long maxLobSize, ClassLoader classLoader, StorageManager storageManager) {
     	super(maxObjectSize, 0, 4, 0, 4);
         this.classLoader = classLoader;
         this.storageManager = storageManager;
+        this.maxLobSize = maxLobSize;
     }
 
     @Override
@@ -137,10 +140,10 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 	        	streamIndex++;
 		        continue;
 	        }
-	        if (store.getLength() + dataLen > MAX_LOB_SIZE) {
+	        if (store.getLength() + dataLen > maxLobSize) {
 	        	if (error == null) {
 		        	error = new StreamCorruptedException(
-		                    "lob too big: " + store.getLength() + dataLen + " (max: " + MAX_LOB_SIZE + ')'); //$NON-NLS-1$ //$NON-NLS-2$
+		                    "lob too big: " + (store.getLength() + dataLen) + " (max: " + maxLobSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
 	        }
 	        if (error == null) {

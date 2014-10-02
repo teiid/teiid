@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.NotSerializableException;
+import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -70,6 +71,7 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 public class TestJDBCSocketTransport {
 
 	private static final int MAX_MESSAGE = 100000;
+	private static final int MAX_LOB = 10000;
 	static InetSocketAddress addr;
 	static SocketListener jdbcTransport;
 	static FakeServer server;
@@ -103,6 +105,7 @@ public class TestJDBCSocketTransport {
 					}
 				};
 				result.setMaxMessageSize(MAX_MESSAGE);
+				result.setMaxLobSize(MAX_LOB);
 				return result;
 			}
 		};
@@ -328,6 +331,12 @@ public class TestJDBCSocketTransport {
 		} finally {
 			delay = 0;
 		}
+	}
+	
+	@Test(expected=TeiidSQLException.class) public void testLargeLob() throws Exception {
+		PreparedStatement s = conn.prepareStatement("select to_bytes(?, 'ascii')");
+		s.setCharacterStream(1, new StringReader(new String(new char[200000])));
+		s.execute();
 	}
 	
 }
