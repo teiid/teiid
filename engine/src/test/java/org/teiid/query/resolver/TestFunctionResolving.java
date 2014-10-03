@@ -135,7 +135,8 @@ public class TestFunctionResolving {
 	public static Expression getExpression(String sql) throws QueryParserException,
 			TeiidComponentException, QueryResolverException {
 		Expression func = QueryParser.getQueryParser().parseExpression(sql);
-		ResolverVisitor.resolveLanguageObject(func, RealMetadataFactory.example1Cached());
+		TransformationMetadata tm = RealMetadataFactory.example1Cached();
+		ResolverVisitor.resolveLanguageObject(func, tm);
 		return func;
 	}
 	
@@ -225,7 +226,16 @@ public class TestFunctionResolving {
 
     	func = (Function) QueryParser.getQueryParser().parseExpression(sql);
 		ResolverVisitor.resolveLanguageObject(func, tm);
-		System.out.println(func.getType());
 	}    
+	
+	/**
+	 * e1 is of type string, so 1 should be converted to string
+	 * @throws Exception
+	 */
+    @Test public void testNumericConversion() throws Exception {
+    	String sql = "1.0/2"; //$NON-NLS-1$
+    	Function f = (Function)getExpression(sql);
+    	assertEquals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, f.getType());
+    }
     
 }
