@@ -60,7 +60,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     
     protected StringBuilder buffer = new StringBuilder();
     private boolean appendedSourceComment;
-    private boolean shortNameOnly = false;
+    protected boolean shortNameOnly = false;
                 
     /**
      * Gets the name of a group or element from the RuntimeMetadata
@@ -861,7 +861,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(SetClause clause) {
-        buffer.append(getElementName(clause.getSymbol(), false));
+        shortNameOnly = true;
+        append(clause.getSymbol());
+        shortNameOnly = false;
         buffer.append(Tokens.SPACE).append(Tokens.EQ).append(Tokens.SPACE);
         append(clause.getValue());
     }

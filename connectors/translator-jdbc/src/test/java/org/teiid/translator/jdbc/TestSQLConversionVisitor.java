@@ -446,6 +446,22 @@ public class TestSQLConversionVisitor {
             output, TRANSLATOR);
     }
     
+    @Test public void testUpdateTrimStrings() throws Exception {
+    	String input = "UPDATE PARTS SET PART_ID = NULL WHERE PARTS.PART_COLOR = 'b'"; //$NON-NLS-1$
+        String output = "UPDATE PARTS SET PART_ID = NULL WHERE PARTS.PART_COLOR = 'b'"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+        
+        input = "insert into parts (part_id) values ('a')"; //$NON-NLS-1$
+        output = "INSERT INTO PARTS (PART_ID) VALUES ('a')"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
     @Test public void testOrderByUnrelated() throws Exception {
     	String input = "select part_id id FROM parts order by part_name"; //$NON-NLS-1$
         String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS ORDER BY PARTS.PART_NAME"; //$NON-NLS-1$
