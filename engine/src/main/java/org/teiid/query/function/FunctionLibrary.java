@@ -285,9 +285,11 @@ public class FunctionLibrary {
         boolean ambiguous = false;
         FunctionMethod result = null;
         boolean isSystem = false;
+        boolean narrowing = false;
                 
         outer: for (FunctionMethod nextMethod : functionMethods) {
             int currentScore = 0; 
+            boolean nextNarrowing = false;
             final List<FunctionParameter> methodTypes = nextMethod.getInputParameters();
             //Holder for current signature with converts where required
             
@@ -322,6 +324,7 @@ public class FunctionLibrary {
 		                	if (!(args[i] instanceof Constant) || ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(sourceType), tmpTypeName, (Constant)args[i]) == null) {
 		                		continue outer;
 		                	}
+		                	nextNarrowing = true;
 		                	currentScore++;
 		                } else {
 		                	currentScore++;
@@ -345,6 +348,7 @@ public class FunctionLibrary {
 							if (t.isExplicit()) {
 								//there still may be a common type, but use any other valid conversion over this one
 								currentScore += types.length + 1;
+								nextNarrowing = true;
 							} else {
 								currentScore++;
 							}
@@ -356,7 +360,15 @@ public class FunctionLibrary {
             	}
             }
             
+            if (nextNarrowing && result != null && !narrowing) {
+            	continue;
+            }
+
             boolean useNext = false;
+            
+            if (!nextNarrowing && narrowing) {
+            	useNext = true;
+            }
             
         	boolean isSystemNext = nextMethod.getParent() == null || INTERNAL_SCHEMAS.contains(nextMethod.getParent().getName());
         	if ((isSystem && isSystemNext) || (!isSystem && !isSystemNext && result != null)) {
@@ -373,8 +385,8 @@ public class FunctionLibrary {
         	} else if (isSystemNext) {
         		useNext = true;
         	}
-            
-            if (currentScore == bestScore) {
+        	
+            if (currentScore == bestScore && !useNext) {
             	ambiguous = true;
             	boolean useCurrent = false;
             	List<FunctionParameter> bestParams = result.getInputParameters();
@@ -424,6 +436,7 @@ public class FunctionLibrary {
                 bestScore = currentScore;
                 result = nextMethod;
                 isSystem = isSystemNext;
+                narrowing = nextNarrowing;
             }            
         }
         

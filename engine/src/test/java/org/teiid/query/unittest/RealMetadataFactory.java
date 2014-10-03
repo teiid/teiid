@@ -728,7 +728,7 @@ public class RealMetadataFactory {
         QueryNode vm1g17n1 = new QueryNode("SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 UNION ALL SELECT pm3.g2.e1, pm3.g2.e2 FROM pm3.g2 ORDER BY e2");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g17 = createVirtualGroup("g17", vm1, vm1g17n1); //$NON-NLS-1$
 
-        QueryNode vm1g18n1 = new QueryNode("SELECT (e4 * 100.0) as x FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g18n1 = new QueryNode("SELECT (e4 * cast(100.0 as double)) as x FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g18 = createVirtualGroup("g18", vm1, vm1g18n1); //$NON-NLS-1$
 
         // Transformations with subqueries and correlated subqueries
