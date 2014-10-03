@@ -34,6 +34,8 @@ import org.apache.olingo.server.api.edm.provider.ComplexType;
 import org.apache.olingo.server.api.edm.provider.EntityContainer;
 import org.apache.olingo.server.api.edm.provider.EntitySet;
 import org.apache.olingo.server.api.edm.provider.EntityType;
+import org.apache.olingo.server.api.edm.provider.Function;
+import org.apache.olingo.server.api.edm.provider.FunctionImport;
 import org.apache.olingo.server.api.edm.provider.NavigationProperty;
 import org.apache.olingo.server.api.edm.provider.NavigationPropertyBinding;
 import org.apache.olingo.server.api.edm.provider.Parameter;
@@ -57,14 +59,11 @@ import org.teiid.metadata.Table;
 
 public class OData4EntitySchemaBuilder {
 
-    public static org.apache.olingo.server.api.edm.provider.Schema buildMetadata(
-            org.teiid.metadata.Schema teiidSchema) {
+    public static org.apache.olingo.server.api.edm.provider.Schema buildMetadata(org.teiid.metadata.Schema teiidSchema) {
         try {
             org.apache.olingo.server.api.edm.provider.Schema edmSchema = new org.apache.olingo.server.api.edm.provider.Schema();
-
             buildEntityTypes(teiidSchema, edmSchema);
-            buildActions(teiidSchema, edmSchema);
-
+            buildProcedures(teiidSchema, edmSchema);
             return edmSchema;
         } catch (Exception e) {
             throw new TeiidRuntimeException(e);
@@ -81,13 +80,11 @@ public class OData4EntitySchemaBuilder {
         return null;
     }
 
-    static org.apache.olingo.server.api.edm.provider.Schema findSchema(
-            Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas, String schemaName) {
+    static org.apache.olingo.server.api.edm.provider.Schema findSchema(Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas, String schemaName) {
         return edmSchemas.get(schemaName);
     }
 
-    static EntityType findEntityType(Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas,
-            String schemaName, String enitityName) {
+    static EntityType findEntityType(Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas, String schemaName, String enitityName) {
         org.apache.olingo.server.api.edm.provider.Schema schema = findSchema(edmSchemas, schemaName);
         if (schema != null) {
             for (EntityType type : schema.getEntityTypes()) {
@@ -99,9 +96,7 @@ public class OData4EntitySchemaBuilder {
         return null;
     }
 
-    static EntityContainer findEntityContainer(
-            Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas,
-            String schemaName) {
+    static EntityContainer findEntityContainer(Map<String, org.apache.olingo.server.api.edm.provider.Schema> edmSchemas, String schemaName) {
         org.apache.olingo.server.api.edm.provider.Schema schema = edmSchemas.get(schemaName);
         return schema.getEntityContainer();
     }
@@ -116,9 +111,7 @@ public class OData4EntitySchemaBuilder {
             KeyRecord primaryKey = table.getPrimaryKey();
             List<KeyRecord> uniques = table.getUniqueKeys();
             if (primaryKey == null && uniques.isEmpty()) {
-                LogManager.logDetail(LogConstants.CTX_ODATA,
-                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017,
-                                table.getFullName()));
+                LogManager.logDetail(LogConstants.CTX_ODATA,ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017,table.getFullName()));
                 continue;
             }
 
@@ -255,66 +248,132 @@ public class OData4EntitySchemaBuilder {
         entitySet.setNavigationPropertyBindings(navigationBindingProperties);
     }
 
-    public static void buildActions(Schema schema,
-            org.apache.olingo.server.api.edm.provider.Schema edmSchema) {
+    public static void buildProcedures(Schema schema, org.apache.olingo.server.api.edm.provider.Schema edmSchema) {
         // procedures
         ArrayList<ComplexType> complexTypes = new ArrayList<ComplexType>();
+        ArrayList<Function> functions = new ArrayList<Function>();
+        ArrayList<FunctionImport> functionImports = new ArrayList<FunctionImport>();
         ArrayList<Action> actions = new ArrayList<Action>();
         ArrayList<ActionImport> actionImports = new ArrayList<ActionImport>();
 
         for (Procedure proc : schema.getProcedures().values()) {
-
-            Action edmAction = new Action();
-            edmAction.setName(proc.getName());
-            edmAction.setBound(false);
-
-            ArrayList<Parameter> params = new ArrayList<Parameter>();
-            for (ProcedureParameter pp : proc.getParameters()) {
-                if (pp.getName().equals("return")) { //$NON-NLS-1$
-                    edmAction.setReturnType(new ReturnType().setType(ODataTypeManager.odataType(pp.getRuntimeType())
-                                            .getFullQualifiedName()));
-                    continue;
-                }
-
-                Parameter param = new Parameter();
-                param.setName(pp.getName());
-                param.setType(ODataTypeManager.odataType(pp.getRuntimeType()).getFullQualifiedName());
-
-                if (DataTypeManager.isArrayType(pp.getRuntimeType())) {
-                    param.setCollection(true);
-                }
-                param.setNullable(pp.getNullType() == NullType.Nullable);
-                params.add(param);
+            if (doesProcedureReturn(proc)) {
+                buildFunction(schema.getName(), proc, complexTypes, functions, functionImports);
             }
-            edmAction.setParameters(params);
-
-            // add a complex type for return resultset.
-            ColumnSet<Procedure> returnColumns = proc.getResultSet();
-            if (returnColumns != null) {
-                ComplexType complexType = new ComplexType();
-                String entityTypeName = proc.getName() + "_" + returnColumns.getName(); //$NON-NLS-1$
-                complexType.setName(entityTypeName);
-
-                ArrayList<Property> props = new ArrayList<Property>();
-                for (Column c : returnColumns.getColumns()) {
-                    props.add(buildProperty(c));
-                }
-                complexType.setProperties(props);
-
-                complexTypes.add(complexType);
-                edmAction.setReturnType((new ReturnType().setType(new FullQualifiedName(schema.getName(), complexType
-                        .getName())).setCollection(true)));
+            else {
+                buildAction(schema.getName(), proc, complexTypes, actions, actionImports);
             }
-
-            ActionImport actionImport = new ActionImport();
-            actionImport.setName(proc.getName()).setAction(new FullQualifiedName(schema.getName(), proc.getName()));
-
-            actions.add(edmAction);
-            actionImports.add(actionImport);
         }
         edmSchema.setComplexTypes(complexTypes);
+        edmSchema.setFunctions(functions);
         edmSchema.setActions(actions);
+        edmSchema.getEntityContainer().setFunctionImports(functionImports);
         edmSchema.getEntityContainer().setActionImports(actionImports);
+    }
+
+    private static boolean doesProcedureReturn(Procedure proc) {
+        for (ProcedureParameter pp : proc.getParameters()) {
+            if (pp.getName().equals("return")) { //$NON-NLS-1$
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void buildFunction(String schemaName, Procedure proc, ArrayList<ComplexType> complexTypes, ArrayList<Function> functions, ArrayList<FunctionImport> functionImports) {
+        Function edmFunction = new Function();
+        edmFunction.setName(proc.getName());
+        edmFunction.setBound(false);
+
+        ArrayList<Parameter> params = new ArrayList<Parameter>();
+        for (ProcedureParameter pp : proc.getParameters()) {
+            if (pp.getName().equals("return")) { //$NON-NLS-1$
+                edmFunction.setReturnType(new ReturnType().setType(ODataTypeManager.odataType(pp.getRuntimeType()).getFullQualifiedName()));
+                continue;
+            }
+
+            Parameter param = new Parameter();
+            param.setName(pp.getName());
+            param.setType(ODataTypeManager.odataType(pp.getRuntimeType()).getFullQualifiedName());
+
+            if (DataTypeManager.isArrayType(pp.getRuntimeType())) {
+                param.setCollection(true);
+            }
+            param.setNullable(pp.getNullType() == NullType.Nullable);
+            params.add(param);
+        }
+        edmFunction.setParameters(params);
+
+        // add a complex type for return resultset.
+        ColumnSet<Procedure> returnColumns = proc.getResultSet();
+        if (returnColumns != null) {
+            ComplexType complexType = new ComplexType();
+            String entityTypeName = proc.getName() + "_" + returnColumns.getName(); //$NON-NLS-1$
+            complexType.setName(entityTypeName);
+
+            ArrayList<Property> props = new ArrayList<Property>();
+            for (Column c : returnColumns.getColumns()) {
+                props.add(buildProperty(c));
+            }
+            complexType.setProperties(props);
+
+            complexTypes.add(complexType);
+            edmFunction.setReturnType((new ReturnType().setType(new FullQualifiedName(schemaName, complexType.getName())).setCollection(true)));
+        }
+
+        FunctionImport functionImport = new FunctionImport();
+        functionImport.setName(proc.getName()).setFunction(new FullQualifiedName(schemaName, proc.getName()));
+
+        functions.add(edmFunction);
+        functionImports.add(functionImport);
+    }
+
+    public static void buildAction(String schemaName, Procedure proc, ArrayList<ComplexType> complexTypes, ArrayList<Action> actions, ArrayList<ActionImport> actionImports) {
+        Action edmAction = new Action();
+        edmAction.setName(proc.getName());
+        edmAction.setBound(false);
+
+        ArrayList<Parameter> params = new ArrayList<Parameter>();
+        for (ProcedureParameter pp : proc.getParameters()) {
+            if (pp.getName().equals("return")) { //$NON-NLS-1$
+                edmAction.setReturnType(new ReturnType().setType(ODataTypeManager.odataType(pp.getRuntimeType()).getFullQualifiedName()));
+                continue;
+            }
+
+            Parameter param = new Parameter();
+            param.setName(pp.getName());
+            param.setType(ODataTypeManager.odataType(pp.getRuntimeType()).getFullQualifiedName());
+
+            if (DataTypeManager.isArrayType(pp.getRuntimeType())) {
+                param.setCollection(true);
+            }
+            param.setNullable(pp.getNullType() == NullType.Nullable);
+            params.add(param);
+        }
+        edmAction.setParameters(params);
+
+        // add a complex type for return resultset.
+        ColumnSet<Procedure> returnColumns = proc.getResultSet();
+        if (returnColumns != null) {
+            ComplexType complexType = new ComplexType();
+            String entityTypeName = proc.getName() + "_" + returnColumns.getName(); //$NON-NLS-1$
+            complexType.setName(entityTypeName);
+
+            ArrayList<Property> props = new ArrayList<Property>();
+            for (Column c : returnColumns.getColumns()) {
+                props.add(buildProperty(c));
+            }
+            complexType.setProperties(props);
+
+            complexTypes.add(complexType);
+            edmAction.setReturnType((new ReturnType().setType(new FullQualifiedName(schemaName, complexType.getName())).setCollection(true)));
+        }
+
+        ActionImport actionImport = new ActionImport();
+        actionImport.setName(proc.getName()).setAction(new FullQualifiedName(schemaName, proc.getName()));
+
+        actions.add(edmAction);
+        actionImports.add(actionImport);
     }
 
     static List<String> getColumnNames(List<Column> columns) {

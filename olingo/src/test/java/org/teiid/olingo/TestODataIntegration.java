@@ -196,6 +196,7 @@ public class TestODataIntegration {
 
 		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/VM1");
         Assert.assertEquals(200, response.getStatus());
+        System.out.println(response.getContentAsString());
         //TODO: match the document here.. port is being random
 	}
 
@@ -237,6 +238,20 @@ public class TestODataIntegration {
         http.start();
 
         ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/G1(1)/e1");
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("{\"@odata.context\":\"$metadata#Edm.String\",\"value\":\"ABCDEFGHIJ\"}", response.getContentAsString());
+    }
+
+    @Test
+    public void testProcedure() throws Exception {
+        // for usage see
+        // http://www.eclipse.org/jetty/documentation/current/http-client-api.html
+        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
+        HttpClient http = new HttpClient(transport, null);
+        transport.setHttpClient(http);
+        http.start();
+
+        ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/proc(x='foo')");
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("{\"@odata.context\":\"$metadata#Edm.String\",\"value\":\"ABCDEFGHIJ\"}", response.getContentAsString());
     }
