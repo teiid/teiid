@@ -83,6 +83,10 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     
     @Override
     public void append(LanguageObject obj) {
+    	if (shortNameOnly && obj instanceof ColumnReference) {
+    		super.append(obj);
+    		return;
+    	}
         boolean replacementMode = replaceWithBinding;
         if (obj instanceof Command || obj instanceof Function) {
     	    /*
