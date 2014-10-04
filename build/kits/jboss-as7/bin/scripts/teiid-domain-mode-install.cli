@@ -97,8 +97,6 @@
 /profile=ha/subsystem=teiid/translator=ws:add(module=org.jboss.teiid.translator.ws)
 /profile=ha/subsystem=teiid/translator=salesforce:add(module=org.jboss.teiid.translator.salesforce)
 /profile=ha/subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
-/profile=ha/subsystem=teiid/translator=infinispan-cache:add(module=org.jboss.teiid.translator.object)
-/profile=ha/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /profile=ha/subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 /profile=ha/subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
 /profile=ha/subsystem=teiid/translator=sap-nw-gateway:add(module=org.jboss.teiid.translator.odata)
@@ -108,7 +106,6 @@
 /profile=ha/subsystem=teiid/translator=solr:add(module=org.jboss.teiid.translator.solr)
 /profile=ha/subsystem=teiid/translator=excel:add(module=org.jboss.teiid.translator.excel)
 /profile=ha/subsystem=teiid/translator=impala:add(module=org.jboss.teiid.translator.hive)
-/profile=ha/subsystem=teiid/translator=infinispan-cache-dsl:add(module=org.jboss.teiid.translator.infinispan.dsl)
 
 
 /profile=full-ha/subsystem=teiid/translator=jdbc-simple:add(module=org.jboss.teiid.translator.jdbc)
@@ -140,8 +137,6 @@
 /profile=full-ha/subsystem=teiid/translator=ws:add(module=org.jboss.teiid.translator.ws)
 /profile=full-ha/subsystem=teiid/translator=salesforce:add(module=org.jboss.teiid.translator.salesforce)
 /profile=full-ha/subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
-/profile=full-ha/subsystem=teiid/translator=infinispan-cache:add(module=org.jboss.teiid.translator.object)
-/profile=full-ha/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /profile=full-ha/subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 /profile=full-ha/subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
 /profile=full-ha/subsystem=teiid/translator=sap-nw-gateway:add(module=org.jboss.teiid.translator.odata)
@@ -151,7 +146,6 @@
 /profile=full-ha/subsystem=teiid/translator=solr:add(module=org.jboss.teiid.translator.solr)
 /profile=full-ha/subsystem=teiid/translator=excel:add(module=org.jboss.teiid.translator.excel)
 /profile=full-ha/subsystem=teiid/translator=impala:add(module=org.jboss.teiid.translator.hive)
-/profile=full-ha/subsystem=teiid/translator=infinispan-cache-dsl:add(module=org.jboss.teiid.translator.infinispan.dsl)
 
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -162,23 +156,19 @@
 
 /profile=ha/subsystem=resource-adapters/resource-adapter=file:add(module=org.jboss.teiid.resource-adapter.file)
 /profile=ha/subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
-/profile=ha/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan)
 /profile=ha/subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /profile=ha/subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
 /profile=ha/subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /profile=ha/subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /profile=ha/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /profile=ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
-/profile=ha/subsystem=resource-adapters/resource-adapter=infinispan-dsl:add(module=org.jboss.teiid.resource-adapter.infinispan.dsl)
 
 
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=file:add(module=org.jboss.teiid.resource-adapter.file)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
-/profile=full-ha/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
-/profile=full-ha/subsystem=resource-adapters/resource-adapter=infinispan-dsl:add(module=org.jboss.teiid.resource-adapter.infinispan.dsl)

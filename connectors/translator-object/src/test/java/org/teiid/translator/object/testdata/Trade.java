@@ -111,6 +111,7 @@ protected  @Field boolean settled;
 	   this.settled = isSettled;
    }
   
+   @Override
    public String toString() {
 	   
 	   StringBuffer sb = new StringBuffer("Trade:");

@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.object;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,6 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 /**
@@ -40,24 +39,24 @@ import org.teiid.translator.object.util.VDBUtility;
 public abstract class BasicSearchTest {
 
 	@Test public void testQueryGetAllTrades() throws Exception {						
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache as T"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T"); //$NON-NLS-1$
 		
 	
-		performTest(command, 3, 1);
+		performTest(command, 3, 4);
 	}	
 	
 	@Test public void testQueryGetEQ1Trade() throws Exception {						
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache as T where TradeID = '1'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T where TradeID = '1'"); //$NON-NLS-1$
 		
 	
-		performTest(command, 1, 1);
+		performTest(command, 1, 4);
 	}	
 	
 	@Test public void testQueryGetIn1Trade() throws Exception {						
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache as T where TradeID in ('2', '3')"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T where TradeID in ('2', '3')"); //$NON-NLS-1$
 		
 	
-		performTest(command, 2, 1);
+		performTest(command, 2, 4);
 	}		
 	
 	protected List<Object> performTest(Select command, int rowcnt, int colCount) throws Exception {

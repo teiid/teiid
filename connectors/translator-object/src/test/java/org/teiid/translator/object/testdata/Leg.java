@@ -104,7 +104,8 @@ private @IndexedEmbedded List<Transaction> transactions = null;
 	   return this.transactions;
    }
    
-   public String toString() {
+   @Override
+public String toString() {
 	   StringBuffer sb = new StringBuffer("Leg:");
 	   sb.append(" id " + getLegId());
 	   sb.append(" name " + getLegName());

@@ -22,9 +22,24 @@
 			</dependency>
 			<dependency>
 				<groupId>org.infinispan</groupId>
+				<artifactId>infinispan-commons</artifactId>
+				<version>${version.org.infinispan.6}</version>
+			</dependency>			
+			<dependency>
+				<groupId>org.infinispan</groupId>
 				<artifactId>infinispan-query</artifactId>
 				<version>${version.org.infinispan.6}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.infinispan</groupId>
+				<artifactId>infinispan-query-dsl</artifactId>
+				<version>${version.org.infinispan.6}</version>
+			</dependency>		
+			<dependency>
+				<groupId>org.infinispan</groupId>
+				<artifactId>infinispan-lucene-directory	</artifactId>
+				<version>${version.org.infinispan.6}</version>
+			</dependency>		
 			<dependency>
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate-search</artifactId>
@@ -80,9 +95,24 @@
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-commons</artifactId>
+			<scope>provided</scope>
+		</dependency>		
+		<dependency>
+			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-query</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-query-dsl</artifactId>
+			<scope>provided</scope>
+		</dependency>		
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-lucene-directory	</artifactId>
+			<scope>provided</scope>
+		</dependency>		
 
 		<dependency>
 			<groupId>javax.resource</groupId>

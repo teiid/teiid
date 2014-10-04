@@ -13,12 +13,6 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />    
 		<module name="org.jboss.teiid.translator.infinispan.dsl" />
-		
-        <module name="org.jboss.marshalling"/>
-        <module name="org.jboss.marshalling.river"/>
-		
-		
-		<module name="org.infinispan.hotrod" slot="6.3" />
 
         <module name="org.jboss.modules" />        
     </dependencies>

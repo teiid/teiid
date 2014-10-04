@@ -2,6 +2,7 @@ package org.teiid.translator.object;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -36,7 +37,9 @@ public abstract class CacheContainerWrapper
 	public Collection<Object> getAll(String cacheName) {
 		Collection<Object> objs = new ArrayList<Object>();
 		Map<String, Object> c = getCache(cacheName);
-		objs.addAll(c.values());
+		for (String k : c.keySet()) {
+			objs.add(c.get(k));
+		}
 		return objs;
 	}
 	
@@ -47,5 +50,6 @@ public abstract class CacheContainerWrapper
 	 */
 	@SuppressWarnings("rawtypes")
 	public abstract <T extends Map> T getCache(String cacheName);  
+	
 
 }

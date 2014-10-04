@@ -7,14 +7,13 @@
     </resources>
 
     <dependencies>
+        <module name="javax.api"/>
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.translator.object"/>
         <module name="org.jboss.modules"/>
-        <module name="org.jboss.marshalling"/>
-        <module name="org.jboss.marshalling.river"/>
 
-        <module name="org.infinispan.hotrod" slot="6.3" />
+        <module name="org.infinispan" slot="jdg-6.3" optional="true"  export="true" />
     </dependencies>
 </module>
