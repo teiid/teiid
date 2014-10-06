@@ -13,6 +13,11 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />    
 		<module name="org.jboss.teiid.translator.infinispan.dsl" />
+		
+        <module name="org.infinispan.client.hotrod" slot="6.3" optional="true" export="true" />
+        <module name="org.infinispan.commons" slot="6.3" optional="true" export="true"/>
+
+        <module name="org.jboss.remoting3"  />		
 
         <module name="org.jboss.modules" />        
     </dependencies>
