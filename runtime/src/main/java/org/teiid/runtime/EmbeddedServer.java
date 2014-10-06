@@ -36,13 +36,18 @@ import java.net.UnknownHostException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.transaction.TransactionManager;
@@ -65,6 +70,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
@@ -77,6 +83,7 @@ import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionServiceException;
@@ -116,7 +123,16 @@ import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.transport.*;
+import org.teiid.transport.ChannelListener;
+import org.teiid.transport.ClientServiceRegistry;
+import org.teiid.transport.ClientServiceRegistryImpl;
+import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCSocketListener;
+import org.teiid.transport.SocketClientInstance;
+import org.teiid.transport.SocketConfiguration;
+import org.teiid.transport.SocketListener;
+import org.teiid.transport.WireProtocol;
 import org.teiid.vdb.runtime.VDBKey;
 import org.xml.sax.SAXException;
 
@@ -298,7 +314,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private SessionAwareCache<CachedResults> rs;
 	private SessionAwareCache<PreparedPlan> ppc;
 	protected ArrayList<SocketListener> transports = new ArrayList<SocketListener>();
-	
+	private Timer timer;
+	private MaterializationManager materializationMgr = null;
+	private ShutDownListener shutdownListener = new ShutDownListener();
+
 	public EmbeddedServer() {
 
 	}
@@ -327,6 +346,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (running != null) {
 			throw new IllegalStateException();
 		}
+		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
@@ -383,6 +403,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
 		this.services.setVDBRepository(this.repo);
+		this.timer = new Timer("Teiid Timer", true); //$NON-NLS-1$
+		this.materializationMgr = getMaterializationManager();
+		this.repo.addListener(this.materializationMgr);
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
@@ -396,6 +419,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				}
 			}
 		}
+		this.shutdownListener.setBootInProgress(false);
 		running = true;
 	}
 
@@ -497,6 +521,49 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 		}
 		return bufferService;
+	}
+
+	protected MaterializationManager getMaterializationManager() {
+	    final TeiidExecutor executor = config.getAsynchWorkExecutor();
+	    return new MaterializationManager(this.shutdownListener) {
+            @Override
+            public Timer getTimer() {
+                return EmbeddedServer.this.timer;
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return executor;
+            }
+
+            @Override
+            public List<Map<String, String>> executeQuery(VDBMetaData vdb, String command) throws SQLException {
+                final List<Map<String, String>> rows = new ArrayList<Map<String,String>>();
+                try {
+                    DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, dqp, new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
+                        @Override
+                        public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
+                            for (List<?> row:results) {
+                                TreeMap<String, String> rowResult = new TreeMap<String, String>();
+                                for (int colNum = 0; colNum < columns.size(); colNum++) {
+                                    Object value = row.get(colNum);
+                                    if (value != null) {
+                                        if (value instanceof Timestamp) {
+                                            value = ((Timestamp)value).getTime();
+                                        }
+                                    }
+                                    rowResult.put(columns.get(colNum), value == null?null:value.toString());
+                                }
+                                rows.add(rowResult);
+                            }
+                        }
+                    }); 
+                } catch (Throwable e) {
+                    throw new SQLException(e);
+                }   
+                return rows;
+            }
+        };
 	}
 
 	/**
@@ -728,6 +795,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (running == null || !running) {
 			return;
 		}
+        this.shutdownListener.setShutdownInProgress(true);
+        this.repo.removeListener(this.materializationMgr);
+        this.timer.cancel();
 		for (SocketListener socket:this.transports) {
 			socket.stop();
 		}
@@ -743,6 +813,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		bufferService = null;
 		dqp = null;
 		running = false;
+		this.shutdownListener.setShutdownInProgress(false);
 	}
 
 	private synchronized void checkStarted() {
@@ -804,5 +875,31 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public int getPort(int transport) {
 		return this.transports.get(transport).getPort();
 	}
-	
+
+	static class ShutDownListener implements ContainerLifeCycleListener {
+	    private boolean shutdownInProgress = false;
+	    private boolean bootInProgress = false;
+
+        @Override
+        public boolean isShutdownInProgress() {
+            return shutdownInProgress;
+        }
+
+        @Override
+        public boolean isBootInProgress() {
+            return bootInProgress;
+        }
+
+        @Override
+        public void addListener(LifeCycleEventListener listener) {
+        }
+
+        public void setBootInProgress(boolean value) {
+            this.bootInProgress = value;
+        }
+
+        public void setShutdownInProgress(boolean value) {
+            this.shutdownInProgress = value;
+        }
+	}
 }

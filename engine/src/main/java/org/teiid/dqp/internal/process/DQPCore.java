@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -44,6 +45,7 @@ import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
@@ -857,5 +859,69 @@ public class DQPCore implements DQP {
 	
 	public String getRuntimeVersion() {
 		return ApplicationInfo.getInstance().getBuildNumber();
-	}	
+	}
+	
+	public interface ResultsListener {
+	    void onResults(List<String> columns,  List<? extends List<?>> results) throws Exception;
+	}
+
+    public static void executeQuery(final String command, final VDBMetaData vdb, final String user, final String app,
+            final long timoutInMilli, final DQPCore engine, final ResultsListener listener) throws Throwable {
+        final SessionMetadata session = TempTableDataManager.createTemporarySession(user, app, vdb); 
+
+        final long requestID =  0L;
+
+        DQPWorkContext workContext = new DQPWorkContext();
+        workContext.setUseCallingThread(true);
+        workContext.setSession(session);
+
+        try {
+            workContext.runInContext(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    long start = System.currentTimeMillis();
+                    RequestMessage request = new RequestMessage(command);
+                    request.setExecutionId(requestID);
+                    request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
+                    Future<ResultsMessage> message = engine.executeRequest(requestID, request);
+                    ResultsMessage rm = null;
+                    if (timoutInMilli < 0) {
+                        rm = message.get();
+                    } else {
+                        rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
+                    }
+                    if (rm.getException() != null) {
+                         throw rm.getException();
+                    }
+
+                    if (rm.isUpdateResult()) {
+                        listener.onResults(Arrays.asList("update-count"), rm.getResultsList()); //$NON-NLS-1$
+                    }
+                    else {
+                        listener.onResults(Arrays.asList(rm.getColumnNames()), rm.getResultsList());
+
+                        while (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
+                            long elapsed = System.currentTimeMillis() - start;
+                            message = engine.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
+                            rm = message.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+                            listener.onResults(Arrays.asList(rm.getColumnNames()), rm.getResultsList());
+                        }
+                    }
+
+                    long elapsed = System.currentTimeMillis() - start;
+                    ResultsFuture<?> response = engine.closeRequest(requestID);
+                    response.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+                    return null;
+                }
+            });
+        } finally {
+            workContext.runInContext(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    engine.terminateSession(session.getSessionId());
+                    return null;
+                }
+            });
+        }	    
+	}
 }

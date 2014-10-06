@@ -82,7 +82,8 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 			}
 		}
 	}
-
+	
+	static final int DEFAULT_MAX_ASYNC_WORKERS = 10;
 	private SecurityHelper securityHelper;
 	private String securityDomain;
 	private TransactionManager transactionManager;
@@ -96,6 +97,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String jgroupsConfigFile;
 	private List<SocketConfiguration> transports;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
+	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
 	
 	private DefaultCacheManager manager;
 	private SimpleChannelFactory channelFactory;
@@ -250,4 +252,16 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setMaxODBCLobSizeAllowed(int lobSize) {
 		this.maxODBCLobSizeAllowed = lobSize;
 	}	
+	
+    public int getMaxAsyncThreads() {
+        return maxAsyncThreads;
+    }
+
+    public void setMaxAsyncThreads(int maxAsyncThreads) {
+        this.maxAsyncThreads = maxAsyncThreads;
+    }
+
+    public TeiidExecutor getAsynchWorkExecutor() {
+        return new ThreadReuseExecutor("Asynchronus Workers", getMaxAsyncThreads()); //$NON-NLS-1$
+    }	
 }
