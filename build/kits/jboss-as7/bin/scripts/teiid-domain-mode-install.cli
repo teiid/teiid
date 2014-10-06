@@ -67,6 +67,7 @@ connect
 /profile=ha/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /profile=ha/subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 /profile=ha/subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
+/profile=ha/subsystem=teiid/translator=sap-gateway:add(module=org.jboss.teiid.translator.odata)
 /profile=ha/subsystem=teiid/translator=sap-nw-gateway:add(module=org.jboss.teiid.translator.odata)
 /profile=ha/subsystem=teiid/translator=mongodb:add(module=org.jboss.teiid.translator.mongodb)
 /profile=ha/subsystem=teiid/translator=cassandra:add(module=org.jboss.teiid.translator.cassandra)

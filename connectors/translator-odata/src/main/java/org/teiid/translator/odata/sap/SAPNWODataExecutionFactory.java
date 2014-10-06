@@ -21,25 +21,9 @@
  */
 package org.teiid.translator.odata.sap;
 
-import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.Translator;
-import org.teiid.translator.WSConnection;
-import org.teiid.translator.odata.ODataExecutionFactory;
 
-@Translator(name="sap-gateway", description="A translator for making OData data service calls to SAP Gateway")
-public class SAPODataExecutionFactory extends ODataExecutionFactory {
+@Translator(name="sap-nw-gateway", description="A translator for making OData data service calls to SAP Gateway", deprecated="sap-gateway")
+public class SAPNWODataExecutionFactory extends SAPODataExecutionFactory {
 
-	public SAPODataExecutionFactory() {
-		super();
-		setSupportsOdataCount(true);
-		setSupportsOdataFilter(true);
-		setSupportsOdataOrderBy(true);
-		setSupportsOdataSkip(true);
-		setSupportsOdataTop(true);
-	}
-
-	@Override
-	public MetadataProcessor<WSConnection> getMetadataProcessor() {
-		return new SAPMetadataProcessor();
-	}
 }

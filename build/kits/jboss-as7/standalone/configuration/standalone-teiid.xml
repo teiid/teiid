@@ -362,6 +362,7 @@
             <translator name="jpa2" module="org.jboss.teiid.translator.jpa"/>
             <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="odata" module="org.jboss.teiid.translator.odata"/>
+            <translator name="sap-gateway" module="org.jboss.teiid.translator.odata"/>
             <translator name="sap-nw-gateway" module="org.jboss.teiid.translator.odata"/>
             <translator name="mongodb" module="org.jboss.teiid.translator.mongodb"/>
             <translator name="cassandra" module="org.jboss.teiid.translator.cassandra"/>

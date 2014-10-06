@@ -25,7 +25,11 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -225,6 +229,10 @@ public class TranslatorUtil {
 		}
 		
 		VDBTranslatorMetaData metadata = new VDBTranslatorMetaData();
+		String see = translator.deprecated();
+		if (see != null && see.length() > 0) {
+			metadata.addProperty("deprecated", see); //$NON-NLS-1$ 
+		}
 		metadata.setName(translator.name());
 		metadata.setDescription(translator.description());
 		metadata.setExecutionFactoryClass(factory.getClass());
