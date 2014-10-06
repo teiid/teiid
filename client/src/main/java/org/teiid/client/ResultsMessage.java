@@ -315,9 +315,6 @@ public class ResultsMessage implements Externalizable {
         // Results data
         if (delayDeserialization) {
         	BatchSerializer.writeBatch(out, dataTypes, null, clientSerializationVersion);
-        } else if (serializationBuffer != null) {
-        	serializationBuffer.writeTo(out);
-        	serializationBuffer = null;
     	} else {
         	BatchSerializer.writeBatch(out, dataTypes, results, clientSerializationVersion);
     	}

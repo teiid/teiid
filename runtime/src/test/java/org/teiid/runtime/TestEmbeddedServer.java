@@ -395,6 +395,7 @@ public class TestEmbeddedServer {
 		try {
 			TeiidDriver driver = new TeiidDriver();
 			conn = driver.connect("jdbc:teiid:test@mm://"+addr.getHostName()+":"+es.transports.get(0).getPort(), null);
+			conn.createStatement().execute("set showplan on"); //trigger alternative serialization for byte count
 			ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
 			rs.next();
 			assertEquals("HELLO WORLD", rs.getString(1));

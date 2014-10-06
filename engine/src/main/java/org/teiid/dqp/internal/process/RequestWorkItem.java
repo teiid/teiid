@@ -928,11 +928,16 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             this.resultsReceiver = null;    
 		}
 		cancelCancelTask();
-		if ((this.dqpWorkContext.getSession().isEmbedded() && this.requestMsg.getShowPlan() != ShowPlan.OFF) 
+		if ((!this.dqpWorkContext.getSession().isEmbedded() && requestMsg.isDelaySerialization() && this.requestMsg.getShowPlan() == ShowPlan.ON) 
+				|| this.requestMsg.getShowPlan() == ShowPlan.DEBUG
 				|| LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE)) {
 			int bytes;
 			try {
-				bytes = response.serialize(!this.dqpWorkContext.getSession().isEmbedded());
+				boolean keep = !this.dqpWorkContext.getSession().isEmbedded() && requestMsg.isDelaySerialization();
+				bytes = response.serialize(keep);
+				if (keep) {
+					response.setDelayDeserialization(true);
+				}
 				dataBytes.addAndGet(bytes);
 			} catch (IOException e) {
 				TeiidComponentException tce = ExceptionUtil.getExceptionOfType(e, TeiidComponentException.class);
