@@ -59,8 +59,6 @@
 /subsystem=teiid/translator=ws:add(module=org.jboss.teiid.translator.ws)
 /subsystem=teiid/translator=salesforce:add(module=org.jboss.teiid.translator.salesforce)
 /subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
-/subsystem=teiid/translator=infinispan-cache:add(module=org.jboss.teiid.translator.object)
-/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 /subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
 /subsystem=teiid/translator=sap-nw-gateway:add(module=org.jboss.teiid.translator.odata)
@@ -70,7 +68,6 @@
 /subsystem=teiid/translator=solr:add(module=org.jboss.teiid.translator.solr)
 /subsystem=teiid/translator=excel:add(module=org.jboss.teiid.translator.excel)
 /subsystem=teiid/translator=impala:add(module=org.jboss.teiid.translator.hive)
-/subsystem=teiid/translator=infinispan-cache-dsl:add(module=org.jboss.teiid.translator.infinispan.dsl)
 
 
 
@@ -79,10 +76,8 @@
 
 /subsystem=resource-adapters/resource-adapter=file:add(module=org.jboss.teiid.resource-adapter.file)
 /subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
-/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan)
 /subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
-/subsystem=resource-adapters/resource-adapter=infinispan-dsl:add(module=org.jboss.teiid.resource-adapter.infinispan.dsl)

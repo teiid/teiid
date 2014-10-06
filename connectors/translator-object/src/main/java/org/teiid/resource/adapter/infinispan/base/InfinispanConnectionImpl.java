@@ -29,6 +29,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheContainerWrapper;
+import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 
 /** 
@@ -92,5 +93,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	public Map<String, Class<?>> getCacheNameClassTypeMapping() {
 		return this.config.getCacheNameClassTypeMapping();
 	}
+
+	@Override
+	public ClassRegistry getClassRegistry() {
+		return this.config.getClassRegistry();
+	}
+
 
 }

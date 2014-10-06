@@ -18,10 +18,10 @@
         <persistence passivation="false">
             <singleFile
                     shared="false"
-                    fetchPersistentState="true"
+                    fetchPersistentState="false"
                     ignoreModifications="false"
-                    purgeOnStartup="false"
-                    preload="true"
+                    purgeOnStartup="true"
+                    preload="false"
                     location="./target/localcache/indexing/trades">
             </singleFile>
         </persistence>

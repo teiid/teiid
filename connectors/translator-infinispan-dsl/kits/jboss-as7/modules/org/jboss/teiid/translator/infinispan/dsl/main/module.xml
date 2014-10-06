@@ -12,9 +12,6 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid" />
-        <module name="javax.persistence.api"/>
-        
-        <module name="org.infinispan.hotrod" slot="6.3" export="true"/>
         
         <module name="org.jboss.modules"/>
     </dependencies>   

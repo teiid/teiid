@@ -28,7 +28,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
-import org.teiid.resource.adapter.infinispan.util.TradesCacheSource;
+import org.teiid.translator.object.util.TradesCacheSource;
 
 /**
  */

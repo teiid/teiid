@@ -57,4 +57,16 @@ public interface ObjectConnection  {
 	 */
 	Map<String, Class<?>> getCacheNameClassTypeMapping();
 	
+	/**
+	 * Return the ClassRegistry that contains which classes and their methods.
+	 * @return ClassRegistry
+	 */
+	public ClassRegistry getClassRegistry();	
+
+	
+	/** 
+	 * Called to enable the connection to cleanup after use
+	 */
+	public void cleanUp();
+	
 }

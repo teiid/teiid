@@ -38,6 +38,7 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
@@ -73,8 +74,7 @@ public class ObjectExecution implements ResultSetExecution {
 			ColumnReference cr = (ColumnReference) dc.getExpression();
 			String name = null;
 			if (cr.getMetadataObject() != null) {
-				Column c = cr.getMetadataObject();
-				name = c.getNameInSource();
+				name = getNameInSource(cr.getMetadataObject());
 			} else {
 				name = cr.getName();
 			}
@@ -147,6 +147,14 @@ public class ObjectExecution implements ResultSetExecution {
 
 	@Override
 	public void cancel()  {
+	}
+	
+	private static String getNameInSource(AbstractMetadataRecord c) {
+		String name = c.getNameInSource();
+		if (name == null || name.trim().isEmpty()) {
+			return c.getName();
+		}
+		return name;
 	}
 	
 }

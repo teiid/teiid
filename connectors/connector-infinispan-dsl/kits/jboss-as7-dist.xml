@@ -35,20 +35,6 @@
                 <include>**/META-INF/**</include>
             </includes>
         </fileSet>
-        <fileSet>
-            <directory>${project.build.directory}/rar-unpack</directory>
-            <outputDirectory>${jbossas-module-root}/org/infinispan/hotrod/6.3</outputDirectory>
-            <filtered>false</filtered>
-            <includes>
-                <include>**/infinispan-client-hotrod*.jar</include>
-                <include>**/infinispan-remote-query-client*.jar</include>
-                <include>**/infinispan-core*.jar</include>
-                <include>**/infinispan-commons*.jar</include>
-                <include>**/infinispan-query*.jar</include>
-                <include>**/protostream*.jar</include>
-                <include>**/protobuf-java*.jar</include>
-            </includes>
-        </fileSet> 
 
     </fileSets>
 </assembly>

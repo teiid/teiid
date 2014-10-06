@@ -38,7 +38,7 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
-import org.infinispan.Cache;
+import org.infinispan.commons.api.BasicCache;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.modules.Module;
@@ -50,7 +50,9 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheContainerWrapper;
+import org.teiid.translator.object.ClassRegistry;
 
 public abstract class AbstractInfinispanManagedConnectionFactory extends
 		BasicManagedConnectionFactory {
@@ -63,29 +65,22 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			ecm = container;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
-		public Cache getCache(String cacheName) {
+		public BasicCache<?,?> getCache(String cacheName) {
 			if (cacheName == null) {
 				return ecm.getCache();
 			}
 			return ecm.getCache(cacheName);
 		}
-		
-		@SuppressWarnings({ "rawtypes" })
-		@Override
-		public Collection<Object> getAll(String cacheName) {
-			Collection<Object> objs = new ArrayList<Object>();
-			org.infinispan.commons.api.BasicCache bc = getCache(cacheName);
-			Iterator ksi = bc.keySet().iterator();
-			while (ksi.hasNext()) {
-				objs.add(ksi.next());
-			}
-			return objs;
-		}
 
 		// added to enable unit test to close the container
 		public void cleanUp() {
 			ecm.stop();
+		}
+		
+		public ClassRegistry getClassRegistry() {
+			return null;
 		}
 	}
 
@@ -100,6 +95,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String cacheJndiName = null;
 	private Map<String, Class<?>> typeMap = null; // cacheName ==> ClassType
 	private String cacheTypes = null;
+	private ClassRegistry methodUtil = new ClassRegistry();
 
 	private CacheContainerWrapper cacheContainer = null;
 	private Map<String, String> pkMap; // cacheName ==> pkey name
@@ -218,6 +214,10 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	public Class<?> getCacheType(String cacheName) {
 		return this.typeMap.get(cacheName);
+	}
+	
+	public ClassRegistry getClassRegistry() {
+		return methodUtil;
 	}
 
 	/**
@@ -374,8 +374,12 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 				pkMap.put(cacheName, mapped.get(1));
 			}
 			try {
-				tm.put(cacheName, Class.forName(className, true, cl));
+				Class clzz = Class.forName(className, true, cl);
+				tm.put(cacheName, clzz);
+				methodUtil.registerClass(clzz);
 			} catch (ClassNotFoundException e) {
+				throw new ResourceException(e);
+			} catch (TranslatorException e) {
 				throw new ResourceException(e);
 			}
 		}
