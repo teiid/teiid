@@ -339,7 +339,8 @@ public interface SourceCapabilities {
         SELECT_WITHOUT_FROM, 
         QUERY_GROUP_BY_ROLLUP, 
         QUERY_ORDERBY_EXTENDED_GROUPING, 
-        INVALID_EXCEPTION; //property saying why the capabilities are invalid
+        INVALID_EXCEPTION, //property saying why the capabilities are invalid
+        COLLATION;
         
         private final String toString;
         

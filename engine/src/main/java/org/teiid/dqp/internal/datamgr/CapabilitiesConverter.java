@@ -143,6 +143,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
         tgtCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, srcCaps.getDefaultNullOrder());
+        tgtCaps.setSourceProperty(Capability.COLLATION, srcCaps.getCollation());
         return tgtCaps;
     }
 

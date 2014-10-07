@@ -104,7 +104,7 @@ public class RulePushLimit implements OptimizerRule {
                 }
             }
             
-            while (canPushLimit(plan, limitNode, limitNodes, metadata, capabilitiesFinder, analysisRecord)) {
+            while (canPushLimit(plan, limitNode, limitNodes, metadata, capabilitiesFinder, analysisRecord, context)) {
                 plan = RuleRaiseAccess.performRaise(plan, limitNode.getFirstChild(), limitNode);
                 //makes this rule safe to run after the final rule assign output elements
                 limitNode.setProperty(Info.OUTPUT_COLS, limitNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
@@ -124,7 +124,7 @@ public class RulePushLimit implements OptimizerRule {
         return plan;
     }
     
-    boolean canPushLimit(PlanNode rootNode, PlanNode limitNode, List<PlanNode> limitNodes, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) throws QueryMetadataException, TeiidComponentException {
+    boolean canPushLimit(PlanNode rootNode, PlanNode limitNode, List<PlanNode> limitNodes, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record, CommandContext context) throws QueryMetadataException, TeiidComponentException {
         PlanNode child = limitNode.getFirstChild();
         if (child == null || child.getChildCount() == 0) {
             return false;
@@ -147,7 +147,7 @@ public class RulePushLimit implements OptimizerRule {
                 NodeEditor.removeChildNode(limitNode, child);
                 limitNodes.remove(child);
                 
-                return canPushLimit(rootNode, limitNode, limitNodes, metadata, capFinder, record);
+                return canPushLimit(rootNode, limitNode, limitNodes, metadata, capFinder, record, context);
             }
             case NodeConstants.Types.SET_OP:
             {
@@ -222,7 +222,7 @@ public class RulePushLimit implements OptimizerRule {
             			return false;
             		}
             		OrderBy parentOrderBy = (OrderBy) child.getProperty(NodeConstants.Info.SORT_ORDER);
-            		distributeLimit(limitNode, setOp, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder);
+            		distributeLimit(limitNode, setOp, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder, context);
             	}
             	return false;
             default:
@@ -247,9 +247,10 @@ public class RulePushLimit implements OptimizerRule {
 	/**
 	 * Push the limit and order by to each union branch
 	 * TODO: check if the top limit is smaller and implement sorted sublist processing, rather than performing a full resort
+	 * @param context 
 	 */
 	private void distributeLimit(PlanNode limitNode, PlanNode setOp,
-			OrderBy parentOrderBy, QueryMetadataInterface metadata, List<PlanNode> limitNodes, Expression parentLimit, Expression parentOffset, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
+			OrderBy parentOrderBy, QueryMetadataInterface metadata, List<PlanNode> limitNodes, Expression parentLimit, Expression parentOffset, CapabilitiesFinder capFinder, CommandContext context) throws QueryMetadataException, TeiidComponentException {
 		outer: for (PlanNode branch : setOp.getChildren()) {
 			PlanNode branchSort = NodeEditor.findNodePreOrder(branch, NodeConstants.Types.SORT, NodeConstants.Types.SET_OP | NodeConstants.Types.SOURCE);
 			if (branchSort != null) {
@@ -274,7 +275,7 @@ public class RulePushLimit implements OptimizerRule {
 			} else {
 				if (branch.getType() == NodeConstants.Types.SET_OP && canPushToBranches(limitNode, branch)) {
 					//go to the children
-					distributeLimit(limitNode, branch, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder);
+					distributeLimit(limitNode, branch, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder, context);
 					continue;
 				}
 				PlanNode newSort = NodeFactory.getNewNode(NodeConstants.Types.SORT);
@@ -306,7 +307,7 @@ public class RulePushLimit implements OptimizerRule {
 							parentAccess.addFirstChild(childLimit.getFirstChild());
 							removedLimit = true;
 						}
-						boolean canRaise = RuleRaiseAccess.canRaiseOverSort(parentAccess, metadata, capFinder, newSort, null, false);
+						boolean canRaise = RuleRaiseAccess.canRaiseOverSort(parentAccess, metadata, capFinder, newSort, null, false, context);
 						if (removedLimit) {
 							childLimit.addFirstChild(parentAccess.getFirstChild());
 							parentAccess.addFirstChild(childLimit);
@@ -331,7 +332,7 @@ public class RulePushLimit implements OptimizerRule {
 					}
 				} else {
 					if (branch.getType() == NodeConstants.Types.ACCESS &&
-							RuleRaiseAccess.canRaiseOverSort(branch, metadata, capFinder, newSort, null, false)) {
+							RuleRaiseAccess.canRaiseOverSort(branch, metadata, capFinder, newSort, null, false, context)) {
 						branch.getFirstChild().addAsParent(newSort);
 					} else {
 						//TODO: if the limit is too large we shouldn't add it in here

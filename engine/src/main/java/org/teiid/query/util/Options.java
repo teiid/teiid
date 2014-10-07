@@ -34,6 +34,7 @@ public class Options {
 	public static final String IMPLICIT_MULTISOURCE_JOIN = "org.teiid.implicitMultiSourceJoin"; //$NON-NLS-1$
 	public static final String JOIN_PREFETCH_BATCHES = "org.teiid.joinPrefetchBatches"; //$NON-NLS-1$
 	public static final String SANITIZE_MESSAGES = "org.teiid.sanitizeMessages"; //$NON-NLS-1$
+	public static final String REQUIRE_COLLATION = "org.teiid.requireTeiidCollation"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault;
@@ -42,6 +43,7 @@ public class Options {
 	private int joinPrefetchBatches = 10;
 	private boolean sanitizeMessages;
 	private float dependentJoinPushdownThreshold = 0;
+	private boolean requireTeiidCollation;
 	
 	public Properties getProperties() {
 		return properties;
@@ -128,6 +130,19 @@ public class Options {
 	public Options dependentJoinPushdownThreshold(
 			float f) {
 		this.dependentJoinPushdownThreshold = f;
+		return this;
+	}
+	
+	public boolean isRequireTeiidCollation() {
+		return requireTeiidCollation;
+	}
+	
+	public void setRequireTeiidCollation(boolean requireTeiidCollation) {
+		this.requireTeiidCollation = requireTeiidCollation;
+	}
+	
+	public Options requireTeiidCollation(boolean b) {
+		this.requireTeiidCollation = b;
 		return this;
 	}
 

@@ -34,7 +34,14 @@ import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
-import org.teiid.language.*;
+import org.teiid.language.Argument;
+import org.teiid.language.BatchedUpdates;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.SetQuery;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
@@ -112,6 +119,7 @@ public class ExecutionFactory<F, C> {
 	private boolean supportsNativeQueries;
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
+	private String collation;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -549,6 +557,18 @@ public class ExecutionFactory<F, C> {
     
     public void setSupportsOrderBy(boolean supportsOrderBy) {
 		this.supportsOrderBy = supportsOrderBy;
+	}
+    
+    /** 
+     * Indicates the collation used for sorting
+     */
+    @TranslatorProperty(display="Collation", description="The collation used by default for sorting.", advanced=true)
+    public String getCollation() {
+		return collation;
+	}
+    
+    public void setCollation(String collation) {
+		this.collation = collation;
 	}
     
     /**
