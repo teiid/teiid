@@ -288,7 +288,7 @@ public class InfinispanExecution implements ResultSetExecution {
 		cacheResultsIt = null;
 		
 		// process the next object in the search result set
-		if (objResultsItr.hasNext()) {
+		while (objResultsItr.hasNext()) {
 			List<Object> r = new ArrayList<Object>(colSize);
 			final Object o = objResultsItr.next();
 			sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);			
@@ -329,14 +329,17 @@ public class InfinispanExecution implements ResultSetExecution {
 				
 				final List<Object> rows = processDepth( r, loadedDepths);
 				
-				if (rows.size() < 2) return (List<Object>) rows.get(0);
+				if (rows != null && rows.size() > 0) {
 				
-				cacheResultsIt = rows.iterator();
-				if (cacheResultsIt != null && cacheResultsIt.hasNext()) {
-					// return the next row in the cache 
-					return (List<Object>) cacheResultsIt.next();
-				} 
-				
+					if (rows.size() < 2) return (List<Object>) rows.get(0);
+					
+					cacheResultsIt = rows.iterator();
+					if (cacheResultsIt != null && cacheResultsIt.hasNext()) {
+						// return the next row in the cache 
+						return (List<Object>) cacheResultsIt.next();
+					} 
+
+				}
 			} else {
 
 				for (int i = 0; i < colSize; i++) {

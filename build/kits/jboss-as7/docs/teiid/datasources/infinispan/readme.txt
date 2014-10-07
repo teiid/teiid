@@ -1,3 +1,7 @@
+NOTE:  Need to also configure the translator to use.  Run either:
+infinispan-cache     -  add-infinispan-cache-translator.cli
+infinispan-cache-dsl -  add-infinispan-cache-dsl-translator.cli
+
 There are three connection strategies for an Infinispan datasource:
 1. JNDI lookup - uses the CacheJndiName config property and expects an 
    Infinispan CacheContainer to be located at the given JNDI name.
