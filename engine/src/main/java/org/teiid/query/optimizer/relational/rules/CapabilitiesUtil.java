@@ -323,22 +323,37 @@ public class CapabilitiesUtil {
 
     public static int getMaxInCriteriaSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
-    	return getProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
+    	return getIntProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
     }
-    	
-    public static int getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    
+    public static Object getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
 
         if (metadata.isVirtualModel(modelID)){
-            return -1;
+            return null;
         }
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        Object maxInCriteriaSize = caps.getSourceProperty(cap);
+        return caps.getSourceProperty(cap);
+    }
+    	
+    /**
+     * Values are expected to be non-negative except for unknown/invalid = -1 
+     * @param cap
+     * @param modelID
+     * @param metadata
+     * @param capFinder
+     * @return
+     * @throws QueryMetadataException
+     * @throws TeiidComponentException
+     */
+    public static int getIntProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    throws QueryMetadataException, TeiidComponentException {
+        Object i = getProperty(cap, modelID, metadata, capFinder);
         int value = -1;
-        if(maxInCriteriaSize != null) {
-            value = ((Integer)maxInCriteriaSize).intValue();
+        if(i != null) {
+            value = ((Integer)i).intValue();
         }
         
         // Check for invalid values and send back code for UNKNOWN
@@ -350,29 +365,12 @@ public class CapabilitiesUtil {
     
     public static int getMaxDependentPredicates(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
-    	return getProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
+    	return getIntProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
     }
     
     public static int getMaxFromGroups(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return -1;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        Object maxGroups = caps.getSourceProperty(Capability.MAX_QUERY_FROM_GROUPS);
-        int value = -1;
-        if(maxGroups != null) {
-            value = ((Integer)maxGroups).intValue();
-        }
-        
-        // Check for invalid values and send back code for UNKNOWN
-        if(value <= 0) {
-            value = -1;
-        }
-        return value;
+    	return getIntProperty(Capability.MAX_QUERY_FROM_GROUPS, modelID, metadata, capFinder);
     }
 
     public static SupportedJoinCriteria getSupportedJoinCriteria(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {

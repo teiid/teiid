@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.TeiidException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -284,4 +285,23 @@ public class TestOrderByProcessing {
 		helpProcess(plan, manager, expected);
 	}
 
+	 @Test public void testSortCollationInhibitsPush() throws TeiidException { 
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setSourceProperty(Capability.COLLATION, "foo");
+
+        // Create query 
+        String sql = "select e1, e2 from pm1.g1 order by e2"; //$NON-NLS-1$
+
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().requireTeiidCollation(true));
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc); //$NON-NLS-1$
+
+		List[] expected = new List[] { Arrays.asList("a", 0), Arrays.asList("a", 1) };
+
+		HardcodedDataManager manager = new HardcodedDataManager();
+		manager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 0)});
+		helpProcess(plan, manager, expected);
+    }
+	
 }

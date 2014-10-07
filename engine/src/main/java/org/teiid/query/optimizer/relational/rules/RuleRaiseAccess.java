@@ -141,7 +141,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 }
                 
                 PlanNode orderBy = NodeEditor.findParent(parentNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
-                if (orderBy != null && orderBy.hasBooleanProperty(Info.UNRELATED_SORT) && !canRaiseOverSort(accessNode, metadata, capFinder, orderBy, record, false)) {
+                if (orderBy != null && orderBy.hasBooleanProperty(Info.UNRELATED_SORT) && !canRaiseOverSort(accessNode, metadata, capFinder, orderBy, record, false, context)) {
                 	//this project node logically has the responsibility of creating the sort keys
             		return null;
                 }
@@ -175,7 +175,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }
             case NodeConstants.Types.SORT:
             {         
-                if (canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record, false)) {
+                if (canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record, false, context)) {
                     return performRaise(rootNode, accessNode, parentNode);
                 }
                 return null;
@@ -379,11 +379,19 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         return true;
     }
+    
+    static boolean canRaiseOverSort(PlanNode accessNode,
+            QueryMetadataInterface metadata,
+            CapabilitiesFinder capFinder,
+            PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated, CommandContext context) throws QueryMetadataException,
+                                TeiidComponentException {
+    	return canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record, compensateForUnrelated, context.getOptions().isRequireTeiidCollation());
+    }
 
 	static boolean canRaiseOverSort(PlanNode accessNode,
                                    QueryMetadataInterface metadata,
                                    CapabilitiesFinder capFinder,
-                                   PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated) throws QueryMetadataException,
+                                   PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated, boolean checkCollation) throws QueryMetadataException,
                                                        TeiidComponentException {
         // Find the model for this node by getting ACCESS node's model
         Object modelID = getModelIDFromAccess(accessNode, metadata);
@@ -435,6 +443,13 @@ public final class RuleRaiseAccess implements OptimizerRule {
         if (accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
         	return false;
         }
+        
+    	String collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION, modelID, metadata, capFinder);
+    	
+    	//we require the collation to match
+    	if (checkCollation && collation != null && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
+    		return false;
+    	}
         
         //we don't need to check for extended grouping here since we'll create an inline view later
         
