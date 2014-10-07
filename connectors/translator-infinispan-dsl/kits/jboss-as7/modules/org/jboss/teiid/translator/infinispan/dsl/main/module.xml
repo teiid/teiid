@@ -15,5 +15,12 @@
         <module name="javax.persistence.api"/>
         
         <module name="org.jboss.modules"/>
+        
+ 	  	<module name="org.infinispan.commons" slot="jdg-6.3" optional="true" export="true" />
+   		<module name="org.infinispan.protostream" slot="jdg-6.3" optional="true" export="true" />
+   		<module name="org.infinispan.client.hotrod" slot="jdg-6.3" optional="true" export="true" />
+        <module name="org.infinispan.query.dsl" slot="jdg-6.3" optional="true" export="true" />       
+        <module name="com.google.protobuf" slot="jdg-6.3" optional="true" export="true"  />
+        
     </dependencies>   
 </module>
