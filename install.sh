@@ -38,8 +38,8 @@ else
     echo
 fi
 
-mkdir -p install
-cd install
+mkdir -p target/install
+cd target/install
 
 ## Download extra packages for server.
 echo "Downloading packages..."
@@ -70,7 +70,7 @@ do
 done
 
 ## Create softlink for Teiid dist.
-ln -sf ../build/target/$TEIID_DIST .
+ln -sf ../../build/target/$TEIID_DIST .
 
 rm -rf temp
 mkdir temp
