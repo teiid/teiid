@@ -401,12 +401,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
         } 
         
         List<OrderByItem> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getOrderByItems();
+        boolean stringType = false;
         for (OrderByItem symbol : sortCols) {
             if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder, record)) {
                 return false;
             }
             if (!CapabilitiesUtil.supportsNullOrdering(metadata, capFinder, modelID, symbol)) {
             	return false;
+            }
+            if (symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.STRING) {
+            	stringType = true;
             }
         }
         
@@ -447,7 +451,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     	String collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION_LOCALE, modelID, metadata, capFinder);
     	
     	//we require the collation to match
-    	if (checkCollation && collation != null && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
+    	if (stringType && checkCollation && collation != null && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
     		return false;
     	}
         

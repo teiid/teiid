@@ -325,7 +325,17 @@ public class TestOrderByProcessing {
 		List[] expected = new List[] { Arrays.asList("a", 0), Arrays.asList("a", 1) };
 
 		HardcodedDataManager manager = new HardcodedDataManager();
-		manager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 0)});
+		manager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1", new List[] {Arrays.asList("a", 0), Arrays.asList("a", 1)});
+		helpProcess(plan, manager, expected);
+		
+		sql = "select e1, e2 from pm1.g1 order by e1"; //$NON-NLS-1$
+
+        plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc); //$NON-NLS-1$
+
+		expected = new List[] { Arrays.asList("a", 0), Arrays.asList("b", 1) };
+
+		manager = new HardcodedDataManager();
+		manager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("b", 1), Arrays.asList("a", 0)});
 		helpProcess(plan, manager, expected);
     }
 	
