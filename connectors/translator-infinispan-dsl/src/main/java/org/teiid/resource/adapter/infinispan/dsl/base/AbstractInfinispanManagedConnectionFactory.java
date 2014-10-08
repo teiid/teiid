@@ -68,7 +68,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String cacheTypes = null;
 	@SuppressWarnings("rawtypes")
 	private Map<String, BaseMarshaller> messageMarshallerMap = null;
-	private static ClassRegistry methodUtil = new ClassRegistry();
+	private ClassRegistry methodUtil = new ClassRegistry();
 	
 	private String protobinFile = null;
 	private String messageMarshallers = null;
@@ -263,7 +263,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	}
 
 	public ClassRegistry getClassRegistry() {
-		return AbstractInfinispanManagedConnectionFactory.methodUtil;
+		return methodUtil;
 	}
 	/**
 	 * Returns the <code>host:port[;host:port...]</code> list that identifies
@@ -432,7 +432,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 				mmp.put(className, (BaseMarshaller) bmi); 	
 
-				AbstractInfinispanManagedConnectionFactory.methodUtil.registerClass(ci);
+				methodUtil.registerClass(ci);
 		
 			} catch (InstantiationException e) {
 				throw new ResourceException(e);
@@ -545,8 +545,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 		try {
 			ctx.registerProtofile(cl.getResourceAsStream(getProtobinFile()));
-			
-			List<Class<?>> registeredClasses = AbstractInfinispanManagedConnectionFactory.methodUtil.getRegisteredClasses();
+
+			List<Class<?>> registeredClasses = methodUtil.getRegisteredClasses();
 			for (Class clz:registeredClasses) {
 				BaseMarshaller m = messageMarshallerMap.get(clz.getName());
 				ctx.registerMarshaller(m);				

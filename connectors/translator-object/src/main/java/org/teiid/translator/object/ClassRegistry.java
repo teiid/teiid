@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.dsl;
+package org.teiid.translator.object;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -61,19 +61,6 @@ public class ClassRegistry {
 			throw new TranslatorException(e);
 		}	
 	}
-	
-	public synchronized void unregisterClass(Class<?> clz) throws TranslatorException {
-		try {
-			// preload methods
-			readEngine.getMethodMap(clz);
-			
-			registeredClasses.put(clz.getName(), clz);	
-			classTableMap.put(clz.getSimpleName(), clz);	
-		} catch (ScriptException e) {
-			throw new TranslatorException(e);
-		}	
-	}
-
 	
 	public TeiidScriptEngine getReadScriptEngine() {
 		return readEngine;

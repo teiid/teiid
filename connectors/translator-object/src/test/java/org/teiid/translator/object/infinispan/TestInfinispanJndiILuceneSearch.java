@@ -67,56 +67,56 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 	}
 	
 	@Test public void testQueryLikeCriteria1() throws Exception {	
-	Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeName like 'TradeName%'"); //$NON-NLS-1$
+	Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeName like 'TradeName%'"); //$NON-NLS-1$
 					
-		performTest(command, 3, 1);
+		performTest(command, 3, 4);
 	}	
 	
 	@Test public void testQueryLikeCriteria2() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeName like 'TradeName 2%'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeName like 'TradeName 2%'"); //$NON-NLS-1$
 					
-		performTest(command, 1, 1);
+		performTest(command, 1, 4);
 	}	
 	
 	@Test public void testQueryCompareEQBoolean() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  Settled = 'false'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  Settled = 'false'"); //$NON-NLS-1$
 					
-		performTest(command, 2, 1);
+		performTest(command, 2, 4);
 	}	
 	
 	@Test public void testQueryCompareNEBoolean() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  Settled <> 'false'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  Settled <> 'false'"); //$NON-NLS-1$
 					
-		performTest(command, 1, 1);
+		performTest(command, 1, 4);
 	}		
 	
 	@Test public void testQueryRangeBetween() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId > '1' and TradeId < '3'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select tradeName, tradeId From Trade_Object.Trade  where  TradeId > '1' and TradeId < '3'"); //$NON-NLS-1$
 					
-		performTest(command, 1, 1);
+		performTest(command, 1, 2);
 	}
 
 	@Test public void testQueryRangeAbove() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId > '1'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId > '1'"); //$NON-NLS-1$
 					
-		performTest(command, 2, 1);
+		performTest(command, 2, 4);
 	}
 	
 	@Test public void testQueryRangeAbove2() throws Exception {     
-	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId > 1"); //$NON-NLS-1$
+	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId > 1"); //$NON-NLS-1$
 	                                       
-	    performTest(command, 2, 1);
+	    performTest(command, 2, 4);
 	}
 
 	@Test public void testQueryRangeBelow() throws Exception {     
-	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId < 3"); //$NON-NLS-1$
+	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId < 3"); //$NON-NLS-1$
 	                                       
-	    performTest(command, 2, 1);
+	    performTest(command, 2, 4);
 	}
 	
 	@Test public void testQueryAnd() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache  where  TradeId > '1' and Settled = 'false'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId > '1' and Settled = 'false'"); //$NON-NLS-1$
 					
-		performTest(command, 1, 1);
+		performTest(command, 1, 4);
 	}	
 }

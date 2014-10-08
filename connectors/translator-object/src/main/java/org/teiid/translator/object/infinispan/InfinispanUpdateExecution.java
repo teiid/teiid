@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.infinispan.dsl;
+package org.teiid.translator.object.infinispan;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,8 +31,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
-import org.infinispan.client.hotrod.RemoteCache;
-import org.teiid.core.TeiidException;
+import org.infinispan.commons.api.BasicCache;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -48,11 +47,16 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
 import org.teiid.query.eval.TeiidScriptEngine;
+import org.teiid.resource.adapter.infinispan.base.InfinispanPlugin;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectPlugin;
 
 /**
  */
@@ -62,7 +66,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	private ScriptContext sc = new SimpleScriptContext();
 
 	// Passed to constructor
-	private InfinispanConnection connection;
+	private ObjectConnection connection;
 	private ExecutionContext context;
 	private InfinispanExecutionFactory executionFactory;
 	private Command command;
@@ -73,7 +77,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	private int updateCnt = 0;
 
 	public InfinispanUpdateExecution(Command command,
-			InfinispanConnection connection, ExecutionContext context,
+			ObjectConnection connection, ExecutionContext context,
 			InfinispanExecutionFactory env) {
 		this.connection = connection;
 		this.context = context;
@@ -90,14 +94,6 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-//		if (command instanceof BatchedUpdates) {
-//			BatchedUpdates updates = (BatchedUpdates)this.command;
-//			this.results = new int[updates.getUpdateCommands().size()];
-//			int index = 0;
-//			for (Command cmd:updates.getUpdateCommands()) {
-//				this.results[index++] = executeUpdate(cmd);
-//			}
-//		}
 
 		if (command instanceof Update) {
 			handleUpdate((Update) command);
@@ -111,14 +107,12 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	}
 
 	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException,
-			TranslatorException {
+	public int[] getUpdateCounts() throws DataNotAvailableException {
 		return new int[] { updateCnt };
 	}
 
 	@SuppressWarnings("null")
 	private void handleInsert(Insert insert) throws TranslatorException {
-		try {
 
 			// get the class to instantiate instance
 			Class<?> clz = this.connection.getClassRegistry().getRegisteredClassToTable(insert.getTable().getName());
@@ -133,11 +127,12 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				// which is were the clz came from
 				entity = clz.newInstance();
 			} catch (InstantiationException e) {
+				throw new TranslatorException(e);
 			} catch (IllegalAccessException e) {
+				throw new TranslatorException(e);
 			}
 
-			String cacheName = insert.getTable().getMetadataObject()
-					.getNameInSource();
+			String cacheName = insert.getTable().getMetadataObject().getNameInSource();
 
 			ForeignKey fk = getForeignKeyColumn(insert.getTable());
 			String fkeyColNIS = null;
@@ -146,8 +141,11 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			}
 			Column keyCol = null;
 			if (fkeyColNIS == null) {
-				keyCol = insert.getTable().getMetadataObject().getPrimaryKey()
-						.getColumns().get(0);
+				KeyRecord pk = insert.getTable().getMetadataObject().getPrimaryKey() ;
+				if (pk == null) {
+					throw new TranslatorException(InfinispanPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, new Object[] {insert.getTable().getName()}));
+				}
+				keyCol = pk.getColumns().get(0);
 			} 
 			
 			if (fkeyColNIS == null && keyCol == null) {
@@ -164,16 +162,17 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 
 			Object keyValue = null;
 			Object fkeyValue = null;
-			String keyColumnType = null;
-			
+			String keyColumnName = null;			
 
 			for (int i = 0; i < columns.size(); i++) {
 				Column column = columns.get(i).getMetadataObject();
 				Object value = values.get(i);
+				
+				String colName = (column.getNameInSource() != null ? column.getNameInSource() : column.getName());
 
 				// do not add the foreign key columns
 				if (fkeyColNIS != null && fkeyColNIS.equals(column.getName()) ) {
-					keyColumnType = column.getNativeType();
+					
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
 						fkeyValue = literalValue.getValue();
@@ -182,43 +181,48 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					}
 					
 				} else if ( keyCol != null && keyCol.getName().equals(column.getName()) ) {
-					keyColumnType = column.getNativeType();
+					keyColumnName = (keyCol.getNameInSource() != null ? keyCol.getNameInSource() : keyCol.getName());
 
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
 						PropertiesUtils.setBeanProperty(entity,
-								column.getName(), literalValue.getValue());
+								colName, literalValue.getValue());
 
 					} else {
 						PropertiesUtils.setBeanProperty(entity,
-								column.getName(), value);
+								colName, value);
 
 					}
 					
-					keyValue = evaluate(entity, keyCol.getName());
+					keyValue = evaluate(entity, keyColumnName);
 
 				} else {
 					
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
 						PropertiesUtils.setBeanProperty(entity,
-								column.getName(), literalValue.getValue());
+								colName, literalValue.getValue());
 					} else {
 						PropertiesUtils.setBeanProperty(entity,
-								column.getName(), value);
+								colName, value);
 					}	
 				}
 			}
 			
-			RemoteCache cache = (RemoteCache) connection.getCache(cacheName);
+			@SuppressWarnings("unchecked")
+			BasicCache<Object, Object> cache = (BasicCache<Object, Object>) connection.getCacheContainer().getCache(cacheName);
 			if (keyCol != null) {
-				Object rootObject = this.executionFactory.performKeySearch(cacheName, keyCol.getNameInSource(), keyValue, connection, context);
+				Object rootObject = this.executionFactory.performKeySearch(cacheName, keyColumnName, keyValue, connection, context);
 
 				if (rootObject != null) {
 					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25009, new Object[] {insert.getTable().getName(), keyValue}));
 				}
 				
-				cache.put(keyValue, entity);
+				if (keyValue instanceof String) {
+					cache.put(keyValue, entity);
+				} else {
+					cache.put(String.valueOf(keyValue), entity);
+				}
 			} else {
 				Object rootObject = this.executionFactory.performKeySearch(cacheName, fkeyColNIS, fkeyValue, connection, context);
 				String fk_nis = fk.getNameInSource();
@@ -245,14 +249,15 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					PropertiesUtils.setBeanProperty(rootObject, fk_nis, n);
 				} 
 				
-				cache.put(fkeyValue, rootObject);
+				if (fkeyValue instanceof String) {
+					cache.put(fkeyValue, entity);
+				} else {
+					cache.put(String.valueOf(fkeyValue), entity);
+				}
 
 			}
 			++updateCnt;
 			
-		} catch (TeiidException e) {
-			throw new TranslatorException(e);
-		}
 	}
 
 	// Private method to actually do a delete operation. 
@@ -286,21 +291,29 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			// if this is the root class (no foreign key), then for each object, obtain
 			// the primary key value and use it to be removed from the cache
 			@SuppressWarnings("rawtypes")
-			RemoteCache cache = (RemoteCache) connection.getCache(cacheName);
+			BasicCache cache = (BasicCache) connection.getCacheContainer().getCache(cacheName);
 
+			String keyColumnName = (keyCol.getNameInSource() != null ? keyCol.getNameInSource() : keyCol.getName());
 			
 			try {
 				
 				
-				cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + keyCol.getName());
+				cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + keyColumnName);
 	
 				for (Object o : toDelete) {
 					sc.setAttribute(ClassRegistry.OBJECT_NAME, o,
 							ScriptContext.ENGINE_SCOPE);
 					Object v = cs.eval(sc);
 					
-					if (cache.containsKey(v) ) {
-						cache.removeAsync(v);
+					String value = null;
+					if (v instanceof String) {
+						value = (String) v;
+					} else {
+						value = String.valueOf(v);
+					}
+
+					if (cache.containsKey(value) ) {
+						cache.removeAsync(value);
 					//	remove(v);
 						++updateCnt;
 					}
@@ -414,17 +427,18 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		}
 	
 		@SuppressWarnings({ "rawtypes", "unchecked" })
-		RemoteCache<Object, Object> cache = (RemoteCache) connection.getCache(cacheName);
+		BasicCache<Object, Object> cache = (BasicCache) connection.getCacheContainer().getCache(cacheName);
 		
 		Object keyValue = null;
-		Object fkeyValue = null;
 
 		List<SetClause> updateList = update.getChanges();
 		
 		if (keyCol != null) {
 			for (Object entity:toUpdate) {
 				
-				keyValue = evaluate(entity, keyCol.getName());
+				String keyColumnName = (keyCol.getNameInSource() != null ? keyCol.getNameInSource() : keyCol.getName());
+		
+				keyValue = evaluate(entity, keyColumnName);
 				
 				for (SetClause sc:updateList) {
 					Column column = sc.getSymbol().getMetadataObject();
@@ -434,21 +448,21 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 						throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25006, new Object[] {keyCol.getName(),update.getTable().getName()}));						
 					}
 					
+					String colName = (column.getNameInSource() != null ? column.getNameInSource() : column.getName());
+
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
 						PropertiesUtils.setBeanProperty(entity,
-								column.getName(), literalValue.getValue());
+								colName, literalValue.getValue());
 					} else {
 						PropertiesUtils.setBeanProperty(entity,
-								column.getName(), value);
+								colName, value);
 					}	
 			
 				}
 				
-				cache.replace(keyValue, entity);
-//				put(keyValue, entity);
-				++updateCnt;
-			
+				cache.replaceAsync(keyValue, entity);
+				++updateCnt;		
 			}
 			
 		} 
@@ -456,7 +470,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	}
 
 	@Override
-	public void cancel() throws TranslatorException {
+	public void cancel() {
 		close();
 	}
 
@@ -480,7 +494,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		return fk;
 	}
 	
-	private String getForeignKeyNIS(NamedTable table, ForeignKey fk) throws TranslatorException {
+	private String getForeignKeyNIS(NamedTable table, ForeignKey fk)  {
 
 		String fkeyColNIS = null;
 		
