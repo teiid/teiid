@@ -444,7 +444,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         	return false;
         }
         
-    	String collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION, modelID, metadata, capFinder);
+    	String collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION_LOCALE, modelID, metadata, capFinder);
     	
     	//we require the collation to match
     	if (checkCollation && collation != null && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {

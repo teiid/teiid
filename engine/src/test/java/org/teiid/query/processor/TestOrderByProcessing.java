@@ -287,7 +287,7 @@ public class TestOrderByProcessing {
 
 	 @Test public void testSortCollationInhibitsPush() throws TeiidException { 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setSourceProperty(Capability.COLLATION, "foo");
+        caps.setSourceProperty(Capability.COLLATION_LOCALE, "foo");
 
         // Create query 
         String sql = "select e1, e2 from pm1.g1 order by e2"; //$NON-NLS-1$

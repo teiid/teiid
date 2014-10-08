@@ -338,8 +338,9 @@ public interface SourceCapabilities {
         FULL_DEPENDENT_JOIN,
         SELECT_WITHOUT_FROM, 
         QUERY_GROUP_BY_ROLLUP, 
-        QUERY_ORDERBY_EXTENDED_GROUPING,
-        COLLATION_LOCALE;
+        QUERY_ORDERBY_EXTENDED_GROUPING, 
+        INVALID_EXCEPTION, //property saying why the capabilities are invalid
+        COLLATION_LOCATION;
         
         private final String toString;
         

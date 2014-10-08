@@ -119,7 +119,7 @@ public class ExecutionFactory<F, C> {
 	private boolean supportsNativeQueries;
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
-	private String collation;
+	private String collationLocale;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -562,13 +562,13 @@ public class ExecutionFactory<F, C> {
     /** 
      * Indicates the collation used for sorting
      */
-    @TranslatorProperty(display="Collation", description="The collation used by default for sorting.", advanced=true)
-    public String getCollation() {
-		return collation;
+    @TranslatorProperty(display="Collation Locale", description="The collation locale used by default for sorting.", advanced=true)
+    public String getCollationLocale() {
+		return collationLocale;
 	}
     
-    public void setCollation(String collation) {
-		this.collation = collation;
+    public void setCollationLocale(String collation) {
+		this.collationLocale = collation;
 	}
     
     /**
