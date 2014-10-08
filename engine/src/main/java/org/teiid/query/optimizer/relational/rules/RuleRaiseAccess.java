@@ -59,6 +59,7 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -401,12 +402,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
         } 
         
         List<OrderByItem> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getOrderByItems();
+        boolean stringType = false;
         for (OrderByItem symbol : sortCols) {
             if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder, record)) {
                 return false;
             }
             if (!CapabilitiesUtil.supportsNullOrdering(metadata, capFinder, modelID, symbol)) {
             	return false;
+            }
+            if (symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.STRING) {
+            	stringType = true;
             }
         }
         
@@ -447,7 +452,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     	String collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION_LOCALE, modelID, metadata, capFinder);
     	
     	//we require the collation to match
-    	if (checkCollation && collation != null && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
+    	if (stringType && checkCollation && collation != null && !collation.equals(Constant.COLLATION_LOCALE)) {
     		return false;
     	}
         
