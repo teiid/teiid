@@ -497,7 +497,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.isThreadBound();
 	}
 	@Override
-	public String getCollation() {
-		return delegate.getCollation();
+	public String getCollationLocale() {
+		return delegate.getCollationLocale();
 	}
 }
