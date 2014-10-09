@@ -142,6 +142,13 @@ public class TeiidDataSource extends BaseDataSource {
         if (this.encryptRequests) {
         	props.setProperty(TeiidURL.CONNECTION.ENCRYPT_REQUESTS, Boolean.TRUE.toString());
         }
+        
+		if (getJaasName() != null) {
+			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
+		}
+		if (getKerberosServicePrincipleName() != null) {
+			props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
+		}
 
         return props;
     }
@@ -268,13 +275,6 @@ public class TeiidDataSource extends BaseDataSource {
 	private Properties buildEmbeddedProperties(final String userName, final String password) {
 		Properties props = buildProperties(userName, password);
 		props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, Boolean.toString(this.passthroughAuthentication));
-		
-		if (getJaasName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
-		}
-		if (getKerberosServicePrincipleName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
-		}
 		return props;
 	}    
 	
