@@ -203,6 +203,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		}
 		
 		Table t = addTable(mf, c, d);
+		
+		// do not use getSourceName, the NameInSource has to be defined as the cache name
 		t.setNameInSource(rootTable.getNameInSource()); 
 			
 		List<FieldDescriptor> fields = fd.getMessageType().getFields();
