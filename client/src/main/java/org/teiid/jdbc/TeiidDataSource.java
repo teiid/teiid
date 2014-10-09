@@ -150,11 +150,22 @@ public class TeiidDataSource extends BaseDataSource {
         if (getLoginTimeout() > 0) {
         	props.setProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT, String.valueOf(getLoginTimeout()));
         }
+        
+        if (getJaasName() != null) {
+			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
+		}
+		if (getKerberosServicePrincipleName() != null) {
+			props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
+		}
 
         return props;
     }
     
     protected String buildServerURL() throws TeiidSQLException {
+    	if (serverName == null) {
+    		return null;
+    	}
+    	
     	if ( this.alternateServers == null || this.alternateServers.length() == 0) {
     		// Format:  "mm://server:port"
     		return new TeiidURL(this.serverName, this.portNumber, this.secure).getAppServerURL();
@@ -276,13 +287,6 @@ public class TeiidDataSource extends BaseDataSource {
 	private Properties buildEmbeddedProperties(final String userName, final String password) {
 		Properties props = buildProperties(userName, password);
 		props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, Boolean.toString(this.passthroughAuthentication));
-		
-		if (getJaasName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
-		}
-		if (getKerberosServicePrincipleName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
-		}
 		return props;
 	}    
 	

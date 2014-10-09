@@ -763,4 +763,15 @@ public class TestTeiidDataSource extends TestCase {
     	assertEquals("user", p.getProperty(BaseDataSource.USER_NAME));
     }
     
+    public void testKerberos() throws SQLException {
+    	TeiidDataSource tds = new TeiidDataSource();
+    	tds.setDatabaseName("y");
+    	tds.setUser("%25user");
+    	tds.setJaasName("x");
+    	tds.setKerberosServicePrincipleName("z");
+    	tds.setServerName("t");
+    	assertEquals("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
+    	
+    }
+    
 }
