@@ -540,16 +540,16 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void registerMarshallers(SerializationContext ctx, ClassLoader cl) throws ResourceException {
 
 		try {
 			ctx.registerProtofile(cl.getResourceAsStream(getProtobinFile()));
-			
+
 			List<Class<?>> registeredClasses = methodUtil.getRegisteredClasses();
 			for (Class clz:registeredClasses) {
 				BaseMarshaller m = messageMarshallerMap.get(clz.getName());
-				ctx.registerMarshaller(clz, m);				
+				ctx.registerMarshaller(m);				
 			}
 
 		} catch (IOException e) {
