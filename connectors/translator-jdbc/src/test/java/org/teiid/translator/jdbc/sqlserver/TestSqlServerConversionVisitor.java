@@ -232,5 +232,14 @@ public class TestSqlServerConversionVisitor {
     @Test public void testTempTable() throws Exception {
     	assertEquals("create table foo (COL1 int, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(trans, true));
     }
+    
+    @Test public void testUnicodeLiteral() throws Exception {
+        String input = "select N'\u0FFF'"; //$NON-NLS-1$
+        String output = "SELECT N'\u0FFF'"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
        
 }

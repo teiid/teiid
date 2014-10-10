@@ -1427,5 +1427,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public boolean useScientificNotation() {
 		return false;
 	}
+
+	/**
+	 * @return true if the N prefix should be used for strings containing non-ascii characters
+	 */
+	public boolean useUnicodePrefix() {
+		return false;
+	}
 	
 }

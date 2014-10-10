@@ -175,12 +175,25 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             		  .append("'"); //$NON-NLS-1$
             } else {
                 // If obj is string, toSting() will not create a new String 
-                // object, it returns it self, so new object creation. 
+                // object, it returns it self, so new object creation.
+            	String val = obj.toString();
+            	if (useUnicodePrefix()) {
+	            	for (int i = 0; i < val.length(); i++) {
+	    				if (val.charAt(i) > 127) {
+	    					buffer.append("N"); //$NON-NLS-1$
+	    					break;
+	    				}
+	    			}
+            	}
                 valuesbuffer.append(Tokens.QUOTE)
-                      .append(escapeString(obj.toString(), Tokens.QUOTE))
+                      .append(escapeString(val, Tokens.QUOTE))
                       .append(Tokens.QUOTE);
             }
         }        
+    }
+    
+    protected boolean useUnicodePrefix() {
+    	return this.executionFactory.useUnicodePrefix();
     }
 
     /**
