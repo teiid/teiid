@@ -116,7 +116,45 @@
         <unpack>false</unpack>
         <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
       </binaries>
-    </moduleSet>    
+    </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-olingo</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/olingo/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        <includes>
+            <include>org.jboss.teiid:teiid-olingo</include>
+        </includes>
+        <binaries>
+            <includeDependencies>false</includeDependencies>
+            <unpack>false</unpack>
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
+            <attachmentClassifier>odata4</attachmentClassifier>
+        </binaries>
+    </moduleSet> 
+    
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        <includes>
+            <include>org.jboss.teiid:teiid-olingo</include>
+        </includes>
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>dependencies</attachmentClassifier>
+        </binaries>
+    </moduleSet>              
 
     <!-- These are Teiid internal dependencies; to make JCA work -->
     <moduleSet>
@@ -142,10 +180,17 @@
                         <exclude>jaxen:jaxen</exclude>
                         <exclude>org.jboss:staxmapper</exclude>
                         <exclude>io.netty:netty</exclude>
+                        <exclude>org.apache.olingo:*</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.apache.olingo:*</include>
+                    </includes>
+                    <outputDirectory>modules/system/layers/base/org/apache/olingo</outputDirectory>
                 </dependencySet>
             </dependencySets>
             <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>
@@ -164,7 +209,9 @@
         <outputDirectory>modules/system/layers/base/org/jboss/teiid/admin/main</outputDirectory>
       </binaries>
     </moduleSet>    
-    
+
+  
+     
     <!-- ******************************************************** 
         These are built in resource-adapters  
         *********************************************************-->
@@ -205,5 +252,4 @@
     </moduleSet>
         
     </moduleSets>  
-    
 </assembly>

@@ -1,0 +1,48 @@
+<assembly>
+  
+  <id>dependencies</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+  
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>${jbossas-module-root}/org/apache/olingo/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.apache.olingo:*</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>${jbossas-module-root}/org/antlr/4.1</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.antlr:antlr4-runtime</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>${jbossas-module-root}/org/apache/commons/lang/3.3.2</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.apache.commons:commons-lang3</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet> 
+    <dependencySet>
+      <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>com.fasterxml.jackson.core:jackson-core</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>         
+    
+  </dependencySets>  
+  
+</assembly>
