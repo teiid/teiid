@@ -436,4 +436,9 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	return false;
     }
     
+    @Override
+    public boolean useUnicodePrefix() {
+    	return true;
+    }
+    
 }
