@@ -22,28 +22,33 @@
 package org.teiid.olingo;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.ContextURL.Suffix;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.edm.Edm;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.format.ODataFormat;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.OData;
+import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.ODataRequest;
 import org.apache.olingo.server.api.ODataResponse;
 import org.apache.olingo.server.api.ODataServerError;
-import org.apache.olingo.server.api.processor.CountProcessor;
 import org.apache.olingo.server.api.processor.DefaultProcessor;
-import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
 import org.apache.olingo.server.api.processor.EntityProcessor;
+import org.apache.olingo.server.api.processor.EntitySetProcessor;
+import org.apache.olingo.server.api.processor.PropertyProcessor;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
-import org.apache.olingo.server.api.serializer.ODataSerializerException;
 import org.apache.olingo.server.api.serializer.ODataSerializerOptions;
+import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriResourceProperty;
@@ -51,7 +56,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.query.sql.lang.Query;
 
 public class TeiidProcessor extends DefaultProcessor implements
-        EntityCollectionProcessor, EntityProcessor, CountProcessor {
+        EntitySetProcessor, EntityProcessor, PropertyProcessor{
     private final Client client;
     private final boolean prepared;
     private OData odata;
@@ -70,7 +75,7 @@ public class TeiidProcessor extends DefaultProcessor implements
     }
 
     @Override
-    public void readCollection(ODataRequest request, ODataResponse response,UriInfo uriInfo, ContentType format) {
+    public void readEntitySet(ODataRequest request, ODataResponse response,UriInfo uriInfo, ContentType format) {
         readEntitySet(response, uriInfo, format, false);
     }
 
@@ -113,7 +118,7 @@ public class TeiidProcessor extends DefaultProcessor implements
             }
             error.setException(e);
             serializer.error(error);
-        } catch (ODataSerializerException e1) {
+        } catch (SerializerException e1) {
             response.setStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode());
         }
     }
@@ -134,7 +139,7 @@ public class TeiidProcessor extends DefaultProcessor implements
             final ODataFormat format,
             final ODataSerializer serializer,
             final boolean isSingleEntity,
-            final String path) throws ODataSerializerException {
+            final String path) throws SerializerException {
         ContextURL contextUrl = ContextURL.with().entitySetOrSingletonOrType(path)
                 .selectList(serializer.buildContextURLSelectList(entitySet, uriInfo.getExpandOption(), uriInfo.getSelectOption()))
                 .suffix(isSingleEntity ? Suffix.ENTITY : null)
@@ -147,7 +152,7 @@ public class TeiidProcessor extends DefaultProcessor implements
     }
 
     @Override
-    public void readCount(ODataRequest request, ODataResponse response,UriInfo uriInfo) {
+    public void countEntitySet(ODataRequest request, ODataResponse response,UriInfo uriInfo) {
         try {
             checkExpand(uriInfo.asUriInfoResource());
             ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared);
@@ -166,7 +171,7 @@ public class TeiidProcessor extends DefaultProcessor implements
     }
 
     @Override
-    public void readEntityProperty(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType contentType, boolean value) {
+    public void readProperty(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType contentType) {
         try {
             checkExpand(uriInfo.asUriInfoResource());
             ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared);
@@ -195,7 +200,7 @@ public class TeiidProcessor extends DefaultProcessor implements
                         ODataSerializer serializer = odata.createSerializer(format);
                         ODataSerializerOptions options = getContextUrl(visitor.getEntitySet(), uriInfo,
                                 format, serializer, false, new ContextURLHelper().buildURL(uriInfo));
-                        response.setContent(serializer.entityProperty(edmProperty, property, value, options));
+                        response.setContent(serializer.entityProperty(edmProperty, property, options));
                         response.setStatusCode(HttpStatusCode.OK.getStatusCode());
                         response.setHeader(HttpHeader.CONTENT_TYPE, contentType.toContentTypeString());
                     }
@@ -205,4 +210,54 @@ public class TeiidProcessor extends DefaultProcessor implements
             handleException(response, contentType, e);
         }
     }
+    
+    @Override
+    public void readPropertyValue(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType contentType) {
+        try {
+            checkExpand(uriInfo.asUriInfoResource());
+            ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), this.prepared);
+            visitor.visit(uriInfo);
+            Query query = visitor.selectQuery(false);
+            List<SQLParam> parameters = visitor.getParameters();
+
+            EntityList result = new EntityList(client.getProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT),
+                    visitor.getEntitySet(), visitor.getProjectedColumns());
+
+            this.client.executeSQL(query, parameters, visitor.isCountQuery(),visitor.getSkip(), visitor.getTop(), result);
+            if (result.getEntities().isEmpty()){
+                response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
+            }
+            else {
+                UriResourceProperty uriProperty = (UriResourceProperty) uriInfo.getUriResourceParts().get(
+                        uriInfo.getUriResourceParts().size() - 2);
+                EdmProperty edmProperty = uriProperty.getProperty();
+                Property property = result.getEntities().get(0).getProperty(edmProperty.getName());
+                if (property == null) {
+                    response.setStatusCode(HttpStatusCode.NOT_FOUND.getStatusCode());
+                } else {
+                    if (property.isNull()) {
+                        response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
+                    } else {
+                        final EdmPrimitiveType type = (EdmPrimitiveType) edmProperty.getType();
+                        try {
+                            final String value = type.valueToString(property.getValue(), edmProperty.isNullable(),
+                                    edmProperty.getMaxLength(), edmProperty.getPrecision(), edmProperty.getScale(),
+                                    edmProperty.isUnicode());
+                            response.setContent(new ByteArrayInputStream(value.getBytes("UTF-8"))); //$NON-NLS-1$
+                        } catch (final EdmPrimitiveTypeException e) {
+                            throw new ODataApplicationException("Error in value formatting.",
+                                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ROOT, e);
+                        } catch (final UnsupportedEncodingException e) {
+                            throw new ODataApplicationException("Encoding exception.",
+                                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ROOT, e);
+                        }
+                        response.setStatusCode(HttpStatusCode.OK.getStatusCode());
+                        response.setHeader(HttpHeader.CONTENT_TYPE, ContentType.TEXT_PLAIN.toContentTypeString());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            handleException(response, contentType, e);
+        }
+    }    
 }

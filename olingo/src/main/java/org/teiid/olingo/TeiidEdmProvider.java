@@ -21,9 +21,6 @@
  */
 package org.teiid.olingo;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,8 +38,6 @@ import org.apache.olingo.server.api.edm.provider.EntityType;
 import org.apache.olingo.server.api.edm.provider.EnumType;
 import org.apache.olingo.server.api.edm.provider.Function;
 import org.apache.olingo.server.api.edm.provider.FunctionImport;
-import org.apache.olingo.server.api.edm.provider.Reference;
-import org.apache.olingo.server.api.edm.provider.Reference.Include;
 import org.apache.olingo.server.api.edm.provider.Schema;
 import org.apache.olingo.server.api.edm.provider.Singleton;
 import org.apache.olingo.server.api.edm.provider.Term;
@@ -193,7 +188,7 @@ public class TeiidEdmProvider extends EdmProvider {
             throws ODataException {
         return this.edmSchema.getActions();
     }
-
+/*
     @Override
     public List<Reference> getReferences() throws ODataException {
         List<Reference> references = new ArrayList<Reference>();
@@ -214,4 +209,5 @@ public class TeiidEdmProvider extends EdmProvider {
         }
         return references;
     }
+*/    
 }

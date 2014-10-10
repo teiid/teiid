@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Dependencies: org.jboss.teiid,org.jboss.teiid.common-core, org.jboss.teiid.client, org.jboss.teiid.admin, org.slf4j
+Dependencies: org.jboss.teiid.olingo

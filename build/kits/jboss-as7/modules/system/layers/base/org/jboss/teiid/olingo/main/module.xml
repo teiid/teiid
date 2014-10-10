@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.olingo">
     <resources>
-    <!-- 
         <resource-root path="teiid-olingo-${project.version}.jar" />
-        <resource-root path="olingo-commons-api-${version.org.apache.olingo}.jar" />
-        <resource-root path="olingo-commons-core-${version.org.apache.olingo}.jar" />
-        <resource-root path="olingo-server-api-${version.org.apache.olingo}.jar" />
-        <resource-root path="olingo-server-core-${version.org.apache.olingo}.jar" />
-        -->
     </resources>
 
     <dependencies>
-         <!-- 
+        <module name="javax.servlet.api"/>    
         <module name="org.apache.olingo" />
-         -->
-        <module name="org.jboss.teiid" />
-        <module name="org.apache.httpcomponents"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.client" />
+        <module name="org.jboss.teiid.admin"/>
+        <module name="org.jboss.teiid.api"/>
+        <module name="org.jboss.teiid"/>
     </dependencies>
 
 </module>
