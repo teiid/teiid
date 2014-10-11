@@ -151,7 +151,7 @@ public class HttpServletRequestDelegate implements HttpServletRequest {
         return delegate.isRequestedSessionIdFromURL();
     }
 
-    @SuppressWarnings("deprecation")
+    @deprecated
     public boolean isRequestedSessionIdFromUrl() {
         return delegate.isRequestedSessionIdFromUrl();
     }
