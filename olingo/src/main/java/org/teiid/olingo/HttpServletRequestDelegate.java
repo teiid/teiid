@@ -151,7 +151,9 @@ public class HttpServletRequestDelegate implements HttpServletRequest {
         return delegate.isRequestedSessionIdFromURL();
     }
 
-    @deprecated
+    /**
+     * @deprecated
+     */
     public boolean isRequestedSessionIdFromUrl() {
         return delegate.isRequestedSessionIdFromUrl();
     }
@@ -253,7 +255,9 @@ public class HttpServletRequestDelegate implements HttpServletRequest {
         return delegate.getRequestDispatcher(s);
     }
 
-    @SuppressWarnings("deprecation")
+    /**
+     * @deprecated
+     */
     public String getRealPath(String s) {
         return delegate.getRealPath(s);
     }
