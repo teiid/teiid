@@ -111,7 +111,7 @@ public class TestMongoDBUpdateExecution {
 
 		details.append("UnitPrice", 34.50);
 		details.append("Quantity", 10);
-		details.append("Discount", 12);
+		details.append("Discount", 12.0);
 		details.append("_id", pk);
 
 		details = new BasicDBObject("OrderDetails", details);

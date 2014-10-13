@@ -21,11 +21,13 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -45,13 +47,26 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.*;
+import com.mongodb.AggregationOptions;
+import com.mongodb.AggregationOutput;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 @SuppressWarnings("nls")
 public class TestMongoDBQueryExecution {
     private MongoDBExecutionFactory translator;
     private TranslationUtility utility;
-
+    private static AggregationOptions options = AggregationOptions.builder()
+            .batchSize(256)
+            .outputMode(AggregationOptions.OutputMode.CURSOR)
+            .allowDiskUse(true)
+            .build();  
+    
     @Before
     public void setUp() throws Exception {
     	this.translator = new MongoDBExecutionFactory();
@@ -71,6 +86,7 @@ public class TestMongoDBQueryExecution {
 	private DBCollection helpExecute(String query, String[] expectedCollection, int expectedParameters) throws TranslatorException {
 		Command cmd = this.utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+		Mockito.stub(context.getBatchSize()).toReturn(256);
 		MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
 		DB db = Mockito.mock(DB.class);
 
@@ -94,7 +110,8 @@ public class TestMongoDBQueryExecution {
 
 		Mockito.stub(db.getCollectionFromString(Mockito.anyString())).toReturn(dbCollection);
 
-		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context, this.utility.createRuntimeMetadata(), connection);
+		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context, 
+		        this.utility.createRuntimeMetadata(), connection);
 		execution.execute();
 		return dbCollection;
 	}
@@ -118,7 +135,8 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m9","$Phone");
 	    result.append( "_m10","$Fax");
 
-		Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
+		List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 	@Test
@@ -131,9 +149,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$CompanyName");
 	    result.append( "_m1","$ContactTitle");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match", new BasicDBObject("Country", "USA")),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 	@Test
@@ -145,8 +164,9 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CategoryName");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 	
 	@Test
@@ -158,9 +178,10 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CategoryName");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match",new BasicDBObject("CategoryName", "Drinks")),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 	
 	@Test
@@ -172,9 +193,10 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CategoryName");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match",new BasicDBObject("_id", 10)),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 
 	@Test
@@ -186,9 +208,10 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$OrderDetails.UnitPrice");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$unwind","$OrderDetails"),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 	@Test
@@ -205,10 +228,11 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m4","$OrderDetails.Discount");
 
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$unwind","$OrderDetails"),
 						new BasicDBObject("$match", new BasicDBObject("_id", 10248)),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 	
 	@Test // one-2-many
@@ -220,10 +244,11 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$OrderDetails.Quantity");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$unwind","$OrderDetails"),
 						new BasicDBObject("$match", new BasicDBObject("OrderDetails.UnitPrice", 0.99)),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 	
 	@Test // one-2-one
@@ -236,9 +261,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$_id");
 	    result.append( "_m1","$address.zip");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match", new BasicDBObject("address.street", "Highway 100")),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 	
 	@Test // one-2-one
@@ -253,9 +279,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$address.zip");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 	
 	@Test // one-2-one
@@ -268,9 +295,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$_id");
 	    result.append( "_m1","$address.zip");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match", QueryBuilder.start("address").exists("true").get()),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 
 	@Test
@@ -282,10 +310,11 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$CustomerID");
 	    result.append( "_m1","$OrderDetails._id.ProductID");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$unwind","$OrderDetails"),
 						new BasicDBObject("$match", QueryBuilder.start("OrderDetails").exists("true").notEquals(null).get()),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 	@Test
@@ -299,9 +328,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Categories.CategoryName");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match", QueryBuilder.start("Categories").exists("true").notEquals(null).get()),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 	@Test
@@ -321,9 +351,10 @@ public class TestMongoDBQueryExecution {
 	    DBObject p2 =  QueryBuilder.start("CategoryID").is(1).get();
 
 	    DBObject match = QueryBuilder.start().and(exists, p1, p2).get(); // duplicate criteria, mongo should ignore it
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$match", match),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 	@Test
@@ -343,10 +374,11 @@ public class TestMongoDBQueryExecution {
 	    		(QueryBuilder.start("Shippers").exists("true").notEquals(null).get())).get();
 
 	    
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$unwind","$OrderDetails"),
 						new BasicDBObject("$match", match),
 						new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 	@Test
@@ -371,11 +403,12 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$__NN_OrderDetails._id.ProductID");
 
 	    DBObject match = QueryBuilder.start("__NN_OrderDetails.UnitPrice").notEquals(null).get();
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    				new BasicDBObject("$project", projection),
 						new BasicDBObject("$unwind","$__NN_OrderDetails"),
 						new BasicDBObject("$match",match),
 						new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
 
@@ -392,9 +425,10 @@ public class TestMongoDBQueryExecution {
 
 	    DBObject match = QueryBuilder.start().and(QueryBuilder.start("T2").exists("true").notEquals(null).get(),
 	    		(QueryBuilder.start("T3").exists("true").notEquals(null).get())).get();
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", match),
 	    		new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
 
     @Test
@@ -408,10 +442,11 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$rental.payment.rental_id");
 	    result.append( "_m2","$rental.payment.amount");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$unwind","$rental"),
 				new BasicDBObject("$unwind","$rental.payment"),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
     
         
@@ -429,9 +464,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Suppliers.CompanyName");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$match", QueryBuilder.start("Suppliers").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
     
     @Test // embedded means always nested as doc not as array 
@@ -448,9 +484,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Suppliers.CompanyName");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$match", QueryBuilder.start("Suppliers").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     @Test(expected=TranslatorException.class) // embedded means always nested as doc not as array 
@@ -467,9 +504,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Suppliers.CompanyName");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$match", QueryBuilder.start("SupplierID").notEquals(null).and(QueryBuilder.start("Suppliers._id").notEquals(null).get()).get()),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     @Test // embedded means always nested as doc not as array 
@@ -486,8 +524,9 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Suppliers.CompanyName");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     @Test // embedded means always nested as doc not as array 
@@ -503,8 +542,9 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Suppliers.CompanyName");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     // embedded means always nested as doc not as array
@@ -522,9 +562,10 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$ProductName");
 	    result.append( "_m1","$Suppliers.CompanyName");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$match", QueryBuilder.start("_id").notEquals(null).get()),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));	    
     }
     
     @Test // merge where one to many relation 
@@ -542,10 +583,11 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$Notes.Comment");
 	    result.append( "_m2","$_id");
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$unwind", "$Notes"),
 				new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
     
     @Test // merge where one to many relation 
@@ -568,10 +610,11 @@ public class TestMongoDBQueryExecution {
 	 	project.append("customer_id", 1);
 	 	project.append("name", 1);
 	 	project.append("__NN_Notes", ifnull);
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$project", project),
 	    		new BasicDBObject("$unwind", "$__NN_Notes"),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
     
     @Test // merge where one to many relation - equal to inner join with doc format teiid has
@@ -588,10 +631,11 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$Notes.Comment");
 		
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$unwind", "$Notes"),
 	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     
@@ -609,10 +653,11 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$Notes.Comment");
 		
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$unwind", "$Notes"),
 	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     @Test // merge where one to many relation (2 merged tables into customer)
@@ -636,11 +681,12 @@ public class TestMongoDBQueryExecution {
 	 	project.append("name", 1);
 	 	project.append("__NN_Notes", buildIfNullExpression("Notes"));
 	 	project.append("__NN_rental", buildIfNullExpression("rental"));
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$project", project),
 	    		new BasicDBObject("$unwind", "$__NN_rental"),
 	    		new BasicDBObject("$unwind", "$__NN_Notes"),
 				new BasicDBObject("$project", result));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
 
 	private BasicDBObject buildIfNullExpression(String table) {
@@ -662,9 +708,10 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id._c0");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$group", new BasicDBObject("_id", new BasicDBObject("_c0", "$Country"))),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 	
 	@Test
@@ -681,9 +728,10 @@ public class TestMongoDBQueryExecution {
 	    group.append( "_c0","$Country");
 	    group.append( "_c1","$City");
 	    	    
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$group", new BasicDBObject("_id", group)),
 						new BasicDBObject("$project", project));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 	
 	@Test
@@ -695,9 +743,10 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id._m0");
 
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$group", new BasicDBObject("_id", new BasicDBObject("_m0", "$Country"))),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 	
 	@Test
@@ -714,9 +763,10 @@ public class TestMongoDBQueryExecution {
 	    group.append( "_m0","$Country");
 	    group.append( "_m1","$City");
 	    
-		Mockito.verify(dbCollection).aggregate(
+		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$group", new BasicDBObject("_id", group)),
 						new BasicDBObject("$project", result));
+		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}	
 	
     @Test // embedded means always nested as doc not as array 
@@ -736,10 +786,11 @@ public class TestMongoDBQueryExecution {
 	    group.append( "_c0","$name");
 	    group.append( "_c1","$address.zip");	    
 
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
 				new BasicDBObject("$project", project));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }	
     
     @Test // embedded means always nested as doc not as array 
@@ -765,13 +816,14 @@ public class TestMongoDBQueryExecution {
 	    sort.append( "_m0",1);
 	    sort.append( "_m1",1);
 	    
-	    Mockito.verify(dbCollection).aggregate(
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
 				new BasicDBObject("$project", project),
 				new BasicDBObject("$sort", sort),
 				new BasicDBObject("$skip", 0),
 				new BasicDBObject("$limit", 2));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     @Test
@@ -788,9 +840,10 @@ public class TestMongoDBQueryExecution {
 		BasicDBObject project = new BasicDBObject();
 	    project.append( "total",1);
 
-	    Mockito.verify(dbCollection).aggregate(	    		
+	    List<DBObject> pipeline = buildArray(	    		
 	    		new BasicDBObject("$group", group),
 				new BasicDBObject("$project", project));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
     
     
@@ -812,9 +865,10 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
 		
-	    Mockito.verify(dbCollection).aggregate(	    		
+	    List<DBObject> pipeline = buildArray(	    		
 	    		new BasicDBObject("$group", group),
 				new BasicDBObject("$project", project));
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
  
     @Test
@@ -833,9 +887,10 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
 		
-	    Mockito.verify(dbCollection).aggregate(	    		
+	    List<DBObject> pipeline = buildArray(	    		
 	    		new BasicDBObject("$group", group),
 				new BasicDBObject("$project", project));    	
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }     
     
     @Test
@@ -853,11 +908,13 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
 		
-	    Mockito.verify(dbCollection).aggregate(	   
+	    List<DBObject> pipeline = buildArray(	   
 	    		new BasicDBObject("$group", group),
 	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
 				new BasicDBObject("$project", project));    	
-    	
+	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
+	    Mockito.verify(dbCollection).aggregate(actualCapture.capture(), Mockito.any(AggregationOptions.class));
+	    Assert.assertEquals(pipeline.toString(), actualCapture.getValue().toString());
     }    
     
     @Test
@@ -875,12 +932,26 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
 		
-	    Mockito.verify(dbCollection).aggregate(	   
+	    ArrayList<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", QueryBuilder.start("age").greaterThan(45).get()),
 	    		new BasicDBObject("$group", group),
 	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
-				new BasicDBObject("$project", project));    	
+				new BasicDBObject("$project", project));
+	    
+	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
+	    ArgumentCaptor<AggregationOptions> optionsCapture = ArgumentCaptor.forClass(AggregationOptions.class);
+	    Mockito.verify(dbCollection).aggregate(actualCapture.capture(), optionsCapture.capture());
+	    Assert.assertEquals(pipeline.toString(), actualCapture.getValue().toString());
+	    Assert.assertEquals(options.toString(), optionsCapture.getValue().toString());
     }    
+    
+    public ArrayList<DBObject> buildArray(DBObject ...basicDBObjects){
+        ArrayList<DBObject> list = new ArrayList<DBObject>();
+        for (DBObject obj:basicDBObjects) {
+            list.add(obj);
+        }
+        return list;
+    }
     
     @Test
     public void testCountStar() throws Exception {
@@ -895,9 +966,10 @@ public class TestMongoDBQueryExecution {
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", 1);
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }  
     
     @Test
@@ -913,10 +985,11 @@ public class TestMongoDBQueryExecution {
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", 1);
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
                         new BasicDBObject("$match", QueryBuilder.start("CategoryName").notEquals(null).get()),
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }     
     
     @Test(expected=TranslatorException.class)
@@ -932,10 +1005,11 @@ public class TestMongoDBQueryExecution {
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", 1);
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
                         new BasicDBObject("$match", QueryBuilder.start("CategoryName").notEquals(null).get()),
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }  
     
     @Test
@@ -953,9 +1027,10 @@ public class TestMongoDBQueryExecution {
         result.append( "_m0", new BasicDBObject("$concat", params));
         result.append( "_m1", "$CategoryName");
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
                         new BasicDBObject("$project", result),
                         new BasicDBObject("$match", QueryBuilder.start("_m0").is("2").get()));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }   
     
     @Test
@@ -973,7 +1048,8 @@ public class TestMongoDBQueryExecution {
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", new BasicDBObject("$substr", params));
 
-        Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
+        List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }   
     
     @Test
@@ -985,7 +1061,8 @@ public class TestMongoDBQueryExecution {
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", new BasicDBObject("$literal", "hit"));
 
-        Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
+        List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
     
     @Test
@@ -997,9 +1074,10 @@ public class TestMongoDBQueryExecution {
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", "$CategoryName");
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
                 new BasicDBObject("$project", result),
                 new BasicDBObject("$skip", 45));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }     
     
     
@@ -1013,8 +1091,9 @@ public class TestMongoDBQueryExecution {
         result.append( "_m0", "$id");
         result.append("_m1", "$column1");
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
                 new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }    
     
     @Test
@@ -1027,9 +1106,10 @@ public class TestMongoDBQueryExecution {
         result.append( "_m0", "$id");
         result.append("_m1", "$column1");
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
         		new BasicDBObject("$match", QueryBuilder.start("column1").notEquals(null).get()),
                 new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }     
     
     @Test
@@ -1064,9 +1144,10 @@ public class TestMongoDBQueryExecution {
 		BasicDBObject result = new BasicDBObject();
         result.append( "_m1", "$CategoryName");
 
-        Mockito.verify(dbCollection).aggregate(
+        List<DBObject> pipeline = buildArray(
                         new BasicDBObject("$match", qb.get()),
                         new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
     
     @Test(expected=TranslatorException.class)

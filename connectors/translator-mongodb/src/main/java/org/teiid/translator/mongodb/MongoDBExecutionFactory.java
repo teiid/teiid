@@ -71,6 +71,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
     
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 	private Version version = TWO_4;
+	private boolean useDisk = true;
 	
 	public MongoDBExecutionFactory() {
 		setSupportsOrderBy(true);
@@ -181,6 +182,15 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 
     Version getVersion() {
         return this.version;
+    }
+    
+    @TranslatorProperty(display="Use Disk", description="Use disk for aggregation processing in MongoDB",advanced=true)
+    public boolean useDisk() {
+        return this.useDisk;
+    }
+
+    public void setUseDisk(boolean useDisk) {
+        this.useDisk = useDisk;
     }
     
     /**

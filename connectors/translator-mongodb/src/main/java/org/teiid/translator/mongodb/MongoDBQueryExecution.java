@@ -22,7 +22,6 @@
 package org.teiid.translator.mongodb;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.language.QueryExpression;
@@ -36,12 +35,17 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.*;
+import com.mongodb.AggregationOptions;
+import com.mongodb.BasicDBObject;
+import com.mongodb.Cursor;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 
 public class MongoDBQueryExecution extends MongoDBBaseExecution implements ResultSetExecution {
 	private Select command;
 	private MongoDBExecutionFactory executionFactory;
-	private Iterator<DBObject> results;
+	private Cursor results;
 	private MongoDBSelectVisitor visitor;
 	private Class<?>[] expectedTypes;
 
@@ -99,8 +103,12 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			buildAggregate(ops, "$limit", this.visitor.limit); //$NON-NLS-1$
 
 			try {
-				AggregationOutput output = collection.aggregate(ops.remove(0), ops.toArray(new DBObject[ops.size()]));
-				this.results = output.results().iterator();
+			    AggregationOptions options = AggregationOptions.builder()
+			            .batchSize(this.executionContext.getBatchSize())
+			            .outputMode(AggregationOptions.OutputMode.CURSOR)
+			            .allowDiskUse(this.executionFactory.useDisk())
+			            .build();
+				this.results = collection.aggregate(ops, options);
 			} catch (MongoException e) {
 				throw new TranslatorException(e);
 			}
@@ -131,6 +139,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 	@Override
 	public void close() {
+		this.results.close();
 		this.results = null;
 	}
 
