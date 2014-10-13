@@ -10,17 +10,13 @@ TEIID_DIST=teiid-${TEIID_VERSION}-jboss-dist.zip
 
 SOURCES=(
     "jboss-eap.zip"
-    "resteasy-jaxrs.zip"
     "teiid-console-dist.zip"
 )
 
 declare -A SOURCE_URL SOURCE_SHA1
 
-SOURCE_URL["jboss-eap.zip"]="http://download.jboss.org/jbosseap/6/jboss-eap-6.1.0.Alpha/jboss-eap-6.1.0.Alpha.zip"
-SOURCE_SHA1["jboss-eap.zip"]="630d81f83b851077e3ad129924502bbdf0c1552a"
-
-SOURCE_URL["resteasy-jaxrs.zip"]="http://sourceforge.net/projects/resteasy/files/Resteasy%20JAX-RS/2.3.6.Final/resteasy-jaxrs-2.3.6.Final-all.zip"
-SOURCE_SHA1["resteasy-jaxrs.zip"]="cfcb2aaa60cd954d04e73cc7e99509ec38b5538a"
+SOURCE_URL["jboss-eap.zip"]="http://maven.repository.redhat.com/techpreview/eap6/6.3.0.Alpha/maven-repository/org/jboss/as/jboss-as-dist/7.4.0.Final-redhat-4/jboss-as-dist-7.4.0.Final-redhat-4.zip"
+SOURCE_SHA1["jboss-eap.zip"]="15978363d25acee751afa35af582548dace95480"
 
 SOURCE_URL["teiid-console-dist.zip"]="http://sourceforge.net/projects/teiid/files/webconsole/1.2/Final/teiid-console-dist-1.2.0.Final-jboss-as7.zip"
 SOURCE_SHA1["teiid-console-dist.zip"]="7b57b77520f2894b0f48a385f7dcff03898bb514"
@@ -81,17 +77,9 @@ echo "Unpacking JBoss..."
 unzip -q ../jboss-eap.zip
 echo
 
-## Patch JAX-RS.
-echo "Patching JAX-RS module..."
-rm -rf jboss-eap-6.1/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs
-unzip -qo ../resteasy-jaxrs.zip
-unzip -q resteasy-jaxrs-*/resteasy-jboss-modules-*.zip
-mv -f org/jboss/resteasy/resteasy-jaxrs jboss-eap-6.1/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs
-echo
-
 ## Install Teiid.
 echo "Installing Teiid..."
-cd jboss-eap-6.1
+cd jboss-eap-6.3
 unzip -q -o ../../teiid-console-dist.zip
 unzip -q -o ../../$TEIID_DIST
 cd ..
@@ -99,7 +87,7 @@ echo
 
 ## Package server.
 echo "Zipping up install..."
-mv -f jboss-eap-6.1 teiid-${TEIID_VERSION}
+mv -f jboss-eap-6.3 teiid-${TEIID_VERSION}
 rm -f ../teiid-${TEIID_VERSION}.zip
 zip -r -q ../teiid-${TEIID_VERSION}.zip teiid-${TEIID_VERSION}
 cd ..

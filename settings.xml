@@ -62,8 +62,8 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
       <repositories>
         <repository>
           <id>jboss-eap-alpha</id>
-          <name>JBoss EAP6.1 Alpha</name>
-          <url>http://maven.repository.redhat.com/techpreview/eap6/6.1.0.Alpha1/maven-repository/</url>
+          <name>JBoss EAP 6.3.0.Alpha</name>
+          <url>http://maven.repository.redhat.com/techpreview/eap6/6.3.0.Alpha/maven-repository/</url>
           <layout>default</layout>
           <releases>
             <enabled>true</enabled>

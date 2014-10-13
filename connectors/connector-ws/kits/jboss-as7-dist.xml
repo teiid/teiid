@@ -42,6 +42,15 @@
             <includes>
                 <include>javax.ws.rs:javax.ws.rs-api</include>
             </includes>
-        </dependencySet>        
+        </dependencySet> 
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/org/springframework/spring/main</outputDirectory>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>org.springframework:spring-beans</include>
+                <include>org.springframework:spring-context</include>
+                <include>org.springframework:spring-core</include>
+            </includes>
+        </dependencySet>               
     </dependencySets>
 </assembly>

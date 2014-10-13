@@ -10,11 +10,7 @@
   <name>Gogole API</name>
   <description>The java API for connecting Google services</description>
   <packaging>bundle</packaging>
-
-  <properties>
-    <version.com.google.guava>16.0.1</version.com.google.guava>
-  </properties>
-      
+  
   <dependencies>     
         <dependency>
             <groupId>javax.resource</groupId>
@@ -24,6 +20,7 @@
         <dependency>
 		  <groupId>com.google.guava</groupId>
 		  <artifactId>guava</artifactId>
+		  <scope>provided</scope>
 		</dependency>
 		<dependency>
 		  <groupId>org.apache.httpcomponents</groupId>

@@ -62,9 +62,6 @@
     <profiles>
     <profile>
         <id>arquillian-tests</id>
-       <activation>
-            <activeByDefault>true</activeByDefault>
-        </activation>        
         <dependencies>
             <dependency>
                 <groupId>org.jboss.spec</groupId>
