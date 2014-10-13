@@ -63,7 +63,7 @@
         <version.dom4j>1.6.1</version.dom4j>
                 
         <!-- integration stack bom propererties -->
-        <version.org.mongodb.mongo-java-driver>2.11.1</version.org.mongodb.mongo-java-driver>
+        <version.org.mongodb.mongo-java-driver>2.12.3</version.org.mongodb.mongo-java-driver>
         
         <!-- Teiid specific properties -->
         <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
