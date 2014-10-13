@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.http.HttpClientTransportOverHTTP;
+import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.io.Buffer;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.bio.SocketConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.junit.AfterClass;
@@ -127,7 +127,7 @@ public class TestODataIntegration {
 
 		server = new Server();
 
-		ServerConnector connector = new ServerConnector(server);
+		SocketConnector connector = new SocketConnector();
 		server.setConnectors(new Connector[] {connector});
 
 		ServletHandler handler = new ServletHandler();
@@ -161,86 +161,129 @@ public class TestODataIntegration {
 	public void testMetadata() throws Exception {
 		// for usage see
 		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
-		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-		HttpClient http = new HttpClient(transport, null);
-		transport.setHttpClient(http);
+		HttpClient http = new HttpClient();
 		http.start();
-
-		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/$metadata");
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")), response.getContentAsString());
+		
+		HttpExchange request = new HttpExchange() {
+            protected void onResponseContent(Buffer content) {
+                try {
+                    Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")), new String(content.asArray()));
+                } catch (IOException e) {
+                    Assert.fail();
+                }
+            }
+            protected void onResponseStatus(Buffer version, int status, Buffer reason){
+                Assert.assertEquals(200, status);
+            }            
+		};
+		request.setURL("http://localhost:"+port+"/odata4/loopy/vm1/$metadata");
+		request.setMethod("GET");
+		
+		http.send(request);
+		request.waitForDone();
 	}
 
 	@Test
 	public void tesSystemMetadata() throws Exception {
 		// for usage see
 		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
-		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-		HttpClient http = new HttpClient(transport, null);
-		transport.setHttpClient(http);
+		HttpClient http = new HttpClient();
 		http.start();
 
-		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/SYS/$metadata");
-        Assert.assertEquals(200, response.getStatus());
-		response = http.GET("http://localhost:"+port+"/odata4/loopy/SYSADMIN/$metadata");
-        Assert.assertEquals(200, response.getStatus());
+        HttpExchange request = new HttpExchange() {
+            protected void onResponseStatus(Buffer version, int status, Buffer reason){
+                Assert.assertEquals(200, status);
+            }            
+        };
+        request.setURL("http://localhost:"+port+"/odata4/loopy/SYS/$metadata");
+        request.setMethod("GET");
+        http.send(request);
+        request.waitForDone();
 	}
 
 	@Test
 	public void tesServiceMetadata() throws Exception {
 		// for usage see
 		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
-		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-		HttpClient http = new HttpClient(transport, null);
-		transport.setHttpClient(http);
+		HttpClient http = new HttpClient();
 		http.start();
 
-		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/VM1");
-        Assert.assertEquals(200, response.getStatus());
-        System.out.println(response.getContentAsString());
         //TODO: match the document here.. port is being random
+        
+        HttpExchange request = new HttpExchange() {
+            protected void onResponseStatus(Buffer version, int status, Buffer reason){
+                Assert.assertEquals(200, status);
+            }            
+        };
+        request.setURL("http://localhost:"+port+"/odata4/loopy/VM1");
+        request.setMethod("GET");
+        
+        http.send(request);
+        request.waitForDone();
 	}
 
 	@Test
 	public void testEntitySet() throws Exception {
 		// for usage see
 		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
-		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-		HttpClient http = new HttpClient(transport, null);
-		transport.setHttpClient(http);
+		HttpClient http = new HttpClient();
 		http.start();
-
-		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/G1");
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("{\"@odata.context\":\"$metadata#G1\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", response.getContentAsString());
+        
+        HttpExchange request = new HttpExchange() {
+            protected void onResponseContent(Buffer content) {
+                Assert.assertEquals("{\"@odata.context\":\"$metadata#G1\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", new String(content.asArray()));
+            }
+            protected void onResponseStatus(Buffer version, int status, Buffer reason){
+                Assert.assertEquals(200, status);
+            }            
+        };
+        request.setURL("http://localhost:"+port+"/odata4/loopy/vm1/G1");
+        request.setMethod("GET");
+        http.send(request);   
+        request.waitForDone();
+        request.waitForDone();
 	}
 
 	@Test
 	public void testEntitySetWithKey() throws Exception {
 		// for usage see
 		// http://www.eclipse.org/jetty/documentation/current/http-client-api.html
-		HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-		HttpClient http = new HttpClient(transport, null);
-		transport.setHttpClient(http);
+		HttpClient http = new HttpClient();
 		http.start();
 
-		ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/G1(0)");
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("{\"@odata.context\":\"$metadata#G1/$entity\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", response.getContentAsString());
+        HttpExchange request = new HttpExchange() {
+            protected void onResponseContent(Buffer content) {
+                Assert.assertEquals("{\"@odata.context\":\"$metadata#G1/$entity\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", new String(content.asArray()));
+            }
+            protected void onResponseStatus(Buffer version, int status, Buffer reason){
+                Assert.assertEquals(200, status);
+            }            
+        };
+        request.setURL("http://localhost:"+port+"/odata4/loopy/vm1/G1(0)");
+        request.setMethod("GET");
+        http.send(request);
+        request.waitForDone();
 	}
 
     @Test
     public void testIndividualProperty() throws Exception {
         // for usage see
         // http://www.eclipse.org/jetty/documentation/current/http-client-api.html
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient http = new HttpClient(transport, null);
-        transport.setHttpClient(http);
+        HttpClient http = new HttpClient();
         http.start();
 
-        ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/G1(1)/e1");
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("{\"@odata.context\":\"$metadata#Edm.String\",\"value\":\"ABCDEFGHIJ\"}", response.getContentAsString());
+        HttpExchange request = new HttpExchange() {
+            protected void onResponseContent(Buffer content) {
+                Assert.assertEquals("{\"@odata.context\":\"$metadata#Edm.String\",\"value\":\"ABCDEFGHIJ\"}", new String(content.asArray()));
+            }
+            protected void onResponseStatus(Buffer version, int status, Buffer reason){
+                Assert.assertEquals(200, status);
+            }            
+        };
+        request.setURL("http://localhost:"+port+"/odata4/loopy/vm1/G1(1)/e1");
+        request.setMethod("GET");
+        http.send(request);
+        request.waitForDone();
     }
 
     
@@ -249,14 +292,21 @@ public class TestODataIntegration {
     public void testProcedure() throws Exception {
         // for usage see
         // http://www.eclipse.org/jetty/documentation/current/http-client-api.html
-        HttpClientTransportOverHTTP transport = new HttpClientTransportOverHTTP();
-        HttpClient http = new HttpClient(transport, null);
-        transport.setHttpClient(http);
+        HttpClient http = new HttpClient();
         http.start();
 
-        ContentResponse response = http.GET("http://localhost:"+port+"/odata4/loopy/vm1/proc(x='foo')");
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("{\"@odata.context\":\"$metadata#Edm.String\",\"value\":\"ABCDEFGHIJ\"}", response.getContentAsString());
+        HttpExchange request = new HttpExchange() {
+            protected void onResponseContent(Buffer content) {
+                Assert.assertEquals("{\"@odata.context\":\"$metadata#Edm.String\",\"value\":\"ABCDEFGHIJ\"}", new String(content.asArray()));
+            }
+            protected void onResponseStatus(Buffer version, int status, Buffer reason){
+                Assert.assertEquals(200, status);
+            }            
+        };
+        request.setURL("http://localhost:"+port+"/odata4/loopy/vm1/proc(x='foo')");
+        request.setMethod("GET");
+        http.send(request);
+        request.waitForDone();
     }
 
 	/*
