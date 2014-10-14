@@ -3,7 +3,7 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>8.9.0.Beta3-SNAPSHOT</version>
+        <version>8.9.0.CR1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-infinispan.6</artifactId>
@@ -137,9 +137,7 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>
-								<unzip
-									src="${project.build.directory}/${project.artifactId}-${project.version}.rar"
-									dest="${project.build.directory}/rar-unpack" />
+								<unzip src="${project.build.directory}/${project.artifactId}-${project.version}.rar" dest="${project.build.directory}/rar-unpack" />
 							</tasks>
 						</configuration>
 						<goals>
