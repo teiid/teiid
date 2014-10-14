@@ -266,6 +266,13 @@ public class ResolverUtil {
                                             String targetTypeName,
                                             boolean implicit, FunctionLibrary library) {
         Class<?> srcType = DataTypeManager.getDataTypeClass(sourceTypeName);
+        
+        Class<?> targetType = DataTypeManager.getDataTypeClass(targetTypeName);
+        
+    	try {
+			setDesiredType(sourceExpression, targetType, sourceExpression);
+		} catch (QueryResolverException e) {
+		} 
 
         FunctionDescriptor fd = library.findTypedConversionFunction(srcType, DataTypeManager.getDataTypeClass(targetTypeName));
 
