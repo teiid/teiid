@@ -27,6 +27,15 @@
                 <include>**/META-INF/*</include>
             </includes>           
         </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/rar-unpack</directory>
+            <outputDirectory>${jbossas-module-root}/org/springframework/spring/main</outputDirectory>
+            <includes>
+                <include>**/spring-beans*.jar</include>
+                <include>**/spring-context*.jar</include>
+                <include>**/spring-core*.jar</include>
+            </includes>           
+        </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>
