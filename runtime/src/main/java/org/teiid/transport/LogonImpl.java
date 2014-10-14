@@ -187,14 +187,14 @@ public class LogonImpl implements ILogon {
 				logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
 				logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.isAuthenticated()));
 				if (result.isAuthenticated()) {
-				    logonResult.addProperty(GSSCredential.class.getName(), result.getDelegationCredentail());
+				    logonResult.addProperty(GSSCredential.class.getName(), result.getDelegationCredential());
 				}
 				return logonResult;
 			}		
 			
 			// GSS API (jdbc) will make the session in one single call			
 			connProps.put(ILogon.KRB5TOKEN, result.getServiceToken());
-			connProps.put(GSSCredential.class.getName(), result.getDelegationCredentail());
+			connProps.put(GSSCredential.class.getName(), result.getDelegationCredential());
 			LogonResult logonResult =  logon(connProps);
 			return logonResult;
 		} catch (LoginException e) {
