@@ -16,7 +16,6 @@
         <module name="org.apache.cxf.impl" />
         <module name="javax.wsdl4j.api" />
         <module name="javax.xml.ws.api" />
-        <module name="org.apache.cxf.impl.frontend-jaxrs" />
         <module name="org.apache.cxf.impl" export="true">
             <imports>
                 <include path="META-INF" />
