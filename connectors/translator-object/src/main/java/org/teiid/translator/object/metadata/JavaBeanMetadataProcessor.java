@@ -58,6 +58,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	protected boolean isUpdatable = false;
 	private TeiidScriptEngine engine = new TeiidScriptEngine();
 
+	@Override
 	public void process(MetadataFactory mf, ObjectConnection conn) throws TranslatorException {
 		Map<String, Class<?>> cacheTypes = conn.getCacheNameClassTypeMapping();
 		for (String cacheName : cacheTypes.keySet()) {

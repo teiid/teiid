@@ -238,7 +238,7 @@ public class InfinispanExecution implements ResultSetExecution {
 					if (fk == null) {
 						throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25001, new Object[] {query.getFrom()}));
 					}
-						DepthNode dn = new DepthNode(fk.getNameInSource() + "." + name, col);
+						DepthNode dn = new DepthNode(fk.getSourceName() + "." + name, col);
  						colObjects[col] = dn;
 						 						
  						int n =dn.getNumberOfNodes();

@@ -1,6 +1,6 @@
 package org.teiid.translator.infinispan.dsl.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Properties;
 

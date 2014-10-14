@@ -38,7 +38,6 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.DataNotAvailableException;
@@ -73,8 +72,7 @@ public class ObjectExecution implements ResultSetExecution {
 			ColumnReference cr = (ColumnReference) dc.getExpression();
 			String name = null;
 			if (cr.getMetadataObject() != null) {
-				Column c = cr.getMetadataObject();
-				name = c.getSourceName();
+				name = cr.getMetadataObject().getSourceName();
 			} else {
 				name = cr.getName();
 			}

@@ -39,6 +39,8 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 
+
+
 /**
  * DSLSearch will parse the WHERE criteria and build the search query(s)
  * that's used to retrieve the results from a remote Infinispan cache using Hot Rod client.

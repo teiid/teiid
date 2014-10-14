@@ -12,12 +12,8 @@
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.translator.object"/>
-        
-        <!-- 
-            this 6.2 slot references the infinispan module installed as part of 
-            connector-infinispan-dsl.
-        -->
-        <!--module name="org.infinispan.hotrod" slot="6.2" /-->
         <module name="org.jboss.modules"/>
+        
+		<module name="org.infinispan" slot="jdg-6.3" optional="true"  export="true" />
     </dependencies>
 </module>

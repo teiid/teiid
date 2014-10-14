@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.TestObjectConnection;
 import org.teiid.translator.object.testdata.Leg;
 import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.testdata.Transaction;
@@ -68,34 +68,14 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	}
 		
 	public static ObjectConnection createConnection() {
-		return new ObjectConnection() {
+		Map <Object, Object> objects = (Map<Object, Object>) TradesCacheSource.loadCache();
 
-			@Override
-			public CacheContainerWrapper getCacheContainer() throws TranslatorException {
-				Map <String, Object> objects = TradesCacheSource.loadCache();
-				return new TestCacheWrapper(objects);
-			}	
-
-			@Override
-			public Class<?> getType(String cacheName) throws TranslatorException {
-				return Trade.class;
-			}
-
-
-			@Override
-			public Map<String, Class<?>> getCacheNameClassTypeMapping() {
-				return mapOfCaches;
-			}
-			
-			@Override
-			public String getPkField(String cacheName) {
-				return "tradeId";
-			}
-
-		};
+		TestObjectConnection toc = new TestObjectConnection(new TestCacheWrapper(objects));
+		
+		return toc;
 	}
 	
-	public static void loadCache(Map<Object, Object> cache) {
+	public static void loadCache(Map <Object, Object> cache) {
 		for (int i = 1; i <= NUMTRADES; i++) {
 			
 			List<Leg> legs = new ArrayList<Leg>();
@@ -129,9 +109,9 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 		}
 	}
 
-	public static Map loadCache() {
+	public static Map<Object, Object> loadCache() {
 		TradesCacheSource tcs = new TradesCacheSource();
-		TradesCacheSource.loadCache(tcs);
+		TradesCacheSource.loadCache( tcs);
 		return tcs;		
 	}
 	
@@ -146,9 +126,9 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	}	
 	
 	private static class TestCacheWrapper extends CacheContainerWrapper {
-		Map <String, Object> cache = null;
+		Map <Object, Object> cache = null;
 		
-		 public TestCacheWrapper(Map <String, Object> objs) { 
+		 public TestCacheWrapper(Map <Object, Object> objs) { 
 			 cache = objs;
 		 }
 		

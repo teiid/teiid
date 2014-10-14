@@ -23,11 +23,16 @@ package org.teiid.translator.object.infinispan;
 
 import java.util.List;
 
+import org.teiid.language.Command;
+import org.teiid.language.Delete;
 import org.teiid.language.Select;
+import org.teiid.language.Update;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
 
@@ -92,18 +97,38 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 		return false;
 	}
 	
+   @Override
+	public UpdateExecution createUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			ObjectConnection connection) {
+    	return new InfinispanUpdateExecution(command, connection, executionContext, this);
+	}	
+	
 	@Override
 	public List<Object> search(Select command, String cacheName,
 			ObjectConnection connection, ExecutionContext executionContext)
 			throws TranslatorException {
 
 			if (supportsLuceneSearching()) {
-				Class<?> type = connection.getType(cacheName);
-				return LuceneSearch.performSearch(command, type, cacheName,
-						connection.getCacheContainer());
+				
+				return LuceneSearch.performSearch(command, cacheName, connection);
 			}
 
 			return super.search(command, cacheName, connection, executionContext);
 	}
+	
+	public List<Object> search(Delete command, String cacheName, ObjectConnection conn, ExecutionContext executionContext)
+				throws TranslatorException {   
+		return LuceneSearch.performSearch(command, cacheName, conn);
+	}
+	
+	public List<Object> search(Update command, String cacheName, ObjectConnection conn, ExecutionContext executionContext)
+			throws TranslatorException {   
+		return LuceneSearch.performSearch(command, cacheName, conn);
+	}	
+	
+	public Object performKeySearch(String cacheName, String columnName, Object value, ObjectConnection conn, ExecutionContext executionContext) throws TranslatorException {
+		return LuceneSearch.performKeySearch(cacheName, columnName, value, conn);
+	}		
 	
 }
