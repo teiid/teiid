@@ -235,7 +235,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(", ProcedureName AS PROCEDURE_NAME, p.Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", convert(decodeString(TYPE, '").append(PARAM_DIRECTION_MAPPING).append("', ','), short) AS COLUMN_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", 1 AS DATA_TYPE") //$NON-NLS-1$
-        .append(", DataType AS TYPE_NAME, p.Precision AS \"PRECISION\", TypeLength  AS LENGTH, convert(Scale, short) AS SCALE") //$NON-NLS-1$
+        .append(", DataType AS TYPE_NAME, p.Precision AS \"PRECISION\", TypeLength  AS LENGTH, convert(case when scale > 32767 then 32767 else Scale end, short) AS SCALE") //$NON-NLS-1$
         .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
         .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
         .append(", p.Description AS REMARKS, NULL AS COLUMN_DEF") //$NON-NLS-1$
@@ -267,7 +267,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 	private static final String QUERY_FUNCTION_COLUMNS = new StringBuffer("SELECT VDBName AS Function_CAT, SchemaName AS FUNCTION_SCHEM, ") //$NON-NLS-1$
 		.append("FunctionName AS FUNCTION_NAME, Name as COLUMN_NAME, CASE WHEN Type = 'ReturnValue' Then 4 WHEN Type = 'In' Then 1 ELSE 0 END AS COLUMN_TYPE") //$NON-NLS-1$
 		.append(", 1 AS DATA_TYPE") //$NON-NLS-1$
-	    .append(", DataType AS TYPE_NAME, \"Precision\" AS \"PRECISION\", TypeLength  AS LENGTH, convert(Scale, short) AS SCALE") //$NON-NLS-1$
+	    .append(", DataType AS TYPE_NAME, \"Precision\" AS \"PRECISION\", TypeLength  AS LENGTH, convert(case when scale > 32767 then 32767 else Scale end, short) AS SCALE") //$NON-NLS-1$
 	    .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
 	    .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
 	    .append(", Description AS REMARKS, NULL AS CHAR_OCTET_LENGTH, Position AS ORDINAL_POSITION,") //$NON-NLS-1$
