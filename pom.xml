@@ -3,7 +3,7 @@
 	<parent>
     	<groupId>org.jboss.integration-platform</groupId>
     	<artifactId>jboss-integration-platform-parent</artifactId>
-    	<version>6.0.0.CR10</version>
+    	<version>6.0.0.CR13</version>
     <!--parent>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-parent</artifactId>
@@ -19,6 +19,10 @@
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
 	    
+	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
+	    
+	    <jbossas-module-root>modules/system/layers/base</jbossas-module-root>
+    
 	    <!-- commenting out to use jboss bom versions -->
         <!--version.org.jboss.resteasy>2.3.6.Final</version.org.jboss.resteasy   2.3.7.Final -->
         <!--version.org.hibernate>4.2.10.Final</version.org.hibernate    4.2.12.Final -->
@@ -42,15 +46,13 @@
         <version.org.jboss.marshalling.jboss-marshalling-river>${version.org.jboss.marshalling}</version.org.jboss.marshalling.jboss-marshalling-river>
         <version.org.jboss.arquillian.core>${version.org.jboss.arquillian}</version.org.jboss.arquillian.core>
         <version.javax.enterprise>${version.javax.enterprise.cdi}</version.javax.enterprise>
-        <version.org.apache.httpcomponents.httpclient>${version.org.apache.httpcomponents}</version.org.apache.httpcomponents.httpclient>
         <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>${version.org.hibernate.javax.persistence}</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
+	    <version.org.apache.cxf-jaxrs>${version.org.apache.cxf}</version.org.apache.cxf-jaxrs>
 	     
         
         <!-- versions required by infinispan 6.1 -->
         <version.org.hibernate>4.2.0.Final</version.org.hibernate>
         <version.org.hibernate.search>4.5.0.Final</version.org.hibernate.search>
-        	     
-	    <version.org.apache.cxf-jaxrs>${version.org.apache.cxf}</version.org.apache.cxf-jaxrs>
 
 
 		<!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
@@ -58,12 +60,17 @@
 
         
         <!-- jboss bom overrides -->
-        <version.org.jboss.integration-platform>6.0.0.CR10</version.org.jboss.integration-platform>
-        <version.org.jboss.jboss-common-core>2.2.17.GA-redhat-2</version.org.jboss.jboss-common-core>
-        <version.org.jboss.as>7.4.0.Final-redhat-4</version.org.jboss.as>
-        <version.org.jboss.jboss-dmr>1.2.0.Final-redhat-1</version.org.jboss.jboss-dmr>
+        <version.org.jboss.integration-platform>6.0.0.CR13</version.org.jboss.integration-platform>
+        <version.jta>1.1</version.jta>
+
+        <!--version.org.jboss.jboss-common-core>2.2.17.GA-redhat-2</version.org.jboss.jboss-common-core-->
+        <!--version.org.jboss.as>7.4.0.Final-redhat-19</version.org.jboss.as-->
+  <!--      <version.org.jboss.jboss-dmr>1.2.0.Final-redhat-1</version.org.jboss.jboss-dmr>
         <version.org.jboss.msc.jboss-msc>1.1.5.Final</version.org.jboss.msc.jboss-msc>
+   -->
         <version.org.jboss.jboss-vfs>3.2.2.Final-redhat-1</version.org.jboss.jboss-vfs>
+   
+   
         <version.org.picketbox>4.0.19.SP4-redhat-1</version.org.picketbox>        
        
         <version.xom>1.2.7.redhat-4</version.xom>
@@ -78,14 +85,13 @@
         <!-- Teiid specific properties -->
         <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
         <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
+        <!--version.net.sourceforge.saxon>${version.net.sf.saxon}</version.net.sourceforge.saxon-->
         <version.json-simple>1.1</version.json-simple>
         <version.connector-api>1.5</version.connector-api>
-        <version.jta>1.1</version.jta>
         <arquillian-container-version>7.4.0.Final</arquillian-container-version>
         <jbossas-test-version>jboss-eap-6.3</jbossas-test-version>
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
         <version.core4j>0.5</version.core4j>        
-        <jbossas-module-root>modules/system/layers/base</jbossas-module-root>
         <version.com.force.api>26.0.0</version.com.force.api>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
