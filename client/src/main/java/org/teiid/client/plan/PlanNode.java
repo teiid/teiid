@@ -157,7 +157,11 @@ public class PlanNode implements Externalizable {
     
     public void addProperty(String pname, String value) {
     	Property p = new Property(pname);
-    	p.setValues(Arrays.asList(value));
+    	if (value == null) {
+    		p.setValues(new ArrayList<String>(0));
+    	} else {
+    		p.setValues(Arrays.asList(value));
+    	}
     	this.properties.put(pname, p);
     }
     
@@ -187,7 +191,9 @@ public class PlanNode implements Externalizable {
     	writer.writeAttribute("name", property.getName()); //$NON-NLS-1$
     	if (property.getValues() != null) {
 	    	for (String value:property.getValues()) {
-	    		writeElement(writer, "value", value); //$NON-NLS-1$
+	    		if (value != null) {
+	    			writeElement(writer, "value", value); //$NON-NLS-1$
+	    		}
 	    	}
     	}
     	PlanNode node = property.getPlanNode();
@@ -208,7 +214,9 @@ public class PlanNode implements Externalizable {
     
     private static void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
         writer.writeStartElement(name);
-        writer.writeCharacters(value);
+        if (value != null) {
+        	writer.writeCharacters(value);
+        }
         writer.writeEndElement();
     }    
     
