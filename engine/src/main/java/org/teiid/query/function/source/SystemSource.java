@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod;
@@ -204,6 +205,13 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     
     private void addFunctions(Class<?> clazz) {
 		Method[] methods = clazz.getMethods();
+		//need a consistent order for tests
+		Arrays.sort(methods, new Comparator<Method>() {
+			@Override
+			public int compare(Method arg0, Method arg1) {
+				return arg0.toGenericString().compareTo(arg1.toGenericString());
+			}
+		});
 		for (Method method : methods) {
 			TeiidFunction f = method.getAnnotation(TeiidFunction.class);
 			if (f == null) {

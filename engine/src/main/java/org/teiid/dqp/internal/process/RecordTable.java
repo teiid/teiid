@@ -37,6 +37,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
@@ -163,7 +164,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		return !(ex instanceof ElementSymbol);
 	}
 	
-	public abstract SimpleIterator<T> processQuery(final VDBMetaData vdb, CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii);
+	public abstract SimpleIterator<T> processQuery(final VDBMetaData vdb, CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata);
 	
 	public SimpleIterator<T> processQuery(final VDBMetaData vdb, NavigableMap<String, ?> map, BaseIndexInfo<?> ii) {
 		final Criteria crit = ii.getCoveredCriteria();

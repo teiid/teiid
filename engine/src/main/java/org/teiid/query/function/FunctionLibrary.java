@@ -130,6 +130,10 @@ public class FunctionLibrary {
 	public FunctionTree[] getUserFunctions() {
 		return userFunctions;
 	}
+	
+	public FunctionTree getSystemFunctions() {
+		return systemFunctions;
+	}
 
     /**
      * Get all function categories, sorted in alphabetical order

@@ -407,7 +407,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	
         	@Override
         	public SimpleIterator<Datatype> processQuery(VDBMetaData vdb,
-        			CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii) {
+        			CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata) {
         		return processQuery(vdb, metadataStore.getDatatypes(), ii);
         	}
         }, columns) {
@@ -558,7 +558,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			@Override
         			public SimpleIterator<AbstractMetadataRecord> processQuery(
         					VDBMetaData vdb, CompositeMetadataStore metadataStore,
-        					BaseIndexInfo<?> ii) {
+        					BaseIndexInfo<?> ii, TransformationMetadata metadata) {
         				return processQuery(vdb, metadataStore.getOids(), ii);
         			}
         			
@@ -841,7 +841,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			@Override
         			public SimpleIterator<AbstractMetadataRecord> processQuery(
         					VDBMetaData vdb, CompositeMetadataStore metadataStore,
-        					BaseIndexInfo<?> ii) {
+        					BaseIndexInfo<?> ii, TransformationMetadata metadata) {
         				return processQuery(vdb, metadataStore.getOids(), ii);
         			}
         			

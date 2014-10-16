@@ -138,8 +138,8 @@ public class MetadataFactory implements Serializable {
 		return h;
 	}
 
-	private static String hex(long val, int hexLength) {
-		long hi = 1L << (hexLength * 4);
+	public static String hex(long val, int hexLength) {
+		long hi = 1L << (Math.min(63, hexLength * 4));
 		return Long.toHexString(hi | (val & (hi - 1))).substring(1);
     }
 

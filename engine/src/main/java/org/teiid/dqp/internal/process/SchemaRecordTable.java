@@ -24,8 +24,10 @@ package org.teiid.dqp.internal.process;
 
 import java.util.List;
 import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -33,7 +35,10 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -55,7 +60,7 @@ class SchemaRecordTable extends RecordTable<Schema> {
 	@Override
 	public SimpleIterator<Schema> processQuery(
 			VDBMetaData vdb, CompositeMetadataStore metadataStore,
-			BaseIndexInfo<?> ii) {
+			BaseIndexInfo<?> ii, TransformationMetadata metadata) {
 		return processQuery(vdb, metadataStore.getSchemas(), ii);
 	}
 
@@ -73,13 +78,13 @@ abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends 
 	@Override
 	public SimpleIterator<T> processQuery(
 			final VDBMetaData vdb, final CompositeMetadataStore metadataStore,
-			final BaseIndexInfo<?> ii) {
+			final BaseIndexInfo<?> ii, final TransformationMetadata metadata) {
 		final SimpleIterator<Schema> schemas = schemaTable.processQuery(vdb, metadataStore.getSchemas(), ii);
 		return new ExpandingSimpleIterator<Schema, T>(schemas) {
 			@Override
 			protected SimpleIterator<T> getChildIterator(
 					Schema parent) {
-				return processQuery(vdb, getChildren(parent), ii.next);
+				return processQuery(vdb, getChildren(parent, metadata), ii.next);
 			}
 		};
 	}
@@ -97,7 +102,7 @@ abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends 
 		rowBuffer.add(s.getName());
 	}
 	
-	protected abstract NavigableMap<String, T> getChildren(Schema s);
+	protected abstract NavigableMap<String, T> getChildren(Schema s, TransformationMetadata metadata);
 	
 }
 
@@ -108,7 +113,7 @@ class ProcedureSystemTable extends SchemaChildRecordTable<Procedure> {
 	}
 
 	@Override
-	protected NavigableMap<String, Procedure> getChildren(Schema s) {
+	protected NavigableMap<String, Procedure> getChildren(Schema s, TransformationMetadata metadata) {
 		return s.getProcedures();
 	}
 }
@@ -120,10 +125,23 @@ class FunctionSystemTable extends SchemaChildRecordTable<FunctionMethod> {
 	}
 
 	@Override
-	protected NavigableMap<String, FunctionMethod> getChildren(Schema s) {
-		/*if (s.getName().equals(CoreConstants.SYSTEM_MODEL)) {
-			
-		}*/
+	protected NavigableMap<String, FunctionMethod> getChildren(Schema s, TransformationMetadata metadata) {
+		//since there is no proper schema for a UDF model, no results will show up for legacy functions
+		if (s.getName().equals(CoreConstants.SYSTEM_MODEL)) {
+			//currently all system functions are contributed via alternative mechanisms
+			//system source, push down functions.
+			FunctionLibrary library = metadata.getFunctionLibrary();
+			FunctionTree tree = library.getSystemFunctions();
+			FunctionTree[] userFuncs = library.getUserFunctions();
+			TreeMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+			for (FunctionTree userFunc : userFuncs) {
+				if (userFunc.getSchemaName().equals(CoreConstants.SYSTEM_MODEL)) {
+					functions.putAll(userFunc.getFunctionsByUuid());
+				}
+			}
+			functions.putAll(tree.getFunctionsByUuid());
+			return functions;
+		}
 		return s.getFunctions();
 	}
 }
@@ -135,7 +153,7 @@ class TableSystemTable extends SchemaChildRecordTable<Table> {
 	}
 
 	@Override
-	protected NavigableMap<String, Table> getChildren(Schema s) {
+	protected NavigableMap<String, Table> getChildren(Schema s, TransformationMetadata metadata) {
 		return s.getTables();
 	}
 }
