@@ -29,8 +29,10 @@ import java.util.concurrent.Executors;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -49,6 +51,7 @@ public class SocketListener implements ChannelListenerFactory {
     private boolean isClientEncryptionEnabled;
     private ExecutorService nettyPool;
     private ClientServiceRegistryImpl csr;
+	private ServerBootstrap bootstrap;
     
     public SocketListener(InetSocketAddress address, SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
 		this(address, config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
@@ -82,7 +85,7 @@ public class SocketListener implements ChannelListenerFactory {
 		
         ChannelFactory factory = new NioServerSocketChannelFactory(this.nettyPool, this.nettyPool, maxWorkers);
         
-        ServerBootstrap bootstrap = new ServerBootstrap(factory);
+        bootstrap = new ServerBootstrap(factory);
         this.channelHandler = createChannelPipelineFactory(config, storageManager);
         bootstrap.setPipelineFactory(channelHandler);
         if (inputBufferSize != 0) {
@@ -101,8 +104,13 @@ public class SocketListener implements ChannelListenerFactory {
     }
     
     public void stop() {
-    	this.serverChanel.close();
-    	this.nettyPool.shutdownNow();
+    	ChannelFuture future = this.serverChanel.close();
+    	bootstrap.shutdown();
+    	try {
+			future.await();
+		} catch (InterruptedException e) {
+			throw new TeiidRuntimeException(e);
+		}
     }
    
     public SocketListenerStats getStats() {
