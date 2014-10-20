@@ -71,8 +71,7 @@ public class MakeGSS {
         String jaasApplicationName = props.getProperty(TeiidURL.CONNECTION.JAAS_NAME);
         String nl = System.getProperty("line.separator");//$NON-NLS-1$
         if (jaasApplicationName == null) {
-        	errors.append(JDBCPlugin.Util.getString("client_prop_missing", TeiidURL.CONNECTION.JAAS_NAME)); //$NON-NLS-1$
-        	errors.append(nl);
+        	jaasApplicationName = "Teiid"; //$NON-NLS-1$
         }
         
         String kerberosPrincipalName =  props.getProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME);
