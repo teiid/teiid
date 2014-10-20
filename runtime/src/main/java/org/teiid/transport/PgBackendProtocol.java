@@ -73,7 +73,9 @@ import org.teiid.transport.pg.PGbytea;
  */
 @SuppressWarnings("nls")
 public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRemote {
-	
+
+	public static final String SSL_HANDLER_KEY = "sslHandler";
+
     private final class SSLEnabler implements ChannelFutureListener {
     	
     	private SSLEngine engine;
@@ -86,7 +88,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		public void operationComplete(ChannelFuture future) throws Exception {
 			if (future.isSuccess()) {
 				SslHandler handler = new SslHandler(engine);
-				future.getChannel().getPipeline().addFirst("sslHandler", handler);
+				future.getChannel().getPipeline().addFirst(SSL_HANDLER_KEY, handler);
 				handler.handshake();
 			}
 		}
@@ -194,15 +196,17 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     private MessageEvent message;
     private int maxLobSize = (2*1024*1024); // 2 MB
 	private final int maxBufferSize;
+	private boolean requireSecure;
     
 	private volatile ResultsFuture<Boolean> nextFuture;
 
 	private SSLConfiguration config;
 
-	public PgBackendProtocol(int maxLobSize, int maxBufferSize, SSLConfiguration config) {
+	public PgBackendProtocol(int maxLobSize, int maxBufferSize, SSLConfiguration config, boolean requireSecure) {
     	this.maxLobSize = maxLobSize;
     	this.maxBufferSize = maxBufferSize;
     	this.config = config;
+		this.requireSecure = requireSecure;
     }
     
 	@Override
@@ -241,7 +245,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	
 	@Override
 	public void useClearTextAuthentication() {
-		sendAuthenticationCleartextPassword();
+		if (requireSecure && config != null && config.isClientEncryptionEnabled()) {
+			sendErrorResponse("Secure authentication is required");
+		} else {
+			sendAuthenticationCleartextPassword();
+		}
 	}
 	
 	@Override
@@ -561,14 +569,20 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	public void sendSslResponse() {
 		SSLEngine engine = null;
 		try {
-			engine = config.getServerSSLEngine();
+			if (config != null) {
+				engine = config.getServerSSLEngine();
+			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		} catch (GeneralSecurityException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		}
 		ChannelBuffer buffer = ctx.getChannel().getConfig().getBufferFactory().getBuffer(1);
 		if (engine == null) {
+			if (requireSecure) {
+				sendErrorResponse(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40124));
+				return;
+			}
 			buffer.writeByte('N');
 		} else {
 			this.message.getFuture().addListener(new SSLEnabler(engine));
@@ -803,6 +817,10 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 
 	private static void trace(String... msg) {
 		LogManager.logTrace(LogConstants.CTX_ODBC, (Object[])msg);
+	}
+	
+	public boolean secureData() {
+		return requireSecure && config != null && config.isSslEnabled();
 	}
 	
 }

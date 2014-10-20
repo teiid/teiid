@@ -47,12 +47,13 @@
   <li>TEIID-2527 The admin method assignToModel has been deprecated.  See the updateSource, addSource, and removeSource methods instead.
   <li>TEIID-2904 The createMetadataProcessor method on JDBCExcutionFactory has been deprecated. Use getMetadataProcessor instead.</li>
   <li>TEIID-3159 The SAP Netweaver Gateway translator (sap-nw-gateway) has been renamed to just SAP Gateway (sap-gateway).  Usage of sap-nw-gateway is deprecated.</li>
+  <li>TEIID-3177 ODBC connections will be required to be secure based upon the SSL mode setting.  If the mode is enabled, then the client must request an SSL connection.  If the mode is login, then the client must use GSS authentication.  To revert to the prior behavior, the system property org.teiid.ODBCRequireSecure can be set to false.</li>
 </ul>
 
 <h4>from 8.6</h4>
 <ul>
    <li>TEIID-2793 Searchability metadata will not prevent more complicated expressions from being pushed down.
-   <li>TEIID-2794 Schema scoped functions are checked for ambiguity. Schema qualifaciton may be needed to resolve properly.
+   <li>TEIID-2794 Schema scoped functions are checked for ambiguity. Schema qualification may be needed to resolve properly.
    <li>TEIID-2840 Internal materialized view ttl refresh is now blocking by default.  To keep the old behavior of lazy invalidation, use the vdb property lazy-invalidation=true
 </ul>
 

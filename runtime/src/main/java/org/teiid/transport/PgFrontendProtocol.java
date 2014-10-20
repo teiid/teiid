@@ -43,6 +43,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCServerRemote;
+import org.teiid.runtime.RuntimePlugin;
 
 /**
  * Represents the messages going from PG ODBC Client --> back end Server  
@@ -141,7 +142,7 @@ public class PgFrontendProtocol extends FrameDecoder {
         switch(messageType) {
         case 'I': 
         	this.initialized = true;
-        	return buildInitialize(data);
+        	return buildInitialize(data, channel);
         case 'p':
         	return buildLogin(data, channel);
         case 'P':
@@ -184,7 +185,7 @@ public class PgFrontendProtocol extends FrameDecoder {
 		return message;
 	}
 
-	private Object buildInitialize(NullTerminatedStringDataInputStream data) throws IOException{
+	private Object buildInitialize(NullTerminatedStringDataInputStream data, Channel channel) throws IOException{
         Properties props = new Properties();
        
         int version = data.readInt();
@@ -194,6 +195,11 @@ public class PgFrontendProtocol extends FrameDecoder {
         if (version == 80877103) {
         	this.initialized = false;
         	this.odbcProxy.sslRequest();
+        	return message;
+        }
+        
+        if (this.pgBackendProtocol.secureData() && channel.getPipeline().get(org.teiid.transport.PgBackendProtocol.SSL_HANDLER_KEY) == null) {
+        	this.odbcProxy.unsupportedOperation(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40123));
         	return message;
         }
         
