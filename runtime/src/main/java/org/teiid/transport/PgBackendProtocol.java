@@ -246,7 +246,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	@Override
 	public void useClearTextAuthentication() {
 		if (requireSecure && config != null && config.isClientEncryptionEnabled()) {
-			sendErrorResponse("Secure authentication is required");
+			sendErrorResponse(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40125));
 		} else {
 			sendAuthenticationCleartextPassword();
 		}

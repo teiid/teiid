@@ -133,17 +133,28 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 
 	private static final MockTransactionManager TRANSACTION_MANAGER = new TestEmbeddedServer.MockTransactionManager();
 
+	enum Mode {
+		LEGACY,//how the test was originally written
+		ENABLED,
+		LOGIN,
+		DISABLED
+	}
+	
 	static class FakeOdbcServer {
 		InetSocketAddress addr;
 		ODBCSocketListener odbcTransport;
 		FakeServer server;
 		
-		public void start(Boolean ssl) throws Exception {
+		public void start(Mode mode) throws Exception {
 			SocketConfiguration config = new SocketConfiguration();
 			SSLConfiguration sslConfig = new SSLConfiguration();
-			if (ssl == null || ssl) {
+			if (mode == Mode.LOGIN) {
+				sslConfig.setMode(SSLConfiguration.LOGIN);
+			} else if (mode == Mode.ENABLED || mode == Mode.LEGACY) {
 				sslConfig.setMode(SSLConfiguration.ENABLED);
 				sslConfig.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+			} else {
+				sslConfig.setMode(SSLConfiguration.DISABLED);
 			}
 			config.setSSLConfiguration(sslConfig);
 			addr = new InetSocketAddress(0);
@@ -156,8 +167,8 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			LogonImpl logon = Mockito.mock(LogonImpl.class);
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
-			if (ssl == null) {
-				odbcTransport.setRequireSSL(false);
+			if (mode == Mode.LEGACY) {
+				odbcTransport.setRequireSecure(false);
 			}
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		}
@@ -172,7 +183,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	private static FakeOdbcServer odbcServer = new FakeOdbcServer();
 	
 	@BeforeClass public static void oneTimeSetup() throws Exception {
-		odbcServer.start(null);
+		odbcServer.start(Mode.LEGACY);
 	}
 	
 	@AfterClass public static void oneTimeTearDown() throws Exception {
