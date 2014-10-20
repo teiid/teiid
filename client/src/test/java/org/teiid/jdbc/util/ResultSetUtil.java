@@ -49,7 +49,7 @@ public class ResultSetUtil {
     public static void printResultSet(ResultSet rs) throws SQLException, IOException {
     	PrintWriter pw = new PrintWriter(System.out);
     	printResultSet(rs, 100, true, pw);
-    	pw.close();
+    	pw.flush();
     }
     
     /**

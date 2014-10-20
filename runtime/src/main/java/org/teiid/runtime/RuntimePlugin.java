@@ -133,5 +133,9 @@ public class RuntimePlugin {
     	TEIID40119,
     	TEIID40120, 
     	TEIID40121, //invalid model name
+    	TEIID40122, //error creating SSLEngine
+    	TEIID40123, 
+    	TEIID40124, 
+    	TEIID40125, 
     }
 }
