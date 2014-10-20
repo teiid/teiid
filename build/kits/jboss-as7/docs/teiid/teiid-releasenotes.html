@@ -47,7 +47,6 @@
   <li>TEIID-2527 The admin method assignToModel has been deprecated.  See the updateSource, addSource, and removeSource methods instead.
   <li>TEIID-2904 The createMetadataProcessor method on JDBCExcutionFactory has been deprecated. Use getMetadataProcessor instead.</li>
   <li>TEIID-3159 The SAP Netweaver Gateway translator (sap-nw-gateway) has been renamed to just SAP Gateway (sap-gateway).  Usage of sap-nw-gateway is deprecated.</li>
-  <li>TEIID-3177 ODBC connections will be required to be secure based upon the SSL mode setting.  If the mode is enabled, then the client must request an SSL connection.  If the mode is login, then the client must use GSS authentication.  To revert to the prior behavior, the system property org.teiid.ODBCRequireSecure can be set to false.</li>
 </ul>
 
 <h4>from 8.6</h4>
@@ -215,6 +214,11 @@ for how to access the underlying SQLWarning chains.
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 8.8</h4>
+<ul>
+  <li>TEIID-3177 ODBC connections will be required to be secure based upon the SSL mode setting.  If the mode is enabled, then the client must request an SSL connection.  If the mode is login, then the client must use GSS authentication.  To revert to the prior behavior, the system property org.teiid.ODBCRequireSecure can be set to false.</li>
+</ul>
+
 <h4>from 8.4</h4>
 <ul>
   <li>TEIID-2512 the usage of the metadata element text as the "raw schema text" may not be appropriate in all situations.  The ddl and ddl-file metadata repositories will check for the ddl and ddl-file model properties respectively.
@@ -314,6 +318,7 @@ temporary table access.
 	if mixed case values are being searched.
 	<li>TEIID-2836 - Data from DB2 on z/OS in EBCDIC may not be represented correctly at runtime.  It is recommended that the values are converted to ASCII or another common character set.
 	<li>TEIID-2998 - Google spreadsheets containing all string data do not detect their row data and labels correctly on the Google backend.
+	<li>TEIID-3070 - Netty threads may inappropriately take up CPU resources.  This affects most EAP releases.  Upgrade the AS version of Netty to 3.6.10.Final to address this issue.
 </ul>
 <h4>from 7.0</h4>
 <ul>
