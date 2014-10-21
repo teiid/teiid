@@ -916,6 +916,33 @@ public class TestSubqueryPushdown {
     } 
     
     /**
+     * Here the merge join prevents us from using a semi join merge join
+     * @throws TeiidProcessingException 
+     * @throws TeiidComponentException 
+     */
+    @Test public void testSemiJoinUnderJoin() throws TeiidComponentException, TeiidProcessingException {
+        ProcessorPlan plan = helpPlan("Select pm2.g2.e1 from pm1.g1 inner join pm2.g2 on (pm1.g1.e1 = pm2.g2.e1) where pm2.g2.e2 in /*+ mj */ (select count(e2) FROM pm1.g2 group by e1 having e1 < pm2.g2.e3)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_2", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            1,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+        checkJoinCounts(plan, 0, 0);
+    } 
+    
+    /**
      * This will not plan as a anti semi-join since the cost seems too high
      */
     @Test public void testNoAntiSemiJoinExistsCosting() {
