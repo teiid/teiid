@@ -269,6 +269,15 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			return current;
 		}
 		
+		//check if the child is already ordered.  TODO: see if the ordering is compatible.
+		PlanNode childSort = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+		if (childSort != null) {
+			if (plannedResult.mergeJoin && analysisRecord != null && analysisRecord.recordAnnotations()) {
+				this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, "Could not plan as a merge join since the parent join requires a sort: " + crit, "ignoring MJ hint", Priority.HIGH)); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			return current;
+		}
+		
 		//add an order by, which hopefully will get pushed down
 		plannedResult.query.setOrderBy(new OrderBy(plannedResult.rightExpressions).clone());
 		for (OrderByItem item : plannedResult.query.getOrderBy().getOrderByItems()) {
