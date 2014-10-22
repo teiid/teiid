@@ -241,7 +241,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			}
 		}
 		Dispatch<T> dispatch = this.wsdlService.createDispatch(this.mcf.getPortQName(), type, mode);
-		setDispatchProperties(dispatch);
+		configureWSSecurity(dispatch);
+		setDispatchProperties(dispatch, "SOAP12"); //$NON-NLS-1$
 		return dispatch;
 	}
 
@@ -313,54 +314,60 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			svc.addPort(this.mcf.getPortQName(), binding, endpoint);
 
 			dispatch = svc.createDispatch(this.mcf.getPortQName(), type, mode);
-
-			if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity) {
-				Client client = ((DispatchImpl)dispatch).getClient();
-				Endpoint ep = client.getEndpoint();
-
-				// spring configuration file
-				if (this.mcf.getOutInterceptors() != null) {
-					for (Interceptor i : this.mcf.getOutInterceptors()) {
-						ep.getOutInterceptors().add(i);
-					}
-				}
-
-				// ws-security pass-thru from custom jaas domain
-				Subject subject = ConnectionContext.getSubject();
-				if (subject != null) {
-					WSSecurityCredential credential = ConnectionContext.getSecurityCredential(subject, WSSecurityCredential.class);
-					if (credential != null) {
-						if (credential.useSts()) {
-							dispatch.getRequestContext().put(SecurityConstants.STS_CLIENT, credential.buildStsClient(bus));
-						}
-						if(credential.getSecurityHandler() == WSSecurityCredential.SecurityHandler.WSS4J) {
-							ep.getOutInterceptors().add(new WSS4JOutInterceptor(credential.getRequestPropterties()));
-							ep.getInInterceptors().add(new WSS4JInInterceptor(credential.getResponsePropterties()));
-						}
-						else if (credential.getSecurityHandler() == WSSecurityCredential.SecurityHandler.WSPOLICY) {
-							dispatch.getRequestContext().putAll(credential.getRequestPropterties());
-							dispatch.getResponseContext().putAll(credential.getResponsePropterties());
-						}
-					}
-				}
-			}
+			configureWSSecurity(dispatch);
 		}
-
-		setDispatchProperties(dispatch);
-
-		if (HTTPBinding.HTTP_BINDING.equals(binding)) {
-	        Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
-	        if(httpHeaders == null) {
-	        	httpHeaders = new HashMap<String, List<String>>();
-	        }
-	        httpHeaders.put("Content-Type", Collections.singletonList("text/xml; charset=utf-8"));//$NON-NLS-1$ //$NON-NLS-2$
-	        httpHeaders.put("User-Agent", Collections.singletonList("Teiid Server"));//$NON-NLS-1$ //$NON-NLS-2$
-	        dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_HEADERS, httpHeaders);
-		}
+		setDispatchProperties(dispatch, binding);
 		return dispatch;
 	}
 
-	private <T> void setDispatchProperties(Dispatch<T> dispatch) {
+    private <T> void configureWSSecurity(Dispatch<T> dispatch) {
+        if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity) {
+            Bus bus = BusFactory.getThreadDefaultBus();
+            BusFactory.setThreadDefaultBus(this.mcf.getBus());
+            try {
+            	Client client = ((DispatchImpl)dispatch).getClient();
+            	Endpoint ep = client.getEndpoint();
+    
+            	// spring configuration file
+            	if (this.mcf.getOutInterceptors() != null) {
+            		for (Interceptor i : this.mcf.getOutInterceptors()) {
+            			ep.getOutInterceptors().add(i);
+            		}
+            	}
+    
+            	// ws-security pass-thru from custom jaas domain
+            	Subject subject = ConnectionContext.getSubject();
+            	if (subject != null) {
+            		WSSecurityCredential credential = ConnectionContext.getSecurityCredential(subject, WSSecurityCredential.class);
+            		if (credential != null) {
+            			if (credential.useSts()) {
+            				dispatch.getRequestContext().put(SecurityConstants.STS_CLIENT, credential.buildStsClient(bus));
+            			}
+            			if(credential.getSecurityHandler() == WSSecurityCredential.SecurityHandler.WSS4J) {
+            				ep.getOutInterceptors().add(new WSS4JOutInterceptor(credential.getRequestPropterties()));
+            				ep.getInInterceptors().add(new WSS4JInInterceptor(credential.getResponsePropterties()));
+            			}
+            			else if (credential.getSecurityHandler() == WSSecurityCredential.SecurityHandler.WSPOLICY) {
+            				dispatch.getRequestContext().putAll(credential.getRequestPropterties());
+            				dispatch.getResponseContext().putAll(credential.getResponsePropterties());
+            			}
+            		}
+            		
+            		// When properties are set on subject treat them as they can configure WS-Security
+            		HashMap<String, String> properties = ConnectionContext.getSecurityCredential(subject, HashMap.class);
+            		for (String key:properties.keySet()) {
+            		    if (key.startsWith("ws-security.")) { //$NON-NLS-1$
+            		        ep.put(key, properties.get(key));
+            		    }
+            		}
+            	}
+            } finally {
+                BusFactory.setThreadDefaultBus(bus);
+            }
+        }   
+    }
+
+	private <T> void setDispatchProperties(Dispatch<T> dispatch, String binding) {
 		if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
 
 			String userName = this.mcf.getAuthUserName();
@@ -398,6 +405,16 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		if (this.mcf.getConnectTimeout() != null){
 			dispatch.getRequestContext().put(CONNECTION_TIMEOUT, this.mcf.getConnectTimeout()); 
 		}
+		
+        if (HTTPBinding.HTTP_BINDING.equals(binding)) {
+            Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
+            if(httpHeaders == null) {
+                httpHeaders = new HashMap<String, List<String>>();
+            }
+            httpHeaders.put("Content-Type", Collections.singletonList("text/xml; charset=utf-8"));//$NON-NLS-1$ //$NON-NLS-2$
+            httpHeaders.put("User-Agent", Collections.singletonList("Teiid Server"));//$NON-NLS-1$ //$NON-NLS-2$
+            dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_HEADERS, httpHeaders);
+        }		
 	}
 
 	@Override
