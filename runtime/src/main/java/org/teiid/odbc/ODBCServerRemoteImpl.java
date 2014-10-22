@@ -1056,7 +1056,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		final ArrayList<PgColInfo> result = new ArrayList<PgColInfo>(columns);
 		for (int i = 1; i <= columns; i++) {
 			final PgColInfo info = new PgColInfo();
-			info.name = meta.getColumnLabel(i).toLowerCase();
+			info.name = meta.getColumnLabel(i);
 			info.type = meta.getColumnType(i);
 			info.type = convertType(info.type);
 			info.precision = meta.getColumnDisplaySize(i);
