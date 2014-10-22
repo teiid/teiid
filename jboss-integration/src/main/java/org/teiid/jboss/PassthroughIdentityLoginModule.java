@@ -25,6 +25,7 @@ import java.security.AccessController;
 import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.acl.Group;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.resource.spi.security.PasswordCredential;
@@ -50,6 +51,7 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
    private char[] password;
    private Subject callerSubject;
    private boolean addPrincipal = true;
+   private HashMap<String, Object> properties = new HashMap<String, Object>();
 
    @Override
    public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
@@ -70,6 +72,7 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
                 password = pass.toCharArray();
             }
         }
+        this.properties.putAll(options);
    }
 
     @Override
@@ -118,6 +121,7 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
       if (this.callerSubject != null) {
           makeCopy(this.callerSubject, this.subject);
       }
+      addPrivateCredential(this.subject, this.properties);
       return true;
    }
    
@@ -181,6 +185,20 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
        
        for (Object obj: from.getPublicCredentials()) {
            to.getPublicCredentials().add(obj);
+       }
+   }
+   
+   static void addPrivateCredential(final Subject subject, final Object obj) {
+       if (System.getSecurityManager() == null) {
+           subject.getPrivateCredentials().add(obj);
+       }
+       else {
+       AccessController.doPrivileged(new PrivilegedAction<Object>() { 
+           public Object run() {
+               subject.getPrivateCredentials().add(obj);
+               return null;
+           }
+       });   
        }
    }
 }

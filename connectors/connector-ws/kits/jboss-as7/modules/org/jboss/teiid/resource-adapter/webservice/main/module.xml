@@ -7,6 +7,7 @@
     </resources>
 
     <dependencies>
+        <module name="sun.jdk" />
         <module name="javax.api" />
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
@@ -45,5 +46,6 @@
                 <include path="META-INF" />
             </exports>
         </module>
+        <module name="org.apache.ws.security"/>        
     </dependencies>
 </module>
