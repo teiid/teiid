@@ -61,8 +61,6 @@ public class MetadataStore implements Serializable {
 	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
 	protected NavigableMap<String, Datatype> datatypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
 	protected List<Grant> grants;
-	private List<String> startTriggers;
-	private List<String> shutdownTriggers;
 	
 	public NavigableMap<String, Schema> getSchemas() {
 		return schemas;

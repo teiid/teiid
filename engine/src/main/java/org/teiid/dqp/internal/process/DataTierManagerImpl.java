@@ -531,7 +531,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(param.getScale());
 				row.add(param.getRadix());
 				row.add(param.getNullType().toString());
-				//row.add(param.getUUID());
+				row.add(param.getUUID());
 				row.add(param.getAnnotation());
 				row.add(null);
         	}

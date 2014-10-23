@@ -264,7 +264,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	}
     
     public boolean isUUIDSet() {
-    	return this.uuid != null;
+    	return this.uuid != null && this.uuid.length() > 0 && !Character.isDigit(this.uuid.charAt(0));
     }
         
 }

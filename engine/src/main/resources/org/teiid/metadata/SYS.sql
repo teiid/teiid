@@ -142,9 +142,9 @@ CREATE FOREIGN TABLE FunctionParams (
     Scale integer NOT NULL,
     Radix integer NOT NULL,
     NullType string(10) NOT NULL,
-    /*UID string(50),*/
+    UID string(50),
     Description string(4000),
-    /*UNIQUE (UID),*/
+    UNIQUE (UID),
     PRIMARY KEY (VDBName, SchemaName, FunctionName, Name),
     FOREIGN KEY (VDBName, SchemaName, FunctionName) REFERENCES Functions (VDBName, SchemaName, Name)
 );

@@ -837,6 +837,10 @@ public class MetadataFactory implements Serializable {
 	public void addFunction(FunctionMethod functionMethod) {
 		functionMethod.setParent(this.schema);
 		setUUID(functionMethod);
+		for (FunctionParameter param : functionMethod.getInputParameters()) {
+			setUUID(param);
+		}
+		setUUID(functionMethod.getOutputParameter());
 		this.schema.addFunction(functionMethod);
 	}
 

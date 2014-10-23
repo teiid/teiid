@@ -15,6 +15,7 @@ indkey
 15                                                               
 1 2 3 5                                                          
 1 2 3                                                            
+14                                                               
 1 2 3                                                            
 1 2                                                              
 5                                                                
@@ -53,6 +54,6 @@ indkey
 1                                                                
 1                                                                
 1                                                                
-Row Count : 53
+Row Count : 54
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 indkey         1111                           java.lang.Object    indkey          int2vector                                      2147483647            2147483647    0         false            true             false       false                 2           false       true          false     true        
