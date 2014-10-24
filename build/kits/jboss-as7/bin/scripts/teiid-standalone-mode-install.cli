@@ -30,7 +30,7 @@ connect
 /subsystem=teiid/transport=embedded:add()
 /subsystem=teiid/transport=odata:add(authentication-security-domain=teiid-security)
 /subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
-/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, authentication-security-domain=teiid-security) 
+/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, authentication-security-domain=teiid-security, ssl-mode=disabled) 
 
 /subsystem=teiid/translator=jdbc-simple:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=jdbc-ansi:add(module=org.jboss.teiid.translator.jdbc)
@@ -83,7 +83,10 @@ connect
 /subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
+/subsystem=resource-adapters/resource-adapter=cassandra:add(module=org.jboss.teiid.resource-adapter.cassandra)
+/subsystem=resource-adapters/resource-adapter=simpledb:add(module=org.jboss.teiid.resource-adapter.simpledb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
+/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 
 
 /:reload

@@ -20,10 +20,12 @@
         <dependency>
 		  <groupId>com.google.guava</groupId>
 		  <artifactId>guava</artifactId>
+		  <scope>provided</scope>
 		</dependency>
 		<dependency>
 		  <groupId>org.apache.httpcomponents</groupId>
 		  <artifactId>httpclient</artifactId>
+		  <scope>provided</scope>
 		</dependency>
        <dependency>
 		  <groupId>org.jboss.teiid.connectors.google</groupId>

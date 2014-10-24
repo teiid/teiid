@@ -9,56 +9,56 @@
 	<artifactId>test-integration-common</artifactId>
 	<name>Common Integration Tests</name>
 	<description>Common Integration tests that do not require external dependencies</description>
-	<dependencies>
-		<dependency>
-			<groupId>postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-		</dependency>
-		<dependency>
-  			<groupId>com.h2database</groupId>
-  			<artifactId>h2</artifactId>
-		</dependency>
-         	<dependency>
-                	<groupId>org.apache.cxf</groupId>
-                	<artifactId>cxf-bundle</artifactId>
-            	</dependency>		
-        	<dependency>
-            		<groupId>org.apache.cxf</groupId>
-            		<artifactId>cxf-rt-frontend-jaxrs</artifactId>
-        	</dependency>        
-		<dependency>
-  			<artifactId>teiid-jboss-integration</artifactId>
-			<groupId>org.jboss.teiid</groupId>
-		</dependency>
-		<dependency>
-            		<groupId>org.jboss.teiid</groupId>
-            		<artifactId>teiid-runtime</artifactId>
-            		<type>test-jar</type>
-        	</dependency>
-		<dependency>
-            		<artifactId>translator-ws</artifactId>
-            		<groupId>org.jboss.teiid.connectors</groupId>
-        	</dependency>
-		<dependency>
-            		<groupId>commons-logging</groupId>
-            		<artifactId>commons-logging</artifactId>
-		</dependency>
-        	<dependency>
-              		<groupId>org.jboss.arquillian.junit</groupId>
-              		<artifactId>arquillian-junit-container</artifactId>
-              		<scope>test</scope>
-            	</dependency>
-        	<dependency>
-            		<groupId>junit</groupId>
-            		<artifactId>junit</artifactId>
-            		<scope>test</scope>
-        	</dependency>
-        	<dependency>
-            		<groupId>org.hibernate</groupId>
-            		<artifactId>hibernate-core</artifactId>
-            		<scope>test</scope>
-        	</dependency>
-	</dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-bundle</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+        </dependency>
+        <dependency>
+            <artifactId>teiid-jboss-integration</artifactId>
+            <groupId>org.jboss.teiid</groupId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-runtime</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <artifactId>translator-ws</artifactId>
+            <groupId>org.jboss.teiid.connectors</groupId>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
     <profiles>
     <profile>
         <id>arquillian-tests</id>
@@ -72,18 +72,6 @@
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-arquillian-container-managed</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.as</groupId>
-                <artifactId>jboss-as-arquillian-common</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.as</groupId>
-                <artifactId>jboss-as-arquillian-protocol-jmx</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.as</groupId>
-                <artifactId>jboss-as-arquillian-testenricher-msc</artifactId>
             </dependency>
         </dependencies>
             <build>
@@ -132,58 +120,12 @@
                                     </artifactItems>
                                 </configuration>
                             </execution>
-                            <execution>
-                                <id>unpack3</id>
-                                <phase>process-test-classes</phase>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.jboss.resteasy</groupId>
-                                            <artifactId>resteasy-jaxrs</artifactId>
-                                            <version>${version.org.jboss.resteasy}</version>
-                                            <type>jar</type>
-                                            <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.jboss.resteasy</groupId>
-                                            <artifactId>async-http-servlet-3.0</artifactId>
-                                            <version>${version.org.jboss.resteasy}</version>
-                                            <type>jar</type>
-                                            <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
-                                        </artifactItem>                                                                                
-                                    </artifactItems>
-                                </configuration>
-                            </execution>                                                         
                         </executions>
                     </plugin>
                     <plugin>
                         <artifactId>maven-resources-plugin</artifactId>
                         <version>2.6</version>
                         <executions>
-                            <execution>
-                                <id>copy-resources</id>
-                                <phase>process-test-classes</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/${jbossas-test-version}/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>src/test/resources</directory>
-                                            <includes>
-                                            <include>module.xml</include>
-                                            </includes>
-                                            <filtering>true</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
                             <execution>
                                 <id>copy-resources2</id>
                                 <phase>process-test-classes</phase>

@@ -1,3 +1,5 @@
 .settings/
 target/
 
+/target/
+/target/
