@@ -55,14 +55,14 @@ public class TestInfinispanConnection extends TestObjectConnection {
         .build(); //Builds  the GlobalConfiguration object
     Configuration loc = new ConfigurationBuilder()
 //        .jmxStatistics().enable() //Enable JMX statistics
-    	.indexing().enable()
+        .indexing().enable().addProperty("hibernate.search.default.directory_provider", "filesystem").addProperty("hibernate.search.default.indexBase", "./target/lucene/indexes")
         .clustering().cacheMode(CacheMode.LOCAL) //Set Cache mode to LOCAL - Data is not replicated.
         .transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
         //.autoCommit(false) //Enable Transactional mode with autocommit false
 //        .lockingMode(LockingMode.OPTIMISTIC).transactionManagerLookup(new GenericTransactionManagerLookup()) //uses GenericTransactionManagerLookup - This is a lookup class that locate transaction managers in the most  popular Java EE application servers. If no transaction manager can be found, it defaults on the dummy transaction manager.
 //        .locking().isolationLevel(IsolationLevel.REPEATABLE_READ) //Sets the isolation level of locking
         .eviction().maxEntries(100).strategy(EvictionStrategy.LIRS) //Sets  4 as maximum number of entries in a cache instance and uses the LIRS strategy - an efficient low inter-reference recency set replacement policy to improve buffer cache performance
-        .persistence().passivation(false).addSingleFileStore().purgeOnStartup(true) //Disable passivation and adds a SingleFileStore that is purged on Startup
+        .persistence().passivation(false).addSingleFileStore().purgeOnStartup(true).location("./target/localcache/indexing/trades") //Disable passivation and adds a SingleFileStore that is purged on Startup
         .build(); //Builds the Configuration object
     	DefaultCacheManager container = new DefaultCacheManager(glob, loc, true);
   
