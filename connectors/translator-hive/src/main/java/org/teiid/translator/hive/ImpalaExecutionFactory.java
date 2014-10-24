@@ -190,6 +190,11 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
          * to produce a small result set that is different from a top-N query
          */
         return true;
-    }    
+    }
+    
+    @Override
+    public org.teiid.translator.ExecutionFactory.NullOrder getDefaultNullOrder() {
+    	return NullOrder.HIGH;
+    }
     
 }
