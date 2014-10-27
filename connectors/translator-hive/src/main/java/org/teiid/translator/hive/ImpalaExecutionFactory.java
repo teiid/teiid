@@ -197,4 +197,9 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     	return NullOrder.HIGH;
     }
     
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+    	return true;
+    }
+    
 }
