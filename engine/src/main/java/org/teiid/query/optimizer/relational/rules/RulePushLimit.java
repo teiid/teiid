@@ -94,6 +94,7 @@ public class RulePushLimit implements OptimizerRule {
                 PlanNode childProject = NodeEditor.findNodePreOrder(limitNode, NodeConstants.Types.PROJECT);
                 
                 if (childProject != null && childProject.getProperty(NodeConstants.Info.INTO_GROUP) == null) {
+                	limitNodes.removeAll(NodeEditor.findAllNodes(limitNode.getFirstChild(), NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.ACCESS));
                     FrameUtil.replaceWithNullNode(limitNode.getFirstChild());
                     PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
                     projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, childProject.getProperty(NodeConstants.Info.PROJECT_COLS));

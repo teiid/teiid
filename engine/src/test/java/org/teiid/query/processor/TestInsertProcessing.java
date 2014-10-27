@@ -540,5 +540,20 @@ public class TestInsertProcessing {
         dataManager.addData("INSERT INTO t (y, z) VALUES ('1', 'a')", new List<?>[] {Arrays.asList(1)});
         helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)}); 
     }
+    
+    @Test public void testInsertQueryExpressionLimitZero() {
+        String sql = "Insert into pm1.g1 (e1) select * from (select uuid() from pm1.g2 limit 4) a limit 0"; //$NON-NLS-1$
+
+        List<?>[] expected = new List[] { 
+            Arrays.asList(new Object[] { 0})
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g2.e1 FROM pm1.g2", Arrays.asList("a"));
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
 
 }
