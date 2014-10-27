@@ -922,6 +922,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		            }
 		        }
     		}
+    		
+    		@Override
+    		protected boolean getIndexInfoForTable(String catalogName,
+    				String schemaName, String tableName, boolean uniqueOnly,
+    				boolean approximateIndexes, String tableType) {
+    			//oracle will throw an exception if we import non approximate with a view
+    			if (!approximateIndexes && "VIEW".equalsIgnoreCase(tableType)) { //$NON-NLS-1$
+    				return false;
+    			}
+    			return true;
+    		}
     	};
     }
     

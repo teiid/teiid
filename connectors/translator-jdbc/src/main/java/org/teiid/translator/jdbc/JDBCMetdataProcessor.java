@@ -22,8 +22,20 @@
 
 package org.teiid.translator.jdbc;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.teiid.core.util.StringUtil;
@@ -52,6 +64,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 		private String schema;
 		private String name;
 		private Table table;
+		private String type;
 		
 		public TableInfo(String catalog, String schema, String name, Table table) {
 			this.catalog = catalog;
@@ -271,6 +284,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				continue;
 			}
 			TableInfo ti = new TableInfo(tableCatalog, tableSchema, tableName, table);
+			ti.type = tables.getString(4);
 			tableMap.put(fullName, ti);
 			tableMap.put(tableName, ti);
 		}
@@ -550,6 +564,9 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
+			if (!getIndexInfoForTable(tableInfo.catalog, tableInfo.schema, tableInfo.name, uniqueOnly, importApproximateIndexes, tableInfo.type)) {
+				continue;
+			}
 			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, uniqueOnly, importApproximateIndexes);
 			TreeMap<Short, String> indexColumns = null;
 			String indexName = null;
@@ -599,6 +616,20 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			}
 			indexInfo.close();
 		}
+	}
+
+	/**
+	 * @param catalogName
+	 * @param schemaName
+	 * @param tableName
+	 * @param uniqueOnly
+	 * @param approximateIndexes
+	 * @param tableType 
+	 * @return
+	 */
+	protected boolean getIndexInfoForTable(String catalogName, String schemaName, String tableName, boolean uniqueOnly, 
+			boolean approximateIndexes, String tableType) {
+		return true;
 	}
 
 	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName) {
