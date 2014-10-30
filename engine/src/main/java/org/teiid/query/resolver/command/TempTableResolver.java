@@ -114,7 +114,13 @@ public class TempTableResolver implements CommandResolver {
 		if (!create.getPrimaryKey().isEmpty()) {
 			ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(create.getPrimaryKey().size());
 			for (ElementSymbol symbol : create.getPrimaryKey()) {
-				primaryKey.add((TempMetadataID) symbol.getMetadataID());
+				Object mid = symbol.getMetadataID();
+				if (mid instanceof TempMetadataID) {
+					primaryKey.add((TempMetadataID)mid);
+				} else if (mid instanceof Column) {
+					//TODO: this breaks our normal metadata usage
+					primaryKey.add(tempTable.getElements().get(((Column)mid).getPosition() - 1));					
+				}
 			}
 			tempTable.setPrimaryKey(primaryKey);
 		}
