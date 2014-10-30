@@ -62,5 +62,15 @@ public class TestGlobalTemp {
 		harness.execute("insert into temp (s) values ('a')", new List<?>[] {Arrays.asList(1)});
 		harness.execute("select * from temp", new List<?>[] {Arrays.asList(1, "a")});
 	}
-
+	
+	@Test public void testPkInitialUse() throws Exception {
+		TempTableTestHarness harness = new TempTableTestHarness();
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create global temporary table temp (x serial, s string primary key) options (updatable true);" +
+				"", "x", "y");
+		HardcodedDataManager dm = new HardcodedDataManager();
+		harness.setUp(metadata, dm);
+		
+		harness.execute("select * from temp", new List<?>[] {});
+	}
+	
 }
