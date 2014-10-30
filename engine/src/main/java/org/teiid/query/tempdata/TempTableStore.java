@@ -236,6 +236,16 @@ public class TempTableStore {
     	this.foreignTempTables.put(tempTableName, create.getTableMetadata());
     }
 
+    /**
+     * 
+     * @param tempTableName
+     * @param create
+     * @param buffer
+     * @param add
+     * @param context may be null for mat views
+     * @return
+     * @throws TeiidProcessingException
+     */
     TempTable addTempTable(final String tempTableName, Create create, BufferManager buffer, boolean add, CommandContext context) throws TeiidProcessingException {
     	List<ElementSymbol> columns = create.getColumnSymbols();
     	TempMetadataID id = tempMetadataStore.getTempGroupID(tempTableName);
