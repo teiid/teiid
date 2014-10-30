@@ -452,4 +452,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		s.execute("set client_encoding LATIN1");
 	}
 	
+	@Test public void testClientIp() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.session.IPAddress') as X"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String value = rs.getString(1);
+		assertNotNull(value);
+	}
+
 }

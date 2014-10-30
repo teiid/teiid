@@ -29,6 +29,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -133,7 +134,7 @@ public class TestSocketServerConnection {
 	@Test public void testSocketServerConnection_PropertiesClientHost() throws Throwable {
 		Properties p = new Properties();
 		
-		SocketServerConnectionFactory.updateConnectionProperties(p);
+		SocketServerConnection.updateConnectionProperties(p, InetAddress.getLocalHost(), true);
        
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));

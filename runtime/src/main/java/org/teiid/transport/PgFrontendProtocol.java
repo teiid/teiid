@@ -131,19 +131,19 @@ public class PgFrontendProtocol extends FrameDecoder {
 
         byte[] data = createByteArray(this.dataLength - 4);
         buffer.readBytes(data);
-		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.pgBackendProtocol.getEncoding()));
+		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.pgBackendProtocol.getEncoding()), channel);
 		this.dataLength = null;
 		this.messageType = null;
 		return message;
 	}
 
-	private Object createRequestMessage(byte messageType, NullTerminatedStringDataInputStream data) throws IOException{
+	private Object createRequestMessage(byte messageType, NullTerminatedStringDataInputStream data, Channel channel) throws IOException{
         switch(messageType) {
         case 'I': 
         	this.initialized = true;
         	return buildInitialize(data);
         case 'p':
-        	return buildLogin(data);
+        	return buildLogin(data, channel);
         case 'P':
         	return buildParse(data);
         case 'B':
@@ -218,8 +218,8 @@ public class PgFrontendProtocol extends FrameDecoder {
         return message;
 	}
 	
-	private Object buildLogin(NullTerminatedStringDataInputStream data) {
-        this.odbcProxy.logon(this.databaseName, this.user, data);
+	private Object buildLogin(NullTerminatedStringDataInputStream data, Channel channel) {
+        this.odbcProxy.logon(this.databaseName, this.user, data, channel.getRemoteAddress());
         return message;
 	}	
 
