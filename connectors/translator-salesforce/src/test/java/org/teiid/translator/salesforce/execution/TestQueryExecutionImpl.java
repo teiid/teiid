@@ -40,7 +40,6 @@ import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
-import org.w3c.dom.Element;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
@@ -56,14 +55,12 @@ public class TestQueryExecutionImpl {
 		QueryResult qr = new QueryResult();
 		SObject so = new SObject();
 		so.setType("Account");
-		Element elem = Mockito.mock(Element.class);
-		Mockito.stub(elem.getLocalName()).toReturn("Name");
-		so.getAny().add(elem);
-		qr.getRecords().add(so);
+		so.addField("Name", null);
+		qr.setRecords(new SObject[] {so});
 		qr.setDone(false);
 		QueryResult finalQr = new QueryResult();
-		so.getAny().add(elem);
-		finalQr.getRecords().add(so);
+		so.addField("Name",  null);
+		finalQr.setRecords(new SObject[] {so});
 		finalQr.setDone(true);
 		Mockito.stub(sfc.query("SELECT Account.Name FROM Account", 0, false)).toReturn(qr);
 		Mockito.stub(sfc.queryMore(null, 0)).toReturn(finalQr);

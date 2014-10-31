@@ -43,7 +43,7 @@
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
         <version.core4j>0.5</version.core4j>        
         <jbossas-module-root>modules/system/layers/base</jbossas-module-root>
-        <version.com.force.api>26.0.0</version.com.force.api>
+        <version.com.force.api>22.0.0</version.com.force.api>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
@@ -402,11 +402,6 @@
             	<artifactId>google-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>
-            <dependency>
-      	    	<groupId>org.jboss.teiid.connectors</groupId>
-            	<artifactId>salesforce-api</artifactId>
-  	        	<version>${project.version}</version>
-        	</dependency> 
             <dependency>
       	    	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>mongodb-api</artifactId>
@@ -883,6 +878,11 @@
                         <artifactId>js</artifactId>
                     </exclusion>
                </exclusions>                
+            </dependency>
+            <dependency>
+                <groupId>com.force.api</groupId>
+                <artifactId>force-partner-api</artifactId>
+                <version>${version.com.force.api}</version>
             </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>

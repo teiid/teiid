@@ -27,15 +27,9 @@
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
               <include>org.jboss.teiid.connectors:translator-salesforce</include>
+              <include>com.force.api:force-wsc</include>
+              <include>com.force.api:force-partner-api</include>
           </includes>
-    </dependencySet>  
-    <dependencySet>   
-      <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/salesforce/api/main</outputDirectory>
-      <useTransitiveDependencies>true</useTransitiveDependencies>
-      <includes>
-          <include>org.jboss.teiid.connectors:salesforce-api</include>
-          <include>com.force.api:force-wsc</include>
-      </includes>       
     </dependencySet>  
   </dependencySets>
   

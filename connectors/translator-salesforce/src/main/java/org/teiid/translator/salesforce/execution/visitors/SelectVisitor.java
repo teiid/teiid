@@ -39,7 +39,6 @@ import org.teiid.translator.salesforce.SalesForcePlugin;
 public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 	public static final String AGG_PREFIX = "expr"; //$NON-NLS-1$
 	private Map<Integer, Expression> selectSymbolIndexToElement = new HashMap<Integer, Expression>();
-	private Map<String, Integer> selectSymbolNameToIndex = new HashMap<String, Integer>();
 	private int selectSymbolCount;
 	private int idIndex = -1; // index of the ID select symbol.
 	protected List<DerivedColumn> selectSymbols;
@@ -74,7 +73,6 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		}
 		selectSymbols = query.getDerivedColumns();
 		selectSymbolCount = selectSymbols.size();
-		int aggCount = 0;
 		for (int index = 0; index < selectSymbols.size(); index++) {
 			DerivedColumn symbol = selectSymbols.get(index);
 			// get the name in source
@@ -82,14 +80,10 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			selectSymbolIndexToElement.put(index, expression);
 			if (expression instanceof ColumnReference) {
 				Column element = ((ColumnReference) expression).getMetadataObject();
-				String qualifiedName = element.getParent().getSourceName() + ':' + element.getSourceName();
-				selectSymbolNameToIndex .put(qualifiedName, index);
 				String nameInSource = element.getSourceName();
 				if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
 					idIndex = index;
 				}
-			} else if (expression instanceof AggregateFunction) {
-				selectSymbolNameToIndex.put(AGG_PREFIX + (aggCount++), index); 
 			}
 		}
 	}
@@ -182,10 +176,6 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 
 	public Expression getSelectSymbolMetadata(int index) {
 		return selectSymbolIndexToElement.get(index);
-	}
-	
-	public Integer getSelectSymbolIndex(String name) {
-		return selectSymbolNameToIndex.get(name);
 	}
 	
 	/**

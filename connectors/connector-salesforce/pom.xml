@@ -29,39 +29,9 @@
         </dependency>    
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>salesforce-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-salesforce</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-frontend-jaxws</artifactId>
-            <scope>provided</scope>        
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-transports-http</artifactId>
-            <scope>provided</scope>        
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-ws-security</artifactId>
-            <scope>provided</scope>        
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-ws-policy</artifactId>
-            <scope>provided</scope>        
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-bundle</artifactId>
-            <scope>provided</scope>
-        </dependency>        
         </dependencies>
     <build>
         <plugins>

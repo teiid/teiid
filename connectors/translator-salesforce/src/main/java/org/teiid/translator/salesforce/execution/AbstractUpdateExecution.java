@@ -105,9 +105,9 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 				String query = visitor.getQuery();
 				QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
 				if (results != null && results.getSize() > 0) {
-					ArrayList<String> idList = new ArrayList<String>(results.getRecords().size());
-					for (int i = 0; i < results.getRecords().size(); i++) {
-						SObject sObject = results.getRecords().get(i);
+					ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
+					for (int i = 0; i < results.getRecords().length; i++) {
+						SObject sObject = results.getRecords()[i];
 						idList.add(sObject.getId());
 					}
 					Ids = idList.toArray(new String[0]);

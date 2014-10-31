@@ -15,7 +15,6 @@
         <module name="javax.jws.api"/>
         <module name="org.apache.cxf"/>
         <module name="javax.wsdl4j.api"/>
-        <module name="org.jboss.teiid.translator.salesforce.api"/>
         <module name="org.jboss.teiid.translator.salesforce"/>
     </dependencies>
 </module>

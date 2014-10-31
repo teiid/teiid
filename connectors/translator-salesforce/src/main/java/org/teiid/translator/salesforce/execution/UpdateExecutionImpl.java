@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.resource.ResourceException;
-import javax.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
 
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -51,7 +49,6 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 		super(ef, command, salesforceConnection, metadata, context);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void execute() throws TranslatorException {
 		UpdateVisitor visitor = new UpdateVisitor(getMetadata());
@@ -59,21 +56,20 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 		String[] ids = getIDs(((Update)command).getWhere(), visitor);
 
 		if (ids != null && ids.length > 0) {
-			List<JAXBElement> elements = new ArrayList<JAXBElement>();
-			for (SetClause clause : ((Update)command).getChanges()) {
-				ColumnReference element = clause.getSymbol();
-				Column column = element.getMetadataObject();
-				String val = ((Literal) clause.getValue()).toString();
-				JAXBElement messageElem = new JAXBElement(new QName(column.getSourceName()), String.class, Util.stripQutes(val));
-				elements.add(messageElem);
-			}
-
 			List<DataPayload> updateDataList = new ArrayList<DataPayload>();
+
 			for (int i = 0; i < ids.length; i++) {
 				DataPayload data = new DataPayload();
+
+				for (SetClause clause : ((Update)command).getChanges()) {
+					ColumnReference element = clause.getSymbol();
+					Column column = element.getMetadataObject();
+					String val = ((Literal) clause.getValue()).toString();
+					data.addField(column.getSourceName(), Util.stripQutes(val));
+				}
+	
 				data.setType(visitor.getTableName());
 				data.setID(ids[i]);
-				data.setMessageElements(elements);
 				updateDataList.add(data);
 			}
 

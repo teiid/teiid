@@ -91,7 +91,6 @@
   
   <modules>
     <module>google-api</module>
-    <module>salesforce-api</module>
     <module>mongodb-api</module>
     <module>simpledb-api</module>
       

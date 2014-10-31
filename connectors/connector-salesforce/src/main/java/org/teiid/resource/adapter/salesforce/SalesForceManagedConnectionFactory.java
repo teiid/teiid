@@ -26,18 +26,11 @@ import java.net.URL;
 
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
-import javax.xml.namespace.QName;
 
-import org.apache.cxf.Bus;
-import org.apache.cxf.bus.spring.SpringBusFactory;
-import org.apache.cxf.configuration.Configurer;
-import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.resource.spi.ConnectionContext;
-
-import com.sforce.soap.partner.SforceService;
 
 
 public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory {
@@ -46,13 +39,9 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	private String username;
 	private String password;
 	private URL URL; //sf url
-	private String configFile; // path to the "jbossws-cxf.xml" file
 	private Long requestTimeout;
 	private Long connectTimeout;
 
-	//cxf bus
-	private Bus bus;
-	
 	public String getUsername() {
 		return username;
 	}
@@ -85,14 +74,6 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		}
 	}
 	
-	public String getConfigFile() {
-		return configFile;
-	}
-
-	public void setConfigFile(String config) {
-		this.configFile = config;
-	}
-	
 	public Long getConnectTimeout() {
 		return connectTimeout;
 	}
@@ -111,15 +92,6 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	@Override
 	public BasicConnectionFactory<SalesforceConnectionImpl> createConnectionFactory() throws ResourceException {
-		QName portQName = SforceService.SERVICE;
-		if (this.configFile != null) {
-			this.bus = new SpringBusFactory().createBus(this.configFile);
-			JaxWsClientFactoryBean instance = new JaxWsClientFactoryBean();
-			Configurer configurer = this.bus.getExtension(Configurer.class);
-	        if (null != configurer) {
-	            configurer.configureBean(portQName.toString() + ".jaxws-client.proxyFactory", instance); //$NON-NLS-1$
-	        }
-		}
 		
 		return new BasicConnectionFactory<SalesforceConnectionImpl>() {
 			private static final long serialVersionUID = 5028356110047329135L;
@@ -142,9 +114,6 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		};
 	}
 	
-	public Bus getBus() {
-		return bus;
-	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -152,7 +121,6 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		result = prime * result + ((URL == null) ? 0 : URL.hashCode());
 		result = prime * result + ((password == null) ? 0 : password.hashCode());
 		result = prime * result + ((username == null) ? 0 : username.hashCode());
-		result = prime * result + ((configFile == null) ? 0 : configFile.hashCode());
 		return result;
 	}
 	@Override
@@ -170,10 +138,6 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		if (!checkEquals(this.username, other.username)) {
 			return false;
 		}
-		if (!checkEquals(this.configFile, other.configFile)) {
-			return false;
-		}
-		
 		return true;
 	}
 }

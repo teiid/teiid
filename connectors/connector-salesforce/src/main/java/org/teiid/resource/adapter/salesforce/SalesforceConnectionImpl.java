@@ -24,15 +24,11 @@ package org.teiid.resource.adapter.salesforce;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 
 import javax.resource.ResourceException;
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.ws.BindingProvider;
 
-import org.apache.cxf.Bus;
-import org.apache.cxf.BusFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -44,8 +40,6 @@ import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
 import com.sforce.async.AsyncApiException;
-import com.sforce.async.BatchInfo;
-import com.sforce.async.BatchInfoList;
 import com.sforce.async.BatchRequest;
 import com.sforce.async.BatchResult;
 import com.sforce.async.BulkConnection;
@@ -53,118 +47,84 @@ import com.sforce.async.ContentType;
 import com.sforce.async.JobInfo;
 import com.sforce.async.OperationEnum;
 import com.sforce.soap.partner.*;
+import com.sforce.soap.partner.Error;
+import com.sforce.soap.partner.fault.InvalidFieldFault;
+import com.sforce.soap.partner.fault.InvalidIdFault;
+import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
+import com.sforce.soap.partner.fault.InvalidSObjectFault;
+import com.sforce.soap.partner.fault.MalformedQueryFault;
+import com.sforce.soap.partner.fault.UnexpectedErrorFault;
 import com.sforce.soap.partner.sobject.SObject;
+import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 	
-	private static final String CONNECTION_TIMEOUT = "javax.xml.ws.client.connectionTimeout"; //$NON-NLS-1$
-	private static final String RECEIVE_TIMEOUT = "javax.xml.ws.client.receiveTimeout"; //$NON-NLS-1$
-
-	private Soap sfSoap;
 	private BulkConnection bulkConnection; 
-	
-	private ObjectFactory partnerFactory = new ObjectFactory();
-	
-	PackageVersionHeader pvHeader = partnerFactory.createPackageVersionHeader();
+	private PartnerConnection partnerConnection;
 	
 	public SalesforceConnectionImpl(String username, String password, URL url, SalesForceManagedConnectionFactory mcf) throws ResourceException {
 		login(username, password, url, mcf);
 	}
 	
-	protected SalesforceConnectionImpl(Soap soap) {
-		this.sfSoap = soap;
-	}
-	
-	String getUserName() throws ResourceException {
-		try {
-			return sfSoap.getUserInfo().getUserName();
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e);
-		}
-	}
-	
-	Soap getBinding() {
-		return sfSoap;
+	SalesforceConnectionImpl(PartnerConnection partnerConnection) {
+		this.partnerConnection = partnerConnection;
 	}
 	
 	private void login(String username, String password, URL url, SalesForceManagedConnectionFactory mcf) throws ResourceException {
-		LoginResult loginResult = null;
-		SforceService sfService = null;
-		SessionHeader sh = null;
-		CallOptions co = new CallOptions();
-		// This value identifies Teiid as a SF certified solution.
-		// It was provided by SF and should not be changed.
-		co.setClient("RedHat/MetaMatrix/"); //$NON-NLS-1$
-		
 		if(url == null) {
 			throw new ResourceException("SalesForce URL is not specified, please provide a valid URL"); //$NON-NLS-1$
 		}
 
-		Bus bus = BusFactory.getThreadDefaultBus();
-		BusFactory.setThreadDefaultBus(mcf.getBus());
-		try {
-			sfService = new SforceService();
-			sh = new SessionHeader();
-			
-			// Session Id must be passed in soapHeader - add the handler
-			sfService.setHandlerResolver(new SalesforceHandlerResolver(sh));
-			
-			sfSoap = sfService.getSoap();
-			Map<String, Object> requestContext = ((BindingProvider)sfSoap).getRequestContext();
-			if (mcf.getConnectTimeout() != null) {
-				requestContext.put(CONNECTION_TIMEOUT, mcf.getConnectTimeout());
-			}
-			requestContext.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
-			loginResult = sfSoap.login(username, password);
-			
-			// Set the SessionId after login, for subsequent calls
-			sh.setSessionId(loginResult.getSessionId());
-			this.bulkConnection = getBulkConnection(loginResult.getServerUrl(), loginResult.getSessionId());
-		} catch (LoginFault e) {
-			throw new ResourceException(e);
-		} catch (InvalidIdFault e) {
-			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e);
-		} catch(AsyncApiException e) {
-			throw new ResourceException(e);
-		} finally {
-			BusFactory.setThreadDefaultBus(bus);
+		ConnectorConfig config = new ConnectorConfig();
+        config.setCompression(true);
+        config.setTraceMessage(false);
+        config.setUsername(username);
+        config.setPassword(password);
+        config.setAuthEndpoint(url.toExternalForm());
+        if (mcf.getConnectTimeout() != null) {
+        	config.setConnectionTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getConnectTimeout()));
+        }
+        if (mcf.getRequestTimeout() != null) {
+        	config.setReadTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getRequestTimeout()));
+        }
+        
+        try {
+	        partnerConnection = new PartnerConnection(config);
+	        
+	        String endpoint = config.getServiceEndpoint();
+	        // The endpoint for the Bulk API service is the same as for the normal
+	        // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
+	        int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
+	        int endIndex = endpoint.indexOf('/', index+7);
+	        String apiVersion = endpoint.substring(index+7,endIndex);
+	        String restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
+	        config.setRestEndpoint(restEndpoint);
+			// This value identifies Teiid as a SF certified solution.
+			// It was provided by SF and should not be changed.
+	        partnerConnection.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
+	        bulkConnection = new BulkConnection(config);
+			// Test the connection.
+			partnerConnection.getUserInfo();
+        } catch (AsyncApiException e) {
+        	throw new ResourceException(e);
+        } catch (ConnectionException e) {
+        	throw new ResourceException(e);
 		}
+        
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
-		Map<String, Object> requestContext = ((BindingProvider)sfSoap).getRequestContext();
-		// Reset the SOAP endpoint to the returned server URL
-		requestContext.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,loginResult.getServerUrl());
-		// or maybe org.apache.cxf.message.Message.ENDPOINT_ADDRESS
-		requestContext.put(BindingProvider.SESSION_MAINTAIN_PROPERTY,Boolean.TRUE);
-		// Set the timeout.
-		if (mcf.getRequestTimeout() != null) {
-			requestContext.put(RECEIVE_TIMEOUT, mcf.getRequestTimeout());
-		}
-		
-		// Test the connection.
-		try {
-			sfSoap.getUserInfo();
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e);
-		}
 	}
 	
-	
 	public boolean isValid() {
-		boolean result = true;
-		if(sfSoap == null) {
-			result = false;
-		} else {
+		if(partnerConnection != null) {
 			try {
-				sfSoap.getServerTimestamp();
+				partnerConnection.getServerTimestamp();
+				return true;
 			} catch (Throwable t) {
 				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Caught Throwable in isAlive", t); //$NON-NLS-1$
-				result = false;
 			}
 		}
-		return result;
+		return false;
 	}
 
 	public QueryResult query(String queryString, int batchSize, Boolean queryAll) throws ResourceException {
@@ -175,69 +135,81 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		}
 		
 		QueryResult qr = null;
-		QueryOptions qo = partnerFactory.createQueryOptions();
-		qo.setBatchSize(batchSize);
+		partnerConnection.setQueryOptions(batchSize);
 		try {
 			if(queryAll != null && queryAll) {
-				qr = sfSoap.queryAll(queryString);
+				qr = partnerConnection.queryAll(queryString);
 			} else {
-				MruHeader mruHeader = partnerFactory.createMruHeader();
-				mruHeader.setUpdateMru(false);
-				
-				qr = sfSoap.query(queryString);
+				partnerConnection.setMruHeader(false);
+				qr = partnerConnection.query(queryString);
 			}
 		} catch (InvalidFieldFault e) {
 			throw new ResourceException(e);
 		} catch (MalformedQueryFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
+		} catch (InvalidSObjectFault e) {
 			throw new ResourceException(e);
 		} catch (InvalidIdFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+		} catch (UnexpectedErrorFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.InvalidQueryLocatorFault e) {
+		} catch (InvalidQueryLocatorFault e) {
 			throw new ResourceException(e);
+		} catch (ConnectionException e) {
+			throw new ResourceException(e);
+		} finally {
+			partnerConnection.clearMruHeader();
+			partnerConnection.clearQueryOptions();
 		}
 		return qr;
 	}
 
 	public QueryResult queryMore(String queryLocator, int batchSize) throws ResourceException {
-		QueryOptions qo = partnerFactory.createQueryOptions();
-		qo.setBatchSize(batchSize);
+		if(batchSize > 2000) {
+			batchSize = 2000;
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
+		}
+
+		partnerConnection.setQueryOptions(batchSize);
 		try {
-			return sfSoap.queryMore(queryLocator);
+			return partnerConnection.queryMore(queryLocator);
 		} catch (InvalidFieldFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+		} catch (UnexpectedErrorFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.InvalidQueryLocatorFault e) {
+		} catch (InvalidQueryLocatorFault e) {
 			throw new ResourceException(e);
+		} catch (ConnectionException e) {
+			throw new ResourceException(e);
+		} finally {
+			partnerConnection.clearQueryOptions();
 		}
 		
 	}
 
 	public int delete(String[] ids) throws ResourceException {
-		List<DeleteResult> results = null;
+		DeleteResult[] results = null;
 		try {
-			results = sfSoap.delete(Arrays.asList(ids));
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			results = partnerConnection.delete(ids);
+		} catch (UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		} catch (ConnectionException e) {
 			throw new ResourceException(e);
 		}
 		
 		boolean allGood = true;
 		StringBuffer errorMessages = new StringBuffer();
-		for(int i = 0; i < results.size(); i++) {
-			DeleteResult result = results.get(i);
+		for(int i = 0; i < results.length; i++) {
+			DeleteResult result = results[i];
 			if(!result.isSuccess()) {
 				if(allGood) {
 					errorMessages.append("Error(s) executing DELETE: "); //$NON-NLS-1$
 					allGood = false;
 				}
-				List<com.sforce.soap.partner.Error> errors = result.getErrors();
-				if(null != errors && errors.size() > 0) {
-					for(int x = 0; x < errors.size(); x++) {
-						com.sforce.soap.partner.Error error = errors.get(x);
+				Error[] errors = result.getErrors();
+				if(null != errors && errors.length > 0) {
+					for(int x = 0; x < errors.length; x++) {
+						Error error = errors[x];
 						errorMessages.append(error.getMessage()).append(';');
 					}
 				}
@@ -247,25 +219,28 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		if(!allGood) {
 			throw new ResourceException(errorMessages.toString());
 		}
-		return results.size();
+		return results.length;
 	}
 
 	public int create(DataPayload data) throws ResourceException {
 		SObject toCreate = new SObject();
 		toCreate.setType(data.getType());
-		toCreate.getAny().addAll(data.getMessageElements());
-		List<SObject> objects = new ArrayList<SObject>();
-		objects.add(toCreate);
-		List<SaveResult> result;
+		for (DataPayload.Field field : data.getMessageElements()) {
+			toCreate.addField(field.name, field.value);
+		}
+		SObject[] objects = new SObject[] {toCreate};
+		SaveResult[] result;
 		try {
-			result = sfSoap.create(objects);
+			result = partnerConnection.create(objects);
 		} catch (InvalidFieldFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
+		} catch (InvalidSObjectFault e) {
 			throw new ResourceException(e);
 		} catch (InvalidIdFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+		} catch (UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		} catch (ConnectionException e) {
 			throw new ResourceException(e);
 		}
 		return analyzeResult(result);
@@ -278,68 +253,76 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			SObject toCreate = new SObject();
 			toCreate.setType(data.getType());
 			toCreate.setId(data.getID());
-			toCreate.getAny().addAll(data.getMessageElements());
+			for (DataPayload.Field field : data.getMessageElements()) {
+				toCreate.addField(field.name, field.value);
+			}
 			params.add(i, toCreate);
 		}
-		List<SaveResult> result;
+		SaveResult[] result;
 			try {
-				result = sfSoap.update(params);
+				result = partnerConnection.update(params.toArray(new SObject[params.size()]));
 			} catch (InvalidFieldFault e) {
 				throw new ResourceException(e);
-			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
+			} catch (InvalidSObjectFault e) {
 				throw new ResourceException(e);
 			} catch (InvalidIdFault e) {
 				throw new ResourceException(e);
-			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			} catch (UnexpectedErrorFault e) {
+				throw new ResourceException(e);
+			} catch (ConnectionException e) {
 				throw new ResourceException(e);
 			}
 		return analyzeResult(result);
 	}
 	
-	private int analyzeResult(List<SaveResult> results) throws ResourceException {
+	private int analyzeResult(SaveResult[] results) throws ResourceException {
 		for (SaveResult result : results) {
 			if(!result.isSuccess()) {
-				throw new ResourceException(result.getErrors().get(0).getMessage());
+				throw new ResourceException(result.getErrors()[0].getMessage());
 			}
 		}
-		return results.size();
+		return results.length;
 	}
 
-	public UpdatedResult getUpdated(String objectType, XMLGregorianCalendar startDate, XMLGregorianCalendar endDate) throws ResourceException {
+	public UpdatedResult getUpdated(String objectType, Calendar startDate, Calendar endDate) throws ResourceException {
 			GetUpdatedResult updated;
 			try {
-				updated = sfSoap.getUpdated(objectType, startDate, endDate);
-			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
+				updated = partnerConnection.getUpdated(objectType, startDate, endDate);
+			} catch (InvalidSObjectFault e) {
 				throw new ResourceException(e);
-			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			} catch (UnexpectedErrorFault e) {
+				throw new ResourceException(e);
+			} catch (ConnectionException e) {
 				throw new ResourceException(e);
 			}
 			UpdatedResult result = new UpdatedResult(); 
-			result.setLatestDateCovered(updated.getLatestDateCovered().toGregorianCalendar());
-			result.setIDs(updated.getIds());
+			result.setLatestDateCovered(updated.getLatestDateCovered());
+			result.setIDs(Arrays.asList(updated.getIds()));
 			return result;
 	}
 
-	public DeletedResult getDeleted(String objectName, XMLGregorianCalendar startCalendar,
-			XMLGregorianCalendar endCalendar) throws ResourceException {
+	public DeletedResult getDeleted(String objectName, Calendar startCalendar,
+			Calendar endCalendar) throws ResourceException {
 			GetDeletedResult deleted;
 			try {
-				deleted = sfSoap.getDeleted(objectName, startCalendar, endCalendar);
-			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
+				deleted = partnerConnection.getDeleted(objectName, startCalendar, endCalendar);
+			} catch (InvalidSObjectFault e) {
 				throw new ResourceException(e);
-			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			} catch (UnexpectedErrorFault e) {
+				throw new ResourceException(e);
+			} catch (ConnectionException e) {
 				throw new ResourceException(e);
 			}
 			DeletedResult result = new DeletedResult();
-			result.setLatestDateCovered(deleted.getLatestDateCovered().toGregorianCalendar());
-			result.setEarliestDateAvailable(deleted.getEarliestDateAvailable().toGregorianCalendar());
-			List<DeletedRecord> records = deleted.getDeletedRecords();
+			result.setLatestDateCovered(deleted.getLatestDateCovered());
+			result.setEarliestDateAvailable(deleted.getEarliestDateAvailable());
+			DeletedRecord[] records = deleted.getDeletedRecords();
 			List<DeletedObject> resultRecords = new ArrayList<DeletedObject>();
 			if(records != null) {
 				for (DeletedRecord record : records) {
 					DeletedObject object = new DeletedObject();
 					object.setID(record.getId());
-					object.setDeletedDate(record.getDeletedDate().toGregorianCalendar());
+					object.setDeletedDate(record.getDeletedDate());
 					resultRecords.add(object);
 				}
 			}
@@ -349,25 +332,23 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	
 	public  QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException {
 		try {
-			List<SObject> objects = sfSoap.retrieve(fieldList, sObjectType, ids);
+			SObject[] objects = partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
 			QueryResult result = new QueryResult();
-			for (SObject sObject : objects) {
-			    if (sObject != null) {
-					result.getRecords().add(sObject);
-			    }
-			}
-			result.setSize(result.getRecords().size());
+			result.setRecords(objects);			
+			result.setSize(objects.length);
 			result.setDone(true);
 			return result;			
 		} catch (InvalidFieldFault e) {
 			throw new ResourceException(e);
 		} catch (MalformedQueryFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
+		} catch (InvalidSObjectFault e) {
 			throw new ResourceException(e);
 		} catch (InvalidIdFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+		} catch (UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		} catch (ConnectionException e) {
 			throw new ResourceException(e);
 		}
 		
@@ -375,18 +356,22 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
 	public DescribeGlobalResult getObjects() throws ResourceException {
 		try {
-			return sfSoap.describeGlobal();
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			return partnerConnection.describeGlobal();
+		} catch (UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		} catch (ConnectionException e) {
 			throw new ResourceException(e);
 		}
 	}
 
 	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException {
 		try {
-			return sfSoap.describeSObject(objectName);
-		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
+			return partnerConnection.describeSObject(objectName);
+		} catch (InvalidSObjectFault e) {
 			throw new ResourceException(e);
-		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+		} catch (UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		} catch (ConnectionException e) {
 			throw new ResourceException(e);
 		}
 	}
@@ -401,7 +386,8 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		return isValid();
 	}
 
-	private JobInfo createBulkJob(String objectName) throws ResourceException {
+	@Override
+	public JobInfo createBulkJob(String objectName) throws ResourceException {
         try {
 			JobInfo job = new JobInfo();
 			job.setObject(objectName);
@@ -414,52 +400,43 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 
 	@Override
-	public JobInfo executeBulkJob(String objectName, List<com.sforce.async.SObject> payload) throws ResourceException {
+	public String addBatch(List<com.sforce.async.SObject> payload, JobInfo job) throws ResourceException {
 		try {
-			JobInfo job = createBulkJob(objectName);
 			BatchRequest request = this.bulkConnection.createBatch(job);
 			request.addSObjects(payload.toArray(new com.sforce.async.SObject[payload.size()]));
-			request.completeRequest();
-			return this.bulkConnection.closeJob(job.getId());
+			return request.completeRequest().getId();
+		} catch (AsyncApiException e) {
+			throw new ResourceException(e);
+		}
+	}
+	
+	@Override 
+	public JobInfo closeJob(String jobId) throws ResourceException {
+		try {
+			return this.bulkConnection.closeJob(jobId);
 		} catch (AsyncApiException e) {
 			throw new ResourceException(e);
 		}
 	}
 
 	@Override
-	public BatchResult getBulkResults(JobInfo job) throws ResourceException {
+	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws ResourceException {
 		try {
-			BatchInfoList batchInfo = this.bulkConnection.getBatchInfoList(job.getId());
-			BatchInfo[] batches = batchInfo.getBatchInfo();
-			if (batches.length > 0) {
-				BatchResult batchResult = this.bulkConnection.getBatchResult(job.getId(), batches[0].getId());
-				if (batchResult.isPartialResult()) {
-					throw new DataNotAvailableException(500);
-				}
-				return batchResult;
+			JobInfo info = this.bulkConnection.getJobStatus(job.getId());
+			if (info.getNumberBatchesTotal() != info.getNumberBatchesFailed() + info.getNumberBatchesCompleted()) {
+				//TODO: this should be configurable
+				throw new DataNotAvailableException(500);
 			}
-			throw new DataNotAvailableException(500);
+			BatchResult[] results = new BatchResult[ids.size()];
+			for (int i = 0; i < ids.size(); i++) {
+				results[i] = this.bulkConnection.getBatchResult(job.getId(), ids.get(i));	
+			}
+			return results;
 		} catch (AsyncApiException e) {
 			throw new ResourceException(e);
 		}
 	}
 	
-    private BulkConnection getBulkConnection(String endpoint, String sessionid) throws AsyncApiException {
-          ConnectorConfig config = new ConnectorConfig();
-          config.setSessionId(sessionid);
-          // The endpoint for the Bulk API service is the same as for the normal
-          // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
-          int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
-          int endIndex = endpoint.indexOf('/', index+7);
-          String apiVersion = endpoint.substring(index+7,endIndex);
-          String restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
-          config.setRestEndpoint(restEndpoint);
-          config.setCompression(true);
-          config.setTraceMessage(false);
-          BulkConnection connection = new BulkConnection(config);
-          return connection;
-      }
-
 	@Override
 	public void cancelBulkJob(JobInfo job) throws ResourceException {
 		try {

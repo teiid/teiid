@@ -23,9 +23,13 @@
           <scope>provided</scope>
         </dependency>
         <dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>salesforce-api</artifactId>
-		</dependency>
+            <groupId>com.force.api</groupId>
+            <artifactId>force-partner-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.force.api</groupId>
+            <artifactId>force-wsc</artifactId>
+        </dependency>
         <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>

@@ -26,13 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-    <li>TEIID-3009 <b>WITH project minimization</b> - common table expressions will have their project columns minimized.
-    <li>TEIID-3038 <b>geoSpatial support for MongoDB</b> translator
-    <li>TEIID-3050 <b>Increased Insert Performance</b> with sources that support batching or insert with iterator.
-    <li>TEIID-3044 <b>Function Metadata</b> is available through system tables and DatabaseMetaData.
-    <li>TEIID-1910 <b>TeiidPlatform for EclipseLink</b> integration is now provided via the teiid-eclipselink-platform jar in maven.
-    <li>TEIID-3119 <b>Performance improvements</b> in grouping and duplicate removal as well as general improvements to memory management.
-    <li>TEIID-3156 <b>Collation aware</b> prevention of order by pushdown via the collationLocale translator property and the org.teiid.requireTeiidCollation system property.
+    <li>TEIID-3192 <b>Salesforce Connectivity</b> - connectivity was converted to the partner api provided by Salesforce rather than utilizing CXF.  Please log an issue if you were utilizing features from the CXF config.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -213,6 +207,11 @@ for how to access the underlying SQLWarning chains.
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 8.9</h4>
+<ul>
+    <li>TEIID-3192 The CXF config is no longer a valid option for the Salesforce resource adapter.  Please log an issue if there is feature from the CXF config that you were using that is not present on the new resource adapter.
+</ul>
 
 <h4>from 8.8</h4>
 <ul>

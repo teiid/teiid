@@ -23,7 +23,6 @@ package org.teiid.translator.salesforce.execution;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.BeforeClass;
@@ -38,7 +37,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
-import org.w3c.dom.Element;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
@@ -67,27 +65,16 @@ public class TestSalesForceDirectQueryExecution {
         QueryResult qr = Mockito.mock(QueryResult.class);
         Mockito.stub(qr.isDone()).toReturn(true);
         
-        ArrayList<SObject> results = new ArrayList<SObject>();
-        ArrayList<Object> values = new ArrayList<Object>();
+        SObject[] results = new SObject[1];
         
-        SObject s = Mockito.mock(SObject.class);
-        //Mockito.stub(s.getId()).toReturn("theID");
-        Mockito.stub(s.getType()).toReturn("Account");
-        results.add(s);
+        SObject s = new SObject();
+        s.setType("Account");
+        s.setId("The ID");
+        results[0] = s;
         
-        Element e1 = Mockito.mock(Element.class);
-        Mockito.stub(e1.getTextContent()).toReturn("The ID");
-        values.add(e1);
+        s.addField("Type", "The Type");
+        s.addField("Name", "The Name");
         
-        Element e2 = Mockito.mock(Element.class);
-        Mockito.stub(e2.getTextContent()).toReturn("The Type");
-        values.add(e2);
-        
-        Element e3 = Mockito.mock(Element.class);
-        Mockito.stub(e3.getTextContent()).toReturn("The Name");
-        values.add(e3);        
-        
-        Mockito.stub(s.getAny()).toReturn(values);        
         Mockito.stub(qr.getRecords()).toReturn(results);
         Mockito.stub(connection.query("SELECT Account.Id, Account.Type, Account.Name FROM Account", 0, false)).toReturn(qr);
         

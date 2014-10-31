@@ -60,12 +60,6 @@
             </config-property> 
             
             <config-property>
-                <description>{$display:"CXF Configuration File",$description:"CXF client configuration File or URL"}</description>
-                <config-property-name>ConfigFile</config-property-name>
-                <config-property-type>java.lang.String</config-property-type>
-            </config-property>
-            
-            <config-property>
                 <description>{$display:"Request Timeout",$description:"Timeout for request"}</description>
                 <config-property-name>RequestTimeout</config-property-name>
                 <config-property-type>java.lang.Long</config-property-type>

@@ -35,7 +35,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	private SalesforceConnection connection;
 	
 	private Map<String, Table> tableMap = new HashMap<String, Table>();
-	private Map<String, List<ChildRelationship>> relationships = new LinkedHashMap<String, List<ChildRelationship>>();
+	private Map<String, ChildRelationship[]> relationships = new LinkedHashMap<String, ChildRelationship[]>();
 	private List<Column> columns;
 	private boolean auditModelFields = false;
 	private boolean normalizeNames = true;
@@ -117,7 +117,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	public void processMetadata() throws TranslatorException {
 		try {
 			DescribeGlobalResult globalResult = connection.getObjects();
-			List<DescribeGlobalSObjectResult> objects = globalResult.getSobjects();
+			DescribeGlobalSObjectResult[] objects = globalResult.getSobjects();
 			for (DescribeGlobalSObjectResult object : objects) {
 				addTable(object);
 			}  
@@ -137,7 +137,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	}
 
 	private void addRelationships() {
-		for (Map.Entry<String, List<ChildRelationship>> entry : this.relationships.entrySet()) {
+		for (Map.Entry<String, ChildRelationship[]> entry : this.relationships.entrySet()) {
 			for (ChildRelationship relationship : entry.getValue()) {
 				if (relationship.getRelationshipName() == null) {
 					continue; //not queryable
@@ -223,15 +223,15 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	}
 
 	private void getRelationships(DescribeSObjectResult objectMetadata) {
-		List<ChildRelationship> children = objectMetadata.getChildRelationships();
-		if(children != null && children.size() != 0) {
+		ChildRelationship[] children = objectMetadata.getChildRelationships();
+		if(children != null && children.length > 0) {
 			this.relationships.put(objectMetadata.getName(), children);
 		}
 	}
 
 	private boolean addColumns(DescribeSObjectResult objectMetadata, Table table) throws TranslatorException {
 		boolean hasUpdateableColumn = false;
-		List<Field> fields = objectMetadata.getFields();
+		Field[] fields = objectMetadata.getFields();
 		for (Field field : fields) {
 			String normalizedName = field.getName();
 			if (normalizeNames) {
@@ -241,27 +241,27 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			if(!isModelAuditFields() && isAuditField(field.getName())) {
 				continue;
 			}
-			String sfTypeName = fieldType.value();
+			String sfTypeName = fieldType.name();
 			Column column = null;
-			if(sfTypeName.equals(FieldType.STRING.value()) || //string
-					sfTypeName.equals(FieldType.COMBOBOX.value()) || //"combobox"
-					sfTypeName.equals(FieldType.REFERENCE.value()) || //"reference"
-					sfTypeName.equals(FieldType.PHONE.value()) || //"phone"
-					sfTypeName.equals(FieldType.ID.value()) || //"id"
-					sfTypeName.equals(FieldType.URL.value()) || //"url"
-					sfTypeName.equals(FieldType.EMAIL.value()) || //"email"
-					sfTypeName.equals(FieldType.ENCRYPTEDSTRING.value()) || //"encryptedstring"
-					sfTypeName.equals(FieldType.ANY_TYPE.value())) {  //"anytype"
+			if(sfTypeName.equals(FieldType.string.name()) || //string
+					sfTypeName.equals(FieldType.combobox.name()) || //"combobox"
+					sfTypeName.equals(FieldType.reference.name()) || //"reference"
+					sfTypeName.equals(FieldType.phone.name()) || //"phone"
+					sfTypeName.equals(FieldType.id.name()) || //"id"
+					sfTypeName.equals(FieldType.url.name()) || //"url"
+					sfTypeName.equals(FieldType.email.name()) || //"email"
+					sfTypeName.equals(FieldType.encryptedstring.name()) || //"encryptedstring"
+					sfTypeName.equals(FieldType.anyType.name())) {  //"anytype"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				column.setNativeType(sfTypeName);
-				if(sfTypeName.equals(FieldType.ID.value())) {
+				if(sfTypeName.equals(FieldType.id.name())) {
 					column.setNullType(NullType.No_Nulls);
 					ArrayList<String> columnNames = new ArrayList<String>();
 					columnNames.add(field.getName());
 					metadataFactory.addPrimaryKey(field.getName()+"_PK", columnNames, table); //$NON-NLS-1$
 				}
 			}
-			else if(sfTypeName.equals(FieldType.PICKLIST.value())) { // "picklist"
+			else if(sfTypeName.equals(FieldType.picklist.name())) { // "picklist"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				if(field.isRestrictedPicklist()) {
 					column.setNativeType("restrictedpicklist"); //$NON-NLS-1$
@@ -271,7 +271,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				
 				column.setProperty(COLUMN_PICKLIST_VALUES, getPicklistValues(field));
 			}
-			else if(sfTypeName.equals(FieldType.MULTIPICKLIST.value())) { //"multipicklist"
+			else if(sfTypeName.equals(FieldType.multipicklist.name())) { //"multipicklist"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				if(field.isRestrictedPicklist()) {
 					column.setNativeType("restrictedmultiselectpicklist");//$NON-NLS-1$
@@ -280,47 +280,47 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				}
 				column.setProperty(COLUMN_PICKLIST_VALUES, getPicklistValues(field));
 			}
-			else if(sfTypeName.equals(FieldType.BASE_64.value())) { //"base64"
+			else if(sfTypeName.equals(FieldType.base64.name())) { //"base64"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.BLOB, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.BOOLEAN.value())) { //"boolean"
+			else if(sfTypeName.equals(FieldType._boolean.name())) { //"boolean"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.BOOLEAN, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.CURRENCY.value())) { //"currency"
+			else if(sfTypeName.equals(FieldType.currency.name())) { //"currency"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DOUBLE, table);
 				column.setNativeType(sfTypeName);
 				column.setCurrency(true);
 				column.setScale(field.getScale());
 				column.setPrecision(field.getPrecision());
 			}
-			else if(sfTypeName.equals(FieldType.TEXTAREA.value())) { //"textarea"
+			else if(sfTypeName.equals(FieldType.textarea.name())) { //"textarea"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				column.setNativeType(sfTypeName);
 				column.setSearchType(SearchType.Unsearchable);
 			}
-			else if(sfTypeName.equals(FieldType.INT.value())) { //"int"
+			else if(sfTypeName.equals(FieldType._int.name())) { //"int"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.INTEGER, table);
 				column.setNativeType(sfTypeName);
 				column.setPrecision(field.getPrecision());
 			}
-			else if(sfTypeName.equals(FieldType.DOUBLE.value()) || //"double"
-					sfTypeName.equals(FieldType.PERCENT.value())) { //"percent"
+			else if(sfTypeName.equals(FieldType._double.name()) || //"double"
+					sfTypeName.equals(FieldType.percent.name())) { //"percent"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DOUBLE, table);
 				column.setNativeType(sfTypeName);
 				column.setScale(field.getScale());
 				column.setPrecision(field.getPrecision());
 			}
-			else if(sfTypeName.equals(FieldType.DATE.value())) { //"date"
+			else if(sfTypeName.equals(FieldType.date.name())) { //"date"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DATE, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.DATETIME.value())) { //"datetime"
+			else if(sfTypeName.equals(FieldType.datetime.name())) { //"datetime"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.TIMESTAMP, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.TIME.value())) { //"time"
+			else if(sfTypeName.equals(FieldType.time.name())) { //"time"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.TIME, table);
 				column.setNativeType(sfTypeName);
 			}
@@ -345,14 +345,15 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	
 	private String getPicklistValues(Field field) {
 		StringBuffer picklistValues = new StringBuffer();
-		if(null != field.getPicklistValues() && 0 != field.getPicklistValues().size()) {
-			List<PicklistEntry> entries = field.getPicklistValues();
-			for (Iterator<PicklistEntry> iterator = entries.iterator(); iterator.hasNext();) {
-				PicklistEntry entry = iterator.next();
-				picklistValues.append(entry.getValue());
-				if(iterator.hasNext()) {
+		if(null != field.getPicklistValues() && field.getPicklistValues().length > 0) {
+			PicklistEntry[] entries = field.getPicklistValues();
+			boolean first = true;
+			for (PicklistEntry entry : entries) {
+				if (!first) {
 					picklistValues.append(',');
 				}
+				first = false;
+				picklistValues.append(entry.getValue());
 			}
 		}
 		return picklistValues.toString();

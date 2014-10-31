@@ -28,7 +28,12 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.*;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Parameter;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -37,8 +42,11 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 
-import com.sforce.async.*;
+import com.sforce.async.BatchResult;
 import com.sforce.async.Error;
+import com.sforce.async.JobInfo;
+import com.sforce.async.Result;
+import com.sforce.async.StatusCode;
 
 @SuppressWarnings("nls")
 public class TestBulkInsertExecution {
@@ -82,8 +90,8 @@ public class TestBulkInsertExecution {
 				
 		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 		JobInfo jobInfo = Mockito.mock(JobInfo.class);
-		Mockito.when(connection.executeBulkJob(Mockito.anyString(), Mockito.anyList())).thenReturn(jobInfo);
-		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class))).thenReturn(batchResult);
+		Mockito.when(connection.createBulkJob(Mockito.anyString())).thenReturn(jobInfo);
+		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class), Mockito.anyList())).thenReturn(new BatchResult[] {batchResult, batchResult, batchResult});
 		
 		SalesForceExecutionFactory config = new SalesForceExecutionFactory();
 		config.setMaxBulkInsertBatchSize(1);
@@ -92,14 +100,14 @@ public class TestBulkInsertExecution {
 		while(true) {
 			try {
 				updateExecution.execute();
-				org.junit.Assert.assertArrayEquals(new int[] {3}, updateExecution.getUpdateCounts());
+				org.junit.Assert.assertArrayEquals(new int[] {1, 1, 1}, updateExecution.getUpdateCounts());
 				break;
 			} catch(DataNotAvailableException e) {
 				continue;
 			}
 		}
-		Mockito.verify(connection, Mockito.times(3)).executeBulkJob(Mockito.anyString(), Mockito.anyList());
-		Mockito.verify(connection, Mockito.times(3)).getBulkResults(Mockito.any(JobInfo.class));
+		Mockito.verify(connection, Mockito.times(1)).createBulkJob(Mockito.anyString());
+		Mockito.verify(connection, Mockito.times(1)).getBulkResults(Mockito.any(JobInfo.class), Mockito.anyList());
 	}
 
 	
@@ -146,8 +154,8 @@ public class TestBulkInsertExecution {
 				
 		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 		JobInfo jobInfo = Mockito.mock(JobInfo.class);
-		Mockito.when(connection.executeBulkJob(Mockito.anyString(), Mockito.anyList())).thenReturn(jobInfo);
-		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class))).thenReturn(batchResult);
+		Mockito.when(connection.createBulkJob(Mockito.anyString())).thenReturn(jobInfo);
+		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class), Mockito.anyList())).thenReturn(new BatchResult[] {batchResult, batchResult, batchResult});
 		
 		SalesForceExecutionFactory config = new SalesForceExecutionFactory();
 		config.setMaxBulkInsertBatchSize(1);
@@ -156,13 +164,13 @@ public class TestBulkInsertExecution {
 		while(true) {
 			try {
 				updateExecution.execute();
-				org.junit.Assert.assertArrayEquals(new int[] {2}, updateExecution.getUpdateCounts());
+				org.junit.Assert.assertArrayEquals(new int[] {1, 1, -3}, updateExecution.getUpdateCounts());
 				break;
 			} catch(DataNotAvailableException e) {
 				continue;
 			}
 		}
-		Mockito.verify(connection, Mockito.times(3)).executeBulkJob(Mockito.anyString(), Mockito.anyList());
-		Mockito.verify(connection, Mockito.times(3)).getBulkResults(Mockito.any(JobInfo.class));
+		Mockito.verify(connection, Mockito.times(1)).createBulkJob(Mockito.anyString());
+		Mockito.verify(connection, Mockito.times(1)).getBulkResults(Mockito.any(JobInfo.class), Mockito.anyList());
 	}
 }

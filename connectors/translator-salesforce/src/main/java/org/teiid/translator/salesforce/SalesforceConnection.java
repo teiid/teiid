@@ -21,11 +21,11 @@
  */
 package org.teiid.translator.salesforce;
 
+import java.util.Calendar;
 import java.util.List;
 
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
@@ -52,9 +52,9 @@ public interface SalesforceConnection extends Connection {
 
 	public int update(List<DataPayload> updateDataList) throws ResourceException;
 
-	public UpdatedResult getUpdated(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ResourceException;
+	public UpdatedResult getUpdated(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
 
-	public DeletedResult getDeleted(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ResourceException;
+	public DeletedResult getDeleted(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
 	
 	public QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException;
 	
@@ -62,9 +62,15 @@ public interface SalesforceConnection extends Connection {
 	
 	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException;
 	
-	public JobInfo executeBulkJob(String objectName, List<SObject> payload) throws ResourceException;
-	
-	public BatchResult getBulkResults(JobInfo job) throws ResourceException;
+	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws ResourceException;
 
 	public void cancelBulkJob(JobInfo job) throws ResourceException;
+
+	JobInfo closeJob(String jobId) throws ResourceException;
+
+	String addBatch(List<SObject> payload, JobInfo job)
+			throws ResourceException;
+
+	JobInfo createBulkJob(String objectName) throws ResourceException;
+
 }

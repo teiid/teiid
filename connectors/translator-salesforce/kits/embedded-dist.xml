@@ -26,6 +26,7 @@
       <useTransitiveDependencies>true</useTransitiveDependencies>
       <includes>
           <include>com.force.api:force-wsc</include>
+          <include>com.force.api:force-partner-api</include>
       </includes>       
     </dependencySet>   
      <dependencySet>

@@ -23,12 +23,11 @@ package org.teiid.translator.salesforce.execution;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.resource.ResourceException;
-import javax.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
@@ -43,10 +42,10 @@ import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.CriteriaVisitor;
-import org.w3c.dom.Element;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
+import com.sforce.ws.bind.XmlObject;
 
 public class DirectQueryExecution implements ProcedureExecution  {
 	
@@ -214,14 +213,14 @@ public class DirectQueryExecution implements ProcedureExecution  {
 	private List<List<Object>> loadBatch(QueryResult queryResult) {
 		List<List<Object>> batch = new ArrayList<List<Object>>();
 		for(SObject sObject : queryResult.getRecords()) {
-			List<Object> fields = sObject.getAny();
+			Iterator<XmlObject> fields = sObject.getChildren();
 			List<Object> row = new ArrayList<Object>();
-			if (sObject.getId() != null) {
-				row.add(sObject.getId());
-			}
-			for (Object field:fields) {
-				Element elem = (Element)field;
-				String value = elem.getTextContent();
+			while (fields.hasNext())  {
+				XmlObject elem = fields.next();
+				if (elem.getName().getLocalPart().equals("type")) { //$NON-NLS-1$
+					continue;
+				}
+				Object value = elem.getValue();
 				row.add(value);
 			}
 			batch.add(row);
@@ -243,9 +242,9 @@ public class DirectQueryExecution implements ProcedureExecution  {
 			throw new TranslatorException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13004));
 		}
 		
-		ArrayList<JAXBElement> attributes = new ArrayList<JAXBElement>();
 		String type = null;
 		String id = null;
+		DataPayload payload = new DataPayload();
 		
 		while(st.hasMoreElements()) {
 			String var = st.nextToken();
@@ -272,10 +271,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
 						continue;
 					}
 					anObj = Util.stripQutes(anObj.toString());
-					QName qname = new QName(name);
-				    @SuppressWarnings( "unchecked" )
-				    JAXBElement jbe = new JAXBElement( qname, String.class, anObj );
-					attributes.add(jbe);
+					payload.addField(name, anObj);
 				}
 			}
 			else if (key.equalsIgnoreCase(TYPE)) {
@@ -285,10 +281,8 @@ public class DirectQueryExecution implements ProcedureExecution  {
 				id = value;
 			}
 		}
-		DataPayload payload = new DataPayload();
 		payload.setID(id);
 		payload.setType(type);
-		payload.setMessageElements(attributes);
 		return payload;
 	}
 
