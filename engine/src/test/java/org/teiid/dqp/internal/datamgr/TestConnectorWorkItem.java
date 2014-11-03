@@ -157,7 +157,7 @@ public class TestConnectorWorkItem {
 		arm.setCommand(command);
 		ConnectorManager cm = TestConnectorManager.getConnectorManager();
 		cm.getExecutionFactory().setSourceRequired(false);
-		ConnectorWorkItem synchConnectorWorkItem = (ConnectorWorkItem) cm.registerRequest(arm);
+		ConnectorWork synchConnectorWorkItem = cm.registerRequest(arm);
 		synchConnectorWorkItem.execute();
 		synchConnectorWorkItem.close();
 		FakeConnector fc = (FakeConnector)cm.getExecutionFactory();

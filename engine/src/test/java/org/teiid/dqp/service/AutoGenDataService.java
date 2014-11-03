@@ -42,6 +42,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
+import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -178,7 +179,11 @@ public class AutoGenDataService extends ConnectorManager{
 			public boolean isThreadBound() {
 				return threadBound;
 			}
-			
+
+            @Override
+            public AtomicRequestID getId() {
+                return null;
+            }
 		};
     }
     
