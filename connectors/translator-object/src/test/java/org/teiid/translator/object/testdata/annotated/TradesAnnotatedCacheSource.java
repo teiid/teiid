@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object.util;
+package org.teiid.translator.object.testdata.annotated;
 
 
 import java.util.ArrayList;
@@ -31,9 +31,7 @@ import java.util.Map;
 import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.TestObjectConnection;
-import org.teiid.translator.object.testdata.Leg;
-import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.testdata.Transaction;
+import org.teiid.translator.object.infinispan.CacheUtil;
 
 
 /**
@@ -43,7 +41,7 @@ import org.teiid.translator.object.testdata.Transaction;
  *
  */
 @SuppressWarnings("nls")
-public class TradesCacheSource extends HashMap <Object, Object> {
+public class TradesAnnotatedCacheSource extends HashMap <Object, Object> {
 	
 	/**
 	 * 
@@ -64,11 +62,11 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	public static final int NUMTRANSACTIONS = 5;
 	
 	static {
-		mapOfCaches.put(TradesCacheSource.TRADES_CACHE_NAME, Trade.class);
+		mapOfCaches.put(TradesAnnotatedCacheSource.TRADES_CACHE_NAME, Trade.class);
 	}
 		
 	public static ObjectConnection createConnection() {
-		Map <Object, Object> objects = (Map<Object, Object>) TradesCacheSource.loadCache();
+		Map <Object, Object> objects = (Map<Object, Object>) TradesAnnotatedCacheSource.loadCache();
 
 		TestObjectConnection toc = new TestObjectConnection(new TestCacheWrapper(objects));
 		
@@ -104,14 +102,14 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 				trade.setSettled(true);
 			}
 			
-			cache.put(String.valueOf(i), trade);
+			cache.put( CacheUtil.encode( String.valueOf(i) ), trade);
 
 		}
 	}
 
 	public static Map<Object, Object> loadCache() {
-		TradesCacheSource tcs = new TradesCacheSource();
-		TradesCacheSource.loadCache( tcs);
+		TradesAnnotatedCacheSource tcs = new TradesAnnotatedCacheSource();
+		TradesAnnotatedCacheSource.loadCache( tcs);
 		return tcs;		
 	}
 	

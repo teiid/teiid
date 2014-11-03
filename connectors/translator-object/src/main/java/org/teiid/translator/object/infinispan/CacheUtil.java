@@ -19,38 +19,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object;
+package org.teiid.translator.object.infinispan;
 
-import org.junit.Before;
-import org.teiid.language.Select;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.util.VDBUtility;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 
-
-@SuppressWarnings("nls")
-public class TestMapCacheKeySearch extends BasicSearchTest {	      
-	   
-	private static ObjectConnection conn = TradesCacheSource.createConnection();
-	private static ExecutionContext context;
+/**
+ * @author vanhalbert
+ *
+ */
+public class CacheUtil {
 	
-	private ObjectExecutionFactory factory = null;
-
-	protected static boolean print = false;
-	
-	@Before public void beforeEach() throws Exception{	
-		 
-		factory = new ObjectExecutionFactory();
-
-		factory.start();
-
+    public static String encode(String key) {
+        try {
+            return URLEncoder.encode(key, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
-	
-	@Override
-	protected ObjectExecution createExecution(Select command) throws TranslatorException {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
-	}
-	
+
+    public static String decode(String key) {
+        try {
+            return URLDecoder.decode(key, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

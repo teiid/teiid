@@ -3,10 +3,13 @@ package org.teiid.translator.object;
 import java.util.Map;
 
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.infinispan.DSLSearch;
+import org.teiid.translator.object.infinispan.InfinispanExecutionFactory;
+import org.teiid.translator.object.infinispan.LuceneSearch;
 import org.teiid.translator.object.testdata.Leg;
 import org.teiid.translator.object.testdata.Trade;
+import org.teiid.translator.object.testdata.TradesCacheSource;
 import org.teiid.translator.object.testdata.Transaction;
-import org.teiid.translator.object.util.TradesCacheSource;
 
 public class TestObjectConnection implements ObjectConnection {
 	private ClassRegistry methodUtil = new ClassRegistry();
@@ -57,4 +60,5 @@ public class TestObjectConnection implements ObjectConnection {
 		return methodUtil;
 	}
 
+	
 }

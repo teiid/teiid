@@ -30,13 +30,13 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.Select;
-import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.infinispan.InfinispanExecutionFactory;
 import org.teiid.translator.object.testdata.Trade;
+import org.teiid.translator.object.testdata.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
