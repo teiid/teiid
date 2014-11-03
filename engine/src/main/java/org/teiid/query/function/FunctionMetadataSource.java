@@ -53,4 +53,10 @@ public interface FunctionMetadataSource {
      * @throws ClassNotFoundException If class could not be found
      */
     Class<?> getInvocationClass(String className) throws ClassNotFoundException;    
+    
+    /**
+     * Classloader used for functions
+     * @return
+     */
+    ClassLoader getClassLoader();    
 }

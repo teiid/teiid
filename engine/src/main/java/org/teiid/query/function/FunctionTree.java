@@ -357,7 +357,8 @@ public class FunctionTree {
             }
         }
 
-        FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext);
+        FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext,
+                source.getClassLoader());
         if (method.getAggregateAttributes() != null && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
         	result.newInstance();
         }

@@ -47,6 +47,7 @@ public class UDFSource implements FunctionMetadataSource {
 		this.classLoader = classLoader;
 	}
     
+    @Override
     public ClassLoader getClassLoader() {
 		return classLoader;
 	}
