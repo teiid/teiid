@@ -18,7 +18,7 @@ on the JDBC driver module in Mondrian's "module.xml" file.
 				 
 		6) Overlay the "modules" directory from this directory on the "<jboss-as>/modules" directory, 
 		
-		7) Look at "<jboss-as>/modules/system/layers/base/org/mondrian/main/module.xml", and copy all the dependent jars
+		7) Look at "<jboss-as>/modules/org/mondrian/main/module.xml", and copy all the dependent jars
 		from "<mondrian-install>/lib/mondrian.war" file. You need to unzip this file and look in the "WEB-INF/lib" directory.
 		Below is list of files you need to copy 
 				
