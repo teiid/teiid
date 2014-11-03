@@ -4,8 +4,8 @@ To configure the Cloudera's Impala as datasource
 
 2) Overlay the "modules" directory on the "<jboss-as>/modules" directory 
 
-3) Then copy needed impala jar files defined in the "<jboss-as>/modules/system/layers/base/org/apache/hadoop/impala/main/modules.xml" file into  
-"<jboss-as>/modules/system/layers/base/org/apache/hadoop/impala/main" directory. You download the jar files 
+3) Then copy needed impala jar files defined in the "<jboss-as>/modules//org/apache/hadoop/impala/main/modules.xml" file into  
+"<jboss-as>/modules/org/apache/hadoop/impala/main" directory. You download the jar files 
 from https://downloads.cloudera.com/impala-jdbc/impala-jdbc-0.5-2.zip
 
 note that incase you are using updated drivers, modify the versions of the files to correct versions in the module.xml file
