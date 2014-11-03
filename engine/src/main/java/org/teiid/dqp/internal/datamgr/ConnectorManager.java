@@ -22,6 +22,9 @@
 
 package org.teiid.dqp.internal.datamgr;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,7 +67,7 @@ public class ConnectorManager  {
 	private final List<String> id;
 	
     // known requests
-    private final ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
+    private final ConcurrentHashMap<AtomicRequestID, ConnectorWork> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWork>();
 	
 	private volatile SourceCapabilities cachedCapabilities;
 	
@@ -92,7 +95,13 @@ public class ConnectorManager  {
     	this.executionFactory = ef;
     	this.id = Arrays.asList(translatorName, connectionName);
     	if (ef != null) {
-	    	functions = ef.getPushDownFunctions();
+    	    ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+    	    try {
+    	        Thread.currentThread().setContextClassLoader(ef.getClass().getClassLoader());
+    	    	functions = ef.getPushDownFunctions();
+            } finally {
+                Thread.currentThread().setContextClassLoader(originalCL);
+            }
 	    	if (functions != null) {
 	    		//set the specific name to match against imported versions of
 	    		//the same function
@@ -147,30 +156,40 @@ public class ConnectorManager  {
 			if (cachedCapabilities != null) {
 	    		return cachedCapabilities;
 	    	}
-			if (translator.isSourceRequiredForCapabilities()) {
-				Object connection = null;
-				Object connectionFactory = null;
-				try {
-					connectionFactory = getConnectionFactory();
-				
-					if (connectionFactory != null) {
-						connection = translator.getConnection(connectionFactory, null);
-					}
-					if (connection == null) {
-			    		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", getConnectionName())); //$NON-NLS-1$);
-			    	}
-					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Initializing the capabilities for", translatorName); //$NON-NLS-1$
-					executionFactory.initCapabilities(connection);
-				} finally {
-					if (connection != null) {
-						translator.closeConnection(connection, connectionFactory);
-					}
-				}
+			ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+			try {
+			    Thread.currentThread().setContextClassLoader(translator.getClass().getClassLoader());
+    			cachedCapabilities = buildCapabilities(translator);
+			} finally {
+			    Thread.currentThread().setContextClassLoader(originalCL);
 			}
-			BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, id);
-			cachedCapabilities = resultCaps;
 		}
 		return cachedCapabilities;
+    }
+
+    private BasicSourceCapabilities buildCapabilities(ExecutionFactory<Object, Object> translator) throws TranslatorException {
+        if (translator.isSourceRequiredForCapabilities()) {
+        	Object connection = null;
+        	Object connectionFactory = null;
+        	try {
+        		connectionFactory = getConnectionFactory();
+        	
+        		if (connectionFactory != null) {
+        			connection = translator.getConnection(connectionFactory, null);
+        		}
+        		if (connection == null) {
+            		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", getConnectionName())); //$NON-NLS-1$);
+            	}
+        		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Initializing the capabilities for", translatorName); //$NON-NLS-1$
+        		executionFactory.initCapabilities(connection);
+        	} finally {
+        		if (connection != null) {
+        			translator.closeConnection(connection, connectionFactory);
+        		}
+        	}
+        }
+        BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, id);
+        return resultCaps;
     }
     
     public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException {
@@ -178,9 +197,23 @@ public class ConnectorManager  {
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
 
-    	ConnectorWorkItem item = new ConnectorWorkItem(message, this);
-        Assertion.isNull(requestStates.put(atomicRequestId, item), "State already existed"); //$NON-NLS-1$
-        return item;
+    	final ConnectorWorkItem item = new ConnectorWorkItem(message, this);
+        ConnectorWork proxy = (ConnectorWork) Proxy.newProxyInstance(ConnectorWork.class.getClassLoader(),
+                new Class[] { ConnectorWork.class }, new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+                        try {
+                            Thread.currentThread().setContextClassLoader(getExecutionFactory().getClass().getClassLoader());
+                            return method.invoke(item, args);
+                        } finally {
+                            Thread.currentThread().setContextClassLoader(originalCL);
+                        }
+                    }
+                });
+    	
+        Assertion.isNull(requestStates.put(atomicRequestId, proxy), "State already existed"); //$NON-NLS-1$
+        return proxy;
     }
     
     ConnectorWork getState(AtomicRequestID requestId) {
