@@ -42,7 +42,7 @@ import org.teiid.translator.TranslatorException;
 
 public class NativeMetadataRepository extends MetadataRepository {
 
-	public static final String IMPORT_PUSHDOWN_FUNCTIONS = "importer.importPushdownFunctions";
+	public static final String IMPORT_PUSHDOWN_FUNCTIONS = "importer.importPushdownFunctions"; //$NON-NLS-1$
 
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
@@ -54,8 +54,18 @@ public class NativeMetadataRepository extends MetadataRepository {
 		if (connectionFactory == null && executionFactory.isSourceRequiredForMetadata()) {
 			throw new TranslatorException(QueryPlugin.Event.TEIID31097, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31097));
 		}
-		
-		Object connection = executionFactory.getConnection(connectionFactory, null);
+		ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+		try {
+		    Thread.currentThread().setContextClassLoader(executionFactory.getClass().getClassLoader());
+		    getMetadata(factory, executionFactory, connectionFactory);
+		} finally {
+		    Thread.currentThread().setContextClassLoader(originalCL);
+		}
+	}
+
+    private void getMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
+            throws TranslatorException {
+        Object connection = executionFactory.getConnection(connectionFactory, null);
 		Object unwrapped = null;
 		
 		if (connection instanceof WrappedConnection) {
@@ -97,6 +107,6 @@ public class NativeMetadataRepository extends MetadataRepository {
 				}
 			}
 		}
-	}
+    }
 	
 }

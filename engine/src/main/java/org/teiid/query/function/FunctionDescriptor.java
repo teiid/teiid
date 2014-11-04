@@ -66,18 +66,21 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     // a different VM.  This function descriptor can be used to look up 
     // the real VM descriptor for execution.
     private transient Method invocationMethod;
+    
+    private ClassLoader classLoader;
 	
     FunctionDescriptor() {
     }
     
 	FunctionDescriptor(FunctionMethod method, Class<?>[] types,
 			Class<?> outputType, Method invocationMethod,
-			boolean requiresContext) {
+			boolean requiresContext, ClassLoader classloader) {
 		this.types = types;
 		this.returnType = outputType;
         this.invocationMethod = invocationMethod;
         this.requiresContext = requiresContext;
         this.method = method;
+        this.classLoader = classloader;
 	}
 	
 	public Object newInstance() {
@@ -258,7 +261,16 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	        		values = newValues;
         		}
         	}
-            Object result = invocationMethod.invoke(functionTarget, values);
+        	Object result = null;
+        	ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+        	try {
+        	    if (this.classLoader != null) {
+        	        Thread.currentThread().setContextClassLoader(this.classLoader);
+        	    }
+        	    result = invocationMethod.invoke(functionTarget, values);
+        	} finally {
+        	    Thread.currentThread().setContextClassLoader(originalCL);
+        	}
             if (context != null && getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
             	context.setDeterminismLevel(getDeterministic());
             }

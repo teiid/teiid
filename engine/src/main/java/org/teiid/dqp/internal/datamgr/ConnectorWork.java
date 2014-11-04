@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.datamgr;
 
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.TranslatorException;
@@ -48,5 +49,6 @@ public interface ConnectorWork {
 	boolean isForkable();
 
 	boolean isThreadBound();
-	
+
+	AtomicRequestID getId();
 }
