@@ -16,9 +16,19 @@
 		<dependencies>	
 			<dependency>
 			  <groupId>org.infinispan</groupId>
+			  <artifactId>infinispan-commons</artifactId>
+			  <version>${version.org.infinispan.6}</version>
+			</dependency>			
+			<dependency>
+			  <groupId>org.infinispan</groupId>
 			  <artifactId>infinispan-query</artifactId>
 			  <version>${version.org.infinispan.6}</version>
-			</dependency>	   
+			</dependency>	
+			<dependency>
+			  <groupId>org.infinispan</groupId>
+			  <artifactId>infinispan-query-dsl</artifactId>
+			  <version>${version.org.infinispan.6}</version>
+			</dependency>				   
 			<dependency>
 			  	<groupId>com.google.protobuf</groupId>
 			  	<artifactId>protobuf-java</artifactId>
@@ -67,12 +77,22 @@
 	  		<groupId>com.google.protobuf</groupId>
 	  		<artifactId>protobuf-java</artifactId>
 	  		<scope>provided</scope>
-		</dependency>		
+		</dependency>	
+		<dependency>
+		    <groupId>org.infinispan</groupId>
+		    <artifactId>infinispan-commons</artifactId>
+		    <scope>provided</scope>
+		</dependency>  				
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-query</artifactId>
 		    <scope>provided</scope>
-		</dependency>  												
+		</dependency>  	
+		<dependency>
+		    <groupId>org.infinispan</groupId>
+		    <artifactId>infinispan-query-dsl</artifactId>
+		    <scope>provided</scope>
+		</dependency> 													
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-client-hotrod</artifactId>

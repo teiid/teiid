@@ -61,7 +61,7 @@ public interface ObjectConnection  {
 	 * Return the ClassRegistry that contains which classes and their methods.
 	 * @return ClassRegistry
 	 */
-	public ClassRegistry getClassRegistry();	
+	ClassRegistry getClassRegistry();	
 
 	
 	/** 

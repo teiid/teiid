@@ -461,7 +461,11 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			
 				}
 				
-				cache.replaceAsync(keyValue, entity);
+				if (keyValue instanceof String) {
+					cache.replaceAsync( keyValue, entity);
+				} else {
+					cache.replaceAsync(String.valueOf(keyValue), entity);
+				}
 				++updateCnt;		
 			}
 			

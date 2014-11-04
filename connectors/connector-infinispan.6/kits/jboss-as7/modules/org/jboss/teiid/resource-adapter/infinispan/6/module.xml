@@ -11,9 +11,9 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
-        <module name="org.jboss.teiid.translator.object"/>
+        <module name="org.jboss.teiid.translator.object" export="true" />
         <module name="org.jboss.modules"/>
-
-        <module name="org.infinispan" slot="jdg-6.3" optional="true"  export="true" />
+        
+         <module name="org.infinispan" slot="jdg-6.3" optional="true"  export="true" />
     </dependencies>
 </module>

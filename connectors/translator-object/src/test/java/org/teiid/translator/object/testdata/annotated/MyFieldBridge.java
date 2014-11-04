@@ -19,38 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object;
+package org.teiid.translator.object.testdata.annotated;
 
-import org.junit.Before;
-import org.teiid.language.Select;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.util.VDBUtility;
+import org.hibernate.search.bridge.StringBridge;
 
+//The bride for LineItem bridge
+public class MyFieldBridge implements StringBridge {
 
-@SuppressWarnings("nls")
-public class TestMapCacheKeySearch extends BasicSearchTest {	      
-	   
-	private static ObjectConnection conn = TradesCacheSource.createConnection();
-	private static ExecutionContext context;
-	
-	private ObjectExecutionFactory factory = null;
-
-	protected static boolean print = false;
-	
-	@Before public void beforeEach() throws Exception{	
-		 
-		factory = new ObjectExecutionFactory();
-
-		factory.start();
-
+    @Override
+    public String objectToString(final Object object) {
+        return object.toString();
     }
-	
-	@Override
-	protected ObjectExecution createExecution(Select command) throws TranslatorException {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
-	}
-	
-
 }

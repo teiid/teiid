@@ -39,7 +39,6 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.DataNotAvailableException;

@@ -1,10 +1,14 @@
 package org.teiid.translator.object.infinispan;
 
+import java.lang.annotation.ElementType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.cfg.SearchMapping;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
@@ -17,9 +21,12 @@ import org.infinispan.transaction.TransactionMode;
 import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.TestObjectConnection;
-import org.teiid.translator.object.util.TradesCacheSource;
+import org.teiid.translator.object.testdata.Trade;
+import org.teiid.translator.object.testdata.TradesCacheSource;
 
 public class TestInfinispanConnection extends TestObjectConnection {
+	
+	private static int cnt = 0;
 
 	private DefaultCacheManager container;
 
@@ -38,41 +45,74 @@ public class TestInfinispanConnection extends TestObjectConnection {
 			throws Exception {
 
 		DefaultCacheManager container = new DefaultCacheManager(configFile);
-//		container.removeCache(TradesCacheSource.TRADES_CACHE_NAME);
-//		container.getCache(TradesCacheSource.TRADES_CACHE_NAME, true);
 
 		return createConnection(container);   	
 		
 	}
 		
-		public static ObjectConnection createConnection()
+	public static ObjectConnection createConnection()
 				throws Exception {
-	
-        GlobalConfiguration glob = new GlobalConfigurationBuilder()
-        .nonClusteredDefault() //Helper method that gets you a default constructed GlobalConfiguration, preconfigured for use in LOCAL mode
-        .globalJmxStatistics().enable() //This method allows enables the jmx statistics of the global configuration.
-       .jmxDomain("org.infinispan.trades")  //prevent collision with non-transactional carmart
-        .build(); //Builds  the GlobalConfiguration object
-    Configuration loc = new ConfigurationBuilder()
-//        .jmxStatistics().enable() //Enable JMX statistics
-        .indexing().enable().addProperty("hibernate.search.default.directory_provider", "filesystem").addProperty("hibernate.search.default.indexBase", "./target/lucene/indexes")
-        .clustering().cacheMode(CacheMode.LOCAL) //Set Cache mode to LOCAL - Data is not replicated.
-        .transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
-        //.autoCommit(false) //Enable Transactional mode with autocommit false
-//        .lockingMode(LockingMode.OPTIMISTIC).transactionManagerLookup(new GenericTransactionManagerLookup()) //uses GenericTransactionManagerLookup - This is a lookup class that locate transaction managers in the most  popular Java EE application servers. If no transaction manager can be found, it defaults on the dummy transaction manager.
-//        .locking().isolationLevel(IsolationLevel.REPEATABLE_READ) //Sets the isolation level of locking
-        .eviction().maxEntries(100).strategy(EvictionStrategy.LIRS) //Sets  4 as maximum number of entries in a cache instance and uses the LIRS strategy - an efficient low inter-reference recency set replacement policy to improve buffer cache performance
-        .persistence().passivation(false).addSingleFileStore().purgeOnStartup(true).location("./target/localcache/indexing/trades") //Disable passivation and adds a SingleFileStore that is purged on Startup
-        .build(); //Builds the Configuration object
-    	DefaultCacheManager container = new DefaultCacheManager(glob, loc, true);
+		
+    	DefaultCacheManager container = createContainer();
+    	container.startCache(TradesCacheSource.TRADES_CACHE_NAME);
   
 		return createConnection(container);   	
 	}
+	
+	public static DefaultCacheManager createContainer() throws Exception {
+		SearchMapping mapping = new SearchMapping();
+		mapping.entity(Trade.class).indexed().providedId().
+		property("name", ElementType.METHOD).field().analyze(Analyze.NO).
+		property("settled", ElementType.METHOD).field().analyze(Analyze.NO).
+		property("tradeDate", ElementType.METHOD).field().analyze(Analyze.NO).
+		property("tradeId", ElementType.METHOD).field().analyze(Analyze.NO);
+
+		Properties properties = new Properties();
+		properties.put(org.hibernate.search.Environment.MODEL_MAPPING, mapping);
+		properties.put("lucene_version", "LUCENE_CURRENT");		
+		properties.put("hibernate.search.default.directory_provider", "ram");
+		
+		GlobalConfiguration glob = new GlobalConfigurationBuilder()
+        	.nonClusteredDefault() //Helper method that gets you a default constructed GlobalConfiguration, preconfigured for use in LOCAL mode
+        	.globalJmxStatistics().enable() //This method allows enables the jmx statistics of the global configuration.
+        	.jmxDomain("org.infinispan.trades." + ++cnt)  //prevent collision
+        	.build(); //Builds  the GlobalConfiguration object
+		
+		Configuration loc = new ConfigurationBuilder()
+    		.indexing().enable().addProperty("hibernate.search.default.directory_provider", "filesystem").addProperty("hibernate.search.default.indexBase", "./target/lucene/indexes" + cnt)
+    		.enable()
+    		.indexLocalOnly(true)
+    		.withProperties(properties)
+		        .persistence().passivation(false).addSingleFileStore().purgeOnStartup(true).location("./target/localcache/indexing/trades" + cnt) //Disable passivation and adds a SingleFileStore that is purged on Startup
+    		.build();
+		return new DefaultCacheManager(glob, loc);
+		
+	}
+	
+	public static DefaultCacheManager createContainerForLucene()
+			throws Exception {
+
+	    GlobalConfiguration glob = new GlobalConfigurationBuilder()
+	    .nonClusteredDefault() //Helper method that gets you a default constructed GlobalConfiguration, preconfigured for use in LOCAL mode
+	    .globalJmxStatistics().enable() //This method allows enables the jmx statistics of the global configuration.
+	   .jmxDomain("org.infinispan.trades.annotated." + ++cnt)  //prevent collision with non-transactional carmart
+	    .build(); //Builds  the GlobalConfiguration object
+	    Configuration loc = new ConfigurationBuilder()
+		.indexing().enable().addProperty("hibernate.search.default.directory_provider", "filesystem").addProperty("hibernate.search.default.indexBase", "./target/lucene/indexes " + cnt)
+	    .clustering().cacheMode(CacheMode.LOCAL) //Set Cache mode to LOCAL - Data is not replicated.
+	    .transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
+	    .eviction().maxEntries(100).strategy(EvictionStrategy.LIRS) //Sets  4 as maximum number of entries in a cache instance and uses the LIRS strategy - an efficient low inter-reference recency set replacement policy to improve buffer cache performance
+	    .persistence().passivation(false).addSingleFileStore().purgeOnStartup(true).location("./target/localcache/indexing/trades" + cnt) //Disable passivation and adds a SingleFileStore that is purged on Startup
+	    .build(); //Builds the Configuration object
+		DefaultCacheManager container = new DefaultCacheManager(glob, loc, true);
+	
+		return container;
+	}
+	
 
 
 	private static ObjectConnection createConnection(DefaultCacheManager container) {
-		TradesCacheSource.loadCache(container
-				.getCache(TradesCacheSource.TRADES_CACHE_NAME));
+		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
 	
 		CacheContainerWrapper wrapper = new TestInfinispanCacheWrapper(
 				container);

@@ -21,16 +21,10 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import java.util.List;
-
 import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.Select;
-import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.ObjectConnection;
@@ -50,14 +44,17 @@ import org.teiid.translator.object.ObjectExecutionFactory;
  */
 @Translator(name = "infinispan-cache", description = "The Infinispan Cache Translator")
 public class InfinispanExecutionFactory extends ObjectExecutionFactory {
+
 	private boolean supportsLuceneSearching = false;
+	private boolean supportsDSLSearching = false;
+	
 
 	public InfinispanExecutionFactory() {
 		super();
 	}
 	
 	public boolean isFullTextSearchingSupported() {
-		return this.supportsLuceneSearching;
+		return this.supportsLuceneSearching || this.supportsDSLSearching;
 	}
 
 	/**
@@ -67,14 +64,31 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	 * 
 	 * @since 6.1.0
 	 */
-	@TranslatorProperty(display = "Support Using Lucene Searching", description = "True, assumes objects have Hibernate Search annotations", advanced = true)
+	@TranslatorProperty(display = "Support Using Lucene Searching", description = "True, assumes objects have Hibernate Search annotations and will use Hiberante Lucene searching", advanced = true)
 	public boolean supportsLuceneSearching() {
 		return this.supportsLuceneSearching;
 	}
 
 	public void setSupportsLuceneSearching(boolean supportsLuceneSearching) {
 		this.supportsLuceneSearching = supportsLuceneSearching;
+		setSearchType(new LuceneSearch());
 	}
+	
+	/**
+	 * Indicates if Infinispan DSL Querying is used for searching	 * @return boolean
+	 * @return boolean
+	 * 
+	 * @since 6.1.0
+	 */
+	@TranslatorProperty(display = "Support Using DSL Searching", description = "True means Infinispan DSL Querying is used for searching ", advanced = true)
+	public boolean supportsDSLSearching() {
+		return this.supportsDSLSearching;
+	}
+
+	public void setSupportsDSLSearching(boolean supportsDSLSearching) {
+		this.supportsDSLSearching = supportsDSLSearching;
+		setSearchType(new DSLSearch());
+	}	
 
 	@Override
 	public boolean supportsOrCriteria() {
@@ -93,8 +107,8 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 
 	@Override
 	public boolean supportsLikeCriteria() {
-		// at this point, i've been unable to get the Like to work.
-		return false;
+		// at this point, i've been unable to get this to work with Lucene searching
+		return this.supportsDSLSearching;
 	}
 	
    @Override
@@ -104,31 +118,6 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
     	return new InfinispanUpdateExecution(command, connection, executionContext, this);
 	}	
 	
-	@Override
-	public List<Object> search(Select command, String cacheName,
-			ObjectConnection connection, ExecutionContext executionContext)
-			throws TranslatorException {
 
-			if (supportsLuceneSearching()) {
-				
-				return LuceneSearch.performSearch(command, cacheName, connection);
-			}
-
-			return super.search(command, cacheName, connection, executionContext);
-	}
-	
-	public List<Object> search(Delete command, String cacheName, ObjectConnection conn, ExecutionContext executionContext)
-				throws TranslatorException {   
-		return LuceneSearch.performSearch(command, cacheName, conn);
-	}
-	
-	public List<Object> search(Update command, String cacheName, ObjectConnection conn, ExecutionContext executionContext)
-			throws TranslatorException {   
-		return LuceneSearch.performSearch(command, cacheName, conn);
-	}	
-	
-	public Object performKeySearch(String cacheName, String columnName, Object value, ObjectConnection conn, ExecutionContext executionContext) throws TranslatorException {
-		return LuceneSearch.performKeySearch(cacheName, columnName, value, conn);
-	}		
 	
 }
