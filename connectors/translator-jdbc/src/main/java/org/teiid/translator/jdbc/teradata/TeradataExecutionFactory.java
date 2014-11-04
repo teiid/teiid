@@ -57,7 +57,6 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 	protected ConvertModifier convert = new ConvertModifier();
 	
     public TeradataExecutionFactory() {
-    	setSupportsOuterJoins(false);
     }
     
 	@Override
