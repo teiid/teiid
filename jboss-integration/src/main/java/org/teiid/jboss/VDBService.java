@@ -390,12 +390,16 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
 							te = e;
 						}
+						ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
 						try {
+						    Thread.currentThread().setContextClassLoader(metadataRepo.getClass().getClassLoader());
 							metadataRepo.loadMetadata(factory, ef, cf);		
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
 							break;
 						} catch (Exception e) {
 							ex = e;
+						} finally {
+						    Thread.currentThread().setContextClassLoader(originalCL);
 						}
 					}
 				}
@@ -442,7 +446,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
     					if (vdb.getStatus() != Status.FAILED && vdb.getStatus() != Status.REMOVED) {
     						throw e;
     					}
-    					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not load metadata for a removed or failed deployment.");
+    					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not load metadata for a removed or failed deployment."); //$NON-NLS-1$
     				}
     			}
     		});

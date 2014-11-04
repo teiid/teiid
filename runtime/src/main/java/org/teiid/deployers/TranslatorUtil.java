@@ -120,7 +120,13 @@ public class TranslatorUtil {
 			}
 			executionFactory = (ExecutionFactory)o;
 			injectProperties(executionFactory, data);
-			executionFactory.start();
+			ClassLoader orginalCL = Thread.currentThread().getContextClassLoader();
+			try {
+			    Thread.currentThread().setContextClassLoader(executionFactory.getClass().getClassLoader());
+			    executionFactory.start();
+			} finally {
+			    Thread.currentThread().setContextClassLoader(orginalCL);
+			}
 			return executionFactory;
 		} catch (InvocationTargetException e) {
 			throw new TeiidException(RuntimePlugin.Event.TEIID40025, e);
