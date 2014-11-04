@@ -31,7 +31,6 @@ import java.util.Map;
 import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.TestObjectConnection;
-import org.teiid.translator.object.infinispan.CacheUtil;
 
 
 /**
@@ -102,7 +101,7 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 				trade.setSettled(true);
 			}
 			
-			cache.put( CacheUtil.encode( String.valueOf(i) ), trade);
+			cache.put(String.valueOf(i), trade);
 
 		}
 	}

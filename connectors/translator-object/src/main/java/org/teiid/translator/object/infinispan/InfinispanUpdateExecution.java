@@ -219,9 +219,9 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				}
 				
 				if (keyValue instanceof String) {
-					cache.put(CacheUtil.encode( (String) keyValue), entity);
+					cache.put(keyValue, entity);
 				} else {
-					cache.put( CacheUtil.encode( String.valueOf(keyValue) ), entity);
+					cache.put(String.valueOf(keyValue), entity);
 				}
 			} else {
 				Object rootObject = this.executionFactory.performKeySearch(cacheName, fkeyColNIS, fkeyValue, connection, context);
@@ -250,9 +250,9 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				} 
 				
 				if (fkeyValue instanceof String) {
-					cache.put(CacheUtil.encode( (String) fkeyValue), entity);
+					cache.put(fkeyValue, entity);
 				} else {
-					cache.put(CacheUtil.encode( String.valueOf(fkeyValue)), entity);
+					cache.put(String.valueOf(fkeyValue), entity);
 				}
 
 			}
@@ -313,7 +313,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					}
 
 					if (cache.containsKey(value) ) {
-						cache.removeAsync(CacheUtil.encode( value));
+						cache.removeAsync(value);
 					//	remove(v);
 						++updateCnt;
 					}
@@ -462,9 +462,9 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				}
 				
 				if (keyValue instanceof String) {
-					cache.replaceAsync( CacheUtil.encode( (String) keyValue), entity);
+					cache.replaceAsync( keyValue, entity);
 				} else {
-					cache.replaceAsync( CacheUtil.encode(String.valueOf(keyValue)), entity);
+					cache.replaceAsync(String.valueOf(keyValue), entity);
 				}
 				++updateCnt;		
 			}
