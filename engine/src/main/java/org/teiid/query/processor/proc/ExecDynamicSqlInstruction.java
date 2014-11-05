@@ -53,6 +53,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -169,14 +170,20 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			Map<ElementSymbol, Expression> nameValueMap = createVariableValuesMap(localContext);
             ValidationVisitor visitor = new ValidationVisitor();
             Request.validateWithVisitor(visitor, metadata, command);
-
-            if (dynamicCommand.getAsColumns() != null
+            boolean update = false;
+            if (RelationalNodeUtil.isUpdate(command)) {
+            	if (dynamicCommand.isAsClauseSet()) {
+            		throw new QueryProcessingException(QueryPlugin.Event.TEIID31157, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31157));
+            	}
+            	update = true;
+            } else if (dynamicCommand.getAsColumns() != null
 					&& !dynamicCommand.getAsColumns().isEmpty()) {
         		command = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), command, metadata, dynamicCommand.getAsColumns()); //$NON-NLS-1$
 				if (dynamicCommand.getIntoGroup() != null) {
 					Insert insert = new Insert(dynamicCommand.getIntoGroup(), dynamicCommand.getAsColumns(), Collections.emptyList());
 					insert.setQueryExpression((Query)command);
 					command = insert;
+					update = true;
 				}
 			}
             
@@ -188,7 +195,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, dynamicCommand.getIntoGroup() != null?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
+			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, update?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
 				@Override
 				public void process(ProcedurePlan procEnv)
 						throws BlockedException, TeiidComponentException,

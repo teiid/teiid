@@ -2279,6 +2279,28 @@ public class TestProcedureProcessor {
         helpProcess(plan, fdm, new List[] {Arrays.asList("a", 0), Arrays.asList("a", 3), Arrays.asList("a", 0), Arrays.asList("a", 3)});
     }
     
+    @Test public void testDynamicInsert() throws Exception {
+        String sql = "exec p1(1)"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create virtual procedure p1(a long) returns (res long) as "
+        		+ "begin create local temporary table t (x string); execute immediate 'insert into t select ''a''';  end;", "x", "y");
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {  }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testDynamicInsert1() throws Exception {
+        String sql = "exec p1(1)"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create virtual procedure p1(a long) returns (res long) as "
+        		+ "begin create local temporary table t (x string); execute immediate 'insert into t select ''a''' as res long;  end;", "x", "y");
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {  }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
     private static final boolean DEBUG = false;
     
 }
