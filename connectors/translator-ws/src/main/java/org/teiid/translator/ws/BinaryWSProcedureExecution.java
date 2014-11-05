@@ -92,7 +92,6 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     Map<String, Object> responseContext = Collections.emptyMap();
     int responseCode = 200;
     private boolean useResponseContext;
-    private boolean alwaysAllowPayloads;
 
 	/**
      * @param env
@@ -109,10 +108,6 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 		this.useResponseContext = useResponseContext;
 	}
 
-    public void setAlwaysAllowPayloads(boolean alwaysAllowPayloads) {
-		this.alwaysAllowPayloads = alwaysAllowPayloads;
-	}
-
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
 
@@ -127,7 +122,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 
 			dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, method);
-			if (!this.alwaysAllowPayloads && payload != null && !"POST".equalsIgnoreCase(method)) { //$NON-NLS-1$
+			if (payload != null && !"POST".equalsIgnoreCase(method) && !"PUT".equalsIgnoreCase(method) && !"PATCH".equalsIgnoreCase(method)) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
 			}
 

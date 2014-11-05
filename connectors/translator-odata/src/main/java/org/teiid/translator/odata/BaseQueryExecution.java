@@ -220,7 +220,6 @@ public class BaseQueryExecution {
 
 		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection);
 		execution.setUseResponseContext(true);
-		execution.setAlwaysAllowPayloads(true);
 		execution.setCustomHeaders(headers);
 		execution.execute();
 		return execution;

@@ -12,7 +12,5 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
-        <module name="javax.xml.ws.api"/>
-        <module name="javax.jws.api"/>
     </dependencies>
 </module>
