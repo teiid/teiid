@@ -69,7 +69,7 @@ public class TestRelationalNodeStatistics {
         assertEquals("The NodeBlocks was Inccorrect. Correct: 0 Actual: "+ actualNodeBlocks, 0, actualNodeBlocks); //$NON-NLS-1$
     }
     
-    @Test public void testCumulativeCalculation() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testCumulativeCalculation() {
     	RelationalNode[] children = new RelationalNode[2];
     	children[0] = createFakeNode(createData(1));
     	children[1] = createFakeNode(createData(1));
@@ -81,6 +81,8 @@ public class TestRelationalNodeStatistics {
     	children[1].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
     	RelationalNodeStatistics stats = new RelationalNodeStatistics();
     	stats.setBatchEndTime(1000);
+    	stats.setBatchStartTime(0);
+    	stats.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
     	stats.collectNodeStats(children);
     	assertEquals(1000, stats.getNodeCumulativeProcessingTime());
     	assertEquals(700, stats.getNodeNextBatchProcessingTime());

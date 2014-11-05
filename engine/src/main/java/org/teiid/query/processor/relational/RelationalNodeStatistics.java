@@ -107,7 +107,7 @@ public class RelationalNodeStatistics {
         // set nodeEndTime to the time gathered at the end of the last batch
         this.nodeEndTime = this.batchEndTime;
         this.nodeCumulativeProcessingTime = this.nodeEndTime - this.nodeStartTime;
-        this.nodeNextBatchProcessingTime = this.nodeCumulativeProcessingTime;
+        this.nodeNextBatchProcessingTime = this.nodeCumulativeNextBatchProcessingTime;
         for (int i = 0; i < relationalNodes.length; i++) {
         	if (relationalNodes[i] == null) {
         		break;
