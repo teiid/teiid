@@ -134,6 +134,16 @@
 			</roles>
 			<timezone>-6</timezone>
 		</developer>
+		<developer>
+			<name>Kylin Soong</name>
+			<id>kylinsoong</id>
+			<email>ksoong@redhat.com</email>
+			<organization>Red Hat</organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+8</timezone>
+		</developer>
 	</developers>
 	<profiles>
     <profile>
