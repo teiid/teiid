@@ -2301,6 +2301,17 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataManager, tm);
     }
     
+    @Test(expected=TeiidProcessingException.class) public void testDynamicCreate() throws Exception {
+        String sql = "exec p1(1)"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create virtual procedure p1(a long) returns (res long) as "
+        		+ "begin execute immediate 'create local temporary table t (x string)' as res long;  end;", "x", "y");
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {  }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
     private static final boolean DEBUG = false;
     
 }

@@ -53,7 +53,6 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
-import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -63,6 +62,7 @@ import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SetClause;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -171,7 +171,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
             ValidationVisitor visitor = new ValidationVisitor();
             Request.validateWithVisitor(visitor, metadata, command);
             boolean update = false;
-            if (RelationalNodeUtil.isUpdate(command)) {
+            if (!command.returnsResultSet() && !(command instanceof StoredProcedure)) {
             	if (dynamicCommand.isAsClauseSet()) {
             		throw new QueryProcessingException(QueryPlugin.Event.TEIID31157, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31157));
             	}
