@@ -829,7 +829,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         	Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions((List<Expression>) projectNode.getProperty(Info.PROJECT_COLS));
         	for (WindowFunction windowFunction : windowFunctions) {
 				WindowSpecification spec = windowFunction.getWindowSpecification();
-				if (spec.getOrderBy() != null || spec.getPartition() == null) {
+				if (spec.getPartition() == null) {
 					return null;
 				}
 				for (ElementSymbol col : cols) {

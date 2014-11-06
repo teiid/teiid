@@ -372,6 +372,25 @@ public class TestWindowFunctions {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testViewCriteriaPushdown1() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT * FROM (select e1, e3, count(e1) over (partition by e3 order by e2) as r from pm1.g1) as x where x.e3 = false", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.e1, g_0.e3, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e3 = FALSE"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        		Arrays.asList(null, Boolean.FALSE, 2),
+        		Arrays.asList("b", Boolean.FALSE, 3),
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        }; 
+        helpProcess(plan, dataManager, expected);
+    }
+    
     @Test public void testViewLimit() throws Exception {
     	BasicSourceCapabilities caps = getTypicalCapabilities();
     	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
