@@ -38,9 +38,11 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.RecursiveTableProcessor;
 import org.teiid.query.tempdata.TempTableStore.TableProcessor;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.util.CommandContext;
@@ -119,6 +121,13 @@ public class RelationalPlan extends ProcessorPlan {
 	    	HashMap<String, TableProcessor> processors = new HashMap<String, TableProcessor>();
 	        tempTableStore.setProcessors(processors);
 			for (WithQueryCommand withCommand : this.with) {
+				if (withCommand.isRecursive()) {
+					SetQuery setQuery = (SetQuery)withCommand.getCommand();
+					ProcessorPlan initial = setQuery.getLeftQuery().getProcessorPlan();
+					QueryProcessor withProcessor = new QueryProcessor(initial, getContext(), root.getBufferManager(), root.getDataManager());
+					processors.put(withCommand.getGroupSymbol().getName(), new RecursiveTableProcessor(withProcessor, withCommand.getColumns(), setQuery.getRightQuery().getProcessorPlan(), setQuery.isAll()));
+					continue;
+				}
 				ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
 				QueryProcessor withProcessor = new QueryProcessor(plan, getContext(), root.getBufferManager(), root.getDataManager()); 
 				processors.put(withCommand.getGroupSymbol().getName(), new TableProcessor(withProcessor, withCommand.getColumns()));
@@ -142,7 +151,7 @@ public class RelationalPlan extends ProcessorPlan {
 			this.tempTableStore.removeTempTables();
 			if (this.tempTableStore.getProcessors() != null) {
     			for (TableProcessor proc : this.tempTableStore.getProcessors().values()) {
-    				proc.getQueryProcessor().closeProcessing();
+    				proc.close();
     			}
     			this.tempTableStore.setProcessors(null);
 			}
@@ -159,7 +168,13 @@ public class RelationalPlan extends ProcessorPlan {
         this.root.reset();
         if (this.with != null) {
         	for (WithQueryCommand withCommand : this.with) {
-				withCommand.getCommand().getProcessorPlan().reset();
+        		if (withCommand.isRecursive()) {
+					SetQuery setQuery = (SetQuery)withCommand.getCommand();
+					setQuery.getLeftQuery().getProcessorPlan().reset();
+					setQuery.getLeftQuery().getProcessorPlan().reset();
+				} else {
+					withCommand.getCommand().getProcessorPlan().reset();
+				}
 			}
         }
     }
@@ -183,7 +198,13 @@ public class RelationalPlan extends ProcessorPlan {
 		if (with != null) {
 			List<WithQueryCommand> newWith = LanguageObject.Util.deepClone(this.with, WithQueryCommand.class);
 			for (WithQueryCommand withQueryCommand : newWith) {
-				withQueryCommand.getCommand().setProcessorPlan(withQueryCommand.getCommand().getProcessorPlan().clone());
+				if (withQueryCommand.isRecursive()) {
+					SetQuery setQuery = (SetQuery)withQueryCommand.getCommand();
+					setQuery.getLeftQuery().setProcessorPlan(setQuery.getLeftQuery().getProcessorPlan().clone());
+					setQuery.getRightQuery().setProcessorPlan(setQuery.getRightQuery().getProcessorPlan().clone());
+				} else {
+					withQueryCommand.getCommand().setProcessorPlan(withQueryCommand.getCommand().getProcessorPlan().clone());
+				}
 			}
 			plan.setWith(newWith);
 		}
@@ -212,7 +233,13 @@ public class RelationalPlan extends ProcessorPlan {
     			return true;
     		}
     		for (WithQueryCommand withCommand : this.with) {
-				if (withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads)) {
+    			if (withCommand.isRecursive()) {
+    				SetQuery setQuery = (SetQuery)withCommand.getCommand();
+    				if (setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads) 
+    						|| setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads)) {
+    					return true;
+    				}
+    			} else if (withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads)) {
 					return true;
 				}
 			}

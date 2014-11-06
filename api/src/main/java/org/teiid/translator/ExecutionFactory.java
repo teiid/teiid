@@ -954,6 +954,14 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * @return true if a recursive WITH clause is supported
+     * @since 8.9
+     */
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return supportsCommonTableExpressions();
+    }
+    
+    /**
      * @return true if Advanced OLAP operations are supported
      *  including the aggregate function filter clause.
      * @since 7.5

@@ -44,6 +44,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
@@ -124,7 +125,25 @@ public class SimpleQueryResolver implements CommandResolver {
             
             QueryResolver.setChildMetadata(queryExpression, query);
             
-            QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
+            QueryCommand recursive = null;
+            
+            try {
+            	QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
+            } catch (QueryResolverException e) {
+            	if (!(queryExpression instanceof SetQuery)) {
+            		throw e;
+            	}
+            	SetQuery setQuery = (SetQuery)queryExpression;
+            	//valid form must be a union with nothing above
+            	if (setQuery.getOperation() != Operation.UNION
+            			|| setQuery.getLimit() != null 
+            			|| setQuery.getOrderBy() != null 
+            			|| setQuery.getOption() != null) {
+            		throw e;
+            	}
+            	QueryResolver.resolveCommand(setQuery.getLeftQuery(), metadata.getMetadata(), false);
+            	recursive = setQuery.getRightQuery();
+            }
 
             if (!discoveredGroups.add(obj.getGroupSymbol())) {
             	 throw new QueryResolverException(QueryPlugin.Event.TEIID30101, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30101, obj.getGroupSymbol()));
@@ -157,6 +176,13 @@ public class SimpleQueryResolver implements CommandResolver {
             		es.setMetadataID(colid);
             		es.setGroupSymbol(obj.getGroupSymbol());
 				}
+            }
+            
+            if (recursive != null) {
+            	QueryResolver.setChildMetadata(recursive, query);
+            	QueryResolver.resolveCommand(recursive, metadata.getMetadata(), false);
+            	new SetQueryResolver().resolveSetQuery(metadata, false, (SetQuery)queryExpression, ((SetQuery)queryExpression).getLeftQuery(), recursive);
+            	obj.setRecursive(true);
             }
         }
 	}

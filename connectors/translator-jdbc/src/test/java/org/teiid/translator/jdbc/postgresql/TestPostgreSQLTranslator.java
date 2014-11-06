@@ -571,4 +571,13 @@ public class TestPostgreSQLTranslator {
             output);
     }
     
+    @Test public void testRecursiveCTE() throws Exception {
+        String input = "WITH p(n) as (select part_name as n from parts union select n from p) SELECT * FROM P"; //$NON-NLS-1$
+        String output = "WITH RECURSIVE p (n) AS (SELECT PARTS.PART_NAME AS n FROM PARTS UNION SELECT p.n FROM p) SELECT P.n FROM P";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
 }

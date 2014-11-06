@@ -32,6 +32,7 @@ public class WithItem extends BaseLanguageObject implements SubqueryContainer {
 	private List<ColumnReference> columns;
 	private QueryExpression queryExpression;
 	private List<? extends List<?>> dependentValues;
+	private boolean recusive;
 
 	public NamedTable getTable() {
 		return table;
@@ -70,6 +71,14 @@ public class WithItem extends BaseLanguageObject implements SubqueryContainer {
 	
 	public List<? extends List<?>> getDependentValues() {
 		return dependentValues;
+	}
+	
+	public boolean isRecusive() {
+		return recusive;
+	}
+	
+	public void setRecusive(boolean recusive) {
+		this.recusive = recusive;
 	}
 	
 }

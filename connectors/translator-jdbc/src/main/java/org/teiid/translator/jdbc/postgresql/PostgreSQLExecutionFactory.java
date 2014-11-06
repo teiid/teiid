@@ -32,14 +32,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Like;
+import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -53,6 +47,7 @@ import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
@@ -632,6 +627,23 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     			
     		}
     	}
+    }
+    
+    @Override
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	return new SQLConversionVisitor(this) {
+    		@Override
+    		protected void appendWithKeyword(With obj) {
+    			super.appendWithKeyword(obj);
+    			for (WithItem with : obj.getItems()) {
+    				if (with.isRecusive()) {
+    					buffer.append(SQLConstants.Tokens.SPACE);
+    					buffer.append(SQLConstants.Reserved.RECURSIVE);
+    					break;
+    				}
+    			}
+    		}
+    	};
     }
     
 }

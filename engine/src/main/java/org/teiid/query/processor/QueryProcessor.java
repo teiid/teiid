@@ -329,5 +329,9 @@ public class QueryProcessor implements BatchProducer {
 	public void close() throws TeiidComponentException {
 		closeProcessing();
 	}
+	
+	public ProcessorDataManager getProcessorDataManager() {
+		return dataMgr;
+	}
 
 }

@@ -16,6 +16,7 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 	private List<ElementSymbol> columns;
 	private QueryCommand queryExpression;
 	private TupleBuffer tupleBuffer;
+	private boolean recursive;
 	
 	public WithQueryCommand(GroupSymbol groupSymbol, List<ElementSymbol> columns, QueryCommand queryExpression) {
 		this.groupSymbol = groupSymbol;
@@ -56,6 +57,7 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 			clone.queryExpression = (QueryCommand)queryExpression.clone();
 		}
 		clone.tupleBuffer = this.tupleBuffer;
+		clone.recursive = recursive;
 		return clone;
 	}
 	
@@ -93,6 +95,14 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 	
 	public void setGroupSymbol(GroupSymbol groupSymbol) {
 		this.groupSymbol = groupSymbol;
+	}
+	
+	public boolean isRecursive() {
+		return recursive;
+	}
+	
+	public void setRecursive(boolean recursive) {
+		this.recursive = recursive;
 	}
 	
 }

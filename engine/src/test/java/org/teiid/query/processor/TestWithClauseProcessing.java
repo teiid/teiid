@@ -16,6 +16,7 @@ import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -408,5 +409,49 @@ public class TestWithClauseProcessing {
 	    
 	    helpProcess(plan, cc, dataManager, expected);
 	}
+	
+	@Test public void testRecursive() {
+	    String sql = "WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 64 ) SELECT sum(n) FROM t;"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+	        Arrays.asList(2080l),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    dataManager.setBlockOnce();
+	    sampleData1(dataManager);
+	    
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+	    
+	    helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testRecursiveUnion() {
+	    String sql = "WITH t(n) AS ( (VALUES (1) union all values(2)) UNION (SELECT n+1 FROM t WHERE n < 64 union all SELECT e2 from pm1.g1) ) SELECT sum(n) FROM t;"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+	        Arrays.asList(2080l),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    dataManager.setBlockOnce();
+	    sampleData1(dataManager);
+	    
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+	    
+	    helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testRecursivePushdown() throws TeiidComponentException, TeiidProcessingException {
+	    String sql = "WITH t(n) AS ( select e2 from pm1.g1 UNION SELECT n+1 FROM t WHERE n < 64 ) SELECT n FROM t"; //$NON-NLS-1$
+
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+	    bsc.setCapabilitySupport(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, true);
+	    bsc.setFunctionSupport("+", true);
+	    CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"WITH t (n) AS (SELECT g_0.e2 FROM pm1.g1 AS g_0 UNION SELECT (g_0.n + 1) FROM t AS g_0 WHERE g_0.n < 64) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	}
 
 }
+

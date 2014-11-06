@@ -74,6 +74,7 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
@@ -304,6 +305,52 @@ public class RelationalPlanner {
 				}
 				subCommand = query;
 				with.setCommand(subCommand);
+			}
+			if (with.isRecursive()) {
+				SetQuery setQuery = (SetQuery) subCommand;
+
+				QueryCommand qc = setQuery.getLeftQuery();
+				final RelationalPlan subPlan = optimize(qc);
+			    qc.setProcessorPlan(subPlan);
+			    
+			    AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(subPlan);
+			    Object modelID = null;
+			    if (aNode != null) {
+					modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode, false);
+					((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(modelID);
+			    }
+			    //now that we possibly have a model id, plan the recursive part
+				QueryCommand qc1 = setQuery.getRightQuery();
+				RelationalPlan subPlan1 = optimize(qc1);
+			    qc1.setProcessorPlan(subPlan1);
+			    
+				QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+			    if (modelID == null || withCommand == null) {
+			    	continue;
+			    }
+			    
+				if (!CapabilitiesUtil.supports(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
+					continue;
+				}
+		    	
+			    AccessNode aNode1 = CriteriaCapabilityValidatorVisitor.getAccessNode(subPlan1);
+			    if (aNode1 == null) {
+			    	continue;
+			    }
+				Object modelID1 = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode1, false);
+				QueryCommand withCommand1 = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode1);
+			    if (modelID1 == null || withCommand1 == null) {
+			    	continue;
+			    }
+			    
+			    //if we are the same connector for each, then we should be good to proceed
+			    if (CapabilitiesUtil.isSameConnector(modelID, modelID1, metadata, capFinder)) {
+			    	SetQuery pushdownSetQuery = new SetQuery(Operation.UNION, setQuery.isAll(), withCommand, withCommand1);
+					WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), pushdownSetQuery);
+					wqc.setRecursive(true);
+					this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
+			    }
+			    continue;
 			}
 		    RelationalPlan subPlan = optimize(subCommand);
 		    subCommand.setProcessorPlan(subPlan);

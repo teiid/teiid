@@ -147,7 +147,7 @@ public class TempTable implements Cloneable, SearchableTable {
 					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30236, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30236, columns.get(i)));
 				}
 			}
-			insertTuple(tuple, addRowId);
+			insertTuple(tuple, addRowId, true);
 			if (generatedKey != null) {
 				this.keys.addKey(generatedKey);
 			}
@@ -717,7 +717,7 @@ public class TempTable implements Cloneable, SearchableTable {
 			@Override
 			protected void undo(List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
 				if (primaryKeyChangePossible) {
-					insertTuple(tuple, false);
+					insertTuple(tuple, false, true);
 				} else {
 					updateTuple(tuple);
 				}
@@ -775,7 +775,7 @@ public class TempTable implements Cloneable, SearchableTable {
 			
 			@Override
 			protected void undo(List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
-				insertTuple(tuple, false);
+				insertTuple(tuple, false, true);
 			}
 		};
 		int updateCount = up.process();
@@ -784,10 +784,14 @@ public class TempTable implements Cloneable, SearchableTable {
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 	
-	private void insertTuple(List<?> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
+	boolean insertTuple(List<?> list, boolean ordered, boolean checkDuplidate) throws TeiidComponentException, TeiidProcessingException {
 		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW, -1) != null) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30238, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30238, this.tid.getID()));
+			if (!checkDuplidate) {
+				return false;
+			}
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30238, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30238, this.tid.getID()));
 		}
+		return true;
 	}
 	
 	private void deleteTuple(List<?> tuple) throws TeiidComponentException {

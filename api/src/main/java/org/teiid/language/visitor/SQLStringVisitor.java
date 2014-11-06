@@ -926,14 +926,18 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     @Override
     public void visit(With obj) {
     	appendedSourceComment = true;
-    	buffer.append(WITH);
+    	appendWithKeyword(obj);
     	buffer.append(Tokens.SPACE);
     	append(obj.getItems());
     	buffer.append(Tokens.SPACE);
     	appendedSourceComment = false;
     }
     
-    @Override
+    protected void appendWithKeyword(With obj) {
+    	buffer.append(WITH);		
+	}
+
+	@Override
     public void visit(WithItem obj) {
     	append(obj.getTable());
     	buffer.append(Tokens.SPACE);

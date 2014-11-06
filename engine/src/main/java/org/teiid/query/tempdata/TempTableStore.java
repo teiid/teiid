@@ -38,7 +38,6 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -54,7 +53,8 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.processor.BatchIterator;
+import org.teiid.query.processor.BatchCollector.BatchProducerTupleSource;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.resolver.command.TempTableResolver;
 import org.teiid.query.sql.lang.Command;
@@ -91,17 +91,144 @@ public class TempTableStore {
     public static class TableProcessor {
 		QueryProcessor queryProcessor;
     	List<ElementSymbol> columns;
-    	BatchIterator iterator;
+    	BatchProducerTupleSource iterator;
 
     	public TableProcessor(QueryProcessor queryProcessor,
 				List<ElementSymbol> columns) {
 			this.queryProcessor = queryProcessor;
 			this.columns = columns;
-			this.iterator = new BatchIterator(queryProcessor);
+			this.iterator = new BatchProducerTupleSource(queryProcessor);
 		}
     	
-    	public QueryProcessor getQueryProcessor() {
-			return queryProcessor;
+    	public void close() {
+			iterator.closeSource();
+			queryProcessor.closeProcessing();
+		}
+
+    	/**
+    	 * Ensure the temp table is ready for use.  If a temp table other than the one
+    	 * passed in is returned it should be used instead.
+    	 * @param tempTable
+    	 * @param context
+    	 * @param bufferManager
+    	 * @param dataMgr
+    	 * @throws TeiidComponentException
+    	 * @throws TeiidProcessingException
+    	 */
+    	public TempTable process(TempTable tempTable) throws TeiidComponentException, TeiidProcessingException {			
+    		tempTable.insert(iterator, columns, false, null);
+    		tempTable.setUpdatable(false);
+    		close();
+    		return tempTable;
+		}
+
+    	/**
+    	 * Alter the create if needed
+    	 * @param create
+    	 */
+		public void alterCreate(Create create) {
+			
+		}
+    }
+    
+    public static class RecursiveTableProcessor extends TableProcessor {
+    	private ProcessorPlan recursive;
+    	private boolean all;
+    	private boolean initial = true;
+    	private TempTable working;
+    	private TempTable intermediate;
+    	private QueryProcessor workingQp;
+    	private boolean building;
+    	
+		public RecursiveTableProcessor(QueryProcessor queryProcessor,
+				List<ElementSymbol> columns, ProcessorPlan processorPlan, boolean all) {
+			super(queryProcessor, columns);
+			this.recursive = processorPlan;
+			this.all = all;
+		}
+
+		@Override
+		public TempTable process(TempTable tempTable) throws TeiidComponentException, TeiidProcessingException {
+			if (initial) {
+				//process initial plan
+				if (working == null) {
+					working = tempTable.clone();
+					intermediate = tempTable.clone();
+				}
+				processPlan(tempTable, working);
+				initial = false;	
+			}
+			
+			//continue to build the result
+			while (working.getRowCount() > 0) {
+				if (building) {
+					return working;
+				} 
+				building = true;
+				try {
+					if (workingQp == null) {
+						recursive.reset();
+						workingQp = new QueryProcessor(recursive, this.queryProcessor.getContext(), 
+								this.queryProcessor.getBufferManager(), this.queryProcessor.getProcessorDataManager());
+						this.iterator = new BatchProducerTupleSource(workingQp);
+					}
+					processPlan(tempTable, intermediate);
+					this.workingQp.closeProcessing();
+					this.workingQp = null;
+					//swap the intermediate to be the working
+					working.truncate(true);
+					TempTable temp = working;
+					working = intermediate;
+					intermediate = temp;
+				} finally {
+					building = false;
+				}
+			}
+			//we truncate rater than remove because we are cloned off of the original
+			this.working.truncate(true);
+			this.intermediate.truncate(true);
+			tempTable.setUpdatable(false);
+			return tempTable;
+		}
+
+		private void processPlan(TempTable tempTable, TempTable target)
+				throws TeiidComponentException, TeiidProcessingException {
+			List<Object> row = null;
+			List tuple = null;
+			
+			while ((tuple = this.iterator.nextTuple()) != null) {
+				if (all) {
+					row = new ArrayList<Object>(tuple);
+					row.add(0, tempTable.getRowCount());
+				} else{
+					row = tuple;
+				}
+				if (tempTable.insertTuple(row, false, false)) {
+					target.insertTuple(row, false, true);	
+				}
+			}
+			iterator.closeSource();
+		}
+		
+		@Override
+		public void alterCreate(Create create) {
+			if (!all) {
+				create.getPrimaryKey().addAll(create.getColumnSymbols());
+			}
+		}
+		
+		@Override
+		public void close() {
+			super.close();
+			if (workingQp != null) {
+				workingQp.closeProcessing();
+			}
+			if (working != null) {
+				working.remove();
+			}
+			if (intermediate != null) {
+				intermediate.remove();
+			}
 		}
     }
     
@@ -368,7 +495,11 @@ public class TempTableStore {
     		if (processors != null) {
     			TableProcessor withProcessor = processors.get(tempTableID);
     			if (withProcessor != null) {
-    				buildWithTable(tempTableID, withProcessor, tempTable);
+    				TempTable tt = withProcessor.process(tempTable);
+    				if (tt != tempTable) {
+    					return tt;
+    				}
+    				processors.remove(tempTableID);
     			}
     		}
     		return tempTable;
@@ -389,8 +520,13 @@ public class TempTableStore {
         	        Create create = new Create();
         	        create.setTable(new GroupSymbol(tempTableID));
         	        create.setElementSymbolsAsColumns(withProcessor.columns);
+        	        withProcessor.alterCreate(create);
         			tempTable = addTempTable(tempTableID, create, buffer, true, context);
-    				buildWithTable(tempTableID, withProcessor, tempTable);
+        			TempTable tt = withProcessor.process(tempTable);
+    				if (tt != tempTable) {
+    					return tt;
+    				}
+        			processors.remove(tempTableID);
     				return tempTable;
         		}
         	}
@@ -402,15 +538,6 @@ public class TempTableStore {
         create.setElementSymbolsAsColumns(columns);
         return addTempTable(tempTableID, create, buffer, true, context);       
     }
-
-	private void buildWithTable(String tempTableID,
-			TableProcessor withProcessor, TempTable tempTable)
-			throws TeiidComponentException, ExpressionEvaluationException,
-			TeiidProcessingException {
-		tempTable.insert(withProcessor.iterator, withProcessor.columns, false, null);
-		tempTable.setUpdatable(false);
-		processors.remove(tempTableID);
-	}
 
 	private TempTable getTempTable(String tempTableID, Command command,
 			BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context)

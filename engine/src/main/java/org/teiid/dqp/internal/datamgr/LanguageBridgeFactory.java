@@ -285,6 +285,7 @@ public class LanguageBridgeFactory {
 			} else {
 				item.setDependentValues(new TupleBufferList(withQueryCommand.getTupleBuffer()));
 			}
+			item.setRecusive(withQueryCommand.isRecursive());
 			items.add(item);
 		}
     	result.setItems(items);
