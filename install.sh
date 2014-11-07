@@ -2,10 +2,15 @@
 ## Usage: ./install.sh
 ## Description: Build Teiid and run install steps to produce standalone server.
 
+command -v xmllint > /dev/null || {
+    echo "Error: xmllint not found. Hint: On Redhat install libxml2; on Debian install libxml2-utils."
+    exit 1
+}
+
 set -e
 
 ## Parse Teiid version out of POM.
-TEIID_VERSION=$(xmllint --xpath '/*/*[local-name()="version"]/text()' pom.xml)
+TEIID_VERSION=$(echo -e 'setns x=http://maven.apache.org/POM/4.0.0\ncat /x:project/x:version/text()' | xmllint --shell pom.xml | grep -v '^[/ ]')
 TEIID_DIST=teiid-${TEIID_VERSION}-jboss-dist.zip
 
 SOURCES=(
@@ -61,7 +66,7 @@ do
     SHA1="${SOURCE_SHA1[$NAME]}"
     
     ## Verify checksum.
-    echo "$SHA1 $NAME" | sha1sum -c -
+    echo "$SHA1  $NAME" | sha1sum -c -
     echo
 done
 
