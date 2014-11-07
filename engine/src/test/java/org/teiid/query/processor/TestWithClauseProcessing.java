@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
@@ -21,6 +22,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -410,7 +412,7 @@ public class TestWithClauseProcessing {
 	    helpProcess(plan, cc, dataManager, expected);
 	}
 	
-	@Test public void testRecursive() {
+	@Test public void testRecursive() throws Exception {
 	    String sql = "WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 64 ) SELECT sum(n) FROM t;"; //$NON-NLS-1$
 	    
 	    List<?>[] expected = new List[] { 
@@ -422,11 +424,28 @@ public class TestWithClauseProcessing {
 	    sampleData1(dataManager);
 	    
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
-	    
-	    helpProcess(plan, dataManager, expected);
+	    CommandContext cc = createCommandContext();
+	    cc.setSession(new SessionMetadata());
+	    helpProcess(plan, cc, dataManager, expected);
 	}
 	
-	@Test public void testRecursiveUnion() {
+	@Test(expected=TeiidProcessingException.class) public void testMaxRecursive() throws Exception {
+	    String sql = "WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 64 ) SELECT sum(n) FROM t;"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+	        Arrays.asList(2080l),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+	    CommandContext cc = createCommandContext();
+	    cc.setSession(new SessionMetadata());
+	    cc.setSessionVariable(TempTableStore.TEIID_MAX_RECURSION, 10);
+	    helpProcess(plan, cc, dataManager, expected);
+	}
+	
+	@Test public void testRecursiveUnion() throws Exception {
 	    String sql = "WITH t(n) AS ( (VALUES (1) union all values(2)) UNION (SELECT n+1 FROM t WHERE n < 64 union all SELECT e2 from pm1.g1) ) SELECT sum(n) FROM t;"; //$NON-NLS-1$
 	    
 	    List<?>[] expected = new List[] { 
@@ -438,8 +457,9 @@ public class TestWithClauseProcessing {
 	    sampleData1(dataManager);
 	    
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
-	    
-	    helpProcess(plan, dataManager, expected);
+	    CommandContext cc = createCommandContext();
+	    cc.setSession(new SessionMetadata());
+	    helpProcess(plan, cc, dataManager, expected);
 	}
 	
 	@Test public void testRecursivePushdown() throws TeiidComponentException, TeiidProcessingException {

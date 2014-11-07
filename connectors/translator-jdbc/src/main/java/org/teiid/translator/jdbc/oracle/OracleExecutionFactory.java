@@ -65,6 +65,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
+	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
@@ -939,6 +940,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsCommonTableExpressions() {
     	return getVersion().compareTo(NINE_2) >= 0;
+    }
+    
+    @Override
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return getVersion().compareTo(ELEVEN_2) >= 0;
     }
     
     @Override

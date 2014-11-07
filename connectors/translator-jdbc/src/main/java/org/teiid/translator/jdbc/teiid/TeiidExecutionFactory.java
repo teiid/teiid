@@ -50,6 +50,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version EIGHT_5 = Version.getVersion("8.5"); //$NON-NLS-1$
+	public static final Version EIGHT_10 = Version.getVersion("8.10"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -215,6 +216,11 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsCommonTableExpressions() {
     	return getVersion().compareTo(SEVEN_2) >= 0;
+    }
+    
+    @Override
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return getVersion().compareTo(EIGHT_10) >= 0;
     }
     
     @Override

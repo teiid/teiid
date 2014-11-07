@@ -954,11 +954,11 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
-     * @return true if a recursive WITH clause is supported
+     * @return true if a recursive WITH clause item is supported
      * @since 8.9
      */
     public boolean supportsRecursiveCommonTableExpressions() {
-    	return supportsCommonTableExpressions();
+    	return false;
     }
     
     /**

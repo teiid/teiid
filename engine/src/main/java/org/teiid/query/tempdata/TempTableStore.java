@@ -76,7 +76,9 @@ import org.teiid.query.util.CommandContext;
  * cost of state cloning and would allow for concurrent read/write transactions. 
  */
 public class TempTableStore {
-	
+
+	public static final String TEIID_MAX_RECURSION = "teiid.maxRecursion"; //$NON-NLS-1$
+
     public interface TransactionCallback {
     	void commit();
     	void rollback();
@@ -132,19 +134,27 @@ public class TempTableStore {
     }
     
     public static class RecursiveTableProcessor extends TableProcessor {
-    	private ProcessorPlan recursive;
+		private ProcessorPlan recursive;
     	private boolean all;
     	private boolean initial = true;
     	private TempTable working;
     	private TempTable intermediate;
     	private QueryProcessor workingQp;
     	private boolean building;
+    	private int iterations;
+		private int maxIterations = 10000; //Default to 10000
     	
 		public RecursiveTableProcessor(QueryProcessor queryProcessor,
 				List<ElementSymbol> columns, ProcessorPlan processorPlan, boolean all) {
 			super(queryProcessor, columns);
 			this.recursive = processorPlan;
 			this.all = all;
+			if (queryProcessor.getContext() != null) {
+				Object value = queryProcessor.getContext().getSessionVariable(TEIID_MAX_RECURSION); 
+				if (value instanceof Integer) {
+					maxIterations = ((Integer)value).intValue();
+				}
+			}
 		}
 
 		@Override
@@ -173,6 +183,10 @@ public class TempTableStore {
 						this.iterator = new BatchProducerTupleSource(workingQp);
 					}
 					processPlan(tempTable, intermediate);
+					iterations++;
+					if (maxIterations > 0 && iterations > maxIterations) {
+						throw new TeiidProcessingException(QueryPlugin.Event.TEIID31158, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31158, maxIterations, tempTable.getMetadataId().getName()));
+					}
 					this.workingQp.closeProcessing();
 					this.workingQp = null;
 					//swap the intermediate to be the working
