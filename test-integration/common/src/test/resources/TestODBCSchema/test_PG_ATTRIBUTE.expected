@@ -266,12 +266,12 @@ oid          attrelid     attname                                               
 411          408          object_type                                                        1043         -1      3       54           true        false         false    
 412          408          SchemaName                                                         1043         -1      4       259          true        false         false    
 413          408          Name                                                               1043         -1      5       259          true        false         false    
-414          408          ElementName                                                        1043         -1      6       259          true        false         false    
+414          408          ElementName                                                        1043         -1      6       259          false       false         false    
 415          408          Uses_UID                                                           1043         -1      7       54           true        false         false    
 416          408          Uses_object_type                                                   1043         -1      8       54           true        false         false    
 417          408          Uses_SchemaName                                                    1043         -1      9       259          true        false         false    
 418          408          Uses_Name                                                          1043         -1      10      259          true        false         false    
-419          408          Uses_ElementName                                                   1043         -1      11      259          true        false         false    
+419          408          Uses_ElementName                                                   1043         -1      11      259          false       false         false    
 421          420          UID                                                                1043         -1      1       54           true        false         false    
 422          420          Uses_UID                                                           1043         -1      2       54           true        false         false    
 424          423          resourcePath                                                       1043         -1      1       259          false       false         false    
