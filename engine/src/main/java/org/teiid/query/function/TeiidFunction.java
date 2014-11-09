@@ -30,6 +30,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -40,4 +41,5 @@ public @interface TeiidFunction {
 	String category();
 	boolean nullOnNull() default false;
 	Determinism determinism() default Determinism.DETERMINISTIC;
+    PushDown pushdown() default PushDown.CANNOT_PUSHDOWN;
 }

@@ -35,6 +35,7 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
@@ -66,6 +67,7 @@ public class TypeFacility {
 		public static final int XML = DataTypeManager.DefaultTypeCodes.XML;
 		public static final int NULL = DataTypeManager.DefaultTypeCodes.NULL;
 		public static final int VARBINARY = DataTypeManager.DefaultTypeCodes.VARBINARY;
+		public static final int GEOMETRY = DataTypeManager.DefaultTypeCodes.GEOMETRY;
 	}
 
     public interface RUNTIME_TYPES {
@@ -89,6 +91,7 @@ public class TypeFacility {
         public static final Class<XMLType> XML           = DataTypeManager.DefaultDataClasses.XML;
         public static final Class<NullType> NULL         = DataTypeManager.DefaultDataClasses.NULL;
         public static final Class<BinaryType> VARBINARY         = DataTypeManager.DefaultDataClasses.VARBINARY;
+        public static final Class<GeometryType> GEOMETRY         = DataTypeManager.DefaultDataClasses.GEOMETRY;
         
     }
     
@@ -112,7 +115,8 @@ public class TypeFacility {
         public static final String BLOB         = DataTypeManager.DefaultDataTypes.BLOB;
         public static final String CLOB         = DataTypeManager.DefaultDataTypes.CLOB;
         public static final String XML         	= DataTypeManager.DefaultDataTypes.XML;
-        public static final String VARBINARY         	= DataTypeManager.DefaultDataTypes.VARBINARY;
+        public static final String VARBINARY    = DataTypeManager.DefaultDataTypes.VARBINARY;
+        public static final String GEOMETRY     = DataTypeManager.DefaultDataTypes.GEOMETRY;
     }
     
     /**

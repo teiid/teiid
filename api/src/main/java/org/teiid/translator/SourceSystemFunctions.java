@@ -165,4 +165,8 @@ public class SourceSystemFunctions {
 	
 	public static final String UUID = "uuid"; //$NON-NLS-1$
 
+    public static final String ST_ASTEXT = "st_astext"; //$NON-NLS-1$
+    public static final String ST_GEOMFROMTEXT = "st_geomfromtext"; //$NON-NLS-1$
+    public static final String ST_INTERSECTS = "st_intersects"; //$NON-NLS-1$
+    public static final String ST_CONTAINS = "st_contains"; //$NON-NLS-1$
 }

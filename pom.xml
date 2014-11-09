@@ -81,6 +81,7 @@
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
         <version.com.facebook.presto>0.85</version.com.facebook.presto>
         <version.net.oauth.core>20100527</version.net.oauth.core>
+	<version.jts>1.13</version.jts>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1440,7 +1441,12 @@
                 <groupId>com.facebook.presto</groupId>
                 <artifactId>presto-jdbc</artifactId>
                 <version>${version.com.facebook.presto}</version>
-            </dependency>            
+            </dependency>
+            <dependency>
+                <groupId>com.vividsolutions</groupId>
+                <artifactId>jts</artifactId>
+                <version>${version.jts}</version>
+            </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>

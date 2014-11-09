@@ -27,8 +27,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -37,6 +40,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.function.GeometryFunctionMethods;
 import org.teiid.query.function.JSONFunctionMethods;
 import org.teiid.query.function.SystemFunctionMethods;
 import org.teiid.query.function.TeiidFunction;
@@ -54,7 +58,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     /** The name of the invocation class for all of the system functions. */
     private static final String FUNCTION_CLASS = FunctionMethods.class.getName(); 
     private static final String XML_FUNCTION_CLASS = XMLSystemFunctions.class.getName(); 
-    private static final String SECURITY_FUNCTION_CLASS = SecuritySystemFunctions.class.getName(); 
+    private static final String SECURITY_FUNCTION_CLASS = SecuritySystemFunctions.class.getName();
+    private static final String GEOMETRY_FUNCTION_CLASS = GeometryFunctionMethods.class.getName();
     
     /**
      * Construct a source of system metadata.
@@ -198,7 +203,9 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addArrayGet();
         addArrayLength();
         addTrimFunction();
+
         addFunctions(JSONFunctionMethods.class);
+        addFunctions(GeometryFunctionMethods.class);
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
         addFunctions(XMLSystemFunctions.class);
@@ -233,10 +240,11 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 				func.setNullOnNull(true);
 			}
 			func.setDeterminism(f.determinism());
+            func.setPushdown(f.pushdown());
 			functions.add(func);
 		}
 	}
-    
+
     private void addTrimFunction() {
         functions.add(
             new FunctionMethod(SourceSystemFunctions.TRIM, QueryPlugin.Util.getString("SystemSource.trim_desc"), STRING, FUNCTION_CLASS, SourceSystemFunctions.TRIM,//$NON-NLS-1$ 

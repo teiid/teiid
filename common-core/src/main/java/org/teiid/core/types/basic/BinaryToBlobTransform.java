@@ -22,12 +22,24 @@
 
 package org.teiid.core.types.basic;
 
+import java.sql.Blob;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
 public class BinaryToBlobTransform extends Transform {
+
+    private Class<?> targetType;
+
+    public BinaryToBlobTransform() {
+        this.targetType = DataTypeManager.DefaultDataClasses.BLOB;
+    }
+
+    public BinaryToBlobTransform(Class<?> targetType) {
+        this.targetType = targetType;
+    }
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -38,8 +50,14 @@ public class BinaryToBlobTransform extends Transform {
 	 * the transformation fails
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
-        BinaryType contents = (BinaryType)value;                
-		return contents.toBlob();
+        BinaryType contents = (BinaryType)value;
+        byte[] bytes = contents.getBytesDirect();
+        try {
+            return targetType.getConstructor(Blob.class)
+                    .newInstance(BlobType.createBlob(bytes));
+        } catch (Exception e) {
+            throw new TransformationException(e);
+        }
 	}
 
 	/**
@@ -55,7 +73,7 @@ public class BinaryToBlobTransform extends Transform {
 	 * @return Target type
 	 */
 	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.BLOB;
+        return targetType;
 	}
 	
 }

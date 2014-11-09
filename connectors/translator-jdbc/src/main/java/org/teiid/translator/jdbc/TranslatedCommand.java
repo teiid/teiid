@@ -104,6 +104,7 @@ public class TranslatedCommand {
 		return TypeFacility.RUNTIME_TYPES.XML.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.CLOB.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.BLOB.equals(l.getType())
+				|| TypeFacility.RUNTIME_TYPES.GEOMETRY.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
 	}
     

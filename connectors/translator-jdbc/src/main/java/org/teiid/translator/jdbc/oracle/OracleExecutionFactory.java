@@ -58,6 +58,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.*;
+import org.teiid.translator.jdbc.ConvertModifier.FormatModifier;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
@@ -217,6 +218,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 			}
 		}, 
 		FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG,	FunctionModifier.BIGINTEGER);
+        convertModifier.addSourceConversion(new FormatModifier("SDO_UTIL.TO_WKBGEOMETRY"), FunctionModifier.GEOMETRY); //$NON-NLS-1$
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
@@ -530,11 +532,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOrderByNullOrdering() {
     	return true;
     }    
-    
+        
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this) {
-    		
     		@Override
     		public void visit(Select select) {
     			if (select.getFrom() == null || select.getFrom().isEmpty()) {
@@ -617,7 +618,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     			super.visit(obj);
     		}
-    		
+            
     		@Override
     		public void visit(Call call) {
         		if (oracleSuppliedDriver && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null) {
@@ -896,9 +897,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			if (type == 12 || (type == Types.OTHER && typeName != null && typeName.contains("char"))) { //$NON-NLS-1$
     				return TypeFacility.RUNTIME_NAMES.STRING;
     			}
+                if ("MDSYS.SDO_GEOMETRY".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                    return TypeFacility.RUNTIME_NAMES.GEOMETRY;
+                }
     			return super.getRuntimeType(type, typeName, precision);
     		}
-    		
+                
     		@Override
     		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
     	        PreparedStatement stmt = null;

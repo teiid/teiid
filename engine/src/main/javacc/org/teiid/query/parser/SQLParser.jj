@@ -113,6 +113,7 @@ TOKEN: /* Data types */
 {
 	<STRING: "string">
 |   <VARBINARY: "varbinary">
+|   <GEOMETRY: "geometry">
 |   <VARCHAR: "varchar">
 |	<BOOLEAN: "boolean">
 |	<BYTE: "byte">
@@ -4663,6 +4664,7 @@ ParsedDataType parseDataTypePrimary() :
 		(typeToken = <BLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <VARBINARY> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
+		typeToken = <GEOMETRY> |
 		typeToken = <XML>
 	)
 	{

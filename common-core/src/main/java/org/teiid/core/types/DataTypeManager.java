@@ -195,6 +195,7 @@ public class DataTypeManager {
 		public static final String CLOB = "clob"; //$NON-NLS-1$
 		public static final String XML = "xml"; //$NON-NLS-1$
 		public static final String VARBINARY = "varbinary"; //$NON-NLS-1$
+		public static final String GEOMETRY = "geometry"; //$NON-NLS-1$
 	}
 
 	public static final class DefaultDataClasses {
@@ -218,6 +219,7 @@ public class DataTypeManager {
 		public static final Class<ClobType> CLOB = ClobType.class;
 		public static final Class<XMLType> XML = XMLType.class;
 		public static final Class<BinaryType> VARBINARY = BinaryType.class;
+		public static final Class<GeometryType> GEOMETRY = GeometryType.class;
 	}
 	
 	public static final class DefaultTypeCodes {
@@ -241,9 +243,10 @@ public class DataTypeManager {
 		public static final int XML = 17;
 		public static final int NULL = 18;
 		public static final int VARBINARY = 19;
+		public static final int GEOMETRY = 20;
 	}
 	
-	public static int MAX_TYPE_CODE = DefaultTypeCodes.VARBINARY;
+	public static int MAX_TYPE_CODE = DefaultTypeCodes.GEOMETRY;
 	
     private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
     private static final List<Class<?>> typeList;
@@ -269,6 +272,7 @@ public class DataTypeManager {
         typeMap.put(DataTypeManager.DefaultDataClasses.XML, DefaultTypeCodes.XML);
         typeMap.put(DataTypeManager.DefaultDataClasses.NULL, DefaultTypeCodes.NULL);
         typeMap.put(DataTypeManager.DefaultDataClasses.VARBINARY, DefaultTypeCodes.VARBINARY);
+        typeMap.put(DataTypeManager.DefaultDataClasses.GEOMETRY, DefaultTypeCodes.GEOMETRY);
         typeList = new ArrayList<Class<?>>(typeMap.keySet());
     }    
     
@@ -629,13 +633,15 @@ public class DataTypeManager {
 	public static boolean isLOB(Class<?> type) {
 		return DataTypeManager.DefaultDataClasses.BLOB.equals(type)
 				|| DataTypeManager.DefaultDataClasses.CLOB.equals(type)
-				|| DataTypeManager.DefaultDataClasses.XML.equals(type);
+				|| DataTypeManager.DefaultDataClasses.XML.equals(type)
+                || DataTypeManager.DefaultDataClasses.GEOMETRY.equals(type);
 	}
 
 	public static boolean isLOB(String type) {
 		return DataTypeManager.DefaultDataTypes.BLOB.equals(type)
 				|| DataTypeManager.DefaultDataTypes.CLOB.equals(type)
-				|| DataTypeManager.DefaultDataTypes.XML.equals(type);
+				|| DataTypeManager.DefaultDataTypes.XML.equals(type)
+                || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type);
 	}
 
 	/**
@@ -662,6 +668,7 @@ public class DataTypeManager {
 		DataTypeManager.addDataType(DefaultDataTypes.NULL, DefaultDataClasses.NULL);
 		DataTypeManager.addDataType(DefaultDataTypes.BLOB, DefaultDataClasses.BLOB);
 		DataTypeManager.addDataType(DefaultDataTypes.VARBINARY, DefaultDataClasses.VARBINARY);
+		DataTypeManager.addDataType(DefaultDataTypes.GEOMETRY, DefaultDataClasses.GEOMETRY);
 		DATA_TYPE_NAMES = Collections.unmodifiableSet(new LinkedHashSet<String>(dataTypeNames.keySet()));
 		dataTypeNames.put(DataTypeAliases.BIGINT, DefaultDataClasses.LONG);
 		dataTypeNames.put(DataTypeAliases.DECIMAL, DefaultDataClasses.BIG_DECIMAL);
@@ -824,10 +831,12 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToSQLXMLTransform());
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.BinaryToBlobTransform());
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.BinaryToBlobTransform(DefaultDataClasses.GEOMETRY));
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.ClobToStringTransform());
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.BlobToBinaryTransform());
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.BlobToBinaryTransform(DefaultDataClasses.GEOMETRY));
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
 		

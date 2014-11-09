@@ -41,11 +41,15 @@ import org.teiid.core.util.ObjectConverterUtil;
 /**
  * Represent a value of type "blob", which can be streamable from client
  */
-public final class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobType> {
+public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobType> {
 
 	private static final long serialVersionUID = 1294191629070433450L;
     
     public BlobType() {
+    }
+
+    public BlobType(byte[] bytes) {
+        super(createBlob(bytes));
     }
 
     public BlobType(Blob blob) {

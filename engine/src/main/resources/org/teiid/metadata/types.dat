@@ -4,6 +4,7 @@ mmuuid:569dfa00-c456-1e24-9b01-c8207cd53eb7|||anySimpleType|false|java.math.BigD
 mmuuid:f2249740-a078-1e26-9b08-d6079ebe1f0d|||decimal|false|java.math.BigDecimal|2147483647|bigdecimal|bigdecimal||2147483647|10|bigdecimal|2147483647|Searchable|true|Basic|Atomic
 mmuuid:822b9a40-a066-1e26-9b08-d6079ebe1f0d|||decimal|false|java.math.BigInteger|2147483647|biginteger|biginteger||2147483647|10|biginteger|0|Searchable|true|Basic|Atomic
 mmuuid:5a793100-1836-1ed0-ba0f-f2334f5fbf95|||base64Binary|false|org.teiid.core.types.BlobType|2147483647|blob|blob||0||blob|0|Unsearchable||Basic|Atomic
+mmuuid:5a793100-1836-1ed0-ba0f-f2334f5fbf96|||base64Binary|false|org.teiid.core.types.GeometryType|2147483647|geometry|geometry||0||geometry|0|Unsearchable||Basic|Atomic
 mmuuid:62472700-a064-1e26-9b08-d6079ebe1f0d|||string|true|java.lang.Character|1|char|char||0||char|0|Searchable||Basic|Atomic
 mmuuid:559646c0-4941-1ece-b22b-f49159d22ad3|||string|true|org.teiid.core.types.ClobType|2147483647|clob|clob||0||clob|0|Like_Only||Basic|Atomic
 mmuuid:051a0640-b4e8-1e26-9f33-b76fd9d5fa79|||base64Binary|false|java.lang.Object|2147483647|object|object||0||object|0|Unsearchable||Basic|Atomic

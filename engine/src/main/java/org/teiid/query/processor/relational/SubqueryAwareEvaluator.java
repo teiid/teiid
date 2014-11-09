@@ -356,7 +356,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	}
 	
 	/**
-	 * Implements must pushdown function hanlding if supported by the source.
+	 * Implements must pushdown function handling if supported by the source.
 	 * 
 	 * The basic strategy is to create a dummy subquery to represent the evaluation
 	 */

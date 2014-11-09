@@ -31,6 +31,7 @@ import org.teiid.language.Function;
 import org.teiid.metadata.Table;
 import org.teiid.translator.*;
 import org.teiid.translator.jdbc.*;
+import org.teiid.translator.jdbc.ConvertModifier.FormatModifier;
 
 
 /** 
@@ -59,6 +60,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 	@Override
     public void start() throws TranslatorException {
         super.start();
+
         registerFunctionModifier(SourceSystemFunctions.BITAND, new BitFunctionModifier("&", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITNOT, new BitFunctionModifier("~", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITOR, new BitFunctionModifier("|", getLanguageFactory())); //$NON-NLS-1$
@@ -66,6 +68,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.LPAD, new PadFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.RPAD, new PadFunctionModifier());
+
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("signed", FunctionModifier.BOOLEAN, FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG); //$NON-NLS-1$
@@ -87,6 +90,8 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList(function.getParameters().get(0), " + 0.0"); //$NON-NLS-1$
 			}
 		}, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);
+        convertModifier.addSourceConversion(new FormatModifier("AsWKB"), FunctionModifier.GEOMETRY); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.GEOMETRY, FunctionModifier.BLOB, new FormatModifier("GeomFromWKB")); //$NON-NLS-1$
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
@@ -205,6 +210,9 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
+        
+        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
         
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("ISNULL"); //$NON-NLS-1$
@@ -381,7 +389,15 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	return new JDBCMetdataProcessor() {
+        return new JDBCMetdataProcessor() {
+            @Override
+            protected String getRuntimeType(int type, String typeName, int precision) {
+                if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                    return TypeFacility.RUNTIME_NAMES.GEOMETRY;
+                }                
+                return super.getRuntimeType(type, typeName, precision);                    
+            }
+                
     		@Override
     		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
     	        PreparedStatement stmt = null;

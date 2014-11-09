@@ -36,6 +36,16 @@ import org.teiid.core.util.ObjectConverterUtil;
 
 public class BlobToBinaryTransform extends Transform {
 
+    private Class<?> sourceType;
+
+    public BlobToBinaryTransform() {
+        this.sourceType = DataTypeManager.DefaultDataClasses.BLOB;
+    }
+
+    public BlobToBinaryTransform(Class<?> sourceType) {
+        this.sourceType = sourceType;
+    }
+
     /**
      * This method transforms a value of the source type into a value
      * of the target type.
@@ -66,7 +76,7 @@ public class BlobToBinaryTransform extends Transform {
 
 	@Override
 	public Class<?> getSourceType() {
-		return DataTypeManager.DefaultDataClasses.BLOB;
+		return sourceType;
 	}
 
 	@Override

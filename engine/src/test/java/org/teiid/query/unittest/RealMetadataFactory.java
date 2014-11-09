@@ -100,7 +100,13 @@ public class RealMetadataFactory {
         Schema vqt = createVirtualModel("VQT", metadataStore); //$NON-NLS-1$
         Schema bvqt = createVirtualModel("BQT_V", metadataStore); //$NON-NLS-1$
         Schema bvqt2 = createVirtualModel("BQT2_V", metadataStore); //$NON-NLS-1$
-        
+
+        Schema gis = createPhysicalModel("GIS", metadataStore);
+        Table colaMarkets = createPhysicalGroup("COLA_MARKETS", gis);
+        createElement("MKT_ID", colaMarkets, "integer");
+        createElement("NAME", colaMarkets, "string");
+        createElement("SHAPE", colaMarkets, "geometry");
+
         // Create physical groups
         Table bqt1SmallA = createPhysicalGroup("SmallA", bqt1); //$NON-NLS-1$
         Table bqt1SmallB = createPhysicalGroup("SmallB", bqt1); //$NON-NLS-1$
