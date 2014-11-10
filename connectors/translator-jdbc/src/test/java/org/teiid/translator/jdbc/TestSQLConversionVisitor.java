@@ -24,8 +24,13 @@ package org.teiid.translator.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.TestDeleteImpl;
@@ -34,6 +39,7 @@ import org.teiid.dqp.internal.datamgr.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.TestQueryImpl;
 import org.teiid.dqp.internal.datamgr.TestUpdateImpl;
 import org.teiid.language.LanguageObject;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -71,12 +77,12 @@ public class TestSQLConversionVisitor {
         helpTestVisitor(vdb, input, expectedOutput, false);
     }
     
-    public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
+    public TranslatedCommand helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
     	JDBCExecutionFactory trans = new JDBCExecutionFactory();
     	trans.setUseBindVariables(usePreparedStatement);
         try {
 			trans.start();
-	        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
+	        return TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
 		} catch (TranslatorException e) {
 			throw new RuntimeException(e);
 		}
@@ -494,7 +500,7 @@ public class TestSQLConversionVisitor {
                         true); 
     }
     
-    @Test public void testFunctionNativeQuery() {
+    @Test public void testFunctionNativeQuery() throws SQLException {
     	String ddl = "create foreign table t (x integer, y integer); create foreign function bsl (arg1 integer, arg2 integer) returns integer OPTIONS (\"teiid_rel:native-query\" '$1 << $2');";
     	
         helpTestVisitor(ddl,
@@ -506,6 +512,15 @@ public class TestSQLConversionVisitor {
                 "select bsl(x, y) from t where x = 1 + 1", //$NON-NLS-1$
                 "SELECT t.x << t.y FROM t WHERE t.x = ?", //$NON-NLS-1$
                 true);
+        
+        TranslatedCommand tc = helpTestVisitor(ddl,
+                "select bsl(1, y) from t where x = y", //$NON-NLS-1$
+                "SELECT ? << t.y FROM t WHERE t.x = t.y", //$NON-NLS-1$
+                true);
+        JDBCQueryExecution qe = new JDBCQueryExecution(null, null, Mockito.mock(ExecutionContext.class), TRANSLATOR);
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        qe.bind(ps, tc.getPreparedValues(), null);
+        Mockito.verify(ps, Mockito.times(1)).setObject(1, 1, Types.INTEGER);
     }
     
     @Test public void testGroupByRollup() {
@@ -522,5 +537,5 @@ public class TestSQLConversionVisitor {
                         "SELECT 10000000000.0, -100.0", //$NON-NLS-1$
                         true);
     }
-
+    
 }
