@@ -108,21 +108,22 @@ public class TranslationHelper {
     	return util.parseCommand(sql);
     }    
 
-	public static void helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
-		helpTestVisitor(vdb,null,input, expectedOutput, translator);
+	public static TranslatedCommand helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
+		return helpTestVisitor(vdb,null,input, expectedOutput, translator);
 	}
 	
-	public static void helpTestVisitor(String vdb, String udf, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
+	public static TranslatedCommand helpTestVisitor(String vdb, String udf, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
 	    // Convert from sql to objects
 	    Command obj = helpTranslate(vdb, udf, translator.getPushDownFunctions(), input);
 	    
-	    helpTestVisitor(expectedOutput, translator, obj);
+	    return helpTestVisitor(expectedOutput, translator, obj);
 	}	
 
-	public static void helpTestVisitor(String expectedOutput, JDBCExecutionFactory translator, Command obj) throws TranslatorException {
+	public static TranslatedCommand helpTestVisitor(String expectedOutput, JDBCExecutionFactory translator, Command obj) throws TranslatorException {
 		TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), translator);
 	    tc.translateCommand(obj);
 	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
+	    return tc;
 	}
 	
 	public static String helpTestTempTable(JDBCExecutionFactory transaltor, boolean transactional) throws QueryMetadataException, TeiidComponentException {

@@ -30,6 +30,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.List;
 
+import org.teiid.language.Argument;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.language.Parameter;
@@ -90,6 +91,10 @@ public abstract class JDBCBaseExecution implements Execution  {
 		    	Literal litParam = (Literal)paramValue;
 		    	value = litParam.getValue();
 		    	paramType = litParam.getType();
+		    } else if (paramValue instanceof Argument) {
+		    	Argument arg = (Argument)paramValue;
+		    	value = ((Literal)arg.getExpression()).getValue();
+		    	paramType = arg.getType();
 		    } else {
 		    	Parameter param = (Parameter)paramValue;
 		    	if (batchValues == null) {
