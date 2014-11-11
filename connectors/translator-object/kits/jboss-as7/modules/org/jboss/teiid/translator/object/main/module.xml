@@ -16,12 +16,7 @@
         <module name="org.infinispan" slot="jdg-6.3" optional="true"  export="true" />
         <module name="org.infinispan.query" slot="jdg-6.3" optional="true" export="true" /> 
         <module name="org.infinispan.commons" slot="jdg-6.3" optional="true"  export="true" />
-
-	<!--
-		The "your.pojo.module" name needs to be replaced with the module name that has
-		the java class(s) that's being stored in the JDG cache  
-	-->
-	
-		<module name="your.pojo.module"  optional="true"  export="true" />
+        <module name="org.infinispan.query.dsl" slot="jdg-6.3"optional="true"  export="true" /> 
+        
     </dependencies>
 </module>

@@ -45,7 +45,7 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 		
 
 	@BeforeClass
-    public static void beforeEachClass() throws Exception {  
+    public static void beforeClass() throws Exception {  
         // Set up the mock JNDI ...
    		context = mock(ExecutionContext.class);
 		
@@ -61,6 +61,7 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 	
 	@Before public void beforeEachTest() throws Exception{	
 		factory = new InfinispanExecutionFactory();
+
 		factory.start();
     }
 	

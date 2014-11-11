@@ -49,6 +49,7 @@ import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectPlugin;
+import org.teiid.translator.object.SearchType;
 
 
 
@@ -59,9 +60,10 @@ import org.teiid.translator.object.ObjectPlugin;
  * @author vhalbert
  * 
  */
-public final class LuceneSearch   {
+public class LuceneSearch implements SearchType  {
 	
-	public static Object performKeySearch(String cacheName, String columnNameInSource, Object value, ObjectConnection connection) throws TranslatorException {
+	@Override
+	public Object performKeySearch(String cacheName, String columnNameInSource, Object value, ObjectConnection connection) throws TranslatorException {
 	   
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Perform Lucene KeySearch."); //$NON-NLS-1$
@@ -70,23 +72,26 @@ public final class LuceneSearch   {
 		return c.get(String.valueOf(value));
 	}
 
-	public static List<Object> performSearch(Update command, String cacheName, ObjectConnection connection)
+	@Override
+	public List<Object> performSearch(Update command, String cacheName, ObjectConnection connection)
 			throws TranslatorException {
 		return performSearch(command.getWhere(), cacheName, connection);
 	}
 	
-	public static List<Object> performSearch(Delete command, String cacheName, ObjectConnection connection)
+	@Override
+	public List<Object> performSearch(Delete command, String cacheName, ObjectConnection connection)
 			throws TranslatorException {	
 		return performSearch(command.getWhere(), cacheName, connection);
 	}
 
-	public static List<Object> performSearch(Select command, String cacheName, ObjectConnection connection)
+	@Override
+	public List<Object> performSearch(Select command, String cacheName, ObjectConnection connection)
 			throws TranslatorException {	
 		return performSearch(command.getWhere(), cacheName, connection);
 	}
 
 
-	public static List<Object> performSearch(Condition where, String cacheName, ObjectConnection connection)
+	private static List<Object> performSearch(Condition where, String cacheName, ObjectConnection connection)
 			throws TranslatorException {
 		
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
@@ -367,7 +372,7 @@ public final class LuceneSearch   {
 
 	private static Query createEqualsQuery(Column column, Object value, boolean and,
 			boolean not, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
-		String nis = column.getSourceName();
+		String nis = column.getNameInSource();
 		return createEqualsQuery(   (nis != null ? nis : column.getName()), value, and, not, junction, queryBuilder);
 		
 //		Query queryKey = queryBuilder.keyword()
@@ -404,7 +409,7 @@ public final class LuceneSearch   {
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(column.getSourceName())
+				.onField(column.getNameInSource())
 				.above(value).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
@@ -414,7 +419,7 @@ public final class LuceneSearch   {
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(column.getSourceName())
+				.onField(column.getNameInSource())
 				.below(value).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
@@ -423,7 +428,7 @@ public final class LuceneSearch   {
 	private static Query createLikeQuery(Column column, String value,
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.phrase()
-				.onField(column.getSourceName()).sentence(value)
+				.onField(column.getNameInSource()).sentence(value)
 				.createQuery();
 		junction.should(queryKey);
 		return queryKey;
