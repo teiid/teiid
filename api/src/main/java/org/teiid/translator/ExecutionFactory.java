@@ -462,6 +462,13 @@ public class ExecutionFactory<F, C> {
     public boolean supportsCompareCriteriaOrdered() {
     	return false;
     }
+    
+    /** 
+     * Support indicates connector accepts criteria of form (element &lt;|&gt; constant)
+     */
+    public boolean supportsCompareCriteriaOrderedExclusive() {
+    	return supportsCompareCriteriaOrdered();
+    }
 
     /** 
      * Support indicates connector accepts criteria of form (element LIKE constant) 

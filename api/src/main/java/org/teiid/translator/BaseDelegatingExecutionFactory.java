@@ -504,4 +504,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsRecursiveCommonTableExpressions() {
 		return delegate.supportsRecursiveCommonTableExpressions();
 	}
+	@Override
+	public boolean supportsCompareCriteriaOrderedExclusive() {
+		return delegate.supportsCompareCriteriaOrderedExclusive();
+	}
 }

@@ -39,6 +39,7 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);

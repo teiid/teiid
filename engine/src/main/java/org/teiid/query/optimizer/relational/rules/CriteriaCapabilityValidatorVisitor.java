@@ -252,8 +252,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 operatorCap = Capability.CRITERIA_COMPARE_EQ;
                 break; 
             case CompareCriteria.LT: 
-            case CompareCriteria.GT: 
-                negated = true;
+            case CompareCriteria.GT:
+            	operatorCap = Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE;
+            	break;
             case CompareCriteria.LE: 
             case CompareCriteria.GE: 
                 operatorCap = Capability.CRITERIA_COMPARE_ORDERED;
@@ -262,8 +263,15 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
         // Check if compares are allowed
         if(! this.caps.supportsCapability(operatorCap)) {
-            markInvalid(obj, operatorCap + " CompareCriteria not supported by source"); //$NON-NLS-1$
-            return;
+        	boolean unsupported = true;
+        	if (operatorCap == Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE 
+        			&& this.caps.supportsCapability(Capability.CRITERIA_COMPARE_ORDERED) && this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+    			unsupported = false;
+        	}
+        	if (unsupported) {
+	            markInvalid(obj, operatorCap + " CompareCriteria not supported by source"); //$NON-NLS-1$
+	            return;
+        	}
         }                       
         if (negated && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
         	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
