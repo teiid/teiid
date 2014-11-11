@@ -1964,7 +1964,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
         append(SPACE);
         append(NonReserved.COLUMNS);
-
+        boolean noTrim = obj.isNoTrim();
         for (Iterator<TextColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
             TextColumn col = cols.next();
             append(SPACE);
@@ -1982,7 +1982,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 	                append(SPACE);
 	                append(col.getWidth());
 	            }
-	            if (col.isNoTrim()) {
+	            if (!noTrim && col.isNoTrim()) {
 	            	append(SPACE);
 	                append(NO);
 	                append(SPACE);
@@ -2038,6 +2038,12 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(NonReserved.SKIP);
             append(SPACE);
             append(obj.getSkip());
+        }
+        if (noTrim) {
+        	append(SPACE);
+            append(NO);
+            append(SPACE);
+            append(NonReserved.TRIM);
         }
         append(")");//$NON-NLS-1$
         append(SPACE);

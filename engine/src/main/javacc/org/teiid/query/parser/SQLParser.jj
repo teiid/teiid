@@ -2519,6 +2519,7 @@ TextTable textTable(ParseInfo info) :
 	Integer skip = null;
 	String selector = null;
 	String aliasID = null;
+	boolean noTrim = false;
 }
 {
  	<TEXTTABLE> <LPAREN> file = commonValueExpression(info)
@@ -2567,6 +2568,12 @@ TextTable textTable(ParseInfo info) :
 	  <SKIP_KEYWORD>
 	  skip = intVal()
 	]
+	[ LOOKAHEAD(2)
+      <NO> <TRIM>
+      {
+    	noTrim = true;	  	
+      }
+  	]
  	<RPAREN>
  	[<AS>] aliasID=id(Boolean.FALSE)
  	{
@@ -2581,6 +2588,9 @@ TextTable textTable(ParseInfo info) :
  		result.setQuote(quote);
  		result.setUsingRowDelimiter(useRowDelimiter);
  		result.setSelector(selector);
+ 		if (noTrim) {
+ 			result.setNoTrim();
+ 		}
  		return result;
  	}
 }

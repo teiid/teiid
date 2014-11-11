@@ -214,6 +214,21 @@ public class TextTable extends TableFunctionReference {
     public void setUsingRowDelimiter(boolean usingRowDelimiter) {
 		this.usingRowDelimiter = usingRowDelimiter;
 	}
+    
+    public void setNoTrim() {
+    	for (TextColumn col : columns) {
+    		col.noTrim = true;
+    	}
+    }
+    
+    public boolean isNoTrim() {
+    	for (TextColumn col : columns) {
+    		if (!col.noTrim) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
 
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {

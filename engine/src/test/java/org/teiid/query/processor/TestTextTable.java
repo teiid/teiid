@@ -48,6 +48,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -522,7 +523,7 @@ public class TestTextTable {
 	@Test public void testTextTableFixedBestEffort() throws Exception {
     	String sql = "select x.* from texttable('abc\nde\nfghi\n' COLUMNS x string width 1, y string width 1, z string width 1) x"; //$NON-NLS-1$
     	
-        List[] expected = new List[] {
+        List<?>[] expected = new List[] {
         		Arrays.asList("a", "b", "c"),
         		Arrays.asList("d", "e", null), //too short, but still parsed
         		Arrays.asList("f", "g", "h"),  //truncated
@@ -530,6 +531,20 @@ public class TestTextTable {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+    }
+	
+	@Test public void testNoTrimDelimited() throws Exception {
+    	String sql = "select x.* from texttable('x, y\n a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) x"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] {
+        		Arrays.asList(" a ", "b"),
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        Command cmd = helpParse(sql);
+        assertEquals("SELECT x.* FROM TEXTTABLE('x, y\n a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) AS x", cmd.toString());
+		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
 		helpProcess(plan, dataManager, expected);
     }
 	

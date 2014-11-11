@@ -89,6 +89,8 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private TeiidProcessingException asynchException;
 
 	private int limit = -1;
+
+	private boolean noTrim;
 	
 	public TextTableNode(int nodeID) {
 		super(nodeID);
@@ -171,6 +173,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	
 	public void setTable(TextTable table) {
 		this.table = table;
+		this.noTrim = table.isNoTrim();
 	}
 
 	@Override
@@ -509,7 +512,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				} 
 				if (!qualified) {
 					//close the last entry
-					addValue(result, wasQualified, builder.toString());
+					addValue(result, wasQualified || noTrim, builder.toString());
 					return result;
 				} 
 				line = readLine(lineWidth, false);
@@ -524,7 +527,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 						builder.append(chr);
 						escaped = false;
 					} else {
-						addValue(result, wasQualified, builder.toString());
+						addValue(result, wasQualified || noTrim, builder.toString());
 						wasQualified = false;
 						builder = new StringBuilder();  //next entry
 					} 
