@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -14,32 +16,38 @@ import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.util.TradesCacheSource;
-import org.teiid.translator.object.util.VDBUtility;
+import org.teiid.translator.object.testdata.TradesCacheSource;
+//import org.teiid.translator.object.util.TradesCacheSource;
+import org.teiid.translator.object.util.*;
 
 public class TestInfinispanUpdateExecution {
 	private static ObjectConnection CONNECTION;
 	private static TranslationUtility translationUtility = VDBUtility.TRANSLATION_UTILITY;
 
-	private static InfinispanExecutionFactory TRANSLATOR;
+	private  InfinispanExecutionFactory factory;
 	
 	@Mock
 	private static ExecutionContext context;
 
 	@BeforeClass
-    public static void beforeEachClass() throws Exception {  
+    public static void beforeClass() throws Exception {  
 		 
 		context = mock(ExecutionContext.class);
 		
 		CONNECTION = TestInfinispanConnection.createConnection();
-		
-		TRANSLATOR = new InfinispanExecutionFactory() ;
-
-		TRANSLATOR.setSupportsLuceneSearching(true);
-
-		TRANSLATOR.start();
 
     }
+	
+	@AfterClass
+	public static void afterClass() {
+		((TestInfinispanConnection) CONNECTION).cleanUp();
+	}
+	
+	@Before public void beforeEachTest() throws Exception{	
+		factory = new InfinispanExecutionFactory();
+		factory.setSupportsLuceneSearching(true);
+		factory.start();
+    }	
 	
 	
 	/** 
@@ -178,7 +186,7 @@ public class TestInfinispanUpdateExecution {
 
 	public void testDeleteRootByValue() throws Exception {
 
-		assertNotNull(CONNECTION.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("1"));
+		assertNotNull(CONNECTION.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("2"));
 		assertNotNull(CONNECTION.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("3"));
 
 		Command command = translationUtility
@@ -193,7 +201,7 @@ public class TestInfinispanUpdateExecution {
 		Thread.sleep(3000);
 
 		
-		assertNull(CONNECTION.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("1"));
+		assertNull(CONNECTION.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("2"));
 		assertNull(CONNECTION.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("3"));
 
 	}
@@ -242,7 +250,7 @@ public class TestInfinispanUpdateExecution {
 //	
 	protected InfinispanUpdateExecution createExecution(Command command) {
 
-		return (InfinispanUpdateExecution) TRANSLATOR.createUpdateExecution(
+		return (InfinispanUpdateExecution) factory.createUpdateExecution(
 				command,
 				context,
 				VDBUtility.RUNTIME_METADATA, CONNECTION);

@@ -19,38 +19,52 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object;
+package org.teiid.translator.object.testdata.annotated;
 
-import org.junit.Before;
-import org.teiid.language.Select;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.util.VDBUtility;
+import java.io.Serializable;
 
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.FieldBridge;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.ProvidedId;
 
-@SuppressWarnings("nls")
-public class TestMapCacheKeySearch extends BasicSearchTest {	      
-	   
-	private static ObjectConnection conn = TradesCacheSource.createConnection();
-	private static ExecutionContext context;
+@Indexed @ProvidedId
+public class Transaction implements Serializable {
 	
-	private ObjectExecutionFactory factory = null;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private @Field @FieldBridge(impl = MyFieldBridge.class) LineItem li = null;
 
-	protected static boolean print = false;
-	
-	@Before public void beforeEach() throws Exception{	
-		 
-		factory = new ObjectExecutionFactory();
-
-		factory.start();
-
-    }
-	
-	@Override
-	protected ObjectExecution createExecution(Select command) throws TranslatorException {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
+	@Indexed @ProvidedId
+	final class LineItem implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		@Field  String description = null;
+		
+		
+		@Override
+		public String toString() {
+			return description;
+		}
 	}
 	
 
+
+	
+	public void setLineItem(Object description) {
+		LineItem item = new LineItem();
+		item.description = description.toString();
+		li = item;
+	}
+	
+	public Object getLineItem() {
+		return li;
+	}
+	
 }
+
+

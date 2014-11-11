@@ -29,10 +29,12 @@ import org.teiid.core.util.Assertion;
 import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Condition;
+import org.teiid.language.Delete;
 import org.teiid.language.Expression;
 import org.teiid.language.In;
 import org.teiid.language.Literal;
 import org.teiid.language.Select;
+import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.TranslatorException;
@@ -41,10 +43,57 @@ import org.teiid.translator.TranslatorException;
  * SearchByKey is simple search logic that enables querying the cache by
  * the key, using EQUI and IN clauses on the SELECT statement.
  */
-public  class SearchByKey  {
+public  class SearchByKey implements SearchType  {
 
-	public  List<Object> search(Select command, Class<?> rootClass, String cacheName, CacheContainerWrapper cache)
-			throws TranslatorException {
+	protected  void addAll(CacheContainerWrapper cache, String cacheName, Class<?> rootClass, List<Object> results) throws TranslatorException {
+		results.addAll(cache.getAll(cacheName));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performKeySearch(java.lang.String, java.lang.String, java.lang.Object, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public Object performKeySearch(String cacheName, String columnNameInSource,
+			Object value, ObjectConnection conn) throws TranslatorException {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.language.Update, java.lang.String, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public List<Object> performSearch(Update command, String cacheName,
+			ObjectConnection conn) throws TranslatorException {
+		throw new UnsupportedOperationException("Update is not supported at this time");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.language.Delete, java.lang.String, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public List<Object> performSearch(Delete command, String cacheName,
+			ObjectConnection conn) throws TranslatorException {
+		throw new UnsupportedOperationException("Delete is not supported at this time");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.language.Select, java.lang.String, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public List<Object> performSearch(Select command, String cacheName,
+			ObjectConnection conn) throws TranslatorException {
+
+		CacheContainerWrapper cache = conn.getCacheContainer();
+		Class<?> rootClass = conn.getType(cacheName);
+
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Perform search by key."); //$NON-NLS-1$
 		
@@ -90,10 +139,8 @@ public  class SearchByKey  {
 			}
 		} 
 		return results;
-	}
-	
-	protected  void addAll(CacheContainerWrapper cache, String cacheName, Class<?> rootClass, List<Object> results) throws TranslatorException {
-		results.addAll(cache.getAll(cacheName));
+
+		
 	}
 
 }
