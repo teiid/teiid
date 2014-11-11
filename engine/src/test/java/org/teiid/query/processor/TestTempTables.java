@@ -310,6 +310,14 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("select * from x where e2 = 3", new List[] {Arrays.asList("a", 3)}); //$NON-NLS-1$
 	}
 	
+	@Test public void testCompareLessThan() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (3, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (4, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		ProcessorPlan plan = execute("select * from x where e2 < 4", new List[] {Arrays.asList("a", 3)}); //$NON-NLS-1$
+		TestOptimizer.checkAtomicQueries(new String[] {"SELECT x.e1, x.e2 FROM x WHERE x.e2 < 4"}, plan);
+	}
+	
 	@Test public void testLikeWithIndex() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (3, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
