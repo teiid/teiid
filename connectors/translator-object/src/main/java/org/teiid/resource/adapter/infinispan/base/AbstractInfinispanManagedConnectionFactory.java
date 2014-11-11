@@ -24,11 +24,8 @@ package org.teiid.resource.adapter.infinispan.base;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -337,13 +334,15 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			try {
 				List<String> mods = StringUtil.getTokens(getModule(), ","); //$NON-NLS-1$
 				for (String mod : mods) {
-
+		
 					Module x = Module.getContextModuleLoader().loadModule(
 							ModuleIdentifier.create(mod));
 					// the first entry must be the module associated with the
 					// cache
 					if (cl == null) {
 						cl = x.getClassLoader();
+					} else {
+						throw new ResourceException("Unable to get classloader for " + mod);
 					}
 				}
 			} catch (ModuleLoadException e) {
@@ -351,7 +350,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			}
 
 		} else {
-			cl = this.getClass().getClassLoader();
+			cl =  Thread.currentThread().getContextClassLoader();
+
 		}
 
 		List<String> types = StringUtil.getTokens(getCacheTypeMap(), ","); //$NON-NLS-1$
@@ -374,6 +374,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 				pkMap.put(cacheName, mapped.get(1));
 			}
 			try {
+				
 				Class clzz = Class.forName(className, true, cl);
 				tm.put(cacheName, clzz);
 				methodUtil.registerClass(clzz);
@@ -399,8 +400,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		try {
 			Thread.currentThread().setContextClassLoader(
 					this.getClass().getClassLoader());
-		
 			ClassLoader classLoader = loadClasses();
+
 	
 			switch (cacheType) {
 			case LOCAL_JNDI:
@@ -418,7 +419,6 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			case REMOTE_SERVER_LISTS:
 				this.cacheContainer = createRemoteCacheFromServerList(classLoader);
 				break;
-	
 			}
 		} finally {
 			Thread.currentThread().setContextClassLoader(cl);

@@ -37,13 +37,12 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.testdata.annotated.Trade;
-import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
-public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
+public class TestInfinispanJndiDSLSearch extends BasicSearchTest {
 	protected static final String JNDI_NAME = "java/MyCacheManager";
 
 
@@ -56,9 +55,10 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 	    
 		context = mock(ExecutionContext.class);
         
-		final DefaultCacheManager container = TestInfinispanConnection.createContainerForLucene();
+		final DefaultCacheManager container = TestInfinispanConnection.createContainer();
+				//new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml", true);
         
-		TradesAnnotatedCacheSource.loadCache(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME));
+        TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
   
         afactory = new AbstractInfinispanManagedConnectionFactory() {
 			/**
@@ -78,10 +78,10 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 		};
 		
 		afactory.setCacheJndiName(JNDI_NAME);
-		afactory.setCacheTypeMap(TradesAnnotatedCacheSource.TRADES_CACHE_NAME + ":" + Trade.class.getName());
+		afactory.setCacheTypeMap(TradesCacheSource.TRADES_CACHE_NAME + ":" + Trade.class.getName());
 
 		factory = new InfinispanExecutionFactory();
-		factory.setSupportsLuceneSearching(true);
+		factory.setSupportsDSLSearching(true);
 
 		factory.start();
 

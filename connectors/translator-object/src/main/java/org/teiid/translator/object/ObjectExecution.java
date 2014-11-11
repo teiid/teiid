@@ -94,7 +94,7 @@ public class ObjectExecution implements ResultSetExecution {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
 
-		String nameInSource = ((NamedTable)query.getFrom().get(0)).getMetadataObject().getSourceName();
+		String nameInSource = ((NamedTable)query.getFrom().get(0)).getMetadataObject().getNameInSource();
 	    
 	    List<Object> results = factory.search(query, nameInSource, connection, executionContext);
 	    

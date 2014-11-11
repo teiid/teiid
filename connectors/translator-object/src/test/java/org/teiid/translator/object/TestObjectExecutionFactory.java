@@ -38,7 +38,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.util.TradesCacheSource;
+import org.teiid.translator.object.testdata.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")

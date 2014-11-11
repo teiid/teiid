@@ -33,16 +33,7 @@ import javax.script.SimpleScriptContext;
 
 import org.infinispan.commons.api.BasicCache;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.SetClause;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -168,7 +159,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				Column column = columns.get(i).getMetadataObject();
 				Object value = values.get(i);
 				
-				String colName = (column.getNameInSource() != null ? column.getNameInSource() : column.getName());
+				String colName = column.getSourceName();
 
 				// do not add the foreign key columns
 				if (fkeyColNIS != null && fkeyColNIS.equals(column.getName()) ) {
@@ -181,7 +172,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 					}
 					
 				} else if ( keyCol != null && keyCol.getName().equals(column.getName()) ) {
-					keyColumnName = (keyCol.getNameInSource() != null ? keyCol.getNameInSource() : keyCol.getName());
+					keyColumnName = keyCol.getSourceName();
 
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
@@ -436,7 +427,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		if (keyCol != null) {
 			for (Object entity:toUpdate) {
 				
-				String keyColumnName = (keyCol.getNameInSource() != null ? keyCol.getNameInSource() : keyCol.getName());
+				String keyColumnName = keyCol.getSourceName();
 		
 				keyValue = evaluate(entity, keyColumnName);
 				
@@ -448,7 +439,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 						throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25006, new Object[] {keyCol.getName(),update.getTable().getName()}));						
 					}
 					
-					String colName = (column.getNameInSource() != null ? column.getNameInSource() : column.getName());
+					String colName = column.getSourceName();
 
 					if (value instanceof Literal) {
 						Literal literalValue = (Literal) value;
@@ -461,7 +452,11 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			
 				}
 				
-				cache.replaceAsync(keyValue, entity);
+				if (keyValue instanceof String) {
+					cache.replaceAsync( keyValue, entity);
+				} else {
+					cache.replaceAsync(String.valueOf(keyValue), entity);
+				}
 				++updateCnt;		
 			}
 			

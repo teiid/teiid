@@ -12,13 +12,23 @@
 	<description>This tranlator is used to query an Infinispan cache using DSL</description>
 	<packaging>bundle</packaging>
 
-   <dependencyManagement>
+    <dependencyManagement>
 		<dependencies>	
+			<dependency>
+			  <groupId>org.infinispan</groupId>
+			  <artifactId>infinispan-commons</artifactId>
+			  <version>${version.org.infinispan.6}</version>
+			</dependency>			
 			<dependency>
 			  <groupId>org.infinispan</groupId>
 			  <artifactId>infinispan-query</artifactId>
 			  <version>${version.org.infinispan.6}</version>
-			</dependency>	   
+			</dependency>	
+			<dependency>
+			  <groupId>org.infinispan</groupId>
+			  <artifactId>infinispan-query-dsl</artifactId>
+			  <version>${version.org.infinispan.6}</version>
+			</dependency>				   
 			<dependency>
 			  	<groupId>com.google.protobuf</groupId>
 			  	<artifactId>protobuf-java</artifactId>
@@ -67,12 +77,22 @@
 	  		<groupId>com.google.protobuf</groupId>
 	  		<artifactId>protobuf-java</artifactId>
 	  		<scope>provided</scope>
-		</dependency>		
+		</dependency>	
+		<dependency>
+		    <groupId>org.infinispan</groupId>
+		    <artifactId>infinispan-commons</artifactId>
+		    <scope>provided</scope>
+		</dependency>  				
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-query</artifactId>
 		    <scope>provided</scope>
-		</dependency>  												
+		</dependency>  	
+		<dependency>
+		    <groupId>org.infinispan</groupId>
+		    <artifactId>infinispan-query-dsl</artifactId>
+		    <scope>provided</scope>
+		</dependency> 													
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-client-hotrod</artifactId>
@@ -86,47 +106,46 @@
         </dependency>                    
     </dependencies>
 
+     <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.xml</exclude>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                  <execution>
+                    <id>create-assemblies</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>single</goal>
+                    </goals>
+                  </execution>
+                </executions>
+            </plugin>   
 
-	<build>
-		<outputDirectory>target/classes</outputDirectory>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-				<includes>
-					<include>**/*.xml</include>
-					<include>**/*.properties</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-				<excludes>
-					<exclude>**/*.xml</exclude>
-					<exclude>**/*.properties</exclude>
-				</excludes>
-			</resource>
-		</resources>
-		<plugins>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptors>
-						<descriptor>kits/jboss-as7-dist.xml</descriptor>
-						<descriptor>kits/embedded-dist.xml</descriptor>
-					</descriptors>
-				</configuration>
-				<executions>
-					<execution>
-						<id>create-assemblies</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-		</plugins>
-	</build>
+        </plugins>         
+    </build>
 </project>
