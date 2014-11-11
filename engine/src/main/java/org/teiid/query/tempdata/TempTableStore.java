@@ -43,6 +43,8 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
@@ -145,14 +147,18 @@ public class TempTableStore {
 		private int maxIterations = 10000; //Default to 10000
     	
 		public RecursiveTableProcessor(QueryProcessor queryProcessor,
-				List<ElementSymbol> columns, ProcessorPlan processorPlan, boolean all) {
+				List<ElementSymbol> columns, ProcessorPlan processorPlan, boolean all) throws TransformationException {
 			super(queryProcessor, columns);
 			this.recursive = processorPlan;
 			this.all = all;
 			if (queryProcessor.getContext() != null) {
-				Object value = queryProcessor.getContext().getSessionVariable(TEIID_MAX_RECURSION); 
-				if (value instanceof Integer) {
-					maxIterations = ((Integer)value).intValue();
+				Object value = queryProcessor.getContext().getSessionVariable(TEIID_MAX_RECURSION);
+				if (value != null) {
+					value = DataTypeManager.convertToRuntimeType(value, false);
+					DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.INTEGER);
+					if (value instanceof Number) {
+						maxIterations = ((Number)value).intValue();
+					}
 				}
 			}
 		}
