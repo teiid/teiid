@@ -16,7 +16,7 @@
         <module name="org.infinispan" slot="jdg-6.3" optional="true"  export="true" />
         <module name="org.infinispan.query" slot="jdg-6.3" optional="true" export="true" /> 
         <module name="org.infinispan.commons" slot="jdg-6.3" optional="true"  export="true" />
-        <module name="org.infinispan.query.dsl" slot="jdg-6.3"optional="true"  export="true" /> 
+        <module name="org.infinispan.query.dsl" slot="jdg-6.3" optional="true"  export="true" /> 
         
     </dependencies>
 </module>
