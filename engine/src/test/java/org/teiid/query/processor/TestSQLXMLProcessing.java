@@ -312,6 +312,16 @@ public class TestSQLXMLProcessing {
         process(sql, null);
     }
     
+    @Test public void testXmlTableNumeric() throws Exception {
+        String sql = "select * from xmltable('/a' passing convert('<a s=\"1\" d=\"2.0\" l=\"12345678901\"/>', xml) columns x short path '@s', x1 double path '@d', z long path '@l') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList((short)1, 2.0, 12345678901l)
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test public void testXmlTableDateTime() throws Exception {
         String sql = "select * from xmltable('/a' passing convert('<a dt=\"0001-11-17T07:38:49\" dtz=\"2011-11-17T07:38:49Z\" t=\"13:23:14\" d=\"2010-04-05\" />', xml) columns x timestamp path '@dt', x1 timestamp path '@dtz', y date path '@d', z time path '@t') as x"; //$NON-NLS-1$
         
