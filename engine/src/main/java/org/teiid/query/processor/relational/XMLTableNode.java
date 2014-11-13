@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import net.sf.saxon.lib.ConversionRules;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
@@ -345,7 +344,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 			BuiltInAtomicType bat = typeMapping.get(type);
 			if (bat != null) {
 				AtomicValue av = new StringValue(i.getStringValueCS());
-				ConversionResult cr = Converter.convert(av, bat, new ConversionRules());
+				ConversionResult cr = Converter.convert(av, bat, this.table.getXQueryExpression().getConfig().getConversionRules());
 				value = cr.asAtomic();
 				value = getValue((AtomicValue)value);
 				if (value instanceof Item) {
