@@ -111,15 +111,13 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			doMaterializationActions(vdb, new MaterializationAction() {
 				@Override
 				public void process(Table table) {
-					if (!reloading) {
-						String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
-						if (start != null) {
-							for (String script : StringUtil.tokenize(start, ';')) {
-								try {
-									executeQuery(vdb, script);
-								} catch (SQLException e) {
-									LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-								}
+					String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
+					if (start != null) {
+						for (String script : StringUtil.tokenize(start, ';')) {
+							try {
+								executeQuery(vdb, script);
+							} catch (SQLException e) {
+								LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
 							}
 						}
 					}
