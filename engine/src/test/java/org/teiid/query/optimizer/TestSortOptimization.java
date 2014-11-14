@@ -317,7 +317,7 @@ public class TestSortOptimization {
         bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
         CapabilitiesFinder finder = new DefaultCapabilitiesFinder(bsc);
         RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder, 
-                                      new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                      new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
         
         assertTrue(plan.getRootNode() instanceof ProjectNode);
     }
@@ -329,11 +329,11 @@ public class TestSortOptimization {
         bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
         CapabilitiesFinder finder = new DefaultCapabilitiesFinder(bsc);
         RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder, 
-                                      new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0, c_2 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                      new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0, c_1 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
         
         assertTrue(plan.getRootNode() instanceof ProjectNode);
         HardcodedDataManager hdm = new HardcodedDataManager();
-        hdm.addData("SELECT concat(g_0.e1, '1') AS c_0, g_0.e1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0, c_2 LIMIT 2", Arrays.asList("c1", "c", 2), Arrays.asList("d1", "d", 3));
+        hdm.addData("SELECT concat(g_0.e1, '1') AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0, c_1 LIMIT 2", Arrays.asList("c1", 2), Arrays.asList("d1", 3));
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("c1", 1), Arrays.asList("d1", 1)});
     }
     

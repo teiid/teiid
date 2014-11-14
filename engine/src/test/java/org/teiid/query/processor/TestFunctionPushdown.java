@@ -405,6 +405,19 @@ public class TestFunctionPushdown {
                 new String[] {"SELECT concat2(g_0.e1, g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	}
 	
+	@Test public void testPartialProjectPushdown() throws Exception {
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        
+        ProcessorPlan plan = helpPlan("select case when e1 = 1 then 1 else 0 end, e2 + e4 from pm1.g1", metadata, null, new DefaultCapabilitiesFinder(caps), 
+                new String[] {"SELECT CASE WHEN g_0.e1 = '1' THEN 1 ELSE 0 END, g_0.e2, g_0.e4 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        HardcodedDataManager dm = new HardcodedDataManager(metadata);
+        dm.addData("SELECT CASE WHEN g_0.e1 = '1' THEN 1 ELSE 0 END, g_0.e2, g_0.e4 FROM g1 AS g_0", new List[] {Arrays.asList(1, 2, 3.1)});
+        TestProcessor.helpProcess(plan, dm, new List[] {Arrays.asList(1, 5.1)});
+	}
+	
 	public static String sourceFunc(String msg) {
 		return msg;
 	}

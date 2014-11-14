@@ -31,8 +31,10 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -52,19 +54,12 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.NullOrder;
@@ -96,6 +91,16 @@ public final class RuleCollapseSource implements OptimizerRule {
             		plan = removeUnnecessaryInlineView(plan, commandRoot);
             	}
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
+                Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+                //find all pushdown functions and mark them to be evaluated by the source
+                for (Function f : FunctionCollectorVisitor.getFunctions(queryCommand, false)) {
+                	FunctionDescriptor fd = f.getFunctionDescriptor();
+    				if (f.isEval() && modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
+    								&& fd.getMethod() != null 
+    								&& CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
+    					f.setEval(false);
+    				}
+                }
             	plan = addDistinct(metadata, capFinder, accessNode, plan, queryCommand, capFinder);
                 command = queryCommand;
                 queryCommand.setSourceHint((SourceHint) accessNode.getProperty(Info.SOURCE_HINT));

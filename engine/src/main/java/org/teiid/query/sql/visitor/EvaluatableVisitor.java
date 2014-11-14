@@ -24,8 +24,6 @@ package org.teiid.query.sql.visitor;
 
 import java.util.TreeSet;
 
-import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionDescriptor;
@@ -33,7 +31,6 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.DependentSetCriteria;
@@ -90,15 +87,6 @@ public class EvaluatableVisitor extends LanguageVisitor {
         if (fd.getDeterministic() == Determinism.NONDETERMINISTIC) {
             evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
         } else if (fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
-        	try {
-				if (obj.isEval() && modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
-								&& fd.getMethod() != null 
-								&& CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
-					obj.setEval(false);
-				}
-			} catch (QueryMetadataException e) {
-			} catch (TeiidComponentException e) {
-			}
         	if (obj.isEval()) {
         		evaluationNotPossible(EvaluationLevel.PROCESSING);
         	} else {

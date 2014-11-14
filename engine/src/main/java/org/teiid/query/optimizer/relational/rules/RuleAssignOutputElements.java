@@ -272,7 +272,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	}
 		    	}
 	            
-	            List<Expression> requiredInput = collectRequiredInputSymbols(root);
+	            List<Expression> requiredInput = collectRequiredInputSymbols(root, metadata, capFinder);
 	            //targeted optimization for unnecessary aggregation
 	            if (root.getType() == NodeConstants.Types.GROUP && root.hasBooleanProperty(Info.IS_OPTIONAL) && NodeEditor.findParent(root, NodeConstants.Types.ACCESS) == null) {
 	            	PlanNode parent = removeGroupBy(root, metadata);
@@ -585,8 +585,12 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * are any symbols that are required in the processing of this node,
      * for instance to create a new element symbol or sort on it, etc.
      * @param node Node to collect for
+     * @param metadata 
+     * @param capFinder 
+     * @throws TeiidComponentException 
+     * @throws QueryMetadataException 
      */
-	private List<Expression> collectRequiredInputSymbols(PlanNode node) {
+	private List<Expression> collectRequiredInputSymbols(PlanNode node, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
 
         Set<Expression> requiredSymbols = new LinkedHashSet<Expression>();
         Set<Expression> createdSymbols = new HashSet<Expression>();
@@ -597,6 +601,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			case NodeConstants.Types.PROJECT:
             {
                 List<Expression> projectCols = (List<Expression>) node.getProperty(NodeConstants.Info.PROJECT_COLS);
+                PlanNode accessParent = NodeEditor.findParent(node, NodeConstants.Types.ACCESS);
+                PlanNode accessNode = null;
+                if (accessParent == null) {
+                	//find the direct access node
+                	accessNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE 
+                			| NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP);
+                }
                 for (Expression ss : projectCols) {
                     if(ss instanceof AliasSymbol) {
                         createdSymbols.add(ss);
@@ -608,14 +619,19 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                         createdSymbols.add(ss);
                     }
                     boolean symbolRequired = false;
-                    if (finalRun && !(ss instanceof ElementSymbol) && NodeEditor.findParent(node, NodeConstants.Types.ACCESS) == null) {
+                    if (finalRun && accessParent == null && !(SymbolMap.getExpression(ss) instanceof ElementSymbol) && !node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+                    	if (accessNode != null) {
+                    		//narrow check for projection pushing
+                    		Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+    		                if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
+    		                	requiredSymbols.add(ss);
+    							continue;
+    		                }
+                    	}
                     	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
                     	for (Function function : functions) {
 							if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
 								continue;
-							}
-							if (!getWindowFunctions(Arrays.asList(ss)).isEmpty()) {
-								break; //TODO: support subexpression pushing
 							}
 							//assume we need the whole thing
 							requiredSymbols.add(ss);
