@@ -369,7 +369,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				if (factory != null) {
 					factory.correctDatatypes(datatypes, builtin);
 					cached = true;
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				} else {
 					factory = createMetadataFactory(vdb, model, vdbResources.getEntriesPlusVisibilities());
 					ExecutionFactory ef = null;
@@ -392,6 +392,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						}
 						ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
 						try {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50104,vdb.getName(), vdb.getVersion(), model.getName(), cm.getTranslatorName(), cm.getConnectionName()));
 						    Thread.currentThread().setContextClassLoader(metadataRepo.getClass().getClassLoader());
 							metadataRepo.loadMetadata(factory, ef, cf);		
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
