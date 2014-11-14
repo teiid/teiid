@@ -2513,6 +2513,7 @@ TextTable textTable(ParseInfo info) :
 	List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
 	boolean useRowDelimiter = true;
 	Character delimiter = null;
+	Character rowDelimiter = null;
 	boolean escape = false;
 	Character quote = null;
 	Integer header = null;
@@ -2539,10 +2540,14 @@ TextTable textTable(ParseInfo info) :
 		}
 	)* 
 	[
-	  <NO> <ROW> <DELIMITER>
+	  (<NO> <ROW> <DELIMITER>
 	  {
 	    useRowDelimiter = false;
-	  }
+	  })
+	  |
+	  (<ROW> <DELIMITER>
+	    rowDelimiter = charVal(info, " ROW DELMITER")
+	  )
 	]
 	[
 	  <DELIMITER>
@@ -2591,6 +2596,7 @@ TextTable textTable(ParseInfo info) :
  		if (noTrim) {
  			result.setNoTrim();
  		}
+ 		result.setRowDelimiter(rowDelimiter);
  		return result;
  	}
 }

@@ -125,6 +125,7 @@ public class TextTable extends TableFunctionReference {
 	
     private Expression file;
     private List<TextColumn> columns = new ArrayList<TextColumn>();
+    private Character rowDelimiter;
 	private Character delimiter;
 	private Character quote;
     private boolean escape;
@@ -173,6 +174,14 @@ public class TextTable extends TableFunctionReference {
     
     public void setColumns(List<TextColumn> columns) {
 		this.columns = columns;
+	}
+    
+    public Character getRowDelimiter() {
+		return rowDelimiter;
+	}
+    
+    public void setRowDelimiter(Character rowDelimiter) {
+		this.rowDelimiter = rowDelimiter;
 	}
     
     public Character getDelimiter() {
@@ -250,6 +259,7 @@ public class TextTable extends TableFunctionReference {
 		}
 		clone.fixedWidth = this.fixedWidth;
 		clone.usingRowDelimiter = this.usingRowDelimiter;
+		clone.rowDelimiter = this.rowDelimiter;
 		return clone;
 	}
 
@@ -269,7 +279,9 @@ public class TextTable extends TableFunctionReference {
 			&& EquivalenceUtil.areEqual(quote, other.quote)
 			&& EquivalenceUtil.areEqual(header, other.header)
 			&& EquivalenceUtil.areEqual(skip, other.skip)
-			&& usingRowDelimiter == other.usingRowDelimiter;
+			&& usingRowDelimiter == other.usingRowDelimiter
+			&& EquivalenceUtil.areEqual(rowDelimiter, other.rowDelimiter);
+		
 	}
 	
 }

@@ -2008,6 +2008,13 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(ROW);
         	append(SPACE);
             append(NonReserved.DELIMITER);
+        } else if (obj.getRowDelimiter() != null) {
+        	append(SPACE);
+            append(ROW);
+        	append(SPACE);
+            append(NonReserved.DELIMITER);
+            append(SPACE);
+            visitNode(new Constant(obj.getRowDelimiter()));
         }
         if (obj.getDelimiter() != null) {
             append(SPACE);

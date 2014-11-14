@@ -1180,7 +1180,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	for (DerivedColumn dc : tl.getExpressions()) {
 			validateXMLContentTypes(dc.getExpression(), obj);
 		}
-    	validateTextOptions(obj, tl.getDelimiter(), tl.getQuote());
+    	validateTextOptions(obj, tl.getDelimiter(), tl.getQuote(), '\n');
     	if (tl.getEncoding() != null) {
     		try {
     			Charset.forName(tl.getEncoding());
@@ -1429,7 +1429,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	}
     		delimiter = obj.getDelimiter();
     		quote = obj.getQuote();
-			validateTextOptions(obj, delimiter, quote);
+			validateTextOptions(obj, delimiter, quote, obj.getRowDelimiter());
     	}
     	if (obj.getSkip() != null && obj.getSkip() < 0) {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
@@ -1440,18 +1440,21 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
 	private void validateTextOptions(LanguageObject obj, Character delimiter,
-			Character quote) {
+			Character quote, Character newLine) {
 		if (quote == null) {
 			quote = '"';
 		} 
 		if (delimiter == null) {
 			delimiter = ',';
 		}
+		if (newLine == null) {
+			newLine = '\n';
+		}
 		if (EquivalenceUtil.areEqual(quote, delimiter)) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_delimiter"), obj); //$NON-NLS-1$
 		}
-		if (EquivalenceUtil.areEqual(quote, '\n') 
-				|| EquivalenceUtil.areEqual(delimiter, '\n')) {
+		if (EquivalenceUtil.areEqual(quote, newLine) 
+				|| EquivalenceUtil.areEqual(delimiter, newLine)) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_newline"), obj); //$NON-NLS-1$
 		}
 	}

@@ -92,6 +92,9 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 
 	private boolean noTrim;
 	
+	private char newLine = '\n';
+	private boolean crNewLine = true;
+	
 	public TextTableNode(int nodeID) {
 		super(nodeID);
 	}
@@ -135,6 +138,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				}
 	        }
 			lineWidth = table.getColumns().size() * DataTypeManager.MAX_STRING_LENGTH;
+		}
+		if (table.isUsingRowDelimiter()) {
+			Character c = table.getRowDelimiter();
+			if (c != null) {
+				this.newLine = c;
+				this.crNewLine = false;
+			}
 		}
         Map<Expression, Integer> elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
@@ -353,7 +363,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		StringBuilder sb = new StringBuilder(exact ? maxLength : (maxLength >> 4));
 		while (true) {
 			char c = readChar();
-			if (c == '\n') {
+			if (c == newLine) {
 				if (sb.length() == 0) {
 					if (eof) {
 						return null;
@@ -375,7 +385,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    		sb.deleteCharAt(sb.length() - 1);
 		    		//we're not forcing them to fully specify the line, so just drop the rest
 		    		//TODO: there should be a max read length
-		    		while (readChar() != '\n') {
+		    		while (readChar() != newLine) {
 		    			
 		    		}
 		    		return sb;
@@ -391,23 +401,27 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		try {
 			int c = reader.read();
 		    if (cr) {
-				if (c == '\n') {
+				if (c == newLine) {
 				    c = reader.read();
 				}
 				cr = false;
 		    }
 		    switch (c) {
 		    case '\r':
-				cr = true;
-				textLine++;
-				return '\n';
+		    	if (crNewLine) {
+					cr = true;
+					textLine++;
+					return newLine;
+		    	}
+		    	break;
 		    case -1:
 		    	eof = true;
 		    	textLine++;
-				return '\n';
-		    case '\n':		
+				return newLine;
+		    }
+		    if (c == newLine) {
 				textLine++;
-				return '\n';
+				return newLine;
 		    }
 		    return (char)c;
 		} catch (IOException e) {
@@ -457,7 +471,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				}
 				processHeader(parseLine(line));
 			} else {
-				while (readChar() != '\n') {
+				while (readChar() != newLine) {
 	    			
 	    		}
 			}
@@ -505,7 +519,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					if (cr) {
 						builder.append('\r'); 
 					}
-					builder.append('\n'); 
+					builder.append(newLine); 
 					escaped = false;
 					line = readLine(lineWidth, false);
 					continue;
