@@ -259,7 +259,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             }
             return moveCriteriaIntoOnClause(critNode, joinNode);
         }
-        JoinType optimized = JoinUtil.optimizeJoinType(critNode, joinNode, metadata);
+        JoinType optimized = JoinUtil.optimizeJoinType(critNode, joinNode, metadata, true);
         
         if (optimized == JoinType.JOIN_INNER) {
             moveCriteriaIntoOnClause(critNode, joinNode);
@@ -479,7 +479,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     //if we successfully optimized then this should no longer inhibit the criteria from being pushed
                     //since the criteria must then be on the outer side of an outer join or on either side of an inner join
 
-                    JoinType optimized = JoinUtil.optimizeJoinType(critNode, currentNode, metadata);
+                    JoinType optimized = JoinUtil.optimizeJoinType(critNode, currentNode, metadata, this.createdNodes == null);
                     
                     if (optimized == null || optimized.isOuter()) {
                         return currentNode;
