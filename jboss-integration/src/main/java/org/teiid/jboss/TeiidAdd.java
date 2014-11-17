@@ -22,60 +22,14 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
-import static org.teiid.jboss.TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.ASYNC_THREAD_POOL_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.DC_STACK_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.ENCRYPT_FILES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.INLINE_LOBS;
-import static org.teiid.jboss.TeiidConstants.LOB_CHUNK_SIZE_IN_KB_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_ROWS_FETCH_SIZE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_SOURCE_ROWS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_THREADS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.PPC_CONTAINER_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PPC_ENABLE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PPC_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.QUERY_THRESHOLD_IN_SECS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.QUERY_TIMEOUT;
-import static org.teiid.jboss.TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_ENABLE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TIME_SLICE_IN_MILLI_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.USE_DISK_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.WORKMANAGER;
-import static org.teiid.jboss.TeiidConstants.asBoolean;
-import static org.teiid.jboss.TeiidConstants.asInt;
-import static org.teiid.jboss.TeiidConstants.asLong;
-import static org.teiid.jboss.TeiidConstants.asString;
-import static org.teiid.jboss.TeiidConstants.isDefined;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
@@ -90,16 +44,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jboss.as.controller.AbstractAddStepHandler;
-import org.jboss.as.controller.ControlledProcessStateService;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.OperationStepHandler;
-import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.ProcessType;
-import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.*;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.RelativePathService;
@@ -514,6 +459,8 @@ class TeiidAdd extends AbstractAddStepHandler {
                 try {
                     Thread.currentThread().setContextClassLoader(instance.getClass().getClassLoader());
                     return method.invoke(instance, args);
+                } catch (InvocationTargetException e) {
+                	throw e.getTargetException();
                 } finally {
                     Thread.currentThread().setContextClassLoader(originalCL);
                 }

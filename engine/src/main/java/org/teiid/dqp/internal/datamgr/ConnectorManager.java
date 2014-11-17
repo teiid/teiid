@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
@@ -206,6 +207,8 @@ public class ConnectorManager  {
                         try {
                             Thread.currentThread().setContextClassLoader(getExecutionFactory().getClass().getClassLoader());
                             return method.invoke(item, args);
+                        } catch (InvocationTargetException e) {
+                        	throw e.getTargetException();
                         } finally {
                             Thread.currentThread().setContextClassLoader(originalCL);
                         }
