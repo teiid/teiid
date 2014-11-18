@@ -24,9 +24,17 @@
  */
 package org.teiid.translator.jdbc.sqlserver;
 
-import java.sql.*;
+import java.sql.Connection;
 import java.sql.Date;
-import java.util.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.AggregateFunction;
@@ -36,7 +44,11 @@ import org.teiid.language.LanguageObject;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.Version;
@@ -275,6 +287,15 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean hasTimeType() {
     	return getVersion().compareTo(TEN_0) >= 0;
+    }
+    
+    /**
+     * The SQL Server driver maps the time escape to a timestamp/datetime, so
+     * use a cast of the string literal instead.
+     */
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+    	return "cast('" +  formatDateValue(timeValue) + "' as time)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Override
