@@ -21,9 +21,6 @@
  */
 package org.teiid.resource.adapter.salesforce;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
 
@@ -38,9 +35,15 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	private String username;
 	private String password;
-	private URL URL; //sf url
+	private String url; //sf url
 	private Long requestTimeout;
 	private Long connectTimeout;
+	
+	private String proxyUsername;
+	private String proxyPassword;
+	private String proxyUrl;
+	
+	private String configProperties;
 
 	public String getUsername() {
 		return username;
@@ -58,20 +61,13 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public URL getAsURL() {
-		return this.URL;
-	}
 	
 	public String getURL() {
-		return this.URL.toExternalForm();
+		return this.url;
 	}
 	
 	public void setURL(String uRL) {
-		try {
-			this.URL = new URL(uRL);
-		} catch (MalformedURLException e) {
-			throw new TeiidRuntimeException("URL Supplied is not valid URL"+ e.getMessage());//$NON-NLS-1$
-		}
+		this.url = uRL;
 	}
 	
 	public Long getConnectTimeout() {
@@ -109,16 +105,48 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 					password = ConnectionContext.getPassword(subject, SalesForceManagedConnectionFactory.this, userName, password);
 				}
 				
-				return new SalesforceConnectionImpl(userName, password, getAsURL(), SalesForceManagedConnectionFactory.this);
+				return new SalesforceConnectionImpl(userName, password, SalesForceManagedConnectionFactory.this);
 			}
 		};
+	}
+	
+	public String getProxyUsername() {
+		return proxyUsername;
+	}
+	
+	public void setProxyUsername(String proxyUsername) {
+		this.proxyUsername = proxyUsername;
+	}
+	
+	public String getProxyPassword() {
+		return proxyPassword;
+	}
+	
+	public void setProxyPassword(String proxyPassword) {
+		this.proxyPassword = proxyPassword;
+	}
+	
+	public String getProxyURL() {
+		return proxyUrl;
+	}
+	
+	public void setProxyURL(String proxyUrl) {
+		this.proxyUrl = proxyUrl;
+	}
+	
+	public String getConfigProperties() {
+		return configProperties;
+	}
+	
+	public void setConfigProperties(String configProperties) {
+		this.configProperties = configProperties;
 	}
 	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((URL == null) ? 0 : URL.hashCode());
+		result = prime * result + ((url == null) ? 0 : url.hashCode());
 		result = prime * result + ((password == null) ? 0 : password.hashCode());
 		result = prime * result + ((username == null) ? 0 : username.hashCode());
 		return result;
@@ -129,7 +157,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
 		SalesForceManagedConnectionFactory other = (SalesForceManagedConnectionFactory) obj;
-		if (!checkEquals(this.URL, other.URL)) {
+		if (!checkEquals(this.url, other.url)) {
 			return false;
 		}
 		if (!checkEquals(this.password, other.password)) {
@@ -138,6 +166,10 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		if (!checkEquals(this.username, other.username)) {
 			return false;
 		}
-		return true;
+		return checkEquals(this.proxyUrl, other.proxyUrl) 
+				&& checkEquals(this.proxyUsername, other.proxyUsername)
+				&& checkEquals(this.proxyPassword, other.proxyPassword)
+				&& checkEquals(this.configProperties, other.configProperties);
 	}
+	
 }

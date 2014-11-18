@@ -21,14 +21,19 @@
  */
 package org.teiid.resource.adapter.salesforce;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Properties;
 
 import javax.resource.ResourceException;
 
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -63,25 +68,47 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	private BulkConnection bulkConnection; 
 	private PartnerConnection partnerConnection;
 	
-	public SalesforceConnectionImpl(String username, String password, URL url, SalesForceManagedConnectionFactory mcf) throws ResourceException {
-		login(username, password, url, mcf);
+	public SalesforceConnectionImpl(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
+		login(username, password, mcf);
 	}
 	
 	SalesforceConnectionImpl(PartnerConnection partnerConnection) {
 		this.partnerConnection = partnerConnection;
 	}
 	
-	private void login(String username, String password, URL url, SalesForceManagedConnectionFactory mcf) throws ResourceException {
-		if(url == null) {
-			throw new ResourceException("SalesForce URL is not specified, please provide a valid URL"); //$NON-NLS-1$
-		}
+	private void login(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
 
 		ConnectorConfig config = new ConnectorConfig();
+		
+		//set the catch all properties
+		String props = mcf.getConfigProperties();
+		if (props != null) {
+			Properties p = new Properties();
+			try {
+				p.load(new StringReader(props));
+			} catch (IOException e) {
+				throw new ResourceException(e);
+			}
+			PropertiesUtils.setBeanProperties(config, p, null);
+		}
+		
         config.setCompression(true);
         config.setTraceMessage(false);
         config.setUsername(username);
         config.setPassword(password);
-        config.setAuthEndpoint(url.toExternalForm());
+        config.setAuthEndpoint(mcf.getURL());
+        
+        //set proxy if needed
+        if (mcf.getProxyURL() != null) {
+			try {
+				URL proxyURL = new URL(mcf.getProxyURL());
+				config.setProxy(proxyURL.getHost(), proxyURL.getPort());
+		        config.setProxyUsername(mcf.getProxyUsername());
+		        config.setProxyPassword(mcf.getProxyPassword());
+			} catch (MalformedURLException e) {
+				throw new ResourceException(e);
+			}
+        }
         if (mcf.getConnectTimeout() != null) {
         	config.setConnectionTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getConnectTimeout()));
         }
@@ -445,4 +472,5 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			throw new ResourceException(e);
 		}
 	}	
+	
 }
