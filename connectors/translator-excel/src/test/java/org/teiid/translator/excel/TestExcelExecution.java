@@ -106,6 +106,33 @@ public class TestExcelExecution {
 	}	
 	
 	@Test
+	public void testExecutionColumnWithNullCell() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" + 
+				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1')\n" + 
+				") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
+
+    	FileConnection connection = Mockito.mock(FileConnection.class);
+    	Mockito.stub(connection.getFile("3219.xlsx")).toReturn(UnitTestUtil.getTestDataFile("3219.xlsx"));
+
+    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+    	assertEquals(results.size(), 7);
+	}
+	
+	@Test
+	public void testExecutionColumnsWithNullCell() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" + 
+				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
+				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2')\n" + 
+				") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
+
+    	FileConnection connection = Mockito.mock(FileConnection.class);
+    	Mockito.stub(connection.getFile("3219.xlsx")).toReturn(UnitTestUtil.getTestDataFile("3219.xlsx"));
+
+    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+    	assertEquals(results.size(), 7);
+	}
+	
+	@Test
 	public void testExecutionWithDataNumberXLS() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" + 
 				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
