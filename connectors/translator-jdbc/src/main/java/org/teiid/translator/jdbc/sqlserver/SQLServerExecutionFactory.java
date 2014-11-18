@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -286,6 +287,15 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean hasTimeType() {
     	return getVersion().compareTo(TEN_0) >= 0;
+    }
+    
+    /**
+     * The SQL Server driver maps the time escape to a timestamp/datetime, so
+     * use a cast of the string literal instead.
+     */
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+    	return "cast('" +  formatDateValue(timeValue) + "' as time)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Override

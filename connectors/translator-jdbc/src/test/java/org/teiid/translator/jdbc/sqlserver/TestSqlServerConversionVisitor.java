@@ -176,6 +176,16 @@ public class TestSqlServerConversionVisitor {
             output);        
     }
     
+    @Test public void testTimeLiteral2008() throws Exception {
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        String input = "select stringkey from bqt1.smalla where BQT1.SmallA.TimeValue = {t '00:00:00'}"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.TimeValue = cast('00:00:00' as time)"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
     @Test public void testUniqueidentifier() throws Exception {
     	MetadataStore metadataStore = new MetadataStore();
     	Schema foo = RealMetadataFactory.createPhysicalModel("foo", metadataStore); //$NON-NLS-1$
