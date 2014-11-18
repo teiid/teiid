@@ -392,7 +392,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						}
 						ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
 						try {
-							LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50104,vdb.getName(), vdb.getVersion(), model.getName(), cm.getTranslatorName(), cm.getConnectionName()));
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50104,vdb.getName(), vdb.getVersion(), model.getName(), cm != null?cm.getTranslatorName():null, cm != null?cm.getConnectionName():null));
 						    Thread.currentThread().setContextClassLoader(metadataRepo.getClass().getClassLoader());
 							metadataRepo.loadMetadata(factory, ef, cf);		
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
