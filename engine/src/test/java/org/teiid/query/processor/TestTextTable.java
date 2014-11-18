@@ -51,6 +51,7 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.validator.TestValidator;
 
 @SuppressWarnings({"unchecked", "nls"})
 public class TestTextTable {
@@ -546,6 +547,27 @@ public class TestTextTable {
         assertEquals("SELECT x.* FROM TEXTTABLE('x, y\n a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) AS x", cmd.toString());
 		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
 		helpProcess(plan, dataManager, expected);
+    }
+	
+	@Test public void testRowDelimiter() throws Exception {
+    	String sql = "select x.* from texttable('x-1, y\n a -2, \"b\"-3' COLUMNS x string, \"1\" string ROW DELIMITER ',' DELIMITER '-' HEADER) x"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] {
+        		Arrays.asList("y\n a", "2"),
+        		Arrays.asList("b", "3"),
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        Command cmd = helpParse(sql);
+        assertEquals("SELECT x.* FROM TEXTTABLE('x-1, y\n a -2, \"b\"-3' COLUMNS x string, \"1\" string ROW DELIMITER ',' DELIMITER '-' HEADER) AS x", cmd.toString());
+		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+    }
+	
+	@Test public void testRowDelimiterValidation() throws Exception {
+    	String sql = "select x.* from texttable('x' COLUMNS x string ROW DELIMITER '-' DELIMITER '-' HEADER) x"; //$NON-NLS-1$
+    	
+        TestValidator.helpValidate(sql, new String[]{"TEXTTABLE('x' COLUMNS x string ROW DELIMITER '-' DELIMITER '-' HEADER) AS x"}, RealMetadataFactory.example1Cached());
     }
 	
 }
