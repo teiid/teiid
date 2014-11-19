@@ -3,14 +3,14 @@
     <resource-root path="spring-beans-${version.org.springframework}.jar"/>
     <resource-root path="spring-context-${version.org.springframework}.jar"/>    
     <resource-root path="spring-core-${version.org.springframework}.jar"/>
-    <!-- 
-    <resource-root path="spring-asm.jar"/>
-    <resource-root path="spring-aop.jar"/>    
-    <resource-root path="spring-expression.jar"/>
-    <resource-root path="spring-tx.jar"/>
-     -->    
+    <resource-root path="spring-asm-${version.org.springframework}.jar"/>
+    <resource-root path="spring-expression-${version.org.springframework}.jar"/>
+    
+    <resource-root path="spring-aop-${version.org.springframework}.jar"/>   
+    <resource-root path="spring-tx-${version.org.springframework}.jar"/>
   </resources>
   <dependencies>
     <module name="javax.api"/>
+    <module name="org.apache.commons.logging"/> 
   </dependencies>
 </module>

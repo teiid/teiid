@@ -34,6 +34,10 @@
                 <include>**/spring-beans*.jar</include>
                 <include>**/spring-context*.jar</include>
                 <include>**/spring-core*.jar</include>
+                <include>**/spring-asm*.jar</include>
+                <include>**/spring-expression*.jar</include>
+                <include>**/spring-aop*.jar</include>
+                <include>**/spring-tx*.jar</include>
             </includes>           
         </fileSet>
     </fileSets>
