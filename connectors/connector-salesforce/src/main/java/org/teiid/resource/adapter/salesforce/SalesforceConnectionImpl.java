@@ -79,7 +79,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	private void login(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
 
 		ConnectorConfig config = new ConnectorConfig();
-		
+
+        config.setCompression(true);
+        config.setTraceMessage(false);
+
 		//set the catch all properties
 		String props = mcf.getConfigProperties();
 		if (props != null) {
@@ -92,8 +95,6 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			PropertiesUtils.setBeanProperties(config, p, null);
 		}
 		
-        config.setCompression(true);
-        config.setTraceMessage(false);
         config.setUsername(username);
         config.setPassword(password);
         config.setAuthEndpoint(mcf.getURL());
