@@ -32,6 +32,8 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -42,6 +44,16 @@ import org.teiid.query.util.CommandContext;
 
 
 public class TestFunction {
+	
+	@Before
+	public void setUp() {
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-5")); //$NON-NLS-1$
+	}
+	
+	@After
+	public void tearDown() {
+		TimestampWithTimezone.resetCalendar(null);
+	}
 
     private void helpConcat(String s1, String s2, Object expected) {
         Object actual = FunctionMethods.concat(s1, s2);
