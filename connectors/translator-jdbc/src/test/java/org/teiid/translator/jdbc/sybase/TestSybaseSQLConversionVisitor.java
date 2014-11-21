@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -267,6 +268,15 @@ public class TestSybaseSQLConversionVisitor {
     	assertFalse(sybaseExecutionFactory.supportsRowLimit());
     	sybaseExecutionFactory.setDatabaseVersion("15.1");
     	assertTrue(sybaseExecutionFactory.supportsRowLimit());
+    }
+    
+    @Test public void testFormatSupport() {
+    	assertTrue(trans.supportsFormatLiteral("MM/dd/yy", Format.DATE));
+    	assertFalse(trans.supportsFormatLiteral("MMM/yyy", Format.DATE));
+    	
+        helpTestVisitor(getBQTVDB(),
+                "SELECT formattimestamp(timestampvalue, 'yy.MM.dd') from bqt1.smalla", //$NON-NLS-1$
+                "SELECT CONVERT(VARCHAR, SmallA.TimestampValue, 2) FROM SmallA"); //$NON-NLS-1$
     }
     
 }
