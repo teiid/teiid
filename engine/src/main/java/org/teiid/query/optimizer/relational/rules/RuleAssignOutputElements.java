@@ -590,20 +590,22 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                     }
                     boolean symbolRequired = false;
                     if (finalRun && !(ss instanceof ElementSymbol) && NodeEditor.findParent(node, NodeConstants.Types.ACCESS) == null) {
-                    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
-                    	for (Function function : functions) {
-							if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
-								continue;
+                    	if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
+	                    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
+	                    	for (Function function : functions) {
+								if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
+									continue;
+								}
+								if (!getWindowFunctions(Arrays.asList(ss)).isEmpty()) {
+									break; //TODO: support subexpression pushing
+								}
+								//assume we need the whole thing
+								requiredSymbols.add(ss);
+								symbolRequired = true;
+								checkSymbols = true;
+								break;
 							}
-							if (!getWindowFunctions(Arrays.asList(ss)).isEmpty()) {
-								break; //TODO: support subexpression pushing
-							}
-							//assume we need the whole thing
-							requiredSymbols.add(ss);
-							symbolRequired = true;
-							checkSymbols = true;
-							break;
-						}
+                    	}
                     }
                     if (!symbolRequired) {
                     	ElementCollectorVisitor.getElements(ss, requiredSymbols);
