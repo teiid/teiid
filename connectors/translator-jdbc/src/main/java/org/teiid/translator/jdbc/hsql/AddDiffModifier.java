@@ -51,10 +51,16 @@ public class AddDiffModifier extends FunctionModifier {
 	
 	private boolean add;
 	private LanguageFactory factory;
+	private boolean supportsQuarter;
 
 	public AddDiffModifier(boolean add, LanguageFactory factory) {
 		this.add = add;
 		this.factory = factory;
+	}
+	
+	public AddDiffModifier supportsQuarter(boolean b) {
+		this.supportsQuarter = b;
+		return this;
 	}
 	
 	@Override
@@ -69,6 +75,10 @@ public class AddDiffModifier extends FunctionModifier {
 		String newInterval = INTERVAL_MAP.get(interval);
 		if (newInterval != null) {
 			intervalType.setValue(newInterval);
+			return null;
+		}
+		if (supportsQuarter && interval.equals(NonReserved.SQL_TSI_QUARTER)) {
+			intervalType.setValue("QUARTER"); //$NON-NLS-1$
 			return null;
 		}
 		if (add) {
