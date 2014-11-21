@@ -226,22 +226,22 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             Class<?> type = obj.getType();
             Object val = obj.getValue();
             if(Number.class.isAssignableFrom(type)) {
-            	this.onGoingExpression.push(escapeString(String.valueOf(val))); //$NON-NLS-1$
+            	this.onGoingExpression.push(escapeString(String.valueOf(val))); 
             } 
             else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
             	this.onGoingExpression.push(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
             } 
             else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-            	this.onGoingExpression.push(new SimpleDateFormat("yyyy-MM-DD'T'HH-mm-ss:SSSZ").format(val)); //$NON-NLS-1$
+            	this.onGoingExpression.push(new SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss:SSSZ").format(val)); //$NON-NLS-1$
             } 
             else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
             	this.onGoingExpression.push(new SimpleDateFormat("HH-mm-ss:SSSZ").format(val)); //$NON-NLS-1$
             } 
             else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-            	this.onGoingExpression.push(new SimpleDateFormat("yyyy-MM-DD").format(val)); //$NON-NLS-1$            	
+            	this.onGoingExpression.push(new SimpleDateFormat("yyyy-MM-dd").format(val)); //$NON-NLS-1$            	
             }  
             else {
-            	this.onGoingExpression.push(escapeString(val.toString()));//$NON-NLS-1$
+            	this.onGoingExpression.push(escapeString(val.toString()));
             }
         }
 	}
