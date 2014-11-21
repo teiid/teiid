@@ -628,17 +628,19 @@ public final class RuleAssignOutputElements implements OptimizerRule {
     							continue;
     		                }
                     	}
-                    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
-                    	for (Function function : functions) {
-							if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
-								continue;
-							}
-							//assume we need the whole thing
-							requiredSymbols.add(ss);
-							symbolRequired = true;
-							checkSymbols = true;
-							break;
-						}
+                    	if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
+                        	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
+                        	for (Function function : functions) {
+    							if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
+    								continue;
+    							}
+    							//assume we need the whole thing
+    							requiredSymbols.add(ss);
+    							symbolRequired = true;
+    							checkSymbols = true;
+    							break;
+    						}
+                    	}
                     }
                     if (!symbolRequired) {
                     	ElementCollectorVisitor.getElements(ss, requiredSymbols);

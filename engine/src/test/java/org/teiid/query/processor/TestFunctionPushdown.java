@@ -418,6 +418,52 @@ public class TestFunctionPushdown {
         TestProcessor.helpProcess(plan, dm, new List[] {Arrays.asList(1, 5.1)});
 	}
 	
+	@Test public void testMustPushdownOverGrouping() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+        String sql = "select func(e1) from g1 group by e1"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT y.g1.e1 FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT y.g1.e1 FROM y.g1", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        dataManager.addData("SELECT func(2)", new List[] {Arrays.asList(3)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(3)});
+	}
+	
 	public static String sourceFunc(String msg) {
 		return msg;
 	}
