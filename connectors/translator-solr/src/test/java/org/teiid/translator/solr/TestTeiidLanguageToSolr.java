@@ -257,8 +257,8 @@ public class TestTeiidLanguageToSolr {
 	@Test
 	public void testDateField() throws Exception {
 		assertTrue(getSolrTranslation(
-				"select name,purchasedate from example where purchasedate = {ts '2014-01-06 11:52:07'}")
-				.startsWith("fl=name,purchasedate&q=purchasedate:2014-01-06T11-52-07:000"));
+				"select name,purchasedate from example where purchasedate = {ts '2014-02-06 11:52:07'}")
+				.startsWith("fl=name,purchasedate&q=purchasedate:2014-02-06T11-52-07:000"));
 	}
 	
 	@Test
