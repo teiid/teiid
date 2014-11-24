@@ -209,5 +209,10 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
     public boolean hasTimeType() {
     	return true;
     }
+    
+    @Override
+    public boolean useAsInGroupAlias() {
+    	return true;
+    }
 	
 }
