@@ -91,7 +91,13 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		HttpMethod method = new GetMethod("http://localhost:8080/odata/loopy.1/$metadata");
 		int statusCode = client.executeMethod(method);
 		assertTrue(statusCode == HttpStatus.SC_OK);
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt")), method.getResponseBodyAsString());
+		String stringResults = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt"));
+		String response=method.getResponseBodyAsString();
+		System.out.println(response);
+//		if (response.indexOf("Edm.Int64") >  -1 ) {
+//		  stringResults = stringResults.replace("Edm.Int32", "Edm.Int64");    
+//		}
+		assertEquals(stringResults, response);
 		method.releaseConnection();
 	}
 }

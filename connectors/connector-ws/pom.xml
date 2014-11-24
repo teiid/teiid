@@ -26,12 +26,16 @@
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
+        </dependency>							      
+		<dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxws</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+        </dependency>           
         <dependency>
             <groupId>org.apache.ws.security</groupId>
             <artifactId>wss4j</artifactId>
