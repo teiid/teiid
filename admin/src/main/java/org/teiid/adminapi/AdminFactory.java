@@ -1607,7 +1607,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE);
+	                List<VDBMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE);
+	                if (list != null) {
+		        		return list;
+		        	}
 	            }
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70036, e);
