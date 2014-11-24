@@ -573,13 +573,17 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				
 		boolean cachable = false;
 		CacheID cacheId = null;
-		boolean canUseCached = !requestMsg.getRequestOptions().isContinuous() && (requestMsg.useResultSetCache() || 
-				getCacheHint() != null);
 		
 		if (rsCache != null) {
-			if (!canUseCached) {
-				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Non-cachable command."); //$NON-NLS-1$
-			} else {
+			boolean canUseCache = true;
+			if (requestMsg.getRequestOptions().isContinuous()) {
+				canUseCache = false;
+				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Command is continuous, result set caching will not be used"); //$NON-NLS-1$
+			} else if (!requestMsg.useResultSetCache() && getCacheHint() == null) {
+				canUseCache = false;
+				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Command has no cache hint and result set cache mode is not on."); //$NON-NLS-1$
+			}
+			if (canUseCache) {
 				ParseInfo pi = Request.createParseInfo(requestMsg);
 				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
 		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
@@ -596,10 +600,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					//check that there are enough cached results
 					//TODO: possibly ignore max rows for caching
 					if (cr != null && (cr.getRowLimit() == 0 || (requestMsg.getRowLimit() != 0 && requestMsg.getRowLimit() <= cr.getRowLimit()))) {
-						this.resultsBuffer = cr.getResults();
 						request.initMetadata();
 						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
 						if (!request.validateAccess(requestMsg.getCommands(), this.originalCommand, CommandType.CACHED)) {
+							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using result set cached results", cacheId); //$NON-NLS-1$
+							this.resultsBuffer = cr.getResults();
 							doneProducingBatches();
 							return;
 						}
@@ -609,6 +614,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Parameters are not serializable - cache cannot be used for", cacheId); //$NON-NLS-1$
 				}
 			}
+		} else {
+			LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Result set caching is disabled."); //$NON-NLS-1$
 		}
 		try {
 			request.processRequest();

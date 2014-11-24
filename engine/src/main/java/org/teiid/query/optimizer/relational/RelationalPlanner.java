@@ -379,8 +379,7 @@ public class RelationalPlanner {
 	}
 
 	private void processWith(final QueryCommand command, List<WithQueryCommand> withList)
-			throws QueryMetadataException, TeiidComponentException,
-			QueryPlannerException {
+			throws QueryMetadataException, TeiidComponentException {
 		for (int i = 0; i < withList.size(); i++) {
 			WithQueryCommand with = withList.get(i);
 			final GroupSymbol old = with.getGroupSymbol();
@@ -946,16 +945,19 @@ public class RelationalPlanner {
 					StoredProcedure sp = (StoredProcedure)container;
 					boolean noCache = isNoCacheGroup(metadata, sp.getProcedureID(), option);
 					if (!noCache) {
-						if (context.isResultSetCacheEnabled() && container.areResultsCachable() && LobManager.getLobIndexes(new ArrayList<ElementSymbol>(sp.getProcedureParameters().keySet())) == null) {
-							container.getGroup().setGlobalTable(true);
-							container.setCacheHint(c.getCacheHint());
-							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$
-							return false;
+						if (!context.isResultSetCacheEnabled()) {
+							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup(), "result set cache disabled"); //$NON-NLS-1$ //$NON-NLS-2$
+						} else if (!container.areResultsCachable()) {
+							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup(), "procedure performs updates"); //$NON-NLS-1$ //$NON-NLS-2$
+						} else if (LobManager.getLobIndexes(new ArrayList<ElementSymbol>(sp.getProcedureParameters().keySet())) != null) {
+							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup(), "lob parameters"); //$NON-NLS-1$ //$NON-NLS-2$
 						}
-						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup()); //$NON-NLS-1$
-					} else {
-						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_not_used", container.getGroup()); //$NON-NLS-1$
+						container.getGroup().setGlobalTable(true);
+						container.setCacheHint(c.getCacheHint());
+						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$*/
+						return false;
 					}
+					recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_not_used", container.getGroup()); //$NON-NLS-1$
 				}
 			}
 			//skip the rewrite here, we'll do that in the optimizer
