@@ -50,7 +50,7 @@ public class CapabilitiesConverter {
     
     public static BasicSourceCapabilities convertCapabilities(ExecutionFactory srcCaps, Object connectorID) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
-        
+        tgtCaps.setTranslator(srcCaps);
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, srcCaps.supportsSelectExpression());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, srcCaps.supportsSelectDistinct());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, srcCaps.supportsAliasedTable());
