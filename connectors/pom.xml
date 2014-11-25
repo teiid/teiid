@@ -126,7 +126,7 @@
     <module>connector-accumulo</module>
     <module>connector-solr</module>
     <module>connector-infinispan-dsl</module>
-    
+    <module>translator-prestodb</module>
     <module>sandbox</module>
 
   </modules>

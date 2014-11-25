@@ -77,6 +77,7 @@
         <version.org.apache.commons>3.3.2</version.org.apache.commons>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
+        <version.com.facebook.presto>0.85</version.com.facebook.presto>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1392,6 +1393,11 @@
                 <artifactId>spring-core</artifactId>
                 <version>${version.org.springframework}</version>
             </dependency>
+            <dependency>
+                <groupId>com.facebook.presto</groupId>
+                <artifactId>presto-jdbc</artifactId>
+                <version>${version.com.facebook.presto}</version>
+            </dependency>            
         </dependencies>
 	</dependencyManagement>
 	<modules>
