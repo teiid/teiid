@@ -23,6 +23,7 @@ package org.teiid.translator.mongodb;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,11 +41,13 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 
+import com.mongodb.AggregationOptions;
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 @SuppressWarnings("nls")
 public class TestMongoDBDirectQueryExecution {
@@ -86,8 +89,30 @@ public class TestMongoDBDirectQueryExecution {
 		
 		ResultSetExecution execution = this.translator.createDirectExecution(Arrays.asList(arg, arg2), cmd, context, this.utility.createRuntimeMetadata(), connection);
 		execution.execute();
-		Mockito.verify(dbCollection).aggregate(
-				new BasicDBObject("$match", new BasicDBObject("id", "foo")), 
-				new BasicDBObject("$project", new BasicDBObject("_m0", "$user")));
+		
+        List<DBObject> pipeline = TestMongoDBQueryExecution.buildArray(new BasicDBObject("$match", new BasicDBObject("id", "foo")), 
+                new BasicDBObject("$project", new BasicDBObject("_m0", "$user")));        
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+		
 	}
+	
+    @Test
+    public void testShellDirect() throws Exception {
+        Command cmd = this.utility.parseCommand("SELECT * FROM Customers");
+        MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        DBCollection dbCollection = Mockito.mock(DBCollection.class);
+        DB db = Mockito.mock(DB.class);
+        Mockito.stub(db.getCollection("MyTable")).toReturn(dbCollection);
+        
+        Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
+        Mockito.stub(connection.getDatabase()).toReturn(db);
+        
+        Argument arg = new Argument(Direction.IN, null, String.class, null);
+        arg.setArgumentValue(new Literal("$ShellCmd;MyTable;remove;{ qty: { $gt: 20 }}", String.class));
+
+        ResultSetExecution execution = this.translator.createDirectExecution(Arrays.asList(arg), cmd, context, this.utility.createRuntimeMetadata(), connection);
+        execution.execute();
+        Mockito.verify(dbCollection).remove(QueryBuilder.start("qty").greaterThan(20).get());
+    }	
 }

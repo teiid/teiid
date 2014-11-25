@@ -945,7 +945,7 @@ public class TestMongoDBQueryExecution {
 	    Assert.assertEquals(options.toString(), optionsCapture.getValue().toString());
     }    
     
-    public ArrayList<DBObject> buildArray(DBObject ...basicDBObjects){
+    public static ArrayList<DBObject> buildArray(DBObject ...basicDBObjects){
         ArrayList<DBObject> list = new ArrayList<DBObject>();
         for (DBObject obj:basicDBObjects) {
             list.add(obj);
