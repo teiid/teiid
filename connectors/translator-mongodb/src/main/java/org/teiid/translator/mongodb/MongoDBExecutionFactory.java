@@ -98,6 +98,11 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
             @Override
             public List<?> translate(Function function) {
                 function.setName("$substr"); //$NON-NLS-1$
+                
+                // MongoDB is zero base index; Teiid is 1 based;
+                Literal offset = (Literal)function.getParameters().get(1);
+                offset.setValue((Integer)offset.getValue()-1); 
+                
                 if (function.getParameters().size() == 2) {
                     function.getParameters().add(new Literal(DataTypeManager.MAX_STRING_LENGTH, TypeFacility.RUNTIME_TYPES.INTEGER));
                 }
