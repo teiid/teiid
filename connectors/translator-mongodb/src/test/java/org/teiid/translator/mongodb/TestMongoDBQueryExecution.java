@@ -1041,7 +1041,7 @@ public class TestMongoDBQueryExecution {
 
         BasicDBList params = new BasicDBList();
         params.add("$CategoryName");
-        params.add(3);
+        params.add(2);
         params.add(4000);
         
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
@@ -1051,6 +1051,26 @@ public class TestMongoDBQueryExecution {
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }   
+    
+    @Test
+    public void testSubStr2() throws Exception {
+        String query = "SELECT SUBSTRING(CategoryName, 3, 4) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+
+        BasicDBList params = new BasicDBList();
+        params.add("$CategoryName");
+        params.add(2);
+        params.add(4);
+        
+        //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", new BasicDBObject("$substr", params));
+
+        List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }     
+
     
     @Test
     public void testSelectConstant() throws Exception {
