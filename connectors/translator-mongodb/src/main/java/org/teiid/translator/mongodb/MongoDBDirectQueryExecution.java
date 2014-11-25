@@ -24,9 +24,10 @@ package org.teiid.translator.mongodb;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -34,6 +35,7 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
@@ -45,9 +47,11 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.AggregationOutput;
+import com.mongodb.AggregationOptions;
+import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 /**
  * This enables the Direct Query execution of the MongoDB queries. For that to happen the procedure 
@@ -67,15 +71,17 @@ public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements
 	private String query;
 	private List<Argument> arguments;
 	protected boolean returnsArray;
-	private Iterator<DBObject> results;
+	private Cursor results;
+	private MongoDBExecutionFactory executionFactory;
 	
 	public MongoDBDirectQueryExecution(List<Argument> arguments, @SuppressWarnings("unused") Command cmd,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			MongoDBConnection connection, String nativeQuery, boolean returnsArray) {
+			MongoDBConnection connection, String nativeQuery, boolean returnsArray, MongoDBExecutionFactory ef) {
 		super(executionContext, metadata, connection);
 		this.arguments = arguments;
 		this.returnsArray = returnsArray;
 		this.query = nativeQuery;
+		this.executionFactory = ef;
 	}
 
 	@Override
@@ -91,23 +97,75 @@ public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements
 		
 		StringTokenizer st = new StringTokenizer(buffer.toString(), ";"); //$NON-NLS-1$
 		String collectionName = st.nextToken();
-		
-		ArrayList<DBObject> operations = new ArrayList<DBObject>();
-		while (st.hasMoreTokens()) {
-			operations.add((DBObject)JSON.parse(st.nextToken()));
+		boolean shellOperation = collectionName.equalsIgnoreCase("$ShellCmd"); //$NON-NLS-1$
+		String shellOperationName = null;
+		if (shellOperation) {
+		    collectionName = st.nextToken();
+		    shellOperationName = st.nextToken();
 		}
-		
+	
 		DBCollection collection = this.mongoDB.getCollection(collectionName);
 		if (collection == null) {
 			throw new TranslatorException(MongoDBPlugin.Event.TEIID18020, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18020, collectionName));
 		}
 		
-		if (operations.isEmpty()) {
-			throw new TranslatorException(MongoDBPlugin.Event.TEIID18021, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18021, collectionName));
+		if (shellOperation) {
+		    
+            ArrayList<Object> operations = new ArrayList<Object>();
+            while (st.hasMoreTokens()) {
+                String token = st.nextToken();
+                if (token.startsWith("{")) { //$NON-NLS-1$
+                    operations.add(JSON.parse(token));
+                }
+                else {
+                    operations.add(token);
+                }
+            }
+            
+		    try {
+		        ReflectionHelper helper = new ReflectionHelper(DBCollection.class);
+                Method method = helper.findBestMethodOnTarget(shellOperationName, operations.toArray(new Object[operations.size()]));
+                Object result = method.invoke(collection, operations.toArray(new Object[operations.size()]));
+                if (result instanceof Cursor) {
+                    this.results = (Cursor)result;
+                }
+                else if (result instanceof WriteResult) {
+                    WriteResult wr = (WriteResult)result;
+                    if (wr.getError() != null) {
+                        throw new TranslatorException(wr.getError());
+                    }
+                }
+            } catch (NoSuchMethodException e) {
+                throw new TranslatorException(MongoDBPlugin.Event.TEIID18034, e, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18034, buffer.toString()));
+            } catch (SecurityException e) {
+                throw new TranslatorException(MongoDBPlugin.Event.TEIID18034, e, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18034, buffer.toString()));
+            } catch (IllegalAccessException e) {
+                throw new TranslatorException(MongoDBPlugin.Event.TEIID18034, e, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18034, buffer.toString()));
+            } catch (IllegalArgumentException e) {
+                throw new TranslatorException(MongoDBPlugin.Event.TEIID18034, e, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18034, buffer.toString()));
+            } catch (InvocationTargetException e) {
+                throw new TranslatorException(MongoDBPlugin.Event.TEIID18034, e.getTargetException(), MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18034, buffer.toString()));
+            }
 		}
-		
-		AggregationOutput output = collection.aggregate(operations.remove(0), operations.toArray(new DBObject[operations.size()]));
-		this.results = output.results().iterator();
+		else {
+	        ArrayList<DBObject> operations = new ArrayList<DBObject>();
+	        while (st.hasMoreTokens()) {
+	            String token = st.nextToken();
+	            operations.add((DBObject)JSON.parse(token));
+	        }
+		    
+    		if (operations.isEmpty()) {
+    			throw new TranslatorException(MongoDBPlugin.Event.TEIID18021, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18021, collectionName));
+    		}
+    		
+            AggregationOptions options = AggregationOptions.builder()
+                    .batchSize(this.executionContext.getBatchSize())
+                    .outputMode(AggregationOptions.OutputMode.CURSOR)
+                    .allowDiskUse(this.executionFactory.useDisk())
+                    .build();
+    		
+    		results = collection.aggregate(operations, options);
+		}
 	}
 
 	@Override

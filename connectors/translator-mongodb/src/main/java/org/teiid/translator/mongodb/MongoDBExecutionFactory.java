@@ -243,7 +243,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, MongoDBConnection connection) throws TranslatorException {
 		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
 		if (nativeQuery != null) {
-			return new MongoDBDirectQueryExecution(command.getArguments(), command, executionContext, metadata, connection, nativeQuery, false);
+			return new MongoDBDirectQueryExecution(command.getArguments(), command, executionContext, metadata, connection, nativeQuery, false, this);
 		}
 		throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18011));
 	}
@@ -255,7 +255,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, MongoDBConnection connection) throws TranslatorException {
-		return new MongoDBDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true);
+		return new MongoDBDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true, this);
 	}
 
     @Override
