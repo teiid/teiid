@@ -1038,10 +1038,15 @@ public class TestMongoDBQueryExecution {
         String query = "SELECT SUBSTRING(CategoryName, 3) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
-
+        
+        //{ "$subtract" : [ 3 , 1]}
+        BasicDBList subtract = new BasicDBList();
+        subtract.add(3);
+        subtract.add(1);
+        
         BasicDBList params = new BasicDBList();
         params.add("$CategoryName");
-        params.add(3);
+        params.add(new BasicDBObject("$subtract", subtract));
         params.add(4000);
         
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
@@ -1051,6 +1056,30 @@ public class TestMongoDBQueryExecution {
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }   
+    
+    @Test
+    public void testSubStr2() throws Exception {
+        String query = "SELECT SUBSTRING(CategoryName, CategoryID, 4) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+
+        BasicDBList subtract = new BasicDBList();
+        subtract.add("$_id");
+        subtract.add(1);
+        
+        BasicDBList params = new BasicDBList();
+        params.add("$CategoryName");
+        params.add(new BasicDBObject("$subtract", subtract));
+        params.add(4);
+        
+        //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", new BasicDBObject("$substr", params));
+
+        List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }     
+
     
     @Test
     public void testSelectConstant() throws Exception {
@@ -1154,5 +1183,27 @@ public class TestMongoDBQueryExecution {
     public void testGeoFunctionInWhereWithFalse() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) = false";
         helpExecute(query, new String[]{"Categories"}, 2);
-    }     
+    }
+    
+    @Test
+    public void testAdd() throws Exception {
+        String query = "SELECT SupplierID+1 FROM Suppliers";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Suppliers"}, 1);
+        //{ "$project" : { "_m0" : { "$add" : [ "$_id" , 1]}}}
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0",new BasicDBObject("$add", buildObjectArray("$_id", 1)));
+
+        List<DBObject> pipeline = buildArray(
+                new BasicDBObject("$project", result));        
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+    
+    ArrayList<Object> buildObjectArray(Object ...objs){
+        ArrayList<Object> list = new ArrayList<Object>();
+        for (Object obj:objs) {
+            list.add(obj);
+        }
+        return list;
+    }
 }
