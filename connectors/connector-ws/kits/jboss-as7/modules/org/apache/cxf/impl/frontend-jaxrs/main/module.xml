@@ -11,6 +11,6 @@
         <module name="javax.activation.api"/>
         <module name="org.apache.cxf"/>
         <module name="org.apache.cxf.impl"/>
-        <module name="javax.ws.rs.api" services="export" export="true" />
+        <module name="javax.ws.rs.api" services="export" export="true" slot="2.0"/>
     </dependencies>
 </module>

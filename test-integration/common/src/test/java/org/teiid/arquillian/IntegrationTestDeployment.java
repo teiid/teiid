@@ -186,7 +186,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 41, translators.size());
+		assertEquals(translators.toString(), 40, translators.size());  // infinispan is not configured OOTB
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -239,7 +239,9 @@ public class IntegrationTestDeployment {
 
 	@Test
 	public void testVDBConnectionType() throws Exception {
-		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));			
+		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));	
+		
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);	
 		
 		VDB vdb = admin.getVDB("bqt", 1);
 		Model model = vdb.getModels().get(0);
@@ -268,6 +270,8 @@ public class IntegrationTestDeployment {
 		}
 
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);	
+
 		admin.updateSource("bqt", 2, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		
 		conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
@@ -317,6 +321,7 @@ public class IntegrationTestDeployment {
 		s = sessions.iterator().next();
 
 		admin.terminateSession(s.getSessionId());
+		Thread.sleep(2000);
 		sessions = admin.getSessions();
 		assertEquals (0, sessions.size());			
 		conn.close();
@@ -388,7 +393,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
 		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
-				"accumulo", "infinispan", "file", "cassandra", "salesforce", "mongodb", "solr", "webservice", "simpledb", "h2"}));
+				"accumulo", "file", "cassandra", "salesforce", "mongodb", "solr", "webservice", "simpledb", "h2"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
 		assertEquals(vals, templates);
@@ -462,7 +467,10 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testDataRoleMapping() throws Exception{
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
+//		Thread.sleep(2000);		
 		
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
+
 		VDB vdb = admin.getVDB("bqt", 2);
 		Model model = vdb.getModels().get(0);
 		admin.assignToModel("bqt", 2, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
