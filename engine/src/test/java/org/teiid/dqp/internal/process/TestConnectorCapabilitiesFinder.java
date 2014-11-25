@@ -25,6 +25,8 @@ package org.teiid.dqp.internal.process;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -38,6 +40,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 
 
 /**
@@ -116,5 +119,22 @@ public class TestConnectorCapabilitiesFinder {
     	ef.start();
     	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
         assertTrue("Did not get expected capabilities", bsc.supportsFunction("ns.func")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testConverts() throws Exception {
+    	ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
+    		@Override
+    		public boolean supportsConvert(int fromType, int toType) {
+    			return false;
+    		}
+    		@Override
+    		public List<String> getSupportedFunctions() {
+    			return Arrays.asList("convert");
+    		}
+    	};
+    	ef.start();
+    	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+        assertTrue(bsc.supportsFunction("convert")); //$NON-NLS-1$ 
+        assertFalse(bsc.supportsConvert(TypeFacility.RUNTIME_CODES.BIG_DECIMAL, TypeFacility.RUNTIME_CODES.BIG_INTEGER));
     }
 }
