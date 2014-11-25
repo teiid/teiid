@@ -99,14 +99,25 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
             @Override
             public List<?> translate(Function function) {
                 function.setName("$substr"); //$NON-NLS-1$
+
+                ArrayList<Expression> params = new ArrayList<Expression>();
                 
+                params.add(function.getParameters().get(0));
+                        
                 // MongoDB is zero base index; Teiid is 1 based;
-                Literal offset = (Literal)function.getParameters().get(1);
-                offset.setValue((Integer)offset.getValue()-1); 
+                params.add(LanguageFactory.INSTANCE.createFunction("-", new Expression[] { function.getParameters().get(1),
+                        LanguageFactory.INSTANCE.createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER) },
+                        TypeFacility.RUNTIME_TYPES.INTEGER));
                 
                 if (function.getParameters().size() == 2) {
-                    function.getParameters().add(new Literal(DataTypeManager.MAX_STRING_LENGTH, TypeFacility.RUNTIME_TYPES.INTEGER));
+                    function.getParameters().add(LanguageFactory.INSTANCE.createLiteral(DataTypeManager.MAX_STRING_LENGTH,
+                            TypeFacility.RUNTIME_TYPES.INTEGER));
                 }
+                
+                params.add(function.getParameters().get(2));
+                
+                function.getParameters().clear();
+                function.getParameters().addAll(params);
                 return null;
             }
         });
