@@ -3,7 +3,7 @@
     <resource-root path="spring-beans-${version.org.springframework}.jar"/>
     <resource-root path="spring-context-${version.org.springframework}.jar"/>    
     <resource-root path="spring-core-${version.org.springframework}.jar"/>
-    <resource-root path="spring-asm-${version.org.springframework}.jar"/>
+    <resource-root path="spring-asm-${version.org.springframework.asm}.jar"/>
     <resource-root path="spring-expression-${version.org.springframework}.jar"/>
     
     <resource-root path="spring-aop-${version.org.springframework}.jar"/>   
