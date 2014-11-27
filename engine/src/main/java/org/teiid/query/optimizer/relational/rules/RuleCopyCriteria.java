@@ -53,6 +53,8 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -179,7 +181,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
         if (isNew) {
             joinCriteria.add(tgtCrit);
             if (tgtCrit instanceof CompareCriteria) {
-            	((CompareCriteria)tgtCrit).setOptional(true);
+            	CompareCriteria cc = (CompareCriteria)tgtCrit;
+            	if (!EvaluatableVisitor.willBecomeConstant(cc.getRightExpression()) &&
+            			!EvaluatableVisitor.willBecomeConstant(cc.getRightExpression())) {
+            		((CompareCriteria)tgtCrit).setOptional(true);
+            	}
             }
             return true;
         } else if (checkForGroupReduction) {
