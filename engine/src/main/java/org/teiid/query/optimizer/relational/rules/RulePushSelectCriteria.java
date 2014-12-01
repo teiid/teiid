@@ -246,9 +246,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         
         if (jt == JoinType.JOIN_CROSS || jt == JoinType.JOIN_INNER) {
-            if (jt == JoinType.JOIN_CROSS) {
-                joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_INNER);
-            }
             return moveCriteriaIntoOnClause(critNode, joinNode);
         }
         JoinType optimized = JoinUtil.optimizeJoinType(critNode, joinNode, metadata, true);
@@ -322,6 +319,10 @@ public final class RulePushSelectCriteria implements OptimizerRule {
     	if (criteria != null) {
     		joinCriteria.add(criteria);
     	}
+    	
+    	if (!joinCriteria.isEmpty() && joinNode.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_CROSS) {
+            joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_INNER);
+        }
         return moved;
     }
 

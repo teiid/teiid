@@ -702,12 +702,12 @@ public class TestDependentJoins {
     
     @Test public void testLargeSetInDepAccessMultiJoinCriteriaConcurrent() throws Exception {
     	//allows concurrent
-    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, -1, 4, 4);
+    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, -1, 4, 5);
     }
     
     @Test public void testLargeSetInDepAccessMultiJoinCriteriaCompound() throws Exception {
     	//max predicates forces multiple queries
-    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, 4, 3, 3);
+    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, 4, 3, 2);
     }
     
     @Test public void testLargeSetInDepAccessMultiJoinCriteriaCompoundAll() throws Exception {
@@ -793,7 +793,7 @@ public class TestDependentJoins {
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
         TestOptimizer.checkAtomicQueries(new String[] {
         		"SELECT pm1.g2.e4 FROM pm1.g2", 
-        		"SELECT pm2.g1.e1, pm2.g1.e2, pm2.g1.e4 FROM pm2.g1 WHERE (pm2.g1.e1 IN (<dependent values>)) AND (pm2.g1.e2 IN (<dependent values>)) AND (pm2.g1.e4 IN (<dependent values>))", 
+        		"SELECT pm2.g1.e4, pm2.g1.e1, pm2.g1.e2 FROM pm2.g1 WHERE pm2.g1.e4 IN (<dependent values>)", 
         		"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"
         }, plan);
         CommandContext cc = TestProcessor.createCommandContext();
@@ -1133,9 +1133,9 @@ public class TestDependentJoins {
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT DISTINCT g_0.e1, g_0.e2 FROM pm2.g1 AS g_0", new List<?>[] {Arrays.asList("b", 1), Arrays.asList("a", 1)});
-        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'b'", new List<?>[] {Arrays.asList("b", 1)});
-        dataManager.addData("SELECT g_0.e2 FROM pm2.g2 AS g_0 WHERE g_0.e2 = 1", new List<?>[] {Arrays.asList(1)});
-        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", new List<?>[] {Arrays.asList("a", 1)});
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'b'", new List<?>[] {Arrays.asList("b", 1)});
+        dataManager.addData("SELECT g_0.e2 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList(1), Arrays.asList(2), Arrays.asList(3)});
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", new List<?>[] {Arrays.asList("a", 1)});
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
     }

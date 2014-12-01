@@ -7388,7 +7388,7 @@ public class TestXMLProcessor {
        
         helpTestProcess("SELECT * " + //$NON-NLS-1$
             " FROM xmltest.doc9c " + //$NON-NLS-1$
-            " WHERE SupplierID > '54' AND context(SupplierID, SupplierID)>'54' ", //$NON-NLS-1$
+            " WHERE SupplierID > '54' AND context(SupplierID, SupplierID)>'54' order by itemid", //$NON-NLS-1$
             expectedDoc, metadata, dataMgr);        
     }  
 
@@ -7647,7 +7647,7 @@ public class TestXMLProcessor {
         
         helpTestProcess("SELECT Catalogs.Catalog.Items.Item.ItemID, OrderID " + //$NON-NLS-1$
             " FROM xmltest.doc9c " + //$NON-NLS-1$
-            " WHERE SupplierID > '54' ", //$NON-NLS-1$
+            " WHERE SupplierID > '54' order by itemid", //$NON-NLS-1$
             expectedDoc, metadata, dataMgr);        
     }
                      
@@ -8919,7 +8919,7 @@ public class TestXMLProcessor {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE SupplierID > ANY (SELECT supplierNum FROM stock.suppliers WHERE supplierNum IN ('53','54') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE SupplierID > ANY (SELECT supplierNum FROM stock.suppliers WHERE supplierNum IN ('53','54') ) order by itemid", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     } 
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass3() throws Exception {
