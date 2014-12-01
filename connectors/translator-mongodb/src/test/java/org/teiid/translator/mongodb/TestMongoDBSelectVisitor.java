@@ -23,6 +23,8 @@ package org.teiid.translator.mongodb;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
@@ -63,7 +65,7 @@ public class TestMongoDBSelectVisitor {
     private void helpExecute(String query, String collection, String project, String match) throws Exception {
     	helpExecute(query, collection, project, match, null, null);
     }
-    private void helpExecute(String query, String collection, String project, String match, String groupby, String having) throws Exception {
+    private MongoDBSelectVisitor helpExecute(String query, String collection, String project, String match, String groupby, String having) throws Exception {
     	Select cmd = (Select)this.utility.parseCommand(query);
     	MongoDBSelectVisitor visitor = new MongoDBSelectVisitor(this.translator, this.utility.createRuntimeMetadata());
     	visitor.visitNode(cmd);
@@ -87,6 +89,7 @@ public class TestMongoDBSelectVisitor {
     	if (having != null) {
     		assertEquals("having wrong", having, visitor.having.toString());
     	}
+    	return visitor;
     }
 
     @Test
@@ -296,14 +299,29 @@ public class TestMongoDBSelectVisitor {
     public void testDistinctEquivalent() throws Exception {
     	String query = "SELECT user_id, age age FROM users group by user_id, age";
 
-		helpExecute(
+    	MongoDBSelectVisitor visitor = helpExecute(
 				query,
 				"users",
 				"{ \"_m0\" : \"$_id._c0\" , \"age\" : \"$_id._c1\"}",
 				null,
 				"{ \"_id\" : { \"_c0\" : \"$user_id\" , \"_c1\" : \"$age\"}}",
 				null);
+    	assertEquals(Arrays.asList("_m0", "age"), visitor.selectColumnReferences);
     }
+    
+    @Test
+    public void testAggregateWithGroupBy() throws Exception {
+        String query = "SELECT user_id, sum(age) FROM users group by user_id";
+
+        MongoDBSelectVisitor visitor = helpExecute(
+                query,
+                "users",
+                "{ \"_m0\" : \"$_id._c0\" , \"_m1\" : 1}",
+                null,
+                "{ \"_id\" : { \"_c0\" : \"$user_id\"} , \"_m1\" : { \"$sum\" : \"$age\"}}",
+                null);
+        assertEquals(Arrays.asList("_m0", "_m1"), visitor.selectColumnReferences);
+    }    
 
     @Test
     public void testSum() throws Exception {
