@@ -76,6 +76,8 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			    throw new TranslatorException(MongoDBPlugin.Event.TEIID18025, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18025));
 			}
 			
+			assert visitor.selectColumns.size() == visitor.selectColumnReferences.size();
+			
 			if (this.visitor.projectBeforeMatch) {
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$
 			}

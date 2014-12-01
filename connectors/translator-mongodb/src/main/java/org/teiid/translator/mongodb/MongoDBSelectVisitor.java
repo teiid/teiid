@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.AndOr;
 import org.teiid.language.Array;
@@ -184,6 +183,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			BasicDBObject id = this.groupByProjections.get("_id"); //$NON-NLS-1$
 			this.project.append(alias, id.get(exprDetails.projectedName));
 			exprDetails.projectedName = alias;
+	        this.selectColumnReferences.add(alias);
 		}
 		else {
 			exprDetails.projectedName = alias;
