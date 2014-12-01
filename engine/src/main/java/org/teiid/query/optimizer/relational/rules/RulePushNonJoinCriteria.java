@@ -22,6 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -36,12 +37,19 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -53,6 +61,12 @@ import org.teiid.query.util.CommandContext;
  * Upon a successful push, RulePushSelectCriteria will be run again.
  */
 public final class RulePushNonJoinCriteria implements OptimizerRule {
+	
+	private boolean firstRun = true;
+	
+	public RulePushNonJoinCriteria(boolean firstRun) {
+		this.firstRun = firstRun;
+	}
 
 	/**
 	 * Execute the rule as described in the class comments.
@@ -100,9 +114,8 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
                     break;
                 }
                 
-                if (pushCriteria(node, crit)) {
+                if (pushCriteria(node, crit, crits, metadata)) {
                     treeChanged = true;
-                    crits.remove();
                 }
             }
             
@@ -141,10 +154,11 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
      * 
      * @param joinNode
      * @param tgtCrit
+     * @param metadata 
      * @return
      */
     private boolean pushCriteria(PlanNode joinNode,
-                                  Criteria tgtCrit) {
+                                  Criteria tgtCrit, Iterator iter, QueryMetadataInterface metadata) {
         PlanNode newCritNode = RelationalPlanner.createSelectNode(tgtCrit, false);
         
         Set<GroupSymbol> groups = newCritNode.getGroups();
@@ -164,8 +178,69 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
             }
         }
         
+        if (pushed) {
+        	iter.remove();
+        } else if (firstRun && tgtCrit instanceof CompareCriteria) {
+            CompareCriteria crit = (CompareCriteria) tgtCrit;
+            
+            Expression leftExpr = crit.getLeftExpression();
+            Expression rightExpr = crit.getRightExpression();
+                        
+        	for (int i = 0; i < innerJoinNodes.length; i++) {
+        		PlanNode node = FrameUtil.findJoinSourceNode(innerJoinNodes[i]);
+        		
+        		boolean outer = false;
+        		for (PlanNode child : NodeEditor.findAllNodes(node, NodeConstants.Types.JOIN)) {
+        			if (((JoinType)child.getProperty(Info.JOIN_TYPE)).isOuter()) {
+        				outer = true;
+        				break;
+        			}
+        		}
+        		
+        		if (!outer) {
+        			continue;
+        		}
+        		
+                Set<GroupSymbol> leftExprGroups = GroupsUsedByElementsVisitor.getGroups(leftExpr);            
+                Set<GroupSymbol> rightExprGroups = GroupsUsedByElementsVisitor.getGroups(rightExpr);
+
+                ArrayList<ElementSymbol> notNull = new ArrayList<ElementSymbol>(2);
+                
+        		if (node.getGroups().containsAll(leftExprGroups)) {
+        			collectNotNull(leftExpr, notNull);
+        		} else if (node.getGroups().containsAll(rightExprGroups)) {
+        			collectNotNull(rightExpr, notNull);
+        		}
+        		
+        		if (!notNull.isEmpty()) {
+        			pushed = true;
+        			for (ElementSymbol es : notNull) {
+        				IsNullCriteria inc = new IsNullCriteria(es);
+        				inc.setNegated(true);
+        				PlanNode notNullCrit = RelationalPlanner.createSelectNode(inc, false);
+        				notNullCrit.setProperty(NodeConstants.Info.IS_TEMPORARY, true);
+        				innerJoinNodes[i].addAsParent(notNullCrit);
+        			}
+        		}
+        	}
+        }
+        
         return pushed;
     }
+
+	private void collectNotNull(Expression leftExpr,
+			ArrayList<ElementSymbol> notNull) {
+		if (leftExpr instanceof ElementSymbol) {
+			notNull.add((ElementSymbol)leftExpr);
+		} else if (leftExpr instanceof Function) {
+			Function f = (Function)leftExpr;
+			if (!f.getFunctionDescriptor().isNullDependent()) {
+				for (Expression arg : f.getArgs()) {
+					collectNotNull(arg, notNull);
+				}
+			}
+		}
+	}
 
     public String toString() {
 		return "PushNonJoinCriteria"; //$NON-NLS-1$

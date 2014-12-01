@@ -78,8 +78,8 @@ public final class RuleCleanCriteria implements OptimizerRule {
 	}
     
     boolean cleanCriteria(PlanNode critNode, boolean removeAllPhantom) throws TeiidComponentException {
-        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM) 
-        		&& (removeAllPhantom || critNode.hasBooleanProperty(Info.IS_COPIED))) {
+        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_TEMPORARY) || (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM) 
+        		&& (removeAllPhantom || critNode.hasBooleanProperty(Info.IS_COPIED)))) {
 	        NodeEditor.removeChildNode(critNode.getParent(), critNode);
 	        return false;
         }

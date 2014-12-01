@@ -109,6 +109,7 @@ public final class NodeConstants {
         //phantom nodes represent the previous position of criteria that has been pushed across a source, group, or union node.
         //phantom nodes are used by RuleCopyCriteria and removed by RuleCleanCriteria.
         IS_PHANTOM,         // Boolean
+        IS_TEMPORARY,         // Boolean
         IS_COPIED,           // Boolean - used in CopyCriteria to mark which selects have already been copied
         IS_PUSHED,           // true if this node has already been pushed
         IS_DEPENDENT_SET, // Boolean - only used with dependent joins

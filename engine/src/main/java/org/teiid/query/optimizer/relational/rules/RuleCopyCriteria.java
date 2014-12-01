@@ -102,7 +102,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
             //Push any newly created criteria nodes and try to copy them afterwards
             rules.push(RuleConstants.COPY_CRITERIA);
             rules.push(RuleConstants.RAISE_ACCESS);
-            rules.push(RuleConstants.PUSH_NON_JOIN_CRITERIA);
+            rules.push(new RulePushNonJoinCriteria(false));
         }
         
         //mark the old criteria nodes as copied.  this will prevent RulePushSelectCriteria from considering them again

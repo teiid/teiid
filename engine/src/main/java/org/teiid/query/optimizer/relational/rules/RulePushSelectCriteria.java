@@ -374,7 +374,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		
         NodeEditor.removeChildNode(critNode.getParent(), critNode);
         destination.addAsParent(critNode);
-        if (groupSelects && destination == sourceNode) {
+        if (groupSelects && destination == sourceNode && !critNode.hasBooleanProperty(Info.IS_TEMPORARY) && !destination.hasBooleanProperty(Info.IS_TEMPORARY)) {
         	//Help with the detection of composite keys in pushed criteria
         	RuleMergeCriteria.mergeChain(critNode, metadata);
         }
@@ -731,6 +731,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		copyNode.addGroups(critNode.getGroups());
         if(critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
             copyNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+        }
+        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_TEMPORARY)) {
+        	copyNode.setProperty(NodeConstants.Info.IS_TEMPORARY, Boolean.TRUE);
         }
         if (createdNodes != null) {
         	createdNodes.add(copyNode);

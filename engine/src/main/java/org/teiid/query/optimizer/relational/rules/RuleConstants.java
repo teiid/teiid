@@ -40,7 +40,7 @@ public final class RuleConstants {
     public static final OptimizerRule CLEAN_CRITERIA = new RuleCleanCriteria();    
     public static final OptimizerRule VALIDATE_WHERE_ALL = new RuleValidateWhereAll();    
     public static final OptimizerRule REMOVE_OPTIONAL_JOINS = new RuleRemoveOptionalJoins();
-    public static final OptimizerRule PUSH_NON_JOIN_CRITERIA = new RulePushNonJoinCriteria();
+    public static final OptimizerRule PUSH_NON_JOIN_CRITERIA = new RulePushNonJoinCriteria(true);
     public static final OptimizerRule RAISE_NULL = new RuleRaiseNull();
     public static final OptimizerRule PLAN_JOINS = new RulePlanJoins();
     public static final OptimizerRule IMPLEMENT_JOIN_STRATEGY = new RuleImplementJoinStrategy();
