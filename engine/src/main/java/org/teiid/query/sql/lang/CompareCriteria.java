@@ -45,6 +45,10 @@ public class CompareCriteria extends AbstractCompareCriteria {
 
 	/** The right-hand expression. */
 	private Expression rightExpression;
+	
+	//null means existing, but implied
+	//true means completely derived
+	//false means required
 	private Boolean isOptional = Boolean.FALSE;
     
     /**

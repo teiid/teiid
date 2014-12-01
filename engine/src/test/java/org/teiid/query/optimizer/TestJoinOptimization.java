@@ -1091,13 +1091,13 @@ public class TestJoinOptimization {
 	   	ProcessorPlan plan = TestOptimizer.helpPlan("SELECT * from pm1.g1 inner join (pm1.g2 left outer join pm1.g3 on pm1.g2.e1=pm1.g3.e1) on pm1.g1.e1=pm1.g3.e1", //$NON-NLS-1$
 	   			RealMetadataFactory.example1Cached(),
 	            new String[] {
-	   				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g2 AS g_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	   				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g2 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
 	    RelationalNode node = ((RelationalPlan)plan).getRootNode().getChildren()[0];
 	    assertTrue(node instanceof JoinNode);
 	    node = node.getChildren()[0];
 	    assertTrue(node instanceof JoinNode);
-	    assertNotEquals(((JoinNode)node).getJoinType(), JoinType.JOIN_LEFT_OUTER);
+	    assertEquals(JoinType.JOIN_INNER, ((JoinNode)node).getJoinType());
 	 }
     
 }
