@@ -31,14 +31,9 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.VARBINARY;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.sql.DataSource;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -66,6 +61,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         setSupportsInnerJoins(true);
         setSupportsOuterJoins(true);
         setSupportsFullOuterJoins(true);
+        setUseBindVariables(false);
     }
     
     @Override
@@ -106,23 +102,6 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     public boolean isSourceRequiredForMetadata() {
         return true;
     }
-    
-    @Override
-    public Connection getConnection(final DataSource ds) throws TranslatorException {        
-        final Connection conn =  super.getConnection(ds);
-        Connection proxy = (Connection) Proxy.newProxyInstance(
-            ds.getClass().getClassLoader(),
-            new Class[] { Connection.class },
-            new InvocationHandler () {
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    if (method.getName().equals("getTransactionIsolation")) { //$NON-NLS-1$
-                        return Connection.TRANSACTION_NONE;
-                    }
-                    return method.invoke(conn, args);
-                }
-            });        
-        return proxy;
-    }    
     
     @Override
     public void start() throws TranslatorException {
@@ -189,7 +168,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PRESTODB, "url_extract_protocol", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "url_extract_query", STRING, STRING); //$NON-NLS-1$
         
-        //TODO: JSON functions, not sure how to represent the JSON type?
+        // TODO: JSON functions, not sure how to represent the JSON type?
         // Array Functions, MAP functions?
         // aggregate functions?
     }    

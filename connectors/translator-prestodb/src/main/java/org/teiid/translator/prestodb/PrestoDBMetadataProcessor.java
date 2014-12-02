@@ -88,10 +88,10 @@ public class PrestoDBMetadataProcessor extends JDBCMetdataProcessor implements M
         return catalogs;
     }   
     
-    private List<String> getSchema(Connection conn, String schema) throws SQLException {
+    private List<String> getSchema(Connection conn, String catalog) throws SQLException {
         ArrayList<String> schemas = new ArrayList<String>();
         Statement stmt = conn.createStatement();
-        ResultSet rs =  stmt.executeQuery("SHOW CATALOGS FROM "+schema); //$NON-NLS-1$
+        ResultSet rs =  stmt.executeQuery("SHOW SCHEMAS FROM "+catalog); //$NON-NLS-1$
         while (rs.next()){
             schemas.add(rs.getString(1));
         }
