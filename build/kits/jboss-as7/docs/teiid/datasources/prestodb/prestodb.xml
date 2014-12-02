@@ -1,0 +1,20 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/prestoDS" enabled="true" use-java-context="true" pool-name="PrestoDB">
+            <connection-url>jdbc:presto://example.net:8080</connection-url>
+            <driver>prestodb</driver>
+            <security>
+                <user-name>sa</user-name>
+                <password>sa</password>
+            </security>
+        </datasource>
+        <drivers>
+            <driver name="prestodb" module="com.facebook.presto">
+                <driver-class>com.facebook.presto.jdbc.PrestoDriver</driver-class>
+            </driver>
+        </drivers>
+    </datasources>
+</subsystem>
+
+
