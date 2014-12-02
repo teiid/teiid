@@ -67,15 +67,20 @@ public class SpreadsheetMetadataExtractor {
 		SpreadsheetEntry sentry = gdataAPI
 				.getSpreadsheetEntryByTitle(spreadsheetName);
 		SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheetName);
+		metadata.setSpreadsheetKey(sentry.getKey());
 		try {
 			for (WorksheetEntry wentry : sentry.getWorksheets()) {
 				String title = wentry.getTitle().getPlainText();
 				Worksheet worksheet = metadata.createWorksheet(title);
+				worksheet.setId(wentry.getId().substring(wentry.getId().lastIndexOf('/')+1));
 				List<Column> cols = visualizationAPI.getMetadata(spreadsheetName, title);
-				if (cols.isEmpty()) {
-					worksheet.setColumnCount(0);
-				} else {
-					worksheet.setColumns(cols);
+				if(!cols.isEmpty()){
+					if(cols.get(0).getLabel()!=null){
+						worksheet.setHeaderEnabled(true);
+					}
+				}
+				for(Column c: cols){
+					worksheet.addColumn(c.getLabel()!=null ? c.getLabel(): c.getAlphaName(), c);
 				}
 			}
 		} catch (IOException ex) {

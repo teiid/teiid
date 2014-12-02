@@ -13,7 +13,16 @@ import java.util.Map;
 public class SpreadsheetInfo {
 	private String spreadsheetName;
 	private Map<String, Worksheet> worksheetByName = new HashMap<String,Worksheet>();
+	private String spreadsheetKey;
 	
+	public String getSpreadsheetKey() {
+		return spreadsheetKey;
+	}
+
+	public void setSpreadsheetKey(String spreadsheetKey) {
+		this.spreadsheetKey = spreadsheetKey;
+	}
+
 	public SpreadsheetInfo(String spreadsheetName) {
 		this.spreadsheetName = spreadsheetName;
 		
