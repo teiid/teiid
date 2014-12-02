@@ -37,6 +37,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 
 public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 	private static final String WORKSHEET = "worksheet"; //$NON-NLS-1$
@@ -97,7 +98,7 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 					@Override
 					public void substitute(Argument arg, StringBuilder builder, int index) {
 						Literal argumentValue = arg.getArgumentValue();
-						SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor();
+						SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
 						visitor.visit(argumentValue);
 						builder.append(visitor.getTranslatedSQL());
 					}

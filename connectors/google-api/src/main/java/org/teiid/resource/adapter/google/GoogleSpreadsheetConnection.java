@@ -22,8 +22,13 @@
 
 package org.teiid.resource.adapter.google;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.resource.cci.Connection;
 
+import org.teiid.resource.adapter.google.common.UpdateResult;
+import org.teiid.resource.adapter.google.common.UpdateSet;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.result.RowsResult;
 
@@ -34,9 +39,8 @@ import org.teiid.resource.adapter.google.result.RowsResult;
  */
 public interface GoogleSpreadsheetConnection extends Connection {
 	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit, int batchSize);
-	/**
-	 * Returns information about existing Spreadsheets and worksheets.
-	 * @return
-	 */
+	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set);
+	public UpdateResult deleteRows(String worksheetID, String criteria);
+	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair);
 	public SpreadsheetInfo getSpreadsheetInfo();
 }

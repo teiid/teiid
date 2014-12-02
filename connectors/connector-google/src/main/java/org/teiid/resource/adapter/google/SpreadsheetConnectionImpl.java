@@ -22,6 +22,9 @@
 
 package org.teiid.resource.adapter.google;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.security.auth.Subject;
 
 import org.teiid.logging.LogConstants;
@@ -30,6 +33,8 @@ import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.common.SpreadsheetAuthException;
+import org.teiid.resource.adapter.google.common.UpdateResult;
+import org.teiid.resource.adapter.google.common.UpdateSet;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
@@ -149,5 +154,18 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		return info;
 	}
 
+	@Override
+	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set) {
+		return gdata.listFeedUpdate(info.getSpreadsheetKey(), worksheetID, criteria, set);
+	}
+
+	@Override
+	public UpdateResult deleteRows(String worksheetID, String criteria) {
+		return gdata.listFeedDelete(info.getSpreadsheetKey(), worksheetID, criteria);
+	}
+	@Override
+	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair){
+		return gdata.listFeedInsert(info.getSpreadsheetKey(), worksheetID, pair);
+	}
 
 }

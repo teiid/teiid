@@ -33,7 +33,14 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 
+/**
+ * Execution of SELECT Command
+ * 
+ * @author felias
+ *
+ */
 public class SpreadsheetQueryExecution implements ResultSetExecution {
 
 	private Select query;
@@ -61,8 +68,8 @@ public class SpreadsheetQueryExecution implements ResultSetExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-		SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor();
-		visitor.translateSQL(query);		
+		SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
+		visitor.translateSQL(query);
 		rowIterator = connection.executeQuery(visitor.getWorksheetTitle(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
 		
 	}
