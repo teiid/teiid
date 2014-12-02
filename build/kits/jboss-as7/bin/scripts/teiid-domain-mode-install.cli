@@ -50,6 +50,7 @@ connect
 /profile=ha/subsystem=teiid/translator=postgresql:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=sqlserver:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=sybase:add(module=org.jboss.teiid.translator.jdbc)
+/profile=ha/subsystem=teiid/translator=sybaseiq:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=teiid:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=teradata:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=modeshape:add(module=org.jboss.teiid.translator.jdbc)
