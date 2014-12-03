@@ -618,31 +618,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                     if (ss instanceof WindowFunction || ss instanceof ExpressionSymbol) {
                         createdSymbols.add(ss);
                     }
-                    boolean symbolRequired = false;
-                    if (finalRun && accessParent == null && !(SymbolMap.getExpression(ss) instanceof ElementSymbol) && !node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
-                    	if (accessNode != null) {
-                    		//narrow check for projection pushing
-                    		Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
-    		                if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
-    		                	requiredSymbols.add(ss);
-    							continue;
-    		                }
-                    	}
-                    	if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
-                        	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
-                        	for (Function function : functions) {
-    							if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
-    								continue;
-    							}
-    							//assume we need the whole thing
-    							requiredSymbols.add(ss);
-    							symbolRequired = true;
-    							checkSymbols = true;
-    							break;
-    						}
-                    	}
-                    }
-                    if (!symbolRequired) {
+                    if (!pushProjection(node, metadata, capFinder,
+							requiredSymbols, accessParent, accessNode, ss)) {
                     	ElementCollectorVisitor.getElements(ss, requiredSymbols);
                     }
                 }
@@ -662,9 +639,19 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				break;
 			case NodeConstants.Types.GROUP:
 				List<Expression> groupCols = (List<Expression>) node.getProperty(NodeConstants.Info.GROUP_COLS);
+				PlanNode accessParent = NodeEditor.findParent(node, NodeConstants.Types.ACCESS);
+                PlanNode accessNode = null;
+                if (accessParent == null) {
+                	//find the direct access node
+                	accessNode = NodeEditor.findNodePreOrder(node.getFirstChild(), NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE 
+                			| NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP);
+                }
 				if(groupCols != null) {
 				    for (Expression expression : groupCols) {
-				    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+				    	if (!pushProjection(node, metadata, capFinder,
+								requiredSymbols, accessParent, accessNode, expression)) {
+	                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+	                    }
                     }
 				}
 				SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
@@ -681,7 +668,10 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					    AggregateSymbol agg = (AggregateSymbol)ex;
 	                    Expression[] aggExprs = agg.getArgs();
 	                    for (Expression expression : aggExprs) {
-	                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+	                    	if (!pushProjection(node, metadata, capFinder,
+									requiredSymbols, accessParent, accessNode, expression)) {
+		                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+		                    }	
 	                    }
 	                    OrderBy orderBy = agg.getOrderBy();
 	                    if(orderBy != null) {
@@ -738,6 +728,40 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         }
         
         return new ArrayList<Expression>(requiredSymbols);
+	}
+
+	private boolean pushProjection(PlanNode node,
+			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+			Set<Expression> requiredSymbols, PlanNode accessParent,
+			PlanNode accessNode, Expression ss)
+			throws QueryMetadataException, TeiidComponentException {
+		if (finalRun && accessParent == null && !node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+			Expression ex = SymbolMap.getExpression(ss);
+			if (ex instanceof ElementSymbol || ex instanceof Constant) {
+				return false;
+			}
+			if (accessNode != null) {
+				//narrow check for projection pushing
+				Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+		        if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
+		        	requiredSymbols.add(ss);
+					return true;
+		        }
+			}
+			if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
+		    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
+		    	for (Function function : functions) {
+					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
+						continue;
+					}
+					//assume we need the whole thing
+					requiredSymbols.add(ss);
+					checkSymbols = true;
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
     /**

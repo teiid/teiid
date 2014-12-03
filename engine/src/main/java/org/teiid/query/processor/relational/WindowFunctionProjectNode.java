@@ -438,7 +438,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			List<Expression> collectedExpressions = new ArrayList<Expression>(expressionIndexes.keySet());
 			Evaluator eval = new Evaluator(elementMap, getDataManager(), getContext());
 			final RelationalNode sourceNode = this.getChildren()[0];
-			inputTs = new ProjectingTupleSource(sourceNode, eval, collectedExpressions) {
+			inputTs = new ProjectingTupleSource(sourceNode, eval, collectedExpressions, elementMap) {
 				int index = 0;
 				@Override
 				public List<Object> nextTuple() throws TeiidComponentException,

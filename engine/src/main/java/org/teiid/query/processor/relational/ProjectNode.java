@@ -123,10 +123,12 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             }
 
             Integer index = elementMap.get(symbol);
-            if(index == null || index.intValue() != i) {
-                // input / output element order is not the same
+            if(index == null) {
                 needsProject = true;
             } else {
+            	if (index.intValue() != i) {
+            		needsProject = true;
+            	}
             	projectionIndexes[i] = index;
             }
         }

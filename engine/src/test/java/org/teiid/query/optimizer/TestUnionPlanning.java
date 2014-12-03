@@ -259,7 +259,7 @@ public class TestUnionPlanning {
     	bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
     	DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
         ProcessorPlan plan = TestOptimizer.helpPlan("select intkey from (SELECT 1 as IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT 2 as intkey, intnum FROM BQT2.SmallA) A group by intkey", RealMetadataFactory.exampleBQTCached(), null, capFinder,//$NON-NLS-1$
-            new String[] { "SELECT 2 AS c_0 FROM BQT2.SmallA AS g_0 LIMIT 1", "SELECT 1 AS c_0 FROM BQT1.SmallA AS g_0 LIMIT 1" }, ComparisonMode.EXACT_COMMAND_STRING); 
+            new String[] { "SELECT 1 AS c_0 FROM BQT2.SmallA AS g_0 LIMIT 1", "SELECT 1 AS c_0 FROM BQT1.SmallA AS g_0 LIMIT 1" }, ComparisonMode.EXACT_COMMAND_STRING); 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

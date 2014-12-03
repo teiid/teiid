@@ -272,6 +272,13 @@ public class TestProcessor {
             	fail("did not complete processing");
             }
             rowCount = id.getRowCount();
+    		if(DEBUG) {
+                System.out.println("\nResults:\n" + id.getSchema()); //$NON-NLS-1$
+                TupleSource ts2 = id.createIndexedTupleSource();
+                for(int j=0; j<rowCount; j++) {
+                    System.out.println("" + j + ": " + ts2.nextTuple());	 //$NON-NLS-1$ //$NON-NLS-2$
+                }
+            }
             if ( expectedResults != null ) {
             	examineResults(expectedResults, bufferMgr, id);
             }
@@ -299,15 +306,6 @@ public class TestProcessor {
         TupleSource ts = tsID.createIndexedTupleSource();
         int count = tsID.getRowCount();   
 
-		if(DEBUG) {
-            System.out.println("\nResults:\n" + tsID.getSchema()); //$NON-NLS-1$
-            TupleSource ts2 = tsID.createIndexedTupleSource();
-            for(int j=0; j<count; j++) {
-                System.out.println("" + j + ": " + ts2.nextTuple());	 //$NON-NLS-1$ //$NON-NLS-2$
-            }    
-            ts2.closeSource();
-        }
-        
         // Compare actual to expected row count
         assertEquals("Did not get expected row count: ", expectedResults.length, count); //$NON-NLS-1$
      
