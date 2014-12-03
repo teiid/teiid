@@ -17,6 +17,10 @@ import net.sf.saxon.type.SchemaType;
 import net.sf.saxon.type.SimpleType;
 import net.sf.saxon.type.Type;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+
 /**
  * A filter that uses the PathMap to determine what should be included in the document
  * 
@@ -91,6 +95,7 @@ class PathMapFilter extends ProxyReceiver {
 
 	private boolean closed;
 	private LinkedList<MatchContext> matchContext = new LinkedList<MatchContext>();
+	private boolean logTrace = LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE);
 	
 	public PathMapFilter(PathMapRoot root, Receiver receiver) {
 		super(receiver);
@@ -119,6 +124,8 @@ class PathMapFilter extends ProxyReceiver {
 		matchContext.add(newContext);
 		if (newContext.matchedElement) {
 			super.startElement(elemName, typeCode, locationId, properties);
+		} else if (logTrace) {
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "Document projection did not match element", elemName.getURI(), ':', elemName.getLocalPart()); //$NON-NLS-1$
 		}
 	}
 	
