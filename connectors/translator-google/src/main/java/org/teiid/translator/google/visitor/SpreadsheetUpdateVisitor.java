@@ -28,16 +28,22 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 	public void visit(Update obj) {
 		worksheetTitle = obj.getTable().getName();
 		changes = new ArrayList<UpdateSet>();
+		String columnName;
 		if (obj.getTable().getMetadataObject().getNameInSource() != null) {
 			this.worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
 		}
 		worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
 		for (SetClause s : obj.getChanges()) {
+			if(s.getSymbol().getMetadataObject().getNameInSource()!=null){
+				columnName=s.getSymbol().getMetadataObject().getNameInSource();
+			}else{
+				columnName=s.getSymbol().getMetadataObject().getName();
+			}
 			SQLStringVisitor.getSQLString(s.getValue());
 			if (s.getSymbol().getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
-				changes.add(new UpdateSet(s.getSymbol().getName(),"'"+getStringValue(s.getValue())));
+				changes.add(new UpdateSet(columnName,"'"+getStringValue(s.getValue())));
 			} else {
-				changes.add(new UpdateSet(s.getSymbol().getName(), getStringValue(s.getValue())));
+				changes.add(new UpdateSet(columnName, getStringValue(s.getValue())));
 			}
 		}
 		if (obj.getWhere() != null) {

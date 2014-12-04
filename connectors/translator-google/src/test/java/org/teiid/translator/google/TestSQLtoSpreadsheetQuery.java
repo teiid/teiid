@@ -196,8 +196,8 @@ public class TestSQLtoSpreadsheetQuery {
         SpreadsheetInsertVisitor visitor=new SpreadsheetInsertVisitor(people);
         visitor.visit((Insert)getCommand(sql));
         assertEquals(3, visitor.getColumnNameValuePair().size());
-        assertEquals("String,String",visitor.getColumnNameValuePair().get("A"));
-        assertEquals("String@String",visitor.getColumnNameValuePair().get("B"));
+        assertEquals("'String,String",visitor.getColumnNameValuePair().get("A"));
+        assertEquals("'String@String",visitor.getColumnNameValuePair().get("B"));
         assertEquals("15.5",visitor.getColumnNameValuePair().get("C"));
 	}
 	
@@ -211,7 +211,7 @@ public class TestSQLtoSpreadsheetQuery {
         visitor.visit((Update)getCommand(sql));
         assertEquals(2,visitor.getChanges().size());
         assertEquals("A", visitor.getChanges().get(0).getColumnID());
-        assertEquals("String,String", visitor.getChanges().get(0).getValue());
+        assertEquals("'String,String", visitor.getChanges().get(0).getValue());
         assertEquals("C", visitor.getChanges().get(1).getColumnID());
         assertEquals("1.5", visitor.getChanges().get(1).getValue());
         assertEquals("a = \"Str,Str\"", visitor.getCriteriaQuery());

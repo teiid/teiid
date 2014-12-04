@@ -52,7 +52,11 @@ public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 
 	@Override
 	public void visit(ColumnReference obj) {
-		columns.add(obj.getMetadataObject().getName());
+		if(obj.getMetadataObject().getNameInSource()!=null){
+			columns.add(obj.getMetadataObject().getNameInSource());
+		}else{
+			columns.add(obj.getMetadataObject().getName());
+		}
 		super.visit(obj);
 	}
 

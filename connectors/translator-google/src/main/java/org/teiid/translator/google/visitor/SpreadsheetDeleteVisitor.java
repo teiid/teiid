@@ -16,9 +16,12 @@ public class SpreadsheetDeleteVisitor extends SpreadsheetCriteriaVisitor {
 	}
 
 	public void visit(Delete obj) {
-		worksheetTitle = obj.getTable().getName();	
+		if (obj.getTable().getMetadataObject().getNameInSource() != null) {
+			worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
+		}else{
+			worksheetTitle = obj.getTable().getName();	
+		}
 		worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
-		
 		if (obj.getWhere() != null) {
 			append(obj.getWhere());
 			criteriaQuery = buffer.toString();
