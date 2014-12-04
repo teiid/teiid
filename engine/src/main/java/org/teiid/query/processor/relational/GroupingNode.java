@@ -72,21 +72,36 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     	
     	private Evaluator eval;
     	private List<Expression> collectedExpressions;
+    	private int[] projectionIndexes;
     	
-		ProjectingTupleSource(BatchProducer sourceNode, Evaluator eval, List<Expression> expressions) {
+		ProjectingTupleSource(BatchProducer sourceNode, Evaluator eval, List<Expression> expressions, Map<Expression, Integer> elementMap) {
 			super(sourceNode);
 			this.eval = eval;
 			this.collectedExpressions = expressions;
+			this.projectionIndexes = new int[this.collectedExpressions.size()];
+	    	Arrays.fill(this.projectionIndexes, -1);
+			for (int i = 0; i < expressions.size(); i++) {
+				Integer index = elementMap.get(expressions.get(i));
+	            if(index != null) {
+	            	projectionIndexes[i] = index;
+	            }
+			}
 		}
 
 		@Override
 		protected List<Object> updateTuple(List<?> tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 			int columns = collectedExpressions.size();
 		    List<Object> exprTuple = new ArrayList<Object>(columns);
-		    for(int col = 0; col<columns; col++) { 
-		        // The following call may throw BlockedException, but all state to this point
-		        // is saved in class variables so we can start over on building this tuple
-		        Object value = eval.evaluate(collectedExpressions.get(col), tuple);
+		    for(int col = 0; col<columns; col++) {
+		    	int index = projectionIndexes[col];
+		    	Object value = null;
+		    	if (index != -1) {
+		    		value = tuple.get(index);
+		    	} else {
+			        // The following call may throw BlockedException, but all state to this point
+			        // is saved in class variables so we can start over on building this tuple
+			        value = eval.evaluate(collectedExpressions.get(col), tuple);
+		    	}
 		        exprTuple.add(value);
 		    }
 		    return exprTuple;
@@ -100,7 +115,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     
     // Collection phase
     private int phase = COLLECTION;
-    private Map elementMap;                    // Map of incoming symbol to index in source elements
+    private Map<Expression, Integer> elementMap;                    // Map of incoming symbol to index in source elements
     private LinkedHashMap<Expression, Integer> collectedExpressions;         // Collected Expressions
     private int distinctCols = -1;
        
@@ -361,7 +376,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 	
 	public TupleSource getGroupSortTupleSource() {
 		final RelationalNode sourceNode = this.getChildren()[0];
-		return new ProjectingTupleSource(sourceNode, getEvaluator(elementMap), new ArrayList<Expression>(collectedExpressions.keySet()));
+		return new ProjectingTupleSource(sourceNode, getEvaluator(elementMap), new ArrayList<Expression>(collectedExpressions.keySet()), elementMap);
 	}
 	
 	@Override

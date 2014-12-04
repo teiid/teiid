@@ -232,7 +232,7 @@ public class TestExpressionsInGroupBy {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END, BQT1.SmallA.IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
                                       TestOptimizer.SHOULD_SUCCEED );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {

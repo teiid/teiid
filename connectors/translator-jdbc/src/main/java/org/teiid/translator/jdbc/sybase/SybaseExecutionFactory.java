@@ -70,6 +70,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
 	protected boolean jtdsDriver;
+	protected ConvertModifier convertModifier = new ConvertModifier();
 	
 	public SybaseExecutionFactory() {
 		setSupportsFullOuterJoins(false);
@@ -165,7 +166,6 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		});
         
         //add in type conversion
-        ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.setBooleanNullable(booleanNullable());
         //boolean isn't treated as bit, since it doesn't support null
         //byte is treated as smallint, since tinyint is unsigned

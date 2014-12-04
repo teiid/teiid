@@ -407,4 +407,12 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return getVersion().compareTo(TEN_0) < 0;
     }
     
+    @Override
+    public boolean supportsConvert(int fromType, int toType) {
+    	if (fromType == TypeFacility.RUNTIME_CODES.OBJECT && this.convertModifier.hasTypeMapping(toType)) {
+			return true;
+    	}
+    	return super.supportsConvert(fromType, toType);
+    }
+    
 }
