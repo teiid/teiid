@@ -24,32 +24,50 @@ package org.teiid.resource.adapter.google.metadata;
 
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import org.teiid.resource.adapter.google.common.Util;
 
 public class Worksheet {
+	private String id;
 	private String name;
-	private List<Column> columns = Collections.emptyList();
-	
-	public List<Column> getColumns() {
+	private HashMap<String, Column> columns = new HashMap<String, Column>();
+	private boolean headerEnabled=false;
+
+	public HashMap<String, Column> getColumns() {
 		return columns;
 	}
-	
-	public void setColumns(List<Column> columns) {
+
+	public void setColumns(HashMap<String, Column> columns) {
 		this.columns = columns;
+	}
+
+	public List<Column> getColumnsAsList() {
+		return new ArrayList<Column>(columns.values());
+	}
+
+	public void addColumn(String label, Column column) {
+		columns.put(label, column);
+	}
+
+	public String getColumnID(String columnLabel) {
+		if (columns.get(columnLabel) == null) {
+			return null;
+		} else {
+			return columns.get(columnLabel).getAlphaName();
+		}
 	}
 
 	public void setColumnCount(int columnCount) {
 		if (columnCount == 0) {
-			columns = Collections.emptyList();
+			return;
 		} else {
-			columns = new ArrayList<Column>(columnCount);
+			columns = new HashMap<String,Column>(columnCount);
 			for (int i = 1; i <= columnCount; i++) {
-				Column newCol = new  Column();
+				Column newCol = new Column();
 				newCol.setAlphaName(Util.convertColumnIDtoString(i));
-				columns.add(newCol);
+				columns.put(newCol.getAlphaName(), newCol);
 			}
 		}
 	}
@@ -65,5 +83,21 @@ public class Worksheet {
 	public int getColumnCount() {
 		return columns.size();
 	}
-	
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public boolean isHeaderEnabled() {
+		return headerEnabled;
+	}
+
+	public void setHeaderEnabled(boolean headerEnabled) {
+		this.headerEnabled = headerEnabled;
+	}
+
 }

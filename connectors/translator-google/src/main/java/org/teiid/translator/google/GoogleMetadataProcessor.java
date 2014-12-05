@@ -71,7 +71,7 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 	 * @throws TranslatorException
 	 */
 	private void addColumnsToTable(MetadataFactory mf, Table table, Worksheet worksheet) {
-		for(Column column : worksheet.getColumns()){
+		for(Column column : worksheet.getColumnsAsList()){
 			String type = null;
 			switch(column.getDataType()){
 			case DATE:
@@ -92,8 +92,8 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 			default:
 				type = TypeFacility.RUNTIME_NAMES.STRING;
 			}
-			org.teiid.metadata.Column c = mf.addColumn(column.getLabel()!=null?column.getLabel():column.getAlphaName(), type, table);
-			c.setNameInSource(column.getAlphaName());
+			org.teiid.metadata.Column c = mf.addColumn(worksheet.isHeaderEnabled()?column.getLabel():column.getAlphaName(), type, table);
+			c.setNameInSource(worksheet.isHeaderEnabled()?column.getLabel():column.getAlphaName());
 			c.setNativeType(column.getDataType().name());
 		}    
 	}

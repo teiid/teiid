@@ -31,9 +31,11 @@ import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.teiid.resource.adapter.google.common.SpreadsheetAuthException;
 
@@ -57,7 +59,8 @@ public class ClientLoginHeaderFactory implements AuthHeaderFactory {
 	}
 
 	public void login(){
-		DefaultHttpClient httpclient = new DefaultHttpClient();
+		//HttpClient httpclient = HttpClientBuilder.create().build();
+		HttpClient httpclient = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(
 				"https://www.google.com/accounts/ClientLogin"); //$NON-NLS-1$
 		List<NameValuePair> nvps = new ArrayList<NameValuePair>(); 

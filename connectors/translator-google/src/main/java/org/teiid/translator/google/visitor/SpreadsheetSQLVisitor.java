@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.google;
+package org.teiid.translator.google.visitor;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
@@ -31,15 +31,27 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
+import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
+import org.teiid.resource.adapter.google.metadata.Worksheet;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
-
+/**
+ * Translates SQL SELECT queries
+ * 
+ * @author felias
+ *
+ */
 public class SpreadsheetSQLVisitor extends SQLStringVisitor {
 
 	private String worksheetTitle;
 	private Integer limitValue = null;
 	private Integer offsetValue = null;
+    private SpreadsheetInfo info;
 
+	public SpreadsheetSQLVisitor(SpreadsheetInfo spreadsheetInfo) {
+		this.info=spreadsheetInfo;
+	}
 
 	public String getWorksheetTitle() {
 		return worksheetTitle;
@@ -50,7 +62,15 @@ public class SpreadsheetSQLVisitor extends SQLStringVisitor {
 	 */
 	@Override
 	protected String replaceElementName(String group, String element) {
-		return element;
+		Worksheet worksheetSourceName=info.getWorksheetByName(worksheetTitle);
+		if(worksheetSourceName==null){
+			throw new SpreadsheetOperationException("Worksheet "+worksheetTitle+" doesn't exist in the spreadsheet");
+		}
+		String columnId=worksheetSourceName.getColumnID(element);
+ 	    if(columnId==null){
+ 	    	throw new SpreadsheetOperationException("Column "+element +" doesn't exist in the worksheet "+worksheetTitle);
+ 	    }
+		return columnId;
 	}
 
 	public String getTranslatedSQL() {
@@ -63,11 +83,15 @@ public class SpreadsheetSQLVisitor extends SQLStringVisitor {
 
 	public void visit(Select obj) {
 		buffer.append(SELECT).append(Tokens.SPACE);
-		append(obj.getDerivedColumns());
+		
 		if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
 			NamedTable table = ((NamedTable)obj.getFrom().get(0));
-			this.worksheetTitle = table.getMetadataObject().getSourceName();
+			this.worksheetTitle = table.getName();
+			if (table.getMetadataObject().getNameInSource() != null) {
+				this.worksheetTitle = table.getMetadataObject().getNameInSource();
+			}
 		}
+		append(obj.getDerivedColumns());
 		if (obj.getWhere() != null) {
 			buffer.append(Tokens.SPACE).append(WHERE).append(Tokens.SPACE);
 			append(obj.getWhere());
