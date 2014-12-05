@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
@@ -46,6 +47,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.TempTableTestHarness;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
@@ -396,8 +399,19 @@ public class TestAuthorizationValidationVisitor {
     }
     
     @Test public void testCreateForeignTemp() throws Exception {
-        helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {"CREATE FOREIGN TEMPORARY TABLE x (\n	id string\n) ON 'bqt1'"}, RealMetadataFactory.exampleBQTVDB(), exampleAuthSvc1); //$NON-NLS-1$ //$NON-NLS-2$
+    	DataPolicyMetadata dpm = exampleAuthSvc1();
+    	dpm.setAllowCreateTemporaryTables(false);
+        helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {"x"}, RealMetadataFactory.exampleBQTVDB(), dpm); //$NON-NLS-1$ //$NON-NLS-2$
         helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), examplePolicyBQT()); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TempTableTestHarness harness = new TempTableTestHarness();
+        harness.setUp(RealMetadataFactory.exampleBQTCached(), new HardcodedDataManager());
+        harness.execute("create foreign temporary table x (id string) on bqt1", new List[] {Arrays.asList(0)});
+        helpTest("insert into x (id) values ('a')", harness.getMetadata(), new String[]{"x.id"}, RealMetadataFactory.exampleBQTVDB(), dpm);
+        //we have create on bqt1
+        helpTest("insert into x (id) values ('a')", harness.getMetadata(), new String[]{}, RealMetadataFactory.exampleBQTVDB(), examplePolicyBQT());
+        //we don't have read on bqt1
+        helpTest("select * from x", harness.getMetadata(), new String[]{"x.id"}, RealMetadataFactory.exampleBQTVDB(), examplePolicyBQT());
     }
     
     @Test public void testGrantAll() throws Exception {
