@@ -76,5 +76,9 @@ public class TempTableTestHarness {
 	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(dm, bm, cache);
 	}
+	
+	public TempMetadataAdapter getMetadata() {
+		return metadata;
+	}
 
 }
