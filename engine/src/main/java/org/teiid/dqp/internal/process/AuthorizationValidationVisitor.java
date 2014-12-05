@@ -38,6 +38,7 @@ import org.teiid.logging.AuditMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -69,9 +70,6 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(Create obj) {
     	validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.CREATE);
-    	if (obj.getTableMetadata() != null) {
-    		validateTemp(PermissionType.CREATE, obj.getOn(), true, obj, Context.CREATE);
-    	}
     }
     
     @Override
@@ -320,6 +318,18 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         Object modelId = metadata.getModelID(metadataID);
         String modelName = metadata.getFullName(modelId);
         if (!isSystemSchema(modelName)) {
+        	//foreign temp table full names are not schema qualified by default
+        	if (!metadata.isVirtualModel(modelId)) {
+        		GroupSymbol group = null;
+        		if (symbol instanceof ElementSymbol) {
+        			group = ((ElementSymbol)symbol).getGroupSymbol();
+        		} else if (symbol instanceof GroupSymbol) {
+        			group = (GroupSymbol)symbol; 
+        		}
+        		if (group != null && group.isTempGroupSymbol() && !group.isGlobalTable()) {
+            		fullName = modelName + AbstractMetadataRecord.NAME_DELIM_CHAR + modelId;
+        		}
+        	}
         	nameToSymbolMap.put(fullName, symbol);
         }
     }
