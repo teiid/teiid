@@ -1,10 +1,33 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.translator.google.visitor;
 
-import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.text.SimpleDateFormat;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.Expression;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
@@ -40,12 +63,12 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 			buffer.append(obj.toString());
 			return;
 		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE)) {
-			buffer.append(new java.text.SimpleDateFormat("yyyy-MM-dd").format(obj.getValue()));
+			buffer.append(obj.getValue().toString()); 
 			return;
 		} else {
-			buffer.append("\"");
-			buffer.append(obj.getValue().toString());
-			buffer.append("\"");
+			buffer.append("\""); //$NON-NLS-1$
+			buffer.append(StringUtil.replace(obj.getValue().toString(), "\"", "\"\"")); //$NON-NLS-1$ //$NON-NLS-2$
+			buffer.append("\""); //$NON-NLS-1$
 			return;
 		}
 	}
@@ -55,14 +78,12 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 		if (obj instanceof Literal) {
 			literal = (Literal) obj;
 		} else {
-			throw new SpreadsheetOperationException("Spreadsheet translator internal error: Expression is not allowed in the set clause");
+			throw new SpreadsheetOperationException("Spreadsheet translator internal error: Expression is not allowed in the set clause"); //$NON-NLS-1$
 		}
 		if (literal.getType().equals(DataTypeManager.DefaultDataClasses.DATE)) {
 			return new java.text.SimpleDateFormat("MM/dd/yyyy").format(literal.getValue());
 		} else if (literal.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
 			return new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(literal.getValue());
-		} else if (literal.getType().equals(DataTypeManager.DefaultDataClasses.TIME)) {
-			return new SimpleDateFormat("HH:mm:ss").format(literal.getValue());
 		} else
 			return literal.getValue().toString();
 	}

@@ -54,21 +54,19 @@ public class Worksheet {
 	public String getColumnID(String columnLabel) {
 		if (columns.get(columnLabel) == null) {
 			return null;
-		} else {
-			return columns.get(columnLabel).getAlphaName();
-		}
+		} 
+		return columns.get(columnLabel).getAlphaName();
 	}
 
 	public void setColumnCount(int columnCount) {
 		if (columnCount == 0) {
 			return;
-		} else {
-			columns = new HashMap<String,Column>(columnCount);
-			for (int i = 1; i <= columnCount; i++) {
-				Column newCol = new Column();
-				newCol.setAlphaName(Util.convertColumnIDtoString(i));
-				columns.put(newCol.getAlphaName(), newCol);
-			}
+		} 
+		columns = new HashMap<String,Column>(columnCount);
+		for (int i = 1; i <= columnCount; i++) {
+			Column newCol = new Column();
+			newCol.setAlphaName(Util.convertColumnIDtoString(i));
+			columns.put(newCol.getAlphaName(), newCol);
 		}
 	}
 

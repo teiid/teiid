@@ -35,8 +35,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
 import org.teiid.resource.adapter.google.common.SpreadsheetAuthException;
 
 
@@ -74,14 +74,13 @@ public class ClientLoginHeaderFactory implements AuthHeaderFactory {
 			httpPost.setEntity(new UrlEncodedFormEntity(nvps));
 			response = httpclient.execute(httpPost);
 		} catch (Exception ex) {
-			throw new SpreadsheetAuthException("Error when attempting Client Login", ex);
+			throw new SpreadsheetAuthException(GoogleSpreadsheetConnection.UTIL.gs("login_error"), ex); //$NON-NLS-1$
 		}
 		if (response.getStatusLine().getStatusCode() != 200) {
 			String msg = null;
-			msg = response.getStatusLine().getStatusCode() + ": "
+			msg = response.getStatusLine().getStatusCode() + ": " //$NON-NLS-1$
 					+ response.getStatusLine().getReasonPhrase();
-			throw new SpreadsheetAuthException("Error when attempting Client Login: "
-					+ msg);
+			throw new SpreadsheetAuthException(GoogleSpreadsheetConnection.UTIL.gs("login_error") + " :" + msg); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		BufferedReader br = null;
 		try {
@@ -93,11 +92,11 @@ public class ClientLoginHeaderFactory implements AuthHeaderFactory {
 			// TODO Little hackish. Some idea how to solve this? 
 			authkey = br.readLine();
 			if (authkey == null) {
-				throw new SpreadsheetAuthException("Authkey read from server is null");
+				throw new SpreadsheetAuthException(GoogleSpreadsheetConnection.UTIL.gs("missing_authkey")); //$NON-NLS-1$
 			} 
 			authkey = authkey.substring(authkey.indexOf('=')+1);
 		} catch (IOException e) {
-			throw new SpreadsheetAuthException("Error reading Client Login response", e);
+			throw new SpreadsheetAuthException(GoogleSpreadsheetConnection.UTIL.gs("authkey_read_error"), e); //$NON-NLS-1$
 		} finally{
 			if (br!= null)
 				try {

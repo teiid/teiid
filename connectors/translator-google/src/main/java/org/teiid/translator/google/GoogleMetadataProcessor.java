@@ -61,6 +61,9 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 		Table table = mf.addTable(worksheet.getName());
 		table.setNameInSource(worksheet.getName()); 
 		addColumnsToTable(mf, table, worksheet);
+		if (worksheet.isHeaderEnabled()) {
+			table.setSupportsUpdate(true);
+		}
 	}
 	
 	/**

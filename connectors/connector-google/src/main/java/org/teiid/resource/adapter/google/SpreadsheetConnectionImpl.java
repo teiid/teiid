@@ -144,7 +144,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	}	
 	
 	@Override
-	public SpreadsheetInfo getSpreadsheetInfo() {
+	public synchronized SpreadsheetInfo getSpreadsheetInfo() {
 		if (info == null) {
 			SpreadsheetMetadataExtractor metadataExtractor = new SpreadsheetMetadataExtractor();
 			metadataExtractor.setGdataAPI(gdata);

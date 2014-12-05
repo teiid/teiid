@@ -106,7 +106,7 @@ public class GDataClientLoginAPI implements GDataAPI {
 
 	private void reauthenticate() {
 		headerFactory.login();
-		service.setHeader("Authorization", headerFactory.getAuthHeader());
+		service.setHeader("Authorization", headerFactory.getAuthHeader()); //$NON-NLS-1$
 	}
 /**
  * Updates spreadsheet using the listfeed. 
@@ -120,8 +120,8 @@ public class GDataClientLoginAPI implements GDataAPI {
 	public UpdateResult listFeedUpdate(String spreadsheetKey, String worksheetID, String criteria, List<UpdateSet> updateSet) {
 		SpreadsheetQuery query = null;
 		try {
-			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full"));
-			query.setStringCustomParameter("sq", criteria);
+			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full")); //$NON-NLS-1$ //$NON-NLS-2$
+			query.setStringCustomParameter("sq", criteria); //$NON-NLS-1$
 
 		} catch (MalformedURLException e) {
 			throw new SpreadsheetOperationException("Error getting spreadsheet URL: " + e);
@@ -156,8 +156,8 @@ public class GDataClientLoginAPI implements GDataAPI {
 	public UpdateResult listFeedDelete(String spreadsheetKey, String worksheetID, String criteria) {
 		SpreadsheetQuery query = null;
 		try {
-			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full"));
-			query.setStringCustomParameter("sq", criteria);
+			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full")); //$NON-NLS-1$ //$NON-NLS-2$
+			query.setStringCustomParameter("sq", criteria); //$NON-NLS-1$
 			
 
 		} catch (MalformedURLException e) {
@@ -190,7 +190,7 @@ public class GDataClientLoginAPI implements GDataAPI {
 	public UpdateResult listFeedInsert(String spreadsheetKey, String worksheetID, Map<String, String> pair) {
 		SpreadsheetQuery query = null;
 		try {
-			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full"));
+			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		} catch (MalformedURLException e) {
 			throw new SpreadsheetOperationException("Error getting spreadsheet URL: " + e);

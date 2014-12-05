@@ -36,6 +36,7 @@ import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.metadata.Worksheet;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.google.SpreadsheetExecutionFactory;
 /**
  * Translates SQL SELECT queries
  * 
@@ -64,7 +65,7 @@ public class SpreadsheetSQLVisitor extends SQLStringVisitor {
 	protected String replaceElementName(String group, String element) {
 		Worksheet worksheetSourceName=info.getWorksheetByName(worksheetTitle);
 		if(worksheetSourceName==null){
-			throw new SpreadsheetOperationException("Worksheet "+worksheetTitle+" doesn't exist in the spreadsheet");
+			throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", worksheetTitle)); //$NON-NLS-1$
 		}
 		String columnId=worksheetSourceName.getColumnID(element);
  	    if(columnId==null){

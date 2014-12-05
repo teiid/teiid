@@ -1,3 +1,25 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.translator.google;
 
 import org.teiid.language.Command;
@@ -29,19 +51,21 @@ public abstract class AbstractSpreadsheetExecution implements UpdateExecution {
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
-		if(result.checkResult()==false){
-			context.addWarning(new SpreadsheetOperationException("Not all rows has been properly updated."+" Expected: "+result.getExpectedNumberOfRows()+"Actual: "+result.getActualNumberOfRows()));
-		}		
+		if (result.getExpectedNumberOfRows() != result.getActualNumberOfRows()) {
+			if (result.getExpectedNumberOfRows() > result.getActualNumberOfRows()) {
+				context.addWarning(new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("partial_update", result.getExpectedNumberOfRows(), result.getActualNumberOfRows()))); //$NON-NLS-1$
+			} else { 
+				throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("unexpected_updatecount", result.getExpectedNumberOfRows(), result.getActualNumberOfRows())); //$NON-NLS-1$
+			}
+		}
 		return new int[]{result.getActualNumberOfRows()};
 	}
     
@@ -49,10 +73,10 @@ public abstract class AbstractSpreadsheetExecution implements UpdateExecution {
 		SpreadsheetInfo info=connection.getSpreadsheetInfo();
 		Worksheet worksheet=info.getWorksheetByName(worksheetTitle);
 		if(worksheet==null){
-			throw new SpreadsheetOperationException("Worksheet "+worksheetTitle+" doesn't exist in the spreadsheet");
+			throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", worksheetTitle)); //$NON-NLS-1$
 		}
 		if(!worksheet.isHeaderEnabled()){
-			throw new TranslatorException("Spreadsheet's column labels must exists to support UPDATE, INSERT and DELETE statements.");
+			throw new TranslatorException(SpreadsheetExecutionFactory.UTIL.gs("headers_required")); //$NON-NLS-1$
 		}
 	}
 	

@@ -38,7 +38,7 @@ public class Util {
         String normID=id.toUpperCase().trim();
         int result=0;
         for(int counter=0, i=normID.length()-1;i>=0;i--,counter++){
-           int partial=(int)normID.charAt(i)-64;
+           int partial= normID.charAt(i)-64;
            result=(int)(result+(partial*Math.pow(26,counter)));
         }
         return result;
