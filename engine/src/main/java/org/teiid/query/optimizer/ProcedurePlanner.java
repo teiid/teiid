@@ -33,6 +33,7 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.*;
@@ -44,8 +45,10 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -242,7 +245,17 @@ public final class ProcedurePlanner implements CommandPlanner {
 				if (command.getType() == Command.TYPE_DYNAMIC){
 					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder, cmdStmt.isReturnable() );
 				}else{
-					instruction = new CreateCursorResultSetInstruction(null, commandPlan, getMode(parentProcCommand, cmdStmt, command));
+					CreateCursorResultSetInstruction cursor = new CreateCursorResultSetInstruction(null, commandPlan, getMode(parentProcCommand, cmdStmt, command));
+					if (cursor.getMode() == Mode.HOLD) {
+						for (GroupSymbol gs : GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false)) {
+							if (gs.isTempTable() && metadata.getModelID(gs.getMetadataID()) == TempMetadataAdapter.TEMP_MODEL) {
+								cursor.setUsesLocalTemp(true);
+								break;
+							}
+						}
+						
+					}
+					instruction = cursor;
 					//handle stored procedure calls
 					if (command.getType() == Command.TYPE_STORED_PROCEDURE) {
 						StoredProcedure sp = (StoredProcedure)command;

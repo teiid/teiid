@@ -94,6 +94,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		List<?> currentRow;
 		TupleBuffer resultsBuffer;
 		public boolean returning;
+		public boolean usesLocalTemp;
 	}
 	
 	static final ElementSymbol ROWCOUNT =
@@ -345,7 +346,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         		VariableContext vc = this.cursorStates.getParentContext();
         		CursorState last = (CursorState) this.cursorStates.getValue(null);
                 if(last != null){
-                	if (last.resultsBuffer == null) {
+                	if (last.resultsBuffer == null && (last.usesLocalTemp || !txnTupleSources.isEmpty())) {
                 		last.resultsBuffer = bufferMgr.createTupleBuffer(last.processor.getOutputElements(), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
                 		last.returning = true;
                 	}
@@ -557,7 +558,17 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		return this.currentVarContext;
     }
 
-    public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, CreateCursorResultSetInstruction.Mode mode)
+    /**
+     * 
+     * @param command
+     * @param rsName
+     * @param procAssignments
+     * @param mode
+     * @param usesLocalTemp - only matters in HOLD mode
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
+     */
+    public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, CreateCursorResultSetInstruction.Mode mode, boolean usesLocalTemp)
         throws TeiidComponentException, TeiidProcessingException {
     	
         CursorState state = (CursorState) this.cursorStates.getValue(rsName);
@@ -574,6 +585,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		        CommandContext subContext = getContext().clone();
 		        subContext.setVariableContext(this.currentVarContext);
 		        state = new CursorState();
+		        state.usesLocalTemp = usesLocalTemp;
 		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this);
 		        state.ts = new BatchIterator(state.processor);
 		        if (mode == Mode.HOLD && procAssignments != null && state.processor.getOutputElements().size() - procAssignments.size() > 0) {
