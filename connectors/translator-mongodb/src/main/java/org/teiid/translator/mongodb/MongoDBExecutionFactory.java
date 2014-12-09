@@ -72,6 +72,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 	private Version version = TWO_4;
 	private boolean useDisk = true;
+	private boolean supportsAggregatesCount = true;
 	
 	public MongoDBExecutionFactory() {
 		setSupportsOrderBy(true);
@@ -323,9 +324,14 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
     	return true;
     }
 
+    @TranslatorProperty(display="Supports Count(expr)", description="Supports Aggregate function count with expression", advanced=true)
+    public void setSupportsAggregatesCount(boolean value) {
+        this.supportsAggregatesCount = value;
+    }
+    
     @Override
 	public boolean supportsAggregatesCount() {
-    	return true;
+    	return supportsAggregatesCount;
     }
 
     @Override
