@@ -978,39 +978,151 @@ public class TestMongoDBQueryExecution {
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
         
+        BasicDBList eq = new BasicDBList();
+        eq.add(0, "$CategoryName");
+        eq.add(1, null);
+        BasicDBList values = new BasicDBList();
+        values.add(0, new BasicDBObject("$eq", eq)); //$NON-NLS-1$
+        values.add(1, 0);
+        values.add(2, 1);
+        BasicDBObject expr = new BasicDBObject("$sum",new BasicDBObject("$cond", values)); //$NON-NLS-1$ //$NON-NLS-2$
+        
         BasicDBObject group = new BasicDBObject();
-        group.append( "_id", null);
-        group.append( "_m0", new BasicDBObject("$sum", 1));
+        group.append( "_m0", expr);
+        group.append( "_id", null);        
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", 1);
 
         List<DBObject> pipeline = buildArray(
-                        new BasicDBObject("$match", QueryBuilder.start("CategoryName").notEquals(null).get()),
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }     
     
-    @Test(expected=TranslatorException.class)
-    public void testCountOnmultipleColumns() throws Exception {
-        String query = "SELECT count(CategoryName), count(CategoryID) FROM Categories";
+    @Test
+    public void testCountOnmultipleDifferentColumns() throws Exception {
+        String query = "SELECT count(CategoryName), avg(CategoryID) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        
+        BasicDBList eq = new BasicDBList();
+        eq.add(0, "$CategoryName");
+        eq.add(1, null);
+        BasicDBList values = new BasicDBList();
+        values.add(0, new BasicDBObject("$eq", eq)); //$NON-NLS-1$
+        values.add(1, 0);
+        values.add(2, 1);
+        BasicDBObject expr = new BasicDBObject("$sum",new BasicDBObject("$cond", values)); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        BasicDBObject group = new BasicDBObject();
+        group.append( "_m0", expr);
+        group.append( "_m1", new BasicDBObject("$avg", "$_id"));
+        group.append( "_id", null);        
+        
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", 1);
+        result.append( "_m1", 1);
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$group", group),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }  
+    
+    @Test
+    public void testMultipleAggregateWithCountOnSameColumn() throws Exception {
+        String query = "SELECT count(CategoryName), avg(CategoryName) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        
+        
+        BasicDBList eq = new BasicDBList();
+        eq.add(0, "$CategoryName");
+        eq.add(1, null);
+        BasicDBList values = new BasicDBList();
+        values.add(0, new BasicDBObject("$eq", eq)); //$NON-NLS-1$
+        values.add(1, 0);
+        values.add(2, 1);
+        BasicDBObject expr = new BasicDBObject("$sum",new BasicDBObject("$cond", values)); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        BasicDBObject group = new BasicDBObject();
+        group.append( "_m0", expr);
+        group.append( "_m1", new BasicDBObject("$avg", "$CategoryName"));
+        group.append( "_id", null);
+
+        BasicDBObject project = new BasicDBObject();
+        project.append( "_m0", 1);
+        project.append( "_m1", 1);
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$group", group),
+                        new BasicDBObject("$project", project));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+    
+    @Test
+    public void testMultipleAggregateOnSameColumn() throws Exception {
+        String query = "SELECT sum(CategoryName), avg(CategoryName) FROM Categories";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        
+        BasicDBObject group = new BasicDBObject();
+        group.append( "_id", null);
+        group.append( "_m0", new BasicDBObject("$sum", "$CategoryName"));
+        group.append( "_m1", new BasicDBObject("$avg", "$CategoryName"));
+
+        BasicDBObject project = new BasicDBObject();
+        project.append( "_m0", 1);
+        project.append( "_m1", 1);
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$group", group),
+                        new BasicDBObject("$project", project));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }  
+    
+    @Test
+    public void testMultipleAggregateOnSameColumnWithGroupBy() throws Exception {
+        String query = "SELECT sum(CategoryName), avg(CategoryName) FROM Categories Group By Picture";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
+        
+        BasicDBObject group = new BasicDBObject();
+        group.append( "_id", new BasicDBObject("_c0", "$Picture"));
+        group.append( "_m0", new BasicDBObject("$sum", "$CategoryName"));
+        group.append( "_m1", new BasicDBObject("$avg", "$CategoryName"));
+
+        BasicDBObject project = new BasicDBObject();
+        project.append( "_m0", 1);
+        project.append( "_m1", 1);
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$group", group),
+                        new BasicDBObject("$project", project));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }     
+    
+    @Test
+    public void testMultipleAggregateOnSameColumn_withCountSTAR() throws Exception {
+        String query = "SELECT count(*), avg(CategoryName) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
         
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", null);
         group.append( "_m0", new BasicDBObject("$sum", 1));
+        group.append( "_m1", new BasicDBObject("$avg", "$CategoryName"));
 
-        BasicDBObject result = new BasicDBObject();
-        result.append( "_m0", 1);
+        BasicDBObject project = new BasicDBObject();
+        project.append( "_m0", 1);
+        project.append( "_m1", 1);
 
         List<DBObject> pipeline = buildArray(
-                        new BasicDBObject("$match", QueryBuilder.start("CategoryName").notEquals(null).get()),
                         new BasicDBObject("$group", group),
-                        new BasicDBObject("$project", result));
+                        new BasicDBObject("$project", project));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }  
+    }    
     
     @Test
     public void testFunctionInWhere() throws Exception {

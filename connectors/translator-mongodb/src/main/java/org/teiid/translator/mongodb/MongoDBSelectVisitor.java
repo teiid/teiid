@@ -24,6 +24,7 @@ package org.teiid.translator.mongodb;
 import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -390,8 +391,20 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     	BasicDBObject expr = null;
 		if (obj.getName().equals(AggregateFunction.COUNT)) {
 	        // this is only true for count(*) case, so we need implicit group id clause
-		    this.group.put("_id", null); //$NON-NLS-1$
-			expr = new BasicDBObject("$sum", new Integer(1)); //$NON-NLS-1$
+	        try {
+                Object param = this.onGoingExpression.pop();
+                BasicDBList eq = new BasicDBList();
+                eq.add(0, param);
+                eq.add(1, null);
+                BasicDBList values = new BasicDBList();
+                values.add(0, new BasicDBObject("$eq", eq)); //$NON-NLS-1$
+                values.add(1, 0);
+                values.add(2, 1);
+                expr = new BasicDBObject("$sum",new BasicDBObject("$cond", values)); //$NON-NLS-1$ //$NON-NLS-2$
+            } catch (EmptyStackException e) {
+                this.group.put("_id", null); //$NON-NLS-1$
+                expr = new BasicDBObject("$sum", new Integer(1)); //$NON-NLS-1$
+            }
 		}
 		else if (obj.getName().equals(AggregateFunction.AVG)) {
 			expr = new BasicDBObject("$avg", this.onGoingExpression.pop()); //$NON-NLS-1$
@@ -589,12 +602,6 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(Select obj) {
-	    
-	    try {
-            SQLRewriterVisitor.rewrite(obj);
-        } catch (TranslatorException e) {
-            this.exceptions.add(e);
-        }
 	    
     	this.command = obj;
 
