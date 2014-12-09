@@ -84,5 +84,16 @@ public class CacheHint extends CacheDirective {
 		}
 		return b;
 	}
+	
+	public CacheHint clone() {
+		CacheHint copy = new CacheHint();
+		copy.setInvalidation(this.getInvalidation());
+		copy.setPrefersMemory(this.getPrefersMemory());
+		copy.setReadAll(this.getReadAll());
+		copy.setScope(this.getScope());
+		copy.setTtl(this.getTtl());
+		copy.setUpdatable(this.getUpdatable());
+		return copy;
+	}
 
 }

@@ -219,6 +219,11 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		AbstractMetadataRecord record = DataTierManagerImpl.getByUuid(tm.getMetadataStore(), uuid);
 		if (record != null) {
 			record.setProperty(name, value);
+			if (record instanceof Table) {
+				((Table)record).setLastModified(System.currentTimeMillis());
+			} else if (record instanceof Procedure) {
+				((Procedure)record).setLastModified(System.currentTimeMillis());
+			}
 		}
 	}
 	

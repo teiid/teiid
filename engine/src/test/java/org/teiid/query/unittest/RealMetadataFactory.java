@@ -486,8 +486,9 @@ public class RealMetadataFactory {
         createKey(KeyRecord.Type.Primary, "pk", vGroup3, vElements3.subList(0, 1));
         createKey(KeyRecord.Type.Index, "idx", vGroup3, vElements3.subList(1, 2));
 
-        QueryNode vTrans4 = new QueryNode("/*+ cache(ttl:100) */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vTrans4 = new QueryNode("/*+ cache(ttl:10000) */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup4 = createVirtualGroup("VGroup4", virtModel, vTrans4); //$NON-NLS-1$
+        vGroup4.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, "100"); //$NON-NLS-1$
         vGroup4.setMaterialized(true);
         createElements(vGroup4,
                                       new String[] { "x" }, //$NON-NLS-1$

@@ -61,6 +61,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.ReplicatedObject;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -369,8 +370,34 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			TempMetadataID id) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
 			QueryValidatorException {
+		if (id.getCacheHint() != null && !id.getTableData().updateCacheHint(((Table)viewId).getLastModified())) {
+			return;
+		}
+		//TODO: be stricter about the update strategy (needs synchronized or something better than ms resolution)
 		Command c = QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand();
 		CacheHint hint = c.getCacheHint();
+		if (hint != null) {
+			hint = hint.clone();
+		} else {
+			hint = new CacheHint();	
+		}
+		//overlay the properties
+		String ttlString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_TTL, false);
+		if (ttlString != null) {
+			hint.setTtl(Long.parseLong(ttlString));
+		}
+		String memString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, false);
+		if (memString != null) {
+			hint.setPrefersMemory(Boolean.valueOf(memString));
+		}
+		String updatableString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_UPDATABLE, false);
+		if (updatableString != null) {
+			hint.setUpdatable(Boolean.valueOf(updatableString));
+		}
+		String scope = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_SCOPE, false);
+		if (scope != null) {
+			hint.setScope(scope);
+		}
 		id.setCacheHint(hint);
 	}
 		
