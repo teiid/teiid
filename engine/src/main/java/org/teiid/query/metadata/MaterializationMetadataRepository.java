@@ -69,10 +69,8 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 					String afterScript = table.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false);
 					String stageTable = table.getProperty(MATVIEW_STAGE_TABLE, false);
 					String loadScript = table.getProperty(MATVIEW_LOAD_SCRIPT, false);
-					String exception = table.getProperty(MATVIEW_ONERROR_ACTION, false);
-					String ttl = table.getProperty(MATVIEW_TTL, false);
 					
-					if (statusTable == null || (stageTable == null && loadScript == null) || exception == null || ttl == null ) {
+					if (statusTable == null || (stageTable == null && loadScript == null)) {
 						throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31154));
 					}
 					

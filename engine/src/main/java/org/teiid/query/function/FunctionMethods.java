@@ -1488,14 +1488,12 @@ public final class FunctionMethods {
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
 	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException {
-		if (!validity) {
+		if (!validity && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
 			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
 				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
 			}
-			if (MaterializationMetadataRepository.ErrorAction.WAIT.name().equalsIgnoreCase(action)){
-				context.getWorkItem().scheduleWork(30000);
-				throw BlockedException.INSTANCE;
-			}
+			context.getWorkItem().scheduleWork(10000);
+			throw BlockedException.INSTANCE;
 		}
 		return 1;
 	}	

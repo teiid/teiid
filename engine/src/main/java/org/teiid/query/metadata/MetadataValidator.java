@@ -352,7 +352,7 @@ public class MetadataValidator {
     			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata);
     			CacheHint cacheHint = node.getCommand().getCacheHint();
 				Long ttl = -1L;
-				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint) {
+				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint && t.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false) == null) {
 					ttl = cacheHint.getTtl();
 					t.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, String.valueOf(ttl));
 				}
