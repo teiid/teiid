@@ -35,6 +35,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
@@ -42,6 +43,7 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Create.CommitAction;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.Option.MakeDep;
@@ -401,7 +403,22 @@ public class SQLStringVisitor extends LanguageVisitor {
             }
             append(Tokens.RPAREN);
         }
-        append(")"); //$NON-NLS-1$
+        append(Tokens.RPAREN);
+        CommitAction commitAction = obj.getCommitAction();
+        if (commitAction != null) {
+        	append(Tokens.SPACE);
+        	append(Reserved.ON);
+        	append(Tokens.SPACE);
+        	append(Reserved.COMMIT);
+        	append(Tokens.SPACE);
+        	switch (commitAction) {
+        	case PRESERVE_ROWS:
+        		append(NonReserved.PRESERVE);
+        		append(Tokens.SPACE);
+        		append(Reserved.ROWS);
+        		break;
+        	}
+        }
     }
 
     @Override

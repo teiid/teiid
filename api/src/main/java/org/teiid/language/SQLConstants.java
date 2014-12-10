@@ -134,6 +134,8 @@ public class SQLConstants {
 		public static final String JSONOBJECT = "JSONOBJECT"; //$NON-NLS-1$
 		
 		public static final String AUTO_INCREMENT = "AUTO_INCREMENT"; //$NON-NLS-1$
+		
+		public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

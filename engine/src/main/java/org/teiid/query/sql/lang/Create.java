@@ -41,6 +41,11 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * @since 5.5
  */
 public class Create extends Command implements TargetedCommand {
+	
+	public enum CommitAction {
+		PRESERVE_ROWS,
+	}
+	
     /** Identifies the table to be created. */
     private GroupSymbol table;
     private List<ElementSymbol> primaryKey = new ArrayList<ElementSymbol>();
@@ -48,6 +53,7 @@ public class Create extends Command implements TargetedCommand {
     private List<ElementSymbol> columnSymbols;
     private Table tableMetadata;
     private String on;
+    private CommitAction commitAction;
     
     public GroupSymbol getTable() {
         return table;
@@ -116,6 +122,7 @@ public class Create extends Command implements TargetedCommand {
         copyMetadataState(copy);
         copy.setTableMetadata(this.tableMetadata);
         copy.on = this.on;
+        copy.commitAction = this.commitAction;
         return copy;
     }
 
@@ -190,7 +197,8 @@ public class Create extends Command implements TargetedCommand {
         	}
 		}
         
-        return EquivalenceUtil.areEqual(getTable(), other.getTable()) &&
+        return this.commitAction == other.commitAction
+        	   && EquivalenceUtil.areEqual(getTable(), other.getTable()) &&
                EquivalenceUtil.areEqual(getPrimaryKey(), other.getPrimaryKey()) &&
                EquivalenceUtil.areEqual(this.on, other.on) && 
                //metadata equality methods are basically identity based, so we need a better check
@@ -215,5 +223,13 @@ public class Create extends Command implements TargetedCommand {
     		this.table = new GroupSymbol(tableMetadata.getName());
     	}
 		this.tableMetadata = tableMetadata;
+	}
+    
+    public CommitAction getCommitAction() {
+		return commitAction;
+	}
+    
+    public void setCommitAction(CommitAction commitAction) {
+		this.commitAction = commitAction;
 	}
 }

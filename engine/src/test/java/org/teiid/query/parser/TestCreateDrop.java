@@ -37,6 +37,7 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.sql.lang.Create;
+import org.teiid.query.sql.lang.Create.CommitAction;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -55,7 +56,8 @@ public class TestCreateDrop {
         column.setType(DataTypeManager.DefaultDataClasses.BYTE);
         columns.add(column);
         create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable (c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
+        create.setCommitAction(CommitAction.PRESERVE_ROWS);
+        helpTest("Create local TEMPORARY table tempTable (c1 boolean, c2 byte) on commit preserve rows", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte) ON COMMIT PRESERVE ROWS", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testCreateTempTable2() {
