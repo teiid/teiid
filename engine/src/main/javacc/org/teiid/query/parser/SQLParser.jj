@@ -2540,14 +2540,14 @@ TextTable textTable(ParseInfo info) :
 		}
 	)* 
 	[
-	  (<NO> <ROW> <DELIMITER>
+	  LOOKAHEAD(2) ((<NO> <ROW> <DELIMITER>
 	  {
 	    useRowDelimiter = false;
 	  })
 	  |
 	  (<ROW> <DELIMITER>
 	    rowDelimiter = charVal(info, " ROW DELMITER")
-	  )
+	  ))
 	]
 	[
 	  <DELIMITER>
