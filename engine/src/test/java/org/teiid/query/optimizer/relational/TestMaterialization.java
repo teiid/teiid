@@ -197,7 +197,7 @@ public class TestMaterialization {
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP4.x FROM #MAT_MATVIEW.VGROUP4"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertEquals("Expected one annotation", 2, annotations.size()); //$NON-NLS-1$
+        assertEquals("Expected one annotation", 1, annotations.size()); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
 

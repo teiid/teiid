@@ -1740,9 +1740,6 @@ public class RelationalPlanner {
         		TempMetadataID tid = context.getGlobalTableStore().getGlobalTempTableMetadataId(metadataID);
         		matTableName = tid.getID();
         		hint = tid.getCacheHint();
-        		if (hint != null) {
-					recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", virtualGroup, matTableName, tid); //$NON-NLS-1$
-				}        	
         		matMetadataId = tid;
             } else {
             	matTableName = metadata.getFullName(matMetadataId);
