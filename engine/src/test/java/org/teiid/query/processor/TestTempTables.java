@@ -586,4 +586,14 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("select x.e1 from x inner join /*+ makeind */ x1 on x.e3 = x1.e3 and x.e2 = x1.e2", new List[] {Arrays.asList("2"), Arrays.asList("1")}); //$NON-NLS-1$
 	}
 	
+	@Test public void testSubquery() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, e3 integer, primary key (e2, e3))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+		execute("insert into x (e3, e2, e1) values (4, 2, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e3, e2, e1) values (4, 3, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+
+		execute("update x set e1 = 1 where e1 in (select e1 from pm1.g1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		
+	}
+	
 }

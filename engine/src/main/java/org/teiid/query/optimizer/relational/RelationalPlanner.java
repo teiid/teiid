@@ -968,15 +968,24 @@ public class RelationalPlanner {
 		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container);
 
 		if (c == null
-				/* we cheat with the temp table capabilities a little - it actual supports any non-pushdown required function and non-correlated subquery
-				 * we do a specific validation for subqueries below, and otherwise skip the CriteriaCapabilityValidatorVisitor
-				 */
-				&& (!container.getGroup().isTempTable() || metadata.getModelID(container.getGroup().getMetadataID()) != TempMetadataAdapter.TEMP_MODEL) 
 				&& container instanceof FilteredCommand) { //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
 			//for non-temp source queries, we must pre-plan subqueries to know if they can be pushed down
-			planSubqueries(container, c, subqueries, true);
+			boolean compensate = false;
+			boolean isTemp = container.getGroup().isTempTable() && metadata.getModelID(container.getGroup().getMetadataID()) == TempMetadataAdapter.TEMP_MODEL;
+			try {
+				planSubqueries(container, c, subqueries, true);
+			} catch (QueryPlannerException e) {
+				if (!isTemp) {
+					throw e;
+				}
+				compensate = true;
+			}
+
+			if (!isTemp && !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
+				compensate = true;
+			}
 			
-			if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
+			if (compensate) {
 				//do a workaround of row-by-row processing for update/delete
 				validateRowProcessing(container);
 				
