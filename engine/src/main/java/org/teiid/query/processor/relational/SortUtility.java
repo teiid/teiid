@@ -98,13 +98,10 @@ public class SortUtility {
     private int batchSize;
 	private ListNestedSortComparator comparator;
 	private int targetRowCount;
-	private boolean shouldProject;
     private boolean doneReading;
     private int phase = INITIAL_SORT;
     private List<TupleBuffer> activeTupleBuffers = new ArrayList<TupleBuffer>();
     
-    private int processed;
-
     // Phase constants for readability
     private static final int INITIAL_SORT = 1;
     private static final int MERGE = 2;
@@ -135,19 +132,15 @@ public class SortUtility {
 				sortTypes.add(orderByItem.isAscending());
 				nullOrderings.add(orderByItem.getNullOrdering());
 			}
-            if (items.size() < schema.size()) {
-            	if (mode == Mode.DUP_REMOVE_SORT) {
-		        	List<Expression> toAdd = new ArrayList<Expression>(schema);
-		        	toAdd.removeAll(sortElements);
-		        	sortElements.addAll(toAdd);
-		        	sortTypes.addAll(Collections.nCopies(sortElements.size() - sortTypes.size(), OrderBy.ASC));
-		        	nullOrderings.addAll(Collections.nCopies(sortElements.size() - nullOrderings.size(), (NullOrdering)null));
-		        	//this path should be for join processing, which can check the isDistinct flag.
-		        	//that needs the proper index based upon the original sort columns, not based upon making the whole set distinct
-		        	distinctIndex = items.size() - 1;
-            	} else {
-            		shouldProject = true;
-            	}
+            if (items.size() < schema.size() && mode == Mode.DUP_REMOVE_SORT) {
+	        	List<Expression> toAdd = new ArrayList<Expression>(schema);
+	        	toAdd.removeAll(sortElements);
+	        	sortElements.addAll(toAdd);
+	        	sortTypes.addAll(Collections.nCopies(sortElements.size() - sortTypes.size(), OrderBy.ASC));
+	        	nullOrderings.addAll(Collections.nCopies(sortElements.size() - nullOrderings.size(), (NullOrdering)null));
+	        	//this path should be for join processing, which can check the isDistinct flag.
+	        	//that needs the proper index based upon the original sort columns, not based upon making the whole set distinct
+	        	distinctIndex = items.size() - 1;
             }
         }
         
@@ -184,7 +177,7 @@ public class SortUtility {
         this.schemaSize = bufferManager.getSchemaSize(this.schema);
         this.batchSize = bufferManager.getProcessorBatchSize(this.schema);
         this.targetRowCount = Math.max(bufferManager.getMaxProcessingSize()/this.schemaSize, 2)*this.batchSize;
-        this.comparator = new ListNestedSortComparator(cols, sortTypes);
+        this.comparator = new ListNestedSortComparator(cols, sortTypes).defaultNullOrder(bufferMgr.getOptions().getDefaultNullOrder());
         int distinctIndex = cols.length - 1;
         this.comparator.setDistinctIndex(distinctIndex);
         this.comparator.setNullOrdering(nullOrderings);
@@ -330,7 +323,6 @@ public class SortUtility {
 			}
 			TupleBufferTupleSource ts = workingBuffer.createIndexedTupleSource(source != null);
 			ts.setReverse(!stableSort && workingBuffer.getRowCount() > this.batchSize);
-			processed+=this.workingBuffer.getRowCount();
 			maxRows = Math.max(1, (totalReservedBuffers/schemaSize))*batchSize;
             if (mode == Mode.SORT) {
             	workingTuples = new ArrayList<List<?>>();

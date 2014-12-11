@@ -67,6 +67,7 @@ import org.teiid.query.processor.relational.ListNestedSortComparator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 
 
 /**
@@ -535,7 +536,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
     		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$
     	}
-    	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(elements.subList(0, keyLength)), getProcessorBatchSize(elements), keyLength, lobManager);
+    	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes).defaultNullOrder(getOptions().getDefaultNullOrder()), getProcessorBatchSize(elements.subList(0, keyLength)), getProcessorBatchSize(elements), keyLength, lobManager);
     }
 
 	private static Class<?>[] getTypeClasses(final List<? extends Expression> elements) {
@@ -1000,6 +1001,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 	
 	AtomicInteger removed = new AtomicInteger();
+
+	private Options options;
 	
 	CacheEntry remove(Long gid, Long batch, boolean prefersMemory) {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
@@ -1289,6 +1292,19 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
 	public void invalidCacheGroup(Long gid) {
 		removeCacheGroup(gid, null);
+	}
+	
+	@Override
+	public void setOptions(Options options) {
+		this.options = options;
+	}
+	
+	@Override
+	public Options getOptions() {
+		if (options == null) {
+			options = new Options();
+		}
+		return options;
 	}
 	
 }

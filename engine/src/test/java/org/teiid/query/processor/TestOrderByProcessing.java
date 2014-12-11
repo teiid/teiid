@@ -29,6 +29,8 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -338,5 +340,42 @@ public class TestOrderByProcessing {
 		manager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("b", 1), Arrays.asList("a", 0)});
 		helpProcess(plan, manager, expected);
     }
+	 
+	@Test public void testDefaultNullOrdering() throws Exception {
+		String sql = "select e1 from pm1.g1 order by e1"; //$NON-NLS-1$
+
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		CommandContext cc = createCommandContext();
+		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+		bm.setOptions(new Options().defaultNullOrder(NullOrder.FIRST));
+		cc.setBufferManager(bm);
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata,
+				new DefaultCapabilitiesFinder(), cc);
+
+		HardcodedDataManager manager = new HardcodedDataManager(metadata);
+		manager.addData("SELECT g1.e1 FROM g1",
+				new List[] { Arrays.asList("a"), Arrays.asList("b"), Arrays.asList((String)null) });
+		helpProcess(plan, cc, manager, new List[] { Arrays.asList((String)null), Arrays.asList("a"), Arrays.asList("b") });
+
+		plan = helpGetPlan(helpParse("select e1 from pm1.g1 order by e1 desc"), metadata,
+				new DefaultCapabilitiesFinder(), cc);
+
+		helpProcess(plan, cc, manager, new List[] { Arrays.asList((String)null), Arrays.asList("b"), Arrays.asList("a") });
+		
+		bm.getOptions().setDefaultNullOrder(NullOrder.LAST);
+		
+		plan = helpGetPlan(helpParse("select e1 from pm1.g1 order by e1 desc"), metadata,
+				new DefaultCapabilitiesFinder(), cc);
+
+		helpProcess(plan, cc, manager, new List[] { Arrays.asList("b"), Arrays.asList("a"), Arrays.asList((String)null) });
+		
+		bm.getOptions().setDefaultNullOrder(NullOrder.HIGH);
+		
+		plan = helpGetPlan(helpParse("select e1 from pm1.g1 order by e1"), metadata,
+				new DefaultCapabilitiesFinder(), cc);
+
+		helpProcess(plan, cc, manager, new List[] { Arrays.asList("a"), Arrays.asList("b"), Arrays.asList((String)null) });
+		
+	}
 	
 }

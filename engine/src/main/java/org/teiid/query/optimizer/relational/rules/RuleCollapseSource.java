@@ -736,14 +736,28 @@ public final class RuleCollapseSource implements OptimizerRule {
 				if (!supportsNullOrdering) {
 					item.setNullOrdering(null);
 				}
-			} else if (userOrdering && supportsNullOrdering && defaultNullOrder != NullOrder.LOW && context.getOptions().isPushdownDefaultNullOrder()) {
-				//try to match the expected default of low
+			} else if (userOrdering && supportsNullOrdering && defaultNullOrder != context.getOptions().getDefaultNullOrder() && context.getOptions().isPushdownDefaultNullOrder()) {
+				//try to match the expected default
 				if (item.isAscending()) {
-					if (defaultNullOrder != NullOrder.FIRST) {
-						item.setNullOrdering(NullOrdering.FIRST);
+					if (context.getOptions().getDefaultNullOrder() == NullOrder.FIRST || context.getOptions().getDefaultNullOrder() == NullOrder.LOW) {
+						if (defaultNullOrder != NullOrder.FIRST && defaultNullOrder != NullOrder.LOW) {
+							item.setNullOrdering(NullOrdering.FIRST);
+						}
+					} else {
+						if (defaultNullOrder != NullOrder.LAST && defaultNullOrder != NullOrder.HIGH) {
+							item.setNullOrdering(NullOrdering.LAST);
+						}
 					}
-				} else if (defaultNullOrder != NullOrder.LAST) {
-					item.setNullOrdering(NullOrdering.LAST);
+				} else {
+					if (context.getOptions().getDefaultNullOrder() == NullOrder.LAST || context.getOptions().getDefaultNullOrder() == NullOrder.LOW) {
+						if (defaultNullOrder != NullOrder.LAST && defaultNullOrder != NullOrder.LOW) {
+							item.setNullOrdering(NullOrdering.LAST);
+						}
+					} else {
+						if (defaultNullOrder != NullOrder.FIRST && defaultNullOrder != NullOrder.HIGH) {
+							item.setNullOrdering(NullOrdering.FIRST);
+						}
+					}
 				}
 			}
 		}

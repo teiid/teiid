@@ -33,6 +33,7 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 /**
  * Accumulates information about index usage.
@@ -45,7 +46,7 @@ class IndexInfo extends BaseIndexInfo<TempTable> {
 		super(table, projectedCols, condition, orderBy, primary);
 	}
 
-	TupleBrowser createTupleBrowser() throws TeiidComponentException {
+	TupleBrowser createTupleBrowser(NullOrder nullOrder) throws TeiidComponentException {
 		boolean direction = OrderBy.ASC;
 		if (ordering != null) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Using index for ordering"); //$NON-NLS-1$
@@ -58,7 +59,7 @@ class IndexInfo extends BaseIndexInfo<TempTable> {
 		if (!valueSet.isEmpty()) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
 			if (ordering != null) {
-				sortValueSet(direction);
+				sortValueSet(direction, nullOrder);
 			}
 			CollectionTupleSource cts = new CollectionTupleSource(valueSet.iterator());
 			return new TupleBrowser(this.table.getTree(), cts, direction);

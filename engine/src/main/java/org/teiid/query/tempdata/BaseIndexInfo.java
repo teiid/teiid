@@ -46,6 +46,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 /**
  * Accumulates information about index usage.
@@ -345,13 +346,13 @@ public class BaseIndexInfo<T extends SearchableTable> {
 		return valueSet;
 	}
 	
-	public void sortValueSet(boolean direction) {
+	public void sortValueSet(boolean direction, NullOrder nullOrder) {
 		int size = getValueSet().get(0).size();
 		int[] sortOn = new int[size];
 		for (int i = 0; i <sortOn.length; i++) {
 			sortOn[i] = i;
 		}
-		Collections.sort(getValueSet(), new ListNestedSortComparator(sortOn, direction));
+		Collections.sort(getValueSet(), new ListNestedSortComparator(sortOn, direction).defaultNullOrder(nullOrder));
 	}
 	
 	public Criteria getCoveredCriteria() {

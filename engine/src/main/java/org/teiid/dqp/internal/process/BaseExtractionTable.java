@@ -129,7 +129,7 @@ abstract class RecordExtractionTable<T extends AbstractMetadataRecord> extends B
 	@Override
 	public TupleSource processQuery(Query query, VDBMetaData vdb,
 			TransformationMetadata metadata, CommandContext cc) {
-		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria());
+		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
 		final SimpleIterator<T> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata);
 		return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), iter, cc, vdb, metadata, this);
 	}
@@ -147,7 +147,7 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 	@Override
 	public TupleSource processQuery(Query query, VDBMetaData vdb,
 			final TransformationMetadata metadata, CommandContext cc) {
-		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria());
+		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
 		final SimpleIterator<P> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata);
 		while (ii.next != null) {
 			ii = ii.next;

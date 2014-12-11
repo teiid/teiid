@@ -47,6 +47,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.tempdata.BaseIndexInfo;
 import org.teiid.query.tempdata.SearchableTable;
+import org.teiid.query.util.CommandContext;
 
 abstract class RecordTable<T extends AbstractMetadataRecord> implements SearchableTable {
 	
@@ -225,10 +226,10 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		return (T) val;
 	}
 
-	public BaseIndexInfo<RecordTable<?>> planQuery(Query query, Criteria condition) {
+	public BaseIndexInfo<RecordTable<?>> planQuery(Query query, Criteria condition, CommandContext context) {
 		BaseIndexInfo<RecordTable<?>> info = new BaseIndexInfo<RecordTable<?>>(this, Collections.EMPTY_LIST, condition, null, false);
 		if (!info.getValueSet().isEmpty()) {
-			info.sortValueSet(OrderBy.ASC);
+			info.sortValueSet(OrderBy.ASC, context.getBufferManager().getOptions().getDefaultNullOrder());
 		}
 		return info;
 	}

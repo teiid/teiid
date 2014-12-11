@@ -24,6 +24,8 @@ package org.teiid.query.util;
 
 import java.util.Properties;
 
+import org.teiid.translator.ExecutionFactory.NullOrder;
+
 /**
  * A holder for options
  */
@@ -35,6 +37,7 @@ public class Options {
 	public static final String JOIN_PREFETCH_BATCHES = "org.teiid.joinPrefetchBatches"; //$NON-NLS-1$
 	public static final String SANITIZE_MESSAGES = "org.teiid.sanitizeMessages"; //$NON-NLS-1$
 	public static final String REQUIRE_COLLATION = "org.teiid.requireTeiidCollation"; //$NON-NLS-1$
+	public static final String DEFAULT_NULL_ORDER = "org.teiid.defaultNullOrder"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault;
@@ -44,6 +47,7 @@ public class Options {
 	private boolean sanitizeMessages;
 	private float dependentJoinPushdownThreshold = 0;
 	private boolean requireTeiidCollation;
+	private NullOrder defaultNullOrder = NullOrder.LOW;
 	
 	public Properties getProperties() {
 		return properties;
@@ -143,6 +147,19 @@ public class Options {
 	
 	public Options requireTeiidCollation(boolean b) {
 		this.requireTeiidCollation = b;
+		return this;
+	}
+	
+	public NullOrder getDefaultNullOrder() {
+		return defaultNullOrder;
+	}
+	
+	public void setDefaultNullOrder(NullOrder defaultNullOrder) {
+		this.defaultNullOrder = defaultNullOrder;
+	}
+	
+	public Options defaultNullOrder(NullOrder b) {
+		this.defaultNullOrder = b;
 		return this;
 	}
 

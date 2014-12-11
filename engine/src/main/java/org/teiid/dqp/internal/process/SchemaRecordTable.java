@@ -43,6 +43,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.tempdata.BaseIndexInfo;
+import org.teiid.query.util.CommandContext;
 
 class SchemaRecordTable extends RecordTable<Schema> {
 	
@@ -91,9 +92,9 @@ abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends 
 	
 	@Override
 	public BaseIndexInfo<RecordTable<?>> planQuery(Query query,
-			Criteria condition) {
-		BaseIndexInfo<RecordTable<?>> ii = schemaTable.planQuery(query, query.getCriteria());
-		ii.next = super.planQuery(query, ii.getNonCoveredCriteria());
+			Criteria condition, CommandContext context) {
+		BaseIndexInfo<RecordTable<?>> ii = schemaTable.planQuery(query, query.getCriteria(), context);
+		ii.next = super.planQuery(query, ii.getNonCoveredCriteria(), context);
 		return ii;
 	}
 	
