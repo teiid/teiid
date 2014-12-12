@@ -2059,7 +2059,12 @@ public class QueryRewriter {
 	private Constant evaluate(Expression expression, boolean isBindEligible)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException {
-		Object value = evaluator.evaluate(expression, Collections.emptyList());
+		Object value = null;
+		if (expression instanceof Criteria) {
+			value = evaluator.evaluateTVL((Criteria)expression, Collections.emptyList());
+		} else {
+			value = evaluator.evaluate(expression, Collections.emptyList());
+		}
         if (value instanceof Constant) {
         	return (Constant)value; //multi valued substitution
         }

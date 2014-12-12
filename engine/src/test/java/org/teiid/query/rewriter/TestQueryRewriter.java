@@ -1671,5 +1671,11 @@ public class TestQueryRewriter {
 		
     	helpTestRewriteCommand("merge into x (y) values (1)", "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X) AS X1\nBEGIN\nIF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\nBEGIN\nEND\nELSE\nBEGIN\nINSERT INTO x (y) VALUES (X1.y);\nEND\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND", metadata);
     }
+    
+	@Test public void testUnknownRewrite() throws Exception {
+		String sql = "SELECT 1 = null"; //$NON-NLS-1$
+        
+		helpTestRewriteCommand(sql, "SELECT UNKNOWN");
+    }
 
 }
