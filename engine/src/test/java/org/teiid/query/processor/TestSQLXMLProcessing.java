@@ -268,6 +268,15 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTableNull() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing convert(null, xml) columns x string path '@x', val string path '/.') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test(expected=TeiidProcessingException.class) public void testXmlTableSequence() throws Exception {
         String sql = "select * from xmltable('/a' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path 'b') as x"; //$NON-NLS-1$
         
@@ -463,6 +472,26 @@ public class TestSQLXMLProcessing {
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("1 2 3 4 5"),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlExists() throws Exception {
+        String sql = "select xmlexists('for $i in (1 to 1) return $i'), xmlexists('for $i in (1 to 0) return $i')"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(true, false),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlQueryNull() throws Exception {
+        String sql = "select xmlquery('/a' passing cast(null as xml))"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Collections.singletonList(null),
         };    
     
         process(sql, expected);
@@ -769,5 +798,43 @@ public class TestSQLXMLProcessing {
         
         process(sql, null);
 	}
+	
+	@Test public void testXmlText() throws Exception {
+		String sql = "SELECT xmlserialize(xmltext('foo&bar') as string)"; //$NON-NLS-1$
+        
+		List<?>[] expected = new List<?>[] {
+        		Arrays.asList("foo&amp;bar"),
+        }; 
+		
+        process(sql, expected);
+	}
+	
+	@Test(expected=TeiidProcessingException.class) public void testInvalidXmlComment() throws Exception {
+		String sql = "SELECT xmlcomment('--')"; //$NON-NLS-1$
+        
+        process(sql, null);
+	}
+	
+    @Test public void testXmlCast() throws Exception {
+    	String sql = "select xmlcast(xmlquery('/a/b' passing convert('<a><b>1</b></a>', xml)) as integer)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Collections.singletonList(1),
+        };    
+        
+        assertEquals("SELECT XMLCAST(XMLQUERY('/a/b' PASSING convert('<a><b>1</b></a>', xml)) AS integer)", TestProcessor.helpParse(sql).toString());
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlCast1() throws Exception {
+    	String sql = "select xmlcast(cast('2000-01-01 00:00:00' as timestamp) as xml)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Collections.singletonList("2000-01-01T06:00:00Z"),
+        };    
+        
+        process(sql, expected);
+    }
     
 }

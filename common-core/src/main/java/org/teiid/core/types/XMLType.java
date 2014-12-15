@@ -60,7 +60,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	}
 	
 	private static final long serialVersionUID = -7922647237095135723L;
-	static final boolean SUPPORT_DTD = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.supportDTD", false);
+	static final boolean SUPPORT_DTD = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.supportDTD", false); //$NON-NLS-1$
 	
 	private static ThreadLocal<XMLInputFactory> threadLocalFactory = new ThreadLocal<XMLInputFactory>() {
 		protected XMLInputFactory initialValue() {
@@ -80,7 +80,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 				@Override
 				public Object resolveEntity(String arg0, String arg1, String arg2,
 						String arg3) throws XMLStreamException {
-					throw new XMLStreamException("Reading external entities is disabled");
+					throw new XMLStreamException("Reading external entities is disabled"); //$NON-NLS-1$
 				}
 			});
 		}
