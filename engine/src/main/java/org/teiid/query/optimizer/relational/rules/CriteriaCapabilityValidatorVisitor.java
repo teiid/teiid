@@ -134,6 +134,15 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
     
     @Override
+    public void visit(XMLExists obj) {
+    	markInvalid(obj, "Pushdown of XMLExists not allowed"); //$NON-NLS-1$
+    }
+    
+    public void visit(XMLCast xmlCast) {
+    	markInvalid(xmlCast, "Pushdown of XMLCast not allowed"); //$NON-NLS-1$
+    }
+    
+    @Override
     public void visit(QueryString obj) {
     	markInvalid(obj, "Pushdown of QueryString not allowed"); //$NON-NLS-1$
     }

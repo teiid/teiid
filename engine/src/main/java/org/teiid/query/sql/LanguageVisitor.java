@@ -151,4 +151,8 @@ public abstract class LanguageVisitor {
 	public void visit(ReturnStatement obj) {}
 	
 	public void visit(JSONObject obj) {}
+
+	public void visit(XMLExists xmlExists) {}
+
+	public void visit(XMLCast xmlCast) {}
 }

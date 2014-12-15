@@ -2658,6 +2658,50 @@ name=xml query
 description=Executes an XQuery to return an XML result.
 example={code:sql}XMLQUERY('<a>...</a>' PASSING doc){code}
 */
+Expression xmlExists(ParseInfo info) :
+{
+    String xquery = null;
+    XMLNamespaces xmlNamespaces = null;
+    DerivedColumn passing = null;
+    ArrayList<DerivedColumn> passingValues = new ArrayList<DerivedColumn>();
+    Boolean content = null;
+    Boolean empty = null;
+}
+{
+    <XMLEXISTS> <LPAREN> 
+    [ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
+    xquery = stringVal()
+    [ 
+      <PASSING>
+      passing = derivedColumn(info)
+      {
+        passingValues.add(passing);
+        passing.setPropagateName(false);
+      }
+      (<COMMA>
+        passing = derivedColumn(info)
+        {
+          passingValues.add(passing);
+          passing.setPropagateName(false);
+        }
+      )*
+    ]
+    <RPAREN>
+    {
+        XMLQuery result = new XMLQuery();
+        result.setXquery(xquery);
+        result.setNamespaces(xmlNamespaces);
+        result.setPassing(passingValues);
+        result.setEmptyOnEmpty(true);
+        return new XMLExists(result);
+    }
+}
+
+/*
+name=xml query
+description=Executes an XQuery to return an XML result.
+example={code:sql}XMLQUERY('<a>...</a>' PASSING doc){code}
+*/
 XMLQuery xmlQuery(ParseInfo info) :
 {
 	String xquery = null;
@@ -3098,8 +3142,8 @@ Expression booleanPrimary(ParseInfo info) :
 			ex=compareCrit(info, ex)
 	     )]
 	    )
-	    |
-		ex=existsCriteria(info)
+	    | ex=existsCriteria(info)
+	    | ex=xmlExists(info)
     )
 	{
 		return ex;
@@ -3871,6 +3915,7 @@ Expression unescapedFunction(ParseInfo info) :
 {
     Expression expression = null;
     Expression condition = null;
+    ParsedDataType type = null;
     
 }
 {
@@ -3891,6 +3936,15 @@ Expression unescapedFunction(ParseInfo info) :
         }
         return expression;
     }
+    |
+	(			
+		<XMLCAST>
+		<LPAREN>
+		expression = expression(info)
+		<AS>
+		type = parseDataType()
+		<RPAREN>				
+    ) { return new XMLCast(expression, DataTypeManager.getDataTypeClass(type.type)); }
 }
 
 /*
@@ -4246,7 +4300,7 @@ Expression function(ParseInfo info) :
 		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR> | funcToken = <USER> 
 		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
 		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLCONCAT>
-		                    | funcToken = <XMLCOMMENT>)
+		                    | funcToken = <XMLCOMMENT> | funcToken = <XMLTEXT>)
         <LPAREN>
 		[args = expressionList(info)]
 		<RPAREN>

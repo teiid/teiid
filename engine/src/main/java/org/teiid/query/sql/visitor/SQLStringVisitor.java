@@ -1445,7 +1445,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             // Hide this function, which is implicit
             visitNode(args[0]);
 
-        } else if (name.equalsIgnoreCase(CONVERT) || name.equalsIgnoreCase(CAST)) {
+        } else if (name.equalsIgnoreCase(CONVERT) || name.equalsIgnoreCase(CAST) || name.equalsIgnoreCase(XMLCAST)) {
             append(name);
             append("("); //$NON-NLS-1$
 
@@ -2205,6 +2205,36 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
             append(NonReserved.EMPTY);
         }
+        append(")");//$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(XMLExists exists) {
+    	append("XMLEXISTS("); //$NON-NLS-1$
+    	XMLQuery obj = exists.getXmlQuery();
+        if (obj.getNamespaces() != null) {
+            visitNode(obj.getNamespaces());
+            append(","); //$NON-NLS-1$
+            append(SPACE);
+        }
+        visitNode(new Constant(obj.getXquery()));
+        if (!obj.getPassing().isEmpty()) {
+            append(SPACE);
+            append(NonReserved.PASSING);
+            append(SPACE);
+            registerNodes(obj.getPassing(), 0);
+        }
+        append(")");//$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(XMLCast exists) {
+    	append("XMLCAST("); //$NON-NLS-1$
+    	append(exists.getExpression());
+    	append(Tokens.SPACE);
+    	append(AS);
+    	append(Tokens.SPACE);
+    	append(DataTypeManager.getDataTypeName(exists.getType()));
         append(")");//$NON-NLS-1$
     }
 

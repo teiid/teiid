@@ -201,6 +201,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addFunctions(JSONFunctionMethods.class);
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
+        addFunctions(XMLSystemFunctions.class);
     }
     
     private void addFunctions(Class<?> clazz) {

@@ -390,6 +390,11 @@ public class ResolverVisitor extends LanguageVisitor {
     }
     
     @Override
+    public void visit(XMLExists obj) {
+    	visit(obj.getXmlQuery());
+    }
+    
+    @Override
     public void visit(QueryString obj) {
     	try {
 			obj.setPath(ResolverUtil.convertExpression(obj.getPath(), DataTypeManager.DefaultDataTypes.STRING, metadata));

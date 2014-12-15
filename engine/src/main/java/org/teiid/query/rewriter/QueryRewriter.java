@@ -2041,6 +2041,15 @@ public class QueryRewriter {
         			}
         		}
         	}
+        } else if (expression instanceof XMLCast) {
+        	XMLCast cast = (XMLCast)expression;
+        	if (cast.getType() == DefaultDataClasses.XML) {
+        		XMLQuery xmlQuery = new XMLQuery();
+        		xmlQuery.setXquery("$i"); //$NON-NLS-1$
+        		xmlQuery.setPassing(Arrays.asList(new DerivedColumn("i", cast.getExpression()))); //$NON-NLS-1$
+        		xmlQuery.compileXqueryExpression();
+        		return xmlQuery;
+        	}
         } else {
         	rewriteExpressions(expression);
         } 

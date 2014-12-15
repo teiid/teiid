@@ -1337,6 +1337,18 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(XMLQuery obj) {
     	validatePassing(obj, obj.getXQueryExpression(), obj.getPassing());
     }
+    
+    @Override
+    public void visit(XMLExists obj) {
+    	validatePassing(obj, obj.getXmlQuery().getXQueryExpression(), obj.getXmlQuery().getPassing());
+    }
+    
+    @Override
+    public void visit(XMLCast obj) {
+    	if (obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.XML && obj.getType() != DataTypeManager.DefaultDataClasses.XML) {
+    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xmlcast_types", obj), obj); //$NON-NLS-1$
+    	}
+    }
 
 	private void validatePassing(LanguageObject obj, SaxonXQueryExpression xqe, List<DerivedColumn> passing) {
 		boolean context = false;

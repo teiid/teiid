@@ -530,6 +530,21 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     
     @Override
+    public void visit(XMLExists obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getXmlQuery().getNamespaces());
+    	visitNodes(obj.getXmlQuery().getPassing());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(XMLCast obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getExpression());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
     public void visit(DerivedColumn obj) {
     	preVisitVisitor(obj);
     	visitNode(obj.getExpression());

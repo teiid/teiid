@@ -41,10 +41,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
+import net.sf.saxon.Configuration;
+import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.ValidationException;
+import net.sf.saxon.value.StringValue;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -69,6 +74,7 @@ import org.teiid.query.function.JSONFunctionMethods.JSONBuilder;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.relational.XMLTableNode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.proc.ExceptionExpression;
@@ -92,14 +98,21 @@ public class Evaluator {
 		XmlConcat concat; //just used to get a writer
 		Type type;
 		private javax.xml.transform.Result result;
+		boolean hasItem;
 		
-		private XMLQueryRowProcessor() throws TeiidProcessingException {
-			concat = new XmlConcat(context.getBufferManager());
-			result = new StreamResult(concat.getWriter());
+		private XMLQueryRowProcessor(boolean exists) throws TeiidProcessingException {
+			if (!exists) {
+				concat = new XmlConcat(context.getBufferManager());
+				result = new StreamResult(concat.getWriter());
+			}
 		}
 
 		@Override
 		public void processRow(NodeInfo row) {
+			if (concat == null) {
+				hasItem = true;
+				return;
+			}
 			if (type == null) {
 				type = SaxonXQueryExpression.getType(row);
 			} else {
@@ -233,6 +246,8 @@ public class Evaluator {
             return Boolean.valueOf(evaluate((ExistsCriteria)criteria, tuple));
         } else if (criteria instanceof ExpressionCriteria) {
         	return (Boolean)evaluate(((ExpressionCriteria)criteria).getExpression(), tuple);
+        } else if (criteria instanceof XMLExists) {
+        	return (Boolean) evaluateXMLQuery(tuple, ((XMLExists)criteria).getXmlQuery(), true);
 		} else {
              throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30311, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30311, criteria));
 		}
@@ -677,7 +692,7 @@ public class Evaluator {
 	   } else if (expression instanceof XMLSerialize){
 		   return evaluateXMLSerialize(tuple, (XMLSerialize)expression);
 	   } else if (expression instanceof XMLQuery) {
-		   return evaluateXMLQuery(tuple, (XMLQuery)expression);
+		   return evaluateXMLQuery(tuple, (XMLQuery)expression, false);
 	   } else if (expression instanceof QueryString) {
 		   return evaluateQueryString(tuple, (QueryString)expression);
 	   } else if (expression instanceof XMLParse){
@@ -696,9 +711,62 @@ public class Evaluator {
 		   return new ArrayImpl(result);
 	   } else if (expression instanceof ExceptionExpression) {
 		   return evaluate(tuple, (ExceptionExpression)expression);
+	   } else if (expression instanceof XMLCast) {
+		   return evaluate(tuple, (XMLCast)expression);
 	   } else {
 	        throw new TeiidComponentException(QueryPlugin.Event.TEIID30329, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30329, expression.getClass().getName()));
 	   }
+	}
+
+	private Object evaluate(List<?> tuple, XMLCast expression) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+		Object val = internalEvaluate(expression.getExpression(), tuple);
+		if (val == null) {
+			return new Constant(null, expression.getType());
+		}
+		Configuration config = new Configuration();
+		XMLType value = (XMLType)val;
+		Type t = value.getType();
+		try {
+			Item i = null;
+			switch (t) {
+				case CONTENT: 
+					//content could map to an array value, but we aren't handling that case here yet - only in xmltable
+				case COMMENT:
+				case PI:
+					throw new FunctionExecutionException();
+				case TEXT:
+					i = new StringValue(value.getString());
+					break;
+				case UNKNOWN:
+				case DOCUMENT:
+				case ELEMENT:
+					StreamSource ss = value.getSource(StreamSource.class);
+					try {
+						i = config.buildDocument(ss);
+					} finally {
+						if (ss.getInputStream() != null) {
+							ss.getInputStream().close();
+						}
+						if (ss.getReader() != null) {
+							ss.getReader().close();
+						}
+					}
+					break;
+				default:
+					throw new AssertionError("Unknown xml value type " + t); //$NON-NLS-1$
+			}
+			return XMLTableNode.getValue(expression.getType(), i, config, context);
+		} catch (IOException e) {
+			throw new FunctionExecutionException(e);
+		} catch (ValidationException e) {
+			throw new FunctionExecutionException(e);
+		} catch (TransformationException e) {
+			throw new FunctionExecutionException(e);
+		} catch (XPathException e) {
+			throw new FunctionExecutionException(e);
+		} catch (SQLException e) {
+			throw new FunctionExecutionException(e);
+		}
 	}
 
 	private Object evaluate(List<?> tuple, ExceptionExpression ee)
@@ -824,7 +892,17 @@ public class Evaluator {
 		return result.toString();
 	}
 
-	private Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery)
+	/**
+	 * 
+	 * @param tuple
+	 * @param xmlQuery
+	 * @param exists - check only for the existence of a non-empty result
+	 * @return Boolean if exists is true, otherwise an XMLType value
+	 * @throws BlockedException
+	 * @throws TeiidComponentException
+	 * @throws FunctionExecutionException
+	 */
+	private Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery, boolean exists)
 			throws BlockedException, TeiidComponentException,
 			FunctionExecutionException {
 		boolean emptyOnEmpty = xmlQuery.getEmptyOnEmpty() == null || xmlQuery.getEmptyOnEmpty();
@@ -832,10 +910,19 @@ public class Evaluator {
 		try {
 			XMLQueryRowProcessor rp = null;
 			if (xmlQuery.getXQueryExpression().isStreaming()) {
-				rp = new XMLQueryRowProcessor();
+				rp = new XMLQueryRowProcessor(exists);
 			}
 			try {
 				result = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple, rp);
+				if (result == null) {
+					return null;
+				}
+				if (exists) {
+					if (result.iter.next() == null) {
+						return false;
+					}
+					return true;
+				}
 			} catch (TeiidRuntimeException e) {
 				if (e.getCause() instanceof XPathException) {
 					throw (XPathException)e.getCause();
@@ -843,6 +930,9 @@ public class Evaluator {
 				throw e;
 			}
 			if (rp != null) {
+				if (exists) {
+					return rp.hasItem;
+				}
 				XMLType.Type type = rp.type;
 				if (type == null) {
 					if (!emptyOnEmpty) {
@@ -1038,28 +1128,32 @@ public class Evaluator {
 	
 	private Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple, RowProcessor processor) 
 	throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		HashMap<String, Object> parameters = new HashMap<String, Object>();
-		Object contextItem = evaluateParameters(cols, tuple, parameters);
+		Map<String, Object> parameters = new HashMap<String, Object>();
+		evaluateParameters(cols, tuple, parameters);
+		Object contextItem = null;
+		if (parameters.containsKey(null)) {
+			contextItem = parameters.remove(null);
+			if (contextItem == null) {
+				return null;
+			}
+		}
 		return XQueryEvaluator.evaluateXQuery(xquery, contextItem, parameters, processor, context);
 	}
 
 	/**
 	 * Evaluate the parameters and return the context item if it exists
 	 */
-	public Object evaluateParameters(List<DerivedColumn> cols, List<?> tuple,
-			Map<String, Object> parameters)
+	public void evaluateParameters(List<DerivedColumn> cols, List<?> tuple, Map<String, Object> parameters)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException {
-		Object contextItem = null;
 		for (DerivedColumn passing : cols) {
 			Object value = evaluateParameter(tuple, passing);
 			if (passing.getAlias() == null) {
-				contextItem = value;
+				parameters.put(null, value);
 			} else {
 				parameters.put(passing.getAlias(), value);
 			}
 		}
-		return contextItem;
 	}
 
 	private Object evaluateParameter(List<?> tuple, DerivedColumn passing)

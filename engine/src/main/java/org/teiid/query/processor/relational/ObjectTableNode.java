@@ -164,8 +164,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 		}
 		setReferenceValues(this.table);
 		Evaluator eval = getEvaluator(Collections.emptyMap());
-		Object context = eval.evaluateParameters(this.table.getPassing(), null, scriptContext.getBindings(ScriptContext.ENGINE_SCOPE));
-		assert context == null;
+		eval.evaluateParameters(this.table.getPassing(), null, scriptContext.getBindings(ScriptContext.ENGINE_SCOPE));
 
 		Object value = evalScript(this.table.getCompiledScript(), this.table.getRowScript());
 		if (value instanceof Iterable<?>) {

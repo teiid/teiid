@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import net.sf.saxon.Configuration;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
@@ -41,6 +42,7 @@ import net.sf.saxon.om.SequenceTool;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ConversionResult;
 import net.sf.saxon.type.Converter;
@@ -71,6 +73,7 @@ import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
@@ -118,6 +121,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	private boolean usingOutput;
 	
 	private int rowLimit = -1;
+	
+	private boolean streaming;
 	
 	public XMLTableNode(int nodeID) {
 		super(nodeID);
@@ -178,6 +183,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				rowLimit = parent.getLimit() + parent.getOffset();
 			}
 		}
+		streaming = this.table.getXQueryExpression().isStreaming();
 	}
 
 	@Override
@@ -186,7 +192,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		
 		evaluate(false);
 		
-		if (this.table.getXQueryExpression().isStreaming()) {
+		if (streaming) {
 			while (state == State.BUILDING) {
 				try {
 					this.wait();
@@ -234,7 +240,20 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		setReferenceValues(this.table);
 		final HashMap<String, Object> parameters = new HashMap<String, Object>();
 		Evaluator eval = getEvaluator(Collections.emptyMap());
-		final Object contextItem = eval.evaluateParameters(this.table.getPassing(), null, parameters);
+		eval.evaluateParameters(this.table.getPassing(), null, parameters);
+		final Object contextItem;
+		if (parameters.containsKey(null)) {
+			contextItem = parameters.remove(null);
+			//null context item mean no rows
+			if (contextItem == null) {
+				result = new Result();
+				result.iter = EmptyIterator.emptyIterator();
+				streaming = false;
+				return;
+			}
+		} else {
+			contextItem = null;
+		}
 
 		if (this.table.getXQueryExpression().isStreaming()) {
 			if (this.buffer == null) {
@@ -308,10 +327,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 					if (next != null) {
 						if (proColumn.getSymbol().getType().isArray()) {
 							ArrayList<Object> vals = new ArrayList<Object>();
-							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem));
-							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next));
+							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem, this.table.getXQueryExpression().getConfig(), getContext()));
+							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.table.getXQueryExpression().getConfig(), getContext()));
 							while ((next = pathIter.next()) != null) {
-								vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next));
+								vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.table.getXQueryExpression().getConfig(), getContext()));
 							}
 							Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(proColumn.getSymbol().getType().getComponentType(), vals.size())));
 							tuple.add(value);
@@ -319,7 +338,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						}
 						throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
 					}
-					Object value = getValue(proColumn.getSymbol().getType(), colItem);
+					Object value = getValue(proColumn.getSymbol().getType(), colItem, this.table.getXQueryExpression().getConfig(), getContext());
 					tuple.add(value);
 				} catch (XPathException e) {
 					throw new TeiidProcessingException(QueryPlugin.Event.TEIID30172, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30172, proColumn.getName()));
@@ -330,12 +349,12 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		return tuple;
 	}
 
-	private Object getValue(Class<?> type,
-			Item colItem) throws XPathException,
+	public static Object getValue(Class<?> type,
+			Item colItem, Configuration config, CommandContext context) throws XPathException,
 			ValidationException, TransformationException {
 		Object value = colItem;
 		if (value instanceof AtomicValue) {
-			value = getValue((AtomicValue)colItem);
+			value = getValue((AtomicValue)colItem, context);
 		} else if (value instanceof Item) {
 			Item i = (Item)value;
 			if (XMLSystemFunctions.isNull(i)) {
@@ -344,9 +363,9 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 			BuiltInAtomicType bat = typeMapping.get(type);
 			if (bat != null) {
 				AtomicValue av = new StringValue(i.getStringValueCS());
-				ConversionResult cr = Converter.convert(av, bat, this.table.getXQueryExpression().getConfig().getConversionRules());
+				ConversionResult cr = Converter.convert(av, bat, config.getConversionRules());
 				value = cr.asAtomic();
-				value = getValue((AtomicValue)value);
+				value = getValue((AtomicValue)value, context);
 				if (value instanceof Item) {
 					value = ((Item)value).getStringValue();
 				}
@@ -357,11 +376,11 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		return FunctionDescriptor.importValue(value, type);
 	}
 
-	private Object getValue(AtomicValue value) throws XPathException {
+	static private Object getValue(AtomicValue value, CommandContext context) throws XPathException {
 		if (value instanceof CalendarValue) {
 			CalendarValue cv = (CalendarValue)value;
 			if (!cv.hasTimezone()) {
-				TimeZone tz = getContext().getServerTimeZone();
+				TimeZone tz = context.getServerTimeZone();
 				int tzMin = tz.getRawOffset()/60000;
 				if (tz.getDSTSavings() > 0) {
 					tzMin = tz.getOffset(cv.getCalendar().getTimeInMillis())/60000;
