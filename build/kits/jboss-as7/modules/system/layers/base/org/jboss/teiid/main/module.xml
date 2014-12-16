@@ -50,7 +50,10 @@
         <module name="org.jboss.ironjacamar.impl"/>
         <module name="org.jgroups"/>
         <module name="nu.xom" />
-        <module name="org.jaxen" />        
+        <module name="org.jaxen" />
+        <module name="org.apache.cxf"/> <!-- for OAuth -->
+        <module name="org.apache.cxf.impl"/> <!-- for OAuth -->
+        <module name="org.apache.cxf.impl.frontend-jaxrs"/>  <!-- for OAuth -->              
     </dependencies>
 
 </module>

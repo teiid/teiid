@@ -62,6 +62,7 @@ import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.ietf.jgss.GSSCredential;
+import org.teiid.OAuthCredential;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Base64;
 import org.teiid.logging.LogConstants;
@@ -115,7 +116,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 	private static final class HttpDispatch implements Dispatch<DataSource> {
 
-		private HashMap<String, Object> requestContext = new HashMap<String, Object>();
+		private static final String AUTHORIZATION = "Authorization"; //$NON-NLS-1$
+        private HashMap<String, Object> requestContext = new HashMap<String, Object>();
 		private HashMap<String, Object> responseContext = new HashMap<String, Object>();
 		private WebClient client;
 		private String endpoint;
@@ -134,7 +136,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		public DataSource invoke(DataSource msg) {
 			try {
 				final URL url = new URL(this.endpoint);
-
+				final String httpMethod = (String)this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD);
+				
 				Map<String, List<String>> header = (Map<String, List<String>>)this.requestContext.get(MessageContext.HTTP_REQUEST_HEADERS);
 				for (Map.Entry<String, List<String>> entry : header.entrySet()) {
 					this.client.header(entry.getKey(), entry.getValue().toArray());
@@ -143,13 +146,17 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				String password = (String) this.requestContext.get(Dispatch.PASSWORD_PROPERTY);
 				
 				if (username != null) {
-					this.client.header("Authorization", "Basic " + Base64.encodeBytes((username + ':' + password).getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+					this.client.header(AUTHORIZATION, "Basic " + Base64.encodeBytes((username + ':' + password).getBytes())); //$NON-NLS-1$
 				}
 				else if (this.requestContext.get(GSSCredential.class.getName()) != null) {
 				    WebClient.getConfig(this.client).getRequestContext().put(GSSCredential.class.getName(), this.requestContext.get(GSSCredential.class.getName()));
 				    WebClient.getConfig(this.client).getRequestContext().put("auth.spnego.requireCredDelegation", true); //$NON-NLS-1$ 
 				}
-
+                else if (this.requestContext.get(OAuthCredential.class.getName()) != null) {
+                    OAuthCredential credential = (OAuthCredential)this.requestContext.get(OAuthCredential.class.getName());                    
+                    this.client.header(AUTHORIZATION, credential.getAuthorizationHeader(this.endpoint, httpMethod));
+                }
+				
 				InputStream payload = null;
 				if (msg != null) {
 					payload = msg.getInputStream();
@@ -165,7 +172,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 					clientPolicy.setConnectionTimeout(timeout);
 				}
 				
-				javax.ws.rs.core.Response response = this.client.invoke((String)this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD), payload);
+				javax.ws.rs.core.Response response = this.client.invoke(httpMethod, payload);
 				this.responseContext.put(WSConnection.STATUS_CODE, response.getStatus());
 				this.responseContext.putAll(response.getMetadata());
 
@@ -398,6 +405,20 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
                 throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("no_gss_credential")); //$NON-NLS-1$
             }
 		}
+        else if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.OAuth) {
+            boolean credentialFound = false;
+            Subject subject = ConnectionContext.getSubject();
+            if (subject != null) {
+                OAuthCredential credential = ConnectionContext.getSecurityCredential(subject, OAuthCredential.class);
+                if (credential != null) {
+                    dispatch.getRequestContext().put(OAuthCredential.class.getName(), credential);  
+                    credentialFound = true;
+                }
+            }
+            if (!credentialFound) {
+                throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("no_oauth_credential")); //$NON-NLS-1$
+            }
+        }
 
 		if (this.mcf.getRequestTimeout() != null){
 			dispatch.getRequestContext().put(RECEIVE_TIMEOUT, this.mcf.getRequestTimeout()); 
