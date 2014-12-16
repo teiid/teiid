@@ -807,6 +807,19 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
       }
     
+    @Test public void testDynamicUpdateInto() throws Exception {
+    	
+    	TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+    	String query = "BEGIN " //$NON-NLS-1$ //$NON-NLS-2$
+            + " execute immediate 'delete from pm1.g1' as v integer into #temp; select * from #temp with return; end";
+
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+        
+        ProcessorPlan plan = helpGetPlan(query, metadata);
+        
+        helpProcess(plan, dataMgr, new List[] {Arrays.asList(0)});
+    }
+    
 	private void addProc(TransformationMetadata metadata, String query) {
 		addProc(metadata, "sq2", query, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[0], new String[0]);
 	}
