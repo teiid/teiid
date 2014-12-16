@@ -5245,5 +5245,12 @@ public class TestParser {
     	JSONObject f = new JSONObject(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
     	helpTestExpression("jsonObject(a as \"table\")", "JSONOBJECT(a AS \"table\")", f);
     }
+    
+    @Test public void testLineComment() {
+    	String sql = "select 1 -- some comment";
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new Constant(1))));
+        helpTest(sql, "SELECT 1", query);
+    }
 
 }

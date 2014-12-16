@@ -104,6 +104,11 @@ MORE :
   < ~[] >
 }
 
+SPECIAL_TOKEN:
+{
+   <LINE_COMMENT: "--"(~["\r","\n"])*>
+}
+
 TOKEN: /* Data types */
 {
 	<STRING: "string">
