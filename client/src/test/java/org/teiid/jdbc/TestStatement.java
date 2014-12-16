@@ -95,6 +95,9 @@ public class TestStatement {
 		
 		assertFalse(statement.execute("set foo 'b''ar' ; ")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "b'ar");
+		
+		assertFalse(statement.execute("set \"foo\" 'b''a1r' ; ")); //$NON-NLS-1$
+		Mockito.verify(conn).setExecutionProperty("foo", "b'a1r");
 	}
 	
 	@Test public void testSetPayloadStatement() throws Exception {
@@ -230,6 +233,14 @@ public class TestStatement {
 	
 	@Test public void testSet() {
 		Matcher m = StatementImpl.SET_STATEMENT.matcher("set foo to 1");
+		assertTrue(m.matches());
+	}
+	
+	@Test public void testQuotedSet() {
+		Matcher m = StatementImpl.SET_STATEMENT.matcher("set \"foo\"\"\" to 1");
+		assertTrue(m.matches());
+		assertEquals("\"foo\"\"\"", m.group(2));
+		m = StatementImpl.SHOW_STATEMENT.matcher("show \"foo\"");
 		assertTrue(m.matches());
 	}
 	

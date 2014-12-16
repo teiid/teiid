@@ -157,8 +157,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected Map<String, Integer> outParamByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
     
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*)\\s*;?\\s*?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*|(?:\"[^\"]*\")+)\\s*;?\\s*?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     /**
      * MMStatement Constructor.
@@ -425,8 +425,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
         		}
         		String key = match.group(2);
+        		key = unescapeId(key);
         		String value = match.group(3);
-        		if (value != null && value.startsWith("\'") && value.endsWith("\'")) { //$NON-NLS-1$
+        		if (value != null && value.startsWith("\'") && value.endsWith("\'")) { //$NON-NLS-1$ //$NON-NLS-2$
         			value = value.substring(1, value.length() - 1);
         			value = StringUtil.replaceAll(value, "''", "'"); //$NON-NLS-1$ //$NON-NLS-2$
         		}
@@ -542,9 +543,18 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     	return result;
     }
 
+	private String unescapeId(String key) {
+		if (key.startsWith("\"")) { //$NON-NLS-1$
+			key = key.substring(1, key.length() - 1);
+			key = StringUtil.replaceAll(key, "\"\"", "\""); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return key;
+	}
+
 	ResultsFuture<Boolean> executeShow(Matcher match)
 			throws SQLException {
 		String show = match.group(1);
+		show = unescapeId(show);
 		if (show.equalsIgnoreCase("PLAN")) { //$NON-NLS-1$
 			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
 			PlanNode plan = driverConnection.getCurrentPlanDescription();
