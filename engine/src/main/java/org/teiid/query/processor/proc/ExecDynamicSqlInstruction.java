@@ -34,6 +34,7 @@ import java.util.Map;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
@@ -170,12 +171,15 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			Map<ElementSymbol, Expression> nameValueMap = createVariableValuesMap(localContext);
             ValidationVisitor visitor = new ValidationVisitor();
             Request.validateWithVisitor(visitor, metadata, command);
-            boolean update = false;
+            boolean insertInto = false;
+            boolean updateCommand = false;
             if (!command.returnsResultSet() && !(command instanceof StoredProcedure)) {
             	if (dynamicCommand.isAsClauseSet()) {
-            		throw new QueryProcessingException(QueryPlugin.Event.TEIID31157, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31157));
+            		if (dynamicCommand.getProjectedSymbols().size() != 1 || ((Expression)dynamicCommand.getProjectedSymbols().get(0)).getType() != DataTypeManager.DefaultDataClasses.INTEGER) {
+            			throw new QueryProcessingException(QueryPlugin.Event.TEIID31157, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31157));
+            		}
             	}
-            	update = true;
+            	updateCommand = true;
             } else if (dynamicCommand.getAsColumns() != null
 					&& !dynamicCommand.getAsColumns().isEmpty()) {
         		command = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), command, metadata, dynamicCommand.getAsColumns()); //$NON-NLS-1$
@@ -183,7 +187,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 					Insert insert = new Insert(dynamicCommand.getIntoGroup(), dynamicCommand.getAsColumns(), Collections.emptyList());
 					insert.setQueryExpression((Query)command);
 					command = insert;
-					update = true;
+					insertInto = true;
 				}
 			}
             
@@ -195,7 +199,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, update?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
+			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, (insertInto||updateCommand)?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
 				@Override
 				public void process(ProcedurePlan procEnv)
 						throws BlockedException, TeiidComponentException,
@@ -214,13 +218,28 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 	//create the temp table in the parent scope
                 	Create create = new Create();
                 	create.setTable(new GroupSymbol(groupName));
-                	for (ElementSymbol es : ((Insert)command).getVariables()) {
+                	for (ElementSymbol es : (List<ElementSymbol>)dynamicCommand.getAsColumns()) {
                 		Column c = new Column();
                 		c.setName(es.getShortName());
                 		c.setRuntimeType(DataTypeManager.getDataTypeName(es.getType()));
                 		create.getColumns().add(c);
                 	}
                     procEnv.getDataManager().registerRequest(procEnv.getContext(), create, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
+                }
+                //backwards compatibility to support into with a rowcount
+                if (updateCommand) {
+                	Insert insert = new Insert();
+                	insert.setGroup(new GroupSymbol(groupName));
+                	for (ElementSymbol es : (List<ElementSymbol>)dynamicCommand.getAsColumns()) {
+                		ElementSymbol col = new ElementSymbol(es.getShortName(), insert.getGroup());
+                		col.setType(es.getType());
+                		insert.addVariable(col);
+                	}
+                	insert.addValue(new Constant(procEnv.getCurrentVariableContext().getValue(ProcedurePlan.ROWCOUNT)));
+                	QueryResolver.resolveCommand(insert, metadata.getDesignTimeMetadata());
+                	TupleSource ts = procEnv.getDataManager().registerRequest(procEnv.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
+                	ts.nextTuple();
+                	ts.closeSource();
                 }
             }
 
