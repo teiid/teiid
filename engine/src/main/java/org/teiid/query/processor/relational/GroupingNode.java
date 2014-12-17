@@ -534,9 +534,9 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			for (int i = 0; i < size; i++) {
 				vals.set(i, tuple.get(i));
 			}
+			int index = size;
 			for (int i = 0; i < this.groupSortfunctions.length; i++) {
 				AggregateFunction aggregateFunction = this.groupSortfunctions[i];
-				int index = size;
 				aggregateFunction.setState(tuple, index);
 				index+=this.accumulatorStateCount[i];
 				vals.set(size + i, aggregateFunction.getResult(getContext()));

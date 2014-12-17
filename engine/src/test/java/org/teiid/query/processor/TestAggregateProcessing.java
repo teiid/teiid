@@ -509,6 +509,24 @@ public class TestAggregateProcessing {
 		helpProcess(plan, dataManager, expected);
 	}
 	
+	@Test public void testGroupSortMultipleAggregates() throws Exception {
+		String sql = "select e1, min(e2), max(e3) from pm1.g1 group by e1";
+
+		List[] expected = new List[] {
+				Arrays.asList(null, 1, false),
+				Arrays.asList("a", 0, true),
+				Arrays.asList("b", 2, false),
+				Arrays.asList("c", 1, true),
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+	}
+	
 	public static class SumAll implements UserDefinedAggregate<Integer> {
 		
 		private boolean isNull = true;
