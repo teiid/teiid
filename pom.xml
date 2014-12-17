@@ -80,6 +80,7 @@
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
         <version.com.facebook.presto>0.85</version.com.facebook.presto>
+        <version.net.oauth.core>20100527</version.net.oauth.core>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1106,6 +1107,26 @@
                     </exclusion>                                   
                 </exclusions>                  
             </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth2</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>                        
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-bindings-xml</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.oauth.core</groupId>
+                <artifactId>oauth</artifactId>
+                <version>${version.net.oauth.core}</version>
+            </dependency>                         
             <dependency>
                 <groupId>com.datastax.cassandra</groupId>
                 <artifactId>cassandra-driver-core</artifactId>

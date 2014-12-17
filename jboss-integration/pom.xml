@@ -110,12 +110,20 @@
         <scope>provided</scope>
     </dependency> 
     
-<!--     <dependency>
-        <groupId>org.picketbox</groupId>
-        <artifactId>jbosssx-client</artifactId>
+    <dependency>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-rt-rs-security-oauth</artifactId>
         <scope>provided</scope>
-    </dependency> -->
-      
+    </dependency>
+    <dependency>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-rt-rs-security-oauth2</artifactId>
+        <scope>provided</scope>
+    </dependency>     
+        
+
+     
+           
     <dependency>
         <groupId>org.jboss.as</groupId>
         <artifactId>jboss-as-subsystem-test-framework</artifactId>

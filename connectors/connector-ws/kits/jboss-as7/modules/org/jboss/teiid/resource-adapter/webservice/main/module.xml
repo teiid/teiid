@@ -1,5 +1,7 @@
 <module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.webservice">
-
+    
+    <main-class name="org.teiid.oauth.OAuthUtil"/>
+    
     <resources>
         <resource-root path="connector-ws-${project.version}.jar" />
         <resource-root path="." />
@@ -17,7 +19,7 @@
         <module name="org.apache.cxf.impl" />
         <module name="javax.wsdl4j.api" />
         <module name="javax.xml.ws.api" />
-        <module name="org.apache.cxf.impl.frontend-jaxrs" />
+        <module name="org.apache.cxf.impl.frontend-jaxrs" services="export" export="true"/>
         <module name="org.apache.cxf.impl" export="true">
             <imports>
                 <include path="META-INF" />
