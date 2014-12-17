@@ -315,7 +315,8 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 		if (metadataResults == null) {
 			if (StatementImpl.SET_STATEMENT.matcher(prepareSql).matches() 
 					|| StatementImpl.TRANSACTION_STATEMENT.matcher(prepareSql).matches()
-					|| StatementImpl.SHOW_STATEMENT.matcher(prepareSql).matches()) {
+					|| StatementImpl.SHOW_STATEMENT.matcher(prepareSql).matches()
+					|| StatementImpl.SET_CHARACTERISTIC_STATEMENT.matcher(prepareSql).matches()) {
 				metadataResults = new MetadataResult();
 			} else {
 				try {

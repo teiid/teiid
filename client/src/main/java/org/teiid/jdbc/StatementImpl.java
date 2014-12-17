@@ -24,6 +24,7 @@ package org.teiid.jdbc;
 
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -158,6 +159,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SET_CHARACTERISTIC_STATEMENT = Pattern.compile("\\s*set\\s+session\\s+characteristics\\s+as\\s+transaction\\s+isolation\\s+level\\s+((?:read\\s+(?:(?:committed)|(?:uncommitted)))|(?:repeatable\\s+read)|(?:serializable))\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*|(?:\"[^\"]*\")+)\\s*;?\\s*?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     /**
@@ -424,8 +426,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		if (resultsMode == ResultsMode.RESULTSET) {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
         		}
-        		String key = match.group(2);
-        		key = unescapeId(key);
+        		String val = match.group(2);
+        		String key = unescapeId(val);
         		String value = match.group(3);
         		if (value != null && value.startsWith("\'") && value.endsWith("\'")) { //$NON-NLS-1$ //$NON-NLS-2$
         			value = value.substring(1, value.length() - 1);
@@ -439,7 +441,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         				this.getMMConnection().setPayload(p);
         			}
         			p.setProperty(key, value);
-        		} else if ("SESSION AUTHORIZATION".equalsIgnoreCase(key)) { //$NON-NLS-1$
+        		} else if (val == key && "SESSION AUTHORIZATION".equalsIgnoreCase(key)) { //$NON-NLS-1$
         			this.getMMConnection().changeUser(value, this.getMMConnection().getPassword());
         		} else if (key.equalsIgnoreCase(TeiidURL.CONNECTION.PASSWORD)) {
         			this.getMMConnection().setPassword(value);
@@ -450,6 +452,21 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		} else {
         			this.driverConnection.setExecutionProperty(key, value);
         		}
+        		this.updateCounts = new int[] {0};
+        		return booleanFuture(false);
+        	}
+        	match = SET_CHARACTERISTIC_STATEMENT.matcher(commands[0]);
+        	if (match.matches()) {
+        		String value = match.group(1);
+				if (StringUtil.endsWithIgnoreCase(value, "uncommitted")) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+				} else if (StringUtil.endsWithIgnoreCase(value, "committed")) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+				} else if (StringUtil.startsWithIgnoreCase(value, "repeatable")) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+				} else if ("serializable".equalsIgnoreCase(value)) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);	
+				}        		
         		this.updateCounts = new int[] {0};
         		return booleanFuture(false);
         	}
