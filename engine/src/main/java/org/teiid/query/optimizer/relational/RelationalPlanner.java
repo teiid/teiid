@@ -798,7 +798,7 @@ public class RelationalPlanner {
         	if (savedOption != null) {
         		option = savedOption;
         	} 
-        } else if (savedOption != null && savedOption.isNoCache()) { //merge no cache settings
+        } else if (savedOption != null && savedOption.isNoCache() && savedOption != option) { //merge no cache settings
     		if (savedOption.getNoCacheGroups() == null || savedOption.getNoCacheGroups().isEmpty()) {
     			if (option.getNoCacheGroups() != null) {
     				option.getNoCacheGroups().clear(); // full no cache
