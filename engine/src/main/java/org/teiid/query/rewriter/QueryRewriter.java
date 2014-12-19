@@ -2694,7 +2694,7 @@ public class QueryRewriter {
 		}
         query.setFrom(from); 
         QueryResolver.resolveCommand(query, tma);
-        query.setOption(nested.getOption());
+        query.setOption(nested.getOption()!=null?(Option) nested.getOption().clone():null);
         from.getClauses().clear();
         SubqueryFromClause sqfc = new SubqueryFromClause(inlineGroup.getName());
         sqfc.setCommand(nested);
