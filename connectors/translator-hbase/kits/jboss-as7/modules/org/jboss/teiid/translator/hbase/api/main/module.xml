@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.translator.hbase.api">
+    <resources>
+        <resource-root path="hbase-api-${project.version}.jar" />
+        <resource-root path="phoenix-core-${version.org.apache.phoenix.phoenix-core}.jar" />
+    </resources>
+
+<!-- 
+phoenix-core depend on quite a great numbers of dependencies. phoenix-client is a single jar for phoenix JDBC, but no maven artifact
+   https://issues.apache.org/jira/browse/PHOENIX-1547
+ -->
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" />
+    </dependencies>
+</module>

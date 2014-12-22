@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <artifactId>connectors</artifactId>
+        <groupId>org.jboss.teiid</groupId>
+        <version>8.10.0.Alpha3-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>hbase-api</artifactId>
+    <groupId>org.jboss.teiid.connectors</groupId>
+    <name>HBase API</name>
+    <description>The java API for the HBase</description>
+    <packaging>bundle</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+            <scope>provided</scope>
+        </dependency>   
+        <!-- 'phoenix-client.jar' are a single jar is enough for HBase phoenix connector, but it dosn't supply maven artifact, Only available via downloading distribution 
+        	  I have raised a JIRA
+        	         https://issues.apache.org/jira/browse/PHOENIX-1547
+        -->  
+        <dependency>
+          <groupId>org.apache.phoenix</groupId>
+          <artifactId>phoenix-core</artifactId>
+        </dependency>
+    </dependencies>    
+</project>

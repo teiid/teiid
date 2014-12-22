@@ -129,5 +129,8 @@
     <module>translator-prestodb</module>
     <module>sandbox</module>
 
+    <module>hbase-api</module>
+    <module>connector-hbase</module>
+    <module>translator-hbase</module>
   </modules>
 </project>
