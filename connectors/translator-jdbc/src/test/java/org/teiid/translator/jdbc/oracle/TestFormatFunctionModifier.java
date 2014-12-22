@@ -42,15 +42,23 @@ public class TestFormatFunctionModifier {
     }
     
     @Test public void testDay() {
-    	helpTest("'DD DDD'", "d D");
+    	helpTest("'DD DDD'", "dd DD");
     }
     
     @Test public void testYear() {
-    	helpTest("'YY YY YY YYYY'", "y yy yyy yyyy");
+    	helpTest("'YYYY YY YYYY YYYY'", "y yy yyy yyyy");
     }
     
     @Test public void testMonth() {
-    	helpTest("'MM MM Mon Month'", "M MM MMM MMMM");
+    	helpTest("'MM Mon Month'", "MM MMM MMMM");
+    }
+    
+    @Test public void testEra() {
+    	helpTest("'AD'", "GG");
+    }
+    
+    @Test public void testAmPm() {
+    	helpTest("'AM'", "aa");
     }
     
     @Test public void testISO() {
@@ -58,6 +66,11 @@ public class TestFormatFunctionModifier {
     }
     
     @Test public void testSupports() {
+    	assertTrue(offm.supportsLiteral("MMM"));
+    	assertFalse(offm.supportsLiteral("yyyyy"));
+    	assertFalse(offm.supportsLiteral("h"));
+    	assertFalse(offm.supportsLiteral("H"));
+    	assertFalse(offm.supportsLiteral("M"));
     	assertFalse(offm.supportsLiteral("\""));
     	assertFalse(offm.supportsLiteral("'"));
     	assertFalse(offm.supportsLiteral("x"));

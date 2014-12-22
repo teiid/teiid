@@ -33,7 +33,7 @@ public class OracleFormatFunctionModifier extends
 
 	public static final String ALL_TOKENS = "GyMdkHmsSEDFwWahKzZ"; //$NON-NLS-1$
 	
-	static final Pattern tokenPattern = Pattern.compile("(G|y+|M+|D+|d+|E+|a+|H+|h+|m+|s+|S+|Z+|[\\- /,.;:]+|(?:'[^'\"]*')+|[^'\"a-zA-Z]+)"); //$NON-NLS-1$
+	static final Pattern tokenPattern = Pattern.compile("(G+|y{1,4}|M{2,4}|DD|dd|E+|a+|HH|hh|mm|ss|S+|Z+|[\\- /,.;:]+|(?:'[^'\"]*')+|[^'\"a-zA-Z]+)"); //$NON-NLS-1$
 
 	public OracleFormatFunctionModifier(String prefix) {
 		super(prefix);
@@ -54,11 +54,16 @@ public class OracleFormatFunctionModifier extends
 		StringBuilder sb = new StringBuilder();
 		sb.append("'"); //$NON-NLS-1$
 		int end = 0;
+		char previous = 0;
 		while (m.find()) {
 			if (m.group().length() == 0) {
 				continue;
 			}
 			String group = m.group();
+			if (Character.isAlphabetic(previous) && group.charAt(0) == previous) {
+				throw new IllegalArgumentException();
+			}
+			previous = group.charAt(0);
 			sb.append(convertToken(group));
 			end = m.end();
 		} 
@@ -74,12 +79,12 @@ public class OracleFormatFunctionModifier extends
 		case 'G':
 			return "AD"; //$NON-NLS-1$
 		case 'y':
-			if (group.length() >= 4) {
-				return "YYYY"; //$NON-NLS-1$
+			if (group.length() == 2) {
+				return "YY"; //$NON-NLS-1$
 			}
-			return "YY"; //$NON-NLS-1$
+			return "YYYY"; //$NON-NLS-1$
 		case 'M':
-			if (group.length() <= 2) {
+			if (group.length() == 2) {
 				return "MM"; //$NON-NLS-1$
 			}
 			if (group.length() == 3) {
@@ -96,7 +101,7 @@ public class OracleFormatFunctionModifier extends
 			}
 			return "Dy"; //$NON-NLS-1$
 		case 'a':
-			return "PM"; //$NON-NLS-1$
+			return "AM"; //$NON-NLS-1$
 		case 'H':
 			return "HH24"; //$NON-NLS-1$
 		case 'h':
