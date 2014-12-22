@@ -28,7 +28,6 @@ import java.util.List;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
-import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.resource.adapter.google.common.UpdateSet;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 
@@ -61,7 +60,6 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 			}else{
 				columnName=s.getSymbol().getMetadataObject().getName();
 			}
-			SQLStringVisitor.getSQLString(s.getValue());
 			if (s.getSymbol().getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
 				changes.add(new UpdateSet(columnName,"'"+getStringValue(s.getValue()))); //$NON-NLS-1$
 			} else {
