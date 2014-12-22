@@ -43,6 +43,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.deployers.VirtualDatabaseException;
@@ -54,6 +55,7 @@ import org.teiid.translator.HBaseConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
+@Ignore
 public class TestHBaseExecution {
 	
 	static {
