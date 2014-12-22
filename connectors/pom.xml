@@ -130,5 +130,6 @@
     
     <module>sandbox</module>
 
+    <module>translator-hbase</module>
   </modules>
 </project>
