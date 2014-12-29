@@ -60,7 +60,7 @@ public class OracleFormatFunctionModifier extends
 				continue;
 			}
 			String group = m.group();
-			if (Character.isAlphabetic(previous) && group.charAt(0) == previous) {
+			if (Character.isLetter(previous) && group.charAt(0) == previous) {
 				throw new IllegalArgumentException();
 			}
 			previous = group.charAt(0);
