@@ -73,6 +73,8 @@ public class Sum extends SingleArgumentAggregateFunction {
         
             this.accumulatorType = DOUBLE;
 
+        } else if(dataType.equals(DataTypeManager.DefaultDataClasses.BIG_INTEGER)) {
+        	this.accumulatorType = BIG_INTEGER;
         } else {
             this.accumulatorType = BIG_DECIMAL;
         }

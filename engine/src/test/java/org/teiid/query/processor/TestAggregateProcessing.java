@@ -1116,6 +1116,16 @@ public class TestAggregateProcessing {
     	
     	helpProcess(plan, dataManager, expected);
     }
+    
+	@Test public void testBigIntegerSum() throws Exception {
+		String sql = "SELECT sum(x) FROM agg x"; //$NON-NLS-1$
+
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table agg (x biginteger)", "x", "y");
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT y.agg.x FROM y.agg", Arrays.asList(BigInteger.valueOf(1)));
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+		TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(BigInteger.valueOf(1))});
+	}
 
 	
 }
