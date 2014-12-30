@@ -38,14 +38,18 @@ public class HBasePlugin {
 		// Phoenix HBase Table Mapping
 		TEIID27001,
 		
-		//HBaseQueryExecution
+		// HBaseQueryExecution
 		TEIID27002,
 		
 		// HBaseUpdateExecution
 		TEIID27003,
 		
+		// HBaseProcedureExecution
 		TEIID27004,
+		
+		// HBaseMetadataProcessor
 		TEIID27005,
+		
 		TEIID27006,
 		TEIID27007,
 		TEIID27008,
