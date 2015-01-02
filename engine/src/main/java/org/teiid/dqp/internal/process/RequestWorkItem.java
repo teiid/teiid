@@ -89,6 +89,12 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.GeneratedKeysImpl;
 import org.teiid.query.util.Options;
 
+/**
+ * Compiles results and other information for the client.  There is quite a bit of logic
+ * surrounding forming batches to prevent buffer growth, send multiple batches at a time,
+ * partial batches, etc.  There is also special handling for the update count case, which
+ * needs to read the entire result before sending it back to the client.
+ */
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
 	//TODO: this could be configurable
@@ -665,7 +671,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
 							}
 						}
-			        	if (add) {
+			        	if (add && !returnsUpdateCount) {
 			        		throw new AssertionError("Should not add batch to buffer"); //$NON-NLS-1$
 			        	}
 			        }
@@ -818,7 +824,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 			if (!this.requestMsg.getRequestOptions().isContinuous()) {
 				if ((this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
-						|| (this.transactionState == TransactionState.ACTIVE)) {
+						|| (this.transactionState == TransactionState.ACTIVE) || (returnsUpdateCount && !doneProducingBatches)) {
 					return result;
 				}
 			
@@ -828,6 +834,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		
 				boolean fromBuffer = false;
 	    		int count = this.end - this.begin + 1;
+	    		if (returnsUpdateCount) {
+	    			count = Integer.MAX_VALUE;
+	    		}
 	    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
 		    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
 		    			batch = savedBatch;
@@ -847,6 +856,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    					batches *= multiplier;
 		    				}
 		    			}
+		    			if (returnsUpdateCount) {
+			    			batches = Integer.MAX_VALUE;
+			    		}
 		    			for (int i = 1; i < batches && batch.getRowCount() + resultsBuffer.getBatchSize() <= count && !batch.getTerminationFlag(); i++) {
 		    				TupleBatch next = resultsBuffer.getBatch(batch.getEndRow() + 1);
 		    				if (next.getRowCount() == 0) {
