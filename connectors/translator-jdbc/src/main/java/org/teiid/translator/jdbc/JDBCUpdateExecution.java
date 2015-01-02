@@ -29,6 +29,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -71,12 +72,12 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     @Override
     public void execute() throws TranslatorException {
         if (command instanceof BatchedUpdates) {
-        	result = execute(((BatchedUpdates)command));
+        	execute(((BatchedUpdates)command));
         } else {
             // translate command
             TranslatedCommand translatedComm = translateCommand(command);
 
-            result = executeTranslatedCommand(translatedComm);
+            executeTranslatedCommand(translatedComm);
         }
     }
 
@@ -162,7 +163,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @throws TranslatorException
      * @since 4.3
      */
-    private int[] executeTranslatedCommand(TranslatedCommand translatedComm) throws TranslatorException {
+    private void executeTranslatedCommand(TranslatedCommand translatedComm) throws TranslatorException {
         // create statement or PreparedStatement and execute
         String sql = translatedComm.getSql();
         boolean commitType = false;
@@ -177,6 +178,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             	} else {
             		updateCount = statement.executeUpdate(sql);
             	}
+            	result = new int[] {updateCount};
                 addStatementWarnings();
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
@@ -208,14 +210,18 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             				}
             			}
             		    int[] results = pstatement.executeBatch();
-            		    
-            		    for (int i=0; i<results.length; i++) {
-            		        updateCount += results[i];
+            		    if (result == null) {
+            		    	result = results;
+            		    } else {
+            		    	int len = result.length;
+            		    	result = Arrays.copyOf(result, len + results.length);
+            		    	System.arraycopy(results, 0, result, len, results.length);
             		    }
             		}
                 } else {
             		bind(pstatement, translatedComm.getPreparedValues(), null);
         			updateCount = pstatement.executeUpdate();
+        			result = new int[] {updateCount};
         			addStatementWarnings();
                 }
                 succeeded = true;
@@ -242,7 +248,6 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                     generatedKeys.addKey(vals);
         		}
         	}
-            return new int[] {updateCount};
         } catch (SQLException err) {
         	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11013, err, translatedComm);
         } finally {

@@ -86,6 +86,106 @@ import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
+	private static final class FakeTranslator extends
+			ExecutionFactory<AtomicInteger, Object> {
+		
+		private boolean batch;
+		
+		public FakeTranslator(boolean batch) {
+			this.batch = batch;
+		}
+		
+		@Override
+		public Object getConnection(AtomicInteger factory)
+				throws TranslatorException {
+			return factory.incrementAndGet();
+		}
+
+		@Override
+		public void closeConnection(Object connection, AtomicInteger factory) {
+			
+		}
+		
+		@Override
+		public boolean supportsBulkUpdate() {
+			return true;
+		}
+
+		@Override
+		public void getMetadata(MetadataFactory metadataFactory, Object conn)
+				throws TranslatorException {
+			assertEquals(conn, Integer.valueOf(1));
+			Table t = metadataFactory.addTable("my-table");
+			t.setSupportsUpdate(true);
+			Column c = metadataFactory.addColumn("my-column", TypeFacility.RUNTIME_NAMES.STRING, t);
+			c.setUpdatable(true);
+		}
+
+		@Override
+		public ResultSetExecution createResultSetExecution(
+				QueryExpression command, ExecutionContext executionContext,
+				RuntimeMetadata metadata, Object connection)
+				throws TranslatorException {
+			ResultSetExecution rse = new ResultSetExecution() {
+				
+				@Override
+				public void execute() throws TranslatorException {
+					
+				}
+				
+				@Override
+				public void close() {
+					
+				}
+				
+				@Override
+				public void cancel() throws TranslatorException {
+					
+				}
+				
+				@Override
+				public List<?> next() throws TranslatorException, DataNotAvailableException {
+					return null;
+				}
+			};
+			return rse;
+		}
+
+		@Override
+		public UpdateExecution createUpdateExecution(Command command,
+				ExecutionContext executionContext,
+				RuntimeMetadata metadata, Object connection)
+				throws TranslatorException {
+			UpdateExecution ue = new UpdateExecution() {
+				
+				@Override
+				public void execute() throws TranslatorException {
+					
+				}
+				
+				@Override
+				public void close() {
+					
+				}
+				
+				@Override
+				public void cancel() throws TranslatorException {
+					
+				}
+				
+				@Override
+				public int[] getUpdateCounts() throws DataNotAvailableException,
+						TranslatorException {
+					if (!batch) {
+						return new int[] {2};
+					}
+					return new int[] {1, 1, -1, 1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, -1, 1};
+				}
+			};
+			return ue;
+		}
+	}
+
 	public static final class MockTransactionManager implements TransactionManager {
 		ThreadLocal<Transaction> txns = new ThreadLocal<Transaction>();
 		List<Transaction> txnHistory = new ArrayList<Transaction>();
@@ -185,89 +285,7 @@ public class TestEmbeddedServer {
 		ec.setUseDisk(false);
 		es.start(ec);
 		
-		es.addTranslator("y", new ExecutionFactory<AtomicInteger, Object> () {
-			@Override
-			public Object getConnection(AtomicInteger factory)
-					throws TranslatorException {
-				return factory.incrementAndGet();
-			}
-			
-			@Override
-			public void closeConnection(Object connection, AtomicInteger factory) {
-				
-			}
-			
-			@Override
-			public void getMetadata(MetadataFactory metadataFactory, Object conn)
-					throws TranslatorException {
-				assertEquals(conn, Integer.valueOf(1));
-				Table t = metadataFactory.addTable("my-table");
-				t.setSupportsUpdate(true);
-				Column c = metadataFactory.addColumn("my-column", TypeFacility.RUNTIME_NAMES.STRING, t);
-				c.setUpdatable(true);
-			}
-			
-			@Override
-			public ResultSetExecution createResultSetExecution(
-					QueryExpression command, ExecutionContext executionContext,
-					RuntimeMetadata metadata, Object connection)
-					throws TranslatorException {
-				ResultSetExecution rse = new ResultSetExecution() {
-					
-					@Override
-					public void execute() throws TranslatorException {
-						
-					}
-					
-					@Override
-					public void close() {
-						
-					}
-					
-					@Override
-					public void cancel() throws TranslatorException {
-						
-					}
-					
-					@Override
-					public List<?> next() throws TranslatorException, DataNotAvailableException {
-						return null;
-					}
-				};
-				return rse;
-			}
-			
-			@Override
-			public UpdateExecution createUpdateExecution(Command command,
-					ExecutionContext executionContext,
-					RuntimeMetadata metadata, Object connection)
-					throws TranslatorException {
-				UpdateExecution ue = new UpdateExecution() {
-					
-					@Override
-					public void execute() throws TranslatorException {
-						
-					}
-					
-					@Override
-					public void close() {
-						
-					}
-					
-					@Override
-					public void cancel() throws TranslatorException {
-						
-					}
-					
-					@Override
-					public int[] getUpdateCounts() throws DataNotAvailableException,
-							TranslatorException {
-						return new int[] {2};
-					}
-				};
-				return ue;
-			}
-		});
+		es.addTranslator("y", new FakeTranslator(false));
 		final AtomicInteger counter = new AtomicInteger();
 		ConnectionFactoryProvider<AtomicInteger> cfp = new EmbeddedServer.SimpleConnectionFactoryProvider<AtomicInteger>(counter);
 		
@@ -304,7 +322,36 @@ public class TestEmbeddedServer {
 		assertNull(es.getSchemaDdl("empty", "xxx"));
 	}
 	
-	@Test(expected=VirtualDatabaseException.class) public void testInvalidName() throws Exception {
+	@Test public void testBatchedUpdate() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		
+		ec.setUseDisk(false);
+		es.bufferService.setProcessorBatchSize(1);
+		es.start(ec);
+		
+		es.addTranslator("y", new FakeTranslator(true));
+		final AtomicInteger counter = new AtomicInteger();
+		ConnectionFactoryProvider<AtomicInteger> cfp = new EmbeddedServer.SimpleConnectionFactoryProvider<AtomicInteger>(counter);
+		
+		es.addConnectionFactoryProvider("z", cfp);
+		
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("my-schema");
+		mmd.addSourceMapping("x", "y", "z");
+		es.deployVDB("test", mmd);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		PreparedStatement ps = c.prepareStatement("insert into \"my-table\" values (?)");
+		for (int i = 0; i < 16; i++) {
+		ps.setString(1, "a");
+		ps.addBatch();
+		}
+		int[] result = ps.executeBatch();
+		assertArrayEquals(new int[] {1, 1, -1, 1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, -1, 1}, result);
+	}
+	
+	@Test(expected=VirtualDatabaseException.class) 
+	public void testInvalidName() throws Exception {
 		es.start(new EmbeddedConfiguration());
 		ModelMetaData mmd1 = new ModelMetaData();
 		mmd1.setName("virt.1");
