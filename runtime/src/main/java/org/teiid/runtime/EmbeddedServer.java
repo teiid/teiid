@@ -336,7 +336,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	/**
 	 * Adds the object as the named connection factory to replace the default JNDI lookup strategy.
 	 * @param name
-	 * @param connectionFactoryr
+	 * @param connectionFactory
 	 */
 	public void addConnectionFactory(String name, Object connectionFactory) {
 		this.connectionFactoryProviders.put(name, new SimpleConnectionFactoryProvider<Object>(connectionFactory));
