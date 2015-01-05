@@ -174,11 +174,19 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return id;
 	}
     
-    public void cancel() {
+    /**
+     * @param premature false if the cancel is after results have been read
+     */
+    @Override
+    public void cancel(boolean premature) {
     	try {
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
+    		if (premature) {
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
+    		}
             if (this.isCancelled.compareAndSet(false, true)) {
-                this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1);
+            	if (premature) {
+            		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1);
+            	}
     	        if(execution != null) {
     	            execution.cancel();
     	        }            

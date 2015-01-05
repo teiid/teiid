@@ -34,7 +34,7 @@ import org.teiid.translator.TranslatorException;
  */
 public interface ConnectorWork {
 
-	void cancel();
+	void cancel(boolean premature);
 
 	AtomicResultsMessage more() throws TranslatorException, BlockedException;
 
