@@ -364,6 +364,8 @@ public class DependentCriteriaProcessor {
     		if (!restartIndexes.isEmpty()) {
     			currentIndex = restartIndexes.removeLast().intValue();
     		}
+    		int possible = 0;
+
 	        for (int i = 0; i < sources.size(); i++) {
 
 	            List<SetState> source = sources.get(i);
@@ -422,7 +424,12 @@ public class DependentCriteriaProcessor {
 	            for (SetState setState : source) {
 	            	currentPredicates += setState.replacementSize()/maxSize+(setState.replacementSize()%maxSize!=0?1:0);
 				}
+	            possible+=source.size();
 	        }
+	        
+	        if (currentPredicates + possible > totalPredicates) {
+            	break; //don't exceed the max
+            }
 	        
             if (restartIndexes.isEmpty()) {
             	break;

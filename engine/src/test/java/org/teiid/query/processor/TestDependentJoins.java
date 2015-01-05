@@ -102,6 +102,34 @@ public class TestDependentJoins {
        TestProcessor.helpProcess(plan, dataManager, expected);
    }
     
+    @Test public void testMultiCritDepJoinOverMax() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm2.g1 WHERE pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e1=pm2.g1.e1 and pm1.g2.e1=pm2.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "d" }), //$NON-NLS-1$
+        };    
+        
+        // Construct data manager with data
+        HardcodedDataManager hdm = new HardcodedDataManager(true);
+        hdm.addData("SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"), Arrays.asList("d"));
+        hdm.addData("SELECT g_0.e1 AS c_0, g_1.e1 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 = g_0.e1) AND (g_0.e1 IN ('a', 'b')) AND (g_1.e1 IN ('a', 'b'))", Arrays.asList("a", "a"), Arrays.asList("b", "b"));
+        hdm.addData("SELECT g_0.e1 AS c_0, g_1.e1 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 = g_0.e1) AND (g_0.e1 IN ('c', 'd')) AND (g_1.e1 IN ('c', 'd'))", Arrays.asList("c", "c"), Arrays.asList("d", "d"));
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+        caps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 3);
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps));
+
+        // Run query
+        TestProcessor.helpProcess(plan, hdm, expected);
+    }
+    
     @Test public void testDependentView() { 
         String sql = "SELECT v.e1 FROM (select distinct e1 from pm1.g1) as v, pm2.g1 WHERE v.e1=pm2.g1.e1 order by v.e1 option makedep v"; //$NON-NLS-1$
         
@@ -722,7 +750,7 @@ public class TestDependentJoins {
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
         depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
-        depcaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 3);
+        depcaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 4);
 
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
