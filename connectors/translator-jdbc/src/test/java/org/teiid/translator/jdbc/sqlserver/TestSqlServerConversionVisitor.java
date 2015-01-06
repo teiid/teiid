@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
@@ -53,6 +54,7 @@ public class TestSqlServerConversionVisitor {
         trans.start();
     }
     
+    @Before
     public void setUp() throws Exception {
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
     }
@@ -166,6 +168,15 @@ public class TestSqlServerConversionVisitor {
             output);        
     }
     
+    @Test public void testConvertTime() throws Exception {
+        String input = "select cast('12:00:00' as time) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT CAST('1970-01-01 12:00:00.0' AS DATETIME) FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
     @Test public void testConvertDate2008() throws Exception {
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
         String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
@@ -251,5 +262,5 @@ public class TestSqlServerConversionVisitor {
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
-       
+    
 }

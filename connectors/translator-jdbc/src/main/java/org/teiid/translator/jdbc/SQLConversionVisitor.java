@@ -166,7 +166,11 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
                 valuesbuffer.append(executionFactory.translateLiteralTimestamp((Timestamp)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-                valuesbuffer.append(executionFactory.translateLiteralTime((Time)obj));
+            	if (!executionFactory.hasTimeType()) {
+            		valuesbuffer.append(executionFactory.translateLiteralTimestamp(new Timestamp(((Time)obj).getTime())));
+            	} else {
+            		valuesbuffer.append(executionFactory.translateLiteralTime((Time)obj));
+            	}
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
                 valuesbuffer.append(executionFactory.translateLiteralDate((java.sql.Date)obj));
             } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
