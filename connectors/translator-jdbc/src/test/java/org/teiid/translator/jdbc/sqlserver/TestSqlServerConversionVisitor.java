@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
@@ -54,6 +55,7 @@ public class TestSqlServerConversionVisitor {
         trans.start();
     }
     
+    @Before
     public void setUp() throws Exception {
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
     }
@@ -257,6 +259,7 @@ public class TestSqlServerConversionVisitor {
     	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.TIME));
     	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.INTEGER));
     	assertFalse(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.CLOB));
+    	assertFalse(trans.supportsConvert(TypeFacility.RUNTIME_CODES.TIMESTAMP, TypeFacility.RUNTIME_CODES.TIME));
     }
        
 }

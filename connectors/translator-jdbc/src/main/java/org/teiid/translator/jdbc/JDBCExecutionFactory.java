@@ -1435,4 +1435,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return false;
 	}
 	
+	@Override
+	public boolean supportsConvert(int fromType, int toType) {
+		if (!hasTimeType() && toType == TypeFacility.RUNTIME_CODES.TIME) {
+			return false;
+		}
+		return super.supportsConvert(fromType, toType);
+	}
+	
 }
