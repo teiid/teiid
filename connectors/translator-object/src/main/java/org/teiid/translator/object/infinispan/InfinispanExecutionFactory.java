@@ -71,7 +71,9 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 
 	public void setSupportsLuceneSearching(boolean supportsLuceneSearching) {
 		this.supportsLuceneSearching = supportsLuceneSearching;
-		setSearchType(new LuceneSearch());
+		if (this.supportsLuceneSearching) {
+			setSearchType(new LuceneSearch());
+		}
 	}
 	
 	/**
@@ -87,7 +89,9 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 
 	public void setSupportsDSLSearching(boolean supportsDSLSearching) {
 		this.supportsDSLSearching = supportsDSLSearching;
-		setSearchType(new DSLSearch());
+		if (this.supportsDSLSearching) {
+			setSearchType(new DSLSearch());
+		}
 	}	
 
 	@Override
