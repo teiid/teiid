@@ -646,9 +646,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return Translated string
      */
     public String translateLiteralTime(Time timeValue) {
-    	if (!hasTimeType()) {
-    		return translateLiteralTimestamp(new Timestamp(timeValue.getTime())); 
-    	}
         return "{t '" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
