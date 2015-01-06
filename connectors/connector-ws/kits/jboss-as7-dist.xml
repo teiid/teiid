@@ -44,6 +44,7 @@
                 <include>org.apache.cxf:cxf-rt-frontend-jaxrs</include>
                 <include>org.apache.cxf:cxf-rt-rs-security-oauth</include>
                 <include>org.apache.cxf:cxf-rt-rs-security-oauth2</include>
+                <include>org.apache.cxf:cxf-rt-rs-security-oauth2-saml</include>
             </includes>
         </dependencySet>
         <dependencySet>
