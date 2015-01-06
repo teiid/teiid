@@ -6,6 +6,7 @@
         <resource-root path="cxf-rt-oauth2-patch.jar"/>
         <resource-root path="cxf-rt-rs-security-oauth-${version.org.apache.cxf}.jar"/>
         <resource-root path="cxf-rt-rs-security-oauth2-${version.org.apache.cxf}.jar"/>
+        <resource-root path="cxf-rt-rs-security-oauth2-saml-${version.org.apache.cxf}.jar"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>

@@ -1116,7 +1116,12 @@
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-rs-security-oauth2</artifactId>
                 <version>${version.org.apache.cxf}</version>
-            </dependency>                        
+            </dependency>
+            <dependency>
+              <groupId>org.apache.cxf</groupId>
+              <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
+              <version>${version.org.apache.cxf}</version>
+            </dependency>                                     
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-bindings-xml</artifactId>

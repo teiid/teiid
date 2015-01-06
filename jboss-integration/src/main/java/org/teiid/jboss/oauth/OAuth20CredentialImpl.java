@@ -46,7 +46,7 @@ public class OAuth20CredentialImpl implements OAuthCredential {
         return (((token.getIssuedAt()+token.getExpiresIn())-System.currentTimeMillis()) < 0);
     }
 
-    private ClientAccessToken getAccessToken() {
+    protected ClientAccessToken getAccessToken() {
         OAuthClientUtils.Consumer consumer = new OAuthClientUtils.Consumer(getClientId(), getClientSecret());
         WebClient client = WebClient.create(getAccessTokenURI());
         RefreshTokenGrant grant = new RefreshTokenGrant(getRefreshToken());
