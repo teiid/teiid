@@ -87,6 +87,10 @@ public class ObjectExecutionFactory extends
 		this.searchType = type;
 	}
 	
+	public SearchType getSearchType() {
+		return this.searchType;
+	}
+	
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
 	    return new JavaBeanMetadataProcessor();

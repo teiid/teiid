@@ -44,7 +44,7 @@ import org.teiid.translator.object.util.VDBUtility;
 @SuppressWarnings("nls")
 public class TestObjectExecutionFactory {
 	
-	private static ObjectConnection conn = TradesCacheSource.createConnection();
+	protected static ObjectConnection conn = TradesCacheSource.createConnection();
 	
 	public class TestFactory extends ObjectExecutionFactory {
 		public TestFactory() {
@@ -54,19 +54,23 @@ public class TestObjectExecutionFactory {
 	}
 	
 	@Mock
-	private ExecutionContext context;
+	protected ExecutionContext context;
 	
 	@Mock
-	private Select command;
+	protected Select command;
 	
-	private ObjectExecutionFactory factory;
+	protected ObjectExecutionFactory factory;
 
 	@Before public void beforeEach() throws Exception{	
  
 		MockitoAnnotations.initMocks(this);
 		
-		factory = new TestFactory();
+		factory = createFactory();
     }
+	
+	protected ObjectExecutionFactory createFactory() {
+		return new TestFactory();
+	}
 
 	@Test public void testFactory() throws Exception {
 		factory.start();
@@ -78,6 +82,7 @@ public class TestObjectExecutionFactory {
 	
 	
 	@Test public void testGetMetadata() throws Exception {
+		factory.start();
 		
 		Map<String, Datatype> dts = SystemMetadata.getInstance().getSystemStore().getDatatypes();
 
