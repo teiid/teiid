@@ -570,34 +570,23 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     	} else if (obj instanceof DerivedColumn) {
             DerivedColumn dc = (DerivedColumn) obj;
             Expression expr = dc.getExpression();
-            // For GEOMETRY, force source to do implicit conversion from proprietary struct to WKB blob.
+            // For GEOMETRY, force source to do conversion from proprietary struct to WKB blob.
             if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
                 dc.setExpression(getLanguageFactory().createFunction(
-                        SourceSystemFunctions.CONVERT,
-                        new Expression[] {
-                            expr,
-                            new Literal(TypeFacility.RUNTIME_NAMES.GEOMETRY, String.class)
-                        },
-                        TypeFacility.RUNTIME_TYPES.GEOMETRY
-                ));
+                        SourceSystemFunctions.ST_ASBINARY, new Expression[] {expr}, TypeFacility.RUNTIME_TYPES.BLOB));
             }
         } else if (obj instanceof Literal) {
             Literal l = (Literal) obj;
             // For GEOMETRY, force source to do implicit conversion from WKB blob to proprietary struct.
             if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
                 return Arrays.asList(getLanguageFactory().createFunction(
-                        SourceSystemFunctions.CONVERT,
-                        new Expression[] {
-                            l,
-                            new Literal(TypeFacility.RUNTIME_NAMES.BLOB, String.class)
-                        },
-                        TypeFacility.RUNTIME_TYPES.BLOB
+                        SourceSystemFunctions.ST_GEOMFROMBINARY, new Expression[] {l}, TypeFacility.RUNTIME_TYPES.GEOMETRY
                 ));
             }
         }
     	return parts;
     }
-
+    
     /**
      * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
      * if to rely on the default translation. 
@@ -619,7 +608,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	return null;
     }
-
+    
     /**
      * Return a map of function name to FunctionModifier.
      * @return Map of function name to FunctionModifier.

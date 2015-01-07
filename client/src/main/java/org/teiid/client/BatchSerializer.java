@@ -47,6 +47,7 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.XMLType;
 import org.teiid.jdbc.JDBCPlugin;
 
@@ -63,11 +64,14 @@ import org.teiid.jdbc.JDBCPlugin;
  *   outside of jdbc allowed values
  * <li>version 2: starts with 8.2 and adds better array serialization and
  *   uses a safer date/time serialization
+ * <li>version 3: starts with 8.6 and adds better repeated string performance
+ * <li>version 4: starts with 8.10 and adds the geometry type
  * </ul>
  */
 public class BatchSerializer {
 
-    static final byte CURRENT_VERSION = (byte)3;
+	public static final byte VERSION_GEOMETRY = (byte)4;
+    static final byte CURRENT_VERSION = VERSION_GEOMETRY;
 
 	private BatchSerializer() {} // Uninstantiable
 
@@ -91,33 +95,34 @@ public class BatchSerializer {
         serializers.put(DataTypeManager.DefaultDataTypes.STRING,     	new ColumnSerializer[] {defaultSerializer, new StringColumnSerializer1(), new StringColumnSerializer1(), new StringColumnSerializer3()});
         serializers.put(DataTypeManager.DefaultDataTypes.CLOB,  	   	new ColumnSerializer[] {defaultSerializer, new ClobColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.BLOB,     		new ColumnSerializer[] {defaultSerializer, new BlobColumnSerializer1()});
+        serializers.put(DataTypeManager.DefaultDataTypes.GEOMETRY,     	new ColumnSerializer[] {defaultSerializer, new GeometryColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.XML,     		new ColumnSerializer[] {defaultSerializer, new XmlColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.NULL,     		new ColumnSerializer[] {defaultSerializer, new NullColumnSerializer1()});
-        serializers.put(DataTypeManager.DefaultDataTypes.OBJECT,     	new ColumnSerializer[] {defaultSerializer, new ObjectColumnSerializer(DataTypeManager.DefaultTypeCodes.VARBINARY, (byte)1)});
+        serializers.put(DataTypeManager.DefaultDataTypes.OBJECT,     	new ColumnSerializer[] {defaultSerializer, new ObjectColumnSerializer((byte)1)});
         serializers.put(DataTypeManager.DefaultDataTypes.VARBINARY,    	new ColumnSerializer[] {new BinaryColumnSerializer(), new BinaryColumnSerializer1()});
     }
 
     private static ColumnSerializer arrayColumnSerializer = new ColumnSerializer() {
 
     	@Override
-    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache)
+    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version)
     			throws IOException {
     		try {
-				super.writeObject(out, ((java.sql.Array)obj).getArray(), cache);
+				super.writeObject(out, ((java.sql.Array)obj).getArray(), cache, version);
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
     	}
 
     	@Override
-    	protected Object readObject(ObjectInput in, List<Object> cache) throws IOException,
+    	protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException,
     			ClassNotFoundException {
     		return new ArrayImpl((Object[]) in.readObject());
     	}
 
     };
 
-    private static final ColumnSerializer arrayColumnSerialier2 = new ArrayColumnSerializer2(new ObjectColumnSerializer(DataTypeManager.DefaultTypeCodes.VARBINARY, (byte)2));
+    private static final ColumnSerializer arrayColumnSerialier2 = new ArrayColumnSerializer2(new ObjectColumnSerializer((byte)2));
 
 	private static final class ArrayColumnSerializer2 extends ColumnSerializer {
 
@@ -128,7 +133,7 @@ public class BatchSerializer {
 		}
 
 		@Override
-    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache)
+    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version)
     			throws IOException {
 			Object[] values = null;
     		try {
@@ -139,13 +144,16 @@ public class BatchSerializer {
     		}
 			out.writeInt(values.length);
 			int code = DataTypeManager.getTypeCode(values.getClass().getComponentType());
+			if (code == DataTypeManager.DefaultTypeCodes.GEOMETRY && version < VERSION_GEOMETRY) {
+				code = DataTypeManager.DefaultTypeCodes.BLOB;
+			}
     		out.writeByte((byte)code);
     		for (int i = 0; i < values.length;) {
     			writeIsNullData(out, i, values);
     			int end = Math.min(values.length, i+8);
     			for (; i < end; i++) {
     				if (values[i] != null) {
-						this.ser.writeObject(out, values[i], code, cache);
+						this.ser.writeObject(out, values[i], code, cache, version);
 					}
     			}
     		}
@@ -153,7 +161,7 @@ public class BatchSerializer {
     	}
 
 		@Override
-    	protected Object readObject(ObjectInput in, List<Object> cache) throws IOException,
+    	protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException,
     			ClassNotFoundException {
     		int length = in.readInt();
     		if (length == -1) {
@@ -166,7 +174,7 @@ public class BatchSerializer {
     			int end = Math.min(length, i+8);
     			for (; i < end; i++) {
 					if (!isNullObject(i, b)) {
-						vals[i] = this.ser.readObject(in, cache, code);
+						vals[i] = this.ser.readObject(in, cache, code, version);
 					}
     			}
     		}
@@ -183,7 +191,7 @@ public class BatchSerializer {
 
 	static class BinaryColumnSerializer1 extends ColumnSerializer {
 		@Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache)
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version)
 				throws IOException {
 			byte[] bytes = ((BinaryType)obj).getBytes();
 			out.writeInt(bytes.length); //in theory this could be a short, but we're not strictly enforcing the length
@@ -191,7 +199,7 @@ public class BatchSerializer {
 		}
 
 		@Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException,
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException,
 				ClassNotFoundException {
 			int length = in.readInt();
 			byte[] bytes = new byte[length];
@@ -202,40 +210,41 @@ public class BatchSerializer {
 
     static class BinaryColumnSerializer extends ColumnSerializer {
 		@Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache)
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version)
 				throws IOException {
 			//uses object serialization for compatibility with legacy clients
-			super.writeObject(out, ((BinaryType)obj).getBytesDirect(), cache);
+			super.writeObject(out, ((BinaryType)obj).getBytesDirect(), cache, version);
 		}
 
 		@Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException,
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException,
 				ClassNotFoundException {
 			//won't actually be used
-			byte[] bytes = (byte[])super.readObject(in, cache);
+			byte[] bytes = (byte[])super.readObject(in, cache, version);
 			return new BinaryType(bytes);
 		}
 	}
 
 	public static final class ObjectColumnSerializer extends ColumnSerializer {
 
-		int highestKnownCode;
-		byte version;
+		byte defaultVersion;
 
-    	public ObjectColumnSerializer(int highestKnownCode, byte version) {
-    		this.highestKnownCode = highestKnownCode;
-    		this.version = version;
+    	public ObjectColumnSerializer(byte version) {
+    		this.defaultVersion = version;
 		}
 
 		@Override
-    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache)
+    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version)
     			throws IOException {
     		int code = DataTypeManager.getTypeCode(obj.getClass());
+    		if (code == DataTypeManager.DefaultTypeCodes.GEOMETRY && version < VERSION_GEOMETRY) {
+				code = DataTypeManager.DefaultTypeCodes.BLOB;
+			}
     		out.writeByte((byte)code);
-    		writeObject(out, obj, code, cache);
+    		writeObject(out, obj, code, cache, version<VERSION_GEOMETRY?this.defaultVersion:version);
     	}
 
-		protected void writeObject(ObjectOutput out, Object obj, int code, Map<Object, Integer> cache)
+		protected void writeObject(ObjectOutput out, Object obj, int code, Map<Object, Integer> cache, byte effectiveVersion)
 				throws IOException {
 			if (code == DataTypeManager.DefaultTypeCodes.BOOLEAN) {
     			if (Boolean.TRUE.equals(obj)) {
@@ -243,22 +252,23 @@ public class BatchSerializer {
     			} else {
     				out.write((byte)0);
     			}
-    		} else if (code <= this.highestKnownCode && code != DataTypeManager.DefaultTypeCodes.OBJECT) {
-    			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(obj.getClass()), this.version);
-    			s.writeObject(out, obj, cache);
+    		} else if (code == DataTypeManager.DefaultTypeCodes.OBJECT) {
+    			super.writeObject(out, obj, cache, effectiveVersion);
     		} else {
-    			super.writeObject(out, obj, cache);
+    			String name = DataTypeManager.getDataTypeName(obj.getClass());
+    			ColumnSerializer s = getSerializer(name, effectiveVersion);
+    			s.writeObject(out, obj, cache, effectiveVersion);
     		}
     	}
 
     	@Override
-    	protected Object readObject(ObjectInput in, List<Object> cache) throws IOException,
+    	protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException,
     			ClassNotFoundException {
     		int code = in.readByte();
-    		return readObject(in, cache, code);
+    		return readObject(in, cache, code, version<VERSION_GEOMETRY?this.defaultVersion:version);
     	}
 
-		private Object readObject(ObjectInput in, List<Object> cache, int code) throws IOException,
+		private Object readObject(ObjectInput in, List<Object> cache, int code, byte effectiveVersion) throws IOException,
 				ClassNotFoundException {
 			if (code == DataTypeManager.DefaultTypeCodes.BOOLEAN) {
     			if (in.readByte() == (byte)0) {
@@ -267,10 +277,10 @@ public class BatchSerializer {
     			return Boolean.TRUE;
     		}
     		if (code != DataTypeManager.DefaultTypeCodes.OBJECT) {
-    			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(DataTypeManager.getClass(code)), this.version);
-    			return s.readObject(in, cache);
+    			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(DataTypeManager.getClass(code)), this.defaultVersion);
+    			return s.readObject(in, cache, effectiveVersion);
     		}
-			return super.readObject(in, cache);
+			return super.readObject(in, cache, effectiveVersion);
     	}
 		
 		@Override
@@ -284,7 +294,7 @@ public class BatchSerializer {
 
     private static class StringColumnSerializer1 extends ColumnSerializer {
     	@Override
-    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+    	protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
     		String str = (String)obj;
         	if (str.length() <= MAX_UTF) {
         		//skip object serialization if we have a short string
@@ -297,12 +307,12 @@ public class BatchSerializer {
         }
 
     	@Override
-    	protected Object readObject(ObjectInput in, List<Object> cache) throws IOException,
+    	protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException,
     			ClassNotFoundException {
     		if (in.readByte() == ObjectStreamConstants.TC_STRING) {
     			return in.readUTF();
     		}
-    		return super.readObject(in, cache);
+    		return super.readObject(in, cache, version);
     	}
     	
     }
@@ -311,7 +321,7 @@ public class BatchSerializer {
     	private static final int MAX_INLINE_STRING_LENGTH = 5;
     	private static final byte REPEATED_STRING = 0;
     	@Override
-    	protected Object readObject(ObjectInput in, List<Object> cache)
+    	protected Object readObject(ObjectInput in, List<Object> cache, byte version)
     			throws IOException, ClassNotFoundException {
     		byte b = in.readByte();
     		if (b == ObjectStreamConstants.TC_STRING) {
@@ -334,7 +344,7 @@ public class BatchSerializer {
     	
     	@Override
     	protected void writeObject(ObjectOutput out, Object obj,
-    			Map<Object, Integer> cache) throws IOException {
+    			Map<Object, Integer> cache, byte version) throws IOException {
     		String str = (String)obj;
     		Integer val = cache.get(str);
     		if (val != null) {
@@ -345,7 +355,7 @@ public class BatchSerializer {
     		if (str.length() > MAX_INLINE_STRING_LENGTH) {
     			cache.put(str, cache.size());
     		}
-    		super.writeObject(out, obj, cache);
+    		super.writeObject(out, obj, cache, version);
     	}
     	
     	@Override
@@ -357,23 +367,23 @@ public class BatchSerializer {
     private static class NullColumnSerializer1 extends ColumnSerializer {
     	@Override
     	public void writeColumn(ObjectOutput out, int col,
-    			List<? extends List<?>> batch, Map<Object, Integer> cache) throws IOException {
+    			List<? extends List<?>> batch, Map<Object, Integer> cache, byte version) throws IOException {
     	}
 
     	@Override
     	public void readColumn(ObjectInput in, int col,
-    			List<List<Object>> batch, byte[] isNull, List<Object> cache) throws IOException,
+    			List<List<Object>> batch, byte[] isNull, List<Object> cache, byte version) throws IOException,
     			ClassNotFoundException {
     	}
     }
 
     private static class ClobColumnSerializer1 extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
         	((Externalizable)obj).writeExternal(out);
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException, ClassNotFoundException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
         	ClobType ct = new ClobType();
         	ct.readExternal(in);
             return ct;
@@ -382,12 +392,30 @@ public class BatchSerializer {
 
     private static class BlobColumnSerializer1 extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
         	((Externalizable)obj).writeExternal(out);
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException, ClassNotFoundException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
         	BlobType bt = new BlobType();
+        	bt.readExternal(in);
+            return bt;
+        }
+    }
+    
+    private static class GeometryColumnSerializer extends ColumnSerializer {
+        @Override
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
+    		((Externalizable)obj).writeExternal(out);
+        }
+        @Override
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
+        	if (version < 4) {
+            	BlobType bt = new BlobType();
+            	bt.readExternal(in);
+                return bt;
+        	}
+        	GeometryType bt = new GeometryType();
         	bt.readExternal(in);
             return bt;
         }
@@ -395,13 +423,13 @@ public class BatchSerializer {
 
     private static class XmlColumnSerializer1 extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
-        	((XMLType)obj).writeExternal(out, CURRENT_VERSION);
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
+        	((XMLType)obj).writeExternal(out, (byte) 1);
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException, ClassNotFoundException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
         	XMLType xt = new XMLType();
-        	xt.readExternal(in, CURRENT_VERSION);
+        	xt.readExternal(in, (byte)1);
             return xt;
         }
     }
@@ -497,30 +525,30 @@ public class BatchSerializer {
      * @since 4.2
      */
     private static class ColumnSerializer {
-        public void writeColumn(ObjectOutput out, int col, List<? extends List<?>> batch, Map<Object, Integer> cache) throws IOException {
+        public void writeColumn(ObjectOutput out, int col, List<? extends List<?>> batch, Map<Object, Integer> cache, byte version) throws IOException {
             writeIsNullData(out, col, batch);
             Object obj = null;
             for (int i = 0; i < batch.size(); i++) {
                 obj = batch.get(i).get(col);
                 if (obj != null) {
-                    writeObject(out, obj, cache);
+                    writeObject(out, obj, cache, version);
                 }
             }
         }
 
-        public void readColumn(ObjectInput in, int col, List<List<Object>> batch, byte[] isNull, List<Object> cache) throws IOException, ClassNotFoundException {
+        public void readColumn(ObjectInput in, int col, List<List<Object>> batch, byte[] isNull, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
             readIsNullData(in, isNull);
             for (int i = 0; i < batch.size(); i++) {
                 if (!isNullObject(isNull, i)) {
-                    batch.get(i).set(col, DataTypeManager.getCanonicalValue(readObject(in, cache)));
+                    batch.get(i).set(col, DataTypeManager.getCanonicalValue(readObject(in, cache, version)));
                 }
             }
         }
 
-        protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+        protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
         	out.writeObject(obj);
         }
-        protected Object readObject(ObjectInput in, List<Object> cache) throws IOException, ClassNotFoundException {
+        protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
         	return in.readObject();
         }
         
@@ -531,55 +559,55 @@ public class BatchSerializer {
 
     private static class IntColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeInt(((Integer)obj).intValue());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return Integer.valueOf(in.readInt());
         }
     }
 
     private static class LongColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeLong(((Long)obj).longValue());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return Long.valueOf(in.readLong());
         }
     }
 
     private static class FloatColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeFloat(((Float)obj).floatValue());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return new Float(in.readFloat());
         }
     }
 
     private static class DoubleColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeDouble(((Double)obj).doubleValue());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return new Double(in.readDouble());
         }
     }
 
     private static class ShortColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeShort(((Short)obj).shortValue());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return Short.valueOf(in.readShort());
         }
     }
@@ -589,7 +617,7 @@ public class BatchSerializer {
          * by using a 8 bit mask that is bit-shifted to mask each value.
          */
     	@Override
-        public void writeColumn(ObjectOutput out, int col, List<? extends List<?>> batch, Map<Object, Integer> cache) throws IOException {
+        public void writeColumn(ObjectOutput out, int col, List<? extends List<?>> batch, Map<Object, Integer> cache, byte version) throws IOException {
             int currentByte = 0;
             int mask = 0x80;
             Object obj;
@@ -621,7 +649,7 @@ public class BatchSerializer {
             }
             // Invariant mask != 0
             // If we haven't reached the eight-row mark then the loop would not have written this byte
-            // Write the final byte containing data for th extra rows, if it exists.
+            // Write the final byte containing data for the extra rows, if it exists.
             if (mask != 0x80) {
                 out.write(currentByte);
             }
@@ -629,7 +657,7 @@ public class BatchSerializer {
     	
     	@Override
     	public void readColumn(ObjectInput in, int col,
-    			List<List<Object>> batch, byte[] isNull, List<Object> cache) throws IOException,
+    			List<List<Object>> batch, byte[] isNull, List<Object> cache, byte version) throws IOException,
         		ClassNotFoundException {
             int currentByte = 0, mask = 0; // Initialize the mask so that it is reset in the loop
             boolean isNullVal;
@@ -655,36 +683,36 @@ public class BatchSerializer {
 
     private static class ByteColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeByte(((Byte)obj).byteValue());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return Byte.valueOf(in.readByte());
         }
     }
 
     private static class CharColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeChar(((Character)obj).charValue());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return Character.valueOf(in.readChar());
         }
     }
 
     private static class BigIntegerColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             BigInteger val = (BigInteger)obj;
             byte[] bytes = val.toByteArray();
             out.writeInt(bytes.length);
             out.write(bytes);
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             int length = in.readInt();
             byte[] bytes = new byte[length];
             in.readFully(bytes);
@@ -694,7 +722,7 @@ public class BatchSerializer {
 
     private static class BigDecimalColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             BigDecimal val = (BigDecimal)obj;
             out.writeInt(val.scale());
             BigInteger unscaled = val.unscaledValue();
@@ -703,7 +731,7 @@ public class BatchSerializer {
             out.write(bytes);
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             int scale = in.readInt();
             int length = in.readInt();
             byte[] bytes = new byte[length];
@@ -714,22 +742,22 @@ public class BatchSerializer {
 
     private static class DateColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeLong(((java.sql.Date)obj).getTime());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return new java.sql.Date(in.readLong());
         }
     }
 
     private static class TimeColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             out.writeLong(((Time)obj).getTime());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return new Time(in.readLong());
         }
     }
@@ -754,7 +782,7 @@ public class BatchSerializer {
 
     private static class DateColumnSerializer1 extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             long time = ((java.sql.Date)obj).getTime();
             if (time < MIN_DATE_32 || time > MAX_DATE_32) {
             	throw new IOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20029, obj.getClass().getName()));
@@ -762,14 +790,14 @@ public class BatchSerializer {
 			out.writeInt((int)(time/60000) + DATE_NORMALIZER);
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return new java.sql.Date(((in.readInt()&0xffffffffL) - DATE_NORMALIZER)*60000);
         }
     }
 
     private static class TimeColumnSerializer1 extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             long time = ((Time)obj).getTime();
             if (time < MIN_TIME_32 || time > MAX_TIME_32) {
             	throw new IOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20029, obj.getClass().getName()));
@@ -777,20 +805,20 @@ public class BatchSerializer {
 			out.writeInt((int)(time/1000));
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             return new Time((in.readInt()&0xffffffffL)*1000);
         }
     }
 
     private static class TimestampColumnSerializer extends ColumnSerializer {
         @Override
-		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache) throws IOException {
+		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
             Timestamp ts =  (Timestamp)obj;
             out.writeLong(ts.getTime());
             out.writeInt(ts.getNanos());
         }
         @Override
-		protected Object readObject(ObjectInput in, List<Object> cache) throws IOException {
+		protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException {
             Timestamp ts = new Timestamp(in.readLong());
             ts.setNanos(in.readInt());
             return ts;
@@ -804,7 +832,6 @@ public class BatchSerializer {
     			if (version < 2) {
     				return arrayColumnSerializer;
     			}
-    			//TODO: make this scalable with version
     			return arrayColumnSerialier2;
     		}
     		return defaultSerializer;
@@ -837,7 +864,7 @@ public class BatchSerializer {
 	            		cache = new HashMap<Object, Integer>();
 	            	}
 	                try {
-	                    serializer.writeColumn(out, i, batch, cache);
+	                    serializer.writeColumn(out, i, batch, cache, version);
 	                } catch (ClassCastException e) {
 	                    Object obj = null;
 	                    String objectClass = null;
@@ -894,7 +921,7 @@ public class BatchSerializer {
             if (cache == null && serializer.usesCache(version)) {
         		cache = new ArrayList<Object>();
         	}
-            serializer.readColumn(in, col, batch, isNullBuffer, cache);
+            serializer.readColumn(in, col, batch, isNullBuffer, cache, version);
         }
         return batch;
     }

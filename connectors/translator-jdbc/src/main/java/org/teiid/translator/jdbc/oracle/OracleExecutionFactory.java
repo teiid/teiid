@@ -58,7 +58,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.*;
-import org.teiid.translator.jdbc.ConvertModifier.FormatModifier;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
@@ -106,7 +105,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	 */
 	static final class RefCursorType {}
 	static int CURSOR_TYPE = -10;
-	static final String REF_CURSOR = "REF CURSOR";
+	static final String REF_CURSOR = "REF CURSOR"; //$NON-NLS-1$
 	
 	/*
 	 * handling for char bindings
@@ -218,7 +217,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 			}
 		}, 
 		FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG,	FunctionModifier.BIGINTEGER);
-        convertModifier.addSourceConversion(new FormatModifier("SDO_UTIL.TO_WKBGEOMETRY"), FunctionModifier.GEOMETRY); //$NON-NLS-1$
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
@@ -237,6 +235,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, STRING, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, OBJECT, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
+    	registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("SDO_UTIL.FROM_WKBGEOMETRY")); //$NON-NLS-1$
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -532,10 +532,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOrderByNullOrdering() {
     	return true;
     }    
-        
+    
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this) {
+    		
     		@Override
     		public void visit(Select select) {
     			if (select.getFrom() == null || select.getFrom().isEmpty()) {
@@ -618,7 +619,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     			super.visit(obj);
     		}
-            
+    		
     		@Override
     		public void visit(Call call) {
         		if (oracleSuppliedDriver && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null) {
@@ -762,6 +763,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(NEAREST_NEIGHBOR_DISTANCE);
         supportedFunctions.add(WITHIN_DISTANCE);
         supportedFunctions.add(FILTER);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
         return supportedFunctions;
     }
     
@@ -902,7 +904,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                 }
     			return super.getRuntimeType(type, typeName, precision);
     		}
-                
+    		
     		@Override
     		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
     	        PreparedStatement stmt = null;

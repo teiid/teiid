@@ -274,7 +274,9 @@ public class LobManager {
 				}
 			};			
 			isf.setLength(byteLength);
-			if (lob instanceof BlobType) {
+			if (lob instanceof GeometryType) {
+				persistedLob = new GeometryType(new BlobImpl(isf));
+			} else if (lob instanceof BlobType) {
 				persistedLob = new BlobType(new BlobImpl(isf));
 			}
 			else if (lob instanceof ClobType) {

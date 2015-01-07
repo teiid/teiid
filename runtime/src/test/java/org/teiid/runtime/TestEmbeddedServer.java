@@ -39,6 +39,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1285,6 +1286,29 @@ public class TestEmbeddedServer {
 		PreparedStatement ps = c.prepareStatement("select * from texttable(? columns a string) as x");
 		ps.setCharacterStream(1, new StringReader("a\nb"));
 		assertTrue(ps.execute());
+	}
+	
+	@Test public void testGeometrySelect() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create view v (i geometry) as select ST_GeomFromText('POLYGON ((100 100, 200 200, 75 75, 100 100))')");
+		
+		es.deployVDB("vdb", mmd1);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("select * from v");
+		assertEquals("geometry", rs.getMetaData().getColumnTypeName(1));
+		assertEquals(Types.BLOB, rs.getMetaData().getColumnType(1));
+		assertEquals("java.sql.Blob", rs.getMetaData().getColumnClassName(1));
+		rs.next();
+		assertEquals(77, rs.getBlob(1).length());
 	}
 
 }

@@ -37,6 +37,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.teiid.client.BatchSerializer;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.ResizingArrayList;
@@ -997,13 +998,18 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];
 
+        byte clientSerializationVersion = this.dqpWorkContext.getClientVersion().getClientSerializationVersion();
         for(int i=0; i<columnSymbols.size(); i++) {
             Expression symbol = columnSymbols.get(i);
             columnNames[i] = Symbol.getShortName(Symbol.getOutputName(symbol));
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
+            if (dataTypes[i].equals(DataTypeManager.DefaultDataTypes.GEOMETRY) && !this.dqpWorkContext.getSession().isEmbedded() && clientSerializationVersion < BatchSerializer.VERSION_GEOMETRY) {
+            	dataTypes[i] = DataTypeManager.DefaultDataTypes.BLOB;
+            }
         }
         ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
-        result.setClientSerializationVersion(this.dqpWorkContext.getClientVersion().getClientSerializationVersion());
+        
+		result.setClientSerializationVersion(clientSerializationVersion);
         result.setDelayDeserialization(this.requestMsg.isDelaySerialization() && this.originalCommand.returnsResultSet());
         return result;
     }

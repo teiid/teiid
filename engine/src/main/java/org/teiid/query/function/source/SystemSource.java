@@ -27,11 +27,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -58,8 +55,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     /** The name of the invocation class for all of the system functions. */
     private static final String FUNCTION_CLASS = FunctionMethods.class.getName(); 
     private static final String XML_FUNCTION_CLASS = XMLSystemFunctions.class.getName(); 
-    private static final String SECURITY_FUNCTION_CLASS = SecuritySystemFunctions.class.getName();
-    private static final String GEOMETRY_FUNCTION_CLASS = GeometryFunctionMethods.class.getName();
+    private static final String SECURITY_FUNCTION_CLASS = SecuritySystemFunctions.class.getName(); 
     
     /**
      * Construct a source of system metadata.
@@ -244,7 +240,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 			functions.add(func);
 		}
 	}
-
+    
     private void addTrimFunction() {
         functions.add(
             new FunctionMethod(SourceSystemFunctions.TRIM, QueryPlugin.Util.getString("SystemSource.trim_desc"), STRING, FUNCTION_CLASS, SourceSystemFunctions.TRIM,//$NON-NLS-1$ 

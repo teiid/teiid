@@ -22,16 +22,30 @@
 
 package org.teiid.translator.jdbc.mysql;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
 import org.teiid.metadata.Table;
-import org.teiid.translator.*;
-import org.teiid.translator.jdbc.*;
-import org.teiid.translator.jdbc.ConvertModifier.FormatModifier;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.AliasModifier;
+import org.teiid.translator.jdbc.ConvertModifier;
+import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
 /** 
@@ -60,7 +74,6 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 	@Override
     public void start() throws TranslatorException {
         super.start();
-
         registerFunctionModifier(SourceSystemFunctions.BITAND, new BitFunctionModifier("&", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITNOT, new BitFunctionModifier("~", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITOR, new BitFunctionModifier("|", getLanguageFactory())); //$NON-NLS-1$
@@ -68,6 +81,8 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.LPAD, new PadFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.RPAD, new PadFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("AsWKB")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("GeomFromWKB")); //$NON-NLS-1$
 
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -90,8 +105,6 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList(function.getParameters().get(0), " + 0.0"); //$NON-NLS-1$
 			}
 		}, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);
-        convertModifier.addSourceConversion(new FormatModifier("AsWKB"), FunctionModifier.GEOMETRY); //$NON-NLS-1$
-        convertModifier.addConvert(FunctionModifier.GEOMETRY, FunctionModifier.BLOB, new FormatModifier("GeomFromWKB")); //$NON-NLS-1$
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
@@ -213,7 +226,8 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         
         supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
         supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
-        
+        supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("ISNULL"); //$NON-NLS-1$
 //        supportedFunctions.add("LEAST"); //$NON-NLS-1$

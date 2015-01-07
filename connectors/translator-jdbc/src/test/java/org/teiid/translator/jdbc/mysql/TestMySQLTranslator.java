@@ -25,7 +25,6 @@ package org.teiid.translator.jdbc.mysql;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -370,19 +369,17 @@ public class TestMySQLTranslator {
             output, TRANSLATOR);
     }
 
-    @Ignore
     @Test
     public void testGeometrySelectConvert() throws Exception {
-        String input = "select shape, ST_AsText(shape), ST_GeomFromText(ST_AsText(shape)) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT AsWKB(COLA_MARKETS.SHAPE), AsText(COLA_MARKETS.SHAPE), AsWKB(GeomFromText(AsText(COLA_MARKETS.SHAPE))) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String input = "select shape from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT AsWKB(COLA_MARKETS.SHAPE) FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
-    @Ignore
     @Test
     public void testGeometryPushdown() throws Exception {
-        String input = "select mkt_id, shape, ST_AsText(shape) from cola_markets where ST_Contains(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'), shape);"; //$NON-NLS-1$
-        String output = "SELECT COLA_MARKETS.MKT_ID, AsWKB(COLA_MARKETS.SHAPE), AsText(COLA_MARKETS.SHAPE) FROM COLA_MARKETS WHERE st_contains(GeomFromText(?), COLA_MARKETS.SHAPE) = 1"; //$NON-NLS-1$
+        String input = "select mkt_id from cola_markets where ST_Contains(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'), shape);"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.MKT_ID FROM COLA_MARKETS WHERE st_contains(GeomFromWKB(?), COLA_MARKETS.SHAPE) = 1"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 }

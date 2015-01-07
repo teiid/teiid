@@ -42,6 +42,7 @@ import javax.security.auth.Subject;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.BatchSerializer;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.message.RequestID;
@@ -71,7 +72,8 @@ public class DQPWorkContext implements Serializable {
 		EIGHT_2("08.02", (byte)2), //$NON-NLS-1$
 		EIGHT_4("08.04.00.CR3", (byte)2), //$NON-NLS-1$
 		EIGHT_6("08.06.00.Beta3", (byte)3), //$NON-NLS-1$
-		EIGHT_7("08.07.00.Beta2", (byte)3); //$NON-NLS-1$
+		EIGHT_7("08.07.00.Beta2", (byte)3), //$NON-NLS-1$
+		EIGHT_10("08.10.00.Alpha3", BatchSerializer.VERSION_GEOMETRY); //$NON-NLS-1$
 		
 		private String string;
 		private byte clientSerializationVersion;

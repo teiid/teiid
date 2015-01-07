@@ -831,12 +831,10 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToSQLXMLTransform());
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.BinaryToBlobTransform());
-		DataTypeManager.addTransform(new org.teiid.core.types.basic.BinaryToBlobTransform(DefaultDataClasses.GEOMETRY));
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.ClobToStringTransform());
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.BlobToBinaryTransform());
-		DataTypeManager.addTransform(new org.teiid.core.types.basic.BlobToBinaryTransform(DefaultDataClasses.GEOMETRY));
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
 		

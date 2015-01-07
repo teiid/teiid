@@ -122,7 +122,6 @@
         <dependency>
             <groupId>com.vividsolutions</groupId>
             <artifactId>jts</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

@@ -21,7 +21,7 @@
  */
 package org.teiid.query.metadata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,7 +30,10 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -302,4 +305,12 @@ public class TestDDLStringVisitor {
 		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, IN p2 string, INOUT p3 bigdecimal) RETURNS TABLE (r1 string(100)[], r2 bigdecimal[][])";
 		helpTest(ddl, expected);		
 	}
+	
+	@Test public void testGeometry() throws Exception {
+		String ddl = "CREATE foreign table G1( e1 geometry)";
+		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
+				"	e1 geometry\n" + 
+				");";
+		helpTest(ddl, expected);
+	}	
 }

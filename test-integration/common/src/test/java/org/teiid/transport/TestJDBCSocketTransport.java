@@ -25,9 +25,12 @@ package org.teiid.transport;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.NotSerializableException;
 import java.io.StringReader;
 import java.net.InetSocketAddress;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,7 +50,13 @@ import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -62,6 +71,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnectionFactory;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -337,6 +347,34 @@ public class TestJDBCSocketTransport {
 		PreparedStatement s = conn.prepareStatement("select to_bytes(?, 'ascii')");
 		s.setCharacterStream(1, new StringReader(new String(new char[200000])));
 		s.execute();
+	}
+	
+	@Test public void testGeometryStreaming() throws Exception {
+		StringBuilder geomString = new StringBuilder();
+		for (int i = 0; i < 600; i++) {
+			geomString.append("100 100,");
+		}
+		geomString.append("100 100");
+		final GeometryType geo = GeometryUtils.geometryFromClob(new ClobType(new ClobImpl("POLYGON ((" + geomString + "))")));
+		long length = geo.length();
+		assertTrue(length > DataTypeManager.MAX_LOB_MEMORY_BYTES);
+		PreparedStatement s = conn.prepareStatement("select st_geomfrombinary(?)");
+		s.setBlob(1, new BlobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				try {
+					return geo.getBinaryStream();
+				} catch (SQLException e) {
+					throw new IOException(e);
+				}
+			}
+		}));
+		ResultSet rs = s.executeQuery();
+		rs.next();
+		Blob b = rs.getBlob(1);
+		assertEquals(length, b.length());
+		b.getBytes(1, (int) b.length());
 	}
 	
 }

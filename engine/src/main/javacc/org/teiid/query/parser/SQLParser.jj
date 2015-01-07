@@ -113,7 +113,6 @@ TOKEN: /* Data types */
 {
 	<STRING: "string">
 |   <VARBINARY: "varbinary">
-|   <GEOMETRY: "geometry">
 |   <VARCHAR: "varchar">
 |	<BOOLEAN: "boolean">
 |	<BYTE: "byte">
@@ -495,6 +494,7 @@ TOKEN : /* NonReserved words */
 |   <JSONARRAY_AGG: "jsonarray_agg">
 |   <JSONOBJECT: "jsonobject">
 |   <PRESERVE: "preserve">
+|   <GEOMETRY: "geometry">
 
 }
 /*
