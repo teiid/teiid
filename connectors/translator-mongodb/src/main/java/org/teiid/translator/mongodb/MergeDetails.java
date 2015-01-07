@@ -29,7 +29,7 @@ import org.teiid.translator.TranslatorException;
 import com.mongodb.DB;
 import com.mongodb.DBRef;
 
-public class MutableDBRef implements Cloneable {
+public class MergeDetails implements Cloneable {
 	enum Association {ONE, MANY};
 
 	private String parentTable;
@@ -44,6 +44,11 @@ public class MutableDBRef implements Cloneable {
 	private String referenceName;
 	private String alias;
 	private boolean nested;
+	private MongoDocument document;
+
+	public MergeDetails(MongoDocument document) {
+	    this.document = document;
+	}
 
     public String getAlias() {
 		if (this.alias != null) {
@@ -72,7 +77,7 @@ public class MutableDBRef implements Cloneable {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public DBRef getDBRef(DB db, boolean push) {
 		if (this.id != null) {
 			if (this.idReference != null) {
@@ -82,14 +87,14 @@ public class MutableDBRef implements Cloneable {
 		}
 		return null;
 	}
-	
+
 	public Object getValue() {
 		if (this.id != null) {
 			return this.id.getValue();
 		}
 		return null;
-	}	
-	
+	}
+
 	public String getParentTable() {
 		return this.parentTable;
 	}
@@ -154,15 +159,15 @@ public class MutableDBRef implements Cloneable {
 	public void setIdReference(String idReference) {
 		this.idReference = idReference;
 	}
-	
+
     public boolean isNested() {
         return nested;
     }
 
     public void setNested(boolean nested) {
         this.nested = nested;
-    }	
-    
+    }
+
     public String getParentColumnName(String columnName) {
         for(int i = 0; i< this.columns.size(); i++) {
             if (this.columns.get(i).equalsIgnoreCase(columnName)) {
@@ -182,8 +187,8 @@ public class MutableDBRef implements Cloneable {
 	}
 
 	@Override
-	public MutableDBRef clone() {
-		MutableDBRef clone = new MutableDBRef();
+	public MergeDetails clone() {
+		MergeDetails clone = new MergeDetails(this.document);
 		clone.parentTable = this.parentTable;
 		if (this.id != null) {
 			clone.id = this.id.clone();

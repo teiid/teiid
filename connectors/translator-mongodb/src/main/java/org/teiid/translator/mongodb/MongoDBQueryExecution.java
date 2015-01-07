@@ -74,7 +74,10 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 		if (collection != null) {
 			// TODO: check to see how to pass the hint
 			ArrayList<DBObject> ops = new ArrayList<DBObject>();
-			buildAggregate(ops, "$project", this.visitor.unwindProject); //$NON-NLS-1$
+
+			for (ProcessingNode ref:this.visitor.mergePlanner.getNodes()) {
+                buildAggregate(ops, ref.getInstruction()); 
+            }
 			
 			if (this.visitor.project.isEmpty()) {
 			    throw new TranslatorException(MongoDBPlugin.Event.TEIID18025, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18025));
@@ -86,11 +89,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$
 			}
 
-			if (!this.visitor.unwindTables.isEmpty()) {
-				for (String ref:this.visitor.unwindTables) {
-					buildAggregate(ops, "$unwind", "$"+ref); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-			}
+			
 			buildAggregate(ops, "$match", this.visitor.match); //$NON-NLS-1$
 
 			buildAggregate(ops, "$group", this.visitor.group); //$NON-NLS-1$
@@ -123,6 +122,12 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			query.add(new BasicDBObject(type, object));
 		}
 	}
+	
+    private void buildAggregate(List<DBObject> query, DBObject dbObject) {
+        if (dbObject != null) {
+            query.add(dbObject);
+        }
+    }	
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {

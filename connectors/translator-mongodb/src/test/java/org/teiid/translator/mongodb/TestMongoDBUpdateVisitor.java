@@ -21,13 +21,14 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -62,8 +63,8 @@ public class TestMongoDBUpdateVisitor {
 
     }
 
-    private MutableDBRef buildKey(String name, String parentTable, String embeddedTable, String id) {
-    	MutableDBRef key = new MutableDBRef();
+    private MergeDetails buildKey(String name, String parentTable, String embeddedTable, String id) {
+    	MergeDetails key = new MergeDetails(null);
     	key.setName(name);
     	key.setParentTable(parentTable);
     	key.setEmbeddedTable(embeddedTable);
@@ -71,7 +72,7 @@ public class TestMongoDBUpdateVisitor {
     	return key;
     }
 
-    private void helpExecute(String query, String collection, String expected, String match, MutableDBRef pushKey, List<MutableDBRef> pullKeys) throws Exception {
+    private void helpExecute(String query, String collection, String expected, String match, MergeDetails pushKey, List<MergeDetails> pullKeys) throws Exception {
     	Command cmd = this.utility.parseCommand(query);
     	MongoDBUpdateVisitor visitor = new MongoDBUpdateVisitor(this.translator, this.utility.createRuntimeMetadata(), Mockito.mock(DB.class));
     	visitor.visitNode(cmd);
@@ -99,8 +100,8 @@ public class TestMongoDBUpdateVisitor {
     		assertEquals("Wrong PushKey", pushKey.toString(), visitor.mongoDoc.getMergeKey().toString());
     	}
 
-    	if (!visitor.mongoDoc.getEmbeddableReferences().isEmpty()) {
-    		assertEquals("Wrong PullKeys", visitor.mongoDoc.getEmbeddableReferences().toString(), pullKeys.toString());
+    	if (!visitor.mongoDoc.getEmbeddedReferences().isEmpty()) {
+    		assertEquals("Wrong PullKeys", visitor.mongoDoc.getEmbeddedReferences().toString(), pullKeys.toString());
     	}
     	this.docs = null;
     }
@@ -118,7 +119,7 @@ public class TestMongoDBUpdateVisitor {
 		this.docs.put("Categories", new BasicDBObject("categoryK", "categoryV"));
 		this.docs.put("Suppliers", new BasicDBObject("SuppliersK", "SuppliersV"));
 
-		ArrayList<MutableDBRef> pull = new ArrayList<MutableDBRef>();
+		ArrayList<MergeDetails> pull = new ArrayList<MergeDetails>();
 		pull.add(buildKey("Categories", "Products", "Categories", "24"));
 		pull.add(buildKey("Suppliers", "Products", "Suppliers", "34"));
 
@@ -175,20 +176,12 @@ public class TestMongoDBUpdateVisitor {
 				buildKey("FK1", "Orders", "OrderDetails", null), null);
 	}
 
-	@Test
+	@Test(expected=TranslatorException.class)
 	public void testUpdateMergeReferenceUpdate() throws Exception {
 		helpExecute("UPDATE OrderDetails SET ProductID = 4", "Orders",
 				"{ \"ProductID\" : 4}",
 				null, buildKey("FK1", "Orders", "OrderDetails", null),
 				null);
-	}
-
-	@Test
-	public void testUpdateMergeReferenceUpdateWhere() throws Exception {
-		helpExecute("UPDATE OrderDetails SET ProductID = 4 WHERE ProductID = 3",
-				"Orders",
-				"{ \"ProductID\" : 4}", "{ \"OrderDetails._id.ProductID\" : 3}",
-				buildKey("OrderDetails", "Orders", "OrderDetails", null), null);
 	}
 
 	@Test(expected=TranslatorException.class)
@@ -205,7 +198,7 @@ public class TestMongoDBUpdateVisitor {
 		this.docs = new LinkedHashMap<String, DBObject>();
 		this.docs.put("Categories", new BasicDBObject("categoryK", "categoryV"));
 
-		ArrayList<MutableDBRef> pull = new ArrayList<MutableDBRef>();
+		ArrayList<MergeDetails> pull = new ArrayList<MergeDetails>();
 		pull.add(buildKey("Categories", "Products", "Categories", "4"));
 		pull.add(buildKey("Suppliers", "Products", "Suppliers", null));
 
@@ -234,6 +227,7 @@ public class TestMongoDBUpdateVisitor {
 	}
 
 	@Test
+	@Ignore
 	public void testCompositeKeyUpdate() throws Exception {
 		helpExecute("update G1 set e2 = 48",  "G1", "{ \"_id.e2\" : 48}", null, null, null);
 	}

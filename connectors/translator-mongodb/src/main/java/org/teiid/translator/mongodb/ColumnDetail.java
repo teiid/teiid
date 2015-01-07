@@ -21,46 +21,54 @@
  */
 package org.teiid.translator.mongodb;
 
+import java.util.ArrayList;
+
 import com.mongodb.QueryBuilder;
 
 class ColumnDetail {
-    String documentFieldName;
-	String projectedName;
-	String documentQueryFieldName;
-	String targetDocumentFieldName;
-	String tableName;
-	String columnName;
-	String targetDocumentName;
+	private ArrayList<String> projectedNames = new ArrayList<String>();
+	String documentFieldName;
 	Object expression;
 	boolean partOfGroupBy;
 	boolean partOfProject;
 
 	public QueryBuilder getQueryBuilder() {
-        QueryBuilder query = QueryBuilder.start(this.projectedName);
-        if (this.documentQueryFieldName != null) {
-            query = QueryBuilder.start(this.documentQueryFieldName); 
+        QueryBuilder query = QueryBuilder.start(this.projectedNames.get(0));
+        if (this.documentFieldName != null) {
+            query = QueryBuilder.start(this.documentFieldName);
         }
-        return query; 
+        return query;
 	}
 
 	public QueryBuilder getPullQueryBuilder() {
-	    QueryBuilder query = QueryBuilder.start(this.projectedName);
-        if (this.targetDocumentFieldName != null) {
-            query = QueryBuilder.start(this.targetDocumentFieldName); 
-        }
-        return query;
+	    if (this.documentFieldName != null) {
+	        return QueryBuilder.start(this.documentFieldName.substring(this.documentFieldName.lastIndexOf('.')+1));
+	    }
+	    return QueryBuilder.start(this.projectedNames.get(0));
     }
-	
+
+	public void addProjectedName(String name) {
+        this.projectedNames.add(0, name);
+    }
+
+	public String getProjectedName(){
+	    return this.projectedNames.get(0);
+	}
+
+    public boolean hasProjectedName(String name) {
+        for(String s: this.projectedNames) {
+            if (s.equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 	@Override
 	public String toString() {
 	    StringBuilder sb = new StringBuilder();
-	    sb.append("Column Name                = ").append(this.columnName).append("\n");  //$NON-NLS-1$//$NON-NLS-2$
-	    sb.append("Document                   = ").append(this.tableName).append("\n");  //$NON-NLS-1$//$NON-NLS-2$
-	    sb.append("Target Document            = ").append(this.targetDocumentName).append("\n");  //$NON-NLS-1$//$NON-NLS-2$
-	    sb.append("Projected Name             = ").append(this.projectedName).append("\n");  //$NON-NLS-1$//$NON-NLS-2$
-	    sb.append("Document Query Field Name  = ").append(this.documentQueryFieldName).append("\n"); //$NON-NLS-1$//$NON-NLS-2$
-	    sb.append("Document Field Name        = ").append(this.documentFieldName).append("\n"); //$NON-NLS-1$//$NON-NLS-2$
-	    sb.append("Target Document Field Name = ").append(this.targetDocumentFieldName).append("\n"); //$NON-NLS-1$//$NON-NLS-2$
+	    sb.append("Projected Name             = ").append(this.projectedNames).append("\n");  //$NON-NLS-1$//$NON-NLS-2$
+	    sb.append("Document Field Name  = ").append(this.documentFieldName).append("\n"); //$NON-NLS-1$//$NON-NLS-2$
 	    sb.append("Expression = ").append(this.expression).append("\n"); //$NON-NLS-1$//$NON-NLS-2$
 		return sb.toString();
 	}

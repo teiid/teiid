@@ -21,52 +21,27 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.translator.TranslatorException;
 
 import com.mongodb.BasicDBObject;
 
-public class IDRef implements Cloneable {
-	LinkedHashMap<String, Object> pk = new LinkedHashMap<String, Object>();
-
-	public void addColumn(String key, Object value) {
-		// only add if not added before
-		if (this.pk.get(key) == null) {
-			this.pk.put(key, value);
-		}
-	}
-
-	public List<String> getKeys(){
-	    return new ArrayList<String>(this.pk.keySet());
-	}
-
-	public Object getValue() {
-		if (this.pk.size() == 1) {
-			for (String key:this.pk.keySet()) {
-				return this.pk.get(key);
-			}
-		}
-		BasicDBObject value = new BasicDBObject();
-		for (String key:this.pk.keySet()) {
-			value.append(key, this.pk.get(key));
-		}
-		return value;
-	}
-
-	@Override
-	public String toString() {
-		Object obj =  getValue();
-		if (obj != null) {
-			return obj.toString();
-		}
-		return null;
-	}
-
-	@Override
-	public IDRef clone() {
-		IDRef clone = new IDRef();
-		clone.pk.putAll(this.pk);
-		return clone;
-	}
+public class ProjectionNode extends ProcessingNode {
+    private BasicDBObject projection;
+    
+    public ProjectionNode (MongoDocument document, BasicDBObject projection) {
+        super(document);
+        this.projection = projection;
+    }
+    
+    public void append(String alias, ProjectionNode node) {
+        this.projection.append(alias, node.projection.get(alias));
+    }
+    
+    @Override
+    public BasicDBObject getInstruction() throws TranslatorException {
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "{\"$project\": {"+this.projection.toString()+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
+        return new BasicDBObject("$project", this.projection); //$NON-NLS-1$ 
+    }
 }

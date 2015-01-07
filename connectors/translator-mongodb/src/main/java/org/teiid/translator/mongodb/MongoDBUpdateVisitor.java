@@ -28,10 +28,12 @@ import java.util.Stack;
 
 import org.teiid.language.*;
 import org.teiid.language.AndOr.Operator;
+import org.teiid.language.Update;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.mongodb.MutableDBRef.Association;
+import org.teiid.translator.mongodb.MergeDetails.Association;
+import org.teiid.translator.mongodb.MongoDBUpdateExecution.RowInfo;
 
 import com.mongodb.*;
 
@@ -43,7 +45,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	private Condition condition;
 	protected Stack<DBObject> onGoingPullCriteria = new Stack<DBObject>();
 	protected TranslatorException pullException;
-	
+
 	public MongoDBUpdateVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata, DB mongoDB) {
 		super(executionFactory, metadata);
 		this.mongoDB = mongoDB;
@@ -57,17 +59,40 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
         List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
 
 		try {
+		    IDRef pk = null;
 			for (int i = 0; i < columns.size(); i++) {
 				String colName = getColumnName(columns.get(i));
 				Expression expr = values.get(i);
-				resolveExpressionValue(obj.getTable().getName(), colName, expr);
+				Object value = resolveExpressionValue(colName, expr);
+				
+                if (this.mongoDoc.isPartOfPrimaryKey(colName)) {
+                    if (pk == null) {
+                        pk = new IDRef();
+                    }
+                    pk.addColumn(colName, value);
+                }
+                else {
+                    this.columnValues.put(colName, value);    
+                }
+
+		        // Update he mongo document to keep track the reference values.
+		        this.mongoDoc.updateReferenceColumnValue(obj.getTable().getName(), colName, value);
+
+		        // if this FK column, replace with reference rather than simple key value
+		        if (this.mongoDoc.isPartOfForeignKey(colName)) {
+		            MergeDetails ref = this.mongoDoc.getFKReference(colName);
+		            this.columnValues.put(colName, ref.clone());
+		        }				
 			}
+            if (pk != null) {
+                this.columnValues.put("_id", pk.getValue()); //$NON-NLS-1$
+            }			
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}
 	}
 
-	private void resolveExpressionValue(String tableName, String colName, Expression expr) throws TranslatorException {
+	private Object resolveExpressionValue(String colName, Expression expr) throws TranslatorException {
 		Object value = null;
 		if (expr instanceof Literal) {
 			value = this.executionFactory.convertToMongoType(((Literal) expr).getValue(), this.mongoDB, colName);
@@ -88,17 +113,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		else {
 			this.exceptions.add(new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18001)));
 		}
-
-		this.columnValues.put(colName, value);
-
-		// Update he mongo document to keep track the reference values.
-		this.mongoDoc.updateReferenceColumnValue(tableName, colName, value);
-
-		// if this FK column, replace with reference rather than simple key value
-		if (this.mongoDoc.isPartOfForeignKey(colName)) {
-			MutableDBRef ref = this.mongoDoc.getFKReference(colName);
-			this.columnValues.put(colName, ref.clone());
-		}
+		return value;
 	}
 
 	@Override
@@ -108,11 +123,46 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
         List<SetClause> changes = obj.getChanges();
         try {
+            IDRef pk = null;
 			for (SetClause clause:changes) {
 				String colName = getColumnName(clause.getSymbol());
+				// make sure user not updating the linked keys
+				if (this.mongoDoc.isMerged()) {
+                    if (this.mongoDoc.getMergeKey().getAssociation() == Association.ONE
+                            && this.mongoDoc.isPartOfPrimaryKey(colName)) {
+                        throw new TranslatorException(MongoDBPlugin.Event.TEIID18035, MongoDBPlugin.Util.gs(
+                                MongoDBPlugin.Event.TEIID18035, colName, obj.getTable().getName()));
+                    } else if (this.mongoDoc.getMergeKey().getAssociation() == Association.MANY
+                            && this.mongoDoc.isPartOfForeignKey(colName)) {
+                        throw new TranslatorException(MongoDBPlugin.Event.TEIID18036, MongoDBPlugin.Util.gs(
+                                MongoDBPlugin.Event.TEIID18036, colName, obj.getTable().getName()));
+                    }
+				}
 				Expression expr = clause.getValue();
-				resolveExpressionValue(obj.getTable().getName(), colName, expr);
+				Object value = resolveExpressionValue(colName, expr);
+
+	            if (this.mongoDoc.isPartOfPrimaryKey(colName)) {
+	                if (pk == null) {
+	                    pk = new IDRef();
+	                }
+	                pk.addColumn(colName, value);
+	            }
+	            else {
+	                this.columnValues.put(colName, value);    
+	            }
+
+                // Update the mongo document to keep track the reference values.
+                this.mongoDoc.updateReferenceColumnValue(obj.getTable().getName(), colName, value);
+
+                // if this FK column, replace with reference rather than simple key value
+                if (this.mongoDoc.isPartOfForeignKey(colName)) {
+                    MergeDetails ref = this.mongoDoc.getFKReference(colName);
+                    this.columnValues.put(colName, ref.clone());
+                }				
 			}
+            if (pk != null) {
+                this.columnValues.put("_id", pk.getValue()); //$NON-NLS-1$
+            }
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}
@@ -136,40 +186,30 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	}
 
 	public BasicDBObject getInsert(LinkedHashMap<String, DBObject> embeddedDocuments) {
-		IDRef pk = null;
-
 		BasicDBObject insert = new BasicDBObject();
 		for (String key:this.columnValues.keySet()) {
 			Object obj = this.columnValues.get(key);
 
-			if (obj instanceof MutableDBRef) {
-				//obj =  ((MutableDBRef)obj).getDBRef(db, true);
-				obj =  ((MutableDBRef)obj).getValue();
+			if (obj instanceof MergeDetails) {
+				obj =  ((MergeDetails)obj).getValue();
 			}
 
-			if (this.mongoDoc.isPartOfPrimaryKey(key)) {
-				if (pk == null) {
-					pk = new IDRef();
-				}
-				pk.addColumn(key, obj);
+			if (key.equals("_id")) { //$NON-NLS-1$
+			    insert.append("_id", obj); //$NON-NLS-1$
 			}
-			else {
-				if (this.mongoDoc.isPartOfForeignKey(key)) {
-					if (obj instanceof BasicDBObject) {
-						insert.append(key, ((BasicDBObject) obj).get(key));
-					}
-					else {
-						insert.append(key, obj);
-					}
-				}
-				else {
-					insert.append(key, obj);
-				}
+			if (!this.mongoDoc.isPartOfPrimaryKey(key)) {
+    			if (this.mongoDoc.isPartOfForeignKey(key)) {
+    				if (obj instanceof BasicDBObject) {
+    					insert.append(key, ((BasicDBObject) obj).get(key));
+    				}
+    				else {
+    					insert.append(key, obj);
+    				}
+    			}
+    			else {
+    				insert.append(key, obj);
+    			}
 			}
-		}
-
-		if (pk != null) {
-			insert.append("_id", pk.getValue()); //$NON-NLS-1$
 		}
 
 		if (this.mongoDoc.hasEmbeddedDocuments()) {
@@ -182,25 +222,21 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		}
 		return insert;
 	}
-
+	
 	public BasicDBObject getUpdate(LinkedHashMap<String, DBObject> embeddedDocuments) throws TranslatorException {
 		BasicDBObject update = new BasicDBObject();
-
-		String embeddedDocumentName = null;
-		if (this.mongoDoc.isMerged()) {
-			embeddedDocumentName = this.mongoDoc.getTable().getName();
-		}
 
 		for (String key:this.columnValues.keySet()) {
 			Object obj = this.columnValues.get(key);
 
-			if (obj instanceof MutableDBRef) {
-				MutableDBRef ref = ((MutableDBRef)obj);
+			if (obj instanceof MergeDetails) {
+				MergeDetails ref = ((MergeDetails)obj);
 
 				if (this.mongoDoc.isMerged()) {
 					// do not allow updating the main document reference where this embedded document is embedded.
 					if (ref.getParentTable().equals(this.mongoDoc.getMergeTable().getName())) {
-						throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18007, ref.getParentTable(), embeddedDocumentName));
+						throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18007, 
+						        ref.getParentTable(), this.mongoDoc.getDocumentName()));
 					}
 				}
 
@@ -215,11 +251,11 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 				}
 				else {
 					update.append(key, ref.getValue());
-				}				
-				
+				}
+
 				// also update the embedded document
 				if (this.mongoDoc.hasEmbeddedDocuments()) {
-					for (MutableDBRef docKey: this.mongoDoc.getEmbeddableReferences()) {
+					for (MergeDetails docKey: this.mongoDoc.getEmbeddedReferences()) {
 						if (ref.getParentTable().equals(docKey.getEmbeddedTable())) {
 							DBObject embedDoc = embeddedDocuments.get(docKey.getName());
 							if (embedDoc == null || ref.getValue() == null) {
@@ -235,14 +271,14 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			else {
 				if (this.mongoDoc.isMerged()) {
 					if (this.mongoDoc.getMergeAssociation() == Association.MANY) {
-						update.append(embeddedDocumentName+".$."+key, obj); //$NON-NLS-1$
+						update.append(this.mongoDoc.getDocumentName()+".$."+key, obj); //$NON-NLS-1$
 					}
 					else {
-						update.append(embeddedDocumentName+"."+key, obj); //$NON-NLS-1$
+						update.append(this.mongoDoc.getDocumentName()+"."+key, obj); //$NON-NLS-1$
 					}
 				}
 				else {
-					if (isPartOfPrimaryKey(this.mongoDoc.getTargetTable(), key)) {
+					if (this.mongoDoc.isPartOfPrimaryKey(key)) {
 						if (hasCompositePrimaryKey(this.mongoDoc.getTargetTable())) {
 							update.append("_id."+key, obj);//$NON-NLS-1$
 						}
@@ -274,36 +310,53 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		return this.pull;
 	}
 
-	public boolean updateMerge(String childTableName, BasicDBList previousRows, BasicDBObject parentKey, BasicDBList updated) throws TranslatorException {
+	public boolean updateMerge(BasicDBList previousRows, RowInfo parentKey, BasicDBList updated) throws TranslatorException {
 	    boolean update = false;
 		for (int i = 0; i < previousRows.size(); i++) {
 			BasicDBObject row = (BasicDBObject)previousRows.get(i);
-			if (this.match == null && getPullQuery() == null || ExpressionEvaluator.matches(this.condition, row, parentKey, childTableName)) {
+			if (this.match == null && getPullQuery() == null || ExpressionEvaluator.matches(this.executionFactory, this.mongoDB, this.condition, row, parentKey)) {
 			    update = true;
 				for (String key:this.columnValues.keySet()) {
 					Object obj = this.columnValues.get(key);
 
-					if (obj instanceof MutableDBRef) {
-						MutableDBRef ref = ((MutableDBRef)obj);
+					if (obj instanceof MergeDetails) {
+						MergeDetails ref = ((MergeDetails)obj);
 						row.put(key, ref.getValue());
 					}
 					else {
 						row.put(key, obj);
 					}
-				}				
+				}
 			}
 			updated.add(row);
 		}
 		return update;
 	}
 	
-	public BasicDBObject updateMerge(String childTableName, BasicDBObject previousRow, BasicDBObject parentKey) throws TranslatorException {
-		if (this.match == null || ExpressionEvaluator.matches(this.condition, previousRow, parentKey, childTableName)) {
+    public boolean updateDelete(BasicDBList previousRows, RowInfo parentKey, BasicDBList updated) throws TranslatorException {
+        for (int i = 0; i < previousRows.size(); i++) {
+            BasicDBObject row = (BasicDBObject)previousRows.get(i);
+            if (this.match == null && getPullQuery() == null
+                    || ExpressionEvaluator.matches(this.executionFactory, this.mongoDB, this.condition, row, parentKey)) {
+                //do not add
+            }
+            else {
+                updated.add(row);    
+            }
+        }
+        return updated.size() != previousRows.size();
+    }	
+	
+	public boolean updateMerge(BasicDBObject previousRow, RowInfo parentKey) throws TranslatorException {
+	    boolean update = false;
+		if (this.match == null || ExpressionEvaluator.matches(this.executionFactory, this.mongoDB, this.condition, previousRow, parentKey)) {
 			for (String key:this.columnValues.keySet()) {
 				Object obj = this.columnValues.get(key);
-	
-				if (obj instanceof MutableDBRef) {
-					MutableDBRef ref = ((MutableDBRef)obj);
+				
+				update = true;
+				
+				if (obj instanceof MergeDetails) {
+					MergeDetails ref = ((MergeDetails)obj);
 					previousRow.put(key, ref.getValue());
 				}
 				else {
@@ -311,9 +364,8 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 				}
 			}
 		}
-		return previousRow;
-	}	
-
+		return update;
+	}
 	
     @Override
     public void visit(Comparison obj) {
@@ -321,62 +373,61 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             super.visit(obj);
             return;
         }
-        
+
         try {
             // this for the normal where clause
-            ColumnDetail exprAlias = getExpressionAlias(obj.getLeftExpression());
-    
+            ColumnDetail leftExpr = getExpressionAlias(obj.getLeftExpression());
+
             append(obj.getRightExpression());
-    
+
             Object rightExpr = this.onGoingExpression.pop();
             if (this.expressionMap.get(rightExpr) != null) {
-                rightExpr = this.expressionMap.get(rightExpr).projectedName;
+                rightExpr = this.expressionMap.get(rightExpr).getProjectedName();
             }
             // build pull criteria for delete; the pull criteria only applies in merge scenario
-            // and only columns in the embedded document.       
+            // and only columns in the embedded document.
             boolean buildPullQuery = (includeInPullCriteria(obj.getLeftExpression()) && includeInPullCriteria(obj.getRightExpression()));
-        
+
             if (!buildPullQuery) {
-                QueryBuilder query = exprAlias.getQueryBuilder();
+                QueryBuilder query = leftExpr.getQueryBuilder();
                 buildComparisionQuery(obj, rightExpr, query);
                 this.onGoingExpression.push(query.get());
             }
             else {
-                QueryBuilder pullQuery = exprAlias.getPullQueryBuilder();
+                QueryBuilder pullQuery = leftExpr.getPullQueryBuilder();
                 buildComparisionQuery(obj, rightExpr, pullQuery);
                 this.onGoingPullCriteria.push(pullQuery.get());
             }
-            
+
             if (obj.getLeftExpression() instanceof ColumnReference) {
-                ColumnReference colum = (ColumnReference)obj.getLeftExpression();
-                this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), exprAlias.columnName, rightExpr);
-            }             
+                ColumnReference column = (ColumnReference)obj.getLeftExpression();
+                this.mongoDoc.updateReferenceColumnValue(column.getTable().getName(), column.getName(), rightExpr);
+            }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
         }
     }
-    
+
     private boolean includeInPullCriteria(Expression expr) throws TranslatorException {
         if (!this.mongoDoc.isMerged()) {
             return false;
         }
         Collection<ColumnReference> columns = CollectorVisitor.collectElements(expr);
         for (ColumnReference column:columns) {
-            ColumnDetail detail = buildColumnDetail(column);
-            if (!detail.targetDocumentName.equals(this.mongoDoc.getTable().getName())) {
+            if (this.mongoDoc.isPartOfForeignKey(column.getName())) {
                 return false;
             }
         }
         return true;
-    }    
-    
+    }
+
     @Override
     public void visit(AndOr obj) {
         if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
             super.visit(obj);
             return;
         }
-        
+
         append(obj.getLeftCondition());
         append(obj.getRightCondition());
 
@@ -384,7 +435,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
         if (this.onGoingExpression.size() >= 2) {
             DBObject right = (DBObject)this.onGoingExpression.pop();
             DBObject left = (DBObject) this.onGoingExpression.pop();
-            
+
             switch(obj.getOperator()) {
             case AND:
                 this.onGoingExpression.push(QueryBuilder.start().and(left, right).get());
@@ -398,7 +449,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
         if (this.onGoingPullCriteria.size() >= 2) {
             DBObject pullRight = this.onGoingPullCriteria.pop();
-            DBObject pullLeft = this.onGoingPullCriteria.pop();            
+            DBObject pullLeft = this.onGoingPullCriteria.pop();
             switch(obj.getOperator()) {
             case AND:
                 this.onGoingPullCriteria.push(QueryBuilder.start().and(pullLeft, pullRight).get());
@@ -408,12 +459,12 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
                 break;
             }
             valid = true;
-        }        
+        }
         if (!valid && obj.getOperator() == Operator.OR) {
             this.pullException = new TranslatorException(MongoDBPlugin.Event.TEIID18029, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18029));
         }
-    }    
-    
+    }
+
     @Override
     public void visit(Function obj) {
         if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
@@ -421,8 +472,8 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             return;
         }
         this.pullException = new TranslatorException(MongoDBPlugin.Event.TEIID18028, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18028));
-    }    
-    
+    }
+
     @Override
     public void visit(In obj) {
         if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
@@ -443,14 +494,14 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             this.exceptions.add(e);
         }
     }
-    
+
     @Override
     public void visit(IsNull obj) {
         if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
             super.visit(obj);
             return;
         }
-        
+
         try {
             boolean buildPullQuery = includeInPullCriteria(obj.getExpression());
             if (buildPullQuery) {
@@ -463,16 +514,16 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
-        }        
+        }
     }
-        
+
     @Override
     public void visit(Like obj) {
         if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {
             super.visit(obj);
             return;
         }
-        
+
         try {
             boolean buildPullQuery = includeInPullCriteria(obj.getLeftExpression());
             if (buildPullQuery) {
@@ -485,6 +536,6 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
             }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
-        }              
-    }    
+        }
+    }
 }

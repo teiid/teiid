@@ -29,20 +29,23 @@ import java.util.Stack;
 import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.mongodb.MongoDBUpdateExecution.RowInfo;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 public class ExpressionEvaluator extends HierarchyVisitor {
 	private BasicDBObject row;
-	private BasicDBObject parentKey;
-	private String tableName;
+	private RowInfo rowInfo;
+	private MongoDBExecutionFactory executionFactory; 
+	private DB mongoDB;
 	protected Stack<Boolean> match = new Stack<Boolean>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-	public static boolean matches(Condition condition, BasicDBObject row, BasicDBObject parentKey, String tableName) throws TranslatorException {
-		ExpressionEvaluator evaluator = new ExpressionEvaluator(row, parentKey, tableName);
+	public static boolean matches(MongoDBExecutionFactory executionFactory, DB mongoDB, Condition condition, BasicDBObject row, RowInfo rowInfo) throws TranslatorException {
+		ExpressionEvaluator evaluator = new ExpressionEvaluator(executionFactory, mongoDB, row, rowInfo);
 		evaluator.append(condition);
 		if (!evaluator.exceptions.isEmpty()) {
 			throw evaluator.exceptions.get(0);
@@ -54,10 +57,11 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 		}
 	}
 
-	private ExpressionEvaluator(BasicDBObject row, BasicDBObject parentKey, String tableName) {
+	private ExpressionEvaluator(MongoDBExecutionFactory executionFactory, DB mongoDB, BasicDBObject row, RowInfo rowInfo) {
+	    this.executionFactory = executionFactory;
+	    this.mongoDB  = mongoDB;
 		this.row = row;
-		this.parentKey = parentKey;
-		this.tableName = tableName;
+		this.rowInfo = rowInfo;
 	}
 
 	@Override
@@ -97,9 +101,16 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 		}
 		ColumnReference column = (ColumnReference)obj;
 		
-		Object value = this.parentKey.get(column.getName());
-		if (value == null && MongoDBSelectVisitor.isPartOfPrimaryKey(column.getTable().getMetadataObject(), column.getName())) {
-			value = this.row.get("_id"); //$NON-NLS-1$
+		Object value = null;
+		if (MongoDBSelectVisitor.isPartOfPrimaryKey(column.getTable().getMetadataObject(), column.getName())) {
+			// this is true one to many case
+		    value = this.row.get("_id"); //$NON-NLS-1$
+			if (value == null) {
+			    value = getValueFromRowInfo(column, value);
+			}
+		}
+        if (value == null && MongoDBSelectVisitor.isPartOfForeignKey(column.getTable().getMetadataObject(), column.getName())) {
+            value = getValueFromRowInfo(column, value);		    
 		}
 		if (value == null) {
 		    value = this.row.get(column.getName());
@@ -109,9 +120,29 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 		}
 		if (value instanceof DBObject) {
 			value = ((DBObject) value).get(column.getName());
-		}
-		return value;
+		}		
+		return this.executionFactory.retrieveValue(value, column.getType(), this.mongoDB, column.getName(), column.getName());
 	}
+
+    private Object getValueFromRowInfo(ColumnReference column, Object value) {
+        String tableName = column.getTable().getMetadataObject().getName();
+        if (this.rowInfo.tableName.equals(tableName) || this.rowInfo.mergedTableName.equals(tableName)) {
+            //  one to one case
+            value = this.rowInfo.PK;
+        }
+        else {
+            // one to many case                 
+            RowInfo info = this.rowInfo;
+            while(info.parent != null) {
+                info = info.parent;
+                if (info.tableName.equals(tableName) || info.mergedTableName.equals(tableName)) {
+                    value = info.PK;
+                    break;
+                }                       
+            }
+        }
+        return value;
+    }
 
 	private Object getLiteralValue(Expression obj) throws TranslatorException {
 		if (!(obj instanceof Literal)) {

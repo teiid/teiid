@@ -59,8 +59,8 @@ public class TestMongoDBQueryExecution {
             .batchSize(256)
             .outputMode(AggregationOptions.OutputMode.CURSOR)
             .allowDiskUse(true)
-            .build();  
-    
+            .build();
+
     @Before
     public void setUp() throws Exception {
     	this.translator = new MongoDBExecutionFactory();
@@ -104,7 +104,7 @@ public class TestMongoDBQueryExecution {
 
 		Mockito.stub(db.getCollectionFromString(Mockito.anyString())).toReturn(dbCollection);
 
-		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context, 
+		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context,
 		        this.utility.createRuntimeMetadata(), connection);
 		execution.execute();
 		return dbCollection;
@@ -162,7 +162,7 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
-	
+
 	@Test
 	public void testSelectEmbeddableWithWhere_ON_NONPK() throws Exception {
 		String query = "SELECT CategoryName FROM Categories WHERE CategoryName = 'Drinks'";
@@ -176,8 +176,8 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$match",new BasicDBObject("CategoryName", "Drinks")),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-	
+	}
+
 	@Test
 	public void testSelectEmbeddableWithWhere_ON_PK() throws Exception {
 		String query = "SELECT CategoryName FROM Categories WHERE CategoryID = 10";
@@ -191,7 +191,7 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$match",new BasicDBObject("_id", 10)),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
+	}
 
 	@Test
 	public void testSelectFromMerged() throws Exception {
@@ -208,27 +208,6 @@ public class TestMongoDBQueryExecution {
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
 
-	@Test
-	public void testSelectMergedWithWhere() throws Exception {
-		String query = "SELECT * FROM OrderDetails WHERE odID = 10248";
-
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 3);
-
-	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$_id");
-	    result.append( "_m1","$OrderDetails._id.ProductID");
-	    result.append( "_m2","$OrderDetails.UnitPrice");
-	    result.append( "_m3","$OrderDetails.Quantity");
-	    result.append( "_m4","$OrderDetails.Discount");
-
-
-		List<DBObject> pipeline = buildArray(
-						new BasicDBObject("$unwind","$OrderDetails"),
-						new BasicDBObject("$match", new BasicDBObject("_id", 10248)),
-						new BasicDBObject("$project", result));
-		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}
-	
 	@Test // one-2-many
 	public void testSelectMergedWithWhere_ON_NON_PK() throws Exception {
 		String query = "SELECT Quantity FROM OrderDetails WHERE UnitPrice = '0.99'";
@@ -243,8 +222,8 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$match", new BasicDBObject("OrderDetails.UnitPrice", 0.99)),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-	
+	}
+
 	@Test // one-2-one
 	public void testSelectMergedWithWhere_ON_NON_PK_one_to_one() throws Exception {
 		String query = "SELECT cust_id, zip FROM Address WHERE Street = 'Highway 100'";
@@ -256,11 +235,12 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$address.zip");
 
 		List<DBObject> pipeline = buildArray(
+		                new BasicDBObject("$match", QueryBuilder.start("address").exists("true").notEquals(null).get()),
 						new BasicDBObject("$match", new BasicDBObject("address.street", "Highway 100")),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-	
+	}
+
 	@Test // one-2-one
 	public void testSelectONE_TO_ONE() throws Exception {
 		String query = "SELECT c.name, a.zip " +
@@ -277,8 +257,8 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-	
+	}
+
 	@Test // one-2-one
 	public void testSelectMergedWithNOWhere_one_to_one() throws Exception {
 		String query = "SELECT cust_id, zip FROM Address";
@@ -290,23 +270,7 @@ public class TestMongoDBQueryExecution {
 	    result.append( "_m1","$address.zip");
 
 		List<DBObject> pipeline = buildArray(
-						new BasicDBObject("$match", QueryBuilder.start("address").exists("true").get()),
-						new BasicDBObject("$project", result));
-		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-
-	@Test
-	public void testTwoTableInnerJoinMergeAssosiationMany() throws Exception {
-		String query = "SELECT o.CustomerID, od.ProductID FROM Orders o JOIN OrderDetails od ON o.OrderID=od.odID";
-
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 3);
-	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$CustomerID");
-	    result.append( "_m1","$OrderDetails._id.ProductID");
-
-		List<DBObject> pipeline = buildArray(
-						new BasicDBObject("$unwind","$OrderDetails"),
-						new BasicDBObject("$match", QueryBuilder.start("OrderDetails").exists("true").notEquals(null).get()),
+						new BasicDBObject("$match", QueryBuilder.start("address").exists("true").notEquals(null).get()),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
@@ -344,67 +308,13 @@ public class TestMongoDBQueryExecution {
 	    DBObject p1 = QueryBuilder.start("CategoryID").is(1).get();
 	    DBObject p2 =  QueryBuilder.start("CategoryID").is(1).get();
 
-	    DBObject match = QueryBuilder.start().and(exists, p1, p2).get(); // duplicate criteria, mongo should ignore it
+	    DBObject match = QueryBuilder.start().and(p1, p2).get(); // duplicate criteria, mongo should ignore it
 		List<DBObject> pipeline = buildArray(
+		                new BasicDBObject("$match", exists),
 						new BasicDBObject("$match", match),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
-
-	@Test
-	public void testThreeTableInnerJoin() throws Exception {
-		String query = "SELECT o.CustomerID, od.ProductID, s.CompanyName " +
-				"FROM Orders o JOIN OrderDetails od ON o.OrderID=od.odID " +
-				"JOIN Shippers s ON o.ShipVia = s.ShipperID";
-
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 3);
-
-	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$CustomerID");
-	    result.append( "_m1","$OrderDetails._id.ProductID");
-	    result.append( "_m2","$Shippers.CompanyName");
-
-	    DBObject match = QueryBuilder.start().and(QueryBuilder.start("OrderDetails").exists("true").notEquals(null).get(),
-	    		(QueryBuilder.start("Shippers").exists("true").notEquals(null).get())).get();
-
-	    
-	    List<DBObject> pipeline = buildArray(
-						new BasicDBObject("$unwind","$OrderDetails"),
-						new BasicDBObject("$match", match),
-						new BasicDBObject("$project", result));
-	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}
-
-	@Test
-	public void testLeftOuterJoin() throws Exception {
-		String query = "SELECT Orders.CustomerID, OrderDetails.ProductID FROM Orders " +
-				"LEFT OUTER JOIN OrderDetails ON Orders.OrderID = OrderDetails.odID " +
-				"WHERE OrderDetails.UnitPrice IS NOT NULL";
-		
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 4);
-
-	    BasicDBObject projection = new BasicDBObject();
-	    projection.append( "OrderID", 1);
-	    projection.append( "CustomerID", 1);
-	    projection.append("EmployeeID", 1).append("OrderDate",1).append("RequiredDate",1).append("ShippedDate",1);
-	    projection.append("ShipVia",1).append("Freight",1).append("ShipName",1);
-	    projection.append("ShipAddress",1).append("ShipCity",1).append("ShipRegion",1);
-	    projection.append("ShipPostalCode",1).append("ShipCountry",1 );
-		projection.append("__NN_OrderDetails", buildIfNullExpression("OrderDetails"));
-		
-	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$CustomerID");
-	    result.append( "_m1","$__NN_OrderDetails._id.ProductID");
-
-	    DBObject match = QueryBuilder.start("__NN_OrderDetails.UnitPrice").notEquals(null).get();
-	    List<DBObject> pipeline = buildArray(
-	    				new BasicDBObject("$project", projection),
-						new BasicDBObject("$unwind","$__NN_OrderDetails"),
-						new BasicDBObject("$match",match),
-						new BasicDBObject("$project", result));
-	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}
-
 
     @Test
     public void testSelectNestedEmbedding()  throws Exception {
@@ -414,13 +324,14 @@ public class TestMongoDBQueryExecution {
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$e1");
-	    result.append( "_m1","$T2._id");
-	    result.append( "_m2","$T2.T3._id");
+	    result.append( "_m1","$e1");
+	    result.append( "_m2","$e1");
 
-	    DBObject match = QueryBuilder.start().and(QueryBuilder.start("T2").exists("true").notEquals(null).get(),
-	    		(QueryBuilder.start("T3").exists("true").notEquals(null).get())).get();
+	    DBObject t2 = QueryBuilder.start("T2").exists("true").notEquals(null).get();
+	    DBObject t3 = QueryBuilder.start("T3").exists("true").notEquals(null).get();
 	    List<DBObject> pipeline = buildArray(
-	    		new BasicDBObject("$match", match),
+	    		new BasicDBObject("$match", t2),
+	    		new BasicDBObject("$match", t3),
 	    		new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
@@ -433,7 +344,7 @@ public class TestMongoDBQueryExecution {
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$rental.payment._id");
-	    result.append( "_m1","$rental.payment.rental_id");
+	    result.append( "_m1","$rental._id");
 	    result.append( "_m2","$rental.payment.amount");
 
 	    List<DBObject> pipeline = buildArray(
@@ -442,9 +353,9 @@ public class TestMongoDBQueryExecution {
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
-        
-    @Test // embedded means always nested as doc not as array 
+
+
+    @Test // embedded means always nested as doc not as array
     public void testEmbeddedJoin_INNER()  throws Exception {
     	String query = "SELECT p.ProductName,s.CompanyName " +
     			"FROM Suppliers s " +
@@ -463,8 +374,8 @@ public class TestMongoDBQueryExecution {
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
-    @Test // embedded means always nested as doc not as array 
+
+    @Test // embedded means always nested as doc not as array
     public void testEmbeddedJoin_INNER_REVERSE()  throws Exception {
     	String query = "SELECT p.ProductName,s.CompanyName " +
     			"FROM Products p " +
@@ -482,9 +393,9 @@ public class TestMongoDBQueryExecution {
 				new BasicDBObject("$match", QueryBuilder.start("Suppliers").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
-    @Test(expected=TranslatorException.class) // embedded means always nested as doc not as array 
+    }
+
+    @Test(expected=TranslatorException.class) // embedded means always nested as doc not as array
     public void testEmbeddedJoin_LEFTOUTER()  throws Exception {
     	String query = "SELECT p.ProductName,s.CompanyName " +
     			"FROM Suppliers s " +
@@ -502,9 +413,9 @@ public class TestMongoDBQueryExecution {
 				new BasicDBObject("$match", QueryBuilder.start("SupplierID").notEquals(null).and(QueryBuilder.start("Suppliers._id").notEquals(null).get()).get()),
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
-    @Test // embedded means always nested as doc not as array 
+    }
+
+    @Test // embedded means always nested as doc not as array
     public void testEmbeddedJoin_LEFTOUTER2()  throws Exception {
     	String query = "SELECT p.ProductName,s.CompanyName " +
     			"FROM  Products p " +
@@ -521,9 +432,9 @@ public class TestMongoDBQueryExecution {
 	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
-    @Test // embedded means always nested as doc not as array 
+    }
+
+    @Test // embedded means always nested as doc not as array
     public void testEmbeddedJoin_RIGHTOUTER()  throws Exception {
     	String query = "SELECT p.ProductName,s.CompanyName " +
     			"FROM Suppliers s " +
@@ -539,10 +450,10 @@ public class TestMongoDBQueryExecution {
 	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
+    }
+
     // embedded means always nested as doc not as array
-    @Test(expected=TranslatorException.class) 
+    @Test(expected=TranslatorException.class)
     public void testEmbeddedJoin_RIGHTOUTER2()  throws Exception {
     	String query = "SELECT p.ProductName,s.CompanyName " +
     			"FROM  Products p " +
@@ -559,10 +470,10 @@ public class TestMongoDBQueryExecution {
 	    List<DBObject> pipeline = buildArray(
 				new BasicDBObject("$match", QueryBuilder.start("_id").notEquals(null).get()),
 				new BasicDBObject("$project", result));
-	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));	    
+	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
-    @Test // merge where one to many relation 
+
+    @Test // merge where one to many relation
     public void testMERGE_ONE_TO_MANY_Join_INNER()  throws Exception {
     	String query = "SELECT c.name,n.Comment,n.CustomerId " +
     			"FROM customer c " +
@@ -579,12 +490,37 @@ public class TestMongoDBQueryExecution {
 
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$unwind", "$Notes"),
-				new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
-    @Test // merge where one to many relation 
+
+    @Test // merge where one to many relation
+    public void testMERGE_ONE_TO_ONE_Join_INNER_ORDERBY()  throws Exception {
+        String query = "SELECT N2.e1 AS c_0, "
+                + "N1.e1 AS c_1, N1.e2 AS c_2, "
+                + "N1.e3 AS c_3, N2.e2 AS c_4, N2.e3 AS c_5 "
+                + "FROM N1 INNER JOIN N2 ON N1.e1 = N2.e1 "
+                + "ORDER BY c_0";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 3);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "c_0","$_id"); // same expr
+        result.append( "c_1","$_id"); // same expr
+        result.append( "c_2","$e2");
+        result.append( "c_3","$e3");
+        result.append( "c_4","$N2.e2");
+        result.append( "c_5","$N2.e3");
+
+        List<DBObject> pipeline = buildArray(
+                new BasicDBObject("$match", QueryBuilder.start("N2").exists("true").notEquals(null).get()),
+                new BasicDBObject("$project", result),
+                // note c_0, c_1 represent same expressions, so it does not matter
+                new BasicDBObject("$sort", new BasicDBObject("c_1", 1)));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+
+    @Test // merge where one to many relation
     public void testMERGE_ONE_TO_MANY_Join_LEFT_OUTER()  throws Exception {
     	String query = "SELECT c.name,n.Comment " +
     			"FROM customer c " +
@@ -597,9 +533,9 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$__NN_Notes.Comment");
-	    
+
 		BasicDBObject ifnull = buildIfNullExpression("Notes");
-	    
+
 	 	BasicDBObject project = new BasicDBObject();
 	 	project.append("customer_id", 1);
 	 	project.append("name", 1);
@@ -610,7 +546,7 @@ public class TestMongoDBQueryExecution {
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     @Test // merge where one to many relation - equal to inner join with doc format teiid has
     public void testMERGE_ONE_TO_MANY_Join_LEFT_OUTER4()  throws Exception {
     	String query = "SELECT c.name,n.Comment " +
@@ -620,19 +556,18 @@ public class TestMongoDBQueryExecution {
     			"ON c.customer_id = n.CustomerId";
 
 		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
-		
+
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$Notes.Comment");
-		
+
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$unwind", "$Notes"),
-	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
-    
+    }
+
+
     @Test // merge where one to many relation - equal to inner join with doc format teiid has
     public void testMERGE_ONE_TO_MANY_Join_LEFT_OUTER3()  throws Exception {
     	String query = "SELECT c.name,n.Comment " +
@@ -642,18 +577,17 @@ public class TestMongoDBQueryExecution {
     			"ON c.customer_id = n.CustomerId";
 
 		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
-		
+
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$Notes.Comment");
-		
+
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$unwind", "$Notes"),
-	    		new BasicDBObject("$match", QueryBuilder.start("Notes").exists("true").notEquals(null).get()),
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
+    }
+
     @Test // merge where one to many relation (2 merged tables into customer)
     public void testMERGE_ONE_TO_MANY_Join_INNER_OUTER2()  throws Exception {
     	String query = "SELECT c.name,n.Comment ,r.amount " +
@@ -663,13 +597,18 @@ public class TestMongoDBQueryExecution {
     			"ON c.customer_id = n.CustomerId " +
     			"LEFT JOIN rental r ON r.customer_id = c.customer_id";
 
+        //[{ "$project" : { "customer_id" : 1 , "name" : 1 ,
+    	//"__NN_Notes" : { "$ifNull" : [ "$Notes" , [ { }]]} ,
+    	//"__NN_rental" : { "customer_id" : 1 , "name" : 1 , "__NN_rental" : { "$ifNull" : [ "$rental" , [ { }]]}}}}, { "$unwind" : "$__NN_Notes"}, { "$unwind" : "$__NN_rental"}, { "$project" : { "_m0" : "$name" , "_m1" : "$__NN_Notes.Comment" , "_m2" : "$__NN_rental.amount"}}],
+
+
 		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 4);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$name");
 	    result.append( "_m1","$__NN_Notes.Comment");
 	    result.append( "_m2","$__NN_rental.amount");
-	    
+
 	 	BasicDBObject project = new BasicDBObject();
 	 	project.append("customer_id", 1);
 	 	project.append("name", 1);
@@ -677,22 +616,22 @@ public class TestMongoDBQueryExecution {
 	 	project.append("__NN_rental", buildIfNullExpression("rental"));
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$project", project),
-	    		new BasicDBObject("$unwind", "$__NN_rental"),
 	    		new BasicDBObject("$unwind", "$__NN_Notes"),
+	    		new BasicDBObject("$unwind", "$__NN_rental"),
 				new BasicDBObject("$project", result));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
+    }
 
 	private BasicDBObject buildIfNullExpression(String table) {
 		BasicDBList exprs = new BasicDBList();
 		exprs.add("$"+table); //$NON-NLS-1$
 		BasicDBList list = new BasicDBList();
 		list.add(new BasicDBObject());
-		exprs.add(list); 
+		exprs.add(list);
 		BasicDBObject ifnull = new BasicDBObject("$ifNull", exprs); //$NON-NLS-1$
 		return ifnull;
-	}    
-	
+	}
+
 	@Test
 	public void testSimpleGroupBy() throws Exception {
 		String query = "SELECT Country FROM Customers GROUP BY Country";
@@ -707,7 +646,7 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
 	}
-	
+
 	@Test
 	public void testMultipleGroupBy() throws Exception {
 		String query = "SELECT Country,City FROM Customers GROUP BY Country,City";
@@ -721,13 +660,13 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject group = new BasicDBObject();
 	    group.append( "_c0","$Country");
 	    group.append( "_c1","$City");
-	    	    
+
 		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$group", new BasicDBObject("_id", group)),
 						new BasicDBObject("$project", project));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-	
+	}
+
 	@Test
 	public void testDistinctSingle() throws Exception {
 		String query = "SELECT DISTINCT Country FROM Customers";
@@ -741,8 +680,8 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$group", new BasicDBObject("_id", new BasicDBObject("_m0", "$Country"))),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-	
+	}
+
 	@Test
 	public void testDistinctMulti() throws Exception {
 		String query = "SELECT DISTINCT Country, City FROM Customers";
@@ -752,18 +691,18 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id._m0");
 	    result.append( "_m1","$_id._m1");
-	    
+
 	    BasicDBObject group = new BasicDBObject();
 	    group.append( "_m0","$Country");
 	    group.append( "_m1","$City");
-	    
+
 		List<DBObject> pipeline = buildArray(
 						new BasicDBObject("$group", new BasicDBObject("_id", group)),
 						new BasicDBObject("$project", result));
 		Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-	}	
-	
-    @Test // embedded means always nested as doc not as array 
+	}
+
+    @Test // embedded means always nested as doc not as array
     public void testONE_TO_ONE_WithGroupBy()  throws Exception {
 		String query = "SELECT c.name, a.zip " +
 				"FROM customer c join address a " +
@@ -775,19 +714,19 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0","$_id._c0");
 	    project.append( "_m1","$_id._c1");
-	    
+
 	    BasicDBObject group = new BasicDBObject();
 	    group.append( "_c0","$name");
-	    group.append( "_c1","$address.zip");	    
+	    group.append( "_c1","$address.zip");
 
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
 				new BasicDBObject("$project", project));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }	
-    
-    @Test // embedded means always nested as doc not as array 
+    }
+
+    @Test // embedded means always nested as doc not as array
     public void testONE_TO_ONE_WithGroupByOrderBy()  throws Exception {
 		String query = "SELECT c.name, a.zip " +
 				"FROM customer c join address a " +
@@ -801,15 +740,15 @@ public class TestMongoDBQueryExecution {
 	    BasicDBObject project = new BasicDBObject();
 	    project.append( "_m0","$_id._c0");
 	    project.append( "_m1","$_id._c1");
-	    
+
 	    BasicDBObject group = new BasicDBObject();
 	    group.append( "_c0","$name");
-	    group.append( "_c1","$address.zip");	    
+	    group.append( "_c1","$address.zip");
 
 	    BasicDBObject sort = new BasicDBObject();
 	    sort.append( "_m0",1);
 	    sort.append( "_m1",1);
-	    
+
 	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", new BasicDBObject("address", new BasicDBObject("$exists", "true").append("$ne", null))),
 	    		new BasicDBObject("$group", new BasicDBObject("_id", group)),
@@ -818,33 +757,33 @@ public class TestMongoDBQueryExecution {
 				new BasicDBObject("$skip", 0),
 				new BasicDBObject("$limit", 2));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
+    }
+
     @Test
     public void testSumWithGroupBy() throws Exception {
     	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id";
-    	
+
     	DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
     	BasicDBObject id = new BasicDBObject();
 	    id.append( "_c0","$user_id");
-	    
+
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
-	    
+
 		BasicDBObject project = new BasicDBObject();
 	    project.append( "total",1);
 
-	    List<DBObject> pipeline = buildArray(	    		
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$group", group),
 				new BasicDBObject("$project", project));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
-    
+
+
     @Test
     public void testSumWithGroupBy2() throws Exception {
     	String query = "SELECT user_id, status, SUM(age) as total FROM users GROUP BY user_id, status";
-    	
+
 		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
 
 		BasicDBObject project = new BasicDBObject();
@@ -854,21 +793,21 @@ public class TestMongoDBQueryExecution {
 
 	    BasicDBObject id = new BasicDBObject();
 	    id.append( "_c0","$user_id");
-	    id.append( "_c1","$status");	    
+	    id.append( "_c1","$status");
 
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
-		
-	    List<DBObject> pipeline = buildArray(	    		
+
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$group", group),
 				new BasicDBObject("$project", project));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
- 
+
     @Test
     public void testSumWithGroupBy3() throws Exception {
     	String query = "SELECT user_id, SUM(age) as total FROM users GROUP BY user_id";
-    	
+
 		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 2);
 
 		BasicDBObject project = new BasicDBObject();
@@ -880,13 +819,13 @@ public class TestMongoDBQueryExecution {
 
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
-		
-	    List<DBObject> pipeline = buildArray(	    		
+
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$group", group),
-				new BasicDBObject("$project", project));    	
+				new BasicDBObject("$project", project));
 	    Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }     
-    
+    }
+
     @Test
     public void testAggregateWithHaving() throws Exception {
     	String query = "SELECT SUM(age) as total FROM users GROUP BY user_id HAVING SUM(age) > 250";
@@ -901,20 +840,20 @@ public class TestMongoDBQueryExecution {
 
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
-		
-	    List<DBObject> pipeline = buildArray(	   
+
+	    List<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$group", group),
 	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
-				new BasicDBObject("$project", project));    	
+				new BasicDBObject("$project", project));
 	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
 	    Mockito.verify(dbCollection).aggregate(actualCapture.capture(), Mockito.any(AggregationOptions.class));
 	    Assert.assertEquals(pipeline.toString(), actualCapture.getValue().toString());
-    }    
-    
+    }
+
     @Test
     public void testAggregateWithHavingAndWhere() throws Exception {
     	String query = "SELECT SUM(age) as total FROM users WHERE age > 45 GROUP BY user_id HAVING SUM(age) > 250";
-    	
+
 		DBCollection dbCollection = helpExecute(query, new String[]{"users"}, 4);
 
 		BasicDBObject project = new BasicDBObject();
@@ -925,20 +864,20 @@ public class TestMongoDBQueryExecution {
 
 	    BasicDBObject group = new BasicDBObject("_id", id);
 	    group.append("total", new BasicDBObject("$sum", "$age"));
-		
+
 	    ArrayList<DBObject> pipeline = buildArray(
 	    		new BasicDBObject("$match", QueryBuilder.start("age").greaterThan(45).get()),
 	    		new BasicDBObject("$group", group),
 	    		new BasicDBObject("$match", QueryBuilder.start("total").greaterThan(250).get()),
 				new BasicDBObject("$project", project));
-	    
+
 	    ArgumentCaptor<List> actualCapture = ArgumentCaptor.forClass(List.class);
 	    ArgumentCaptor<AggregationOptions> optionsCapture = ArgumentCaptor.forClass(AggregationOptions.class);
 	    Mockito.verify(dbCollection).aggregate(actualCapture.capture(), optionsCapture.capture());
 	    Assert.assertEquals(pipeline.toString(), actualCapture.getValue().toString());
 	    Assert.assertEquals(options.toString(), optionsCapture.getValue().toString());
-    }    
-    
+    }
+
     public static ArrayList<DBObject> buildArray(DBObject ...basicDBObjects){
         ArrayList<DBObject> list = new ArrayList<DBObject>();
         for (DBObject obj:basicDBObjects) {
@@ -946,7 +885,7 @@ public class TestMongoDBQueryExecution {
         }
         return list;
     }
-    
+
     @Test
     public void testCountStar() throws Exception {
         String query = "SELECT count(*) FROM Categories";
@@ -964,14 +903,14 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }  
-    
+    }
+
     @Test
     public void testCountOnColumn() throws Exception {
         String query = "SELECT count(CategoryName) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
-        
+
         BasicDBList eq = new BasicDBList();
         eq.add(0, "$CategoryName");
         eq.add(1, null);
@@ -980,10 +919,10 @@ public class TestMongoDBQueryExecution {
         values.add(1, 0);
         values.add(2, 1);
         BasicDBObject expr = new BasicDBObject("$sum",new BasicDBObject("$cond", values)); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         BasicDBObject group = new BasicDBObject();
         group.append( "_m0", expr);
-        group.append( "_id", null);        
+        group.append( "_id", null);
 
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", 1);
@@ -992,14 +931,14 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }     
-    
+    }
+
     @Test
     public void testCountOnmultipleDifferentColumns() throws Exception {
         String query = "SELECT count(CategoryName), avg(CategoryID) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
-        
+
         BasicDBList eq = new BasicDBList();
         eq.add(0, "$CategoryName");
         eq.add(1, null);
@@ -1008,12 +947,12 @@ public class TestMongoDBQueryExecution {
         values.add(1, 0);
         values.add(2, 1);
         BasicDBObject expr = new BasicDBObject("$sum",new BasicDBObject("$cond", values)); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         BasicDBObject group = new BasicDBObject();
         group.append( "_m0", expr);
         group.append( "_m1", new BasicDBObject("$avg", "$_id"));
-        group.append( "_id", null);        
-        
+        group.append( "_id", null);
+
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", 1);
         result.append( "_m1", 1);
@@ -1022,15 +961,15 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }  
-    
+    }
+
     @Test
     public void testMultipleAggregateWithCountOnSameColumn() throws Exception {
         String query = "SELECT count(CategoryName), avg(CategoryName) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
-        
-        
+
+
         BasicDBList eq = new BasicDBList();
         eq.add(0, "$CategoryName");
         eq.add(1, null);
@@ -1039,7 +978,7 @@ public class TestMongoDBQueryExecution {
         values.add(1, 0);
         values.add(2, 1);
         BasicDBObject expr = new BasicDBObject("$sum",new BasicDBObject("$cond", values)); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         BasicDBObject group = new BasicDBObject();
         group.append( "_m0", expr);
         group.append( "_m1", new BasicDBObject("$avg", "$CategoryName"));
@@ -1054,13 +993,13 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$project", project));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     @Test
     public void testMultipleAggregateOnSameColumn() throws Exception {
         String query = "SELECT sum(CategoryName), avg(CategoryName) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
-        
+
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", null);
         group.append( "_m0", new BasicDBObject("$sum", "$CategoryName"));
@@ -1074,14 +1013,14 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", project));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }  
-    
+    }
+
     @Test
     public void testMultipleAggregateOnSameColumnWithGroupBy() throws Exception {
         String query = "SELECT sum(CategoryName), avg(CategoryName) FROM Categories Group By Picture";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
-        
+
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", new BasicDBObject("_c0", "$Picture"));
         group.append( "_m0", new BasicDBObject("$sum", "$CategoryName"));
@@ -1095,14 +1034,14 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", project));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }     
-    
+    }
+
     @Test
     public void testMultipleAggregateOnSameColumn_withCountSTAR() throws Exception {
         String query = "SELECT count(*), avg(CategoryName) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 3);
-        
+
         BasicDBObject group = new BasicDBObject();
         group.append( "_id", null);
         group.append( "_m0", new BasicDBObject("$sum", 1));
@@ -1116,19 +1055,19 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$group", group),
                         new BasicDBObject("$project", project));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
+    }
+
     @Test
     public void testFunctionInWhere() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE CONCAT(CategoryName, '2') = '2'";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
-        
+
         // { "$project" : { "_m0" : { "$concat" : [ "$CategoryName" , "2"]} , "_m1" : "$CategoryName"}},
         BasicDBList params = new BasicDBList();
         params.add("$CategoryName");
         params.add("2");
-        
+
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", new BasicDBObject("$concat", params));
         result.append( "_m1", "$CategoryName");
@@ -1137,32 +1076,32 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$project", result),
                         new BasicDBObject("$match", QueryBuilder.start("_m0").is("2").get()));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }   
-    
+    }
+
     @Test
     public void testSubStr() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, 3) FROM Categories";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
-        
+
         //{ "$subtract" : [ 3 , 1]}
         BasicDBList subtract = new BasicDBList();
         subtract.add(3);
         subtract.add(1);
-        
+
         BasicDBList params = new BasicDBList();
         params.add("$CategoryName");
         params.add(new BasicDBObject("$subtract", subtract));
         params.add(4000);
-        
+
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", new BasicDBObject("$substr", params));
 
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }   
-    
+    }
+
     @Test
     public void testSubStr2() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, CategoryID, 4) FROM Categories";
@@ -1172,21 +1111,21 @@ public class TestMongoDBQueryExecution {
         BasicDBList subtract = new BasicDBList();
         subtract.add("$_id");
         subtract.add(1);
-        
+
         BasicDBList params = new BasicDBList();
         params.add("$CategoryName");
         params.add(new BasicDBObject("$subtract", subtract));
         params.add(4);
-        
+
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", new BasicDBObject("$substr", params));
 
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }     
+    }
 
-    
+
     @Test
     public void testSelectConstant() throws Exception {
         String query = "SELECT 'hit' FROM Categories";
@@ -1199,7 +1138,7 @@ public class TestMongoDBQueryExecution {
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     @Test
     public void testOffsetWithoutLimit() throws Exception {
         String query = "SELECT CategoryName FROM Categories OFFSET 45 ROWS";
@@ -1213,9 +1152,9 @@ public class TestMongoDBQueryExecution {
                 new BasicDBObject("$project", result),
                 new BasicDBObject("$skip", 45));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }     
-    
-    
+    }
+
+
     @Test
     public void testArrtyType() throws Exception {
         String query = "SELECT * FROM ArrayTest";
@@ -1229,8 +1168,8 @@ public class TestMongoDBQueryExecution {
         List<DBObject> pipeline = buildArray(
                 new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
-    
+    }
+
     @Test
     public void testArrtyTypeInWhere() throws Exception {
         String query = "SELECT * FROM ArrayTest where column1 is not null";
@@ -1245,21 +1184,21 @@ public class TestMongoDBQueryExecution {
         		new BasicDBObject("$match", QueryBuilder.start("column1").notEquals(null).get()),
                 new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }     
-    
+    }
+
     @Test
     public void testGeoFunctionInWhere() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) or CategoryID=1";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 2);
-        
+
         BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
         builder.push("CategoryName");
         builder.push("$geoWithin");//$NON-NLS-1$
 		builder.push("$geometry");//$NON-NLS-1$
 		builder.add("type", "Polygon");//$NON-NLS-1$
 		BasicDBList coordinates = new BasicDBList();
-		
+
 		BasicDBList pointOne = new BasicDBList();
 		pointOne.add(new Double("1.0"));
 		pointOne.add(new Double("2.0"));
@@ -1267,15 +1206,15 @@ public class TestMongoDBQueryExecution {
 		BasicDBList pointTwo = new BasicDBList();
 		pointTwo.add(new Double("3.0"));
 		pointTwo.add(new Double("4.0"));
-		
+
 		BasicDBList points = new BasicDBList();
 		points.add(pointOne);
 		points.add(pointTwo);
-		
+
 		coordinates.add(points);
 		builder.add("coordinates", coordinates); //$NON-NLS-1$
-		
-		QueryBuilder qb = QueryBuilder.start().or(builder.get(), new BasicDBObject("_id", 1));        
+
+		QueryBuilder qb = QueryBuilder.start().or(builder.get(), new BasicDBObject("_id", 1));
 		BasicDBObject result = new BasicDBObject();
         result.append( "_m1", "$CategoryName");
 
@@ -1284,13 +1223,13 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     @Test(expected=TranslatorException.class)
     public void testGeoFunctionInWhereWithFalse() throws Exception {
         String query = "SELECT CategoryName FROM Categories WHERE mongo.geoWithin(CategoryName, 'Polygon', ((cast(1.0 as double), cast(2.0 as double)),(cast(3.0 as double), cast(4.0 as double)))) = false";
         helpExecute(query, new String[]{"Categories"}, 2);
     }
-    
+
     @Test
     public void testAdd() throws Exception {
         String query = "SELECT SupplierID+1 FROM Suppliers";
@@ -1301,10 +1240,10 @@ public class TestMongoDBQueryExecution {
         result.append( "_m0",new BasicDBObject("$add", buildObjectArray("$_id", 1)));
 
         List<DBObject> pipeline = buildArray(
-                new BasicDBObject("$project", result));        
+                new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     ArrayList<Object> buildObjectArray(Object ...objs){
         ArrayList<Object> list = new ArrayList<Object>();
         for (Object obj:objs) {
@@ -1364,4 +1303,168 @@ public class TestMongoDBQueryExecution {
 		execution.execute();
 		execution.next();
     }  
+
+    @Test
+    public void testNestedMergeSelect_one_2_one() throws Exception {
+        String query = "SELECT e1, e2, e3 FROM N3";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0","$_id");
+        result.append( "_m1","$N2.N3.e2");
+        result.append( "_m2","$N2.N3.e3");
+
+        DBObject n2 = QueryBuilder.start("N2").exists("true").notEquals(null).get();
+        DBObject n3 = QueryBuilder.start("N2.N3").exists("true").notEquals(null).get();
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$match",n2),
+                        new BasicDBObject("$match",n3),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+
+    @Test
+    public void testNestedMergeSelect_one_2_one_inner_joined() throws Exception {
+        String query = "select N1.e1, N2.e2, N3.e3 FROM N1 JOIN N2 ON N1.e1=N2.e1 JOIN N3 ON N2.e1 = N3.e1";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0","$_id");
+        result.append( "_m1","$N2.e2");
+        result.append( "_m2","$N2.N3.e3");
+
+        DBObject n2 = QueryBuilder.start("N2").exists("true").notEquals(null).get();
+        DBObject n3 = QueryBuilder.start("N2.N3").exists("true").notEquals(null).get();
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$match",n2),
+                        new BasicDBObject("$match",n3),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+
+    @Test
+    public void testNestedMergeSelect_one_2_many() throws Exception {
+        String query = "SELECT e1, e2, e3 FROM N4 Where N4.e3 = 4";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0","$N2.N4._id");
+        result.append( "_m1","$_id");
+        result.append( "_m2","$N2.N4.e3");
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$match", QueryBuilder.start("N2").exists("true").notEquals(null).get()),
+                        new BasicDBObject("$unwind", "$N2.N4"),
+                        new BasicDBObject("$match", QueryBuilder.start("N2.N4.e3").is(4).get()),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+
+    @Test
+    public void testNestedMergeSelect_one_2_many_onid() throws Exception {
+        String query = "SELECT e1, e2, e3 FROM N4 Where N4.e2 = 4";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0","$N2.N4._id");
+        result.append( "_m1","$_id");
+        result.append( "_m2","$N2.N4.e3");
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$match", QueryBuilder.start("N2").exists("true").notEquals(null).get()),
+                        new BasicDBObject("$unwind", "$N2.N4"),
+                        new BasicDBObject("$match", QueryBuilder.start("_id").is(4).get()),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+
+    @Test
+    public void testNestedMergeSelect_one_2_many_inner_joined() throws Exception {
+        String query = "select N1.e1, N2.e2, N4.e3 FROM N1 JOIN N2 ON N1.e1=N2.e1 JOIN N4 ON N2.e1 = N4.e2 Order by N1.e1";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0","$_id");
+        result.append( "_m1","$N2.e2");
+        result.append( "_m2","$N2.N4.e3");
+
+        DBObject n2 = QueryBuilder.start("N2").exists("true").notEquals(null).get();
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$match", n2),
+                        new BasicDBObject("$unwind", "$N2.N4"),
+                        new BasicDBObject("$project", result),
+                        new BasicDBObject("$sort", new BasicDBObject("_m0", 1)));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+
+    @Test
+    public void testNestedMergeSelect_one_2_many2() throws Exception {
+        String query = "select N2.*, N4.* FROM N2 LEFT OUTER JOIN N4 ON N2.e1 = N4.e2";
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+
+        // [{ "$project" : { "N2.e1" : 1 , "N2.e2" : 1 , "N2.e3" : 1 , "__NN_N4" : { "$ifNull" : [ "$N2.N4" , [ { }]]}}},
+        //{ "$match" : { "N2" : { "$exists" : "true" , "$ne" :  null }}}, { "$unwind" : "$__NN_N4"}, { "$project" : { "c_0" : "$_id" , "c_1" : "$N2.e2" , "c_2" : "$N2.e3" , "c_3" : "$__NN_N4._id" , "c_4" : "$_id" , "c_5" : "$__NN_N4.e3"}}, { "$skip" : 0}, { "$limit" : 100}]
+        BasicDBObject projection = new BasicDBObject();
+        projection.append( "N2.e1", 1);
+        projection.append( "N2.e2", 1);
+        projection.append( "N2.e3", 1);
+        projection.append("__NN_N4", buildIfNullExpression("N2.N4"));
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0","$_id");
+        result.append( "_m1","$N2.e2");
+        result.append( "_m2","$N2.e3");
+        result.append( "_m3","$__NN_N4._id");
+        result.append( "_m4","$_id");
+        result.append( "_m5","$__NN_N4.e3");
+
+        DBObject n2 = QueryBuilder.start("N2").exists("true").notEquals(null).get();
+
+        List<DBObject> pipeline = buildArray(
+                new BasicDBObject("$project", projection),
+                        new BasicDBObject("$match", n2),
+                        new BasicDBObject("$unwind", "$__NN_N4"),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
+
+    @Test
+    public void testNestedMergeSelect_inner_and_left_joined() throws Exception {
+        String query = "select N1.e1, N2.e2, N4.e1, N4.e2, N4.e3  "
+                + "FROM N1 JOIN N2 ON N1.e1=N2.e1 "
+                + "LEFT JOIN N4 ON N2.e1 = N4.e2 ";
+
+
+        DBCollection dbCollection = helpExecute(query, new String[]{"N1"}, 2);
+
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0","$_id");
+        result.append( "_m1","$N2.e2");
+        result.append( "_m2","$__NN_N4._id");
+        result.append( "_m3","$_id");
+        result.append( "_m4","$__NN_N4.e3");
+
+        BasicDBObject projection = new BasicDBObject();
+        projection.append( "e1", 1);
+        projection.append( "e2", 1);
+        projection.append( "e3", 1);
+        projection.append("__NN_N4", buildIfNullExpression("N2.N4"));
+
+        DBObject n2 = QueryBuilder.start("N2").exists("true").notEquals(null).get();
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$match", n2),
+                        new BasicDBObject("$project", projection),
+                        new BasicDBObject("$unwind", "$__NN_N4"),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }
 }

@@ -137,25 +137,25 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("$ifNull")); //$NON-NLS-1$		
 		
         FunctionMethod method = null;
-        method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ 
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ 
         method.setProperty(AVOID_PROJECTION, "true");
         if (getVersion().compareTo(MongoDBExecutionFactory.TWO_6) >= 0) {
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
             method.setProperty(AVOID_PROJECTION, "true");
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
             method.setProperty(AVOID_PROJECTION, "true");
         }
         else {
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
             method.setProperty(AVOID_PROJECTION, "true");
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
             method.setProperty(AVOID_PROJECTION, "true");            
         }
-        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); 
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$ //$NON-NLS-2$
+        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); 
         method.setProperty(AVOID_PROJECTION, "true");
         
         registerFunctionModifier(FUNC_GEO_NEAR, new AliasModifier("$near"));//$NON-NLS-1$
@@ -423,8 +423,10 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	 * @param field
 	 * @param expectedClass
 	 * @return
+	 * @throws TranslatorException 
 	 */
-	public Object retrieveValue(Object value, Class<?> expectedClass, DB mongoDB, String fqn, String colName) {
+    public Object retrieveValue(Object value, Class<?> expectedClass, DB mongoDB, String fqn, String colName)
+            throws TranslatorException {
 		if (value == null) {
 			return null;
 		}
@@ -517,6 +519,16 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		else if (value instanceof org.bson.types.ObjectId) {
 		    org.bson.types.ObjectId id = (org.bson.types.ObjectId) value;
 		    value = id.toStringBabble();
+		}
+		else {
+		    Transform transform = DataTypeManager.getTransform(value.getClass(), expectedClass);
+		    if (transform != null) {
+		        try {
+                    value = transform.transform(value, expectedClass);
+                } catch (TransformationException e) {
+                    throw new TranslatorException(e);
+                }
+		    }
 		}
 		return value;
 	}

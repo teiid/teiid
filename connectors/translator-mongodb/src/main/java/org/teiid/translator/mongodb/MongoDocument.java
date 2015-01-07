@@ -26,17 +26,20 @@ import java.util.Map.Entry;
 
 import org.teiid.metadata.*;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.mongodb.MutableDBRef.Association;
+import org.teiid.translator.mongodb.MergeDetails.Association;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 class MongoDocument {
 	private RuntimeMetadata metadata;
 	private Table table;
-	private MutableDBRef mergeKey;
-	private List<MutableDBRef> pullKeys = new ArrayList<MutableDBRef>();
-	private LinkedHashMap<List<String>, MutableDBRef> foreignKeys = new LinkedHashMap<List<String>, MutableDBRef>();
-	private ArrayList<MutableDBRef> copyto = new ArrayList<MutableDBRef>();
+	private MergeDetails mergeKey;
+	private List<MergeDetails> embeddedKeys = new ArrayList<MergeDetails>();
+	private LinkedHashMap<List<String>, MergeDetails> foreignKeys = new LinkedHashMap<List<String>, MergeDetails>();
+	private ArrayList<MergeDetails> copyto = new ArrayList<MergeDetails>();
 	private MongoDocument mergeDocument;
 	private HashMap<String, MongoDocument> relatedDocs = new HashMap<String, MongoDocument>();
 	private String documentAlias;
@@ -113,12 +116,12 @@ class MongoDocument {
 	}
 
 	public boolean hasEmbeddedDocuments() {
-		return !this.pullKeys.isEmpty();
+		return !this.embeddedKeys.isEmpty();
 	}
 
 	public List<String> getEmbeddedDocumentNames(){
 		ArrayList<String> names = new ArrayList<String>();
-		for (MutableDBRef ref:this.pullKeys) {
+		for (MergeDetails ref:this.embeddedKeys) {
 			names.add(ref.getName());
 		}
 		return names;
@@ -138,7 +141,7 @@ class MongoDocument {
         	for (Table t:this.table.getParent().getTables().values()) {
         		for (ForeignKey fk:t.getForeignKeys()) {
         			if (fk.getReferenceKey().getParent().equals(this.table)){
-        				MutableDBRef key = new MutableDBRef();
+        				MergeDetails key = new MergeDetails(this);
         				key.setName(this.table.getName());
         				key.setParentTable(t.getName());
         				key.setEmbeddedTable(this.table.getName());
@@ -153,7 +156,7 @@ class MongoDocument {
 		}
 	}
 
-	private void setReferenceName(MutableDBRef key, Table table, List<String> columnNames) {
+	private void setReferenceName(MergeDetails key, Table table, List<String> columnNames) {
 		boolean ispartofPK = false;
 		for(String column:columnNames) {
 			if (MongoDBSelectVisitor.isPartOfPrimaryKey(table, column)) {
@@ -181,7 +184,7 @@ class MongoDocument {
 					continue;
 				}
 
-				MutableDBRef key = new MutableDBRef();
+				MergeDetails key = new MergeDetails(this);
 				key.setName(fk.getReferenceTableName());
 				key.setParentTable(this.table.getName());
 				key.setColumns(MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
@@ -192,14 +195,14 @@ class MongoDocument {
 					key.setIdReference(MongoDBSelectVisitor.getForeignKeyRefTable(referenceTable, fk.getReferenceColumns().get(0)));
 				}
 				setReferenceName(key, this.table, MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
-				this.pullKeys.add(key);
+				this.embeddedKeys.add(key);
 			}
     	}
 	}
 
 	private void buildForeignKeyReferences() throws TranslatorException {
     	for (ForeignKey fk:this.table.getForeignKeys()) {
-			MutableDBRef key = new MutableDBRef();
+			MergeDetails key = new MergeDetails(this);
 			key.setParentTable(fk.getReferenceTableName());
 			key.setEmbeddedTable(this.table.getName());
 			key.setName(fk.getName());
@@ -218,7 +221,7 @@ class MongoDocument {
 		Table mergeTable = getMergeTable();
 		for (ForeignKey fk:this.table.getForeignKeys()) {
 			if (fk.getReferenceKey().getParent().equals(mergeTable)) {
-				MutableDBRef key = new MutableDBRef();
+				MergeDetails key = new MergeDetails(this);
 				key.setName(this.table.getName());
 				key.setParentTable(mergeTable.getName());
 				key.setColumns(MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
@@ -259,11 +262,11 @@ class MongoDocument {
 	}
 
 	public void updateReferenceColumnValue(String tableName, String columnName, Object value ) {
-		Iterator<Entry<List<String>, MutableDBRef>> it = this.foreignKeys.entrySet().iterator();
+		Iterator<Entry<List<String>, MergeDetails>> it = this.foreignKeys.entrySet().iterator();
 	    while (it.hasNext()) {
-	        Map.Entry<List<String>, MutableDBRef> pairs = it.next();
+	        Map.Entry<List<String>, MergeDetails> pairs = it.next();
 	        List<String> keys = pairs.getKey();
-	        MutableDBRef ref = pairs.getValue();
+	        MergeDetails ref = pairs.getValue();
 	        if (keys.contains(columnName) && ref.getEmbeddedTable().equals(tableName)) {
 	        	ref.setId(columnName, value);
 	        }
@@ -284,8 +287,8 @@ class MongoDocument {
 		}
 
 		// child table selection query
-		if (!this.pullKeys.isEmpty()) {
-			for (MutableDBRef ref:this.pullKeys) {
+		if (!this.embeddedKeys.isEmpty()) {
+			for (MergeDetails ref:this.embeddedKeys) {
 				if (ref.getColumns().contains(columnName) && ref.getParentTable().equals(tableName)) {
 					for (int i = 0; i < ref.getColumns().size(); i++) {
 						String column = ref.getColumns().get(i);
@@ -299,12 +302,12 @@ class MongoDocument {
 		}
 	}
 
-	public MutableDBRef getFKReference(String columnName) {
-		Iterator<Entry<List<String>, MutableDBRef>> it = this.foreignKeys.entrySet().iterator();
+	public MergeDetails getFKReference(String columnName) {
+		Iterator<Entry<List<String>, MergeDetails>> it = this.foreignKeys.entrySet().iterator();
 	    while (it.hasNext()) {
-	        Map.Entry<List<String>, MutableDBRef> pairs = it.next();
+	        Map.Entry<List<String>, MergeDetails> pairs = it.next();
 	        List<String> keys = pairs.getKey();
-	        MutableDBRef ref = pairs.getValue();
+	        MergeDetails ref = pairs.getValue();
 	        if (keys.contains(columnName)) {
 	        	return ref;
 	        }
@@ -313,7 +316,7 @@ class MongoDocument {
 	}
 
 	public DBObject getEmbeddedDocument(DB mongoDB, String docName) {
-		for (MutableDBRef ref:this.pullKeys) {
+		for (MergeDetails ref:this.embeddedKeys) {
 			if (ref.getName().equals(docName)) {
 				DBRef dbRef = ref.getDBRef(mongoDB, false);
 				if (dbRef != null) {
@@ -324,73 +327,65 @@ class MongoDocument {
 		return null;
 	}
 
-	static class MergeDetails {
-		DBObject match;
-		boolean nested;
-		BasicDBObject update;
-		Association association;
-		String embeddedDocument;
-	}
-	
-	// for nested merge, format is
-	// > db.customer.update({"_id":1, "rental._id":2}, {$push:{"rental.$.payment":{"foo":"bar"}}})
-	public MergeDetails getMergeParentCriteria(DB mongo, DBObject match, String embedTable, BasicDBObject insert, boolean nested) throws TranslatorException {
-		MongoDocument targetDocument = getDocument(this.mergeKey.getParentTable());
-		MergeDetails md = new MergeDetails();
-		md.association = getMergeAssociation();
-		
-		if (targetDocument.isMerged()) {
-			// this is the case of nested merge
-			if (match == null) {
-				match = new BasicDBObject(this.mergeKey.getParentTable()+"._id", this.mergeKey.getDBRef(mongo, true).getId()); //$NON-NLS-1$
-				embedTable = "$"; //$NON-NLS-1$
-			}
-			else {
-				DBCollection collection = mongo.getCollection(this.mergeKey.getParentTable());
-				DBObject result = collection.findOne(match);
-				match = new BasicDBObject(this.mergeKey.getParentTable()+"._id", result.get("_id")); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			return targetDocument.getMergeParentCriteria(mongo, match, embedTable+"."+getTable().getName(), insert, true); //$NON-NLS-1$
-		}
+    public String getColumnName(String columnName) throws TranslatorException {
+        String originalColumnName = columnName;
+        boolean primaryKey = false;
 
-		if (match == null) {
-			DBRef dbRef = this.mergeKey.getDBRef(mongo, true);
-			if (dbRef != null) {
-				match = new BasicDBObject("_id", dbRef.getId()); //$NON-NLS-1$
-				//throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18015, this.mergeKey.getParentTable(), this.mergeKey.getId(), this.mergeKey.getEmbeddedTable()));
-			}
-			else {
-				match = QueryBuilder.start(this.mergeKey.getEmbeddedTable()).exists(true).get(); 
-			}			
-		}
+        if (isPartOfPrimaryKey(originalColumnName)) {
+            columnName = "_id"; //$NON-NLS-1$
+            if (hasCompositePrimaryKey()) {
+                columnName = "_id."+originalColumnName; //$NON-NLS-1$
+            }
+            primaryKey = true;
+        }
 
-		DBCollection collection = mongo.getCollection(this.mergeKey.getParentTable());
-		DBObject result = collection.findOne(match);
-		if (result == null) {
-			throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18006, this.mergeKey.getParentTable(), this.mergeKey.getId(), this.mergeKey.getEmbeddedTable()));
-		}
-		//((BasicDBObject)match).append("_id", result.get("_id")); //$NON-NLS-1$ //$NON-NLS-2$
+        if (isMerged()) {
+            if (primaryKey && pkExistsInParent(this)) {
+                if (this.documentAlias != null) {
+                    return this.documentAlias+"."+columnName; //$NON-NLS-1$
+                }
+                return columnName;
+            }
 
-		String nestedKey = getTable().getName();
-		if (embedTable != null) {
-			nestedKey = getTable().getName()+"."+embedTable; //$NON-NLS-1$
-		}
-		md.embeddedDocument = nestedKey;
-		md.match = match;
-		md.update = new BasicDBObject(nestedKey, insert);
-		md.nested = nested;
-		return md;
-	}
+            // even if the key is part of foreign key, then this
+            // key does not exist in child document.
+            if (isPartOfForeignKey(originalColumnName)) {
+                return getMergeDocument().getColumnName(this.mergeKey.getParentColumnName(originalColumnName));
+            }
+            return this.getDocumentName()+"."+columnName; //$NON-NLS-1$
+        }
+        else if (isEmbeddable()) {
+            
+        }
+        return columnName;
+    }
+
+    public String getDocumentName() throws TranslatorException {
+        return this.documentAlias != null ? this.documentAlias:getQualifiedName(false);
+    }
+
+    // if a table is ONE-2-ONE all the way to target document, then PK exists only on top
+    public boolean pkExistsInParent(MongoDocument document) throws TranslatorException {
+        while(document.isMerged()) {
+            if (document.getMergeKey().getAssociation() == Association.ONE) {
+                document = document.getMergeDocument();
+            }
+            else {
+                return false;
+            }
+        }
+        return true;
+    }
 
 	/**
 	 * References that are going OUT
 	 * @return
 	 */
-	public List<MutableDBRef> getEmbeddedInReferences(){
+	public List<MergeDetails> getEmbeddedIntoReferences(){
 		return this.copyto;
 	}
 
-	MutableDBRef getMergeKey() {
+	MergeDetails getMergeKey() {
 		return this.mergeKey;
 	}
 
@@ -398,35 +393,35 @@ class MongoDocument {
 	 * references that are coming IN
 	 * @return
 	 */
-	List<MutableDBRef> getEmbeddableReferences(){
-		return this.pullKeys;
+	List<MergeDetails> getEmbeddedReferences(){
+		return this.embeddedKeys;
 	}
-	
+
     public boolean embeds(MongoDocument right) throws TranslatorException {
         if (equals(right)) {
             return false;
         }
 
-        for (MutableDBRef ref:this.pullKeys) {
+        for (MergeDetails ref:this.embeddedKeys) {
             if (ref.getEmbeddedTable().equals(right.getTable().getName())) {
                 return true;
             }
         }
 
-        for (MutableDBRef ref:right.getEmbeddedInReferences()) {
+        for (MergeDetails ref:right.getEmbeddedIntoReferences()) {
             if (ref.getParentTable().equals(getTable().getName())) {
                 return true;
             }
         }
         return nestedEmbedded(right);
-    }	
-    
+    }
+
     public boolean merges(MongoDocument right) throws TranslatorException {
 
         if (equals(right)) {
             return false;
         }
-        
+
         if (right.isMerged()) {
             if (right.mergeKey.getParentTable().equals(getTable().getName())) {
                 return true;
@@ -446,14 +441,14 @@ class MongoDocument {
 	 */
 	private boolean nestedEmbedded(MongoDocument right) throws TranslatorException {
 
-		for (MutableDBRef ref:this.pullKeys) {
+		for (MergeDetails ref:this.embeddedKeys) {
 			MongoDocument parent = getDocument(ref.getEmbeddedTable());
 			if (parent.embeds(right)) {
 				return true;
 			}
 		}
 
-		for (MutableDBRef ref:right.getEmbeddedInReferences()) {
+		for (MergeDetails ref:right.getEmbeddedIntoReferences()) {
 			MongoDocument parent = getDocument(ref.getParentTable());
 			if (parent.embeds(right)) {
 				return true;
@@ -461,7 +456,7 @@ class MongoDocument {
 		}
 		return false;
 	}
-	
+
     private boolean nestedMerge(MongoDocument right) throws TranslatorException {
         if (right.isMerged()) {
             MongoDocument parent = getDocument(right.mergeKey.getParentTable());
@@ -470,7 +465,30 @@ class MongoDocument {
             }
         }
         return false;
-    }	
+    }
+
+    public String getQualifiedName(boolean positional) throws TranslatorException {
+        MongoDocument document = this;
+        String tableName = getTable().getName();
+        // check if document nested merge, i.e parent is also merged document
+        while (document.isMerged()) {
+            document = document.getMergeDocument();
+            if (document.isMerged()) {
+                if (positional) {
+                    if (document.mergeKey.getAssociation() == Association.ONE) {
+                        tableName = document.getTable().getName()+"."+tableName; //$NON-NLS-1$
+                    }
+                    else {
+                        tableName = document.getTable().getName()+".$."+tableName; //$NON-NLS-1$
+                    }
+                }
+                else {
+                    tableName = document.getTable().getName()+"."+tableName; //$NON-NLS-1$
+                }
+            }
+        }
+        return tableName;
+    }
 
 	private MongoDocument getDocument(String tblName) throws TranslatorException {
 		if (this.relatedDocs.get(tblName) != null) {
@@ -484,57 +502,41 @@ class MongoDocument {
 		return doc;
 	}
 
-	public MutableDBRef getEmbeddedDocumentReferenceKey(MongoDocument right) throws TranslatorException {
+	public MergeDetails getEmbeddedDocumentReferenceKey(MongoDocument right) throws TranslatorException {
 		if (equals(right)) {
 			return null;
 		}
 
-		for (MutableDBRef ref:this.pullKeys) {
+		for (MergeDetails ref:this.embeddedKeys) {
 			if (ref.getEmbeddedTable().equals(right.getTable().getName())) {
 				return ref.clone();
 			}
 		}
 
-		for (MutableDBRef ref:right.getEmbeddedInReferences()) {
+		for (MergeDetails ref:right.getEmbeddedIntoReferences()) {
 			if (ref.getParentTable().equals(getTable().getName())) {
 				return ref.clone();
-			}
-		}
-
-		if (right.isMerged()) {
-			if (right.mergeKey.getParentTable().equals(getTable().getName())) {
-				return right.mergeKey.clone();
 			}
 		}
 		return getNestedEmbeddedDocumentReferenceKey(right);
 	}
 
-	private MutableDBRef getNestedEmbeddedDocumentReferenceKey(MongoDocument right) throws TranslatorException {
+	private MergeDetails getNestedEmbeddedDocumentReferenceKey(MongoDocument right) throws TranslatorException {
 
-		for (MutableDBRef ref:this.pullKeys) {
+		for (MergeDetails ref:this.embeddedKeys) {
 			MongoDocument parent = getDocument(ref.getEmbeddedTable());
 			if (parent.contains(right)) {
-				MutableDBRef key = parent.getEmbeddedDocumentReferenceKey(right);
+				MergeDetails key = parent.getEmbeddedDocumentReferenceKey(right);
 				key.setName(parent.getTable().getName()+"."+key.getName()); //$NON-NLS-1$
 				key.setNested(true);
 				return key;
 			}
 		}
 
-		for (MutableDBRef ref:right.getEmbeddedInReferences()) {
+		for (MergeDetails ref:right.getEmbeddedIntoReferences()) {
 			MongoDocument parent = getDocument(ref.getParentTable());
 			if (parent.contains(right)) {
-				MutableDBRef key = parent.getEmbeddedDocumentReferenceKey(right);
-				key.setName(parent.getTable().getName()+"."+key.getName()); //$NON-NLS-1$
-				key.setNested(true);
-				return key;
-			}
-		}
-
-		if (right.isMerged()) {
-			MongoDocument parent = getDocument(right.mergeKey.getParentTable());
-			if (parent.contains(right)) {
-				MutableDBRef key = parent.getEmbeddedDocumentReferenceKey(right);
+				MergeDetails key = parent.getEmbeddedDocumentReferenceKey(right);
 				key.setName(parent.getTable().getName()+"."+key.getName()); //$NON-NLS-1$
 				key.setNested(true);
 				return key;
@@ -612,14 +614,11 @@ class MongoDocument {
 		return getTable().getName();
 	}
 
-	public void setDocumentAlias(String alias) {
+	public void setAlias(String alias) {
 		this.documentAlias = alias;
 	}
-	
-	public String getDocumentName() {
-		if (this.documentAlias == null) {
-			return getTable().getName();
-		}
+
+	public String getAlias() {
 		return this.documentAlias;
 	}
 }

@@ -23,107 +23,67 @@ package org.teiid.translator.mongodb;
 
 import java.util.ArrayList;
 
-import org.teiid.language.ColumnReference;
 import org.teiid.language.Comparison;
-import org.teiid.language.Join;
+import org.teiid.language.Condition;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.mongodb.MutableDBRef.Association;
+import org.teiid.translator.mongodb.MergeDetails.Association;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
 
 class JoinCriteriaVisitor extends HierarchyVisitor {
-	private Join join;
-	private MongoDocument left; 
+	private JoinType joinType;
+	private MongoDocument left;
 	private MongoDocument right;
-	//protected Stack<String> onGoingExpression  = new Stack<String>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
-	private DBObject match =  null;
-	private BasicDBObject projection =  null;
+	protected MergePlanner mergePlanner;
 	private String aliasName;
-	
-	public JoinCriteriaVisitor(Join join, MongoDocument left, MongoDocument right) {
-		this.join = join;
+
+	public JoinCriteriaVisitor(JoinType joinType, MongoDocument left, MongoDocument right, MergePlanner mergePlanner) {
+		this.joinType = joinType;
 		this.left = left;
 		this.right = right;
-		
-		if (join.getCondition() != null) {
-			visitNode(join.getCondition());
-		}
+		this.mergePlanner = mergePlanner;
 	}
-	
-	@Override
-	public void visit(ColumnReference obj) {
-		/*
-		String columnName = obj.getMetadataObject().getName();
-		Table table = (Table)obj.getMetadataObject().getParent();
-		
-		String selectionName = null;
-		if (MongoDBSelectVisitor.isPartOfPrimaryKey(table, columnName)) {
-			//TODO:should deal with composite key later
-			selectionName = "_id"; //$NON-NLS-1$
-		}
-		else {
-			selectionName = columnName;
-		}
-		
-		try {
-			if (this.left.embeds(this.right)) {
-				if (table.equals(this.right.getTable())) {
-					selectionName = table.getName()+"."+selectionName; //$NON-NLS-1$
-				}
-			}
-			else {
-				// right embeds left
-				if (table.equals(left.getTable())) {
-					selectionName = table.getName()+"."+selectionName; //$NON-NLS-1$
-				}
-			}
-		} catch (TranslatorException e) {
-			this.exceptions.add(e);
-		}
-		this.onGoingExpression.push(selectionName);
-		*/
+
+	public void process(Condition condition) throws TranslatorException {
+        if (condition != null) {
+            visitNode(condition);
+        }
+
+        if (!this.exceptions.isEmpty()) {
+            throw this.exceptions.get(0);
+        }
 	}
-	
+
 	@Override
 	public void visit(Comparison obj) {
-        /*
-		visitNode(obj.getLeftExpression());
-		String leftExpr = this.onGoingExpression.pop();
-		
-		visitNode(obj.getRightExpression());
-		String rightExpr = this.onGoingExpression.pop();
-		*/
-		
-		DBObject match =  null;
+
 		try {
-			// left outer join we do not need to any thing, if left is the parent, if right is parent then it 
+			// left outer join we do not need to any thing, if left is the parent, if right is parent then it
 			// it is similar to right outer join which is not supported
 			// inner join needs "exists" on embedded doc
 			switch(obj.getOperator()) {
 			case EQ:
-				if (join.getJoinType().equals(JoinType.LEFT_OUTER_JOIN)) {
+				if (this.joinType.equals(JoinType.LEFT_OUTER_JOIN)) {
 					if (left.contains(right)) {
 						// if nesting is simple flat hierary then there is nothing to be done. However if
 						// document is array is $unwind behavior is strange, it does not include the document
-						// that has empty or null child document. So, we need to simulate such that there is 
+						// that has empty or null child document. So, we need to simulate such that there is
 						// some nested doc using "$ifnull"
 						if (this.right.isMerged() && this.right.getMergeAssociation().equals(Association.MANY)) {
-							this.projection = buildIfNullBasedProjection(this.left, this.right);
+							this.mergePlanner.addNode(new ProjectionNode(this.left, buildIfNullBasedProjection(this.left, this.right)), this.aliasName);
 						}
 					}
 					else {
 						// right is parent; left is child. However, left does not exist with out its parent
 						// so in "MERGE" scenario, this is equal to a INNER JOIN
 						if (left.isMerged()) {
-							match = QueryBuilder.start(left.getTable().getName()).exists("true").notEquals(null).get(); //$NON-NLS-1$							
+						    this.mergePlanner.addNode(new ExistsNode(this.left));
 						}
 						else {
 							//so, right is parent, now this is un-supported
@@ -131,17 +91,17 @@ class JoinCriteriaVisitor extends HierarchyVisitor {
 						}
 					}
 				}
-				else if (join.getJoinType().equals(JoinType.INNER_JOIN)){
-					if (left.contains(right)) {
-						match = QueryBuilder.start(right.getTable().getName()).exists("true").notEquals(null).get(); //$NON-NLS-1$
+				else if (this.joinType.equals(JoinType.INNER_JOIN)){
+					if (this.left.contains(this.right)) {
+					    this.mergePlanner.addNode(new ExistsNode(this.right));
 					}
 					else {
-						match = QueryBuilder.start(left.getTable().getName()).exists("true").notEquals(null).get(); //$NON-NLS-1$ 				
+					    this.mergePlanner.addNode(new ExistsNode(this.left));
 					}
 				}
-				else if (join.getJoinType().equals(JoinType.CROSS_JOIN) || join.getJoinType().equals(JoinType.FULL_OUTER_JOIN)){
-					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18022, left.getTable().getName(), right.getTable().getName(), join.getJoinType()));			
-				}        	
+				else if (this.joinType.equals(JoinType.CROSS_JOIN) || this.joinType.equals(JoinType.FULL_OUTER_JOIN)){
+					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18022, left.getTable().getName(), right.getTable().getName(), this.joinType));
+				}
 				break;
 			case NE:
 			case LT:
@@ -154,46 +114,31 @@ class JoinCriteriaVisitor extends HierarchyVisitor {
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}
-    	
-    	this.match = match;
 	}
 
-	DBObject getCondition() throws TranslatorException {
-		if (!this.exceptions.isEmpty()) {
-			throw exceptions.get(0);
-		}
-		return this.match;
-	}
-
-	BasicDBObject getProjection() throws TranslatorException {
-		if (!this.exceptions.isEmpty()) {
-			throw exceptions.get(0);
-		}
-		return this.projection;
-	}	
-	
-	String getAliasName() {
-		return this.aliasName;
-	}
-	
-	private BasicDBObject buildIfNullBasedProjection(MongoDocument parent, MongoDocument child) {
-		
+	private BasicDBObject buildIfNullBasedProjection(MongoDocument parent, MongoDocument child) throws TranslatorException {
 		BasicDBObject columns = new BasicDBObject();
 		Table table = parent.getTable();
 		for (Column c:table.getColumns()) {
-			columns.append(c.getName(), 1);
+		    if (parent.isMerged() || parent.isEmbeddable()) {
+		        columns.append(parent.getQualifiedName(false)+"."+c.getName(), 1); //$NON-NLS-1$
+		    }
+		    else {
+		        columns.append(c.getName(), 1);
+		    }
 		}
 
 		BasicDBList exprs = new BasicDBList();
-		exprs.add("$"+child.getTable().getName()); //$NON-NLS-1$
+		exprs.add("$"+child.getQualifiedName(false)); //$NON-NLS-1$
 		BasicDBList list = new BasicDBList();
 		list.add(new BasicDBObject());
-		exprs.add(list); 
+		exprs.add(list);
 		BasicDBObject ifnull = new BasicDBObject("$ifNull", exprs); //$NON-NLS-1$
 		this.aliasName = "__NN_"+child.getTable().getName();//$NON-NLS-1$
-		columns.append(this.aliasName, ifnull); 
+		columns.append(this.aliasName, ifnull);
+		child.setAlias(this.aliasName);
 		child.getMergeKey().setAlias(this.aliasName);
-		
+
 		return columns;
 	}
 }
