@@ -1320,7 +1320,7 @@ public class TestFunctionLibrary {
     
     @Test public void testInvokeWeek() {
         Timestamp time = TimestampUtil.createTimestamp(100, 0, 1, 1, 2, 3, 4);
-        helpInvokeMethod("week", new Object[] { time }, new Integer(1)); //$NON-NLS-1$ 
+        helpInvokeMethod("week", new Object[] { time }, 52); //$NON-NLS-1$ 
     }
     
     @Test public void testInvokeYear() {

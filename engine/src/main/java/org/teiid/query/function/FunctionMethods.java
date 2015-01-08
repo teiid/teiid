@@ -428,11 +428,6 @@ public final class FunctionMethods {
 
 	public static int dayOfWeek(Date x) {
 		int result = getField(x, Calendar.DAY_OF_WEEK);
-		if (TimestampWithTimezone.ISO8601_WEEK) {
-			//technically this is just pg indexing
-			//iso would use sunday = 7 rather than 0
-			return (result + 6) % 7;
-		}
 		return result;
 	}
 

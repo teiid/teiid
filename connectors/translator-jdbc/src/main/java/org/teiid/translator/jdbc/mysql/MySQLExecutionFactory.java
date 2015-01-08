@@ -81,6 +81,8 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.LPAD, new PadFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.RPAD, new PadFunctionModifier());
+        //WEEKINYEAR assumes 4.1.1
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier("WEEKOFYEAR")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("AsWKB")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("GeomFromWKB")); //$NON-NLS-1$
 

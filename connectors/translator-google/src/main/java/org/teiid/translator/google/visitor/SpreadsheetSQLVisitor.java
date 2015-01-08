@@ -129,6 +129,8 @@ public class SpreadsheetSQLVisitor extends SQLStringVisitor {
 			function.setName("upper"); //$NON-NLS-1$
 		} else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.LCASE)) {
 			function.setName("lower"); //$NON-NLS-1$
+		} else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.DAYOFWEEK)) {
+			function.setName("weekday"); //$NON-NLS-1$
 		}
 		super.visit(function);
 	}

@@ -55,6 +55,7 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier("formatdatetime")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day_of_month")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("day_of_week")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier("iso_week")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("day_of_year")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UNESCAPE, new AliasModifier("stringdecode")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(SourceSystemFunctions.MOD, getLanguageFactory()));

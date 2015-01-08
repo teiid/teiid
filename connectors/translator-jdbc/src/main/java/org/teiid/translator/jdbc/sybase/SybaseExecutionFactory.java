@@ -322,7 +322,8 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
-        supportedFunctions.add("WEEK"); //$NON-NLS-1$
+        //not an iso calculation
+        //supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$

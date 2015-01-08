@@ -322,6 +322,14 @@ public class TestMySQLTranslator {
             output, TRANSLATOR);        
     }
 
+    @Test public void testWeek() throws Exception {
+        String input = "select week(smalla.datevalue) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT WEEKOFYEAR(SmallA.DateValue) FROM SmallA"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);        
+    }
     
     @Test public void testPad() throws Exception {
         String input = "select lpad(smalla.stringkey, 18), rpad(smalla.stringkey, 12) from bqt1.smalla"; //$NON-NLS-1$

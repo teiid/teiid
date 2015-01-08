@@ -38,12 +38,10 @@ import org.teiid.query.unittest.TimestampUtil;
 public class TestFunctionMethods {
 	
 	@BeforeClass public static void oneTimeSetup() {
-		TimestampWithTimezone.ISO8601_WEEK = true;
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-0600"));
 	}
 	
 	@AfterClass public static void oneTimeTearDown() {
-		TimestampWithTimezone.ISO8601_WEEK = false;
 		TimestampWithTimezone.resetCalendar(null);
 	}
 	
@@ -63,8 +61,8 @@ public class TestFunctionMethods {
 		assertEquals(52, FunctionMethods.week(TimestampUtil.createDate(106, 0, 1)));
 	}
 	
-	@Test public void testIso8601Week2() {
-		assertEquals(1, FunctionMethods.dayOfWeek(TimestampUtil.createDate(111, 10, 28)));
+	@Test public void testDayOfWeek() {
+		assertEquals(2, FunctionMethods.dayOfWeek(TimestampUtil.createDate(111, 10, 28)));
 	}
 	
 	@Test public void testTimestampDiffTimeStamp_ErrorUsingEndDate2304() throws Exception {

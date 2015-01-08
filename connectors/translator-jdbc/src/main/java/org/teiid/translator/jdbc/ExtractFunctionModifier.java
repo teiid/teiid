@@ -79,6 +79,7 @@ public class ExtractFunctionModifier extends FunctionModifier {
         objs.add(Tokens.SPACE);               
         objs.add(args.get(0));
         objs.add(Tokens.RPAREN);
+        //for pg - may not be needed for other dbs
         if (function.getName().toLowerCase().equals(SourceSystemFunctions.DAYOFWEEK)) {
         	objs.add(0, Tokens.LPAREN);
         	objs.add(" + 1)"); //$NON-NLS-1$
