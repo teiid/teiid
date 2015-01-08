@@ -34,6 +34,14 @@ CREATE FOREIGN TABLE TypesTest (
     CONSTRAINT PK0 PRIMARY KEY(PK)
 ) OPTIONS("teiid_hbase:TABLE" 'TypesTest', "UPDATABLE" 'TRUE');
 
+CREATE FOREIGN TABLE TimesTest (
+    PK string OPTIONS ("teiid_hbase:CELL" 'ROW_ID'),
+    column1 date OPTIONS ("teiid_hbase:CELL" 'f:q1'),
+    column2 time OPTIONS ("teiid_hbase:CELL" 'f:q2'),
+    column3 timestamp OPTIONS ("teiid_hbase:CELL" 'f:q3'),
+    CONSTRAINT PK0 PRIMARY KEY(PK)
+) OPTIONS("teiid_hbase:TABLE" 'TimesTest', "UPDATABLE" 'TRUE');
+
 CREATE VIRTUAL PROCEDURE extractData(IN param String)
 AS
 BEGIN

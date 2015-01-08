@@ -22,12 +22,7 @@
 package org.teiid.translator.hbase;
 
 import static org.teiid.language.SQLConstants.Reserved.AS;
-import static org.teiid.language.SQLConstants.Reserved.DISTINCT;
-import static org.teiid.language.SQLConstants.Reserved.FROM;
-import static org.teiid.language.SQLConstants.Reserved.HAVING;
 import static org.teiid.language.SQLConstants.Reserved.INTO;
-import static org.teiid.language.SQLConstants.Reserved.SELECT;
-import static org.teiid.language.SQLConstants.Reserved.WHERE;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -47,72 +42,35 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.XMLType;
-import org.teiid.language.Argument;
 import org.teiid.language.ColumnReference;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
-import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.language.TableReference;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Table;
-import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.hbase.phoenix.PColumnTeiidImpl;
 import org.teiid.translator.hbase.phoenix.PNameTeiidImpl;
 import org.teiid.translator.hbase.phoenix.PTableTeiidImpl;
 import org.teiid.translator.hbase.phoenix.PhoenixUtils;
 
-public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringVisitor.Substitutor {
+public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConversionVisitor {
 	
 	public static final String INSERT = "UPSERT";
 	
 	private HBaseExecutionFactory executionFactory ;
-	private ExecutionContext context ;
 	
-	private boolean replaceWithBinding = false;
-	
-	// used to map hbase table to phoenix
-//	private PTable ptable;
-	
-	private boolean prepared;
-	
-	private List preparedValues = new ArrayList();
 	
 	private Map<Column, PColumn> columnsMap = new HashMap<Column, PColumn> ();
 	private Map<Table, PTable> tablesMap = new HashMap<Table, PTable> ();
-	private List<String> mappingDDLlist = new ArrayList<String>();
 	
-//	private String mappingDDL; 
-	
-	public SQLConversionVisitor(HBaseExecutionFactory ef) {
+	public HBaseSQLConversionVisitor(HBaseExecutionFactory ef) {
+		super(ef);
 		this.executionFactory = ef;
-		this.prepared = executionFactory.usePreparedStatements();
 	}
 
-	public void setExecutionContext(ExecutionContext context) {
-		this.context = context;
-	}
-	
-	List getPreparedValues() {
-        return this.preparedValues;
-    }
-	
-	public boolean isPrepared() {
-		return prepared;
-	}
-    
-    public void setPrepared(boolean prepared) {
-		this.prepared = prepared;
-	}
-	
-	public List<String> getMappingDDLList() {
-		return mappingDDLlist;
-	}
 
 	@Override
 	public void visit(Select obj) {
@@ -121,48 +79,8 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 			phoenixTableMapping(obj.getFrom());
 		}
 		
-    	if (obj.getWith() != null) {
-    		append(obj.getWith());
-    	}
-		buffer.append(SELECT).append(Tokens.SPACE);
-        if (obj.isDistinct()) {
-            buffer.append(DISTINCT).append(Tokens.SPACE);
-        }
-        if (useSelectLimit() && obj.getLimit() != null) {
-            append(obj.getLimit());
-            buffer.append(Tokens.SPACE);
-        }
-        append(obj.getDerivedColumns());
-        if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
-        	buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);      
-            append(obj.getFrom());
-//        	buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);    
-//        	buffer.append(ptable.getTableName().getString()).append(Tokens.SPACE).append(AS).append(Tokens.SPACE).append(ptable.getName().getString());
-        }
-        if (obj.getWhere() != null) {
-            buffer.append(Tokens.SPACE)
-                  .append(WHERE)
-                  .append(Tokens.SPACE);
-            append(obj.getWhere());
-        }
-        if (obj.getGroupBy() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getGroupBy());
-        }
-        if (obj.getHaving() != null) {
-            buffer.append(Tokens.SPACE)
-                  .append(HAVING)
-                  .append(Tokens.SPACE);
-            append(obj.getHaving());
-        }
-        if (obj.getOrderBy() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getOrderBy());
-        }
-        if (!useSelectLimit() && obj.getLimit() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getLimit());
-        }
+		super.visit(obj);
+
     }
 	
 	@Override
@@ -212,7 +130,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 		
 		tablesMap.put(table, ptable);
 		
-		mappingDDLlist.add(PhoenixUtils.hbaseTableMappingDDL(ptable));	
+		executionFactory.getMappingDDLList().add(PhoenixUtils.hbaseTableMappingDDL(ptable));
 	}
 
 	
@@ -224,7 +142,6 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 				phoenixTableMapping(namedtable);
 			} 
 		}
-	
 		
 	}
 
@@ -281,39 +198,16 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 		
 		return null;
 	}
-	
-	@Override
-	public void visit(Literal obj) {
-		
-		if(isPrepared() && ((replaceWithBinding && obj.isBindEligible()) || executionFactory.isBindEligible(obj))){
-			buffer.append(UNDEFINED_PARAM);
-			preparedValues.add(obj);
-		} else {
-			super.visit(obj);
-		}
-	}
-
-	@Override
-    public void visit(ExpressionValueSource obj) {
-        replaceWithBinding = true;
-        super.visit(obj);
-    }
-
-	@Override
-	public void visit(DerivedColumn obj) {
-		replaceWithBinding = false;
-		append(obj.getExpression());
-	}
 
 	@Override
 	public void visit(ColumnReference obj) {
-		String groupName = getGroupName(obj, !shortNameOnly);
-		Column column = obj.getMetadataObject();
-		PColumn pcolumn = columnsMap.get(column);
+		String groupName = getGroupName(obj.getTable(), !shortNameOnly);
+		String elementName = getElementName(obj, !shortNameOnly);
+		
 		if(null != groupName){
-			buffer.append(groupName + Tokens.DOT + pcolumn.getName().getString());
+			buffer.append(groupName + Tokens.DOT + elementName);
 		} else {
-			buffer.append(pcolumn.getName().getString());
+			buffer.append(elementName);
 		}
 	}
 	
@@ -353,19 +247,20 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	}
 	
 
-	private String getGroupName(ColumnReference obj, boolean qualify){
+	private String getElementName(ColumnReference obj, boolean qualify){
 		
-        return getGroupName(obj.getTable(), qualify);
+		Column column = obj.getMetadataObject();
+		if(null != column) {
+			PColumn pcolumn = columnsMap.get(column);
+			return pcolumn.getName().getString();
+		} else {
+			return obj.getName();
+		}
+
 	}
 
 	public String getSQL(){
 		return buffer.toString();
-	}
-
-	@Override
-	public void substitute(Argument arg, StringBuilder builder, int index) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

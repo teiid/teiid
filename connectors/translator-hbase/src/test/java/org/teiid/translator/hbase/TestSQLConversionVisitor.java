@@ -143,10 +143,10 @@ public class TestSQLConversionVisitor {
 		HBaseExecutionFactory ef = new HBaseExecutionFactory();
 		ef.start();
 		
-		SQLConversionVisitor vistor = new SQLConversionVisitor(ef);
+		HBaseSQLConversionVisitor vistor = new HBaseSQLConversionVisitor(ef);
 		vistor.visitNode(command);
 		
-		System.out.println(vistor.getSQL());
+//		System.out.println(vistor.getSQL());
 		
 		assertEquals(expected, vistor.getSQL());
 		

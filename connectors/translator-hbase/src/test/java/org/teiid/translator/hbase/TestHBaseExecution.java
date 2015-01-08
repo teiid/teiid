@@ -30,10 +30,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 
+import javax.naming.Context;
 import javax.resource.ResourceException;
 import javax.transaction.TransactionManager;
 
@@ -48,10 +53,8 @@ import org.junit.Test;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
-import org.teiid.resource.adapter.hbase.HBaseManagedConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.translator.HBaseConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
@@ -66,6 +69,7 @@ public class TestHBaseExecution {
 	      Logger.getRootLogger().addAppender(consoleAppender);  
 	      
 	      System.setProperty("java.util.logging.config.file", "src/test/resources/logging.properties");
+	      System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "bitronix.tm.jndi.BitronixInitialContextFactory");
 		}
 	
 	static Connection conn = null;
@@ -79,9 +83,7 @@ public class TestHBaseExecution {
 		executionFactory.start();
 		server.addTranslator("translator-hbase", executionFactory);
 		
-		HBaseManagedConnectionFactory managedconnectionFactory = new HBaseManagedConnectionFactory();
-		managedconnectionFactory.setZkQuorum("localhost:2181");
-		server.addConnectionFactory("java:/hbaseDS", managedconnectionFactory.createConnectionFactory());
+		TestHBaseUtil.setupDataSource("java:/hbaseDS");
 		
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
@@ -100,6 +102,7 @@ public class TestHBaseExecution {
 	public void testBatchedInsert() throws SQLException {
 		TestHBaseUtil.executeBatchedUpdate(conn, "INSERT INTO Customer VALUES (?, ?, ?, ?, ?)", 2);
 		TestHBaseUtil.executeBatchedUpdate(conn, "INSERT INTO Customer(PK, city, name, amount, product) VALUES (?, ?, ?, ?, ?)", 2);
+		TestHBaseUtil.executeBatchedUpdate(conn, "INSERT INTO Customer VALUES (?, ?, ?, ?, ?)", 1);
 	}
 	
 	@Test
@@ -162,6 +165,35 @@ public class TestHBaseExecution {
 		TestHBaseUtil.executeQuery(conn, "SELECT * FROM Customer ORDER BY PK DESC LIMIT 3");
 	}
 	
+	@Test
+	public void testTimesTypes() throws Exception {
+		TestHBaseUtil.executeQuery(conn, "SELECT * FROM TimesTest");
+		
+		Date date = new Date(new java.util.Date().getTime());
+		Time time = new Time(new java.util.Date().getTime());
+		Timestamp timestramp = new Timestamp(new java.util.Date().getTime());
+		
+		PreparedStatement pstmt = null ;
+		try {
+			pstmt = conn.prepareStatement("INSERT INTO TimesTest VALUES (?, ?, ?, ?)");
+			for(int i = 0 ; i < 2 ; i ++) {
+				pstmt.setString(1, 100 + i + "");
+				pstmt.setDate(2, date);
+				pstmt.setTime(3, time);
+				pstmt.setTimestamp(4, timestramp);
+				pstmt.addBatch();
+			}
+			pstmt.executeBatch();
+			if(!conn.getAutoCommit()) {
+				conn.commit();
+			}
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			TestHBaseUtil.close(pstmt);
+		}
+	}
+	
 	/*
 	 * Teiid: https://docs.jboss.org/author/display/TEIID/Supported+Types
 	 * 
@@ -169,8 +201,9 @@ public class TestHBaseExecution {
 	 */
 	@Test
 	public void testDataTypes() throws Exception{
-		TestHBaseUtil.executeQuery(conn, "SELECT * FROM TypesTest");
-		TestHBaseUtil.executeBatchedUpdateDataType(conn, "INSERT INTO TypesTest VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+//		TestHBaseUtil.executeQuery(conn, "SELECT * FROM TypesTest");
+		TestHBaseUtil.executeBatchedUpdateDataType(conn, "INSERT INTO TypesTest VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1);
+		TestHBaseUtil.executeBatchedUpdateDataType(conn, "INSERT INTO TypesTest VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 10);
 		
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -220,13 +253,9 @@ public class TestHBaseExecution {
 	
 	@Test
 	public void testConnection() throws ResourceException, SQLException {
-		HBaseManagedConnectionFactory connectionFactory = new HBaseManagedConnectionFactory();
-		connectionFactory.setZkQuorum("localhost:2181");
-		HBaseConnection connection = connectionFactory.createConnectionFactory().getConnection();
-		assertNotNull(connection);
-		DatabaseMetaData dbmd = connection.getConnection().getMetaData();
-		assertEquals(false, dbmd.supportsGetGeneratedKeys());
-		TestHBaseUtil.close(connection.getConnection());;
+		assertNotNull(conn);
+		DatabaseMetaData dbmd = conn.getMetaData();
+		assertEquals(true, dbmd.supportsGetGeneratedKeys());
 	}
 	
 	@AfterClass 

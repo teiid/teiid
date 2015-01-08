@@ -22,93 +22,48 @@
 package org.teiid.translator.hbase;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Struct;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
-import java.util.TimeZone;
 
-import javax.resource.cci.ConnectionFactory;
-import javax.sql.rowset.serial.SerialStruct;
-
-import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
-import org.teiid.language.Call;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.HBaseConnection;
 import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCPlugin;
+import org.teiid.translator.jdbc.JDBCUpdateExecution;
 
 @Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase")
-public class HBaseExecutionFactory extends ExecutionFactory<ConnectionFactory, HBaseConnection> {
+public class HBaseExecutionFactory extends JDBCExecutionFactory {
 	
 	// use to store phoenix hbase table mapping ddl
 	private Set<String> cacheSet = Collections.synchronizedSet(new HashSet<String>());
 	
-	private int maxInsertBatchSize = 2048;
-	private boolean useBindVariables = true;
+	// use to temporally store phoenix hbase table mapping ddl
+	private List<String> mappingDDLlist = Collections.synchronizedList(new ArrayList<String>());
 	
-	private static final Map<Class<?>, Integer> TYPE_CODE_MAP = new HashMap<Class<?>, Integer>();
-    
-	private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
-	
-    private static final int INTEGER_CODE = 0;
-    private static final int LONG_CODE = 1;
-    private static final int DOUBLE_CODE = 2;
-    private static final int BIGDECIMAL_CODE = 3;
-    private static final int SHORT_CODE = 4;
-    private static final int FLOAT_CODE = 5;
-    private static final int TIME_CODE = 6;
-    private static final int DATE_CODE = 7;
-    private static final int TIMESTAMP_CODE = 8;
-    private static final int BLOB_CODE = 9;
-    private static final int CLOB_CODE = 10;
-    private static final int BOOLEAN_CODE = 11;
-    
-    static {
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.INTEGER, new Integer(INTEGER_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.LONG, new Integer(LONG_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DOUBLE, new Integer(DOUBLE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, new Integer(BIGDECIMAL_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.SHORT, new Integer(SHORT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.FLOAT, new Integer(FLOAT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIME, new Integer(TIME_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DATE, new Integer(DATE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, new Integer(TIMESTAMP_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BLOB, new Integer(BLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(SHORT_CODE));
-    }
-    
-    public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
+//    public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
 	public HBaseExecutionFactory() {
-		
+		super();
+		setSupportsFullOuterJoins(false);
 	}
 	
-	public enum StructRetrieval {
-    	OBJECT,
-    	COPY,
-    	ARRAY
-    }
 
 	@Override
 	public void start() throws TranslatorException {
@@ -119,62 +74,59 @@ public class HBaseExecutionFactory extends ExecutionFactory<ConnectionFactory, H
 	public ResultSetExecution createResultSetExecution(QueryExpression command
 													 , ExecutionContext executionContext
 													 , RuntimeMetadata metadata
-													 , HBaseConnection connection) throws TranslatorException {
-	
-		return new HBaseQueryExecution(this, command, executionContext, metadata, connection);
-	}
-	
-	@Override
-	public UpdateExecution createUpdateExecution(Command command
-											   , ExecutionContext executionContext
-											   , RuntimeMetadata metadata
-											   , HBaseConnection connection) throws TranslatorException {
-
-		return new HBaseUpdateExecution(this, command, executionContext, metadata, connection);
+													 , Connection conn) throws TranslatorException {
+		return new HBaseQueryExecution(command, executionContext, metadata, conn, this);
 	}
 
 	@Override
-	public ProcedureExecution createProcedureExecution(Call command
-													 , ExecutionContext executionContext
-													 , RuntimeMetadata metadata
-													 , HBaseConnection connection) throws TranslatorException {
+	public JDBCUpdateExecution createUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			Connection conn) throws TranslatorException {
+		// TODO Auto-generated method stub
+		return new HBaseUpdateExecution(command, executionContext, metadata, conn, this);
+	}
+
+	public HBaseSQLConversionVisitor getSQLConversionVisitor() {
+		return new HBaseSQLConversionVisitor(this);
+	}
+
+
+	/*
+	 * Phoenix do not support XML, CLOB, BLOB, OBJECT
+	 */
+	protected boolean isBindEligible(Literal l) {
+		return false;
+	}
+
+	public Set<String> getDDLCacheSet() {
+		return cacheSet;
+	}
+	
+	public List<String> getMappingDDLList() {
+		return mappingDDLlist;
+	}
+
+
+	@Override
+	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
 		
-		return super.createProcedureExecution(command, executionContext, metadata, connection);
-	}
-
-	public SQLConversionVisitor getSQLConversionVisitor() {
-		return new SQLConversionVisitor(this);
-	}
-
-	public boolean usePreparedStatements() {
-		return useBindVariables();
+		if (conn == null) {
+			throw new TranslatorException(HBasePlugin.Event.TEIID27005, JDBCPlugin.Util.gs(HBasePlugin.Event.TEIID27016));
+		}
+		MetadataProcessor mp = getMetadataProcessor();
+    	if (mp != null) {
+    	    PropertiesUtils.setBeanProperties(mp, metadataFactory.getModelProperties(), "importer");
+    	    mp.process(metadataFactory, conn);
+    	}
 	}
 	
-	@TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)
-	public boolean useBindVariables() {
-		return this.useBindVariables;
+	@Override
+	public MetadataProcessor<Connection> getMetadataProcessor() {
+		return new HBaseMetadataProcessor();
 	}
 
-	public void setUseBindVariables(boolean useBindVariables) {
-		this.useBindVariables = useBindVariables;
-	}
 
-	 /**
-     * Get the max number of inserts to perform in one batch.
-     * @return
-     */
-    @TranslatorProperty(display="Max Prepared Insert Batch Size", description="The max size of a prepared insert batch.  Default 2048.", advanced=true)
-    public int getMaxPreparedInsertBatchSize() {
-    	return maxInsertBatchSize;
-    }
-    
-    public void setMaxPreparedInsertBatchSize(int maxInsertBatchSize) {
-    	if (maxInsertBatchSize < 1) {
-    		throw new AssertionError("Max prepared batch insert size must be greater than 0"); //$NON-NLS-1$
-    	}
-		this.maxInsertBatchSize = maxInsertBatchSize;
-	}
-
+	@Override
 	public void bindValue(PreparedStatement pstmt, Object param, Class<?> paramType, int i) throws SQLException {
 
 		int type = TypeFacility.getSQLTypeFromRuntimeType(paramType);
@@ -190,7 +142,12 @@ public class HBaseExecutionFactory extends ExecutionFactory<ConnectionFactory, H
 		}
 		
 		if (paramType.equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) {
-			byte[] bytes = ((BinaryType)param).getBytesDirect();
+			byte[] bytes ;
+			if(param instanceof BinaryType){
+				bytes = ((BinaryType)param).getBytesDirect();
+			} else {
+				bytes = (byte[]) param;
+			}
 			pstmt.setBytes(i, bytes);
         	return;
         }
@@ -241,15 +198,15 @@ public class HBaseExecutionFactory extends ExecutionFactory<ConnectionFactory, H
 		}
 		
 		if (paramType.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
-            pstmt.setDate(i,(java.sql.Date)param);
+            pstmt.setDate(i,(java.sql.Date)param, getDatabaseCalendar());
             return;
         } 
         if (paramType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-            pstmt.setTime(i,(java.sql.Time)param);
+            pstmt.setTime(i,(java.sql.Time)param, getDatabaseCalendar());
             return;
         } 
         if (paramType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
-            pstmt.setTimestamp(i,(java.sql.Timestamp)param);
+            pstmt.setTimestamp(i,(java.sql.Timestamp)param, getDatabaseCalendar());
             return;
         }
         
@@ -265,133 +222,9 @@ public class HBaseExecutionFactory extends ExecutionFactory<ConnectionFactory, H
         pstmt.setObject(i, param, type);
 	}
 
-	private boolean useStreamsForLobs() {
-		return false;
-	}
 
-	public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
-		Integer code = TYPE_CODE_MAP.get(expectedType);
-        if(code != null) {
-            switch(code.intValue()) {
-                case INTEGER_CODE:  {
-                    int value = results.getInt(columnIndex);                    
-                    if(results.wasNull()) {
-                        return null;
-                    }
-                    return Integer.valueOf(value);
-                }
-                case LONG_CODE:  {
-                    long value = results.getLong(columnIndex);                    
-                    if(results.wasNull()) {
-                        return null;
-                    } 
-                    return Long.valueOf(value);
-                }                
-                case DOUBLE_CODE:  {
-                    double value = results.getDouble(columnIndex);                    
-                    if(results.wasNull()) {
-                        return null;
-                    } 
-                    return Double.valueOf(value);
-                }                
-                case BIGDECIMAL_CODE:  {
-                    return results.getBigDecimal(columnIndex); 
-                }
-                case SHORT_CODE:  {
-                    short value = results.getShort(columnIndex);                    
-                    if(results.wasNull()) {
-                        return null;
-                    }                    
-                    return Short.valueOf(value);
-                }
-                case FLOAT_CODE:  {
-                    float value = results.getFloat(columnIndex);                    
-                    if(results.wasNull()) {
-                        return null;
-                    } 
-                    return Float.valueOf(value);
-                }
-                case TIME_CODE: {
-            		return results.getTime(columnIndex);
-                }
-                case DATE_CODE: {
-            		return results.getDate(columnIndex);
-                }
-                case TIMESTAMP_CODE: {
-            		return results.getTimestamp(columnIndex);
-                }
-    			case BLOB_CODE: {
-    				try {
-    					return results.getBlob(columnIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				try {
-    					return results.getBytes(columnIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
-    			}
-    			case CLOB_CODE: {
-    				try {
-    					return results.getClob(columnIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
-    			}  
-    			case BOOLEAN_CODE: {
-    				return results.getBoolean(columnIndex);
-    			}
-            }
-        }
-
-        Object result = results.getObject(columnIndex);
-        if (expectedType == TypeFacility.RUNTIME_TYPES.OBJECT) {
-        	return convertObject(result);
-        }
-		return result;
-	}
-	
-	protected Object convertObject(Object object) throws SQLException {
-    	if (object instanceof Struct) {
-    		switch (structRetrieval) {
-    		case OBJECT:
-    			return object;
-    		case ARRAY:
-    			return new ArrayImpl(((Struct)object).getAttributes());
-    		case COPY:
-    			return new SerialStruct((Struct)object, Collections.<String, Class<?>> emptyMap());
-    		}
-    	}
-    	return object;
-	}
-	
-	/*
-	 * Current Phoenix do not support XML, CLOB, BLOB, OBJECT
-	 */
-	protected boolean isBindEligible(Literal l) {
-		return TypeFacility.RUNTIME_TYPES.XML.equals(l.getType())
-				|| TypeFacility.RUNTIME_TYPES.CLOB.equals(l.getType())
-				|| TypeFacility.RUNTIME_TYPES.BLOB.equals(l.getType())
-				|| TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
-	}
-
-	public Set<String> getDDLCacheSet() {
-		return cacheSet;
-	}
-
-	public void setFetchSize(Command command, ExecutionContext executionContext, Statement statement, int fetchSize) throws SQLException {
-		statement.setFetchSize(fetchSize);
-	}
-
-	@Override
-	public MetadataProcessor<HBaseConnection> getMetadataProcessor() {
-		return new HBaseMetadataProcessor();
-	}
 	
 	
-
+	
 	
 }

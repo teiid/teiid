@@ -25,11 +25,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-
+import java.util.List;
+import java.util.Set;
 
 import org.apache.phoenix.schema.PColumn;
 import org.apache.phoenix.schema.PTable;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.translator.hbase.HBaseExecutionException;
+import org.teiid.translator.hbase.HBasePlugin;
 
 public class PhoenixUtils {
 	
@@ -52,18 +55,26 @@ public class PhoenixUtils {
 			}
 		}
 		
-//		String pks = "";
-//		for(PColumn pkColumn: ptable.getPKColumns()) {
-//			pks += pkColumn.getName().getString();
-//			pks += Tokens.COMMA;
-//			pks += Tokens.SPACE;
-//		}
-//		pks = pks.substring(0, pks.length() - 2);
-//		sb.append("CONSTRAINT").append(Tokens.SPACE).append("PK_" + ptable.getTableName().getString()).append(Tokens.SPACE) ;
-//		sb.append("PRIMARY KEY").append(Tokens.SPACE).append(Tokens.LPAREN).append(pks).append(Tokens.RPAREN);
 		String ddl = sb.toString();
 		ddl = ddl.substring(0, ddl.length() - 2) + Tokens.RPAREN ;
 		return ddl;
+	}
+	
+	public static void phoenixTableMapping(Set<String> cacheDDL, List<String> ddlList, Connection conn) throws HBaseExecutionException {
+		
+		for(int i = 0 ; i < ddlList.size() ; i ++) {
+			String ddl = ddlList.get(i);
+			if(!cacheDDL.contains(ddl)) {
+				try {
+					PhoenixUtils.executeUpdate(conn, ddl);
+				} catch (SQLException e) {
+					throw new HBaseExecutionException(HBasePlugin.Event.TEIID27001, e, HBasePlugin.Event.TEIID27012, ddl);
+				}
+				cacheDDL.add(ddl);
+			}
+		}
+		
+		ddlList.clear();
 	}
 	
 	public static boolean executeUpdate(Connection conn, String sql) throws SQLException {

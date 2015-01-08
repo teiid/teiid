@@ -21,104 +21,44 @@
  */
 package org.teiid.translator.hbase;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Connection;
 
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.HBaseConnection;
-import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.hbase.phoenix.PhoenixUtils;
+import org.teiid.translator.jdbc.JDBCQueryExecution;
+import org.teiid.translator.jdbc.TranslatedCommand;
 
-public class HBaseQueryExecution extends HBaseExecution implements ResultSetExecution {
+public class HBaseQueryExecution extends JDBCQueryExecution {
 	
-	private Class<?>[] columnDataTypes;
 	
-	protected ResultSet results;
+	private TranslatedCommand translatedComm = null;
 	
-	public HBaseQueryExecution(HBaseExecutionFactory executionFactory
-							 , QueryExpression command
-							 , ExecutionContext executionContext
-							 , RuntimeMetadata metadata
-							 , HBaseConnection hbconnection) throws HBaseExecutionException {
-		super(command, executionFactory, executionContext, metadata, hbconnection);
-		this.columnDataTypes = command.getColumnTypes();
+
+	public HBaseQueryExecution(QueryExpression command, 
+							   ExecutionContext executionContext, 
+							   RuntimeMetadata metadata,
+							   Connection conn, 
+							   HBaseExecutionFactory executionFactory) throws TranslatorException {
+		super(command, conn, executionContext, executionFactory);
 		
-		visitCommand();
-	}
-
-	@Override
-	public void execute() throws TranslatorException {
-
-		LogManager.logInfo(LogConstants.CTX_CONNECTOR, this.command);
-		
-		boolean usingTxn = false;
-		boolean success = false;
-		try {
-			results = getStatement().executeQuery(vistor.getSQL());
-			success = true;
-		} catch (SQLException e) {
-			throw new HBaseExecutionException(HBasePlugin.Event.TEIID27002, e, command);
-		} finally {
-			if (usingTxn) {
-	        	try {
-		        	try {
-			        	if (success) {
-			        		connection.commit();
-			        	} else {
-			        		connection.rollback();
-			        	}
-		        	} finally {
-			    		connection.setAutoCommit(true);
-		        	}
-	        	} catch (SQLException e) {
-	        	}
-        	}
-		}
+		translatedComm = translateCommand(command);
+		PhoenixUtils.phoenixTableMapping(executionFactory.getDDLCacheSet(), executionFactory.getMappingDDLList(), conn);
 	}
 	
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		
-		try {
-			if (results.next()) {
-				List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
-				
-				for (int i = 0; i < columnDataTypes.length; i++) {
-                    // Convert from 0-based to 1-based
-                    Object value = this.executionFactory.retrieveValue(results, i+1, columnDataTypes[i]);
-                    vals.add(value); 
-                }
+	
 
-                return vals;
-			}
-		} catch (SQLException e) {
-			throw new HBaseExecutionException(HBasePlugin.Event.TEIID27002, e, HBasePlugin.Event.TEIID27011, command);
+	@Override
+	protected TranslatedCommand translateCommand(Command command) throws TranslatorException {
+		
+		if(null == translatedComm) {
+			translatedComm = super.translateCommand(command);
 		}
 		
-		return null;
+		return translatedComm ;
 	}
-
-	@Override
-	public void close() {
-
-		if (results != null) {
-            try {
-                results.close();
-                results = null;
-            } catch (SQLException e) {
-            	LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing ResultSet"); 
-            }
-        }
-		
-		super.close();
-	}
-	
 
 }

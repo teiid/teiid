@@ -32,11 +32,9 @@ import org.apache.phoenix.schema.PDataType;
 import org.apache.phoenix.schema.PName;
 import org.apache.phoenix.schema.PTable;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.translator.HBaseConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
@@ -47,7 +45,7 @@ import org.teiid.translator.hbase.phoenix.PNameTeiidImpl;
 import org.teiid.translator.hbase.phoenix.PTableTeiidImpl;
 import org.teiid.translator.hbase.phoenix.PhoenixUtils;
 
-public class HBaseMetadataProcessor implements MetadataProcessor<HBaseConnection> {
+public class HBaseMetadataProcessor implements MetadataProcessor<Connection> {
 	
 	@ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="HBase Table Name", description="HBase Table Name", required=true)
 	public static final String TABLE = MetadataFactory.HBASE_URI + "TABLE";
@@ -60,7 +58,7 @@ public class HBaseMetadataProcessor implements MetadataProcessor<HBaseConnection
     private String[] columnTypes;
 
 	@Override
-	public void process(MetadataFactory metadataFactory, HBaseConnection connection) throws TranslatorException {
+	public void process(MetadataFactory metadataFactory, Connection connection) throws TranslatorException {
 		
 		if(hbaseTableName == null) {
 			throw new TranslatorException(HBasePlugin.Event.TEIID27005, HBasePlugin.Util.gs(HBasePlugin.Event.TEIID27014, "importer.hbaseTableName"));
@@ -73,10 +71,8 @@ public class HBaseMetadataProcessor implements MetadataProcessor<HBaseConnection
 		if(columnTypes == null || columnTypes.length != columnQualifiers.length) {
 			throw new TranslatorException(HBasePlugin.Event.TEIID27005, HBasePlugin.Util.gs(HBasePlugin.Event.TEIID27014, "importer.columnTypes"));
 		}
-		
-		Connection conn = connection.getConnection();
-		
-		addTable(metadataFactory, conn, hbaseTableName, columnQualifiers);
+				
+		addTable(metadataFactory, connection, hbaseTableName, columnQualifiers);
 		
 	}
 

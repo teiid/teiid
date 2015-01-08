@@ -35,7 +35,6 @@ import org.mockito.Mockito;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
-import org.teiid.translator.HBaseConnection;
 import org.teiid.translator.TranslatorException;
 
 public class TestHBaseMetadataProcessor {
@@ -51,12 +50,10 @@ public class TestHBaseMetadataProcessor {
 		
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "customer", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
 		
-		HBaseConnection connection = Mockito.mock(HBaseConnection.class);
-		Mockito.stub(connection.getConnection()).toReturn(Mockito.mock(Connection.class));
-		Connection conn = connection.getConnection();
+		Connection conn = Mockito.mock(Connection.class);
 		Mockito.stub(conn.createStatement()).toReturn(Mockito.mock(Statement.class));
 		
-		translator.getMetadata(mf, connection);	
+		translator.getMetadata(mf, conn);	
 		
 		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
 		return ddl;

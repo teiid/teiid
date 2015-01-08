@@ -23,15 +23,6 @@
   
   <dependencySets>
     <dependencySet>
-      <includes>
-        <include>org.jboss.teiid.connectors:hbase-api</include>
-        <include>org.apache.phoenix:phoenix-core</include>
-      </includes>
-      <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/hbase/api/main</outputDirectory>
-      <useTransitiveDependencies>false</useTransitiveDependencies>
-      <useTransitiveFiltering>false</useTransitiveFiltering>
-    </dependencySet>
-    <dependencySet>
           <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/hbase/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
