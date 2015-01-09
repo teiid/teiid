@@ -25,6 +25,11 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
@@ -73,7 +78,7 @@ public class TestTeiidLanguageToSolr {
 	@Test
 	public void testSelectStar() throws Exception {
 		// column test, all columns translates to price, weight and popularity
-		assertEquals("fl=price,weight,popularity,name,purchasedate,nis&q=*:*", getSolrTranslation("select * from example"));
+		assertEquals("fl=price,weight,popularity,name,purchasets,purchasetime,purchasedate,nis&q=*:*", getSolrTranslation("select * from example"));
 	}
 
 	@Test
@@ -255,11 +260,38 @@ public class TestTeiidLanguageToSolr {
 	
 	 
 	@Test
-	public void testDateField() throws Exception {
-		assertTrue(getSolrTranslation(
-				"select name,purchasedate from example where purchasedate = {ts '2014-02-06 11:52:07'}")
-				.startsWith("fl=name,purchasedate&q=purchasedate:2014-02-06T11-52-07:000"));
+	public void testTimestampField() throws Exception {
+	    Date d = getTestDate();
+	    SimpleDateFormat format = new SimpleDateFormat("'{ts '''yyyy-MM-dd HH:mm:ss'''}'");
+		assertEquals("fl=name,purchasedate&q=purchasets:2014-02-06T17-52-07:000Z",
+		        getSolrTranslation("select name,purchasedate from example where purchasets = "+format.format(d)));
 	}
+	
+
+	@Test
+    public void testDateField() throws Exception {
+        Date d = getTestDate();
+        SimpleDateFormat format = new SimpleDateFormat("'{d '''yyyy-MM-dd'''}'");
+        assertEquals("fl=name,purchasedate&q=purchasedate:2014-02-06T06-00-00:000Z",
+                getSolrTranslation("select name,purchasedate from example where purchasedate = "+format.format(d)));
+    }
+	
+    @Test
+    public void testTimeField() throws Exception {
+        Date d = getTestDate();
+        SimpleDateFormat format = new SimpleDateFormat("'{t '''HH:mm:ss'''}'");
+        
+        assertEquals("fl=name,purchasedate&q=purchasetime:1970-01-01T17-52-07:000Z",
+                getSolrTranslation("select name,purchasedate from example where purchasetime = "+format.format(d)));
+    }
+
+    private Date getTestDate() {
+        Calendar c = Calendar.getInstance();
+        c.set(2014, 1, 6, 11, 52, 07);
+        c.setTimeZone(TimeZone.getTimeZone("CST"));
+        Date d = c.getTime();
+        return d;
+    }
 	
 	@Test
 	public void testFunction() throws Exception {
