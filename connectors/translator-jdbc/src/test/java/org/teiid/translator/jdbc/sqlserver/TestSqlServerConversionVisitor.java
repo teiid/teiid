@@ -143,8 +143,8 @@ public class TestSqlServerConversionVisitor {
     
     @Test
     public void testDateFunctions() throws Exception {
-        String input = "select dayName(timestampValue), dayOfWeek(timestampValue), quarter(timestampValue) from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT {fn dayname(SmallA.TimestampValue)}, {fn dayofweek(SmallA.TimestampValue)}, {fn quarter(SmallA.TimestampValue)} FROM SmallA"; //$NON-NLS-1$
+        String input = "select dayName(timestampValue), dayOfWeek(timestampValue), quarter(timestampValue), week(timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT {fn dayname(SmallA.TimestampValue)}, {fn dayofweek(SmallA.TimestampValue)}, {fn quarter(SmallA.TimestampValue)}, DATEPART(ISO_WEEK, SmallA.TimestampValue) FROM SmallA"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 

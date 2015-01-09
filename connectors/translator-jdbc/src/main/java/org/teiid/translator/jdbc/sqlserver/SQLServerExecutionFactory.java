@@ -48,7 +48,9 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.Version;
@@ -75,6 +77,18 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	public SQLServerExecutionFactory() {
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(2);
+	}
+	
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
+		registerFunctionModifier(SourceSystemFunctions.WEEK, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("DATEPART(ISO_WEEK, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
 	}
 
 	@Override
