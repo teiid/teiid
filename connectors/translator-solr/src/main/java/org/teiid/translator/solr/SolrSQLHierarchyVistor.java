@@ -21,28 +21,47 @@
  */
 package org.teiid.translator.solr;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
-import static org.teiid.language.visitor.SQLStringVisitor.*;
+import static org.teiid.language.SQLConstants.Reserved.FALSE;
+import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.TRUE;
+import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
+import java.util.TimeZone;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.Like;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
-
+    private static SimpleDateFormat sdf;
+    static {
+        sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss:SSS'Z'"); //$NON-NLS-1$
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
+    }
+    
 	@SuppressWarnings("unused")
 	private RuntimeMetadata metadata;
 	protected StringBuilder buffer = new StringBuilder();
@@ -231,15 +250,11 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
             	this.onGoingExpression.push(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
             } 
-            else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-            	this.onGoingExpression.push(new SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss:SSSZ").format(val)); //$NON-NLS-1$
+            else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP) 
+                    || type.equals(DataTypeManager.DefaultDataClasses.TIME) 
+                    || type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
+            	this.onGoingExpression.push(sdf.format(val));
             } 
-            else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-            	this.onGoingExpression.push(new SimpleDateFormat("HH-mm-ss:SSSZ").format(val)); //$NON-NLS-1$
-            } 
-            else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-            	this.onGoingExpression.push(new SimpleDateFormat("yyyy-MM-dd").format(val)); //$NON-NLS-1$            	
-            }  
             else {
             	this.onGoingExpression.push(escapeString(val.toString()));
             }
