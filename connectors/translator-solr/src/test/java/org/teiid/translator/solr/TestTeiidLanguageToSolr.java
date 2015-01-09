@@ -25,16 +25,19 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
@@ -262,31 +265,27 @@ public class TestTeiidLanguageToSolr {
 	@Test
 	public void testTimestampField() throws Exception {
 	    Date d = getTestDate();
-	    SimpleDateFormat format = new SimpleDateFormat("'{ts '''yyyy-MM-dd HH:mm:ss'''}'");
-		assertEquals("fl=name,purchasedate&q=purchasets:2014-02-06T19-52-07:000Z",
-		        getSolrTranslation("select name,purchasedate from example where purchasets = "+format.format(d)));
+		assertEquals("fl=name,purchasedate&q=purchasets:2014-02-06T19:52:07:000Z",
+		        getSolrTranslation("select name,purchasedate from example where purchasets = {ts '"+new Timestamp(d.getTime())+"'}"));
 	}
-	
 
 	@Test
     public void testDateField() throws Exception {
         Date d = getTestDate();
-        SimpleDateFormat format = new SimpleDateFormat("'{d '''yyyy-MM-dd'''}'");
-        assertEquals("fl=name,purchasedate&q=purchasedate:2014-02-06T06-00-00:000Z",
-                getSolrTranslation("select name,purchasedate from example where purchasedate = "+format.format(d)));
+        assertEquals("fl=name,purchasedate&q=purchasedate:2014-02-06T08:00:00:000Z",
+                getSolrTranslation("select name,purchasedate from example where purchasedate = {d '"+new java.sql.Date(d.getTime())+"'}"));
     }
 	
     @Test
     public void testTimeField() throws Exception {
         Date d = getTestDate();
-        SimpleDateFormat format = new SimpleDateFormat("'{t '''HH:mm:ss'''}'");
-        
-        assertEquals("fl=name,purchasedate&q=purchasetime:1970-01-01T19-52-07:000Z",
-                getSolrTranslation("select name,purchasedate from example where purchasetime = "+format.format(d)));
+        assertEquals("fl=name,purchasedate&q=purchasetime:1970-01-01T19:52:07:000Z",
+                getSolrTranslation("select name,purchasedate from example where purchasetime = {t '"+new Time(d.getTime())+"'}"));
     }
 
     private Date getTestDate() {
-        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("PST"));
+        Calendar c = TimestampWithTimezone.getCalendar();
+        c.setTimeInMillis(0);
         c.set(2014, 1, 6, 11, 52, 07);
         return c.getTime();
     }
@@ -301,6 +300,14 @@ public class TestTeiidLanguageToSolr {
 	public void testNestedFunction() throws Exception {
 		assertEquals("fl=name,div(sum(popularity,1),2)&sort=popularity asc&q=*:*",
 				getSolrTranslation("select name,(popularity+1)/2 as x from example order by popularity ASC"));		
-	}	
+	}
+	
+	@Before public void setUp() { 
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$ 
+	}
+	
+	@After public void tearDown() { 
+		TimestampWithTimezone.resetCalendar(null);
+	}
 
 }

@@ -35,20 +35,9 @@ import java.util.TimeZone;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.Like;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.OrderBy;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
@@ -58,7 +47,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
     private static SimpleDateFormat sdf;
     static {
-        sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss:SSS'Z'"); //$NON-NLS-1$
+        sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss:SSS'Z'"); //$NON-NLS-1$
         sdf.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
     }
     
@@ -261,7 +250,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP) 
                     || type.equals(DataTypeManager.DefaultDataClasses.TIME) 
                     || type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-            	this.onGoingExpression.push(sdf.format(val));
+            	synchronized (sdf) {
+                	this.onGoingExpression.push(sdf.format(val));
+				}
             } 
             else {
             	this.onGoingExpression.push(escapeString(val.toString()));
