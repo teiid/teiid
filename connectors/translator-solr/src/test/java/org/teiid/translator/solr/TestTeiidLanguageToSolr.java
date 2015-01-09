@@ -263,7 +263,7 @@ public class TestTeiidLanguageToSolr {
 	public void testTimestampField() throws Exception {
 	    Date d = getTestDate();
 	    SimpleDateFormat format = new SimpleDateFormat("'{ts '''yyyy-MM-dd HH:mm:ss'''}'");
-		assertEquals("fl=name,purchasedate&q=purchasets:2014-02-06T17-52-07:000Z",
+		assertEquals("fl=name,purchasedate&q=purchasets:2014-02-06T19-52-07:000Z",
 		        getSolrTranslation("select name,purchasedate from example where purchasets = "+format.format(d)));
 	}
 	
@@ -281,16 +281,14 @@ public class TestTeiidLanguageToSolr {
         Date d = getTestDate();
         SimpleDateFormat format = new SimpleDateFormat("'{t '''HH:mm:ss'''}'");
         
-        assertEquals("fl=name,purchasedate&q=purchasetime:1970-01-01T17-52-07:000Z",
+        assertEquals("fl=name,purchasedate&q=purchasetime:1970-01-01T19-52-07:000Z",
                 getSolrTranslation("select name,purchasedate from example where purchasetime = "+format.format(d)));
     }
 
     private Date getTestDate() {
-        Calendar c = Calendar.getInstance();
+        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("PST"));
         c.set(2014, 1, 6, 11, 52, 07);
-        c.setTimeZone(TimeZone.getTimeZone("CST"));
-        Date d = c.getTime();
-        return d;
+        return c.getTime();
     }
 	
 	@Test
