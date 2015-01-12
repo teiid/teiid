@@ -28,37 +28,35 @@ import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.hbase.phoenix.PhoenixUtils;
 import org.teiid.translator.jdbc.JDBCQueryExecution;
 import org.teiid.translator.jdbc.TranslatedCommand;
 
 public class HBaseQueryExecution extends JDBCQueryExecution {
-	
-	
-	private TranslatedCommand translatedComm = null;
-	
+    
+    
+    private TranslatedCommand translatedComm = null;
+    
 
-	public HBaseQueryExecution(QueryExpression command, 
-							   ExecutionContext executionContext, 
-							   RuntimeMetadata metadata,
-							   Connection conn, 
-							   HBaseExecutionFactory executionFactory) throws TranslatorException {
-		super(command, conn, executionContext, executionFactory);
-		
-		translatedComm = translateCommand(command);
-		PhoenixUtils.phoenixTableMapping(executionFactory.getDDLCacheSet(), executionFactory.getMappingDDLList(), conn);
-	}
-	
-	
+    public HBaseQueryExecution(QueryExpression command, 
+                               ExecutionContext executionContext, 
+                               RuntimeMetadata metadata,
+                               Connection conn, 
+                               HBaseExecutionFactory executionFactory) throws TranslatorException {
+        super(command, conn, executionContext, executionFactory);
+        
+        translatedComm = translateCommand(command);
+    }
+    
+    
 
-	@Override
-	protected TranslatedCommand translateCommand(Command command) throws TranslatorException {
-		
-		if(null == translatedComm) {
-			translatedComm = super.translateCommand(command);
-		}
-		
-		return translatedComm ;
-	}
+    @Override
+    protected TranslatedCommand translateCommand(Command command) throws TranslatorException {
+        
+        if(null == translatedComm) {
+            translatedComm = super.translateCommand(command);
+        }
+        
+        return translatedComm ;
+    }
 
 }

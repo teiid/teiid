@@ -401,6 +401,7 @@
             <translator name="excel" module="org.jboss.teiid.translator.excel"/>
             <translator name="impala" module="org.jboss.teiid.translator.hive"/>
             <translator name="ucanaccess" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="hbase" module="org.jboss.teiid.translator.hbase"/>
         </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <unbounded-queue-thread-pool name="teiid-async">

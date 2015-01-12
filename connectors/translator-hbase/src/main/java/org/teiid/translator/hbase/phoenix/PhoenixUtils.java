@@ -22,97 +22,119 @@
 package org.teiid.translator.hbase.phoenix;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Set;
 
-import org.apache.phoenix.schema.PColumn;
-import org.apache.phoenix.schema.PTable;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.translator.hbase.HBaseExecutionException;
-import org.teiid.translator.hbase.HBasePlugin;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Table;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.hbase.HBaseMetadataProcessor;
 
 public class PhoenixUtils {
-	
-	public static final String QUOTE = "\"";
-	
-	public static String hbaseTableMappingDDL(PTable ptable) {
-		
-		StringBuffer sb = new StringBuffer();
-		sb.append("CREATE TABLE IF NOT EXISTS").append(Tokens.SPACE).append(ptable.getTableName().getString());
-		sb.append(Tokens.SPACE).append(Tokens.LPAREN);
-		
-		for (PColumn pColumn : ptable.getColumns()) {
-			if(pColumn.getFamilyName() == null) {
-				String pk = pColumn.getName().getString();
-				sb.append(pk).append(Tokens.SPACE).append(pColumn.getDataType().getSqlTypeName()).append(Tokens.SPACE).append("PRIMARY KEY").append(Tokens.COMMA).append(Tokens.SPACE);
-			} else {
-				String family = pColumn.getFamilyName().getString();
-				String qualifier = pColumn.getName().getString();
-				sb.append(family).append(Tokens.DOT).append(qualifier).append(Tokens.SPACE).append(pColumn.getDataType().getSqlTypeName()).append(Tokens.COMMA).append(Tokens.SPACE);
-			}
-		}
-		
-		String ddl = sb.toString();
-		ddl = ddl.substring(0, ddl.length() - 2) + Tokens.RPAREN ;
-		return ddl;
-	}
-	
-	public static void phoenixTableMapping(Set<String> cacheDDL, List<String> ddlList, Connection conn) throws HBaseExecutionException {
-		
-		for(int i = 0 ; i < ddlList.size() ; i ++) {
-			String ddl = ddlList.get(i);
-			if(!cacheDDL.contains(ddl)) {
-				try {
-					PhoenixUtils.executeUpdate(conn, ddl);
-				} catch (SQLException e) {
-					throw new HBaseExecutionException(HBasePlugin.Event.TEIID27001, e, HBasePlugin.Event.TEIID27012, ddl);
-				}
-				cacheDDL.add(ddl);
-			}
-		}
-		
-		ddlList.clear();
-	}
-	
-	public static boolean executeUpdate(Connection conn, String sql) throws SQLException {
-		
-		Statement stmt = null;
-		
-		try {
-			stmt = conn.createStatement();
-			stmt.executeUpdate(sql);
-		} catch (SQLException e) {
-			throw e;
-		} finally {
-			close(stmt);
-		}
-		
-		return true ;
-	}
-	
-	public static void close(Statement stmt) {
+    
+    public static final String QUOTE = "\""; //$NON-NLS-1$
+    
+    public static String hbaseTableMappingDDL(Table ptable) {
+        
+        StringBuffer sb = new StringBuffer();
+        sb.append("CREATE TABLE IF NOT EXISTS").append(Tokens.SPACE).append(ptable.getSourceName()); //$NON-NLS-1$
+        sb.append(Tokens.SPACE).append(Tokens.LPAREN);
+        
+        for (Column pColumn : ptable.getColumns()) {
+        	String family = pColumn.getProperty(HBaseMetadataProcessor.COLUMN_FAMILY, false);
+            if(family == null) {
+                String pk = pColumn.getSourceName();
+                sb.append(pk).append(Tokens.SPACE).append(convertType(pColumn)).append(Tokens.SPACE).append("PRIMARY KEY").append(Tokens.COMMA).append(Tokens.SPACE); //$NON-NLS-1$
+            } else {
+                String qualifier = pColumn.getSourceName();
+                sb.append(family).append(Tokens.DOT).append(qualifier).append(Tokens.SPACE).append(convertType(pColumn)).append(Tokens.COMMA).append(Tokens.SPACE);
+            }
+        }
+        
+        String ddl = sb.toString();
+        ddl = ddl.substring(0, ddl.length() - 2) + Tokens.RPAREN ;
+        return ddl;
+    }
+    
+    public static boolean executeUpdate(Connection conn, String sql) throws SQLException {
+        
+        Statement stmt = null;
+        
+        try {
+            stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            close(stmt);
+        }
+        
+        return true ;
+    }
+    
+    public static void close(Statement stmt) {
 
-		if(null != stmt) {
-			try {
-				stmt.close();
-				stmt = null;
-			} catch (SQLException e) {
-				
-			}
-		}
-	}
-	
-	public static Connection getPhoenixConnection(String zkQuorum) throws Exception {
-		Class.forName("org.apache.phoenix.jdbc.PhoenixDriver");
-		String connectionURL = "jdbc:phoenix:" + zkQuorum;
-		Connection conn = DriverManager.getConnection(connectionURL);
-		conn.setAutoCommit(true);
-		return conn;
-	}
-
-	
-
+        if(null != stmt) {
+            try {
+                stmt.close();
+                stmt = null;
+            } catch (SQLException e) {
+                
+            }
+        }
+    }
+    
+    /*
+     * Convert teiid type to phoenix type, the following types not support by phoenix
+     *    object -> Any 
+     *    blob   -> java.sql.Blob
+     *    clob   -> java.sql.Clob
+     *    xml    -> java.sql.SQLXML
+     */
+    public static String convertType(Column column) {
+        Class<?> clas = column.getJavaType();
+        String typeName = TypeFacility.getDataTypeName(clas);
+        return convertType(typeName);
+    }
+    
+    public static String convertType(String type) {
+        
+        if(type.equals(TypeFacility.RUNTIME_NAMES.STRING)){
+            return "VARCHAR"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.BOOLEAN)){
+            return "BOOLEAN"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.BYTE)){
+            return "TINYINT"; //$NON-NLS-1$
+        }  else if(type.equals(TypeFacility.RUNTIME_NAMES.SHORT)){
+            return "SMALLINT"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.CHAR)){
+            return "CHAR"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.INTEGER)){
+            return "INTEGER"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.LONG)){
+            return "LONG"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.BIG_INTEGER)){
+            return "LONG"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.FLOAT)){
+            return "FLOAT"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.DOUBLE)){
+            return "DOUBLE"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.BIG_DECIMAL)){
+            return "DECIMAL"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.DATE)){
+            return "DATE"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.TIME)){
+            return "TIME"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.TIMESTAMP)){
+            return "TIMESTAMP"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.VARBINARY)){
+            return "VARBINARY"; //$NON-NLS-1$
+        } else if(type.equals(TypeFacility.RUNTIME_NAMES.CLOB)){
+            return "VARCHAR"; //$NON-NLS-1$
+        } 
+        
+        return "BINARY"; //$NON-NLS-1$
+    }
+    
 }

@@ -21,58 +21,27 @@
  */
 package org.teiid.translator.hbase;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.phoenix.schema.PColumn;
-import org.apache.phoenix.schema.PDataType;
-import org.apache.phoenix.schema.PTable;
 import org.junit.Test;
-import org.teiid.translator.hbase.phoenix.PColumnTeiidImpl;
-import org.teiid.translator.hbase.phoenix.PNameTeiidImpl;
-import org.teiid.translator.hbase.phoenix.PTableTeiidImpl;
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.translator.hbase.phoenix.PhoenixUtils;
 
+@SuppressWarnings("nls")
 public class TestPhoenixDriver {
-	
-	@Test
-	public void testHBaseTableMapping() {
-		
-		String expect = "CREATE TABLE IF NOT EXISTS \"Customer\" (\"Row_Id\" VARCHAR PRIMARY KEY, \"customer\".\"name\" VARCHAR, \"customer\".\"city\" VARCHAR, \"sales\".\"product\" VARCHAR, \"sales\".\"amount\" VARCHAR)";
-		List<PColumn> columns = new ArrayList<PColumn>();
-		PColumn pk = new PColumnTeiidImpl(PNameTeiidImpl.makePName("Row_Id"), null, PDataType.VARCHAR);
-		PColumn name = new PColumnTeiidImpl(PNameTeiidImpl.makePName("name"), PNameTeiidImpl.makePName("customer"), PDataType.VARCHAR);
-		PColumn city = new PColumnTeiidImpl(PNameTeiidImpl.makePName("city"), PNameTeiidImpl.makePName("customer"), PDataType.VARCHAR);
-		PColumn product = new PColumnTeiidImpl(PNameTeiidImpl.makePName("product"), PNameTeiidImpl.makePName("sales"), PDataType.VARCHAR);
-		PColumn amount = new PColumnTeiidImpl(PNameTeiidImpl.makePName("amount"), PNameTeiidImpl.makePName("sales"), PDataType.VARCHAR);
-		columns.add(pk);
-		columns.add(name);
-		columns.add(city);
-		columns.add(product);
-		columns.add(amount);
-		
-		PTable ptable = PTableTeiidImpl.makeTable(PNameTeiidImpl.makePName("Customer"), columns);
+    
+    @Test
+    public void testHBaseTableMapping() throws QueryMetadataException, TeiidComponentException {
+        
+        String expect = "CREATE TABLE IF NOT EXISTS Customer (ROW_ID VARCHAR PRIMARY KEY, customer.city VARCHAR, customer.name VARCHAR, sales.amount VARCHAR, sales.product VARCHAR)";
 
-		assertEquals(expect, PhoenixUtils.hbaseTableMappingDDL(ptable));
-	
-	}
-	
-	@Test
-	public void testDataTypes() {
-		assertEquals("VARCHAR", PDataType.VARCHAR.getSqlTypeName());
-		assertEquals("VARBINARY", PDataType.VARBINARY.getSqlTypeName());
-		assertEquals("BOOLEAN", PDataType.BOOLEAN.getSqlTypeName());
-		assertEquals("TINYINT", PDataType.TINYINT.getSqlTypeName());
-		assertEquals("SMALLINT", PDataType.SMALLINT.getSqlTypeName());
-		assertEquals("INTEGER", PDataType.INTEGER.getSqlTypeName());
-		assertEquals("BIGINT", PDataType.LONG.getSqlTypeName());
-		assertEquals("FLOAT", PDataType.FLOAT.getSqlTypeName());
-		assertEquals("DOUBLE", PDataType.DOUBLE.getSqlTypeName());
-		assertEquals("DECIMAL", PDataType.DECIMAL.getSqlTypeName());
-		assertEquals("DATE", PDataType.DATE.getSqlTypeName());
-		assertEquals("TIME", PDataType.TIME.getSqlTypeName());
-		assertEquals("TIMESTAMP", PDataType.TIMESTAMP.getSqlTypeName());
-	}
+        assertEquals(expect, PhoenixUtils.hbaseTableMappingDDL(TestHBaseUtil.queryMetadataInterface().getModelID("HBaseModel").getTable("Customer")));
+        
+        expect = "CREATE TABLE IF NOT EXISTS TypesTest (ROW_ID VARCHAR PRIMARY KEY, f.column1 VARCHAR, f.column2 VARBINARY, f.column3 CHAR, f.column4 BOOLEAN, f.column5 TINYINT, f.column6 TINYINT, f.column7 SMALLINT, f.column8 SMALLINT, f.column9 INTEGER, f.column10 INTEGER, f.column11 LONG, f.column12 LONG, f.column13 FLOAT, f.column14 FLOAT, f.column15 DOUBLE, f.column16 DECIMAL, f.column17 DECIMAL, f.column18 DATE, f.column19 TIME, f.column20 TIMESTAMP)";
+
+        assertEquals(expect, PhoenixUtils.hbaseTableMappingDDL(TestHBaseUtil.queryMetadataInterface().getModelID("HBaseModel").getTable("TypesTest")));
+    
+    }
+    
 }

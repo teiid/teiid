@@ -486,7 +486,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Insert obj) {
-    	buffer.append(INSERT).append(Tokens.SPACE);
+    	buffer.append(getInsertKeyword()).append(Tokens.SPACE);
 		appendSourceComment(obj);
 		buffer.append(INTO).append(Tokens.SPACE);
 		append(obj.getTable());
@@ -500,6 +500,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(Tokens.SPACE);
         append(obj.getValueSource());
     }
+
+	protected String getInsertKeyword() {
+		return INSERT;
+	}
     
     @Override
 	public void visit(ExpressionValueSource obj) {
