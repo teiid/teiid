@@ -279,4 +279,10 @@ public class TestSybaseSQLConversionVisitor {
                 "SELECT CONVERT(VARCHAR, SmallA.TimestampValue, 2) FROM SmallA"); //$NON-NLS-1$
     }
     
+    @Test public void testGroupBySelect() {
+        helpTestVisitor(getBQTVDB(),
+                "SELECT 1 from bqt1.smalla group by intkey", //$NON-NLS-1$
+                "SELECT SmallA.IntKey FROM SmallA GROUP BY SmallA.IntKey"); //$NON-NLS-1$
+    }
+    
 }

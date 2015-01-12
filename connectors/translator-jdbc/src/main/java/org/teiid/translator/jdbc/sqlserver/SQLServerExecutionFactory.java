@@ -429,4 +429,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return super.supportsConvert(fromType, toType);
     }
     
+    @Override
+    public boolean supportsLiteralOnlyWithGrouping() {
+    	return true;
+    }
+    
 }

@@ -39,10 +39,12 @@ import java.util.Map;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants;
+import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
@@ -453,6 +455,24 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     		return false; //TODO: add support
     	}
     	return formatMap.containsKey(literal);
+    }
+    
+    @Override
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (!supportsLiteralOnlyWithGrouping() && (command instanceof Select)) {
+	    	Select select = (Select)command;
+	    	if (select.getGroupBy() != null && select.getDerivedColumns().size() == 1) {
+	    		DerivedColumn dc = select.getDerivedColumns().get(0);
+	    		if (dc.getExpression() instanceof Literal) {
+	    			dc.setExpression(select.getGroupBy().getElements().get(0));
+	    		}
+	    	}
+    	}
+    	return super.translateCommand(command, context);
+    }
+    
+    public boolean supportsLiteralOnlyWithGrouping() {
+    	return false;
     }
     
 }
