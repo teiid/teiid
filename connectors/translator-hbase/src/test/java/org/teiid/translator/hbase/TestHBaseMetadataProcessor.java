@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.hbase;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,63 +30,56 @@ import java.util.Properties;
 
 import javax.resource.ResourceException;
 
-import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 
+@SuppressWarnings("nls")
 public class TestHBaseMetadataProcessor {
-	
-	static String getDDL(String hbaseTableName, String columnQualifiers, String columnTypes) throws TranslatorException, ResourceException, SQLException {
-		HBaseExecutionFactory translator = new HBaseExecutionFactory();
-		translator.start();
-		
-		Properties props = new Properties();
-		props.setProperty("importer.hbaseTableName", hbaseTableName);
-		props.setProperty("importer.columnQualifiers", columnQualifiers);
-		props.setProperty("importer.columnTypes", columnTypes);
-		
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "customer", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
-		
-		Connection conn = Mockito.mock(Connection.class);
-		Mockito.stub(conn.createStatement()).toReturn(Mockito.mock(Statement.class));
-		
-		translator.getMetadata(mf, conn);	
-		
-		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-		return ddl;
-	}
+    
+    static String getDDL(String hbaseTableName, String columnQualifiers, String columnTypes) throws TranslatorException, ResourceException, SQLException {
+        HBaseExecutionFactory translator = new HBaseExecutionFactory();
+        translator.start();
+        
+        Properties props = new Properties();
+        props.setProperty("importer.hbaseTableName", hbaseTableName);
+        props.setProperty("importer.columnQualifiers", columnQualifiers);
+        props.setProperty("importer.columnTypes", columnTypes);
+        
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "customer", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
+        
+        Connection conn = Mockito.mock(Connection.class);
+        Mockito.stub(conn.createStatement()).toReturn(Mockito.mock(Statement.class));
+        
+        translator.getMetadata(mf, conn);    
+        
+        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        return ddl;
+    }
 
-	
-	/*
-	 * Assuming the hbaseTableName, columnQualifiers and columnTypes can be passed when Designer tool do importer
-	 *    importer.hbaseTableName
-	 *    importer.columnQualifiers
-	 *    importer.columnTypes
-	 */
-	@Test
-	public void testMetadataProcessor() throws TranslatorException, ResourceException, SQLException {
-		
-		String hbaseTableName = "Customer";
-		String columnQualifiers = "ROW_ID,customer:city,customer:name,sales:amount,sales:product";
-		String columnTypes = "string,string,string,string,string";
-		
-		String ddl = getDDL(hbaseTableName, columnQualifiers, columnTypes);
-		
-		String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/hbase/2014' AS teiid_hbase;\n\n" +
-					"CREATE FOREIGN TABLE Customer (\n" +
-					"	ROW_ID string OPTIONS (\"teiid_hbase:CELL\" 'ROW_ID'),\n" +
-					"	city string OPTIONS (\"teiid_hbase:CELL\" 'customer:city'),\n" +
-					"	name string OPTIONS (\"teiid_hbase:CELL\" 'customer:name'),\n" +
-					"	amount string OPTIONS (\"teiid_hbase:CELL\" 'sales:amount'),\n" +
-					"	product string OPTIONS (\"teiid_hbase:CELL\" 'sales:product'),\n" +
-					"	CONSTRAINT ROW_ID PRIMARY KEY(ROW_ID)\n" +
-					") OPTIONS (\"teiid_hbase:TABLE\" 'Customer');" ;
-		
-		assertEquals(expectedDDL, ddl);
+    
+    public void testMetadataProcessor() throws TranslatorException, ResourceException, SQLException {
+        
+        String hbaseTableName = "Customer";
+        String columnQualifiers = "ROW_ID,customer:city,customer:name,sales:amount,sales:product";
+        String columnTypes = "string,string,string,string,string";
+        
+        String ddl = getDDL(hbaseTableName, columnQualifiers, columnTypes);
+        
+        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/hbase/2014' AS teiid_hbase;\n\n" +
+                    "CREATE FOREIGN TABLE Customer (\n" +
+                    "    ROW_ID string OPTIONS (\"teiid_hbase:CELL\" 'ROW_ID'),\n" +
+                    "    city string OPTIONS (\"teiid_hbase:CELL\" 'customer:city'),\n" +
+                    "    name string OPTIONS (\"teiid_hbase:CELL\" 'customer:name'),\n" +
+                    "    amount string OPTIONS (\"teiid_hbase:CELL\" 'sales:amount'),\n" +
+                    "    product string OPTIONS (\"teiid_hbase:CELL\" 'sales:product'),\n" +
+                    "    CONSTRAINT ROW_ID PRIMARY KEY(ROW_ID)\n" +
+                    ") OPTIONS (\"teiid_hbase:TABLE\" 'Customer');" ;
+        
+        assertEquals(expectedDDL, ddl);
 
-	}
-	
+    }
+    
 }

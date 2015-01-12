@@ -74,6 +74,7 @@ connect
 /subsystem=teiid/translator=excel:add(module=org.jboss.teiid.translator.excel)
 /subsystem=teiid/translator=impala:add(module=org.jboss.teiid.translator.hive)
 /subsystem=teiid/translator=prestodb:add(module=org.jboss.teiid.translator.prestodb)
+/subsystem=teiid/translator=hbase:add(module=org.jboss.teiid.translator.hbase)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)

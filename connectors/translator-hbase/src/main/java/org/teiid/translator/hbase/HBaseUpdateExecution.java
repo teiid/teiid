@@ -28,47 +28,45 @@ import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.hbase.phoenix.PhoenixUtils;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.translator.jdbc.TranslatedCommand;
 
 public class HBaseUpdateExecution extends JDBCUpdateExecution {
-	
-	private TranslatedCommand translatedComm = null;
+    
+    private TranslatedCommand translatedComm = null;
 
-	public HBaseUpdateExecution(Command command,
-							    ExecutionContext executionContext, 
-							    RuntimeMetadata metadata,
-							    Connection conn, 
-							    HBaseExecutionFactory executionFactory) throws TranslatorException {
-		super(command, conn, executionContext, executionFactory);
-		
-		setCommitMode(conn);
-		
-		translatedComm = translateCommand(command);
-		PhoenixUtils.phoenixTableMapping(executionFactory.getDDLCacheSet(), executionFactory.getMappingDDLList(), conn);
-	
-	}
+    public HBaseUpdateExecution(Command command,
+                                ExecutionContext executionContext, 
+                                RuntimeMetadata metadata,
+                                Connection conn, 
+                                HBaseExecutionFactory executionFactory) throws TranslatorException {
+        super(command, conn, executionContext, executionFactory);
+        
+        setCommitMode(conn);
+        
+        translatedComm = translateCommand(command);
+    
+    }
 
-	// By default, Phoenix Connection AutoCommit is false, doesn't like other vendors 
-	private void setCommitMode(Connection conn) throws HBaseExecutionException {
-		try {
-			if(!conn.getAutoCommit()) {
-				conn.setAutoCommit(true);
-			}
-		} catch (SQLException e) {
-			throw new HBaseExecutionException(HBasePlugin.Event.TEIID27003, e, HBasePlugin.Event.TEIID27013, command);
-		}
-	}
+    // By default, Phoenix Connection AutoCommit is false, doesn't like other vendors 
+    private void setCommitMode(Connection conn) throws HBaseExecutionException {
+        try {
+            if(!conn.getAutoCommit()) {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new HBaseExecutionException(HBasePlugin.Event.TEIID27003, e, HBasePlugin.Event.TEIID27013, command);
+        }
+    }
 
-	@Override
-	protected TranslatedCommand translateCommand(Command command) throws TranslatorException {
-		
-		if(null == translatedComm) {
-			translatedComm = super.translateCommand(command);
-		}
-		
-		return translatedComm ;
-	}
-	
+    @Override
+    protected TranslatedCommand translateCommand(Command command) throws TranslatorException {
+        
+        if(null == translatedComm) {
+            translatedComm = super.translateCommand(command);
+        }
+        
+        return translatedComm ;
+    }
+    
 }

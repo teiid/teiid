@@ -1,46 +1,46 @@
 SET NAMESPACE 'http://www.teiid.org/translator/hbase/2014' AS teiid_hbase;
             
 CREATE FOREIGN TABLE Customer (
-    PK string OPTIONS ("teiid_hbase:CELL" 'ROW_ID'),
-    city string OPTIONS ("teiid_hbase:CELL" 'customer:city'),
-    name string OPTIONS ("teiid_hbase:CELL" 'customer:name'),
-    amount string OPTIONS ("teiid_hbase:CELL" 'sales:amount'),
-    product string OPTIONS ("teiid_hbase:CELL" 'sales:product'),
+    PK string OPTIONS (nameinsource 'ROW_ID'),
+    city string OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'customer'),
+    name string OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'customer'),
+    amount string OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'sales'),
+    product string OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'sales'),
     CONSTRAINT PK0 PRIMARY KEY(PK)
-) OPTIONS("teiid_hbase:TABLE" 'Customer', "UPDATABLE" 'TRUE');
+) OPTIONS("UPDATABLE" 'TRUE');
 
 CREATE FOREIGN TABLE TypesTest (
-    PK string OPTIONS ("teiid_hbase:CELL" 'ROW_ID'),
-    column1 varchar OPTIONS ("teiid_hbase:CELL" 'f:q1'),
-    column2 varbinary OPTIONS ("teiid_hbase:CELL" 'f:q2'),
-    column3 char OPTIONS ("teiid_hbase:CELL" 'f:q3'),
-    column4 boolean OPTIONS ("teiid_hbase:CELL" 'f:q4'),
-    column5 byte OPTIONS ("teiid_hbase:CELL" 'f:q5'),
-    column6 tinyint OPTIONS ("teiid_hbase:CELL" 'f:q6'),
-    column7 short OPTIONS ("teiid_hbase:CELL" 'f:q7'),
-    column8 smallint OPTIONS ("teiid_hbase:CELL" 'f:q8'),
-    column9 integer OPTIONS ("teiid_hbase:CELL" 'f:q9'),
-    column10 serial OPTIONS ("teiid_hbase:CELL" 'f:q10'),
-    column11 long OPTIONS ("teiid_hbase:CELL" 'f:q11'),
-    column12 bigint OPTIONS ("teiid_hbase:CELL" 'f:q12'),
-    column13 float OPTIONS ("teiid_hbase:CELL" 'f:q13'),
-    column14 real OPTIONS ("teiid_hbase:CELL" 'f:q14'),
-    column15 double OPTIONS ("teiid_hbase:CELL" 'f:q15'),
-    column16 bigdecimal OPTIONS ("teiid_hbase:CELL" 'f:q16'),
-    column17 decimal OPTIONS ("teiid_hbase:CELL" 'f:q17'),
-    column18 date OPTIONS ("teiid_hbase:CELL" 'f:q18'),
-    column19 time OPTIONS ("teiid_hbase:CELL" 'f:q19'),
-    column20 timestamp OPTIONS ("teiid_hbase:CELL" 'f:q20'),
+    PK string OPTIONS (nameinsource 'ROW_ID'),
+    column1 varchar OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column2 varbinary OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column3 char OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column4 boolean OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column5 byte OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column6 tinyint OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column7 short OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column8 smallint OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column9 integer OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column10 serial OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column11 long OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column12 bigint OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column13 float OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column14 real OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column15 double OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column16 bigdecimal OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column17 decimal OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column18 date OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column19 time OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column20 timestamp OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
     CONSTRAINT PK0 PRIMARY KEY(PK)
-) OPTIONS("teiid_hbase:TABLE" 'TypesTest', "UPDATABLE" 'TRUE');
+) OPTIONS("UPDATABLE" 'TRUE');
 
 CREATE FOREIGN TABLE TimesTest (
-    PK string OPTIONS ("teiid_hbase:CELL" 'ROW_ID'),
-    column1 date OPTIONS ("teiid_hbase:CELL" 'f:q1'),
-    column2 time OPTIONS ("teiid_hbase:CELL" 'f:q2'),
-    column3 timestamp OPTIONS ("teiid_hbase:CELL" 'f:q3'),
+    PK string OPTIONS (nameinsource 'ROW_ID'),
+    column1 date OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column2 time OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
+    column3 timestamp OPTIONS ("teiid_hbase:COLUMN_FAMILY" 'f'),
     CONSTRAINT PK0 PRIMARY KEY(PK)
-) OPTIONS("teiid_hbase:TABLE" 'TimesTest', "UPDATABLE" 'TRUE');
+) OPTIONS("UPDATABLE" 'TRUE');
 
 CREATE VIRTUAL PROCEDURE extractData(IN param String)
 AS
