@@ -439,7 +439,12 @@ public class TestHBaseUtil {
 		
 	}
 
-	
-
+	public static void insertTestData(Connection conn) throws Exception {
+		executeUpdate(conn, "INSERT INTO Customer VALUES('101', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
+		executeUpdate(conn, "INSERT INTO Customer VALUES('102', 'Atlanta, GA', 'Jane Brown', '$200.00', 'Lamps')");
+		executeUpdate(conn, "INSERT INTO Customer VALUES('103', 'Pittsburgh, PA', 'Bill Green', '$500.00', 'Desk')");
+		executeUpdate(conn, "INSERT INTO Customer VALUES('104', 'St. Louis, MO', 'Jack Black', '$8000.00', 'Bed')");
+		executeUpdate(conn, "INSERT INTO Customer VALUES('105', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
+	}
 
 }

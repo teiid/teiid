@@ -26,8 +26,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -51,13 +49,28 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.SimpleMock;
-import org.teiid.deployers.VirtualDatabaseException;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
+/**
+ * How to run TestHBaseExecution?
+ * 
+ *  1. HBase setup 
+ *     
+ *     Use the steps 1.2.1 and 1.2.2 in 'http://hbase.apache.org/book/quickstart.html' install Standalone HBase
+ *
+ *  2. Phoenix setup
+ *     
+ *     Use the Installation steps in 'http://phoenix.apache.org/download.html' to copy phoenix-core.jar to HBase lib directory to finish Phoenix installation.
+ *     
+ *     Note that: the phoenix-client.jar as phoenix driver used to setup data source in JBoss Container
+ *  
+ *  3. Start HBase server, comment out @Ignore annotation, execute Junit Test
+ *    
+ *     Note that: If HBase not run on 127.0.0.1, please change JDBC_URL to point to a correct zookeeper quorum
+ *                If Fully Distributed HBase(multiple RegionServer) be run, please change JDBC_URL to point to a correct zookeeper quorum, the sample like 'jdbc:phoenix [ :<zookeeper quorum> [ :<port number> ] [ :<root node> ] ]'
+ */
 @Ignore
 public class TestHBaseExecution {
 	
@@ -72,10 +85,15 @@ public class TestHBaseExecution {
 	      System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "bitronix.tm.jndi.BitronixInitialContextFactory");
 		}
 	
+	static final String JDBC_DRIVER = "org.apache.phoenix.jdbc.PhoenixDriver";
+    static final String JDBC_URL = "jdbc:phoenix:127.0.0.1:2181";
+    static final String JDBC_USER = "";
+    static final String JDBC_PASS = "";
+	
 	static Connection conn = null;
 	
 	@BeforeClass
-	public static void init() throws TranslatorException, ResourceException, VirtualDatabaseException, ConnectorManagerException, FileNotFoundException, IOException, SQLException {
+	public static void init() throws Exception {
 		
 		EmbeddedServer server = new EmbeddedServer();
 		
@@ -83,13 +101,14 @@ public class TestHBaseExecution {
 		executionFactory.start();
 		server.addTranslator("translator-hbase", executionFactory);
 		
-		TestHBaseUtil.setupDataSource("java:/hbaseDS");
+		TestHBaseUtil.setupDataSource("java:/hbaseDS", JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
 		
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
 		server.start(config);
 		server.deployVDB(new FileInputStream(new File("src/test/resources/hbase-vdb.xml")));
 		conn = server.getDriver().connect("jdbc:teiid:hbasevdb", null);
+		TestHBaseUtil.insertTestData(conn);
 	}
 	
 	@Test
@@ -201,7 +220,7 @@ public class TestHBaseExecution {
 	 */
 	@Test
 	public void testDataTypes() throws Exception{
-//		TestHBaseUtil.executeQuery(conn, "SELECT * FROM TypesTest");
+		TestHBaseUtil.executeQuery(conn, "SELECT * FROM TypesTest");
 		TestHBaseUtil.executeBatchedUpdateDataType(conn, "INSERT INTO TypesTest VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1);
 		TestHBaseUtil.executeBatchedUpdateDataType(conn, "INSERT INTO TypesTest VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 10);
 		
