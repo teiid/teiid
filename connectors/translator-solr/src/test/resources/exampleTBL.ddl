@@ -3,7 +3,9 @@ CREATE FOREIGN TABLE example (
   weight float,
   popularity integer, 
   name string PRIMARy KEY, 
-  purchasedate timestamp,
+  purchasets timestamp,
+  purchasetime time,
+  purchasedate date,
   field string OPTIONS (NAMEINSOURCE 'nis') 
 );
 
