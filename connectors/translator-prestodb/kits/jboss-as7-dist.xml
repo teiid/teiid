@@ -29,7 +29,6 @@
         <exclude>com.facebook.presto:presto-jdbc</exclude>
       </excludes>
     </dependencySet>
-    <!-- 
     <dependencySet>
       <outputDirectory>${jbossas-module-root}/com/facebook/presto/main</outputDirectory>
       <useTransitiveDependencies>false</useTransitiveDependencies>
@@ -37,7 +36,6 @@
         <include>com.facebook.presto:presto-jdbc</include>
       </includes>
     </dependencySet>
-    -->    
   </dependencySets>  
   
 </assembly>
