@@ -81,7 +81,7 @@
         <version.org.apache.commons>3.3.2</version.org.apache.commons>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
-        <version.com.facebook.presto>0.85</version.com.facebook.presto>
+        <version.com.facebook.presto>0.89</version.com.facebook.presto>
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.jts>1.13</version.jts>
 	</properties>
