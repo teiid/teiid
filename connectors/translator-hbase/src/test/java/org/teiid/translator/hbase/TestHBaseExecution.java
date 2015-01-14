@@ -36,6 +36,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 
 import javax.resource.ResourceException;
+import javax.sql.DataSource;
 import javax.transaction.TransactionManager;
 
 import org.junit.AfterClass;
@@ -76,6 +77,10 @@ public class TestHBaseExecution {
     
     static Connection conn = null;
     
+    static final String CUSTOMER = "CREATE TABLE Customer IF NOT EXISTS (PK varchar primary key, customer.city varchar, customer.name varchar, sales.amount varchar, sales.product varchar)";
+    static final String TYPES_TEST = "CREATE TABLE TypesTest IF NOT EXISTS (PK varchar primary key, f.q1 varchar, f.column2 varbinary, f.column3 char, f.column4 boolean, f.column5 tinyint, f.column6 tinyint, f.column7 smallint, f.column8 smallint, f.column9 integer, f.column10 integer, f.column11 long, f.column12 long, f.column13 float, f.column14 float, f.column15 double, f.column16 decimal, f.column17 decimal, f.column18 date, f.column19 time, f.column20 timestamp)";
+    static final String TIMES_TEST = "CREATE TABLE TimesTest IF NOT EXISTS (PK varchar primary key, f.column1 date, f.column2 time, f.column3 timestamp)";
+    
     @BeforeClass
     public static void init() throws Exception {
         
@@ -85,7 +90,16 @@ public class TestHBaseExecution {
         executionFactory.start();
         server.addTranslator("translator-hbase", executionFactory);
         
-        TestHBaseUtil.setupDataSource("java:/hbaseDS", JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
+        DataSource ds = TestHBaseUtil.setupDataSource("java:/hbaseDS", JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
+        Connection c = ds.getConnection();
+        Statement s = c.createStatement();
+        
+        s.executeUpdate(CUSTOMER);
+        s.executeUpdate(TYPES_TEST);
+        s.executeUpdate(TIMES_TEST);
+        
+        s.close();
+        c.close();
         
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
@@ -247,11 +261,6 @@ public class TestHBaseExecution {
     @Test
     public void testFunctions() throws Exception {
         TestHBaseUtil.executeQuery(conn, "SELECT COUNT(PK) AS totalCount FROM Customer WHERE name = 'Kylin Soong'");
-    }
-    
-    @Test
-    public void testProcedures() throws Exception {
-        TestHBaseUtil.executeCallable(conn, "call extractData('103')");
     }
     
     @Test
