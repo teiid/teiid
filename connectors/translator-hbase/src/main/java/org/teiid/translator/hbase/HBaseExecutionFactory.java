@@ -98,12 +98,6 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public MetadataProcessor<Connection> getMetadataProcessor() {
-        return new HBaseMetadataProcessor();
-    }
-
-
-    @Override
     public void bindValue(PreparedStatement pstmt, Object param, Class<?> paramType, int i) throws SQLException {
 
         int type = TypeFacility.getSQLTypeFromRuntimeType(paramType);

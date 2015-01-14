@@ -28,10 +28,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-           <groupId>org.apache.phoenix</groupId>
-           <artifactId>phoenix-core</artifactId>
-        </dependency> 
-        <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
             <scope>provided</scope>

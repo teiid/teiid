@@ -21,69 +21,12 @@
  */
 package org.teiid.translator.hbase.phoenix;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Table;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.hbase.HBaseMetadataProcessor;
 
 public class PhoenixUtils {
     
     public static final String QUOTE = "\""; //$NON-NLS-1$
-    
-    public static String hbaseTableMappingDDL(Table ptable) {
-        
-        StringBuffer sb = new StringBuffer();
-        sb.append("CREATE TABLE IF NOT EXISTS").append(Tokens.SPACE).append(ptable.getSourceName()); //$NON-NLS-1$
-        sb.append(Tokens.SPACE).append(Tokens.LPAREN);
-        
-        for (Column pColumn : ptable.getColumns()) {
-        	String family = pColumn.getProperty(HBaseMetadataProcessor.COLUMN_FAMILY, false);
-            if(family == null) {
-                String pk = pColumn.getSourceName();
-                sb.append(pk).append(Tokens.SPACE).append(convertType(pColumn)).append(Tokens.SPACE).append("PRIMARY KEY").append(Tokens.COMMA).append(Tokens.SPACE); //$NON-NLS-1$
-            } else {
-                String qualifier = pColumn.getSourceName();
-                sb.append(family).append(Tokens.DOT).append(qualifier).append(Tokens.SPACE).append(convertType(pColumn)).append(Tokens.COMMA).append(Tokens.SPACE);
-            }
-        }
-        
-        String ddl = sb.toString();
-        ddl = ddl.substring(0, ddl.length() - 2) + Tokens.RPAREN ;
-        return ddl;
-    }
-    
-    public static boolean executeUpdate(Connection conn, String sql) throws SQLException {
-        
-        Statement stmt = null;
-        
-        try {
-            stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            close(stmt);
-        }
-        
-        return true ;
-    }
-    
-    public static void close(Statement stmt) {
-
-        if(null != stmt) {
-            try {
-                stmt.close();
-                stmt = null;
-            } catch (SQLException e) {
-                
-            }
-        }
-    }
     
     /*
      * Convert teiid type to phoenix type, the following types not support by phoenix
