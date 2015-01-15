@@ -171,6 +171,7 @@ public class TestHBaseUtil {
         Date date = new Date(new java.util.Date().getTime());
         Time time = new Time(new java.util.Date().getTime());
         Timestamp timestramp = new Timestamp(new java.util.Date().getTime());
+        timestramp.setNanos(1000);
         
         PreparedStatement pstmt = null ;
         try {
@@ -429,12 +430,15 @@ public class TestHBaseUtil {
         
     }
 
+    /*
+     * Insert test data to table Customer for GroupBy, OrderBy test
+     */
     public static void insertTestData(Connection conn) throws Exception {
-        executeUpdate(conn, "INSERT INTO Customer VALUES('101', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
-        executeUpdate(conn, "INSERT INTO Customer VALUES('102', 'Atlanta, GA', 'Jane Brown', '$200.00', 'Lamps')");
-        executeUpdate(conn, "INSERT INTO Customer VALUES('103', 'Pittsburgh, PA', 'Bill Green', '$500.00', 'Desk')");
-        executeUpdate(conn, "INSERT INTO Customer VALUES('104', 'St. Louis, MO', 'Jack Black', '$8000.00', 'Bed')");
-        executeUpdate(conn, "INSERT INTO Customer VALUES('105', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
+        executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('101', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
+        executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('102', 'Atlanta, GA', 'Jane Brown', '$200.00', 'Lamps')");
+        executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('103', 'Pittsburgh, PA', 'Bill Green', '$500.00', 'Desk')");
+        executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('104', 'St. Louis, MO', 'Jack Black', '$8000.00', 'Bed')");
+        executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('105', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
     }
 
 }

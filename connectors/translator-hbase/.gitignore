@@ -1,0 +1,2 @@
+# ignore btm transaction log file
+*.tlog

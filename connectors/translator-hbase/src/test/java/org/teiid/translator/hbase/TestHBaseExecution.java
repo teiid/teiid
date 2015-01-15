@@ -35,6 +35,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 
+import javax.naming.Context;
 import javax.resource.ResourceException;
 import javax.sql.DataSource;
 import javax.transaction.TransactionManager;
@@ -42,6 +43,7 @@ import javax.transaction.TransactionManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+//import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.runtime.EmbeddedConfiguration;
@@ -59,9 +61,11 @@ import org.teiid.translator.TypeFacility;
  *     
  *     Use the Installation steps in 'http://phoenix.apache.org/download.html' to copy phoenix-core.jar to HBase lib directory to finish Phoenix installation.
  *     
- *     Note that: the phoenix-client.jar as phoenix driver used to setup data source in JBoss Container
+ *     Note that: the phoenix-client.jar as phoenix driver used to setup data source in JBoss Container or run run unit test in j2se environment
+ *     
+ *  3. Add phoenix-client.jar to classpath 
  *  
- *  3. Start HBase server, comment out @Ignore annotation, execute Junit Test
+ *  4. Start HBase server, comment out @Ignore annotation, execute Junit Test
  *    
  *     Note that: If HBase not run on 127.0.0.1, please change JDBC_URL to point to a correct zookeeper quorum
  *                If Fully Distributed HBase(multiple RegionServer) be run, please change JDBC_URL to point to a correct zookeeper quorum, the sample like 'jdbc:phoenix [ :<zookeeper quorum> [ :<port number> ] [ :<root node> ] ]'
@@ -77,9 +81,10 @@ public class TestHBaseExecution {
     
     static Connection conn = null;
     
-    static final String CUSTOMER = "CREATE TABLE Customer IF NOT EXISTS (PK varchar primary key, customer.city varchar, customer.name varchar, sales.amount varchar, sales.product varchar)";
-    static final String TYPES_TEST = "CREATE TABLE TypesTest IF NOT EXISTS (PK varchar primary key, f.q1 varchar, f.column2 varbinary, f.column3 char, f.column4 boolean, f.column5 tinyint, f.column6 tinyint, f.column7 smallint, f.column8 smallint, f.column9 integer, f.column10 integer, f.column11 long, f.column12 long, f.column13 float, f.column14 float, f.column15 double, f.column16 decimal, f.column17 decimal, f.column18 date, f.column19 time, f.column20 timestamp)";
-    static final String TIMES_TEST = "CREATE TABLE TimesTest IF NOT EXISTS (PK varchar primary key, f.column1 date, f.column2 time, f.column3 timestamp)";
+    //This for demonstrating Phoenix's upper casting mapping, assume city, name, amount and product are Column Qualifiers in HBase, Customer are table name in HBase, all are lower words
+    static final String CUSTOMER = "CREATE TABLE IF NOT EXISTS \"Customer\"(\"ROW_ID\" VARCHAR PRIMARY KEY, \"customer\".\"city\" VARCHAR, \"customer\".\"name\" VARCHAR, \"sales\".\"amount\" VARCHAR, \"sales\".\"product\" VARCHAR)";
+    static final String TYPES_TEST = "CREATE TABLE IF NOT EXISTS TypesTest (ROW_ID VARCHAR PRIMARY KEY, f.q1 VARCHAR, f.q2 VARBINARY, f.q3 VARCHAR, f.q4 BOOLEAN, f.q5 TINYINT, f.q6 TINYINT, f.q7 SMALLINT, f.q8 SMALLINT, f.q9 INTEGER, f.q10 INTEGER, f.q11 BIGINT, f.q12 BIGINT, f.q13 FLOAT, f.q14 FLOAT, f.q15 DOUBLE, f.q16 DECIMAL, f.q17 DECIMAL, f.q18 DATE, f.q19 TIME, f.q20 TIMESTAMP)";
+    static final String TIMES_TEST = "CREATE TABLE IF NOT EXISTS TimesTest(ROW_ID VARCHAR PRIMARY KEY, f.column1 DATE, f.column2 TIME, f.column3 TIMESTAMP)";
     
     @BeforeClass
     public static void init() throws Exception {
@@ -92,21 +97,21 @@ public class TestHBaseExecution {
         
         DataSource ds = TestHBaseUtil.setupDataSource("java:/hbaseDS", JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
         Connection c = ds.getConnection();
-        Statement s = c.createStatement();
+        TestHBaseUtil.executeUpdate(c, CUSTOMER);
+    	TestHBaseUtil.executeUpdate(c, TYPES_TEST);
+    	TestHBaseUtil.executeUpdate(c, TIMES_TEST);
+    	
+    	TestHBaseUtil.insertTestData(c);
         
-        s.executeUpdate(CUSTOMER);
-        s.executeUpdate(TYPES_TEST);
-        s.executeUpdate(TIMES_TEST);
-        
-        s.close();
-        c.close();
+    	TestHBaseUtil.close(c);
+    	
+    	System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "bitronix.tm.jndi.BitronixInitialContextFactory");
         
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
         server.start(config);
         server.deployVDB(new FileInputStream(new File("src/test/resources/hbase-vdb.xml")));
         conn = server.getDriver().connect("jdbc:teiid:hbasevdb", null);
-        TestHBaseUtil.insertTestData(conn);
     }
     
     @Test
@@ -189,6 +194,7 @@ public class TestHBaseExecution {
         Date date = new Date(new java.util.Date().getTime());
         Time time = new Time(new java.util.Date().getTime());
         Timestamp timestramp = new Timestamp(new java.util.Date().getTime());
+        timestramp.setNanos(1000);
         
         PreparedStatement pstmt = null ;
         try {
