@@ -27,20 +27,16 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.teiid.core.types.BinaryType;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 
 @Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase")
@@ -76,7 +72,6 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
         return new HBaseSQLConversionVisitor(this);
     }
 
-
     /*
      * Phoenix do not support XML, CLOB, BLOB, OBJECT
      */
@@ -84,19 +79,6 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
         return false;
     }
 
-    @Override
-    public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
-        
-        if (conn == null) {
-            throw new TranslatorException(HBasePlugin.Event.TEIID27005, JDBCPlugin.Util.gs(HBasePlugin.Event.TEIID27016));
-        }
-        MetadataProcessor mp = getMetadataProcessor();
-        if (mp != null) {
-            PropertiesUtils.setBeanProperties(mp, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-            mp.process(metadataFactory, conn);
-        }
-    }
-    
     @Override
     public void bindValue(PreparedStatement pstmt, Object param, Class<?> paramType, int i) throws SQLException {
 
