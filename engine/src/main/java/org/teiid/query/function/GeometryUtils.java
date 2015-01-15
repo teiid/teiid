@@ -45,27 +45,10 @@ import com.vividsolutions.jts.io.WKTReader;
  * TODO: determine if we should use buffermanager to minimize memory footprint
  */
 public class GeometryUtils {
+	
     public static ClobType geometryToClob(GeometryType geometry) throws FunctionExecutionException {
-    	InputStream is = null;
-        try {
-            WKBReader reader = new WKBReader();
-            is = geometry.getBinaryStream();
-            Geometry jtsGeometry = reader.read(new InputStreamInStream(is));
-            return new ClobType(new ClobImpl(jtsGeometry.toText()));
-        } catch (IOException e) {
-            throw new FunctionExecutionException(e);
-        } catch (ParseException e) {
-            throw new FunctionExecutionException(e);
-        } catch (SQLException e) {
-            throw new FunctionExecutionException(e);
-        } finally {
-        	if (is != null) {
-        		try {
-					is.close();
-				} catch (IOException e) {
-				}
-        	}
-        }
+        Geometry jtsGeometry = getGeometry(geometry);
+        return new ClobType(new ClobImpl(jtsGeometry.toText()));
     }
 
     public static GeometryType geometryFromClob(ClobType wkt) throws FunctionExecutionException {
@@ -93,73 +76,62 @@ public class GeometryUtils {
     
     //TODO: should allow an option to assume well formed
     public static GeometryType geometryFromBlob(BlobType wkb) throws FunctionExecutionException {
-    	InputStream is = null;
-        try {
-        	//validate
-            WKBReader reader = new WKBReader();
-            is = wkb.getBinaryStream();
-            reader.read(new InputStreamInStream(is));
-            
-            //return as geometry
-            return new GeometryType(wkb.getReference());
-        } catch (ParseException e) {
-            throw new FunctionExecutionException(e);
-        } catch (SQLException e) {
-            throw new FunctionExecutionException(e);
-        } catch (IOException e) {
-        	throw new FunctionExecutionException(e);
-		} finally {
-        	if (is != null) {
-        		try {
-					is.close();
-				} catch (IOException e) {
-				}
-        	}
-        }
+        //return as geometry
+        GeometryType gt = new GeometryType(wkb.getReference());
+        
+        //validate
+        getGeometry(gt);
+        return gt;
     }
 
 	public static Boolean intersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-		InputStream is1 = null;
-		InputStream is2 = null;
-        try {
-            WKBReader reader = new WKBReader();
-            is1 = geom1.getBinaryStream();
-            is2 = geom2.getBinaryStream();
-            Geometry g1 = reader.read(new InputStreamInStream(is1));
-            Geometry g2 = reader.read(new InputStreamInStream(is2));
-            return g1.intersects(g2);
-        } catch (ParseException e) {
-            throw new FunctionExecutionException(e);
-        } catch (SQLException e) {
-            throw new FunctionExecutionException(e);
-        } catch (IOException e) {
-        	throw new FunctionExecutionException(e);
-		} finally {
-        	if (is1 != null) {
-        		try {
-					is1.close();
-				} catch (IOException e) {
-				}
-        	}
-        	if (is2 != null) {
-        		try {
-					is2.close();
-				} catch (IOException e) {
-				}
-        	}
-        }
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.intersects(g2);
 	}
 	
 	public static Boolean contains(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.contains(g2);
+	}
+	
+	public static Boolean disjoint(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.disjoint(g2);
+	}
+	
+	public static Boolean crosses(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.crosses(g2);
+	}
+	
+	public static Double distance(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.distance(g2);
+	}
+	
+	public static Boolean touches(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.touches(g2);
+	}
+	
+	public static Boolean overlaps(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.overlaps(g2);
+	}
+	
+	static Geometry getGeometry(GeometryType geom) throws FunctionExecutionException {
 		InputStream is1 = null;
-		InputStream is2 = null;
         try {
             WKBReader reader = new WKBReader();
-            is1 = geom1.getBinaryStream();
-            is2 = geom2.getBinaryStream();
-            Geometry g1 = reader.read(new InputStreamInStream(is1));
-            Geometry g2 = reader.read(new InputStreamInStream(is2));
-            return g1.contains(g2);
+            is1 = geom.getBinaryStream();
+            return reader.read(new InputStreamInStream(is1));
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
         } catch (SQLException e) {
@@ -170,12 +142,6 @@ public class GeometryUtils {
         	if (is1 != null) {
         		try {
 					is1.close();
-				} catch (IOException e) {
-				}
-        	}
-        	if (is2 != null) {
-        		try {
-					is2.close();
 				} catch (IOException e) {
 				}
         	}

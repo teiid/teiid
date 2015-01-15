@@ -28,7 +28,15 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
@@ -37,6 +45,8 @@ import javax.sql.rowset.serial.SerialStruct;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.MixinProxy;
 import org.teiid.core.util.PropertiesUtils;
@@ -60,37 +70,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
 	public static final int DEFAULT_MAX_DEPENDENT_PREDICATES = 50;
 	
-    private static final Map<Class<?>, Integer> TYPE_CODE_MAP = new HashMap<Class<?>, Integer>();
-    
-    private static final int INTEGER_CODE = 0;
-    private static final int LONG_CODE = 1;
-    private static final int DOUBLE_CODE = 2;
-    private static final int BIGDECIMAL_CODE = 3;
-    private static final int SHORT_CODE = 4;
-    private static final int FLOAT_CODE = 5;
-    private static final int TIME_CODE = 6;
-    private static final int DATE_CODE = 7;
-    private static final int TIMESTAMP_CODE = 8;
-    private static final int BLOB_CODE = 9;
-    private static final int CLOB_CODE = 10;
-    private static final int BOOLEAN_CODE = 11;
-    
-    static {
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.INTEGER, new Integer(INTEGER_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.LONG, new Integer(LONG_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DOUBLE, new Integer(DOUBLE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, new Integer(BIGDECIMAL_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.SHORT, new Integer(SHORT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.FLOAT, new Integer(FLOAT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIME, new Integer(TIME_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DATE, new Integer(DATE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, new Integer(TIMESTAMP_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BLOB, new Integer(BLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(SHORT_CODE));
-    }
-    
     public enum StructRetrieval {
     	OBJECT,
     	COPY,
@@ -923,7 +902,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @throws SQLException
 	 */
     public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
-        Integer code = TYPE_CODE_MAP.get(expectedType);
+        Integer code = DataTypeManager.getTypeCode(expectedType);
         if(code != null) {
             // Calling the specific methods here is more likely to get uniform (and fast) results from different
             // data sources as the driver likely knows the best and fastest way to convert from the underlying
@@ -931,54 +910,54 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             // as there is a special bytecode instruction that treats this case as a map such that not every value 
             // needs to be tested, which means it is very fast.
             switch(code.intValue()) {
-                case INTEGER_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.INTEGER:  {
                     int value = results.getInt(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }
                     return Integer.valueOf(value);
                 }
-                case LONG_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.LONG:  {
                     long value = results.getLong(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Long.valueOf(value);
                 }                
-                case DOUBLE_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.DOUBLE:  {
                     double value = results.getDouble(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Double.valueOf(value);
                 }                
-                case BIGDECIMAL_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.BIGDECIMAL:  {
                     return results.getBigDecimal(columnIndex); 
                 }
-                case SHORT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.SHORT:  {
                     short value = results.getShort(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }                    
                     return Short.valueOf(value);
                 }
-                case FLOAT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.FLOAT:  {
                     float value = results.getFloat(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Float.valueOf(value);
                 }
-                case TIME_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIME: {
             		return results.getTime(columnIndex, getDatabaseCalendar());
                 }
-                case DATE_CODE: {
+                case DataTypeManager.DefaultTypeCodes.DATE: {
             		return results.getDate(columnIndex, getDatabaseCalendar());
                 }
-                case TIMESTAMP_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIMESTAMP: {
             		return results.getTimestamp(columnIndex, getDatabaseCalendar());
                 }
-    			case BLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.BLOB: {
     				try {
     					return results.getBlob(columnIndex);
     				} catch (SQLException e) {
@@ -991,7 +970,18 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				}
     				break;
     			}
-    			case CLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
+    				try {
+    					Blob val = results.getBlob(columnIndex);
+    					if (val != null) {
+    						return new GeometryType(val);
+    					}
+    				} catch (SQLException e) {
+    					// ignore
+    				}
+    				break;
+    			}
+    			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
     					return results.getClob(columnIndex);
     				} catch (SQLException e) {
@@ -999,7 +989,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				}
     				break;
     			}  
-    			case BOOLEAN_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
     				return results.getBoolean(columnIndex);
     			}
             }
@@ -1021,57 +1011,57 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @throws SQLException
      */
     public Object retrieveValue(CallableStatement results, int parameterIndex, Class<?> expectedType) throws SQLException{
-        Integer code = TYPE_CODE_MAP.get(expectedType);
+        Integer code = DataTypeManager.getTypeCode(expectedType);
         if(code != null) {
             switch(code.intValue()) {
-                case INTEGER_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.INTEGER:  {
                     int value = results.getInt(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }
                     return Integer.valueOf(value);
                 }
-                case LONG_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.LONG:  {
                     long value = results.getLong(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Long.valueOf(value);
                 }                
-                case DOUBLE_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.DOUBLE:  {
                     double value = results.getDouble(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return new Double(value);
                 }                
-                case BIGDECIMAL_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.BIGDECIMAL:  {
                     return results.getBigDecimal(parameterIndex); 
                 }
-                case SHORT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.SHORT:  {
                     short value = results.getShort(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }                    
                     return Short.valueOf(value);
                 }
-                case FLOAT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.FLOAT:  {
                     float value = results.getFloat(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return new Float(value);
                 }
-                case TIME_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIME: {
             		return results.getTime(parameterIndex, getDatabaseCalendar());
                 }
-                case DATE_CODE: {
+                case DataTypeManager.DefaultTypeCodes.DATE: {
             		return results.getDate(parameterIndex, getDatabaseCalendar());
                 }
-                case TIMESTAMP_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIMESTAMP: {
             		return results.getTimestamp(parameterIndex, getDatabaseCalendar());
                 }
-    			case BLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.BLOB: {
     				try {
     					return results.getBlob(parameterIndex);
     				} catch (SQLException e) {
@@ -1083,14 +1073,25 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     					// ignore
     				}
     			}
-    			case CLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
+    				try {
+    					Blob val = results.getBlob(parameterIndex);
+    					if (val != null) {
+    						return new GeometryType(val);
+    					}
+    				} catch (SQLException e) {
+    					// ignore
+    				}
+    				break;
+    			}
+    			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
     					return results.getClob(parameterIndex);
     				} catch (SQLException e) {
     					// ignore
     				}
     			}
-    			case BOOLEAN_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
     				return results.getBoolean(parameterIndex);
     			}
             }

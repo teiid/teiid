@@ -49,7 +49,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -237,6 +236,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
     	registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
     	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("SDO_UTIL.FROM_WKBGEOMETRY")); //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_UTIL.FROM_WKTGEOMETRY")); //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -764,6 +765,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(WITHIN_DISTANCE);
         supportedFunctions.add(FILTER);
         supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
         return supportedFunctions;
     }
     
@@ -891,56 +895,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	return new JDBCMetdataProcessor() {
-    		@Override
-    		protected String getRuntimeType(int type, String typeName,
-    				int precision) {
-    			//overrides for varchar2 and nvarchar2
-    			if (type == 12 || (type == Types.OTHER && typeName != null && typeName.contains("char"))) { //$NON-NLS-1$
-    				return TypeFacility.RUNTIME_NAMES.STRING;
-    			}
-                if ("MDSYS.SDO_GEOMETRY".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
-                    return TypeFacility.RUNTIME_NAMES.GEOMETRY;
-                }
-    			return super.getRuntimeType(type, typeName, precision);
-    		}
-    		
-    		@Override
-    		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
-    	        PreparedStatement stmt = null;
-    	        ResultSet rs = null;
-		        try {
-		            stmt = conn.prepareStatement("select num_rows from ALL_TABLES where owner = ? AND table_name = ?");  //$NON-NLS-1$
-		            stmt.setString(1, schema);
-		            stmt.setString(2, name);
-		            rs = stmt.executeQuery();
-		            if(rs.next()) {
-		            	int cardinality = rs.getInt(1);
-		            	if (!rs.wasNull()) {
-		            		table.setCardinality(cardinality);
-		            	}
-		            }
-		        } finally { 
-		            if(rs != null) {
-		                rs.close();
-		            }
-		            if(stmt != null) {
-		                stmt.close();
-		            }
-		        }
-    		}
-    		
-    		@Override
-    		protected boolean getIndexInfoForTable(String catalogName,
-    				String schemaName, String tableName, boolean uniqueOnly,
-    				boolean approximateIndexes, String tableType) {
-    			//oracle will throw an exception if we import non approximate with a view
-    			if (!approximateIndexes && "VIEW".equalsIgnoreCase(tableType)) { //$NON-NLS-1$
-    				return false;
-    			}
-    			return true;
-    		}
-    	};
+    	return new OracleMetadataProcessor();
     }
     
     @Override

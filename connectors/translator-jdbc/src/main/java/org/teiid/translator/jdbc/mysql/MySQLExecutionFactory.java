@@ -84,7 +84,9 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         //WEEKINYEAR assumes 4.1.1
         registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier("WEEKOFYEAR")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("AsWKB")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("AsWKT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("GeomFromWKB")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("GeomFromText")); //$NON-NLS-1$
 
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -229,7 +231,15 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
         supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
         supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+        supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("ISNULL"); //$NON-NLS-1$
 //        supportedFunctions.add("LEAST"); //$NON-NLS-1$

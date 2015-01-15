@@ -171,4 +171,9 @@ public class SourceSystemFunctions {
     public static final String ST_GEOMFROMBINARY = "st_geomfrombinary"; //$NON-NLS-1$
     public static final String ST_INTERSECTS = "st_intersects"; //$NON-NLS-1$
     public static final String ST_CONTAINS = "st_contains"; //$NON-NLS-1$
+	public static final String ST_CROSSES = "st_crosses"; //$NON-NLS-1$
+	public static final String ST_DISJOINT = "st_disjoint"; //$NON-NLS-1$
+	public static final String ST_DISTANCE = "st_distance"; //$NON-NLS-1$
+	public static final String ST_OVERLAPS = "st_overlaps"; //$NON-NLS-1$
+	public static final String ST_TOUCHES = "st_touches"; //$NON-NLS-1$
 }
