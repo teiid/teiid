@@ -168,6 +168,20 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.ENDSWITH);
         }
         
+        if (getVersion().compareTo(EIGHT_10) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+        	supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        }
+        
         return supportedFunctions;
     }
     
