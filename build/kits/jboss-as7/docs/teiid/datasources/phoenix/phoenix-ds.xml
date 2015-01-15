@@ -1,0 +1,19 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/derbyDS" pool-name="derbyDS">
+            <driver-class>org.apache.phoenix.jdbc.PhoenixDriver</driver-class>
+            <connection-url>jdbc:phoenix:{zookeeper quorum server}</connection-url>
+            <driver>phoenix-[version].jar</driver>
+            <pool>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+            </pool>
+            <security>
+                <user-name>{user}</user-name>
+                <password>{password}</password>
+            </security>
+        </datasource>                               
+    </datasources>
+</subsystem>            

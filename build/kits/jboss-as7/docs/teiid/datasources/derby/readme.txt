@@ -12,12 +12,12 @@ Step 1: Deploying the JDBC Driver
 		2) Overlay the "modules" directory on the "<jboss-as>/modules" directory 
 
 		3) Then copy the derby database JDBC driver jar file "derbyclient.jar" into
-			"<jboss-as>/modules/com/apache/derby/main" directory.
+			"<jboss-as>/modules/org/apache/derby/main" directory.
 		4) start server
 
 Step 2: Creating the datasource 
 
-	Option 1: Edit the standalone-teiid.xml or domain-teiid.xml file and add contents of the "derby.xml" 
+	Option 1: Edit the standalone-teiid.xml or domain-teiid.xml file and add contents of the "derby-ds.xml" 
 	or "derby-xa.xml" file under the "datasources" subsystem. You may have to edit contents according 
 	to where your derby server is located and credentials you need to use to access it.
 	
