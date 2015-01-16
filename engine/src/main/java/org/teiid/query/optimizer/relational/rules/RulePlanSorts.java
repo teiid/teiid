@@ -117,6 +117,11 @@ public class RulePlanSorts implements OptimizerRule {
 					if (node.getParent() == null) {
 						root = node.getFirstChild();
 						root.removeFromParent();
+						Object cols = node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+						root.setProperty(NodeConstants.Info.OUTPUT_COLS, cols);
+						if (root.getType() == NodeConstants.Types.PROJECT) {
+							root.setProperty(NodeConstants.Info.PROJECT_COLS, cols);
+						}
 						node = root;
 					} else {
 						PlanNode nextNode = node.getFirstChild();

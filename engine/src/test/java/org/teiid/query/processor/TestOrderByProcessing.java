@@ -42,6 +42,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
+import org.teiid.query.validator.TestValidator;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings({"nls", "unchecked", "rawtypes"})
@@ -377,5 +378,73 @@ public class TestOrderByProcessing {
 		helpProcess(plan, cc, manager, new List[] { Arrays.asList("a"), Arrays.asList("b"), Arrays.asList((String)null) });
 		
 	}
+	
+	@Test public void testGroupByUnrelated() {
+	    String sql = "SELECT sum(e2) from pm1.g2 group by e1 order by e1"; //$NON-NLS-1$
+	    
+	    List[] expected = new List[] { 
+	    	Arrays.asList(Long.valueOf(1)),
+		    Arrays.asList(Long.valueOf(3)),
+		    Arrays.asList(Long.valueOf(2)),
+		    Arrays.asList(Long.valueOf(1)),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    sampleData1(dataManager);
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder());
+	    helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testGroupByUnrelated1() {
+	    String sql = "SELECT sum(e2), e1 from pm1.g2 group by e1 order by case when e1 is null then 1 else 0 end"; //$NON-NLS-1$
+	    
+	    List[] expected = new List[] { 
+	        Arrays.asList(Long.valueOf(3), "a"),
+	        Arrays.asList(Long.valueOf(2), "b"),
+	        Arrays.asList(Long.valueOf(1), "c"),
+	        Arrays.asList(Long.valueOf(1), null),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    sampleData1(dataManager);
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder());
+	    helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test(expected=QueryValidatorException.class) public void testGroupByUnrelated2() throws TeiidException {
+	    String sql = "SELECT sum(e2) from pm1.g2 group by e1 || 'a' order by case when e1 is null then 0 else 1 end"; //$NON-NLS-1$
+	    
+	    //should not validate
+	    CommandContext context = createCommandContext();
+		helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), DefaultCapabilitiesFinder.INSTANCE, context);
+	}
+	
+	@Test public void testGroupByUnrelated3() {
+	    String sql = "SELECT sum(e2) from pm1.g2 group by e1 || 'a' order by case when e1 || 'a' is null then 0 else 1 end"; //$NON-NLS-1$
+	    
+	    List[] expected = new List[] { 
+	        Arrays.asList(Long.valueOf(1)),
+	        Arrays.asList(Long.valueOf(3)),
+	        Arrays.asList(Long.valueOf(2)),
+	        Arrays.asList(Long.valueOf(1)),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    sampleData1(dataManager);
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder());
+	    helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testUnaliasedOrderByFails() {
+		TestValidator.helpValidate("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2", new String[] {"pm1.g1.e2"}, RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testUnaliasedOrderByFails1() {
+    	TestValidator.helpValidate("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2 + 1", new String[] {"pm1.g1.e2"}, RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testOrderByUnrelated2() {
+    	TestValidator.helpValidate("SELECT max(e2) FROM pm1.g1 group by e1 ORDER BY e4", new String[] {"e4"}, RealMetadataFactory.example1Cached());
+    }
 	
 }

@@ -353,4 +353,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+    @Override
+    public boolean supportsOrderByUnrelated() {
+    	//prior to 8.10 we did not support unrelated from the grouping columns
+    	return getVersion().compareTo(EIGHT_10) >= 0;
+    }
+    
 }

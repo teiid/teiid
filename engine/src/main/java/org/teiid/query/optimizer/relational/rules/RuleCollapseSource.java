@@ -28,6 +28,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
@@ -727,7 +728,11 @@ public final class RuleCollapseSource implements OptimizerRule {
 			for (OrderByItem item : orderBy.getOrderByItems()) {
 				item.setExpressionPosition(exprs.indexOf(SymbolMap.getExpression(item.getSymbol())));
 			}
-			QueryRewriter.rewriteOrderBy(query, orderBy, query.getProjectedSymbols(), new LinkedList<OrderByItem>());
+			try {
+				QueryRewriter.rewriteOrderBy(query, orderBy, query.getProjectedSymbols(), context, context.getMetadata());
+			} catch (TeiidProcessingException e) {
+				throw new TeiidComponentException(e);
+			}
 		}
 		boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, context.getMetadata(), capFinder);
 		NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, context.getMetadata(), capFinder);

@@ -341,12 +341,15 @@ public class ResolverUtil {
     	
     	boolean isSimpleQuery = false;
     	List<GroupSymbol> fromClauseGroups = Collections.emptyList();
-        
+        GroupBy groupBy = null;
         if (command instanceof Query) {
         	Query query = (Query)command;
         	isSimpleQuery = !query.getSelect().isDistinct() && !query.hasAggregates();
         	if (query.getFrom() != null) {
         		fromClauseGroups = query.getFrom().getGroups();
+        	}
+        	if (!query.getSelect().isDistinct()) {
+        		groupBy = query.getGroupBy();
         	}
         }
     	
@@ -439,8 +442,9 @@ public class ResolverUtil {
         	ResolverVisitor.resolveLanguageObject(sortKey, metadata);
         	
             int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
-            if (index == -1 && !isSimpleQuery) {
-    	         throw new QueryResolverException(QueryPlugin.Event.TEIID30088, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30088, sortKey));
+            //if unrelated and not a simple query - that is more than just a grouping, throw an exception
+            if (index == -1 && !isSimpleQuery && groupBy == null) {
+        		throw new QueryResolverException(QueryPlugin.Event.TEIID30088, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30088, sortKey));
         	}
         	orderBy.setExpressionPosition(i, index);
         }

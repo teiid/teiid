@@ -1881,14 +1881,6 @@ public class TestResolver {
         helpResolve("SELECT pm1.g1.e1 a FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$
     }
     
-    @Test public void testUnaliasedOrderByFails() {
-        helpResolveException("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2"); //$NON-NLS-1$
-    }
-    
-    @Test public void testUnaliasedOrderByFails1() {
-        helpResolveException("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2 + 1"); //$NON-NLS-1$
-    }
-
     /** 
      * the group g1 is not known to the order by clause of a union
      */
@@ -2783,10 +2775,6 @@ public class TestResolver {
         helpResolveException("SELECT distinct pm1.g1.e1, e2 as x, e3 as y FROM pm1.g1 ORDER BY e4"); //$NON-NLS-1$
     }
 
-    @Test public void testOrderByUnrelated2() {
-        helpResolveException("SELECT max(e2) FROM pm1.g1 group by e1 ORDER BY e4"); //$NON-NLS-1$
-    }
-    
     @Test public void testOrderByExpression() {
     	Query query = (Query)helpResolve("select pm1.g1.e1 from pm1.g1 order by e2 || e3 "); //$NON-NLS-1$
     	assertEquals(-1, query.getOrderBy().getExpressionPosition(0));

@@ -629,8 +629,9 @@ public class QueryRewriter {
      *  
      * @param query
      * @throws TeiidComponentException, MetaMatrixProcessingException
+     * @throws TeiidProcessingException 
      */
-    public QueryCommand rewriteOrderBy(QueryCommand queryCommand) throws TeiidComponentException {
+    public QueryCommand rewriteOrderBy(QueryCommand queryCommand) throws TeiidComponentException, TeiidProcessingException {
     	final OrderBy orderBy = queryCommand.getOrderBy();
         if (orderBy == null) {
             return queryCommand;
@@ -638,22 +639,19 @@ public class QueryRewriter {
         Select select = queryCommand.getProjectedQuery().getSelect();
         final List<Expression> projectedSymbols = select.getProjectedSymbols();
         
-        LinkedList<OrderByItem> unrelatedItems = new LinkedList<OrderByItem>();
-        
-        rewriteOrderBy(queryCommand, orderBy, projectedSymbols, unrelatedItems);
+        rewriteOrderBy(queryCommand, orderBy, projectedSymbols, context, metadata);
         
     	return queryCommand;
     }
 
 	public static void rewriteOrderBy(QueryCommand queryCommand,
-			final OrderBy orderBy, final List projectedSymbols,
-			LinkedList<OrderByItem> unrelatedItems) {
+			final OrderBy orderBy, final List projectedSymbols, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
 		HashSet<Expression> previousExpressions = new HashSet<Expression>();
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	Expression querySymbol = orderBy.getVariable(i);
         	int index = orderBy.getExpressionPosition(i);
         	if (index == -1) {
-    			unrelatedItems.add(orderBy.getOrderByItems().get(i));
+        		querySymbol = rewriteExpression(querySymbol, context, metadata);
         	} else {
         		querySymbol = (Expression)projectedSymbols.get(index);
         	}

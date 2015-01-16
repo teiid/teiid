@@ -177,7 +177,7 @@ public class TestAliasGenerator {
     
     @Test public void testUnrelatedOrderBy2() throws Exception {
     	String sql = "SELECT b.IntKey FROM (select intkey, stringkey from BQT1.SmallA) a, (select intkey, stringkey from BQT1.SmallA) b ORDER BY a.StringKey || b.intKey"; //$NON-NLS-1$
-        String expected = "SELECT v_1.c_0 FROM (SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0, (SELECT g_1.IntKey AS c_0, g_1.StringKey AS c_1 FROM BQT1.SmallA AS g_1) AS v_1 ORDER BY (v_0.c_1 || v_1.c_0)"; //$NON-NLS-1$
+        String expected = "SELECT v_1.c_0 FROM (SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0, (SELECT g_1.IntKey AS c_0, g_1.StringKey AS c_1 FROM BQT1.SmallA AS g_1) AS v_1 ORDER BY concat(v_0.c_1, convert(v_1.c_0, string))"; //$NON-NLS-1$
         helpTest(sql, expected, true, false, RealMetadataFactory.exampleBQTCached());
     }
     

@@ -635,6 +635,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	AggregateSymbolCollectorVisitor.getAggregates(having, aggs, invalid, null, invalidWindowFunctions, groupSymbols);
         	hasAgg = true;
         }
+        if (groupBy != null && query.getOrderBy() != null) {
+        	Set<Expression> exanded = new HashSet<Expression>(groupSymbols);
+        	exanded.addAll(select.getProjectedSymbols());
+        	for (OrderByItem item : query.getOrderBy().getOrderByItems()) {
+        		if (item.isUnrelated()) {
+        			AggregateSymbolCollectorVisitor.getAggregates(item.getSymbol(), aggs, invalid, null, invalidWindowFunctions, exanded);
+        		}
+        	}
+        }
         for (Expression symbol : select.getProjectedSymbols()) {
         	if (hasAgg || !aggs.isEmpty()) {
         		validateCorrelatedReferences(query, correlationGroups, groupSymbols, symbol, invalid);
