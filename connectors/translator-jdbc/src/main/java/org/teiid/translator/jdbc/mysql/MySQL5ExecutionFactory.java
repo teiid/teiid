@@ -39,9 +39,12 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.Version;
 
 @Translator(name="mysql5", description="A translator for open source MySQL5 Database")
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
+	
+	public static final Version FIVE_6 = Version.getVersion("5.6"); //$NON-NLS-1$
 	
 	@Override
     public void start() throws TranslatorException {
@@ -92,6 +95,15 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
         //mysql rounds down even when crossing a date part
         //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        if (getVersion().compareTo(FIVE_6) >= 0) {
+	        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+	        supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+	        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+	        supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+	        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+	        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+	        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        }
         return supportedFunctions;
     }
     

@@ -46,7 +46,6 @@ import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
-import org.teiid.translator.jdbc.Version;
 
 
 /** 
@@ -54,8 +53,6 @@ import org.teiid.translator.jdbc.Version;
  */
 @Translator(name="mysql", description="A translator for open source MySQL Database, used with any version lower than 5")
 public class MySQLExecutionFactory extends JDBCExecutionFactory {
-	
-	public static final Version FIVE_6 = Version.getVersion("5.6"); //$NON-NLS-1$
 	
 	public MySQLExecutionFactory() {
 		setSupportsFullOuterJoins(false);
@@ -90,15 +87,6 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("AsWKT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("GeomFromWKB")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("GeomFromText")); //$NON-NLS-1$
-        if (getVersion().compareTo(FIVE_6) <= 0) {
-        	registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("INTERSECTS")); //$NON-NLS-1$ 
-        	registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new AliasModifier("CONTAINS")); //$NON-NLS-1$
-        	registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new AliasModifier("CROSSES")); //$NON-NLS-1$
-        	registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new AliasModifier("DISJOINT")); //$NON-NLS-1$
-        	registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new AliasModifier("DISTANCE")); //$NON-NLS-1$
-        	registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new AliasModifier("OVERLAPS")); //$NON-NLS-1$
-        	registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("TOUCHES")); //$NON-NLS-1$
-        }
 
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -240,17 +228,10 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         
-        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
-        supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
         supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
         supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
-        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
-        supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
-        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
-        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
-        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
         
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("ISNULL"); //$NON-NLS-1$

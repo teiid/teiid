@@ -35,7 +35,7 @@ public class TestMySQL5Translator {
     private static MySQL5ExecutionFactory TRANSLATOR; 
     
     @BeforeClass public static void oneTimeSetup() throws TranslatorException {
-        TRANSLATOR = new MySQL5ExecutionFactory();        
+        TRANSLATOR = new MySQL5ExecutionFactory();
         TRANSLATOR.start();
     }
 
@@ -69,6 +69,12 @@ public class TestMySQL5Translator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
             input, 
             output, TRANSLATOR);
+    }
+    
+    @Test public void testGeometryPushdown() throws Exception {
+        String input = "select mkt_id from cola_markets where ST_Contains(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'), shape);"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.MKT_ID FROM COLA_MARKETS WHERE st_contains(GeomFromWKB(?), COLA_MARKETS.SHAPE) = 1"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
 }
