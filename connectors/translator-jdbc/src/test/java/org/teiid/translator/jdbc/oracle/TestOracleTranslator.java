@@ -1174,4 +1174,25 @@ public class TestOracleTranslator {
         String output = "SELECT SDO_UTIL.TO_WKBGEOMETRY(COLA_MARKETS.SHAPE) AS x FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+
+    @Test
+    public void testGeometryDistance() throws Exception {
+        String input = "select ST_Distance(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT SDO_GEOM.DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test
+    public void testGeometryDisjoint() throws Exception {
+        String input = "select ST_Disjoint(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test
+    public void testGeometryIntersects() throws Exception {
+        String input = "select ST_Intersects(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

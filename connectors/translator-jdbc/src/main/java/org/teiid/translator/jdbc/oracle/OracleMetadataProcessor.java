@@ -46,8 +46,7 @@ public final class OracleMetadataProcessor extends
 		if (type == 12 || (type == Types.OTHER && typeName != null && typeName.contains("char"))) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.STRING;
 		}
-	    if (useGeometryType && 
-	    		("MDSYS.SDO_GEOMETRY".equalsIgnoreCase(typeName) || "SDO_GEOMETRY".equalsIgnoreCase(typeName))) { //$NON-NLS-1$ //$NON-NLS-2$
+	    if (useGeometryType && "SDO_GEOMETRY".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
 	        return TypeFacility.RUNTIME_NAMES.GEOMETRY;
 	    }
 		return super.getRuntimeType(type, typeName, precision);

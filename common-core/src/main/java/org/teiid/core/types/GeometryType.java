@@ -25,15 +25,37 @@ package org.teiid.core.types;
 import java.sql.Blob;
 
 public final class GeometryType extends BlobType {
+    public static final int UNKNOWN_SRID = 0;
+    
+    private int srid;
+
     public GeometryType() {
 
     }
 
     public GeometryType(Blob blob) {
-        super(blob);
+        this(blob, UNKNOWN_SRID);
     }
 
     public GeometryType(byte[] bytes) {
+        this(bytes, UNKNOWN_SRID);
+    }
+
+    public GeometryType(Blob blob, int srid) {
+        super(blob);
+        setSrid(srid);
+    }
+
+    public GeometryType(byte[] bytes, int srid) {
         super(bytes);
+        setSrid(srid);
+    }
+
+    public int getSrid() {
+        return srid;
+    }
+
+    public void setSrid(int srid) {
+        this.srid = srid;
     }
 }

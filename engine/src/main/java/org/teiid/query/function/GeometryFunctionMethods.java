@@ -28,6 +28,7 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -49,64 +50,85 @@ public class GeometryFunctionMethods {
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMBINARY,
-            category=FunctionCategoryConstants.GEOMETRY,
-            nullOnNull=true)
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true)
     public static GeometryType geoFromBlob(BlobType wkb) throws FunctionExecutionException {
     	return GeometryUtils.geometryFromBlob(wkb);
     }
+
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMBINARY,
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true)
+    public static GeometryType geoFromBlob(BlobType wkb, int srid) throws FunctionExecutionException {
+    	return GeometryUtils.geometryFromBlob(wkb, srid);
+    }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,
-            category=FunctionCategoryConstants.GEOMETRY,
-            nullOnNull=true)
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true)
     public static GeometryType geomFromText(ClobType wkt) throws FunctionExecutionException {
     	return GeometryUtils.geometryFromClob(wkt);
     }
 
-    @TeiidFunction(name=SourceSystemFunctions.ST_INTERSECTS,
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true)
+    public static GeometryType geomFromText(ClobType wkt, int srid) throws FunctionExecutionException {
+    	return GeometryUtils.geometryFromClob(wkt, srid);
+    }
+
+    @TeiidFunction(name=SourceSystemFunctions.ST_INTERSECTS,
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean intersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.intersects(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_CONTAINS,
                    category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true)
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean contains(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.contains(geom1, geom2);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_CROSSES,
-            category=FunctionCategoryConstants.GEOMETRY,
-            nullOnNull=true)
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean crosses(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.crosses(geom1, geom2);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_DISJOINT,
-            category=FunctionCategoryConstants.GEOMETRY,
-            nullOnNull=true)
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean disjoint(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.disjoint(geom1, geom2);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_DISTANCE,
-            category=FunctionCategoryConstants.GEOMETRY,
-            nullOnNull=true)
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static Double distance(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.distance(geom1, geom2);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_OVERLAPS,
-            category=FunctionCategoryConstants.GEOMETRY,
-            nullOnNull=true)
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean overlaps(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.overlaps(geom1, geom2);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_TOUCHES,
-            category=FunctionCategoryConstants.GEOMETRY,
-            nullOnNull=true)
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean touches(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.touches(geom1, geom2);
     }

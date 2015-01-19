@@ -558,9 +558,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             Literal l = (Literal) obj;
             // For GEOMETRY, force source to do implicit conversion from WKB blob to proprietary struct.
             if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
+                Literal srid = getLanguageFactory().createLiteral(
+                        ((GeometryType) l.getValue()).getSrid(),
+                        Integer.class
+                );
                 return Arrays.asList(getLanguageFactory().createFunction(
-                        SourceSystemFunctions.ST_GEOMFROMBINARY, new Expression[] {l}, TypeFacility.RUNTIME_TYPES.GEOMETRY
-                ));
+                        SourceSystemFunctions.ST_GEOMFROMBINARY, new Expression[] { l, srid }, TypeFacility.RUNTIME_TYPES.GEOMETRY));
             }
         }
     	return parts;

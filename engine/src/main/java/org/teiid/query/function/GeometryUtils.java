@@ -51,7 +51,12 @@ public class GeometryUtils {
         return new ClobType(new ClobImpl(jtsGeometry.toText()));
     }
 
-    public static GeometryType geometryFromClob(ClobType wkt) throws FunctionExecutionException {
+    public static GeometryType geometryFromClob(ClobType wkt)
+            throws FunctionExecutionException {
+        return geometryFromClob(wkt, GeometryType.UNKNOWN_SRID);
+    }
+
+    public static GeometryType geometryFromClob(ClobType wkt, int srid) throws FunctionExecutionException {
     	Reader r = null;
         try {
             WKTReader reader = new WKTReader();
@@ -59,7 +64,7 @@ public class GeometryUtils {
             r = wkt.getCharacterStream();
             Geometry jtsGeometry = reader.read(r);
             byte[] bytes = writer.write(jtsGeometry);
-            return new GeometryType(bytes);
+            return new GeometryType(bytes, srid);
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
         } catch (SQLException e) {
@@ -73,11 +78,16 @@ public class GeometryUtils {
         	}
         }
     }
+
+    public static GeometryType geometryFromBlob(BlobType wkb)
+            throws FunctionExecutionException {
+        return geometryFromBlob(wkb, GeometryType.UNKNOWN_SRID);
+    }
     
     //TODO: should allow an option to assume well formed
-    public static GeometryType geometryFromBlob(BlobType wkb) throws FunctionExecutionException {
+    public static GeometryType geometryFromBlob(BlobType wkb, int srid) throws FunctionExecutionException {
         //return as geometry
-        GeometryType gt = new GeometryType(wkb.getReference());
+        GeometryType gt = new GeometryType(wkb.getReference(), srid);
         
         //validate
         getGeometry(gt);
@@ -125,13 +135,20 @@ public class GeometryUtils {
         Geometry g2 = getGeometry(geom2);
         return g1.overlaps(g2);
 	}
-	
-	static Geometry getGeometry(GeometryType geom) throws FunctionExecutionException {
+
+    static Geometry getGeometry(GeometryType geom)
+            throws FunctionExecutionException {
+        return getGeometry(geom, GeometryType.UNKNOWN_SRID);
+    }
+
+	static Geometry getGeometry(GeometryType geom, int srid) throws FunctionExecutionException {
 		InputStream is1 = null;
         try {
             WKBReader reader = new WKBReader();
             is1 = geom.getBinaryStream();
-            return reader.read(new InputStreamInStream(is1));
+            Geometry jtsGeom = reader.read(new InputStreamInStream(is1));
+            jtsGeom.setSRID(srid);
+            return jtsGeom;
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
         } catch (SQLException e) {

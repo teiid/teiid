@@ -108,6 +108,11 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     }
     
     @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
+    
+    @Override
     public boolean supportsInlineViews() {
     	return true;
     }

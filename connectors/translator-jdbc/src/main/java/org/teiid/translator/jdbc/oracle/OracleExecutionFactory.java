@@ -22,6 +22,7 @@
 
 package org.teiid.translator.jdbc.oracle;
 
+import org.teiid.translator.jdbc.TemplateFunctionModifier;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.CallableStatement;
@@ -118,6 +119,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
 	public OracleExecutionFactory() {
 	}
+
+    
+    private static class OracleRelateModifier extends TemplateFunctionModifier {
+        public OracleRelateModifier(String mask) {
+            super("SDO_RELATE(", 0, ", ", 1, ", 'mask=" + mask + "')");
+        }
+    }
     
     @Override
     public void start() throws TranslatorException {
@@ -234,10 +242,25 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, STRING, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, OBJECT, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
+        
     	registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
-    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("SDO_UTIL.FROM_WKBGEOMETRY")); //$NON-NLS-1$
-    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_UTIL.FROM_WKTGEOMETRY")); //$NON-NLS-1$
     	registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
+
+        // Used instead of SDO_UTIL functions because it allows SRID to be specified.
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("SDO_GEOMETRY")); //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_GEOMETRY")); //$NON-NLS-1$
+
+        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.DISTANCE(", 0, ", ", 1, ", 0.005)"));
+
+        // Disjoint mask cannot be used with SDO_RELATE (says docs).
+        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005)"));
+
+        registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new OracleRelateModifier("contains")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new OracleRelateModifier("anyinteract")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new OracleRelateModifier("touch")); //$NON-NLS-1$
+        //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -768,6 +791,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+        supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+        supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
         return supportedFunctions;
     }
     
