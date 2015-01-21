@@ -161,8 +161,10 @@ public class TestBatchSerializer {
     @Test public void testGeometry() throws IOException, ClassNotFoundException {
     	GeometryType geometryType = new GeometryType(new byte[0]);
     	geometryType.setReferenceStreamId(null);
+    	geometryType.setSrid(10000);
 		Object val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, BatchSerializer.CURRENT_VERSION).get(0).get(0);
 		assertTrue(val instanceof GeometryType);
+		assertEquals(10000, ((GeometryType)val).getSrid());
     	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)0); //object serialization - should fail on the client side
     	
     	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)1); //blob serialization

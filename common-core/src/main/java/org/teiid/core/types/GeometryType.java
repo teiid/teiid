@@ -22,6 +22,9 @@
 
 package org.teiid.core.types;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.sql.Blob;
 
 public final class GeometryType extends BlobType {
@@ -57,5 +60,18 @@ public final class GeometryType extends BlobType {
 
     public void setSrid(int srid) {
         this.srid = srid;
+    }
+    
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+    	super.writeExternal(out);
+    	out.writeInt(srid);
+    }
+    
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+    		ClassNotFoundException {
+    	super.readExternal(in);
+    	srid = in.readInt();
     }
 }

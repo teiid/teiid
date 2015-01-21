@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.teiid.language.Function;
 
 /**
@@ -56,7 +57,7 @@ public class TemplateFunctionModifier extends FunctionModifier {
 
     @Override
     public List<?> translate(Function function) {
-        List objs = new ArrayList();
+        List<Object> objs = new ArrayList<Object>();
         for (Object part : parts) {
             if (part instanceof Integer) {
                 objs.add(function.getParameters().get((Integer) part));

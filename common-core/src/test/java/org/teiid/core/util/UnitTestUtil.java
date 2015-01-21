@@ -32,6 +32,8 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.Writer;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -39,8 +41,9 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
+
+import org.junit.Assert;
 
 /**
  * This class contains static methods that are routinely and commonly used in many test cases, and related to methods to test
@@ -452,8 +455,17 @@ public class UnitTestUtil {
 		enableLogging(Level.FINEST, loggerName);
 	}
 	
+	static Map<String, Logger> loggers = new HashMap<String, Logger>();
+	
 	public static void enableLogging(Level level, String loggerName) {
-		Logger logger = Logger.getLogger(loggerName);
+		Logger logger = null;
+		synchronized (loggers) {
+			logger = loggers.get(loggerName);
+			if (logger == null) {
+				logger = Logger.getLogger(loggerName);
+				loggers.put(loggerName, logger);
+			}
+		}
     	logger.setLevel(level);
 		if (logger.getHandlers().length > 0) {
 	    	for (Handler h : logger.getHandlers()) {

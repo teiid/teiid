@@ -1195,4 +1195,12 @@ public class TestOracleTranslator {
         String output = "SELECT SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test
+    public void testGeometryInsert() throws Exception {
+        String input = "insert into cola_markets(name,shape) values('foo124', ST_GeomFromText('POINT (300 100)', 8307))"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', SDO_GEOMETRY(TO_BLOB(?), 8307))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
 }

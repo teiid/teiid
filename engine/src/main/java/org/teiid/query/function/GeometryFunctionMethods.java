@@ -36,14 +36,16 @@ public class GeometryFunctionMethods {
 
     @TeiidFunction(name=SourceSystemFunctions.ST_ASTEXT, 
                    category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true)
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN                   )
     public static ClobType asText(GeometryType geometry) throws FunctionExecutionException {
        return GeometryUtils.geometryToClob(geometry);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_ASBINARY,
                    category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true)
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static BlobType asBlob(GeometryType geometry) {
         Blob b = geometry.getReference();
         return new BlobType(b);
@@ -58,7 +60,8 @@ public class GeometryFunctionMethods {
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMBINARY,
                    category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true)
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType geoFromBlob(BlobType wkb, int srid) throws FunctionExecutionException {
     	return GeometryUtils.geometryFromBlob(wkb, srid);
     }
@@ -72,7 +75,8 @@ public class GeometryFunctionMethods {
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,
                    category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true)
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType geomFromText(ClobType wkt, int srid) throws FunctionExecutionException {
     	return GeometryUtils.geometryFromClob(wkt, srid);
     }
@@ -132,4 +136,12 @@ public class GeometryFunctionMethods {
     public static Boolean touches(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
     	return GeometryUtils.touches(geom1, geom2);
     }
+    
+   /* @TeiidFunction(name=SourceSystemFunctions.ST_SRID,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static int getSrid(GeometryType geom1) {
+        return geom1.getSrid();
+	}*/
 }

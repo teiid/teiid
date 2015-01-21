@@ -135,10 +135,10 @@ public class GeometryUtils {
         Geometry g2 = getGeometry(geom2);
         return g1.overlaps(g2);
 	}
-
+	
     static Geometry getGeometry(GeometryType geom)
             throws FunctionExecutionException {
-        return getGeometry(geom, GeometryType.UNKNOWN_SRID);
+        return getGeometry(geom, geom.getSrid());
     }
 
 	static Geometry getGeometry(GeometryType geom, int srid) throws FunctionExecutionException {

@@ -22,7 +22,6 @@
 
 package org.teiid.translator.jdbc.oracle;
 
-import org.teiid.translator.jdbc.TemplateFunctionModifier;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.CallableStatement;
@@ -123,7 +122,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     private static class OracleRelateModifier extends TemplateFunctionModifier {
         public OracleRelateModifier(String mask) {
-            super("SDO_RELATE(", 0, ", ", 1, ", 'mask=" + mask + "')");
+            super("SDO_RELATE(", 0, ", ", 1, ", 'mask=" + mask + "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         }
     }
     
@@ -247,13 +246,34 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
 
         // Used instead of SDO_UTIL functions because it allows SRID to be specified.
-    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("SDO_GEOMETRY")); //$NON-NLS-1$
-    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_GEOMETRY")); //$NON-NLS-1$
+    	// we need to use to_blob and to_clob to disambiguate
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
+			
+			@Override
+			public List<?> translate(Function function) {
+				Expression ex = function.getParameters().get(0);
+				if (ex instanceof Parameter || ex instanceof Literal) {
+					function.getParameters().set(0, new Function("TO_BLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.BLOB)); //$NON-NLS-1$
+				}
+				return super.translate(function);
+			}
+		}); 
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
+			
+    		@Override
+			public List<?> translate(Function function) {
+				Expression ex = function.getParameters().get(0);
+				if (ex instanceof Parameter || ex instanceof Literal) {
+					function.getParameters().set(0, new Function("TO_CLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.CLOB)); //$NON-NLS-1$
+				}
+				return super.translate(function);
+			}
+    	}); 
 
-        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.DISTANCE(", 0, ", ", 1, ", 0.005)"));
+        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
 
         // Disjoint mask cannot be used with SDO_RELATE (says docs).
-        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005)"));
+        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new OracleRelateModifier("contains")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$

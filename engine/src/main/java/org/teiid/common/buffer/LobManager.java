@@ -275,12 +275,16 @@ public class LobManager {
 			};			
 			isf.setLength(byteLength);
 			if (lob instanceof GeometryType) {
-				persistedLob = new GeometryType(new BlobImpl(isf));
+				GeometryType gt = new GeometryType(new BlobImpl(isf));
+				gt.setSrid(((GeometryType)lob).getSrid());
+				persistedLob = gt;
 			} else if (lob instanceof BlobType) {
 				persistedLob = new BlobType(new BlobImpl(isf));
 			}
 			else if (lob instanceof ClobType) {
-				persistedLob = new ClobType(new ClobImpl(isf, ((ClobType)lob).length()));
+				ClobType ct = new ClobType(new ClobImpl(isf, ((ClobType)lob).length()));
+				ct.setType(((ClobType)lob).getType());
+				persistedLob = ct;
 			}
 			else {
 				persistedLob = new XMLType(new SQLXMLImpl(isf));
