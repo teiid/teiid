@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
@@ -43,7 +44,7 @@ public final class OracleMetadataProcessor extends
 	protected String getRuntimeType(int type, String typeName,
 			int precision) {
 		//overrides for varchar2 and nvarchar2
-		if (type == 12 || (type == Types.OTHER && typeName != null && typeName.contains("char"))) { //$NON-NLS-1$
+		if (type == 12 || (type == Types.OTHER && typeName != null && StringUtil.indexOfIgnoreCase(typeName, "char") > -1)) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.STRING;
 		}
 	    if (useGeometryType && "SDO_GEOMETRY".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
