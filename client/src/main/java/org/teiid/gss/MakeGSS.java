@@ -207,7 +207,7 @@ class GssAction implements PrivilegedAction {
             }  
             return result;
         }  catch (GSSException gsse) {
-        	return TeiidSQLException.create(gsse, JDBCPlugin.Util.getString("gss_auth_failed")); //$NON-NLS-1$
+        	return TeiidSQLException.create(gsse, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20005));
         } catch(Exception e) {
         	return e;
         }
