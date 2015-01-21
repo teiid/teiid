@@ -51,17 +51,19 @@ public class GeometryFunctionMethods {
         return new BlobType(b);
     }
     
-    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMBINARY,
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMWKB,
                    category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true)
+                   nullOnNull=true,
+                   alias="ST_GEOMFROMBINARY")
     public static GeometryType geoFromBlob(BlobType wkb) throws FunctionExecutionException {
     	return GeometryUtils.geometryFromBlob(wkb);
     }
 
-    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMBINARY,
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMWKB,
                    category=FunctionCategoryConstants.GEOMETRY,
-                   nullOnNull=true,
-                   pushdown=PushDown.CAN_PUSHDOWN)
+                   pushdown=PushDown.CAN_PUSHDOWN,
+        		   nullOnNull=true,
+                   alias="ST_GEOMFROMBINARY")
     public static GeometryType geoFromBlob(BlobType wkb, int srid) throws FunctionExecutionException {
     	return GeometryUtils.geometryFromBlob(wkb, srid);
     }
@@ -137,11 +139,23 @@ public class GeometryFunctionMethods {
     	return GeometryUtils.touches(geom1, geom2);
     }
     
-   /* @TeiidFunction(name=SourceSystemFunctions.ST_SRID,
+    @TeiidFunction(name=SourceSystemFunctions.ST_SRID,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
 	public static int getSrid(GeometryType geom1) {
         return geom1.getSrid();
-	}*/
+	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_SETSRID,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static GeometryType setSrid(GeometryType geom1, int srid) {
+    	GeometryType gt = new GeometryType();
+    	gt.setReference(geom1.getReference());
+    	gt.setSrid(srid);
+        return gt;
+	}
+    
 }

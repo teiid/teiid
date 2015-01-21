@@ -225,20 +225,29 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 			if (name.isEmpty()) {
 				name = method.getName();
 			}
-			FunctionMethod func = MetadataFactory.createFunctionFromMethod(name, method);
-			func.setDescription(QueryPlugin.Util.getString("SystemSource." + name + "_description")); //$NON-NLS-1$ //$NON-NLS-2$
-			func.setCategory(f.category());
-			for (int i = 0; i < func.getInputParameterCount(); i++) {
-				func.getInputParameters().get(i).setDescription("SystemSource." + name + "_param" + (i+1)); //$NON-NLS-1$ //$NON-NLS-2$
+			addFunction(method, f, name);
+			if (!f.alias().isEmpty()) {
+				addFunction(method, f, f.alias());
 			}
-			func.getOutputParameter().setDescription("SystemSource." + name + "_result"); //$NON-NLS-1$ //$NON-NLS-2$
-			if (f.nullOnNull()) {
-				func.setNullOnNull(true);
-			}
-			func.setDeterminism(f.determinism());
-            func.setPushdown(f.pushdown());
-			functions.add(func);
 		}
+	}
+
+	private FunctionMethod addFunction(Method method, TeiidFunction f,
+			String name) {
+		FunctionMethod func = MetadataFactory.createFunctionFromMethod(name, method);
+		func.setDescription(QueryPlugin.Util.getString("SystemSource." + name + "_description")); //$NON-NLS-1$ //$NON-NLS-2$
+		func.setCategory(f.category());
+		for (int i = 0; i < func.getInputParameterCount(); i++) {
+			func.getInputParameters().get(i).setDescription("SystemSource." + name + "_param" + (i+1)); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		func.getOutputParameter().setDescription("SystemSource." + name + "_result"); //$NON-NLS-1$ //$NON-NLS-2$
+		if (f.nullOnNull()) {
+			func.setNullOnNull(true);
+		}
+		func.setDeterminism(f.determinism());
+		func.setPushdown(f.pushdown());
+		functions.add(func);
+		return func;
 	}
     
     private void addTrimFunction() {

@@ -1203,4 +1203,11 @@ public class TestOracleTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
+    @Test
+    public void testSrid() throws Exception {
+        String input = "select st_srid(shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT nvl(c.SHAPE.sdo_srid, 0) FROM COLA_MARKETS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
 }

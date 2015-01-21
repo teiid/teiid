@@ -42,4 +42,5 @@ public @interface TeiidFunction {
 	boolean nullOnNull() default false;
 	Determinism determinism() default Determinism.DETERMINISTIC;
     PushDown pushdown() default PushDown.CANNOT_PUSHDOWN;
+	String alias()  default "";
 }

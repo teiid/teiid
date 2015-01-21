@@ -41,10 +41,12 @@ public class TestGeometry {
 	@Test public void testRoundTrip() throws Exception {
 		Expression ex = TestFunctionResolving.getExpression("ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))')");
 		GeometryType geom = (GeometryType) Evaluator.evaluate(ex);
+		assertEquals(0, geom.getSrid());
 		byte[] bytes = geom.getBytes(1, (int) geom.length());
 		
-		Expression ex1 = TestFunctionResolving.getExpression("ST_GeomFromBinary(X'"+new BinaryType(bytes)+"')");
+		Expression ex1 = TestFunctionResolving.getExpression("ST_GeomFromBinary(X'"+new BinaryType(bytes)+"', 8307)");
 		GeometryType geom1 = (GeometryType) Evaluator.evaluate(ex1);
+		assertEquals(8307, geom1.getSrid());
 		assertEquals(geom, geom1);
 	}
 	

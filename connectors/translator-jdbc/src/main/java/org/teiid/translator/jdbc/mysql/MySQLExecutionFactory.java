@@ -85,7 +85,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier("WEEKOFYEAR")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("AsWKB")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("AsWKT")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("GeomFromWKB")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMWKB, new AliasModifier("GeomFromWKB")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("GeomFromText")); //$NON-NLS-1$
 
         //add in type conversion
@@ -230,7 +230,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         
         supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
         supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
-        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
         
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
@@ -411,7 +411,8 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         return new JDBCMetdataProcessor() {
             @Override
             protected String getRuntimeType(int type, String typeName, int precision) {
-                if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                //mysql will otherwise report a 0/null type for geometry
+            	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
                     return TypeFacility.RUNTIME_NAMES.GEOMETRY;
                 }                
                 return super.getRuntimeType(type, typeName, precision);                    

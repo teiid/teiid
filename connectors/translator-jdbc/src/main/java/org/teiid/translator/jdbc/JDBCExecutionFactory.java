@@ -563,7 +563,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                         Integer.class
                 );
                 return Arrays.asList(getLanguageFactory().createFunction(
-                        SourceSystemFunctions.ST_GEOMFROMBINARY, new Expression[] { l, srid }, TypeFacility.RUNTIME_TYPES.GEOMETRY));
+                        SourceSystemFunctions.ST_GEOMFROMWKB, new Expression[] { l, srid }, TypeFacility.RUNTIME_TYPES.GEOMETRY));
             }
         }
     	return parts;

@@ -175,11 +175,13 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
         	supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
         	supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
-        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
         	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
         	supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
         	supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
         	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        	supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+        	supportedFunctions.add(SourceSystemFunctions.ST_SETSRID);
         }
         
         return supportedFunctions;

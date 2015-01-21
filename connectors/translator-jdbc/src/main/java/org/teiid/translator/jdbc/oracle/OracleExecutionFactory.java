@@ -247,7 +247,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
         // Used instead of SDO_UTIL functions because it allows SRID to be specified.
     	// we need to use to_blob and to_clob to disambiguate
-    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMBINARY, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMWKB, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
 			
 			@Override
 			public List<?> translate(Function function) {
@@ -281,6 +281,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new OracleRelateModifier("touch")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -808,7 +809,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(WITHIN_DISTANCE);
         supportedFunctions.add(FILTER);
         supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
-        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
@@ -818,6 +819,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
         supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
         supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         return supportedFunctions;
     }
     

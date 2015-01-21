@@ -38,6 +38,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.Version;
 
@@ -86,6 +87,8 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 				return null;
 			}
 		}); 
+		
+		registerFunctionModifier(SourceSystemFunctions.ST_SRID, new AliasModifier("SRID")); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -104,6 +107,7 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 	        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
 	        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
         }
+        supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         return supportedFunctions;
     }
     
