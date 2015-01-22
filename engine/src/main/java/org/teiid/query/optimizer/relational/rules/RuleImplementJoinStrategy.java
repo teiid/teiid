@@ -144,7 +144,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	for (int i = 0; i < keyExpressions.size(); i++) {
             		Expression ses = keyExpressions.get(i);
             		if (!(ses instanceof ElementSymbol)) {
-						continue;
+            			toCriteria.add(i);
+            			continue;
 					}
             		Integer existing = indexMap.put(((ElementSymbol)ses).getMetadataID(), i);
             		if (existing != null) {
