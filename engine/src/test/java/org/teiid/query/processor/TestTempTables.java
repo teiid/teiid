@@ -473,7 +473,7 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("insert into x1 (e3, e2, e1) values (5, 2, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x1 (e3, e2, e1) values (5, 1, '2')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		//ensure predicates are preserved
-		execute("select x.e1 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2", new List[] {Arrays.asList("1"), Arrays.asList("2")}); //$NON-NLS-1$
+		execute("select x.e1, upper(x.e1),  x1.e2 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2", new List[0]); //$NON-NLS-1$
 		execute("select x.e1 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2 and x1.e3 = x.e3", new List[0]); //$NON-NLS-1$
 		//ensure there's no bad interaction with makedep
 		execute("select x.e1 from /*+ makedep */ x inner join  x1 on x.e1 = x1.e1 and x.e2 = x1.e2", new List[] {Arrays.asList("1")}); //$NON-NLS-1$
