@@ -23,41 +23,20 @@ package org.teiid.jboss.rest;
 
 import static org.objectweb.asm.Opcodes.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.io.*;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.*;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.jboss.IntegrationPlugin;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.*;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
 
 
@@ -138,14 +117,14 @@ public class RestASMBasedWebArchiveBuilder {
 		}
 		return orig;
 	}
-    
-    private static ArrayList<String> getPathParameters(String uri ) {
-        ArrayList<String> pathParams = new ArrayList<String>();
+
+    private static HashSet<String> getPathParameters(String uri ) {
+        HashSet<String> pathParams = new HashSet<String>();
         String param;
-        if (uri.contains("{")) { 
-            while (uri.indexOf("}") > -1) { 
-                int start = uri.indexOf("{"); 
-                int end = uri.indexOf("}"); 
+        if (uri.contains("{")) {
+            while (uri.indexOf("}") > -1) {
+                int start = uri.indexOf("{");
+                int end = uri.indexOf("}");
                 param = uri.substring(start + 1, end);
                 uri = uri.substring(end + 1);
                 pathParams.add(param);
@@ -262,11 +241,6 @@ public class RestASMBasedWebArchiveBuilder {
 			String charSet = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"CHARSET", false);
 			
 			if (uri != null && method != null) {
-				if (method.equalsIgnoreCase("GET")	&& getPathParameters(uri).size() != procedure.getParameters().size()) {
-					LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50091, procedure.getFullName()));
-					continue;
-				}				
-				
 				if (contentType == null) {
 					contentType = findContentType(procedure);
 				}
@@ -376,13 +350,18 @@ public class RestASMBasedWebArchiveBuilder {
     	}
     	
     	// post only accepts Form inputs, not path params
-    	String paramType = "Ljavax/ws/rs/PathParam;";
-    	if (method.toUpperCase().equals("POST")) {
-    		paramType = "Ljavax/ws/rs/FormParam;";
-    	}
-    	
+    	HashSet<String> pathParms = getPathParameters(uri);
     	for (int i = 0; i < paramsSize; i++)
     	{
+
+        String paramType = "Ljavax/ws/rs/FormParam;";
+        if (method.toUpperCase().equals("GET")) {
+            paramType = "Ljavax/ws/rs/QueryParam;";
+        }
+        if (pathParms.contains(params.get(i).getName())){
+            paramType = "Ljavax/ws/rs/PathParam;";
+        }
+
 		av0 = mv.visitParameterAnnotation(i, paramType, true);
 		av0.visit("value", params.get(i).getName());
 		av0.visitEnd();
