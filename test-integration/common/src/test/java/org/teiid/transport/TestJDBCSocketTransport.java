@@ -208,6 +208,7 @@ public class TestJDBCSocketTransport {
 	
 	@Test public void testGeneratedKeys() throws Exception {
 		Statement s = conn.createStatement();
+		s.execute("set showplan debug");
 		s.execute("create local temporary table x (y serial, z integer, primary key (y))");
 		assertFalse(s.execute("insert into x (z) values (1)", Statement.RETURN_GENERATED_KEYS));
 		ResultSet rs = s.getGeneratedKeys();
@@ -276,6 +277,7 @@ public class TestJDBCSocketTransport {
 	
 	@Test public void testProtocolException() throws Exception {
 		Statement s = conn.createStatement();
+		s.execute("set showplan debug");
 		try {
 			s.execute("select * from objecttable('teiid_context' columns teiid_row object 'teiid_row') as x");
 			fail();

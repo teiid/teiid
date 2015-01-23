@@ -699,6 +699,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             accumulateWarnings(resultsWarning);
         }
         
+        resultsMsg.processResults();
+        
         if (resultsMsg.isUpdateResult()) {
         	List<? extends List<?>> results = resultsMsg.getResultsList();
         	if (resultsMsg.getUpdateCount() == -1) { 

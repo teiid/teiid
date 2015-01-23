@@ -22,7 +22,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -959,15 +958,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					response.setDelayDeserialization(true);
 				}
 				dataBytes.addAndGet(bytes);
-			} catch (IOException e) {
-				TeiidComponentException tce = ExceptionUtil.getExceptionOfType(e, TeiidComponentException.class);
-				if (tce == null) {
-					throw new TeiidComponentException(e);
-				}
-				throw tce;
+				LogManager.logDetail(LogConstants.CTX_DQP, "Sending results for", requestID, "start row", //$NON-NLS-1$ //$NON-NLS-2$ 
+						response.getFirstRow(), "end row", response.getLastRow(), bytes, "bytes"); //$NON-NLS-1$ //$NON-NLS-2$
+			} catch (Exception e) {
+				//do nothing.  there is a low level serialization error that we will let happen
+				//later since it would be inconvenient here
 			}
-			LogManager.logDetail(LogConstants.CTX_DQP, "Sending results for", requestID, "start row", //$NON-NLS-1$ //$NON-NLS-2$ 
-					response.getFirstRow(), "end row", response.getLastRow(), bytes, "bytes"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		setAnalysisRecords(response);
         receiver.receiveResults(response);

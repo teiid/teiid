@@ -339,6 +339,9 @@ public class DQPCore implements DQP {
 				startActivePlan(work, true);
 			}
 		}
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_DQP, workItem.requestID, "Finished Processing");  //$NON-NLS-1$
+        }
     }
     
     public int getActivePlanCount() {
