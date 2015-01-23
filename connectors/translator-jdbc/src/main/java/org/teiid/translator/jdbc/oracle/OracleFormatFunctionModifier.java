@@ -31,8 +31,6 @@ import org.teiid.translator.jdbc.ParseFormatFunctionModifier;
 public class OracleFormatFunctionModifier extends
 		ParseFormatFunctionModifier {
 
-	public static final String ALL_TOKENS = "GyMdkHmsSEDFwWahKzZ"; //$NON-NLS-1$
-	
 	static final Pattern tokenPattern = Pattern.compile("(G+|y{1,4}|M{2,4}|DD|dd|E+|a+|HH|hh|mm|ss|S+|Z+|[\\- /,.;:]+|(?:'[^'\"]*')+|[^'\"a-zA-Z]+)"); //$NON-NLS-1$
 
 	public OracleFormatFunctionModifier(String prefix) {
@@ -58,6 +56,13 @@ public class OracleFormatFunctionModifier extends
 		while (m.find()) {
 			if (m.group().length() == 0) {
 				continue;
+			}
+			if (end == 0) {
+				if (m.start() != 0) {
+					throw new IllegalArgumentException();
+				}
+			} else if (m.start() != end) {
+				throw new IllegalArgumentException();
 			}
 			String group = m.group();
 			if (Character.isLetter(previous) && group.charAt(0) == previous) {
@@ -125,9 +130,6 @@ public class OracleFormatFunctionModifier extends
 		case ':':
 			return group;
 		default:
-			if (ALL_TOKENS.indexOf(group.charAt(0)) >= 0) {
-				throw new IllegalArgumentException();
-			}
 			return '"' + group + '"';
 		}
 	}
