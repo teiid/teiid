@@ -76,6 +76,8 @@ public class TestFormatFunctionModifier {
     	assertFalse(offm.supportsLiteral("x"));
     	assertFalse(offm.supportsLiteral("-ax"));
     	assertFalse(offm.supportsLiteral("k"));
+    	assertFalse(offm.supportsLiteral("F MMM-dd-yyyy G"));
+    	assertFalse(offm.supportsLiteral("MMM-dd-yyyy G u "));
     }
-
+    
 }
