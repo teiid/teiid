@@ -84,6 +84,7 @@
         <version.com.facebook.presto>0.89</version.com.facebook.presto>
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.jts>1.13</version.jts>
+        <version.jts2geojson>0.4.0</version.jts2geojson>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1447,7 +1448,17 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
                 <version>${version.com.fasterxml.jackson.core}</version>
+            </dependency>                        
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${version.com.fasterxml.jackson.core}</version>
             </dependency>            
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${version.com.fasterxml.jackson.core}</version>
+            </dependency>  
     	    <dependency>
         		<groupId>org.eclipse.persistence</groupId>
         		<artifactId>eclipselink</artifactId>
@@ -1482,6 +1493,11 @@
                 <groupId>com.vividsolutions</groupId>
                 <artifactId>jts</artifactId>
                 <version>${version.jts}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wololo</groupId>
+                <artifactId>jts2geojson</artifactId>
+                <version>${version.jts2geojson}</version>
             </dependency>
         </dependencies>
 	</dependencyManagement>

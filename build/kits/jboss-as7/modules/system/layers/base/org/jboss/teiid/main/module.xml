@@ -8,6 +8,7 @@
         <resource-root path="Saxon-HE-${version.net.sourceforge.saxon}.jar" />
         <resource-root path="nux-${version.nux}.jar" />
         <resource-root path="jts-${version.jts}.jar" />
+        <resource-root path="jts2geojson-${version.jts2geojson}.jar" />
         
         <resource-root path="deployments" />
     </resources>
@@ -44,7 +45,8 @@
         <module name="org.jboss.marshalling"/>
         <module name="org.jboss.marshalling.river"/> 
         <module name="org.jboss.as.ee"/>
-        <module name="org.jboss.metadata"/>       
+        <module name="org.jboss.metadata"/>   
+        <module name="com.fasterxml.jackson"/>     
         <!-- These dependencies here for ra.xml description -->
         <module name="org.jboss.as.connector"/>
         <module name="org.jboss.ironjacamar.api"/>

@@ -167,8 +167,12 @@ public class SourceSystemFunctions {
 
     public static final String ST_ASTEXT = "st_astext"; //$NON-NLS-1$
     public static final String ST_ASBINARY = "st_asbinary"; //$NON-NLS-1$
+    public static final String ST_ASGEOJSON = "st_asgeojson"; //$NON-NLS-1$
+    public static final String ST_ASGML = "st_asgml"; //$NON-NLS-1$
     public static final String ST_GEOMFROMTEXT = "st_geomfromtext"; //$NON-NLS-1$
     public static final String ST_GEOMFROMWKB = "st_geomfromwkb"; //$NON-NLS-1$
+    public static final String ST_GEOMFROMGEOJSON = "st_geomfromgeojson"; //$NON-NLS-1$
+    public static final String ST_GEOMFROMGML = "st_geomfromgml"; //$NON-NLS-1$
     public static final String ST_INTERSECTS = "st_intersects"; //$NON-NLS-1$
     public static final String ST_CONTAINS = "st_contains"; //$NON-NLS-1$
 	public static final String ST_CROSSES = "st_crosses"; //$NON-NLS-1$
