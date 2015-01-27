@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.XMLType;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
@@ -81,4 +82,86 @@ public class TestGeometry {
 		assertFalse(b);
 	}
 
+    @Test public void testAsGeoJson() throws Exception {        
+        assertEval(
+                "ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))",
+                "{\"coordinates\":[-48.23456,20.12345],\"type\":\"Point\"}"
+        );
+        assertEval(
+                "ST_AsGeoJson(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'))",
+                "{\"coordinates\":[[[40.0,0.0],[50.0,50.0],[0.0,50.0],[0.0,0.0],[40.0,0.0]]],\"type\":\"Polygon\"}"
+        );
+    }
+        
+    @Test public void testFromGeoJson() throws Exception {
+        assertEval(
+                "ST_AsText(ST_GeomFromGeoJSON('{\"coordinates\":[-48.23456,20.12345],\"type\":\"Point\"}'))",
+                "POINT (-48.23456 20.12345)"
+        );
+        assertEval(
+                "ST_AsText(ST_GeomFromGeoJSON('{\"coordinates\":[[[40.0,0.0],[50.0,50.0],[0.0,50.0],[0.0,0.0],[40.0,0.0]]],\"type\":\"Polygon\"}'))",
+                "POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))"
+        );
+    }
+        
+    @Test public void testAsGml() throws Exception {        
+        assertEval(
+                "ST_AsGML(ST_GeomFromText('POINT (-48.23456 20.12345)'))",
+                "<gml:Point>\n" +
+                "  <gml:coordinates>\n" +
+                "    -48.23456,20.12345 \n" +
+                "  </gml:coordinates>\n" +
+                "</gml:Point>\n"
+        );
+        assertEval(
+                "ST_AsGML(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'))",
+                "<gml:Polygon>\n" +
+                "  <gml:outerBoundaryIs>\n" +
+                "    <gml:LinearRing>\n" +
+                "      <gml:coordinates>\n" +
+                "        40.0,0.0 50.0,50.0 0.0,50.0 0.0,0.0 40.0,0.0 \n" +
+                "      </gml:coordinates>\n" +
+                "    </gml:LinearRing>\n" +
+                "  </gml:outerBoundaryIs>\n" +
+                "</gml:Polygon>\n"
+        );
+    }
+    
+    
+    @Test public void testFromGml() throws Exception {        
+        assertEval(
+                "ST_AsText(ST_GeomFromGML('" +
+                "<gml:Point>\n" +
+                "  <gml:coordinates>\n" +
+                "    -48.23456,20.12345 \n" +
+                "  </gml:coordinates>\n" +
+                "</gml:Point>'))",
+                "POINT (-48.23456 20.12345)"
+        );
+        assertEval("ST_AsText(ST_GeomFromGML('" +
+                "<gml:Polygon>\n" +
+                "  <gml:outerBoundaryIs>\n" +
+                "    <gml:LinearRing>\n" +
+                "      <gml:coordinates>\n" +
+                "        40.0,0.0 50.0,50.0 0.0,50.0 0.0,0.0 40.0,0.0 \n" +
+                "      </gml:coordinates>\n" +
+                "    </gml:LinearRing>\n" +
+                "  </gml:outerBoundaryIs>\n" +
+                "</gml:Polygon>'))",
+                "POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))"
+        );
+    }
+    
+    private void assertEval(String expr, String result) 
+            throws Exception {
+        Expression ex = TestFunctionResolving.getExpression(expr);        
+        Object val = Evaluator.evaluate(ex);
+        String valStr = null;
+        if (val instanceof Clob) {
+            valStr = ClobType.getString((Clob) val);
+        } else if (val instanceof XMLType) {            
+            valStr = ((XMLType) val).getString();
+        }
+        assertEquals(result, valStr);
+    }
 }

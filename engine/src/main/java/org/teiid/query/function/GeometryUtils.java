@@ -22,6 +22,8 @@
 
 package org.teiid.query.function;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -34,19 +36,29 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.InputStreamInStream;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBReader;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
+import com.vividsolutions.jts.io.gml2.GMLReader;
+import com.vividsolutions.jts.io.gml2.GMLWriter;
+import javax.xml.parsers.ParserConfigurationException;
+import org.wololo.geojson.GeoJSON;
+import org.wololo.jts2geojson.GeoJSONReader;
+import org.wololo.jts2geojson.GeoJSONWriter;
+import org.xml.sax.SAXException;
 
 /**
  * Utility methods for geometry
  * TODO: determine if we should use buffermanager to minimize memory footprint
+ * TODO: Split into GeometryFilterUtils and GeometryConvertUtils. - Tom
  */
 public class GeometryUtils {
 	
-    public static ClobType geometryToClob(GeometryType geometry) throws FunctionExecutionException {
+    public static ClobType geometryToClob(GeometryType geometry) 
+            throws FunctionExecutionException {
         Geometry jtsGeometry = getGeometry(geometry);
         return new ClobType(new ClobImpl(jtsGeometry.toText()));
     }
@@ -56,15 +68,14 @@ public class GeometryUtils {
         return geometryFromClob(wkt, GeometryType.UNKNOWN_SRID);
     }
 
-    public static GeometryType geometryFromClob(ClobType wkt, int srid) throws FunctionExecutionException {
+    public static GeometryType geometryFromClob(ClobType wkt, int srid) 
+            throws FunctionExecutionException {
     	Reader r = null;
         try {
             WKTReader reader = new WKTReader();
-            WKBWriter writer = new WKBWriter();
             r = wkt.getCharacterStream();
             Geometry jtsGeometry = reader.read(r);
-            byte[] bytes = writer.write(jtsGeometry);
-            return new GeometryType(bytes, srid);
+            return getGeometryType(jtsGeometry, srid);
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
         } catch (SQLException e) {
@@ -78,7 +89,80 @@ public class GeometryUtils {
         	}
         }
     }
-
+    
+    public static ClobType geometryToGeoJson(GeometryType geometry) 
+            throws FunctionExecutionException {        
+        Geometry jtsGeometry = getGeometry(geometry);
+        GeoJSONWriter writer = new GeoJSONWriter();
+        try {
+            GeoJSON geoJson = writer.write(jtsGeometry);
+            return new ClobType(new ClobImpl(geoJson.toString()));
+        } catch (Exception e) {
+            throw new FunctionExecutionException(e);
+        }
+    }
+    
+    public static GeometryType geometryFromGeoJson(ClobType json) 
+            throws FunctionExecutionException {
+        return geometryFromGeoJson(json, GeometryType.UNKNOWN_SRID);
+    }
+    
+    public static GeometryType geometryFromGeoJson(ClobType json, int srid) 
+            throws FunctionExecutionException {
+        try {
+            GeoJSONReader reader = new GeoJSONReader();
+            String jsonText = ClobType.getString(json);
+            Geometry jtsGeometry = reader.read(jsonText);
+            return getGeometryType(jtsGeometry);
+        } catch (SQLException e) {
+            throw new FunctionExecutionException(e);            
+        } catch (IOException e) {
+            throw new FunctionExecutionException(e);            
+        }
+    }    
+    
+    public static ClobType geometryToGml(GeometryType geometry) 
+            throws FunctionExecutionException {        
+        Geometry jtsGeometry = getGeometry(geometry);
+        GMLWriter writer = new GMLWriter();
+        String gmlText = writer.write(jtsGeometry);
+        return new ClobType(new ClobImpl(gmlText));
+    }
+        
+    public static GeometryType geometryFromGml(ClobType gml) 
+            throws FunctionExecutionException {
+        return geometryFromGml(gml, GeometryType.UNKNOWN_SRID);
+    }
+    
+    public static GeometryType geometryFromGml(ClobType gml, int srid) 
+            throws FunctionExecutionException {
+        GMLReader reader = new GMLReader();
+        GeometryFactory gf = new GeometryFactory();
+        Geometry jtsGeometry = null;
+        Reader r = null;
+        try {
+            r = gml.getCharacterStream();
+            jtsGeometry = reader.read(r, gf);
+        } catch (IOException e) {
+            throw new FunctionExecutionException(e);
+        } catch (ParserConfigurationException e) {            
+            throw new FunctionExecutionException(e);
+        } catch (SAXException e) {
+            throw new FunctionExecutionException(e);
+        } catch (SQLException e) {
+            throw new FunctionExecutionException(e);
+        } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (Exception e) {
+                    // Nothing
+                }
+            }
+        }
+        return getGeometryType(jtsGeometry, srid);
+    }
+    
     public static GeometryType geometryFromBlob(BlobType wkb)
             throws FunctionExecutionException {
         return geometryFromBlob(wkb, GeometryType.UNKNOWN_SRID);
@@ -93,7 +177,7 @@ public class GeometryUtils {
         getGeometry(gt);
         return gt;
     }
-
+    
 	public static Boolean intersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
@@ -136,12 +220,23 @@ public class GeometryUtils {
         return g1.overlaps(g2);
 	}
 	
-    static Geometry getGeometry(GeometryType geom)
+    public static GeometryType getGeometryType(Geometry jtsGeom) {
+        return getGeometryType(jtsGeom, jtsGeom.getSRID());       
+    }
+    
+    public static GeometryType getGeometryType(Geometry jtsGeom, int srid) {
+        WKBWriter writer = new WKBWriter();
+        byte[] bytes = writer.write(jtsGeom);
+        return new GeometryType(bytes, srid);        
+    }
+    
+    public static Geometry getGeometry(GeometryType geom)
             throws FunctionExecutionException {
         return getGeometry(geom, geom.getSrid());
     }
 
-	static Geometry getGeometry(GeometryType geom, int srid) throws FunctionExecutionException {
+	public static Geometry getGeometry(GeometryType geom, int srid) 
+            throws FunctionExecutionException {
 		InputStream is1 = null;
         try {
             WKBReader reader = new WKBReader();

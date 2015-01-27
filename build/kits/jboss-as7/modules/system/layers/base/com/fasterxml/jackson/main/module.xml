@@ -2,5 +2,7 @@
 <module xmlns="urn:jboss:module:1.0" name="com.fasterxml.jackson">
     <resources>
         <resource-root path="jackson-core-${version.com.fasterxml.jackson.core}.jar" />
+        <resource-root path="jackson-databind-${version.com.fasterxml.jackson.core}.jar" />
+        <resource-root path="jackson-annotations-${version.com.fasterxml.jackson.core}.jar" />
     </resources>
 </module>
