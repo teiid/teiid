@@ -66,7 +66,7 @@ public final class RulePlaceAccess implements
                                   OptimizerRule {
 
     public static final String CONFORMED_SOURCES = AbstractMetadataRecord.RELATIONAL_URI + "conformed-sources"; //$NON-NLS-1$
-	private static final String RECONTEXT_STRING = "__"; //$NON-NLS-1$
+	public static final String RECONTEXT_STRING = "__"; //$NON-NLS-1$
 
     public PlanNode execute(PlanNode plan,
                             QueryMetadataInterface metadata,
@@ -281,11 +281,11 @@ public final class RulePlaceAccess implements
      * Creates a uniquely named group symbol given the old symbol
      * 
      * @param oldSymbol
-     * @param allUpperNames a set of all known groups in upper case
+     * @param names a case insensitive set of all known groups
      * @return
      */
     public static GroupSymbol recontextSymbol(GroupSymbol oldSymbol,
-                                              Set<String> allUpperNames) {
+                                              Set<String> names) {
         // Create new unique name
         String oldName = oldSymbol.getName();
         int dotIndex = oldName.lastIndexOf("."); //$NON-NLS-1$
@@ -309,7 +309,7 @@ public final class RulePlaceAccess implements
         String newName = null;
         do {
             newName = oldName + RECONTEXT_STRING + recontextNumber++;
-        } while (!allUpperNames.add(newName.toUpperCase()));
+        } while (!names.add(newName));
 
         // Determine the definition
         String newDefinition = null;

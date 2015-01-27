@@ -2594,7 +2594,7 @@ public class TestProcessor {
     } 
 
     @Test public void testCorrelatedSubquery_defect10021() {
-        String sql = "Select e1, e2 from table1 X where e4 in (select max(Y.e4) FROM table1 Y WHERE X.e4 = Y.e4)"; //$NON-NLS-1$
+        String sql = "Select e1, e2 from table1 X where e4 in /*+ no_unnest */ (select max(Y.e4) FROM table1 Y WHERE X.e4 = Y.e4)"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[] {
@@ -7776,6 +7776,21 @@ public class TestProcessor {
         sampleData1(fdm);
         helpProcess(plan, fdm, new List[] {Arrays.asList(6)});
     }
+    
+    @Test public void testRenaming() {
+        String sql = "Select (select e4 from pm1.g1 X__1), pm1.g1.e2 from pm1.g1, /*+ makeind */ (select e1 from pm2.g1) AS X__1, (select distinct e2, e3 from pm3.g1) X__2 where pm1.g1.e3 = X__1.e1 and pm1.g1.e2 = year(X__2.e3)"; //$NON-NLS-1$
+
+        // Create expected results
+        List[] expected = new List[] {
+        };
+
+        HardcodedDataManager hdm = new HardcodedDataManager(false);
+        // Plan query
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()));
+
+        // Run query
+        helpProcess(plan, hdm, expected);
+    } 
     
     private static final boolean DEBUG = false;
 }

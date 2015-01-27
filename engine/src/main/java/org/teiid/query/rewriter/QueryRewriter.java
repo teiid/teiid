@@ -477,7 +477,7 @@ public class QueryRewriter {
 		List<Criteria> current = Criteria.separateCriteriaByAnd(query.getCriteria());
 		query.setCriteria(null);
 		List<GroupSymbol> groups = query.getFrom().getGroups();
-		HashSet<String> names = new HashSet<String>();
+		TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		for (GroupSymbol gs : groups) {
 			names.add(gs.getName());
 		}

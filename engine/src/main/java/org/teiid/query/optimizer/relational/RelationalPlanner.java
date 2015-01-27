@@ -1245,6 +1245,9 @@ public class RelationalPlanner {
             } else if (this.sourceHint != null) {
             	node.setProperty(Info.SOURCE_HINT, this.sourceHint);
             }
+            if (group.getName().contains(RulePlaceAccess.RECONTEXT_STRING)) {
+            	this.context.getGroups().add(group.getName());
+            }
             parent.addLastChild(node);
         } else if(clause instanceof JoinPredicate) {
             JoinPredicate jp = (JoinPredicate) clause;
@@ -1300,9 +1303,15 @@ public class RelationalPlanner {
 			}
             hints.hasVirtualGroups = true;
             parent.addLastChild(node);
+            if (group.getName().contains(RulePlaceAccess.RECONTEXT_STRING)) {
+            	this.context.getGroups().add(group.getName());
+            }
         } else if (clause instanceof TableFunctionReference) {
         	TableFunctionReference tt = (TableFunctionReference)clause;
             GroupSymbol group = tt.getGroupSymbol();
+            if (group.getName().contains(RulePlaceAccess.RECONTEXT_STRING)) {
+            	this.context.getGroups().add(group.getName());
+            }
             //special handling to convert array table into a mergable construct
             if (parent.getType() == NodeConstants.Types.JOIN && tt instanceof ArrayTable) {
             	JoinType jt = (JoinType) parent.getProperty(Info.JOIN_TYPE);
