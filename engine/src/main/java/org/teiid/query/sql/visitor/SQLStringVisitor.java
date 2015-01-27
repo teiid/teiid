@@ -1824,14 +1824,21 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(operator);
         append(SPACE);
         append(quantifier);
-        append("("); //$NON-NLS-1$
+        addSubqueryHint(obj.getSubqueryHint());
+        append(" ("); //$NON-NLS-1$
         visitNode(obj.getCommand());
         append(")"); //$NON-NLS-1$
     }
 
     @Override
     public void visit( ScalarSubquery obj ) {
-        // operator and beginning of list
+    	if (obj.getSubqueryHint().isDepJoin() || obj.getSubqueryHint().isMergeJoin() || obj.getSubqueryHint().isNoUnnest()) {
+	    	if (this.parts.charAt(this.parts.length()-1) == ' ') {
+	    		this.parts.setLength(this.parts.length() -1);
+	    	}
+	    	addSubqueryHint(obj.getSubqueryHint());
+	    	append(SPACE); 
+    	}
         append("("); //$NON-NLS-1$
         visitNode(obj.getCommand());
         append(")"); //$NON-NLS-1$

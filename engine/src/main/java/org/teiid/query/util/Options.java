@@ -40,7 +40,7 @@ public class Options {
 	public static final String DEFAULT_NULL_ORDER = "org.teiid.defaultNullOrder"; //$NON-NLS-1$
 
 	private Properties properties;
-	private boolean subqueryUnnestDefault;
+	private boolean subqueryUnnestDefault = true;
 	private boolean pushdownDefaultNullOrder;
 	private boolean implicitMultiSourceJoin = true;
 	private int joinPrefetchBatches = 10;

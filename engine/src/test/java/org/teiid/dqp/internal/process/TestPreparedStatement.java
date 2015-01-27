@@ -426,7 +426,7 @@ public class TestPreparedStatement {
     }
     
     @Test public void testWithSubqueryPushdown() throws Exception {
-    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
+    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN /*+ no_unnest */ (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
                 
         List<?>[] expected = new List<?>[] { 
             Arrays.asList("a"),
@@ -445,7 +445,7 @@ public class TestPreparedStatement {
     }
     
     @Test public void testInherentlyUpdatableViewCompensation() throws Exception {
-    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
+    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN /*+ no_unnest */ (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] { 
             Arrays.asList("a"),

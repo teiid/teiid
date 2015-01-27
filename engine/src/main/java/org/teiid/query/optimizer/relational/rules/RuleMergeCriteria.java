@@ -354,35 +354,33 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			if (ssc.getSubqueryHint().isNoUnnest()) {
 				return result;
 			}
-			result.not ^= ssc.isNegated();
-			result.type = crit.getClass();
-			result.mergeJoin = ssc.getSubqueryHint().isMergeJoin();
-			result.makeInd = ssc.getSubqueryHint().isDepJoin();
-			if (!unnest && !result.mergeJoin) {
-				return result;
-			}
+			result.not = ssc.isNegated();
+			result.type = ssc.getClass();
 			crit = new SubqueryCompareCriteria(ssc.getExpression(), ssc.getCommand(), SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
+			((SubqueryCompareCriteria)crit).setSubqueryHint(ssc.getSubqueryHint());
 		} else if (crit instanceof CompareCriteria) {
-			if (!unnest) {
-				return result;
-			}
-			//convert to the quantified form
 			CompareCriteria cc = (CompareCriteria)crit;
 			if (cc.getRightExpression() instanceof ScalarSubquery) {
 				ScalarSubquery ss = (ScalarSubquery)cc.getRightExpression();
+				if (ss.getSubqueryHint().isNoUnnest()) {
+					return result;
+				}
 				result.type = ss.getClass();
 				//we can only use a semi-join if we know that 1 row will be present
 				if (ss.getCommand() instanceof Query) {
 					Query query = (Query)ss.getCommand();
 					if (query.getGroupBy() == null && query.hasAggregates()) {
 						crit = new SubqueryCompareCriteria(cc.getLeftExpression(), ss.getCommand(), cc.getOperator(), SubqueryCompareCriteria.SOME);
+						((SubqueryCompareCriteria)crit).setSubqueryHint(ss.getSubqueryHint());
 					}
 				}
 			}
 		}
 		if (crit instanceof SubqueryCompareCriteria) {
 			SubqueryCompareCriteria scc = (SubqueryCompareCriteria)crit;
-			
+			if (scc.getSubqueryHint().isNoUnnest()) {
+				return result;
+			}
 			if (scc.getPredicateQuantifier() != SubqueryCompareCriteria.SOME
 					//TODO: could add an inline view if not a query
 					|| !(scc.getCommand() instanceof Query)) {
@@ -395,9 +393,14 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			if (result.not && !isNonNull(query, rightExpr)) {
 				return result;
 			}
+			if (!unnest && !result.mergeJoin) {
+				return result;
+			}
 			if (result.type == null) {
 				result.type = scc.getClass();
 			}
+			result.mergeJoin = scc.getSubqueryHint().isMergeJoin();
+			result.makeInd = scc.getSubqueryHint().isDepJoin();
 			result.query = query;
 			result.additionalCritieria = (Criteria)new CompareCriteria(scc.getLeftExpression(), scc.getOperator(), rightExpr).clone();
 		}

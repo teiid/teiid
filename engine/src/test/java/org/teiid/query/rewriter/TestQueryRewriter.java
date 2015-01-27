@@ -173,7 +173,7 @@ public class TestQueryRewriter {
     }
     
     public static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata) throws TeiidException { 
-        return helpTestRewriteCommand(original, expected, metadata, null);
+        return helpTestRewriteCommand(original, expected, metadata, new CommandContext());
     }
     
     public static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata, CommandContext cc) throws TeiidException {

@@ -84,7 +84,7 @@ public class TestAccessPatterns {
     } 
     
     @Test public void testAccessPattern6() {
-        String sql = "SELECT e0, e2 FROM test.group where e1 IN (SELECT e2 FROM vTest.vGroup where e0=1 and e1='2')"; //$NON-NLS-1$
+        String sql = "SELECT e0, e2 FROM test.group where e1 IN /*+ no_unnest */ (SELECT e2 FROM vTest.vGroup where e0=1 and e1='2')"; //$NON-NLS-1$
         TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), new String[] {"SELECT e1, e0, e2 FROM test.\"group\""}); //$NON-NLS-1$
     }   
     

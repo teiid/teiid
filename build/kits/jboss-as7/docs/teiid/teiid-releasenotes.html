@@ -48,12 +48,13 @@
   <li>TEIID-2527 The admin method assignToModel has been deprecated.  See the updateSource, addSource, and removeSource methods instead.
   <li>TEIID-2904 The createMetadataProcessor method on JDBCExcutionFactory has been deprecated. Use getMetadataProcessor instead.</li>
   <li>TEIID-3159 The SAP Netweaver Gateway translator (sap-nw-gateway) has been renamed to just SAP Gateway (sap-gateway).  Usage of sap-nw-gateway is deprecated.</li>
-  <li>TEIID-3282 Changed the WEEK function to compute the ISO 8601 by default (org.teiid.iso8601Week=true) and ensured pushdowns do the same.  Changed the dayOfWeek function to be unaffected by the iso8601Week setting. 
 </ul>
 
 <h4>from 8.9</h4>
 <ul>
    <li>TEIID-3210 Added supportsCompareCriteriaOrderedExclusive, which defaults to supportsCompareCriteriaOrdered, to specifically support &lt; and &gt; pushdown.</li> 
+   <li>TEIID-3282 Changed the WEEK function to compute the ISO 8601 by default (org.teiid.iso8601Week=true) and ensured pushdowns do the same.  Changed the dayOfWeek function to be unaffected by the iso8601Week setting.
+   <li>TEIID-3295 Changed the system property org.teiid.subqueryUnnestDefault to true by default to further optimize subqueries in more situations.  You can set this system property to false or use the /*+ NO_UNNEST */ hint to prevent subquery unnesting. 
 </ul>
 
 <h4>from 8.6</h4>

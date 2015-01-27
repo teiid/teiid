@@ -24,7 +24,9 @@ package org.teiid.query.sql.symbol;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -47,6 +49,8 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
     private int hashCode;
     private String id = "$sc/id" + ID.getAndIncrement(); //$NON-NLS-1$
     private boolean shouldEvaluate;
+    
+    private SubqueryHint subqueryHint = new SubqueryHint();
 
     /**
      * Default constructor
@@ -124,7 +128,8 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
         }
         ScalarSubquery other = (ScalarSubquery) obj;
 
-        return other.getCommand().equals(this.getCommand());
+        return other.getCommand().equals(this.getCommand()) &&
+        		EquivalenceUtil.areEqual(this.subqueryHint, other.subqueryHint);
     }
 
     /**
@@ -148,6 +153,9 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
         //Don't invoke the lazy-loading getType()
         clone.setType(this.type);
         clone.shouldEvaluate = this.shouldEvaluate;
+        if (this.subqueryHint != null) {
+        	clone.subqueryHint = subqueryHint.clone();
+        }
         return clone;
     }
 
@@ -158,5 +166,13 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
+    
+    public SubqueryHint getSubqueryHint() {
+		return subqueryHint;
+	}
+    
+    public void setSubqueryHint(SubqueryHint subqueryHint) {
+		this.subqueryHint = subqueryHint;
+	}
 
 }

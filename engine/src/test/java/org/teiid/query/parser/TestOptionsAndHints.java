@@ -1062,6 +1062,16 @@ public class TestOptionsAndHints {
         assertEquals("SELECT a FROM /*+ NO_UNNEST */ (SELECT a FROM db.g WHERE a2 = 5) AS x", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
     }
     
+    @Test public void testNoUnnest1() throws QueryParserException {
+        String sql = "SELECT a FROM db.g WHERE a2 = all /*+ no_unnest */ (select a from db.g)"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM db.g WHERE a2 = ALL /*+ NO_UNNEST */ (SELECT a FROM db.g)", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
+    }
+    
+    @Test public void testNoUnnest2() throws QueryParserException {
+        String sql = "SELECT a FROM db.g WHERE a2 = /*+ no_unnest */ (select a from db.g)"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM db.g WHERE a2 = /*+ NO_UNNEST */ (SELECT a FROM db.g)", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
+    }
+    
     @Test public void testNonStrictLimit() throws QueryParserException {
         String sql = "SELECT a FROM x /*+ non_strict */ limit 1"; //$NON-NLS-1$
         assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$

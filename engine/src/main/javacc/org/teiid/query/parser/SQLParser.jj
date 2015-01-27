@@ -3245,7 +3245,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
     QueryCommand subquery = null;
     Token operator = null;
     Token quantifier = null;
-    
+    ExistsCriteria.SubqueryHint hint = null;
 }
 {
 	operator=operator()
@@ -3253,6 +3253,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
 	  quantifier=<SOME> |
 	  quantifier=<ALL>
 	)
+	{ hint = getSubqueryHint(getToken(1)); }
 	subquery = subquery(info)
 
 	{
@@ -3271,7 +3272,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
 		} else if(quantifier.image.equalsIgnoreCase("all")) { //$NON-NLS-1$
 			subqueryCrit.setPredicateQuantifier(SubqueryCompareCriteria.ALL);
 		} 
-
+        subqueryCrit.setSubqueryHint(hint);
 	    return subqueryCrit;
    	}
 }
@@ -3996,6 +3997,7 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 	Expression expression = null;
 	Token symbol = null;
 	QueryCommand subquery = null;
+	ExistsCriteria.SubqueryHint hint = null;
 }
 {
     (
@@ -4019,7 +4021,11 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 			} | symbol=nonReserved()) {expression = new ElementSymbol(normalizeId(symbol.image));} 
 		)
 		|
-		LOOKAHEAD(subquery(info)) subquery = subquery(info) {expression = new ScalarSubquery(subquery);}
+		LOOKAHEAD(subquery(info)) ({ hint = getSubqueryHint(getToken(1)); } subquery = subquery(info) {
+		   ScalarSubquery ss = new ScalarSubquery(subquery);
+		   ss.setSubqueryHint(hint);
+		   expression = ss;
+		})
 		|
 		expression = nestedExpression(info)
 		|

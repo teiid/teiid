@@ -67,11 +67,13 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
@@ -1301,18 +1303,40 @@ public class QueryRewriter {
     		if (criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL && criteria.getOperator() != CompareCriteria.EQ && criteria.getOperator() != CompareCriteria.NE) {
 	    		CompareCriteria cc = new CompareCriteria();
 	    		cc.setLeftExpression(criteria.getLeftExpression());
-	    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
-	    		Expression ses = q.getProjectedSymbols().get(0);
-	    		Expression expr = SymbolMap.getExpression(ses);
-	    		q.getSelect().clearSymbols();
+	    		boolean useView = true;
+	    		if (criteria.getCommand() instanceof Query) {
+	    			Query query = (Query)criteria.getCommand();
+	    			if (!query.hasAggregates() && query.getCriteria() != null && query.getOrderBy() == null) {
+	    				final boolean[] hasWindowFunctions = new boolean[1];
+	    				PreOrPostOrderNavigator.doVisit(query.getSelect(), new LanguageVisitor() {
+	    					public void visit(WindowFunction windowFunction) {
+	    						hasWindowFunctions[0] = true;
+	    					};
+						}, PreOrPostOrderNavigator.PRE_ORDER);
+	    				useView = hasWindowFunctions[0];
+	    			}
+	    		}
 	    		AggregateSymbol.Type type = Type.MAX;
 	    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
 	    			type = Type.MIN;
 	    		}
-	    		q.getSelect().addSymbol(new AggregateSymbol(type.name(), false, expr));
-	    		cc.setRightExpression(new ScalarSubquery(q));
-				cc.setOperator(criteria.getOperator());
-	    		return rewriteCriteria(cc);
+	    		if (useView) {
+		    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
+		    		Expression ses = q.getProjectedSymbols().get(0);
+		    		Expression expr = SymbolMap.getExpression(ses);
+		    		q.getSelect().clearSymbols();
+		    		q.getSelect().addSymbol(new AggregateSymbol(type.name(), false, expr));
+		    		ScalarSubquery ss = new ScalarSubquery(q);
+		    		ss.setSubqueryHint(criteria.getSubqueryHint());
+		    		cc.setRightExpression(ss);
+					cc.setOperator(criteria.getOperator());
+		    		return rewriteCriteria(cc);
+	    		}
+	    		Select select = ((Query)criteria.getCommand()).getSelect();
+	    		Expression ex = select.getProjectedSymbols().get(0);
+	    		ex = SymbolMap.getExpression(ex);
+	    		select.setSymbols(Arrays.asList(new AggregateSymbol(type.name(), false, ex)));
+	    		select.setDistinct(false);
     		}
     	}
 

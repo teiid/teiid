@@ -75,24 +75,24 @@ public class TestConformedTables {
 	}
 	
 	@Test public void testConformedSubquery() throws Exception {
-		String sql = "select pm2.g2.e1 from pm2.g2 where e1 in (select e1 from pm1.g1)";
+		String sql = "select pm2.g2.e1 from pm2.g2 where e1 in /*+ no_unnest */ (select e1 from pm1.g1)";
 		
 		BasicSourceCapabilities bsc = getTypicalCapabilities();
 		bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
 		
-		helpPlan(sql, tm, new String[] {"SELECT g_0.e1 FROM pm2.g2 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM pm1.g1 AS g_1)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+		helpPlan(sql, tm, new String[] {"SELECT g_0.e1 FROM pm2.g2 AS g_0 WHERE g_0.e1 IN /*+ NO_UNNEST */ (SELECT g_1.e1 FROM pm1.g1 AS g_1)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 		
 		//TODO: it should work either way, but for now we expect the subquery to conform to the parent
 		sql = "select pm1.g1.e1 from pm1.g1 where e2 in (select e2 from pm2.g2)";
 	}
 	
 	@Test public void testConformedSubquery1() throws Exception {
-		String sql = "select pm2.g3.e1 from pm2.g3 where e1 in (select e1 from pm1.g1)";
+		String sql = "select pm2.g3.e1 from pm2.g3 where e1 in /*+ no_unnest */ (select e1 from pm1.g1)";
 		
 		BasicSourceCapabilities bsc = getTypicalCapabilities();
 		bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
 		
-		helpPlan(sql, tm, new String[] {"SELECT g_0.e1 FROM pm2.g3 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM pm1.g1 AS g_1)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+		helpPlan(sql, tm, new String[] {"SELECT g_0.e1 FROM pm2.g3 AS g_0 WHERE g_0.e1 IN /*+ NO_UNNEST */ (SELECT g_1.e1 FROM pm1.g1 AS g_1)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 }
