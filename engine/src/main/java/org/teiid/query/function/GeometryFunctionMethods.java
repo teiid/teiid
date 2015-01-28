@@ -53,6 +53,7 @@ public class GeometryFunctionMethods {
     
     @TeiidFunction(name=SourceSystemFunctions.ST_ASGEOJSON,
                    category=FunctionCategoryConstants.GEOMETRY,
+        		   pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
     public static ClobType asGeoJson(GeometryType geometry) 
             throws FunctionExecutionException {
@@ -61,12 +62,12 @@ public class GeometryFunctionMethods {
     
     @TeiidFunction(name=SourceSystemFunctions.ST_ASGML,
                    category=FunctionCategoryConstants.GEOMETRY,
+        		   pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
     public static ClobType asGml(GeometryType geometry) 
             throws FunctionExecutionException {
         return GeometryUtils.geometryToGml(geometry);
     }
-        
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,
                    category=FunctionCategoryConstants.GEOMETRY,
@@ -114,13 +115,14 @@ public class GeometryFunctionMethods {
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGEOJSON,
                    category=FunctionCategoryConstants.GEOMETRY,
+        		   pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
     public static GeometryType geomFromGeoJson(ClobType clob, int srid) 
             throws FunctionExecutionException {
         return GeometryUtils.geometryFromGeoJson(clob, srid);
     }
     
-        @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGML,
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGML,
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true)
     public static GeometryType geomFromGml(ClobType gml) 
@@ -130,12 +132,13 @@ public class GeometryFunctionMethods {
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGML,
                    category=FunctionCategoryConstants.GEOMETRY,
+        		   pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
     public static GeometryType geomFromGml(ClobType gml, int srid) 
             throws FunctionExecutionException {
         return GeometryUtils.geometryFromGml(gml, srid);
     }
-
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_INTERSECTS,
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true,

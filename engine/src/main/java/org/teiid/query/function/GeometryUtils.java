@@ -22,18 +22,23 @@
 
 package org.teiid.query.function;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.SQLException;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.types.GeometryType;
+import org.wololo.geojson.GeoJSON;
+import org.wololo.jts2geojson.GeoJSONReader;
+import org.wololo.jts2geojson.GeoJSONWriter;
+import org.xml.sax.SAXException;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -44,11 +49,6 @@ import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.gml2.GMLReader;
 import com.vividsolutions.jts.io.gml2.GMLWriter;
-import javax.xml.parsers.ParserConfigurationException;
-import org.wololo.geojson.GeoJSON;
-import org.wololo.jts2geojson.GeoJSONReader;
-import org.wololo.jts2geojson.GeoJSONWriter;
-import org.xml.sax.SAXException;
 
 /**
  * Utility methods for geometry
@@ -96,7 +96,9 @@ public class GeometryUtils {
         GeoJSONWriter writer = new GeoJSONWriter();
         try {
             GeoJSON geoJson = writer.write(jtsGeometry);
-            return new ClobType(new ClobImpl(geoJson.toString()));
+            ClobType result = new ClobType(new ClobImpl(geoJson.toString()));
+            result.setType(Type.JSON);
+            return result;
         } catch (Exception e) {
             throw new FunctionExecutionException(e);
         }
@@ -113,7 +115,7 @@ public class GeometryUtils {
             GeoJSONReader reader = new GeoJSONReader();
             String jsonText = ClobType.getString(json);
             Geometry jtsGeometry = reader.read(jsonText);
-            return getGeometryType(jtsGeometry);
+            return getGeometryType(jtsGeometry, srid);
         } catch (SQLException e) {
             throw new FunctionExecutionException(e);            
         } catch (IOException e) {

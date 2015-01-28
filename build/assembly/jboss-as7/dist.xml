@@ -181,6 +181,7 @@
                         <exclude>org.jboss:staxmapper</exclude>
                         <exclude>io.netty:netty</exclude>
                         <exclude>org.apache.olingo:*</exclude>
+                        <exclude>com.fasterxml.jackson.core:*</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
@@ -191,6 +192,15 @@
                         <include>org.apache.olingo:*</include>
                     </includes>
                     <outputDirectory>modules/system/layers/base/org/apache/olingo</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <includes>
+                         <include>com.fasterxml.jackson.core:jackson-databind</include>
+                         <include>com.fasterxml.jackson.core:jackson-annotations</include>
+                         <include>com.fasterxml.jackson.core:jackson-core</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/main</outputDirectory>
                 </dependencySet>
             </dependencySets>
             <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>
