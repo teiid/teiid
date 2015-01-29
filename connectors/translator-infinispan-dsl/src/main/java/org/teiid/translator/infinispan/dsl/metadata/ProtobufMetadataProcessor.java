@@ -339,7 +339,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		      case DOUBLE:      return Double.class    ; 
 		      case BOOLEAN:     return Boolean.class   ; 
 		      case STRING:      return String.class    ; 
-		      case BYTE_STRING: return String.class    ; 
+		      case BYTE_STRING: return Byte.class    ; 
 		      case ENUM:  		return String.class 	;
 		      case MESSAGE:  	return String.class 	;
 		      default:
