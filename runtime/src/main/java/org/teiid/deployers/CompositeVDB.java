@@ -220,15 +220,15 @@ public class CompositeVDB {
 		}
 		
 		LinkedHashMap<String, VDBResources.Resource> mergedvisibilityMap = new LinkedHashMap<String, VDBResources.Resource>();
-		if (this.visibilityMap != null) {
-			mergedvisibilityMap.putAll(this.visibilityMap);
-		}
 		for (CompositeVDB child:this.children.values()) {
 			LinkedHashMap<String, VDBResources.Resource> vm = child.getVisibilityMap();
 			if ( vm != null) {
 				mergedvisibilityMap.putAll(vm);
 			}
-		}		
+		}	
+		if (this.visibilityMap != null) {
+			mergedvisibilityMap.putAll(this.visibilityMap);
+		}
 		return mergedvisibilityMap;
 	}
 	
