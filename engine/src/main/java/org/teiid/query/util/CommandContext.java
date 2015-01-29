@@ -22,8 +22,11 @@
 
 package org.teiid.query.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -42,6 +45,8 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
@@ -1044,6 +1049,20 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 				throw new TeiidSQLException();
 			}
 		};
+	}
+	
+	/**
+	 * Used by the system table logic
+	 * @return
+	 */
+	public Clob getSpatialSysRef() {
+		return new ClobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return getClass().getClassLoader().getResourceAsStream("org/teiid/metadata/spatial_ref_sys.csv"); //$NON-NLS-1$
+			}
+		}, -1);
 	}
 	
 }

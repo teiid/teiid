@@ -227,3 +227,13 @@ CREATE FOREIGN TABLE VirtualDatabases (
 
 CREATE FOREIGN PROCEDURE getXMLSchemas(IN document string NOT NULL) RETURNS TABLE (schema xml)
 OPTIONS (UPDATECOUNT 0)
+
+CREATE VIEW spatial_sys_ref (
+    srid integer primary key,
+    auth_name string(256),
+    auth_srid integer,
+    srtext string(2048),
+    proj4text string(2048))
+    OPTIONS (MATERIALIZED true)
+AS select t.* from objecttable('teiid_context' COLUMNS x clob 'teiid_row.spatialSysRef') o
+, texttable(o.x columns srid integer, auth_name string, auth_srid integer, srtext string, proj4text string skip 1) t;  

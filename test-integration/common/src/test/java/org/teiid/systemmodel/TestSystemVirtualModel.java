@@ -259,4 +259,8 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	@Test public void testFunctionParameters() throws Exception {
 		checkResult("testFunctionParams", "select * from FunctionParams"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	
+	@Test public void testSpatial() throws Exception {
+		checkResult("testSpatial", "select * from spatial_sys_ref"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 }
