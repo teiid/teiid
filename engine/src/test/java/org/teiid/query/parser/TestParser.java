@@ -5252,5 +5252,11 @@ public class TestParser {
     	query.setSelect(new Select(Arrays.asList(new Constant(1))));
         helpTest(sql, "SELECT 1", query);
     }
+    
+    @Test public void testTrimExpression() throws QueryParserException {
+    	String sql = "select trim(substring(Description, pos1+1))";
+    	Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand(sql, new ParseInfo());
+		assertEquals("SELECT trim(' ' FROM substring(Description, (pos1 + 1)))", actualCommand.toString());
+    }
 
 }

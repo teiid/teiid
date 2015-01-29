@@ -4234,7 +4234,7 @@ Expression function(ParseInfo info) :
 	   <LPAREN>
 	   { funcName = funcToken.image; funcToken = null; expression = null;}
 	   [
-	    LOOKAHEAD(2) (((funcToken = <LEADING>|
+	    LOOKAHEAD((<LEADING>|<TRAILING>|<BOTH>)|(expression(info)<FROM>)) (((funcToken = <LEADING>|
 	      funcToken = <TRAILING>|
 	      funcToken = <BOTH>)
 	    [expression = expression(info)])
