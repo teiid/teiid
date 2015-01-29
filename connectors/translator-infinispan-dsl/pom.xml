@@ -12,6 +12,11 @@
     <description>This tranlator is used to query an Infinispan cache using DSL</description>
     <packaging>bundle</packaging>
     
+    <properties>
+        <!-- slot defined in the module  -->
+        <jdg.slot>jdg-6.4</jdg.slot>
+    </properties>
+    
     <dependencyManagement>
 		<dependencies>	
 			<dependency>
@@ -28,22 +33,22 @@
 			  <groupId>org.infinispan</groupId>
 			  <artifactId>infinispan-query-dsl</artifactId>
 			  <version>${version.org.infinispan.6}</version>
-			</dependency>				   
-			<dependency>
-			  	<groupId>com.google.protobuf</groupId>
-			  	<artifactId>protobuf-java</artifactId>
-				<version>${version.com.google.protobuf}</version>
 			</dependency>	
-			<dependency>
-		 		 <groupId>org.infinispan.protostream</groupId>
-		 		 <artifactId>protostream</artifactId>
-		  		 <version>${version.org.infinispan.protostream}</version>
-			</dependency>	
-			<dependency>
-			  <groupId>org.infinispan</groupId>
-			  <artifactId>infinispan-client-hotrod</artifactId>
-			  <version>${version.org.infinispan.6}</version>
-			</dependency> 										 
+            <dependency>
+              <groupId>org.infinispan</groupId>
+              <artifactId>infinispan-client-hotrod</artifactId>
+              <version>${version.org.infinispan.6}</version>
+            </dependency> 		
+            <dependency>
+                 <groupId>org.infinispan.protostream</groupId>
+                 <artifactId>protostream</artifactId>
+                 <version>${version.org.infinispan.protostream}</version>
+            </dependency>		
+            <dependency>
+                 <groupId>com.squareup</groupId>
+                 <artifactId>protoparser</artifactId>
+                 <version>${version.com.squareup.protoparser}</version>
+            </dependency>		            
         </dependencies>	
     </dependencyManagement>
     
@@ -68,16 +73,16 @@
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
         </dependency>
-		 <dependency>
+		<dependency>
 	 		 <groupId>org.infinispan.protostream</groupId>
 	 		 <artifactId>protostream</artifactId>
 	 		  <scope>provided</scope>
 		</dependency>	
-		<dependency>
-	  		<groupId>com.google.protobuf</groupId>
-	  		<artifactId>protobuf-java</artifactId>
-	  		<scope>provided</scope>
-		</dependency>	
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>protoparser</artifactId>
+            <scope>provided</scope>
+        </dependency>
 		<dependency>
 		    <groupId>org.infinispan</groupId>
 		    <artifactId>infinispan-commons</artifactId>
@@ -98,7 +103,6 @@
 		    <artifactId>infinispan-client-hotrod</artifactId>
 		    <scope>provided</scope>
 		</dependency>  
-
         <dependency>
            <groupId>org.jboss.modules</groupId>
            <artifactId>jboss-modules</artifactId>

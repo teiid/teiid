@@ -7,10 +7,12 @@ dynamic VDB or if using the Teiid Designer - use the Teiid Connection Importer t
 
 Metadata
 
--  	Each google registered class in the cache will have a corresponding table created. 
+-  	Each registered class in the cache will have a corresponding table created. 
+-   Each registered class that is going to be queried must have a Marshaller implemented, which is configured on the resource-adapter
+-   The root class must have its unique identifier defined as indexed in the protobuf file in order to perform updates
 -   The table for the root class, must have a primary key defined, which must map to an attribute in the class.
 -	The table "name in source" (NIS) will be the name of the JDG cache this table/class is stored
-- 	The table columns will be created from the google protobuf definition, that corresponds to a registered class.
+- 	The table columns will be created from the protobuf definition, that corresponds to a registered class.
 -   Attributes defined as repeatable (i.e., collections, arrays, etc.) or a container class, will be supported as 1-to-* relationships, 
 	and will have corresponding registered class (if they are to be searched).
 -	A 1-to-* relationship class must have a foreign key to map to the root class/table, where the name in source for the foreign key

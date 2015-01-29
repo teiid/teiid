@@ -103,7 +103,7 @@
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
-        <version.org.infinispan.6>6.1.0.Final-redhat-3</version.org.infinispan.6>
+        <version.org.infinispan.6>6.2.0.Final-redhat-4</version.org.infinispan.6>
         <version.olap4j>1.1.0</version.olap4j>
         <version.accumulo>1.5.0</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
@@ -122,8 +122,8 @@
         
         <derby.version>10.2.1.6</derby.version>
 		<mysql.connector.version>5.1.5</mysql.connector.version>		
-		<version.com.google.protobuf>2.5.0</version.com.google.protobuf>
-        <version.org.infinispan.protostream>1.0.2.Final-redhat-1</version.org.infinispan.protostream>  <!--  1.0.0.CR1-redhat-1 is what works in EAP  -->
+        <version.com.squareup.protoparser>3.1.4.redhat-1</version.com.squareup.protoparser>
+        <version.org.infinispan.protostream>3.0.0.Alpha8-redhat-1</version.org.infinispan.protostream>  <!--  1.0.0.CR1-redhat-1 is what works in EAP  -->
         <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
 	</properties>
 	<scm>

@@ -34,6 +34,7 @@ import javax.resource.spi.InvalidPropertyException;
 
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.protostream.BaseMarshaller;
+import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -46,8 +47,6 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.ClassRegistry;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
-
-import com.google.protobuf.Descriptors.DescriptorValidationException;
 
 
 public abstract class AbstractInfinispanManagedConnectionFactory extends
@@ -70,7 +69,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private Map<String, BaseMarshaller> messageMarshallerMap = null;
 	private ClassRegistry methodUtil = new ClassRegistry();
 	
-	private String protobinFile = null;
+	private String protobufDefFile = null;
 	private String messageMarshallers = null;
 	private String messageDescriptor = null;
 	
@@ -85,7 +84,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
 			throws ResourceException {
 		
-		if (protobinFile == null) {
+		if (protobufDefFile == null) {
 			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25030));
 		}
 
@@ -180,24 +179,24 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	}
 	
 	/**
-	 * Get the Protobin File Name
+	 * Get the Protobuf Definition File Name
 	 * 
-	 * @return Name of the Protobin File
-	 * @see #setProtobinFile(String)
+	 * @return Name of the Protobuf Definition File
+	 * @see #setProtobufDefinitionFile(String)
 	 */
-	public String getProtobinFile() {
-		return protobinFile;
+	public String getProtobufDefinitionFile() {
+		return protobufDefFile;
 	}
 
 	/**
-	 * Set the Google Protobin File name that describes the objects to be serialized.
+	 * Set the Google Protobuf Definition File name that describes the objects to be serialized.
 	 * 
-	 * @param protobinFile
-	 *            the file name of the protobin file to use
-	 * @see #getProtobinFile()
+	 * @param protobufDefFile
+	 *            the file name of the protobuf definition file to use
+	 * @see #getProtobufDefinitionFile()
 	 */
-	public void setProtobinFile(String protobinFile) {
-		this.protobinFile = protobinFile;
+	public void setProtobufDefinitionFile(String protobufDefFile) {
+		this.protobufDefFile = protobufDefFile;
 	}
 
 	/**
@@ -531,7 +530,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		
 		if (cache instanceof RemoteCacheManager) {
 			LogManager.logInfo(LogConstants.CTX_CONNECTOR,
-				"=== Using RemoteCacheManager (loaded vi JNDI) ==="); //$NON-NLS-1$
+				"=== Using RemoteCacheManager (loaded from JNDI " + jndiName + ") ==="); //$NON-NLS-1$
 
 			return cacheContainer;
 		}
@@ -544,7 +543,10 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	protected void registerMarshallers(SerializationContext ctx, ClassLoader cl) throws ResourceException {
 
 		try {
-			ctx.registerProtofile(cl.getResourceAsStream(getProtobinFile()));
+			FileDescriptorSource fds = new FileDescriptorSource();
+			fds.addProtoFile("protofile", cl.getResourceAsStream(getProtobufDefinitionFile() ) );
+			
+			ctx.registerProtoFiles( fds );
 
 			List<Class<?>> registeredClasses = methodUtil.getRegisteredClasses();
 			for (Class clz:registeredClasses) {
@@ -553,9 +555,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			}
 
 		} catch (IOException e) {
-			throw new ResourceException(e);
-		} catch (DescriptorValidationException e) {
-			throw new ResourceException(e);
+			throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25032), e);
 		} 
 	}
 
@@ -565,7 +565,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		int result = 1;
 		result = prime
 				* result
-				+  (protobinFile.hashCode());
+				+  (protobufDefFile.hashCode());
 		result = prime
 				* result
 				+ ((remoteServerList == null) ? 0 : remoteServerList.hashCode());

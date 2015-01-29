@@ -11,6 +11,11 @@
 	<groupId>org.jboss.teiid.connectors</groupId>
 	<name>Infinispan Connector 6</name>
 	<description>This connector creates the connection to the Infinispan Cache</description>
+	
+	<properties>
+        <!-- slot defined in the module  -->
+        <jdg.slot>jdg-6.4</jdg.slot>
+    </properties>	
 
 	<dependencyManagement>
 		<dependencies>

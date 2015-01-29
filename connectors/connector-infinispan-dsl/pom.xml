@@ -20,7 +20,7 @@
 			</dependency>  	   
 			<dependency>
 				<groupId>org.infinispan</groupId>
-				<artifactId>infinispan-core</artifactId>
+				<artifactId>infinispan-commons</artifactId>
 			    <version>${version.org.infinispan.6}</version>
 			</dependency> 
 			 <dependency>
@@ -33,16 +33,6 @@
 			    <artifactId>infinispan-query-dsl</artifactId>
 			    <version>${version.org.infinispan.6}</version>
 			</dependency>  
-			<dependency>
-			    <groupId>org.infinispan</groupId>
-			    <artifactId>infinispan-query</artifactId>
-			    <version>${version.org.infinispan.6}</version>
-			</dependency> 	
-			<dependency>
-			  	<groupId>com.google.protobuf</groupId>
-			  	<artifactId>protobuf-java</artifactId>
-				<version>${version.com.google.protobuf}</version>
-			</dependency>	
 			<dependency>
 		 		 <groupId>org.infinispan.protostream</groupId>
 		 		 <artifactId>protostream</artifactId>
@@ -65,21 +55,19 @@
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
             <scope>provided</scope>
-        </dependency>
-               
+        </dependency>     
         <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
         </dependency>   
-		
         <dependency>
           	<groupId>org.infinispan</groupId>
           	<artifactId>infinispan-client-hotrod</artifactId>
         </dependency>     
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
+            <artifactId>infinispan-commons</artifactId>
         </dependency> 
 		<dependency>
 		  <groupId>org.infinispan</groupId>
@@ -90,8 +78,8 @@
 		    <artifactId>infinispan-query-dsl</artifactId>
 		</dependency>  
 		<dependency>
-		    <groupId>org.infinispan</groupId>
-		    <artifactId>infinispan-query</artifactId>
+		 	<groupId>org.infinispan.protostream</groupId>
+		 	<artifactId>protostream</artifactId>
 		</dependency> 		     
         <dependency>
             <groupId>org.jboss.modules</groupId>
