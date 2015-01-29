@@ -22,8 +22,7 @@
 package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
 
-import java.io.FileInputStream;
-import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,17 +38,19 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.ServerStatistics;
 import org.infinispan.client.hotrod.VersionedValue;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
+import org.infinispan.protostream.FileDescriptorSource;
+import org.infinispan.protostream.ProtobufUtil;
+import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
+import org.infinispan.protostream.config.Configuration;
+import org.infinispan.protostream.descriptors.Descriptor;
+import org.infinispan.protostream.descriptors.EnumDescriptor;
+import org.infinispan.protostream.descriptors.FileDescriptor;
+import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.infinispan.query.dsl.QueryFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.ClassRegistry;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
-
-import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
-import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
-import com.google.protobuf.Descriptors.Descriptor;
-import com.google.protobuf.Descriptors.DescriptorValidationException;
-import com.google.protobuf.Descriptors.FileDescriptor;
-
+import org.teiid.translator.TranslatorException;
 
 /**
  * Sample cache of objects
@@ -83,7 +84,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	static {
 		mapOfCaches.put(PersonCacheSource.PERSON_CACHE_NAME, Person.class);
 		try {
-			DESCRIPTOR = createDescriptor();
+			DESCRIPTOR = (Descriptor) createDescriptor();
 
 			CLASS_REGISTRY.registerClass(Person.class);
 			CLASS_REGISTRY.registerClass(PhoneNumber.class);
@@ -172,49 +173,40 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public List<Object> get(int key) {
 		List<Object> objs = new ArrayList<Object>(1);
 		objs.add(this.get(key));
-	//			super.get(key));
 		return objs;
 	}	
 	
 	private static Descriptor createDescriptor() throws Exception {
-
-		InputStream is = new FileInputStream(
-				"./src/test/resources/addressbook.protobin");
-		FileDescriptorSet fds = FileDescriptorSet.parseFrom(is);
-		Map<String, FileDescriptor> fdl = new HashMap<String, FileDescriptor>();
-
+		Configuration config = new Configuration.Builder().build();
+		
 		try {
-			FileDescriptor current = null;
-			for (FileDescriptorProto fdp : fds.getFileList()) {
-				final List<String> dependencyList = fdp.getDependencyList();
-				final FileDescriptor[] fda = new FileDescriptor[dependencyList
-						.size()];
+			FileDescriptorSource fileDescriptorSource = FileDescriptorSource.fromResources(
+	              "addressbook.proto");
 
-				for (int i = 0; i < fda.length; i++) {
-					FileDescriptor fddd = fdl.get(dependencyList.get(i));
-					if (fddd == null) {
-						// missing imports! - this should not happen unless you
-						// left off the --include_imports directive
-					} else {
-						fda[i] = fddd;
-					}
-				}
-				current = FileDescriptor.buildFrom(fdp, fda);
-				fdl.put(current.getName(), current);
-			}
+	      Map<String, FileDescriptor> files = new SquareProtoParser(config).parseAndResolve(fileDescriptorSource);
 
-			// the "fdl" object now has all the descriptors - grab the one you
-			// need.
+	      FileDescriptor descriptor = files.get("addressbook.proto");
+	      
+	      String descriptorName = "quickstart.Person";
+	      Map<String, Descriptor> messages = new HashMap<String, Descriptor>();
+	      for (Descriptor m : descriptor.getMessageTypes()) {
+	         messages.put(m.getFullName(), m);
+	         System.out.println("Descriptor Name: " + m.getFullName());
+	      }
 
-		} catch (DescriptorValidationException e) {
-			// panic ?
-		}
-
-		is.close();
-
-		FileDescriptor fdes = fdl.get("addressbook.proto");
-		List<Descriptor> all = fdes.getMessageTypes();
-		return all.get(0);
+	      Descriptor testClass = messages.get(descriptorName);
+	      
+	      if (testClass == null) {
+	    	  throw new Exception("Did not get descriptor: " + descriptorName );
+	      }
+	      
+	      return testClass;
+	      
+	  } catch (Exception e) {
+    	e.printStackTrace();
+    	throw e;
+	  }
+		
 	}
 
 	/**
@@ -899,6 +891,23 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	@Override
 	public String getProtocolVersion() {
 		return null;
+	}
+
+	@Override
+	public void addClientListener(Object arg0, Object[] arg1, Object[] arg2) {
+	}
+
+	@Override
+	public void addClientListener(Object arg0) {
+	}
+
+	@Override
+	public Set<Object> getListeners() {
+		return null;
+	}
+
+	@Override
+	public void removeClientListener(Object arg0) {
 	}
 	
 	

@@ -127,8 +127,11 @@ public final class DSLSearch implements SearchType   {
 		    for (SortSpecification spec:sss) {
 		    	Expression exp = spec.getExpression();
 		    	Column mdIDElement = ((ColumnReference) exp).getMetadataObject();
-		    	qb = qb.orderBy(getRecordName(mdIDElement), SortOrder.DESC);
-		    }
+		    	SortOrder so = SortOrder.ASC;
+		    	if (spec.getOrdering().name().equalsIgnoreCase(SortOrder.DESC.name())) {
+		    		so = SortOrder.DESC;
+		    	}
+		    	qb = qb.orderBy(mdIDElement.getNameInSource(), so);		    }
 	    }
 	    	
 	    FilterConditionContext fcc = buildQueryFromWhereClause(where, qb, null);	 
@@ -143,7 +146,12 @@ public final class DSLSearch implements SearchType   {
 			if (results == null) {
 				return Collections.emptyList();
 			}
-			
+		} else if (orderby != null) {
+			   query = qb.build();
+	           results = query.list();
+	           if (results == null) {
+	                   return Collections.emptyList();
+	           }			
 		} else {
 			query = qb.build();
 			results = query.list();

@@ -9,12 +9,15 @@
                     <module slot="6" id="org.jboss.teiid.resource-adapter.infinispan"/>
                     <connection-definitions>
                         <connection-definition class-name="org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemote" enabled="true" use-java-context="true" pool-name="infinispanRemote">
+                            <!-- module name to load the cache classes from -->
                             <config-property name="Module">
                                 com.client.quickstart.order.pojos
                             </config-property>
+                            <!-- comma separate list of cache name to cache class;primary key -->
                             <config-property name="CacheTypeMap">
                                 local-quickstart-cache:com.client.quickstart.pojo.Order;id
                             </config-property>
+                            <!-- comma seperated list of hostname:port  -->
                             <config-property name="RemoteServerList">
                                 127.0.0.1:11322
                             </config-property>

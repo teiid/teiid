@@ -12,6 +12,11 @@
 	<name>Object Translator</name>
 	<description>This is the tranlator for API interfaces</description>
 	<packaging>bundle</packaging>
+	
+    <properties>
+        <!-- slot defined in the module  -->
+        <jdg.slot>jdg-6.4</jdg.slot>
+    </properties>	
 
 	<dependencyManagement>
 		<dependencies>

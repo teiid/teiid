@@ -44,7 +44,7 @@
             
             <config-property>
                <description>{$display:"Module",$description:"Module defining the cache classes (module,[module,..])"}</description>
-               <config-property-name>module</config-property-name>
+               <config-property-name>Module</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
                 
@@ -67,8 +67,8 @@
             </config-property>  
             
            <config-property>
-               <description>{$display:"Protobin File",$description:"Path to the Google Protobin file that's packaged in a jar",$required="true"}</description>
-               <config-property-name>ProtobinFile</config-property-name>
+               <description>{$display:"Protobuf Definition File",$description:"Class Path to the Google Protobuf Definition file that's packaged in a jar",$required="true"}</description>
+               <config-property-name>ProtobufDefinitionFile</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>                       
  

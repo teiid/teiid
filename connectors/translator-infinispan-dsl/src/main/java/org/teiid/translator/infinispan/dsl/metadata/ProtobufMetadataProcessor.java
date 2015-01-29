@@ -41,8 +41,9 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 
-import com.google.protobuf.Descriptors.Descriptor;
-import com.google.protobuf.Descriptors.FieldDescriptor;
+import org.infinispan.protostream.descriptors.Descriptor;
+import org.infinispan.protostream.descriptors.FieldDescriptor;
+
 
 
 /**
@@ -111,7 +112,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		
 	    Method pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
 	    if (pkMethod == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, entity.getName()}));
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));
 	    	
 	    }
 	    	    
@@ -126,7 +127,9 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			if (fd.isRepeated() ) {
 				repeats = true;
 			} else {
-				addRootColumn(mf, getJavaType(fd), fd, SearchType.Searchable, rootTable.getName(), rootTable, true, true);	
+				SearchType st = isSearchable(fd);
+
+				addRootColumn(mf, getJavaType(fd), fd, st, rootTable.getName(), rootTable, true, true);	
 			}
 		}	
 		
@@ -186,8 +189,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
     }	
 	
 	private void processRepeatedType(MetadataFactory mf, FieldDescriptor fd, Table rootTable, Method pkMethod, InfinispanConnection conn) throws TranslatorException  {
+		
 		Descriptor d = fd.getMessageType();
-
 		Descriptor parent = d.getContainingType();
 		// Need to find the method name that corresponds to the repeating attribute
 		// so that the actual method name can be used in defining the NIS
@@ -203,13 +206,16 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		}
 		
 		Table t = addTable(mf, c, d);
+		
+		// do not use getSourceName, the NameInSource has to be defined as the cache name
 		t.setNameInSource(rootTable.getNameInSource()); 
 			
 		List<FieldDescriptor> fields = fd.getMessageType().getFields();
-		for (FieldDescriptor f:fields) {
 
+		for (FieldDescriptor f:fields) {
+			final SearchType st = isSearchable(f);
 			// need to use the repeated descriptor, fd, as the prefix to the NIS in order to perform query
-			addSubColumn(mf, getJavaType(f), f, SearchType.Searchable, fd.getName(), t, true, true);	
+			addSubColumn(mf, getJavaType(f), f, st, fd.getName(), t, true, true);	
 		}
 		
 		if (pkMethod != null) {
@@ -310,8 +316,21 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		return c;
 	}	
 	
+	private static SearchType isSearchable(FieldDescriptor fd) {
+		if (fd.getDocumentation() != null) {
+			String doc = fd.getDocumentation();
+				// if its an indexfield, but not set to false, then its indexed and searchable
+			if (doc.indexOf("@IndexedField")  > -1) {
+				if (doc.indexOf("index=false") == -1) {
+					return SearchType.Searchable;
+				}
+			}
+		}
+		return SearchType.Unsearchable;
+
+	}
 	
-	private Class<?> getJavaType(FieldDescriptor fd) {
+	private static Class<?> getJavaType(FieldDescriptor fd) {
 		
 		   switch (fd.getJavaType()) {
 		      case INT:         return Integer.class   ; 
