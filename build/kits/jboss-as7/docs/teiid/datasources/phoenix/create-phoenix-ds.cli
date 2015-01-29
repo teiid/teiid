@@ -1,5 +1,5 @@
-# note that driver-name must be created as a precondition.
+# note that driver-name could be driver's module name if you went module approach.
 
-/subsystem=datasources/data-source=phoenixDS:add(jndi-name=java:/phoenixDS, driver-name=phoenix, enabled=true,use-java-context=true, connection-url=jdbc:phoenix:{zookeeper quorum server},user-name={user}, password={password})
+/subsystem=datasources/data-source=phoenixDS:add(jndi-name=java:/phoenixDS, driver-name=phoenix-[version]-client.jar, driver-class=org.apache.phoenix.jdbc.PhoenixDriver, enabled=true,use-java-context=true, connection-url=jdbc:phoenix:{zookeeper quorum server},user-name={user}, password={password})
 
 ## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
