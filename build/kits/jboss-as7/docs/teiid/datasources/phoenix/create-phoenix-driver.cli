@@ -1,0 +1,5 @@
+# phoenix should depend on sun.jdk and org.apache.log4j
+
+module add --name=org.apache.phoenix --resources=phoenix-[version]-client.jar --dependencies=javax.api,sun.jdk,org.apache.log4j,javax.transaction.api
+
+/subsystem=datasources/jdbc-driver=phoenix:add(driver-name=phoenix,driver-module-name=org.apache.phoenix,driver-class-name=org.apache.phoenix.jdbc.PhoenixDriver)

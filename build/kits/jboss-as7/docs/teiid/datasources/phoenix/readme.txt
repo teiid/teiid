@@ -5,8 +5,9 @@ Note that all instances of [version] should be replaced by the appropriate phoen
 
 Step 1: Deploying the JDBC Driver
  
-	Option 1: use the JBoss CLI tool, and deploy the phoenix client jar by issuing the command
-		deploy phoenix-[version].jar
+	Option 1: use the JBoss CLI tool, and add the phoenix client jar as a JDBC driver by issuing the command
+
+		./bin/jboss-cli.sh --connect --file=create-phoenix-driver.cli
 		
 	Option 2: (recommended)
 		1) Stop the server if it is running.
@@ -19,11 +20,14 @@ Step 1: Deploying the JDBC Driver
 
 Step 2: Creating the datasource 
 
-	Option 1: Edit the standalone-teiid.xml or domain-teiid.xml file and add contents of the "phoenix-ds.xml" 
+	Option 1: Edit the standalone-teiid.xml or domain-teiid.xml file and add contents of the "phoenix.xml" 
 	file under the "datasources" subsystem. You may have to edit contents according to where your Hbase server 
 	is located and credentials you need to use to access it.
 	
 	Option 2: Take a look at create-phoenix-ds.cli script, and modify and execute using JBoss CLI tool as below 
 	
-	./Jboss-admin.sh --file create-phoenix-ds.cli
+	./bin/jboss-cli.sh --connect --file=create-phoenix-ds.cli
+
+	Option 3: Deploy phoenix-ds.xml file. You may have to edit contents according to where your Hbase server
+        is located and credentials you need to use to access it.
 	
