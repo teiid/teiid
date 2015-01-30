@@ -29,6 +29,7 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.Search;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.dsl.QueryFactory;
+import org.infinispan.protostream.descriptors.Descriptor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -36,8 +37,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.ClassRegistry;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
-
-import com.google.protobuf.Descriptors.Descriptor;
 
 /** 
  * Represents a connection to an Infinispan cache container. The <code>cacheName</code> that is specified will dictate the
@@ -57,7 +56,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		this.rcm = config.getCacheContainer();
 		this.ctx = config.getContext();
 
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created."); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
 	}
 	
 	/** 

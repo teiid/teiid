@@ -26,7 +26,8 @@ import java.util.Map;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
 
-import com.google.protobuf.Descriptors.Descriptor;
+import org.infinispan.protostream.descriptors.Descriptor;
+
 
 /**
  * Each InfinispanConnection implementation represents a connection to one or more
@@ -63,7 +64,7 @@ public interface InfinispanConnection {
 	
 
 	/**
-	 * Returns the protobuf descriptor that desribes the messages being serialized
+	 * Returns the descriptor that desribes the messages being serialized
 	 * @param cacheName
 	 * @return Descriptor
 	 * @throws TranslatorException

@@ -74,13 +74,32 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
           </snapshots>
         </repository>
       </repositories>
-    </profile>    
+    </profile> 
+		<profile>
+		  <id>jboss-jdg</id>
+		  <repositories>
+			<repository>
+			  <id>jboss-jdg</id>
+			  <name>JBoss JDG 6</name>
+			  <url>http://maven.repository.redhat.com/techpreview/jdg6/6.4.0/maven-repository/</url>
+			  <layout>default</layout>
+			  <releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			  </releases>
+			  <snapshots>
+				<enabled>false</enabled>
+			  </snapshots>
+			</repository>
+		  </repositories>
+		</profile>               
   </profiles>
 
   <activeProfiles>
     <activeProfile>jboss-public-repository</activeProfile>
     <activeProfile>jboss-developer-repository</activeProfile>
     <activeProfile>jboss-eap-alpha</activeProfile>
+    <activeProfile>jboss-jdg</activeProfile>
   </activeProfiles>
 
 </settings>

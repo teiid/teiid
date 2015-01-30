@@ -12,40 +12,40 @@
     <description>This connector creates the connection to the Infinispan Cache for querying using DSL</description>
 
     <dependencyManagement>
-		<dependencies>
-			<dependency>
-			  <groupId>org.infinispan</groupId>
-			  <artifactId>infinispan-client-hotrod</artifactId>
-			  <version>${version.org.infinispan.6}</version>
-			</dependency>  	   
-			<dependency>
-				<groupId>org.infinispan</groupId>
-				<artifactId>infinispan-core</artifactId>
-			    <version>${version.org.infinispan.6}</version>
-			</dependency> 
-			 <dependency>
-		  		<groupId>org.infinispan</groupId>
-		  		<artifactId>infinispan-remote-query-client</artifactId>
-		  		<version>${version.org.infinispan.6}</version>
-			</dependency>	
-			<dependency>
-			    <groupId>org.infinispan</groupId>
-			    <artifactId>infinispan-query-dsl</artifactId>
-			    <version>${version.org.infinispan.6}</version>
-			</dependency>  
-			<dependency>
-			    <groupId>org.infinispan</groupId>
-			    <artifactId>infinispan-query</artifactId>
-			    <version>${version.org.infinispan.6}</version>
-			</dependency> 													
-        </dependencies>	
+        <dependencies>
+            <dependency>
+              <groupId>org.infinispan</groupId>
+              <artifactId>infinispan-client-hotrod</artifactId>
+              <version>${version.org.infinispan.6}</version>
+            </dependency>      
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-commons</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency> 
+             <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-remote-query-client</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>   
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-query-dsl</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>  
+            <dependency>
+                 <groupId>org.infinispan.protostream</groupId>
+                 <artifactId>protostream</artifactId>
+                 <version>${version.org.infinispan.protostream}</version>
+            </dependency>                                                               
+        </dependencies> 
     </dependencyManagement>
     
     <dependencies>
- 		<dependency>
-		 	<groupId>org.jboss.teiid.connectors</groupId>
-		 	<artifactId>translator-infinispan-dsl</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-infinispan-dsl</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
@@ -55,39 +55,32 @@
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
             <scope>provided</scope>
-        </dependency>
-               
+        </dependency>     
         <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
         </dependency>   
-		
         <dependency>
-          	<groupId>org.infinispan</groupId>
-          	<artifactId>infinispan-client-hotrod</artifactId>
-            <scope>provided</scope>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-client-hotrod</artifactId>
         </dependency>     
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
-            <scope>provided</scope>
+            <artifactId>infinispan-commons</artifactId>
         </dependency> 
-		<dependency>
-		  <groupId>org.infinispan</groupId>
-		  <artifactId>infinispan-remote-query-client</artifactId>
-            <scope>provided</scope>
-		</dependency>   
-		<dependency>
-		    <groupId>org.infinispan</groupId>
-		    <artifactId>infinispan-query-dsl</artifactId>
-            <scope>provided</scope>
-		</dependency>  
-		<dependency>
-		    <groupId>org.infinispan</groupId>
-		    <artifactId>infinispan-query</artifactId>
-            <scope>provided</scope>
-		</dependency> 		     
+        <dependency>
+          <groupId>org.infinispan</groupId>
+          <artifactId>infinispan-remote-query-client</artifactId>
+        </dependency>   
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-query-dsl</artifactId>
+        </dependency>  
+        <dependency>
+            <groupId>org.infinispan.protostream</groupId>
+            <artifactId>protostream</artifactId>
+        </dependency>            
         <dependency>
             <groupId>org.jboss.modules</groupId>
             <artifactId>jboss-modules</artifactId>
