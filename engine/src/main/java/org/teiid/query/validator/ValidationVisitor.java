@@ -675,7 +675,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				}
 			}
 		};
-		AggregateStopNavigator asn = new AggregateStopNavigator(ecv);
+		AggregateStopNavigator asn = new AggregateStopNavigator(ecv, groupingSymbols);
 		object.acceptVisitor(asn);
 	}
 

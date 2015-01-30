@@ -49,8 +49,9 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
             this.groupingColsUsed = groupingColsUsed;
         }
         
-        public AggregateStopNavigator(LanguageVisitor visitor) {
+        public AggregateStopNavigator(LanguageVisitor visitor, Collection<? extends Expression> groupingCols) {
             super(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
+            this.groupingCols = groupingCols;
         }
         
         public void visit(AggregateSymbol obj) {

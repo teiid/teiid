@@ -1144,6 +1144,44 @@ public class TestAggregateProcessing {
 		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
 		TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(BigInteger.valueOf(1))});
 	}
+	
+	@Test public void testCorrelatedGroupingColumnExpression() throws Exception {
+		// Create query
+		String sql = "SELECT A.e2/2, A.e1 FROM pm1.g1 AS A GROUP BY A.e2/2, A.e1 HAVING A.e1 = (SELECT MAX(B.e1) FROM pm1.g1 AS B WHERE A.e2/2 = B.e2)"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(new Object[] { 0, "a" })};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		FakeDataStore.sampleData1(dataManager, RealMetadataFactory.example1Cached());
+
+		// Plan query
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		// Run query
+		helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testCorrelatedGroupingColumnExpressionPushdown() throws Exception {
+		// Create query
+		String sql = "SELECT A.e2/2, A.e1 FROM pm1.g1 AS A GROUP BY A.e2/2, A.e1 HAVING A.e1 = (SELECT MAX(B.e1) FROM pm1.g1 AS B WHERE A.e2/2 = B.e2)"; //$NON-NLS-1$
+
+		// Plan query
+		BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+		bsc.setFunctionSupport(SourceSystemFunctions.DIVIDE_OP, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
+				new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT (g_0.e2 / 2) AS c_0, g_0.e1 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 HAVING v_0.c_1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = v_0.c_0)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+
+		bsc.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
+		plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
+				new String[] {"SELECT (g_0.e2 / 2), g_0.e1 FROM pm1.g1 AS g_0 GROUP BY (g_0.e2 / 2), g_0.e1 HAVING g_0.e1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = (g_0.e2 / 2))"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+	}
 
 	
 }

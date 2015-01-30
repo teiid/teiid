@@ -75,6 +75,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
@@ -494,9 +495,8 @@ public class RelationalPlanner {
 	}
 
     private void connectSubqueryContainers(PlanNode plan, LinkedHashMap<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-        Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
-
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT)) {
+            Set<GroupSymbol> groupSymbols = getGroupSymbols(node);
             List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
             planSubqueries(pushdownWith, groupSymbols, node, subqueryContainers, false);
             node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
@@ -585,7 +585,7 @@ public class RelationalPlanner {
 
 	private static Set<GroupSymbol> getGroupSymbols(PlanNode plan) {
 		Set<GroupSymbol> groupSymbols = new HashSet<GroupSymbol>();
-        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
+        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP, NodeConstants.Types.GROUP)) {
             groupSymbols.addAll(source.getGroups());
         }
 		return groupSymbols;
@@ -1543,7 +1543,9 @@ public class RelationalPlanner {
     public static PlanNode createSelectNode(final Criteria crit, boolean isHaving) {
         PlanNode critNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
         critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
-        if (isHaving && !ElementCollectorVisitor.getAggregates(crit, false).isEmpty()) {
+        //TODO: we should check for grouping expression correlations, but those are not yet set when this is 
+        // called in the planner, so we look for any subquery
+        if (isHaving && (!ElementCollectorVisitor.getAggregates(crit, false).isEmpty() || !ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty())) {
             critNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
         }
         // Add groups to crit node
@@ -1562,8 +1564,6 @@ public class RelationalPlanner {
 	 * @throws QueryMetadataException 
 	 */
 	private PlanNode attachGrouping(PlanNode plan, Query query, Collection<AggregateSymbol> aggs) throws QueryMetadataException, TeiidComponentException {
-		//TODO: correlated agg
-		
 		GroupBy groupBy = query.getGroupBy();
 		List<Expression> groupingCols = null;
 		PlanNode groupNode = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
@@ -1577,14 +1577,54 @@ public class RelationalPlanner {
 		Map<Expression, ElementSymbol> mapping = buildGroupingNode(aggs, groupingCols, groupNode, this.context, this.idGenerator).inserseMapping();
 
 		attachLast(groupNode, plan);
-		ExpressionMappingVisitor.mapExpressions(query.getHaving(), mapping);
-		ExpressionMappingVisitor.mapExpressions(query.getSelect(), mapping);
-		ExpressionMappingVisitor.mapExpressions(query.getOrderBy(), mapping);
-        
+		
+		// special handling if there is an expression in the grouping.  we need to create the appropriate
+		// correlations
+		Map<Expression, Expression> subMapping = null;
+		for (Map.Entry<Expression, ElementSymbol> entry : mapping.entrySet()) {
+			if (entry.getKey() instanceof ElementSymbol) {
+				continue;
+			}
+			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+				@Override
+				public Expression replaceExpression(Expression element) {
+					if (element instanceof ElementSymbol) {
+						return new Reference((ElementSymbol)element);
+					}
+					return element;
+				}
+			};
+			Expression key = (Expression)entry.getKey().clone();
+			PostOrderNavigator.doVisit(key, emv);
+			if (subMapping == null) {
+				subMapping = new HashMap<Expression, Expression>();
+			}
+			ElementSymbol value = entry.getValue().clone();
+			value.setIsExternalReference(true);
+			subMapping.put(key, new Reference(value));
+		}
+		replaceExpressions(query.getHaving(), mapping, subMapping);
+		replaceExpressions(query.getSelect(), mapping, subMapping);
+		replaceExpressions(query.getOrderBy(), mapping, subMapping);
         // Mark in hints
         hints.hasAggregates = true;
         
 		return groupNode;
+	}
+
+	private void replaceExpressions(LanguageObject lo,
+			Map<Expression, ElementSymbol> mapping,
+			Map<Expression, Expression> subMapping) {
+		if (lo == null) {
+			return;
+		}
+		ExpressionMappingVisitor.mapExpressions(lo, mapping);
+		if (subMapping != null) {
+			//support only 1 level of correlation
+			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(lo)) {
+				ExpressionMappingVisitor.mapExpressions(container.getCommand(), subMapping);
+			}
+		}
 	}
 
 	/**
