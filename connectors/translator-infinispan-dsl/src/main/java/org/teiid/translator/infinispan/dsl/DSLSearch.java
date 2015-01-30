@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.query.dsl.FilterConditionBeginContext;
 import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.Query;
@@ -59,21 +60,11 @@ public final class DSLSearch   {
 	
 	public static Object performKeySearch(String cacheName, String columnNameInSource, Object value, InfinispanConnection conn) throws TranslatorException {
 	    @SuppressWarnings("rawtypes")
-		QueryBuilder qb = getQueryBuilder(cacheName, conn);
 	    
-		value = escapeReservedChars(value);
-		
-	    FilterConditionContext fcc = qb.having(columnNameInSource).eq(value);
-		
-		Query query = fcc.toBuilder().build();
-		List<Object> results = query.list();
-		if (results.size() == 1) {
-			return results.get(0);
-		} else if (results.size() > 1) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25053, value.toString()));
-		}
-		
-		return null;
+		RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache(cacheName);
+	    Object v = c.get(value);
+	    return v;
+
 	}
 
 	public static List<Object> performSearch(Update command, String cacheName, InfinispanConnection conn)
@@ -102,7 +93,11 @@ public final class DSLSearch   {
 		    for (SortSpecification spec:sss) {
 		    	Expression exp = spec.getExpression();
 		    	Column mdIDElement = ((ColumnReference) exp).getMetadataObject();
-		    	qb = qb.orderBy(mdIDElement.getSourceName(), SortOrder.DESC);
+		    	SortOrder so = SortOrder.ASC;
+		    	if (spec.getOrdering().name().equalsIgnoreCase(SortOrder.DESC.name())) {
+		    		so = SortOrder.DESC;
+		    	}
+		    	qb = qb.orderBy(mdIDElement.getNameInSource(), so);		    	
 		    }
 	    }
 	    	
@@ -119,12 +114,19 @@ public final class DSLSearch   {
 				return Collections.emptyList();
 			}
 			
+		} else if (orderby != null) {
+		   query = qb.build();
+           results = query.list();
+           if (results == null) {
+                   return Collections.emptyList();
+           }
+
 		} else {
-			query = qb.build();
-			results = query.list();
-			if (results == null) {
-				return Collections.emptyList();
-			}
+		    results = new ArrayList<Object>();
+			RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache(cacheName);
+		    for (Object id : c.keySet()) {
+		          results. add(c.get(id));
+		    }
 		}
 
 		return results;

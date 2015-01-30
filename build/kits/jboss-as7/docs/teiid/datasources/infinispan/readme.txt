@@ -1,4 +1,4 @@
-NOTE:  Need to also configure the translator to use.  Run either:
+NOTE:  Need to configure the translator to use.  Run either:
 infinispan-cache     -  add-infinispan-cache-translator.cli
 infinispan-cache-dsl -  add-infinispan-cache-dsl-translator.cli
 
@@ -23,7 +23,7 @@ name for each of the cache classes.
 To install the infinispan connector, choose 1 of the 2 following options:
 
 1.  edit the "standalone-teiid.xml" file or "doamin-teiid.xml" file and add 
-the contents of the infinispan.xml under "resource-adapters" subsystem section.
+the contents of one of the infinispan-*-ds.xml under "resource-adapters" subsystem section.
 
 2.  edit the create-ldap-ds.properties to set accordingly, and then  
 run the following CLI script in the JBOSS_HOME/bin/jboss-cli.sh -c --file=create-infinspan-ds.cli   --properties=create-infinispan-ds.properties

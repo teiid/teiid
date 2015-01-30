@@ -59,6 +59,7 @@ public class InfinispanExecutionFactory extends
 	public static final int MAX_SET_SIZE = 10000;
 	
 	public InfinispanExecutionFactory() {
+		super();
 		setSourceRequiredForMetadata(true);
 		setMaxInCriteriaSize(MAX_SET_SIZE);
 		setMaxDependentInPredicates(1);

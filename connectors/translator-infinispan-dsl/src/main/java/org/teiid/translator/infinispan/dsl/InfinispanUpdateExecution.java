@@ -141,7 +141,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			} 
 			
 			if (fkeyColNIS == null && keyCol == null) {
-				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {insert.getTable().getName()}));
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {"insert", insert.getTable().getName()}));
 			}
 
 			List<ColumnReference> columns = insert.getColumns();
@@ -264,7 +264,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		String cacheName = delete.getTable().getMetadataObject().getSourceName();
 
 		if (fkeyColNIS == null && keyCol == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {delete.getTable().getName()}));
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {"delete",delete.getTable().getName()}));
 		}		
 
 		// Find all the objects that meet the criteria for deletion
@@ -300,7 +300,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				throw new TranslatorException(e1);
 			}
 		} else {
-			throw new TranslatorException("Deleting container class is TBD");
+			throw new TranslatorException("Deleting container class is not currently supported");
 
 		}
 		
@@ -400,7 +400,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		}		
 		
 		if (fkeyColNIS == null && keyCol == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {update.getTable().getName()}));
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {"update",update.getTable().getName()}));
 		}
 	
 		@SuppressWarnings({ "rawtypes", "unchecked" })

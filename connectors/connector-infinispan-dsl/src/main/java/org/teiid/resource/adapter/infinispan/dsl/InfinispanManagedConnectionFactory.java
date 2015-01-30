@@ -50,14 +50,15 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 
 		File f = new File(this.getHotRodClientPropertiesFile());
 		if (!f.exists()) {
-			throw new InvalidPropertyException(UTIL.getString("InfinispanManagedConnectionFactory.clientPropertiesFileDoesNotExist")); //$NON-NLS-1$
+			throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("clientPropertiesFileDoesNotExist", f.getAbsoluteFile()));
+
 		}
 		try {
 			Properties props = PropertiesUtils.load(f.getAbsolutePath());
 
 			LogManager
 					.logInfo(LogConstants.CTX_CONNECTOR,
-							"=== Using RemoteCacheManager (created from properties) ==="); //$NON-NLS-1$
+							"=== Using RemoteCacheManager (created from properties file " + f.getAbsolutePath() + ") ==="); //$NON-NLS-1$
 
 			return createRemoteCacheWrapper(props, classLoader);
 

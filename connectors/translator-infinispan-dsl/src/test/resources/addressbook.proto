@@ -1,8 +1,14 @@
 package quickstart;
 
+/* @Indexed */
 message Person {
+
+   /* @IndexedField */
    required string name = 1;
+
+   /* @IndexedField(index=true, store=false) */
    required int32 id = 2;
+
    optional string email = 3;
 
    enum PhoneType {
@@ -11,10 +17,16 @@ message Person {
       WORK = 2;
    }
 
+   /* @Indexed */
    message PhoneNumber {
+
+      /* @IndexedField */
       required string number = 1;
+
+      /* @IndexedField(index=false, store=false) */
       optional PhoneType type = 2 [default = HOME];
    }
 
+   /* @IndexedField(index=true, store=false) */
    repeated PhoneNumber phone = 4;
 }
