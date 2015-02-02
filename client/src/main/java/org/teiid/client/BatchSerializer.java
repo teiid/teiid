@@ -277,7 +277,7 @@ public class BatchSerializer {
     			return Boolean.TRUE;
     		}
     		if (code != DataTypeManager.DefaultTypeCodes.OBJECT) {
-    			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(DataTypeManager.getClass(code)), this.defaultVersion);
+    			ColumnSerializer s = getSerializer(DataTypeManager.getDataTypeName(DataTypeManager.getClass(code)), effectiveVersion);
     			return s.readObject(in, cache, effectiveVersion);
     		}
 			return super.readObject(in, cache, effectiveVersion);

@@ -155,7 +155,7 @@ public class TestBatchSerializer {
     }
     
     @Test public void testStringArray() throws IOException, ClassNotFoundException {
-    	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.LONG,  "string[]"}, new List[] {Arrays.asList(1l, new ArrayImpl(new String[] {"a", "b"}))}, BatchSerializer.CURRENT_VERSION);
+    	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.LONG,  "string[]"}, new List[] {Arrays.asList(1l, new ArrayImpl(new String[] {"Silly String", "Silly String"}))}, BatchSerializer.CURRENT_VERSION);
     }
     
     @Test public void testGeometry() throws IOException, ClassNotFoundException {
