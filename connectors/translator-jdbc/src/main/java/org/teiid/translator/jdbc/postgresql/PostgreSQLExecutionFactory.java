@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc.postgresql;
 
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
@@ -35,20 +36,16 @@ import java.util.List;
 import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.AliasModifier;
-import org.teiid.translator.jdbc.ConvertModifier;
-import org.teiid.translator.jdbc.EscapeSyntaxModifier;
-import org.teiid.translator.jdbc.ExtractFunctionModifier;
-import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.ModFunctionModifier;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.translator.jdbc.*;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
@@ -89,6 +86,14 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	private OracleFormatFunctionModifier formatModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP("); //$NON-NLS-1$
+	
+	//postgis versions
+	public static final Version ONE_3 = Version.getVersion("1.3"); //$NON-NLS-1$
+	public static final Version ONE_4 = Version.getVersion("1.4"); //$NON-NLS-1$
+	public static final Version ONE_5 = Version.getVersion("1.5"); //$NON-NLS-1$
+	public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
+	
+	private Version postGisVersion = Version.getVersion("0.0"); //$NON-NLS-1$
     
 	public PostgreSQLExecutionFactory() {
 		setMaxDependentInPredicates(1);
@@ -202,6 +207,38 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 		}, FunctionModifier.BOOLEAN);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier); 
     }    
+    
+    @Override
+    public void initCapabilities(Connection connection)
+    		throws TranslatorException {
+    	super.initCapabilities(connection);
+    	Statement s = null;
+    	ResultSet rs = null;
+    	try {
+	    	s = connection.createStatement();
+	    	rs = s.executeQuery("select PostGIS_Lib_Version()"); //$NON-NLS-1$
+	    	rs.next();
+	    	this.setPostGisVersion(rs.getString(1));
+    	} catch (SQLException e) {
+    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not determine PostGIS version"); //$NON-NLS-1$
+    	} finally {
+    		try {
+    			if (rs != null) {
+    				rs.close();
+    			}
+    		} catch (SQLException e) {
+    			
+    		}
+    		try {
+    			if (s != null) {
+    				s.close();
+    			}
+    		} catch (SQLException e) {
+    			
+    		}
+    	}
+    }
+    
     
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
@@ -496,6 +533,32 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
+        
+        if (this.postGisVersion.compareTo(ONE_3) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+        	supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
+        	supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_SETSRID);
+        	supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+        	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        }
+        if (this.postGisVersion.compareTo(ONE_4) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASGEOJSON);
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
+        }
+        if (this.postGisVersion.compareTo(ONE_5) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGML);
+        }
+        if (this.postGisVersion.compareTo(TWO_0) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGEOJSON);
+        }
         return supportedFunctions;
     }
     
@@ -643,6 +706,29 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     				}
     			}
     		}
+    	};
+    }
+    
+	@TranslatorProperty(display="PostGIS Version", description="The version of the PostGIS extension.",advanced=true)
+    public void setPostGisVersion(String postGisVersion) {
+		this.postGisVersion = Version.getVersion(postGisVersion);
+	}
+    
+    public String getPostGisVersion() {
+		return postGisVersion.toString();
+	}
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+    	return new JDBCMetdataProcessor() {
+            @Override
+            protected String getRuntimeType(int type, String typeName, int precision) {
+                //pg will otherwise report a 1111/other type for geometry
+            	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                    return TypeFacility.RUNTIME_NAMES.GEOMETRY;
+                }                
+                return super.getRuntimeType(type, typeName, precision);                    
+            }
     	};
     }
     

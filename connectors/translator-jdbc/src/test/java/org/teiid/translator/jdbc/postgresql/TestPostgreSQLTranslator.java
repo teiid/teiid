@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -578,6 +579,14 @@ public class TestPostgreSQLTranslator {
         helpTestVisitor(getTestVDB(),
             input, 
             output);
+    }
+    
+    @Test public void testGeometryFunctions() throws Exception {
+    	PostgreSQLExecutionFactory pgef = new PostgreSQLExecutionFactory();
+    	pgef.setPostGisVersion("1.5");
+    	pgef.start();
+    	assertTrue(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_ASBINARY));
+    	assertFalse(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_GEOMFROMGEOJSON));
     }
     
 }
