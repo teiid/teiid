@@ -93,7 +93,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final Version ONE_5 = Version.getVersion("1.5"); //$NON-NLS-1$
 	public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
 	
-	private Version postGisVersion = Version.getVersion("0.0"); //$NON-NLS-1$
+	private Version postGisVersion = Version.DEFAULT_VERSION;
     
 	public PostgreSQLExecutionFactory() {
 		setMaxDependentInPredicates(1);
@@ -212,6 +212,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public void initCapabilities(Connection connection)
     		throws TranslatorException {
     	super.initCapabilities(connection);
+    	if (this.postGisVersion.compareTo(Version.DEFAULT_VERSION) != 0) {
+    		return;
+    	}
     	Statement s = null;
     	ResultSet rs = null;
     	try {
