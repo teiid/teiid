@@ -548,15 +548,17 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			}
     	} else if (obj instanceof DerivedColumn) {
             DerivedColumn dc = (DerivedColumn) obj;
-            Expression expr = dc.getExpression();
-            // For GEOMETRY, force source to do conversion from proprietary struct to WKB blob.
-            if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
-                dc.setExpression(getLanguageFactory().createFunction(
-                        SourceSystemFunctions.ST_ASBINARY, new Expression[] {expr}, TypeFacility.RUNTIME_TYPES.BLOB));
+            if (dc.isProjected()) {
+	            Expression expr = dc.getExpression();
+	            // For GEOMETRY, force source to do conversion from proprietary struct to WKB blob.
+	            if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
+	                dc.setExpression(getLanguageFactory().createFunction(
+	                        SourceSystemFunctions.ST_ASBINARY, new Expression[] {expr}, TypeFacility.RUNTIME_TYPES.BLOB));
+	            }
             }
         } else if (obj instanceof Literal) {
             Literal l = (Literal) obj;
-            // For GEOMETRY, force source to do implicit conversion from WKB blob to proprietary struct.
+            // For GEOMETRY, force source to do implicit conversion from WKB blob to proprietary.
             if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
                 Literal srid = getLanguageFactory().createLiteral(
                         ((GeometryType) l.getValue()).getSrid(),

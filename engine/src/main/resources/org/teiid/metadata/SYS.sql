@@ -163,8 +163,8 @@ CREATE FOREIGN TABLE Functions (
 );
 
 CREATE FOREIGN TABLE Properties (
-	Name string(255) NOT NULL,
-	"Value" string(255) NOT NULL,
+	Name string(4000) NOT NULL,
+	"Value" string(4000) NOT NULL,
 	UID string(50) NOT NULL,
 	OID integer,
 	ClobValue clob(2097152),
@@ -236,4 +236,18 @@ CREATE VIEW spatial_sys_ref (
     proj4text string(2048))
     OPTIONS (MATERIALIZED true)
 AS select t.* from objecttable('teiid_context' COLUMNS x clob 'teiid_row.spatialSysRef') o
-, texttable(o.x columns srid integer, auth_name string, auth_srid integer, srtext string, proj4text string skip 1) t;  
+, texttable(o.x columns srid integer, auth_name string, auth_srid integer, srtext string, proj4text string skip 1) t;
+
+CREATE VIEW GEOMETRY_COLUMNS ( 
+    F_TABLE_CATALOG VARCHAR(256) NOT NULL, 
+    F_TABLE_SCHEMA VARCHAR(256) NOT NULL, 
+    F_TABLE_NAME VARCHAR(256) NOT NULL, 
+    F_GEOMETRY_COLUMN VARCHAR(256) NOT NULL,
+    COORD_DIMENSION INTEGER NOT NULL, 
+    SRID INTEGER NOT NULL, 
+    TYPE VARCHAR(30) NOT NULL)
+as select c.VDBName, c.SchemaName, c.TableName, c.Name, 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}coord_dimension') as integer), 2), 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}srid') as integer), 0),
+  nvl((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}type'), 'GEOMETRY') 
+  from sys.columns as c where DataType = 'geometry';

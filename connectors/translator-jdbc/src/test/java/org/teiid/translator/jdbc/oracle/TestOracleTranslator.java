@@ -1210,4 +1210,10 @@ public class TestOracleTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
+    @Test
+    public void testGeometryInsertQueryExpression() throws Exception {
+        String input = "insert into cola_markets select * from cola_markets"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (MKT_ID, NAME, SHAPE) SELECT COLA_MARKETS.MKT_ID, COLA_MARKETS.NAME, COLA_MARKETS.SHAPE FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

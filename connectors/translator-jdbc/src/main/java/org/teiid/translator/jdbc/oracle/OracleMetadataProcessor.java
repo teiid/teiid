@@ -29,6 +29,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.teiid.core.util.StringUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
@@ -97,5 +101,39 @@ public final class OracleMetadataProcessor extends
 	public void setUseGeometryType(boolean useGeometryType) {
 		this.useGeometryType = useGeometryType;
 	}
+	
+	@Override
+	protected void getGeometryMetadata(Column c, Connection conn,
+			String tableCatalog, String tableSchema, String tableName,
+			String columnName) {
+    	PreparedStatement ps = null;
+    	ResultSet rs = null;
+    	try {
+        	ps = conn.prepareStatement("select coord_dimension, srid from ALL_GEOMETRY_COLUMNS where f_table_schema=? and f_table_name=? and f_geometry_column=?"); //$NON-NLS-1$
+        	ps.setString(1, tableSchema);
+        	ps.setString(2, tableName);
+        	ps.setString(3, columnName);
+        	rs = ps.executeQuery();
+        	if (rs.next()) {
+        		c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
+        		c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
+        	}
+    	} catch (SQLException e) {
+    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$
+    	} finally {
+    		if (rs != null) {
+    			try {
+					rs.close();
+				} catch (SQLException e) {
+				}
+    		}
+    		if (ps != null) {
+    			try {
+					ps.close();
+				} catch (SQLException e) {
+				}
+    		}
+    	}
+    }
 
 }

@@ -472,7 +472,7 @@ public class TestMMDatabaseMetaData {
             while(rs.next()) {
                 count++;
             }
-            assertEquals(14, count);
+            assertEquals(15, count);
         } finally {
             if(rs != null) {
                 rs.close();

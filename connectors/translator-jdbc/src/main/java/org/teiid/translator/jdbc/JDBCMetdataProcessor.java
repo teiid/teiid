@@ -141,7 +141,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			}
 		}
 		
-		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
+		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata, conn);
 		HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
 		if (importKeys) {
 			getPrimaryKeys(metadataFactory, metadata, tables);
@@ -264,7 +264,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	}
 	
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata) throws SQLException {
+			DatabaseMetaData metadata, Connection conn) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
 		Map<String, TableInfo> tableMap = new HashMap<String, TableInfo>();
@@ -290,7 +290,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 		}
 		tables.close();
 		
-		getColumns(metadataFactory, metadata, tableMap);
+		getColumns(metadataFactory, metadata, tableMap, conn);
 		return tableMap;
 	}
 	
@@ -330,7 +330,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	}
 
 	private void getColumns(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
+			DatabaseMetaData metadata, Map<String, TableInfo> tableMap, Connection conn)
 			throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
 		boolean singleSchema = schemaPattern != null && !schemaPattern.contains("_") && !schemaPattern.contains("%"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -339,17 +339,17 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					(excludeTables == null //getting all from a single schema 
 					|| tableMap.size()/2 > Math.sqrt(tableMap.size()/2 + excludedTables)))) {  //not excluding enough from a single schema
 			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
-			processColumns(metadataFactory, tableMap, columns);
+			processColumns(metadataFactory, tableMap, columns, conn);
 		} else {
 			for (TableInfo ti : new LinkedHashSet<TableInfo>(tableMap.values())) {
 				ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, columnNamePattern);
-				processColumns(metadataFactory, tableMap, columns);
+				processColumns(metadataFactory, tableMap, columns, conn);
 			}
 		}
 	}
 
 	private void processColumns(MetadataFactory metadataFactory,
-			Map<String, TableInfo> tableMap, ResultSet columns)
+			Map<String, TableInfo> tableMap, ResultSet columns, Connection conn)
 			throws SQLException {
 		int rsColumns = columns.getMetaData().getColumnCount();
 		while (columns.next()) {
@@ -364,9 +364,26 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					continue;
 				}
 			}
-			addColumn(columns, tableInfo.table, metadataFactory, rsColumns);
+			Column c = addColumn(columns, tableInfo.table, metadataFactory, rsColumns);
+			if (TypeFacility.RUNTIME_TYPES.GEOMETRY.equals(c.getJavaType())) {
+				String columnName = columns.getString(4);
+				getGeometryMetadata(c, conn, tableCatalog, tableSchema, tableName, columnName);
+			}
 		}
 		columns.close();
+	}
+	
+	/**
+	 * 
+	 * @param c
+	 * @param conn
+	 * @param tableCatalog
+	 * @param tableSchema
+	 * @param tableName
+	 * @param columnName 
+	 */
+	protected void getGeometryMetadata(Column c, Connection conn, String tableCatalog, String tableSchema, String tableName, String columnName) {
+		
 	}
 	
 	/**

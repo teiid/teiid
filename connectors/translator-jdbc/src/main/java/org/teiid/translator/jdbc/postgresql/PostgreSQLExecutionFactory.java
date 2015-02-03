@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc.postgresql;
 
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -38,6 +39,8 @@ import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -731,6 +734,45 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
                     return TypeFacility.RUNTIME_NAMES.GEOMETRY;
                 }                
                 return super.getRuntimeType(type, typeName, precision);                    
+            }
+            
+            @Override
+            protected void getGeometryMetadata(Column c, Connection conn,
+            		String tableCatalog, String tableSchema, String tableName,
+            		String columnName) {
+            	PreparedStatement ps = null;
+            	ResultSet rs = null;
+            	try {
+            		if (tableCatalog == null) {
+            			tableCatalog = conn.getCatalog();
+            		}
+	            	ps = conn.prepareStatement("select coord_dimension, srid, type from public.geometry_columns where f_table_catalog=? and f_table_schema=? and f_table_name=? and f_geometry_column=?"); //$NON-NLS-1$
+	            	ps.setString(1, tableCatalog);
+	            	ps.setString(2, tableSchema);
+	            	ps.setString(3, tableName);
+	            	ps.setString(4, columnName);
+	            	rs = ps.executeQuery();
+	            	if (rs.next()) {
+	            		c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
+	            		c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
+	            		c.setProperty(MetadataFactory.SPATIAL_URI + "type", rs.getString(3)); //$NON-NLS-1$
+	            	}
+            	} catch (SQLException e) {
+            		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$
+            	} finally {
+            		if (rs != null) {
+            			try {
+							rs.close();
+						} catch (SQLException e) {
+						}
+            		}
+            		if (ps != null) {
+            			try {
+							ps.close();
+						} catch (SQLException e) {
+						}
+            		}
+            	}
             }
     	};
     }

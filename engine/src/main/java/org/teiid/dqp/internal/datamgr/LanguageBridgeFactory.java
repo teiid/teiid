@@ -167,9 +167,12 @@ public class LanguageBridgeFactory {
 	        if (command instanceof Query) {
 	            Select result = translate((Query)command);
 	            result.setDependentValues(this.dependentSets);
+	            setProjected(result);
 	            return result;
 	        } else if (command instanceof SetQuery) {
-	            return translate((SetQuery)command);
+	            org.teiid.language.SetQuery result = translate((SetQuery)command);
+	            setProjected(result);
+	            return result;
 	        } else if (command instanceof Insert) {
 	            return translate((Insert)command);
 	        } else if (command instanceof Update) {
@@ -188,6 +191,19 @@ public class LanguageBridgeFactory {
     		this.valueIndex = 0;
     	}
     }
+
+	private void setProjected(QueryExpression qe) {
+		if (qe instanceof Select) {
+			Select select = (Select)qe;
+			for (DerivedColumn dc : select.getDerivedColumns()) {
+				dc.setProjected(true);
+			}
+		} else {
+			org.teiid.language.SetQuery sq = (org.teiid.language.SetQuery)qe;
+			setProjected(sq.getLeftQuery());
+			setProjected(sq.getRightQuery());
+		}
+	}
     
     QueryExpression translate(QueryCommand command) {
     	if (command instanceof Query) {

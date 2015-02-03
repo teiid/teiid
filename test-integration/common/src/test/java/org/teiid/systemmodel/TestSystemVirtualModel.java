@@ -69,6 +69,13 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
     	mmd1.setSchemaSourceType("DDL");
     	mmd1.setSchemaText("create view T as select 1");
     	server.deployVDB("test", mmd, mmd1);
+    	
+    	ModelMetaData mmd2 = new ModelMetaData();
+    	mmd2.setName("x");
+    	mmd2.setModelType(Type.VIRTUAL);
+    	mmd2.setSchemaSourceType("DDL");
+    	mmd2.setSchemaText("create view t (g geometry options (\"teiid_spatial:srid\" 3819)) as select null;");
+    	server.deployVDB("test1", mmd2);
     }
     
     @AfterClass public static void teardown() throws Exception {
@@ -262,5 +269,11 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	
 	@Test public void testSpatial() throws Exception {
 		checkResult("testSpatial", "select * from spatial_sys_ref"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testGeometryColumns() throws Exception {
+		this.internalConnection.close();
+		this.internalConnection = server.createConnection("jdbc:teiid:test1");
+		checkResult("testGeometryColumns", "select * from GEOMETRY_COLUMNS"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
