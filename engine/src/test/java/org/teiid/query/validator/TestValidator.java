@@ -1183,7 +1183,7 @@ public class TestValidator {
     @Test public void testValidateObjectInComparison() throws Exception {
         String sql = "SELECT IntKey FROM BQT1.SmallA WHERE ObjectValue = 5";   //$NON-NLS-1$
         ValidatorReport report = helpValidate(sql, new String[] {"ObjectValue = 5"}, RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
-        assertEquals("Expressions of type OBJECT, CLOB, BLOB, or XML cannot be used in comparison: ObjectValue = 5.", report.toString()); //$NON-NLS-1$
+        assertEquals("Non-comparable expression of type object cannot be used in comparison: ObjectValue = 5.", report.toString()); //$NON-NLS-1$
     }
 
     @Test public void testValidateAssignmentWithFunctionOnParameter_InServer() throws Exception{
@@ -1226,7 +1226,7 @@ public class TestValidator {
     	QueryResolver.resolveCommand(command, metadata); 
         
         ValidatorReport report = Validator.validate(command, metadata);
-        assertEquals("Expressions of type OBJECT, CLOB, BLOB, or XML cannot be used as LOOKUP key columns: test.\"group\".e3.", report.toString()); //$NON-NLS-1$
+        assertEquals("Non-comparable expression of type blob cannot be used as LOOKUP key columns: test.\"group\".e3.", report.toString()); //$NON-NLS-1$
     }
     
     @Test public void testDefect12107() throws Exception{

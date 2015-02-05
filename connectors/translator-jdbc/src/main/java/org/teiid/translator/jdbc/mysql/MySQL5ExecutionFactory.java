@@ -106,6 +106,7 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 	        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
 	        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
 	        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+	        supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
         }
         supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         return supportedFunctions;

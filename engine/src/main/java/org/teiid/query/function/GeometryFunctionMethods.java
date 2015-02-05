@@ -214,4 +214,12 @@ public class GeometryFunctionMethods {
         return gt;
 	}
     
+    @TeiidFunction(name=SourceSystemFunctions.ST_EQUALS,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static Boolean equals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        return GeometryUtils.equals(geom1, geom2);
+	}
+    
 }

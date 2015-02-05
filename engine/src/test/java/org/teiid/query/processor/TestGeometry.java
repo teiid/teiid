@@ -24,10 +24,13 @@ package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayOutputStream;
 import java.sql.Blob;
 import java.sql.Clob;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
@@ -35,6 +38,12 @@ import org.teiid.core.types.XMLType;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.io.OutputStreamOutStream;
+import com.vividsolutions.jts.io.WKBWriter;
 
 @SuppressWarnings("nls")
 public class TestGeometry {
@@ -163,5 +172,31 @@ public class TestGeometry {
             valStr = ((XMLType) val).getString();
         }
         assertEquals(result, valStr);
+    }
+    
+    @Test public void testEquals() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("ST_Equals (ST_GeomFromText('LINESTRING(-1 2, 0 3)'), ST_GeomFromText('LINESTRING(0 3, -1 2)'))");
+		Boolean b = (Boolean) Evaluator.evaluate(ex);
+		assertTrue(b);
+		
+		ex = TestFunctionResolving.getExpression("ST_Equals (ST_GeomFromText('LINESTRING(0 0, 0 1, 0 3)'), ST_GeomFromText('LINESTRING(0 3, 0 0)'))");
+		b = (Boolean) Evaluator.evaluate(ex);
+		assertTrue(b);
+		
+		ex = TestFunctionResolving.getExpression("ST_Equals (ST_GeomFromText('LINESTRING(0 1, 0 3)'), ST_GeomFromText('LINESTRING(0 3, 0 0)'))");
+		b = (Boolean) Evaluator.evaluate(ex);
+		assertFalse(b);
+    }
+    
+    @Test(expected=ExpressionEvaluationException.class) public void testEwkb() throws Exception {
+    	WKBWriter writer = new WKBWriter(3, true);
+    	GeometryFactory gf = new GeometryFactory();
+    	Point point = gf.createPoint(new Coordinate(0, 0, 0));
+    	point.setSRID(100);
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	writer.write(point, new OutputStreamOutStream(baos));
+    	
+		Expression ex1 = TestFunctionResolving.getExpression("ST_GeomFromBinary(X'"+new BinaryType(baos.toByteArray())+"', 8307)");
+		Evaluator.evaluate(ex1);
     }
 }

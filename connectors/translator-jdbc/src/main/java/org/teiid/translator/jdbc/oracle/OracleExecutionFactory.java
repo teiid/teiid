@@ -280,6 +280,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new OracleRelateModifier("anyinteract")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new OracleRelateModifier("touch")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new OracleRelateModifier("EQUAL")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -820,6 +821,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
         supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
         supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+        supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
         return supportedFunctions;
     }
     

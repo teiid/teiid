@@ -35,6 +35,7 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.types.GeometryType;
+import org.teiid.query.QueryPlugin;
 import org.wololo.geojson.GeoJSON;
 import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
@@ -244,6 +245,10 @@ public class GeometryUtils {
             WKBReader reader = new WKBReader();
             is1 = geom.getBinaryStream();
             Geometry jtsGeom = reader.read(new InputStreamInStream(is1));
+            if (jtsGeom.getSRID() != GeometryType.UNKNOWN_SRID || jtsGeom.getDimension() > 2) {
+            	//don't allow ewkb - that needs an explicit function
+            	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160));
+            }
             jtsGeom.setSRID(srid);
             return jtsGeom;
         } catch (ParseException e) {
@@ -260,5 +265,9 @@ public class GeometryUtils {
 				}
         	}
         }
+	}
+
+	public static Boolean equals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		return getGeometry(geom1).equalsTopo(getGeometry(geom2));
 	}
 }

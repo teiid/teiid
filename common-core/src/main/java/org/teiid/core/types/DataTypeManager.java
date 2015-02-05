@@ -946,6 +946,7 @@ public class DataTypeManager {
         return (!COMPARABLE_OBJECT && DataTypeManager.DefaultDataTypes.OBJECT.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.CLOB.equals(type))
+            || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type)
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
     }
     

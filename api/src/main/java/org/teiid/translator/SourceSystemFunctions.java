@@ -182,4 +182,5 @@ public class SourceSystemFunctions {
 	public static final String ST_TOUCHES = "st_touches"; //$NON-NLS-1$
 	public static final String ST_SRID = "st_srid"; //$NON-NLS-1$
 	public static final String ST_SETSRID = "st_setsrid"; //$NON-NLS-1$
+	public static final String ST_EQUALS = "st_equals"; //$NON-NLS-1$
 }

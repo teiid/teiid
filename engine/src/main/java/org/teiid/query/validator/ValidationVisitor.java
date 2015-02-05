@@ -273,7 +273,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	public void visit(SubquerySetCriteria obj) {
 		validateSubquery(obj);
 		if (isNonComparable(obj.getExpression())) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj); //$NON-NLS-1$
+			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj); //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
         
@@ -338,7 +338,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		try {
 				ResolverUtil.ResolvedLookup resolvedLookup = ResolverUtil.resolveLookup(obj, getMetadata());
 				if(ValidationVisitor.isNonComparable(resolvedLookup.getKeyElement())) {
-		            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_lookup_key", resolvedLookup.getKeyElement()), resolvedLookup.getKeyElement()); //$NON-NLS-1$            
+		            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_lookup_key", resolvedLookup.getKeyElement(), DataTypeManager.getDataTypeName(resolvedLookup.getKeyElement().getType())), resolvedLookup.getKeyElement()); //$NON-NLS-1$            
 		        }
 			} catch (TeiidComponentException e) {
 				handleException(e, obj);
@@ -527,7 +527,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
 	private void validateSortable(Expression symbol) {
 		if (isNonComparable(symbol)) {
-		    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0026", symbol), symbol); //$NON-NLS-1$
+		    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0026", symbol, DataTypeManager.getDataTypeName(symbol.getType())), symbol); //$NON-NLS-1$
 		}
 	}
 
@@ -884,7 +884,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(BetweenCriteria obj) {
     	if (isNonComparable(obj.getExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -919,7 +919,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(SetCriteria obj) {
     	if (isNonComparable(obj.getExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -931,7 +931,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(SubqueryCompareCriteria obj) {
     	validateSubquery(obj);
     	if (isNonComparable(obj.getLeftExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getLeftExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -1002,7 +1002,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(CompareCriteria obj) {
     	if (isNonComparable(obj.getLeftExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getLeftExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
     	
         // Validate use of 'rowlimit' and 'rowlimitexception' pseudo-functions - they cannot be nested within another
