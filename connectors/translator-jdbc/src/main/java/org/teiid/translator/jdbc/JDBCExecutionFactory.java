@@ -995,7 +995,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				break;
     			}  
     			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
-    				return results.getBoolean(columnIndex);
+    				boolean result = results.getBoolean(columnIndex);
+    				if(results.wasNull()) {
+                        return null;
+                    } 
+    				return result;
     			}
             }
         }
@@ -1097,7 +1101,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				}
     			}
     			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
-    				return results.getBoolean(parameterIndex);
+    				boolean result = results.getBoolean(parameterIndex);
+    				if(results.wasNull()) {
+                        return null;
+                    } 
+    				return result;
     			}
             }
         }

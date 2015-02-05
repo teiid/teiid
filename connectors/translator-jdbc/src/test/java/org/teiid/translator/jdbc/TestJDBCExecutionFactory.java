@@ -82,4 +82,12 @@ public class TestJDBCExecutionFactory {
 		Mockito.stub(rs.getObject(1)).toReturn(s);
 		assertTrue(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.OBJECT) instanceof Array);
 	}
+	
+	@Test public void testBooleanRetrival() throws SQLException {
+		JDBCExecutionFactory jef = new JDBCExecutionFactory();
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Mockito.stub(rs.getBoolean(1)).toReturn(false);
+		Mockito.stub(rs.wasNull()).toReturn(true);
+		assertNull(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.BOOLEAN));
+	}
 }
