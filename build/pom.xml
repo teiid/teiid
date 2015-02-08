@@ -35,6 +35,7 @@
                     <include>**/*.bat</include>
                     <include>**/*.html</include>
                     <include>**/*.cli</include>
+                    <include>**/Dockerfile</include>
                 </includes>
             </resource>
             <resource>
@@ -47,6 +48,7 @@
                     <exclude>**/*.bat</exclude>
                     <exclude>**/*.html</exclude>
                     <exclude>**/*.cli</exclude>
+                    <exclude>**/Dockerfile</exclude>
                 </excludes>
             </resource>
         </resources>
@@ -74,6 +76,7 @@
                 <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                 <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                 <descriptor>assembly/embedded-dist.xml</descriptor>
+                <descriptor>assembly/docker.xml</descriptor>
               </descriptors>
             </configuration>
 
@@ -166,7 +169,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -175,7 +177,7 @@
                         <id>jboss-eap-dist</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>unpack</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
                             <artifactItems>
@@ -185,16 +187,17 @@
                                     <version>${version.org.jboss.as}</version>
                                     <type>zip</type>
                                     <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/uberzip</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/teiid-${project.version}-docker</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
+                    <!-- 
                     <execution>
                         <id>teiid-dist</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>unpack</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
                             <artifactItems>
@@ -205,16 +208,17 @@
                                     <classifier>jboss-dist</classifier>
                                     <type>zip</type>
                                     <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/uberzip/jboss-eap-6.3</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/docker</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
+                     -->
                     <execution>
                         <id>console-dist</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>unpack</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
                             <artifactItems>
@@ -225,14 +229,13 @@
                                     <classifier>jboss-as7</classifier>
                                     <type>zip</type>
                                     <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/uberzip/jboss-eap-6.3</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/teiid-${project.version}-docker</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
     
@@ -254,6 +257,7 @@
                   <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                   <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                   <descriptor>assembly/embedded-dist.xml</descriptor>
+                  <descriptor>assembly/docker.xml</descriptor>
                 </descriptors>
               </configuration>
             </plugin>
