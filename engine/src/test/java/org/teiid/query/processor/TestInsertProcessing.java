@@ -452,7 +452,7 @@ public class TestInsertProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
-		dataManager.addData("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", expected);
+		dataManager.addData("INSERT INTO g1 (e1, e2, e3, e4) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0", expected);
         helpProcess(plan, dataManager, expected);
     }
     
@@ -470,7 +470,7 @@ public class TestInsertProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
-		dataManager.addData("INSERT INTO g1 (e1) SELECT g2.e1 FROM g2", expected);
+		dataManager.addData("INSERT INTO g1 (e1) SELECT g_0.e1 FROM g2 AS g_0", expected);
         helpProcess(plan, dataManager, expected);
     }
     
@@ -488,7 +488,26 @@ public class TestInsertProcessing {
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
         
-        TestOptimizer.helpPlan(sql, metadata, new String[] {"INSERT INTO Test_Insert (status) SELECT CASE WHEN (status = '0') AND (cnt > 0) THEN '4' ELSE status END AS status FROM (SELECT a AS status, (SELECT COUNT(*) FROM y.test_a AS g_0) AS cnt FROM test_a AS smh) AS a"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"INSERT INTO Test_Insert (status) SELECT CASE WHEN (v_0.c_0 = '0') AND (v_0.c_1 > 0) THEN '4' ELSE v_0.c_0 END FROM (SELECT g_0.a AS c_0, (SELECT COUNT(*) FROM y.test_a AS g_1) AS c_1 FROM y.test_a AS g_0) AS v_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testInsertQueryExpressionLayeredView() throws Exception {
+    	QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE target  (  a integer ) options (updatable true);"
+        		+ " CREATE foreign TABLE source  (  a integer );"
+        		+ "create view v1 as select a from source group by a; create view v2 as select a from y.v1 group by a;", "x",  "y" );
+    	
+    	String sql = "insert into target SELECT * FROM y.v2;"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+     
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, capFinder);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("INSERT INTO target (a) SELECT v_0.c_0 FROM (SELECT g_0.a AS c_0 FROM source AS g_0 GROUP BY g_0.a) AS v_0 GROUP BY v_0.c_0", Arrays.asList(1));
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)});
     }
     
     @Test public void testAutoIncrementView() throws Exception {

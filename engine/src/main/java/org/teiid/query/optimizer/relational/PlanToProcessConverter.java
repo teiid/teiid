@@ -362,36 +362,13 @@ public class PlanToProcessConverter {
                     ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
                     aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     setRoutingName(aNode, node, command);
-                    if (command instanceof QueryCommand) {
-	                    try {
-	                        command = (Command)command.clone();
-	                        boolean aliasGroups = modelID != null && (CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder) 
-	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
-	                        boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
-	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
-	                        AliasGenerator visitor = new AliasGenerator(aliasGroups, !aliasColumns);
-	                        SourceHint sh = command.getSourceHint();
-                        	if (sh != null && aliasGroups) {
-                        		VDBMetaData vdb = context.getDQPWorkContext().getVDB();
-                            	ModelMetaData model = vdb.getModel(aNode.getModelName());
-                            	List<String> sourceNames = model.getSourceNames();
-                            	SpecificHint sp = null;
-                            	if (sourceNames.size() == 1) {
-                            		sp = sh.getSpecificHint(sourceNames.get(0));
-                            	}
-	                        	if (sh.isUseAliases() || (sp != null && sp.isUseAliases())) {
-	                        		visitor.setAliasMapping(context.getAliasMapping());
-	                        	}
-	                        }
-							command.acceptVisitor(visitor);
-	                    } catch (QueryMetadataException err) {
-	                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);
-	                    } catch (TeiidRuntimeException e) {
-	                    	if (e.getCause() instanceof QueryPlannerException) {
-	                    		throw (QueryPlannerException)e.getCause();
-	                    	}
-	                    	throw e;
-	                    }
+                    if (command instanceof Insert) {
+                    	Insert insert = (Insert)command;
+                    	if (insert.getQueryExpression() != null) {
+                    		insert.setQueryExpression((QueryCommand)aliasCommand(aNode, insert.getQueryExpression(), modelID));
+                    	}
+                    } else if (command instanceof QueryCommand) {
+	                    command = aliasCommand(aNode, command, modelID);
                     }
                     aNode.setCommand(command);
                     Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);
@@ -628,6 +605,41 @@ public class PlanToProcessConverter {
 		}
 
 		return processNode;
+	}
+
+	private Command aliasCommand(AccessNode aNode, Command command,
+			Object modelID) throws TeiidComponentException,
+			QueryPlannerException {
+		try {
+		    command = (Command)command.clone();
+		    boolean aliasGroups = modelID != null && (CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder) 
+		    		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
+		    boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
+		    		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
+		    AliasGenerator visitor = new AliasGenerator(aliasGroups, !aliasColumns);
+		    SourceHint sh = command.getSourceHint();
+			if (sh != null && aliasGroups) {
+				VDBMetaData vdb = context.getDQPWorkContext().getVDB();
+		    	ModelMetaData model = vdb.getModel(aNode.getModelName());
+		    	List<String> sourceNames = model.getSourceNames();
+		    	SpecificHint sp = null;
+		    	if (sourceNames.size() == 1) {
+		    		sp = sh.getSpecificHint(sourceNames.get(0));
+		    	}
+		    	if (sh.isUseAliases() || (sp != null && sp.isUseAliases())) {
+		    		visitor.setAliasMapping(context.getAliasMapping());
+		    	}
+		    }
+			command.acceptVisitor(visitor);
+		} catch (QueryMetadataException err) {
+		     throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);
+		} catch (TeiidRuntimeException e) {
+			if (e.getCause() instanceof QueryPlannerException) {
+				throw (QueryPlannerException)e.getCause();
+			}
+			throw e;
+		}
+		return command;
 	}
 	
 	private void checkForSharedSourceCommand(AccessNode aNode) {
