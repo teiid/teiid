@@ -53,6 +53,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.Array;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -550,26 +551,61 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             DerivedColumn dc = (DerivedColumn) obj;
             if (dc.isProjected()) {
 	            Expression expr = dc.getExpression();
-	            // For GEOMETRY, force source to do conversion from proprietary struct to WKB blob.
 	            if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
-	                dc.setExpression(getLanguageFactory().createFunction(
-	                        SourceSystemFunctions.ST_ASBINARY, new Expression[] {expr}, TypeFacility.RUNTIME_TYPES.BLOB));
+	                dc.setExpression(translateGeometrySelect(expr));
 	            }
             }
         } else if (obj instanceof Literal) {
             Literal l = (Literal) obj;
-            // For GEOMETRY, force source to do implicit conversion from WKB blob to proprietary.
             if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
-                Literal srid = getLanguageFactory().createLiteral(
-                        ((GeometryType) l.getValue()).getSrid(),
-                        Integer.class
-                );
-                return Arrays.asList(getLanguageFactory().createFunction(
-                        SourceSystemFunctions.ST_GEOMFROMWKB, new Expression[] { l, srid }, TypeFacility.RUNTIME_TYPES.GEOMETRY));
+                return translateGeometryLiteral(l);
             }
         }
     	return parts;
     }
+    
+    /**
+     * Translate GEOMETRY column reference into an expression that 
+     * will return SRID & WKB.
+     * 
+     * @param expr
+     * @return 
+     */
+    public Expression translateGeometrySelect(Expression expr) {
+        return new Function(SourceSystemFunctions.ST_ASBINARY, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.BLOB);
+    }
+    
+    /**
+     * Translate GEOMETRY literal into an expression that will convert to database 
+     * geometry type.
+     * 
+     * @param l
+     * @return 
+     */
+    public List<?> translateGeometryLiteral(Literal l) {
+        Literal srid = getLanguageFactory().createLiteral(
+                ((GeometryType) l.getValue()).getSrid(),
+                Integer.class
+        );
+        return Arrays.asList(getLanguageFactory().createFunction(
+                SourceSystemFunctions.ST_GEOMFROMWKB, 
+                new Expression[] { l, srid }, 
+                TypeFacility.RUNTIME_TYPES.GEOMETRY)
+        );
+    }
+    
+    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) {
+        GeometryType geom = null;
+        try {
+            Blob val = results.getBlob(paramIndex);
+            if (val != null) {
+                geom = new GeometryType(val);
+            }
+        } catch (SQLException e) {
+            // ignore
+        }
+        return geom;
+    }    
     
     /**
      * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
@@ -976,15 +1012,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				break;
     			}
     			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
-    				try {
-    					Blob val = results.getBlob(columnIndex);
-    					if (val != null) {
-    						return new GeometryType(val);
-    					}
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
+                    return retrieveGeometryValue(results, columnIndex);
     			}
     			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
@@ -1118,7 +1146,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
 		return result;
     }
-       
+    
     protected Object convertObject(Object object) throws SQLException {
     	if (object instanceof Struct) {
     		switch (structRetrieval) {

@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.sql.SQLException;
 
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BlobType;
@@ -48,8 +47,18 @@ import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBReader;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
-import com.vividsolutions.jts.io.gml2.GMLReader;
+import com.vividsolutions.jts.io.gml2.GMLHandler;
 import com.vividsolutions.jts.io.gml2.GMLWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * Utility methods for geometry
@@ -137,27 +146,70 @@ public class GeometryUtils {
         return geometryFromGml(gml, GeometryType.UNKNOWN_SRID);
     }
     
+    /**
+     * Custom SAX handler extending GMLHandler to handle parsing SRIDs.
+     */
+    private static class GmlSridHandler extends GMLHandler {
+        private int srid = GeometryType.UNKNOWN_SRID;
+        
+        public GmlSridHandler(GeometryFactory gf, ErrorHandler delegate) {
+            super(gf, delegate);
+        }
+
+        @Override
+        public void startElement(String uri, String localName, String qName, Attributes attributes) 
+                throws SAXException {
+            String srsName = attributes.getValue("srsName");
+            if (srsName != null) {
+                String[] srsParts = srsName.split(":");
+                try {
+                    srid = Integer.parseInt(srsParts[1]);
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
+            }            
+            super.startElement(uri, localName, qName, attributes);
+        }
+
+        public int getSrid() {
+            return srid;
+        } 
+    }
+    
     public static GeometryType geometryFromGml(ClobType gml, int srid) 
             throws FunctionExecutionException {
-        GMLReader reader = new GMLReader();
-        GeometryFactory gf = new GeometryFactory();
+        GeometryFactory gf = new GeometryFactory();        
         Geometry jtsGeometry = null;
-        Reader r = null;
-        try {
-            r = gml.getCharacterStream();
-            jtsGeometry = reader.read(r, gf);
+        Reader reader = null;
+        try {            
+            reader = gml.getCharacterStream();            
+            
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(false);
+            factory.setValidating(false);            
+            SAXParser parser = factory.newSAXParser();            
+            
+            GmlSridHandler handler = new GmlSridHandler(gf, null);
+            parser.parse(new InputSource(reader), handler);
+            
+            jtsGeometry = handler.getGeometry();
+        
+            if (srid == GeometryType.UNKNOWN_SRID) {
+                srid = handler.getSrid();
+            }
+
         } catch (IOException e) {
-            throw new FunctionExecutionException(e);
-        } catch (ParserConfigurationException e) {            
             throw new FunctionExecutionException(e);
         } catch (SAXException e) {
             throw new FunctionExecutionException(e);
         } catch (SQLException e) {
             throw new FunctionExecutionException(e);
+        } catch (ParserConfigurationException e) {
+            throw new FunctionExecutionException(e);
         } finally {
-            if (r != null) {
+            if (reader != null) {
                 try {
-                    r.close();
+                    reader.close();
                 } catch (Exception e) {
                     // Nothing
                 }

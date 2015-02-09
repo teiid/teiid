@@ -1171,7 +1171,7 @@ public class TestOracleTranslator {
     @Test
     public void testGeometrySelectConvert() throws Exception {
         String input = "select shape x from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_UTIL.TO_WKBGEOMETRY(COLA_MARKETS.SHAPE) AS x FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT SDO_UTIL.TO_GMLGEOMETRY(COLA_MARKETS.SHAPE) AS x FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 

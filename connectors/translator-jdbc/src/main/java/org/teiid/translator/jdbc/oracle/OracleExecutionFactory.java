@@ -25,6 +25,7 @@ package org.teiid.translator.jdbc.oracle;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,6 +36,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.GeometryType;
 
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
@@ -49,6 +53,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ProcedureParameter;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -244,6 +249,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         
     	registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
     	registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_ASGML, new AliasModifier("SDO_UTIL.TO_GMLGEOMETRY")); //$NON-NLS-1$
 
         // Used instead of SDO_UTIL functions because it allows SRID to be specified.
     	// we need to use to_blob and to_clob to disambiguate
@@ -813,6 +819,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
         supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
         supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
         supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
         supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
@@ -1039,5 +1046,25 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsGroupByRollup() {
     	return true;
     }
-    
+
+    @Override
+    public Expression translateGeometrySelect(Expression expr) {
+        return new Function(SourceSystemFunctions.ST_ASGML, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.CLOB);
+    }
+
+    @Override
+    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) {
+        GeometryType geom = null;
+        try {
+            Clob clob = results.getClob(paramIndex);
+            if (clob != null) {
+                geom = GeometryUtils.geometryFromGml(new ClobType(clob));
+            }
+        } catch (SQLException e) {
+            // ignore
+        } catch (FunctionExecutionException e) {
+            // ignore
+        }
+        return geom;
+    }
 }

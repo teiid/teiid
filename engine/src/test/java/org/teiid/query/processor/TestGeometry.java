@@ -30,7 +30,6 @@ import java.sql.Clob;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
@@ -40,10 +39,14 @@ import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.OutputStreamOutStream;
 import com.vividsolutions.jts.io.WKBWriter;
+import com.vividsolutions.jts.io.gml2.GMLReader;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.query.function.GeometryUtils;
 
 @SuppressWarnings("nls")
 public class TestGeometry {
@@ -198,5 +201,12 @@ public class TestGeometry {
     	
 		Expression ex1 = TestFunctionResolving.getExpression("ST_GeomFromBinary(X'"+new BinaryType(baos.toByteArray())+"', 8307)");
 		Evaluator.evaluate(ex1);
+    }
+    
+    @Test
+    public void testGmlParseSrid() throws Exception {
+        String gml = "<gml:Polygon srsName=\"SDO:8307\" xmlns:gml=\"http://www.opengis.net/gml\"><gml:outerBoundaryIs><gml:LinearRing><gml:coordinates decimal=\".\" cs=\",\" ts=\" \">5,1 8,1 8,6 5,7 5,1 </gml:coordinates></gml:LinearRing></gml:outerBoundaryIs></gml:Polygon>";
+        GeometryType gt = GeometryUtils.geometryFromGml(new ClobType(ClobImpl.createClob(gml.toCharArray())));
+        assertEquals(8307, gt.getSrid());
     }
 }
