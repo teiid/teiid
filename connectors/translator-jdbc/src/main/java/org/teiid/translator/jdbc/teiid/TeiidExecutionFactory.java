@@ -175,6 +175,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
         	supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
         	supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        	supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
         	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
         	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
         	supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);

@@ -22,6 +22,7 @@
 
 package org.teiid.translator.jdbc.postgresql;
 
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -34,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.GeometryType;
 import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -41,6 +44,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -776,6 +780,25 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
             	}
             }
     	};
+    }
+    
+    @Override
+    public Expression translateGeometrySelect(Expression expr) {
+        return new Function("ST_ASEWKB", Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.BLOB); //$NON-NLS-1$
+    }
+
+    @Override
+    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        GeometryType geom = null;
+        try {
+            Blob blob = results.getBlob(paramIndex);
+            if (blob != null) {
+                geom = GeometryUtils.geometryFromEwkb(blob);
+            }
+        } catch (FunctionExecutionException e) {
+            throw new SQLException(e);
+        }
+        return geom;
     }
     
 }

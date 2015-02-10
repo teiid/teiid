@@ -22,6 +22,10 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -33,6 +37,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
@@ -455,4 +463,84 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     protected JDBCMetdataProcessor createMetadataProcessor() {
         return (JDBCMetdataProcessor)getMetadataProcessor();
     }    
+    
+    @Override
+    public Expression translateGeometrySelect(Expression expr) {
+    	return expr;
+    }
+    
+    @Override
+    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        Blob val = results.getBlob(paramIndex);
+        
+        return toGeometryType(val);
+    }
+    
+    @Override
+    public Object retrieveValue(CallableStatement results, int parameterIndex,
+    		Class<?> expectedType) throws SQLException {
+        Blob val = results.getBlob(parameterIndex);
+        
+        return toGeometryType(val);
+    }
+
+    /**
+     * It appears that mysql will actually return a byte array or a blob backed by a byte array
+     * but just to be safe we'll assume that there may be true blob and that we should back the
+     * geometry value with that blob.
+     * @param val
+     * @return
+     * @throws SQLException
+     */
+	GeometryType toGeometryType(final Blob val) throws SQLException {
+        if (val == null) {
+        	return null;
+        }
+    	//create a wrapper for that will handle the srid
+    	long length = val.length() - 4;
+    	InputStreamFactory streamFactory = new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				InputStream is;
+				try {
+					is = val.getBinaryStream();
+				} catch (SQLException e) {
+					throw new IOException(e);
+				}
+				for (int i = 0; i < 4; i++) {
+					is.read();
+				}
+				return is;
+			}
+			
+		};
+		
+		//read the little endian srid
+		InputStream is = val.getBinaryStream();
+		int srid = 0;
+		try {
+			for (int i = 0; i < 4; i++) {
+				try {
+					int b = is.read();
+					srid += (b << i*8);
+				} catch (IOException e) {
+					srid = GeometryType.UNKNOWN_SRID; //could not determine srid
+				}
+			}
+		} finally {
+			try {
+				is.close();
+			} catch (IOException e) {
+				//i
+			}
+		}
+		
+		streamFactory.setLength(length);
+		Blob b = new BlobImpl(streamFactory);
+    	
+		GeometryType geom = new GeometryType(b);
+        geom.setSrid(srid);
+        return geom;
+	}
 }

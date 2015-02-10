@@ -31,22 +31,20 @@ import java.sql.Clob;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.OutputStreamOutStream;
 import com.vividsolutions.jts.io.WKBWriter;
-import com.vividsolutions.jts.io.gml2.GMLReader;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.query.function.GeometryUtils;
 
 @SuppressWarnings("nls")
 public class TestGeometry {

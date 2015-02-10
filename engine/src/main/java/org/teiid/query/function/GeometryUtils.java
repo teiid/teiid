@@ -25,8 +25,13 @@ package org.teiid.query.function;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.SQLException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BlobType;
@@ -38,6 +43,9 @@ import org.teiid.query.QueryPlugin;
 import org.wololo.geojson.GeoJSON;
 import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
+import org.xml.sax.Attributes;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -49,16 +57,6 @@ import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.gml2.GMLHandler;
 import com.vividsolutions.jts.io.gml2.GMLWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import org.xml.sax.Attributes;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * Utility methods for geometry
@@ -143,11 +141,14 @@ public class GeometryUtils {
         
     public static GeometryType geometryFromGml(ClobType gml) 
             throws FunctionExecutionException {
-        return geometryFromGml(gml, GeometryType.UNKNOWN_SRID);
+        return geometryFromGml(gml, null);
     }
     
     /**
      * Custom SAX handler extending GMLHandler to handle parsing SRIDs.
+     * 
+     * The default JTS logic only handles srsName=int or srsName=uri/int
+     * whereas other systems commonly use srsName=name:int
      */
     private static class GmlSridHandler extends GMLHandler {
         private int srid = GeometryType.UNKNOWN_SRID;
@@ -159,9 +160,9 @@ public class GeometryUtils {
         @Override
         public void startElement(String uri, String localName, String qName, Attributes attributes) 
                 throws SAXException {
-            String srsName = attributes.getValue("srsName");
+            String srsName = attributes.getValue("srsName"); //$NON-NLS-1$
             if (srsName != null) {
-                String[] srsParts = srsName.split(":");
+                String[] srsParts = srsName.split(":"); //$NON-NLS-1$
                 try {
                     srid = Integer.parseInt(srsParts[1]);
                 } catch (NumberFormatException e) {
@@ -176,7 +177,7 @@ public class GeometryUtils {
         } 
     }
     
-    public static GeometryType geometryFromGml(ClobType gml, int srid) 
+    public static GeometryType geometryFromGml(Clob gml, Integer srid) 
             throws FunctionExecutionException {
         GeometryFactory gf = new GeometryFactory();        
         Geometry jtsGeometry = null;
@@ -194,10 +195,13 @@ public class GeometryUtils {
             
             jtsGeometry = handler.getGeometry();
         
-            if (srid == GeometryType.UNKNOWN_SRID) {
-                srid = handler.getSrid();
+            if (srid == null) { 
+        		if (jtsGeometry.getSRID() == GeometryType.UNKNOWN_SRID) {
+        			srid = handler.getSrid();
+        		} else {
+        			srid = jtsGeometry.getSRID();
+        		}
             }
-
         } catch (IOException e) {
             throw new FunctionExecutionException(e);
         } catch (SAXException e) {
@@ -287,25 +291,27 @@ public class GeometryUtils {
     
     public static Geometry getGeometry(GeometryType geom)
             throws FunctionExecutionException {
-        return getGeometry(geom, geom.getSrid());
+        try {
+			return getGeometry(geom.getBinaryStream(), geom.getSrid(), false);
+		} catch (SQLException e) {
+			throw new FunctionExecutionException(e);
+		}
     }
 
-	public static Geometry getGeometry(GeometryType geom, int srid) 
+	public static Geometry getGeometry(InputStream is1, Integer srid, boolean allowEwkb) 
             throws FunctionExecutionException {
-		InputStream is1 = null;
         try {
             WKBReader reader = new WKBReader();
-            is1 = geom.getBinaryStream();
             Geometry jtsGeom = reader.read(new InputStreamInStream(is1));
-            if (jtsGeom.getSRID() != GeometryType.UNKNOWN_SRID || jtsGeom.getDimension() > 2) {
+            if (!allowEwkb && (jtsGeom.getSRID() != GeometryType.UNKNOWN_SRID || jtsGeom.getDimension() > 2)) {
             	//don't allow ewkb - that needs an explicit function
             	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160));
             }
-            jtsGeom.setSRID(srid);
+            if (srid != null) { 
+            	jtsGeom.setSRID(srid);
+            }
             return jtsGeom;
         } catch (ParseException e) {
-            throw new FunctionExecutionException(e);
-        } catch (SQLException e) {
             throw new FunctionExecutionException(e);
         } catch (IOException e) {
         	throw new FunctionExecutionException(e);
@@ -321,5 +327,15 @@ public class GeometryUtils {
 
 	public static Boolean equals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
 		return getGeometry(geom1).equalsTopo(getGeometry(geom2));
+	}
+
+	public static GeometryType geometryFromEwkb(Blob blob) throws FunctionExecutionException {
+		Geometry geom;
+		try {
+			geom = getGeometry(blob.getBinaryStream(), null, true);
+		} catch (SQLException e) {
+			throw new FunctionExecutionException(e);
+		}
+		return getGeometryType(geom);
 	}
 }

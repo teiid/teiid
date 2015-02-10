@@ -53,7 +53,6 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
-import org.teiid.language.Array;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -557,7 +556,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             }
         } else if (obj instanceof Literal) {
             Literal l = (Literal) obj;
-            if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
+            if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY && l.getValue() != null) {
                 return translateGeometryLiteral(l);
             }
         }
@@ -594,18 +593,18 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         );
     }
     
-    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) {
+    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
         GeometryType geom = null;
-        try {
-            Blob val = results.getBlob(paramIndex);
-            if (val != null) {
-                geom = new GeometryType(val);
-            }
-        } catch (SQLException e) {
-            // ignore
+        Blob val = results.getBlob(paramIndex);
+        if (val != null) {
+            geom = new GeometryType(val);
         }
         return geom;
     }    
+    
+    public GeometryType retrieveGeometryValue(CallableStatement results, int parameterIndex) throws SQLException {
+    	throw new SQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11022));
+	}
     
     /**
      * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
@@ -1111,15 +1110,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				}
     			}
     			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
-    				try {
-    					Blob val = results.getBlob(parameterIndex);
-    					if (val != null) {
-    						return new GeometryType(val);
-    					}
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
+    				return retrieveGeometryValue(results, parameterIndex);
     			}
     			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
@@ -1146,7 +1137,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
 		return result;
     }
-    
+
     protected Object convertObject(Object object) throws SQLException {
     	if (object instanceof Struct) {
     		switch (structRetrieval) {

@@ -22,9 +22,14 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.GeometryType;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -380,8 +385,17 @@ public class TestMySQLTranslator {
     @Test
     public void testGeometrySelectConvert() throws Exception {
         String input = "select shape from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT AsWKB(COLA_MARKETS.SHAPE) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.SHAPE FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testMysqlGeometryRead() throws Exception {
+    	MySQLExecutionFactory msef = new MySQLExecutionFactory();
+    	msef.start();
+    	GeometryType gt = msef.toGeometryType(BlobType.createBlob(new byte[] {01,02,00,00,01,01,00,00,00,00,00,00,00,00,00,(byte)0xf0,(byte)0x3f,00,00,00,00,00,00,(byte)0xf0,0x3f }));
+    	assertEquals(513, gt.getSrid());
+    	GeometryUtils.getGeometry(gt);
     }
 
 }

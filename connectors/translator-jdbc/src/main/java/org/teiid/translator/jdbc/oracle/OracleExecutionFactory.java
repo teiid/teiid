@@ -36,10 +36,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.teiid.api.exception.query.FunctionExecutionException;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.GeometryType;
 
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.GeometryType;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
@@ -1053,18 +1052,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     }
 
     @Override
-    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) {
+    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
         GeometryType geom = null;
         try {
             Clob clob = results.getClob(paramIndex);
             if (clob != null) {
-                geom = GeometryUtils.geometryFromGml(new ClobType(clob));
+                geom = GeometryUtils.geometryFromGml(clob, null);
             }
-        } catch (SQLException e) {
-            // ignore
         } catch (FunctionExecutionException e) {
-            // ignore
+            throw new SQLException(e);
         }
         return geom;
     }
+    
 }
