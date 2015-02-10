@@ -1206,7 +1206,7 @@ public class TestOracleTranslator {
     @Test
     public void testGeometryInsertNull() throws Exception {
         String input = "insert into cola_markets(name,shape) values('foo124', null)"; //$NON-NLS-1$
-        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', SDO_GEOMETRY(TO_BLOB(?), 8307))"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', ?)"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
