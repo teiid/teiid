@@ -29,6 +29,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
@@ -47,15 +49,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.AggregationOptions;
-import com.mongodb.AggregationOutput;
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
+import com.mongodb.*;
 
 @SuppressWarnings("nls")
 public class TestMongoDBQueryExecution {
@@ -1318,4 +1312,56 @@ public class TestMongoDBQueryExecution {
         }
         return list;
     }
+    
+    @Test
+    public void testNextWithGroupAndOrder() throws Exception {
+        String query = "select \"FirstName\" from \"TeiidArray\" group by \"FirstName\" order by \"FirstName\" limit 1000";
+
+        String[] expectedCollection = new String[]{"TeiidArray"};
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE TeiidArray (ID String PRIMARY KEY, FirstName varchar(25), LastName varchar(25), Score object[]) OPTIONS(UPDATABLE 'TRUE');", "x", "y");
+        
+        TranslationUtility util = new TranslationUtility(metadata);
+        
+        Command cmd = util.parseCommand(query);
+		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+		Mockito.stub(context.getBatchSize()).toReturn(256);
+		MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
+		DB db = Mockito.mock(DB.class);
+
+		DBCollection dbCollection = Mockito.mock(DBCollection.class);
+		for(String collection:expectedCollection) {
+			Mockito.stub(db.getCollection(collection)).toReturn(dbCollection);
+		}
+
+		Cursor c = Mockito.mock(Cursor.class);
+		
+		Mockito.stub(c.hasNext()).toAnswer(new Answer<Boolean>() {
+			boolean next = true;
+			@Override
+			public Boolean answer(InvocationOnMock invocation) throws Throwable {
+				if (next) {
+					next = false;
+					return true;
+				}
+				return false;
+			}
+		});
+		
+		DBObject dbo = Mockito.mock(DBObject.class);
+		
+		Mockito.stub(c.next()).toReturn(dbo);
+		
+		Mockito.stub(dbCollection.aggregate((List<DBObject>)Mockito.anyList(), (AggregationOptions)Mockito.anyObject())).toReturn(c);
+
+		Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
+		Mockito.stub(connection.getDatabase()).toReturn(db);
+
+		Mockito.stub(db.getCollectionFromString(Mockito.anyString())).toReturn(dbCollection);
+
+		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context, 
+				util.createRuntimeMetadata(), connection);
+		execution.execute();
+		execution.next();
+    }  
 }
