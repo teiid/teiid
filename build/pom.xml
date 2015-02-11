@@ -214,7 +214,9 @@
                         </configuration>
                     </execution>
                      -->
-                    <execution>
+                    <!--
+                      TODO: this should work, but we don't have the artifact in the right place yet 
+                      <execution>
                         <id>console-dist</id>
                         <phase>package</phase>
                         <goals>
@@ -233,7 +235,7 @@
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
-                    </execution>
+                    </execution> -->
                 </executions>
             </plugin>
         </plugins>
