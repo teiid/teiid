@@ -1043,7 +1043,7 @@ public class TestSubqueryPushdown {
         checkJoinCounts(plan, 0, 1);
     }
     
-    @Test public void testAntiSemiJoinInHint() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testAntiSemiJoinInHint() throws Exception {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 NOT IN /*+ MJ */ (select count(e2) from pm3.g1 where e1 = o.e1)", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_1, c_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -1220,7 +1220,7 @@ public class TestSubqueryPushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan("select 1, (select cast(stringkey as integer) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {"SELECT g_0.IntKey FROM BQT1.SmallA AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        assertEquals(5, plan.getDescriptionProperties().getProperties().size());
+        assertEquals(6, plan.getDescriptionProperties().getProperties().size());
     }
     
     @Test public void testCorrelatedGroupingExpression() throws Exception {

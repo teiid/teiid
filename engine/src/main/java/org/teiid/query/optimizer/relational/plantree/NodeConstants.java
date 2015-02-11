@@ -77,6 +77,8 @@ public final class NodeConstants {
         IS_MULTI_SOURCE,
         SOURCE_NAME,
         CONFORMED_SOURCES, //Set <model id>
+        SUB_PLAN,
+        SUB_PLANS,
         
         // Set operation properties 
         SET_OPERATION,      // SetOperation
@@ -102,6 +104,7 @@ public final class NodeConstants {
         PROJECT_COLS,       // List <SingleElementSymbol>
         INTO_GROUP,         // GroupSymbol
         HAS_WINDOW_FUNCTIONS,		// Boolean
+        CONSTRAINT,
 
         // Select node properties
         SELECT_CRITERIA,    // Criteria
@@ -132,6 +135,7 @@ public final class NodeConstants {
         INLINE_VIEW,        // If the source node represents an inline view
         NO_UNNEST,
         MAKE_IND,
+        SOURCE_HINT,
         
         // Group node properties
         GROUP_COLS,         // List <Expression>
@@ -160,9 +164,5 @@ public final class NodeConstants {
         ACCESS_PATTERN_USED, // List <Object element ID>
         REQUIRED_ACCESS_PATTERN_GROUPS, 
         
-        CONSTRAINT,
-        SOURCE_HINT,
-        SUB_PLAN,
-        SUB_PLANS,
     }
 }

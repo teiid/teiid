@@ -521,6 +521,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
         PlanNode result = new PlanNode(getClassName());
+        result.addProperty(PROP_ID, String.valueOf(getID()));
         result.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(this.data.elements));
         if(this.getProcessingState().context != null && this.getProcessingState().context.getCollectNodeStatistics()) {
             result.addProperty(PROP_NODE_STATS_LIST, this.getProcessingState().nodeStatistics.getStatisticsList());

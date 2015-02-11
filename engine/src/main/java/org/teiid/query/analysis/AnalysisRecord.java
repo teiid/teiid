@@ -61,6 +61,7 @@ public class AnalysisRecord {
 
 	// Common 
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
+    public static final String PROP_ID = "Relational Node ID"; //$NON-NLS-1$
     public static final String PROP_DATA_BYTES_SENT = "Data Bytes Sent"; //$NON-NLS-1$
     
     // Relational
@@ -125,8 +126,8 @@ public class AnalysisRecord {
     private PrintWriter debugWriter;    // public
     
     public AnalysisRecord(boolean recordQueryPlan, boolean recordDebug) {
-    	this.recordQueryPlan = recordQueryPlan | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
-        this.recordDebug = recordDebug | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
+    	this.recordQueryPlan = recordQueryPlan || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
+        this.recordDebug = recordDebug || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
         
         if(this.recordQueryPlan) {
             this.annotations = new ArrayList<Annotation>();

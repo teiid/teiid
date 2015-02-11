@@ -475,7 +475,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		ResultSet rs = s.getResultSet();
 		assertTrue(rs.next());
 		String str = rs.getString(1);
-		assertTrue(str.startsWith("ProjectNode\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1"));
+		assertTrue(str.startsWith("ProjectNode\n  + Relational Node ID:0\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1"));
 	}
 	
 	@Test public void testSetEmptyLiteral() throws Exception {
