@@ -36,6 +36,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VDBRepository;
@@ -50,6 +51,7 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
 import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
@@ -288,4 +290,25 @@ public class TestDynamicImportedMetaData {
     	assertEquals(0, t.getUniqueKeys().size());
     	assertEquals(0, t.getIndexes().size());
     }
+    
+    @Test public void testDroppedFk() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.setSchemaSourceType("ddl");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
+    	mmd.setSchemaText("create foreign table x (y integer primary key);"
+    			+ "create foreign table z (y integer, foreign key (y) references x)");
+		server.deployVDB("vdb", mmd);
+    	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importKeys", "true");
+    	//only import z and not the referenced table x
+    	importProperties.setProperty("importer.tableNamePattern", "z");
+    	MetadataFactory mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("test").getTables().get("vdb.foo.z");
+    	List<ForeignKey> fks = t.getForeignKeys();
+    	assertEquals(0, fks.size());
+	}
 }

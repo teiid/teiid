@@ -488,8 +488,8 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
 			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
-			TreeMap<Short, String> keyColumns = null;
-			TreeMap<Short, String> referencedKeyColumns = null;
+			TreeMap<Short, String> keyColumns = new TreeMap<Short, String>();
+			TreeMap<Short, String> referencedKeyColumns = new TreeMap<Short, String>();
 			String fkName = null;
 			TableInfo pkTable = null;
 			short savedSeqNum = Short.MAX_VALUE;
@@ -499,16 +499,17 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				String pkColumnName = fks.getString(4);
 				
 				if (seqNum <= savedSeqNum) {
-					if (keyColumns != null) {
+					if (pkTable != null) {
 						KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, fkName, referencedKeyColumns, pkTable.table);						
 						ForeignKey fk = metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table.getName(), tableInfo.table);
 						if (record != null) {
-							fk.setPrimaryKey(record);
+							fk.setReferenceKey(record);
 						}
 					}
-					keyColumns = new TreeMap<Short, String>();
-					referencedKeyColumns = new TreeMap<Short, String>();
+					keyColumns.clear();
+					referencedKeyColumns.clear();
 					fkName = null;
+					pkTable = null;
 				}
 				savedSeqNum = seqNum;
 				keyColumns.put(seqNum, columnName);
@@ -529,11 +530,11 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					}
 				} 
 			}
-			if (keyColumns != null) {
+			if (pkTable != null) {
 				KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, fkName, referencedKeyColumns, pkTable.table);
 				ForeignKey fk = metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table.getName(), tableInfo.table);
 				if (record != null) {
-					fk.setPrimaryKey(record);
+					fk.setReferenceKey(record);
 				}
 			}
 			fks.close();
