@@ -359,7 +359,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		return picklistValues.toString();
 	}
 	
-    @TranslatorProperty(display="Audit Model Fields", category=PropertyType.IMPORT, description="Audit Model Fields")
+    @TranslatorProperty(display="Model Audit Fields", category=PropertyType.IMPORT, description="Determines if the salesforce audit fields are modeled")
     public boolean isModelAuditFields() {
         return this.auditModelFields;
     }
