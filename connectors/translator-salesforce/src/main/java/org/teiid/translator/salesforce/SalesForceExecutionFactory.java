@@ -72,7 +72,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
 	
-	@TranslatorProperty(display="Audit Model Fields", advanced=true)
+	@TranslatorProperty(display="Model Audit Fields", advanced=true)
 	public boolean isModelAuditFields() {
 		return this.auditModelFields;
 	}
