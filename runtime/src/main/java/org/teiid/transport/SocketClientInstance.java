@@ -36,6 +36,7 @@ import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.DhKeyGenerator;
 import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.logging.LogConstants;
@@ -143,7 +144,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 			return false;
 		}
 		String message = t.getMessage();
-		if ((t.getCause() == null || t.getCause() == t) && message != null && (message.equals("Connection reset by peer") || message.equals("Broken pipe"))) { //$NON-NLS-1$ //$NON-NLS-2$
+		if ((t.getCause() == null || t.getCause() == t) && message != null && (message.equals("Connection reset by peer") || message.equals("Broken pipe") || StringUtil.indexOfIgnoreCase(message, "closed") >= 0)) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			return true;
 		}
 		return false;
