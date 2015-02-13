@@ -397,5 +397,21 @@ public class TestMySQLTranslator {
     	assertEquals(513, gt.getSrid());
     	GeometryUtils.getGeometry(gt);
     }
+    
+    @Test public void testStringUnion() throws Exception {
+    	String input = "select intkey FROM bqt1.smalla UNION select stringkey FROM bqt1.smallb"; //$NON-NLS-1$
+        String output = "(SELECT SmallA.IntKey AS IntKey FROM SmallA) UNION (SELECT SmallB.StringKey FROM SmallB)"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+        
+        input = "select cast(intkey as string) FROM bqt1.smalla UNION select cast(intnum as string) FROM bqt1.smallb"; //$NON-NLS-1$
+        output = "(SELECT cast(SmallA.IntKey AS char) FROM SmallA) UNION (SELECT cast(SmallB.IntNum AS char) FROM SmallB)"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
 
 }

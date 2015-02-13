@@ -40,9 +40,16 @@ import java.util.List;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.Select;
+import org.teiid.language.SetQuery;
 import org.teiid.metadata.Table;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -542,5 +549,58 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 		GeometryType geom = new GeometryType(b);
         geom.setSrid(srid);
         return geom;
+	}
+	
+	@Override
+	public List<?> translateCommand(Command command, ExecutionContext context) {
+		if (command instanceof SetQuery) {
+			//mysql may not be able to find a common collation if a cast is used in a union
+			//TODO: it's a little sloppy to do this here as there can be nested set queries
+			SetQuery sq = (SetQuery)command;
+			if (!sq.isAll()) {
+				List<Select> allQueries = new ArrayList<Select>();
+				gatherSelects(sq, allQueries);
+				int size = allQueries.get(0).getDerivedColumns().size();
+				outer: for (int i = 0; i < size; i++) {
+					boolean casted = false;
+					boolean notCasted = false;
+					for (Select select : allQueries) {
+						Expression ex = select.getDerivedColumns().get(i).getExpression();
+						if (ex.getType() != TypeFacility.RUNTIME_TYPES.STRING) {
+							continue outer;
+						}
+						if (ex instanceof Function) {
+							Function f = (Function)ex;
+							if (f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT)) {
+								casted = true;
+								continue;
+							}
+						}
+						notCasted = true;
+					}
+					if (casted && notCasted) {
+						//allow mysql to implicitly convert
+						for (Select select : allQueries) {
+							DerivedColumn dc = select.getDerivedColumns().get(i);
+							if ((dc.getExpression() instanceof Function) &&
+									(((Function)dc.getExpression()).getName().equalsIgnoreCase(SQLConstants.Reserved.CONVERT))) {
+								dc.setExpression(((Function)dc.getExpression()).getParameters().get(0));
+							}
+						}	
+					}
+				}
+			}
+		}
+		return super.translateCommand(command, context);
+	}
+
+	private void gatherSelects(QueryExpression qe, List<Select> allQueries) {
+		if (qe instanceof Select) {
+			allQueries.add((Select)qe);
+			return;
+		}
+		SetQuery sq = (SetQuery)qe;
+		gatherSelects(sq.getLeftQuery(), allQueries);
+		gatherSelects(sq.getRightQuery(), allQueries);
 	}
 }
