@@ -877,7 +877,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         int type = TypeFacility.getSQLTypeFromRuntimeType(paramType);
                 
         if (param == null) {
-            stmt.setNull(i, type);
+        	if (type == Types.JAVA_OBJECT) {
+        		stmt.setNull(i, Types.OTHER);
+        	} else {
+        		stmt.setNull(i, type);
+        	}
             return;
         } 
         //if this is a Date object, then use the database calendar
@@ -922,7 +926,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	param = ((BinaryType)param).getBytesDirect();
         }
         
-        stmt.setObject(i, param, type);
+        if (type != Types.JAVA_OBJECT) {
+        	stmt.setObject(i, param, type);
+        } else {
+        	stmt.setObject(i, param);
+        }
     }
     
     /**

@@ -71,7 +71,7 @@ public class JDBCDirectQueryExecution extends JDBCQueryExecution implements Proc
             	for (int i = 0; i < paramCount; i++) {
             		Argument arg = parameters.get(i);
             		//TODO: if ParameterMetadata is supported we could use that type
-            		this.executionFactory.bindValue(pstatement, arg.getArgumentValue(), arg.getArgumentValue().getType(), i);
+            		this.executionFactory.bindValue(pstatement, arg.getArgumentValue().getValue(), arg.getArgumentValue().getType(), i + 1);
             	}
                 stmt = pstatement;
                 hasResults = pstatement.execute();

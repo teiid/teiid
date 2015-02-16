@@ -22,9 +22,14 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -86,6 +91,7 @@ public class TestJDBCDirectQueryExecution {
 		ef.setSupportsDirectQueryProcedure(true);
 		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  new FakeExecutionContextImpl(), Mockito.mock(RuntimeMetadata.class), connection);
 		execution.execute();
+		Mockito.verify(stmt).setObject(1, 2);
 		assertArrayEquals(new Object[] {5, "five"}, (Object[])execution.next().get(0));
 	}
 	

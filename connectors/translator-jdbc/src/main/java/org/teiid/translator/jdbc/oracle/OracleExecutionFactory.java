@@ -31,7 +31,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -553,15 +552,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
        
     @Override
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
-    	if(Object.class.equals(paramType)){
-    		//Oracle drive does not support JAVA_OBJECT type
-    		if (param == null) {
-	    		stmt.setNull(i, Types.LONGVARBINARY);
-    		} else {
-    			stmt.setObject(i, param);
-    		}
-    		return;
-    	}
     	if (paramType == FixedCharType.class) {
     		stmt.setObject(i, param, FIXED_CHAR_TYPE);
     		return;
