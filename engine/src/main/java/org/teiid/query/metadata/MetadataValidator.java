@@ -44,7 +44,9 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -169,9 +171,20 @@ public class MetadataValidator {
 				for (Procedure p:schema.getProcedures().values()) {
 					boolean hasReturn = false;
 					names.clear();
-					for (ProcedureParameter param : p.getParameters()) {
+					for (int i = 0; i < p.getParameters().size(); i++) {
+						ProcedureParameter param = p.getParameters().get(i);
 						if (param.isVarArg() && param != p.getParameters().get(p.getParameters().size() -1)) {
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31112, p.getFullName()));
+							//check that the rest of the parameters are optional
+							//this accommodates variadic multi-source procedures
+							//effective this and the resolving logic ensure that you can used named parameters for everything,
+							//or call the vararg procedure as normal
+							for (int j = i+1; j < p.getParameters().size(); j++) {
+								ProcedureParameter param1 = p.getParameters().get(j);
+								if ((param1.getType() == Type.In || param1.getType() == Type.InOut) 
+										&& (param1.isVarArg() || (param1.getNullType() != NullType.Nullable && param1.getDefaultValue() == null))) {
+									metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31112, p.getFullName()));
+								}
+							}
 						}
 						if (param.getType() == ProcedureParameter.Type.ReturnValue) {
 							if (hasReturn) {

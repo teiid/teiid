@@ -24,7 +24,10 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -310,5 +313,47 @@ public class TestDynamicImportedMetaData {
     	Table t = mf.asMetadataStore().getSchemas().get("test").getTables().get("vdb.foo.z");
     	List<ForeignKey> fks = t.getForeignKeys();
     	assertEquals(0, fks.size());
+	}
+    
+    @Test public void testMultiSource() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.setSchemaSourceType("ddl");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
+    	mmd.setSchemaText("create foreign table x (y integer primary key);");
+		server.deployVDB("vdb", mmd);
+		TeiidExecutionFactory tef = new TeiidExecutionFactory() {
+			@Override
+			public void closeConnection(Connection connection,
+					DataSource factory) {
+			}
+		};
+		tef.setSupportsDirectQueryProcedure(true);
+		tef.start();
+		server.addTranslator("teiid", tef);
+		DataSource ds = Mockito.mock(DataSource.class);
+		Mockito.stub(ds.getConnection()).toReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
+		server.addConnectionFactory("teiid1", ds);
+		server.addConnectionFactory("teiid2", ds);
+		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("multi.xml")));
+		Connection c = server.createConnection("jdbc:teiid:multi", null);
+		Statement s = c.createStatement();
+		
+		s.execute("call native('select ?', 'b')");
+		
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		
+		s.execute("call native(request=>'select ?', variable=>('b',), target=>'teiid1')");
+		rs = s.getResultSet();
+		
+		assertTrue(rs.next());
+		
+		Object[] result = (Object[]) rs.getArray(1).getArray();
+		assertArrayEquals(new Object[] {"b"}, result);
+		assertFalse(rs.next());
 	}
 }

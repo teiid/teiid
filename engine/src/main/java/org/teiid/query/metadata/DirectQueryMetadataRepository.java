@@ -21,6 +21,7 @@
  */
 package org.teiid.query.metadata;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
@@ -41,7 +42,7 @@ public class DirectQueryMetadataRepository extends MetadataRepository {
 
 		if (executionFactory != null && executionFactory.supportsDirectQueryProcedure()) {
 			Procedure p = factory.addProcedure(executionFactory.getDirectQueryProcedureName());
-			p.setAnnotation("Invokes translator with a native query that returns results in array of values"); //$NON-NLS-1$
+			p.setAnnotation("Invokes translator with a native query that returns results in an array of values"); //$NON-NLS-1$
 
 			ProcedureParameter param = factory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 			param.setAnnotation("The native query to execute"); //$NON-NLS-1$
@@ -52,7 +53,7 @@ public class DirectQueryMetadataRepository extends MetadataRepository {
 			param.setNullType(NullType.Nullable);
 			param.setVarArg(true);
 			
-			factory.addProcedureResultSetColumn("tuple", TypeFacility.RUNTIME_NAMES.OBJECT, p); //$NON-NLS-1$		
+			factory.addProcedureResultSetColumn("tuple", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(TypeFacility.RUNTIME_TYPES.OBJECT)), p); //$NON-NLS-1$		
 		}
 	}	
 }
