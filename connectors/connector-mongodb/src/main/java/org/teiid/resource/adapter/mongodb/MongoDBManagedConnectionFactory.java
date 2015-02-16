@@ -34,6 +34,7 @@ import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
@@ -58,20 +59,34 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 		}
 
 		final List<ServerAddress> servers = getServers();
-
-		//TODO: need to define all the properties on the ra.xml and build this correctly
-		final MongoClientOptions options = MongoClientOptions.builder().build();
-
-		return new BasicConnectionFactory<MongoDBConnectionImpl>() {
-			@Override
-			public MongoDBConnectionImpl getConnection() throws ResourceException {
-				MongoCredential credential = null;
-				if (MongoDBManagedConnectionFactory.this.username != null && MongoDBManagedConnectionFactory.this.password != null) {
-					credential = MongoCredential.createMongoCRCredential(MongoDBManagedConnectionFactory.this.username, MongoDBManagedConnectionFactory.this.database, MongoDBManagedConnectionFactory.this.password.toCharArray());
-				}
-				return new MongoDBConnectionImpl(MongoDBManagedConnectionFactory.this.database, servers, credential, options);
-			}
-		};
+		if (servers != null) {
+    		//if options needed then use URL format
+    		final MongoClientOptions options = MongoClientOptions.builder().build();
+    
+    		return new BasicConnectionFactory<MongoDBConnectionImpl>() {
+    			@Override
+    			public MongoDBConnectionImpl getConnection() throws ResourceException {
+    				MongoCredential credential = null;
+    				if (MongoDBManagedConnectionFactory.this.username != null && MongoDBManagedConnectionFactory.this.password != null) {
+    					credential = MongoCredential.createMongoCRCredential(MongoDBManagedConnectionFactory.this.username, MongoDBManagedConnectionFactory.this.database, MongoDBManagedConnectionFactory.this.password.toCharArray());
+    				}
+    				return new MongoDBConnectionImpl(MongoDBManagedConnectionFactory.this.database, servers, credential, options);
+    			}
+    		};
+		}
+		
+		// Make connection using the URI format
+        return new BasicConnectionFactory<MongoDBConnectionImpl>() {
+            @Override
+            public MongoDBConnectionImpl getConnection() throws ResourceException {
+                try {
+                    return new MongoDBConnectionImpl(MongoDBManagedConnectionFactory.this.database, getConnectionURI());
+                } catch (UnknownHostException e) {
+                    throw new ResourceException(e);
+                }
+            }
+        };
+		
 	}
 
 	/**
@@ -115,23 +130,34 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 		this.database = database;
 	}
 
+	protected MongoClientURI getConnectionURI() {
+        String serverlist = getRemoteServerList();
+        if (serverlist.startsWith("mongodb://")) { //$NON-NLS-1$	    
+            return new MongoClientURI(getRemoteServerList());
+        }
+        return null;
+	}
 
 	protected List<ServerAddress> getServers() throws ResourceException {
-		List<ServerAddress> addresses = new ArrayList<ServerAddress>();
-		StringTokenizer st = new StringTokenizer(getRemoteServerList(), ";"); //$NON-NLS-1$
-		while (st.hasMoreTokens()) {
-			String token = st.nextToken();
-			int idx = token.indexOf(':');
-			if (idx < 0) {
-				throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
-			}
-			try {
-				addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
-			} catch(UnknownHostException e) {
-				throw new ResourceException(e);
-			}
-		}
-		return addresses;
+	    String serverlist = getRemoteServerList();
+	    if (!serverlist.startsWith("mongodb://")) { //$NON-NLS-1$
+    		List<ServerAddress> addresses = new ArrayList<ServerAddress>();
+    		StringTokenizer st = new StringTokenizer(serverlist, ";"); //$NON-NLS-1$
+    		while (st.hasMoreTokens()) {
+    			String token = st.nextToken();
+    			int idx = token.indexOf(':');
+    			if (idx < 0) {
+    				throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
+    			}
+    			try {
+    				addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
+    			} catch(UnknownHostException e) {
+    				throw new ResourceException(e);
+    			}
+    		}
+    		return addresses;
+	    }
+	    return null;
 	}
 
 	@Override

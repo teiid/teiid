@@ -37,7 +37,7 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-               <description>{$display:"Server List", $description:"Server List (host:port[;host:port...]) to connect to", $required:"true"}</description>
+               <description>{$display:"URL/Server List", $description:"Server List (host:port[;host:port...]) to connect to; if value is in URL format (mongodb://localhost:27017/test) then this will override the credentials and database name if provided", $required:"true"}</description>
                <config-property-name>RemoteServerList</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property> 
@@ -55,7 +55,7 @@
             </config-property> 
             
             <config-property>
-               <description>{$display:"Database",$description:"MongoDB Database Name",$required:"true"}</description> 
+               <description>{$display:"Database",$description:"MongoDB Database Name; Required when not defined on the URL",$required:"optional"}</description> 
                <config-property-name>Database</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>             
