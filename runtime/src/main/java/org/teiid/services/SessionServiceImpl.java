@@ -89,7 +89,7 @@ public class SessionServiceImpl implements SessionService {
     private DQPCore dqp;
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
-    private Timer sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$    
+    private Timer sessionMonitor = null;    
     private List<String> securityDomainNames;
     
     public void setSecurityDomain(String domainName) {
@@ -389,6 +389,7 @@ public class SessionServiceImpl implements SessionService {
 	
 	public void start() {
 		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Default security domain configured=", this.securityDomainNames}); //$NON-NLS-1$
+		this.sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
         	public void run() {
@@ -398,9 +399,10 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	public void stop(){
-		this.sessionMonitor.cancel();
+		if (sessionMonitor != null) {
+			this.sessionMonitor.cancel();
+		}
 		this.sessionCache.clear();
-		this.sessionMonitor.cancel();
 	}
 
 	public void setVDBRepository(VDBRepository repo) {
