@@ -118,14 +118,14 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             // embedded doc - one to one
             Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value);
             childTable.setProperty(MERGE, table.getName());
-            childTable.setProperty(ASSOSIATION, MutableDBRef.Association.ONE.name()); 
+            childTable.setProperty(ASSOSIATION, MergeDetails.Association.ONE.name()); 
         }
         else if (value instanceof BasicDBList) {
             // embedded doc, list one to many
             if (((BasicDBList)value).get(0) instanceof BasicDBObject) {
                 Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0));
                 childTable.setProperty(MERGE, table.getName());
-                childTable.setProperty(ASSOSIATION, MutableDBRef.Association.MANY.name());
+                childTable.setProperty(ASSOSIATION, MergeDetails.Association.MANY.name());
             }
             else {
                 column = metadataFactory.addColumn(columnKey, TypeFacility.RUNTIME_NAMES.OBJECT+"[]", table); //$NON-NLS-1$
@@ -160,9 +160,9 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     }
     
     private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
-        MutableDBRef.Association association = MutableDBRef.Association.valueOf(childTable.getProperty(ASSOSIATION, false));
+        MergeDetails.Association association = MergeDetails.Association.valueOf(childTable.getProperty(ASSOSIATION, false));
         childTable.setProperty(ASSOSIATION, null);
-        if (association == MutableDBRef.Association.ONE) {
+        if (association == MergeDetails.Association.ONE) {
             KeyRecord record = table.getPrimaryKey();
             if (record != null) {
                 ArrayList<String> pkColumns = new ArrayList<String>(); 
