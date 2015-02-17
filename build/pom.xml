@@ -214,8 +214,6 @@
                         </configuration>
                     </execution>
                      -->
-                    <!--
-                      TODO: this should work, but we don't have the artifact in the right place yet 
                       <execution>
                         <id>console-dist</id>
                         <phase>package</phase>
@@ -227,7 +225,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.web-console</groupId>
                                     <artifactId>teiid-console-dist</artifactId>
-                                    <version>1.2.0</version>
+                                    <version>${version.teiid.console}</version>
                                     <classifier>jboss-as7</classifier>
                                     <type>zip</type>
                                     <overWrite>false</overWrite>
@@ -235,7 +233,7 @@
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
-                    </execution> -->
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

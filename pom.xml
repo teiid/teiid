@@ -38,7 +38,7 @@
         <version.dom4j>1.6.1.redhat-6</version.dom4j>       
         
         <!-- Teiid specific properties -->
-        <version.teiid.console>1.2.0</version.teiid.console>
+        <version.teiid.console>1.2.4</version.teiid.console>
         <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
         <version.net.sourceforge.saxon>9.5.1-6</version.net.sourceforge.saxon>
         <version.json-simple>1.1</version.json-simple>
