@@ -123,16 +123,7 @@ import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.transport.ChannelListener;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LocalServerConnection;
-import org.teiid.transport.LogonImpl;
-import org.teiid.transport.ODBCSocketListener;
-import org.teiid.transport.SocketClientInstance;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketListener;
-import org.teiid.transport.WireProtocol;
+import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
 import org.xml.sax.SAXException;
 
@@ -748,7 +739,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		ExecutionFactory ef = null;
 		Object cf = null;
 		
-		TranslatorException te = null;
+		Exception te = null;
 		for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
 			if (te != null) {
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, te, "Failed to get metadata, trying next source."); //$NON-NLS-1$
@@ -770,12 +761,19 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			try {
 				metadataRepository.loadMetadata(factory, ef, cf);
 				break;
-			} catch (TranslatorException e) {
+			} catch (Exception e) {
 				te = e;
+				factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
 			}
 		}
 		if (te != null) {
-			throw te;
+			if (te instanceof TranslatorException) {
+				throw (TranslatorException)te;
+			}
+			if (te instanceof RuntimeException) {
+				throw (RuntimeException)te;
+			}
+			throw new TranslatorException(te);
 		}
 		metadataLoaded(vdb, model, store, loadCount, factory, true, false);
 	}

@@ -398,6 +398,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
 							break;
 						} catch (Exception e) {
+							factory = createMetadataFactory(vdb, model, vdbResources.getEntriesPlusVisibilities());
 							ex = e;
 						} finally {
 						    Thread.currentThread().setContextClassLoader(originalCL);

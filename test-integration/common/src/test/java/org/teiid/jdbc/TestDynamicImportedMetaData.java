@@ -26,7 +26,9 @@ import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +43,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.metadata.Column;
@@ -59,11 +62,16 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
 import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 
-
 /**
  */
 @SuppressWarnings("nls")
 public class TestDynamicImportedMetaData {
+
+	public static final class BadMetadata {
+		public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
+			throw new SQLException();
+		}
+	}
 
 	private FakeServer server;
 	
@@ -355,5 +363,37 @@ public class TestDynamicImportedMetaData {
 		Object[] result = (Object[]) rs.getArray(1).getArray();
 		assertArrayEquals(new Object[] {"b"}, result);
 		assertFalse(rs.next());
+	}
+    
+    @Test public void testMultiSourceImportError() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.setSchemaSourceType("ddl");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
+    	mmd.setSchemaText("create foreign table x (y integer primary key);");
+		server.deployVDB("vdb", mmd);
+		TeiidExecutionFactory tef = new TeiidExecutionFactory() {
+			@Override
+			public void closeConnection(Connection connection,
+					DataSource factory) {
+			}
+		};
+		tef.start();
+		server.addTranslator("teiid", tef);
+		DataSource ds = Mockito.mock(DataSource.class);
+		Connection c = server.getDriver().connect("jdbc:teiid:vdb", null);
+		//bad databasemetadata
+		DatabaseMetaData dbmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new BadMetadata(), c.getMetaData()}, new Class[] {DatabaseMetaData.class});
+		Connection mock = Mockito.mock(Connection.class);
+		Mockito.stub(mock.getMetaData()).toReturn(dbmd);
+		Mockito.stub(ds.getConnection()).toReturn(mock);
+
+		DataSource ds1 = Mockito.mock(DataSource.class);
+		Mockito.stub(ds1.getConnection()).toReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
+		
+		server.addConnectionFactory("teiid1", ds);
+		server.addConnectionFactory("teiid2", ds1);
+		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("multi.xml")));
 	}
 }
