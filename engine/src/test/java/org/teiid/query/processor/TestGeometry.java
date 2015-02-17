@@ -204,7 +204,13 @@ public class TestGeometry {
     @Test
     public void testGmlParseSrid() throws Exception {
         String gml = "<gml:Polygon srsName=\"SDO:8307\" xmlns:gml=\"http://www.opengis.net/gml\"><gml:outerBoundaryIs><gml:LinearRing><gml:coordinates decimal=\".\" cs=\",\" ts=\" \">5,1 8,1 8,6 5,7 5,1 </gml:coordinates></gml:LinearRing></gml:outerBoundaryIs></gml:Polygon>";
-        GeometryType gt = GeometryUtils.geometryFromGml(new ClobType(ClobImpl.createClob(gml.toCharArray())));
+        GeometryType gt = GeometryUtils.geometryFromGml(new ClobType(ClobImpl.createClob(gml.toCharArray())), null);
         assertEquals(8307, gt.getSrid());
+        
+        //oracle will leave of the int with unknown
+        gml = "<gml:Polygon srsName=\"SDO:\" xmlns:gml=\"http://www.opengis.net/gml\"><gml:outerBoundaryIs><gml:LinearRing><gml:coordinates decimal=\".\" cs=\",\" ts=\" \">5,1 8,1 8,6 5,7 5,1 </gml:coordinates></gml:LinearRing></gml:outerBoundaryIs></gml:Polygon>";
+        gt = GeometryUtils.geometryFromGml(new ClobType(ClobImpl.createClob(gml.toCharArray())), null);
+        assertEquals(GeometryType.UNKNOWN_SRID, gt.getSrid());
+
     }
 }

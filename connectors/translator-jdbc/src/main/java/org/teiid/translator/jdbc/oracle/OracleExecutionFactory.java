@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc.oracle;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.io.Reader;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -36,8 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.teiid.api.exception.query.FunctionExecutionException;
-import org.teiid.core.types.GeometryType;
+import org.teiid.GeometryInputSource;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
@@ -51,7 +51,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -1042,17 +1041,19 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     }
 
     @Override
-    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
-        GeometryType geom = null;
-        try {
-            Clob clob = results.getClob(paramIndex);
-            if (clob != null) {
-                geom = GeometryUtils.geometryFromGml(clob, null);
-            }
-        } catch (FunctionExecutionException e) {
-            throw new SQLException(e);
+    public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        final Clob clob = results.getClob(paramIndex);
+        if (clob != null) {
+        	return new GeometryInputSource() {
+				
+				@Override
+				public Reader getGml() throws SQLException {
+					return clob.getCharacterStream();
+				}
+				
+			};
         }
-        return geom;
+        return null;
     }
     
 }

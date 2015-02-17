@@ -127,7 +127,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true)
     public static GeometryType geomFromGml(ClobType gml) 
             throws FunctionExecutionException {
-        return GeometryUtils.geometryFromGml(gml);
+        return GeometryUtils.geometryFromGml(gml, null);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGML,

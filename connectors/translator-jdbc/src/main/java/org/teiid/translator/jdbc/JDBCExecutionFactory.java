@@ -593,7 +593,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         );
     }
     
-    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+    public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
         GeometryType geom = null;
         Blob val = results.getBlob(paramIndex);
         if (val != null) {

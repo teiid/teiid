@@ -25,8 +25,6 @@ package org.teiid.query.function;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.SQLException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -139,9 +137,13 @@ public class GeometryUtils {
         return new ClobType(new ClobImpl(gmlText));
     }
         
-    public static GeometryType geometryFromGml(ClobType gml) 
+    public static GeometryType geometryFromGml(ClobType gml, Integer srid) 
             throws FunctionExecutionException {
-        return geometryFromGml(gml, null);
+        try {
+			return geometryFromGml(gml.getCharacterStream(), srid);
+		} catch (SQLException e) {
+			throw new FunctionExecutionException(e);
+		}
     }
     
     /**
@@ -164,7 +166,9 @@ public class GeometryUtils {
             if (srsName != null) {
                 String[] srsParts = srsName.split(":"); //$NON-NLS-1$
                 try {
-                    srid = Integer.parseInt(srsParts[1]);
+                	if (srsParts.length == 2) {
+                		srid = Integer.parseInt(srsParts[1]);
+                	}
                 } catch (NumberFormatException e) {
                     // ignore
                 }
@@ -177,14 +181,11 @@ public class GeometryUtils {
         } 
     }
     
-    public static GeometryType geometryFromGml(Clob gml, Integer srid) 
+    public static GeometryType geometryFromGml(Reader reader, Integer srid) 
             throws FunctionExecutionException {
         GeometryFactory gf = new GeometryFactory();        
         Geometry jtsGeometry = null;
-        Reader reader = null;
         try {            
-            reader = gml.getCharacterStream();            
-            
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(false);
             factory.setValidating(false);            
@@ -205,8 +206,6 @@ public class GeometryUtils {
         } catch (IOException e) {
             throw new FunctionExecutionException(e);
         } catch (SAXException e) {
-            throw new FunctionExecutionException(e);
-        } catch (SQLException e) {
             throw new FunctionExecutionException(e);
         } catch (ParserConfigurationException e) {
             throw new FunctionExecutionException(e);
@@ -329,13 +328,8 @@ public class GeometryUtils {
 		return getGeometry(geom1).equalsTopo(getGeometry(geom2));
 	}
 
-	public static GeometryType geometryFromEwkb(Blob blob) throws FunctionExecutionException {
-		Geometry geom;
-		try {
-			geom = getGeometry(blob.getBinaryStream(), null, true);
-		} catch (SQLException e) {
-			throw new FunctionExecutionException(e);
-		}
+	public static GeometryType geometryFromEwkb(InputStream is, Integer srid) throws FunctionExecutionException {
+		Geometry geom = getGeometry(is, srid, true);
 		return getGeometryType(geom);
 	}
 }

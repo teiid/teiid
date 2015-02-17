@@ -36,6 +36,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 
+import org.teiid.GeometryInputSource;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.ResizingArrayList;
 import org.teiid.client.util.ExceptionUtil;
@@ -66,6 +67,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -568,6 +570,25 @@ public class ConnectorWorkItem implements ConnectorWork {
 					return new BlobType(new BlobImpl(is.getInputStreamFactory()));
 				} catch (IOException e) {
 					throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
+				}
+			}
+			if (value instanceof GeometryInputSource) {
+				GeometryInputSource gis = (GeometryInputSource)value;
+				try {
+					InputStream is = gis.getEwkb();
+					if (is != null) {
+						return GeometryUtils.geometryFromEwkb(is, gis.getSrid());
+					}
+				} catch (Exception e) {
+					throw new TransformationException(e);
+				}
+				try {
+					Reader r = gis.getGml();
+					if (r != null) {
+						return GeometryUtils.geometryFromGml(r, gis.getSrid());
+					}
+				} catch (Exception e) {
+					throw new TransformationException(e);
 				}
 			}
 		}
