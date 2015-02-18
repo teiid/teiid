@@ -118,7 +118,10 @@ public abstract class TeiidRSProvider {
 	            Class runtimeType = DataTypeManager.getRuntimeType(Class.forName(JDBCSQLTypeInfo.getJavaClassName(columnDataType)));
 	            Object value = parameters.get(columnName);
 	            if (value != null) {
-	                value = DataTypeManager.getTransform(String.class, runtimeType).transform(parameters.get(columnName), runtimeType);
+	                Transform t = DataTypeManager.getTransform(String.class, runtimeType);
+	                if (t != null) {
+	                    value = t.transform(parameters.get(columnName), runtimeType);
+	                }
 	            }
 	            values.put(columnName, value);
 	        }

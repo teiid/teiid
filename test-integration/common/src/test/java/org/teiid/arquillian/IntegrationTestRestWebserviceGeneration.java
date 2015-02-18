@@ -22,7 +22,8 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -125,8 +126,9 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 
 		// post based call
 		params += "&" + URLEncoder.encode("p2", "UTF-8") + "=" + URLEncoder.encode("2", "UTF-8");
+		params += "&" + URLEncoder.encode("p3", "UTF-8") + "=" + URLEncoder.encode("string value", "UTF-8");
 		response = httpCall("http://localhost:8080/sample_1/view/g1post", "POST", params);
-		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 		
 		// ad-hoc procedure
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
