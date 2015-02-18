@@ -417,7 +417,13 @@ public class PlanToProcessConverter {
 			case NodeConstants.Types.SELECT:
 
 				Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-
+				if (!node.hasCollectionProperty(Info.OUTPUT_COLS)) {
+					//the late optimization to create a dependent join from a subquery introduces
+					//criteria that have no output elements set
+					//TODO that should be cleaner, but the logic currently expects to be run after join implementation
+					//and rerunning assign output elements seems excessive
+					node.setProperty(Info.OUTPUT_COLS, node.getFirstChild().getProperty(Info.OUTPUT_COLS));
+				}
 				SelectNode selnode = new SelectNode(getID());
 				selnode.setCriteria(crit);
 				//in case the parent was a source

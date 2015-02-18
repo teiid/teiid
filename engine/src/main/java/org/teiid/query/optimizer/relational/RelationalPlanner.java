@@ -690,7 +690,7 @@ public class RelationalPlanner {
         rules.push(RuleConstants.PLAN_SORTS);
         
         //TODO: update plan sorts to take advantage of semi-join ordering
-        if (hints.hasJoin || hints.hasCriteria) {
+        if (hints.hasJoin || hints.hasCriteria || hints.hasRowBasedSecurity) {
             rules.push(new RuleMergeCriteria(idGenerator, capFinder, analysisRecord, context, metadata));
         }
 

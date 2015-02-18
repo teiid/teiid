@@ -356,7 +356,7 @@ public final class RuleChooseDependent implements OptimizerRule {
             return false;
         }
     	
-    	String id = "$dsc/id" + ID.getAndIncrement(); //$NON-NLS-1$
+    	String id = nextId();
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
 
@@ -370,6 +370,10 @@ public final class RuleChooseDependent implements OptimizerRule {
     	
         return true;
     }
+
+	public static String nextId() {
+		return "$dsc/id" + ID.getAndIncrement(); //$NON-NLS-1$
+	}
 
 	/**
 	 * Check for fully pushable dependent joins
@@ -523,7 +527,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @throws QueryMetadataException 
      * @since 4.3
      */
-    private PlanNode getDependentCriteriaNode(String id, List<Expression> independentExpressions,
+    public static PlanNode getDependentCriteriaNode(String id, List<Expression> independentExpressions,
                                            List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, Boolean bound, MakeDep makeDep) throws QueryMetadataException, TeiidComponentException {
         
         Float cardinality = null;

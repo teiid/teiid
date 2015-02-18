@@ -22,7 +22,15 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -80,7 +88,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             if(nonRelationalPlan != null) {
                 accessNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nonRelationalPlan);
             } else if (RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata) == null) {
-            	//with query or processor plan alreay set
+            	//with query or processor plan already set
             } else if(command == null) {
             	PlanNode commandRoot = accessNode;
             	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);

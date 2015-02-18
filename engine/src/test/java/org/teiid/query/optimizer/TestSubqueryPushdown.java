@@ -403,7 +403,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select max(e1) FROM pm1.g2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in /*+ MJ */ (select max(e1) FROM pm1.g2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -838,6 +838,19 @@ public class TestSubqueryPushdown {
     @Test public void testSubqueryRewriteToJoin2a() throws Exception {
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT concat(pm1.g1.e1, '1') AS expr1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.expr1", RealMetadataFactory.example4());
     }
+    
+    @Test public void testSubqueryRewriteToJoin2b() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 in /*+ mj */ (select pm1.g1.e2 FROM pm1.g1 where e3 = pm3.g1.e3)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 IN /*+ MJ */ (SELECT pm1.g1.e2 FROM pm1.g1 WHERE e3 = pm3.g1.e3)", RealMetadataFactory.example4());
+    }
+    
+    @Test public void testSubqueryRewriteToJoin2c() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 in /*+ mj */ (select pm1.g1.e2 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT pm1.g1.e2 FROM pm1.g1) AS X__1 WHERE pm3.g1.e2 = X__1.e2", RealMetadataFactory.example4());
+    }
+    
+    /* the uniqueness must be on the IN and not the correlated variables */
+    @Test public void testSubqueryRewriteToJoin2d() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e3 in /*+ mj */ (select pm1.g1.e3 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e3 IN /*+ MJ */ (SELECT pm1.g1.e3 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", RealMetadataFactory.example4());
+    }
 
     /**
      * Even though this situation is essentially the same as above, we don't yet handle it
@@ -923,12 +936,12 @@ public class TestSubqueryPushdown {
     /**
      * Must be handled as a semi-join, rather than a regular join
      */
-    @Test public void testSemiJoin() {
+    @Test public void testSemiJoin() throws Exception {
         ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 where e2 in /*+ mj */ (select count(e2) FROM pm1.g2 group by e1 having e1 < pm2.g2.e3)", RealMetadataFactory.example4(),  //$NON-NLS-1$
-            new String[] { "SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0" }); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm2.g2 AS g_0 WHERE g_0.e2 IN (<dependent values>) ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
+            0,      // Access
+            1,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
@@ -1094,7 +1107,7 @@ public class TestSubqueryPushdown {
      * Test to ensure that we don't create an invalid semijoin query when attempting to convert the subquery to a semijoin
      */
     @Test public void testGeneratedSemijoinQuery() throws Exception {
-    	String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE convert(shortvalue, integer) = (SELECT MAX(convert(shortvalue, integer)) FROM (select * from BQT1.SmallA) AS B WHERE b.intnum = a.intnum) ORDER BY intkey";
+    	String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE convert(shortvalue, integer) = /*+ MJ */ (SELECT MAX(convert(shortvalue, integer)) FROM (select * from BQT1.SmallA) AS B WHERE b.intnum = a.intnum) ORDER BY intkey";
     	TestQueryRewriter.helpTestRewriteCommand(sql, "SELECT intkey FROM BQT1.SmallA AS A, (SELECT MAX(convert(shortvalue, integer)) AS expr1, b.intnum FROM (SELECT BQT1.SmallA.IntKey, BQT1.SmallA.StringKey, BQT1.SmallA.IntNum, BQT1.SmallA.StringNum, BQT1.SmallA.FloatNum, BQT1.SmallA.LongNum, BQT1.SmallA.DoubleNum, BQT1.SmallA.ByteNum, BQT1.SmallA.DateValue, BQT1.SmallA.TimeValue, BQT1.SmallA.TimestampValue, BQT1.SmallA.BooleanValue, BQT1.SmallA.CharValue, BQT1.SmallA.ShortValue, BQT1.SmallA.BigIntegerValue, BQT1.SmallA.BigDecimalValue, BQT1.SmallA.ObjectValue FROM BQT1.SmallA) AS B GROUP BY b.intnum) AS X__1 WHERE (a.intnum = X__1.IntNum) AND (convert(shortvalue, integer) = X__1.expr1) ORDER BY intkey", RealMetadataFactory.exampleBQTCached());
     }
 

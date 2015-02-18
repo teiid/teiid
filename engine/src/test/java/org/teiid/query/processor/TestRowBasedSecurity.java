@@ -382,5 +382,32 @@ public class TestRowBasedSecurity {
 		List<?>[] expectedResults = new List<?>[] {Arrays.asList(1), Arrays.asList(2)}; 
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
+	
+	@Test public void testSubqueryHint() throws Exception {
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd3 = new PermissionMetaData();
+		pmd3.setResourceName("pm1.g1");
+		pmd3.setCondition("e1 in /*+ DJ */ (select e1 from pm1.g3)");
+		policy1.addPermission(pmd3);
+		policy1.setName("some-other-role");
+		context.getAllowedDataPolicies().clear();
+		context.getAllowedDataPolicies().put("some-other-role", policy1);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		
+		dataManager.addData("SELECT pm1.g3.e1 FROM pm1.g3", new List<?>[] {Arrays.asList("b"), Arrays.asList("a")});
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("b", 1), Arrays.asList("a", 2)});
+		
+		ProcessorPlan plan = helpGetPlan(helpParse("select e1, e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList("a", 2), Arrays.asList("b", 1)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+		
+		dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a"), Arrays.asList("b")});
+		dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2), Arrays.asList("b", 1)});
+		
+		plan = helpGetPlan(helpParse("select e1, e2 from pm1.g1"), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), context);
+		expectedResults = new List<?>[] {Arrays.asList("a", 2), Arrays.asList("b", 1)};
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
 
 }

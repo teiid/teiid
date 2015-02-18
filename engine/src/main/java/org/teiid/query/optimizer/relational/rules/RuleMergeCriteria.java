@@ -123,6 +123,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 	private AnalysisRecord analysisRecord;
 	private CommandContext context;
 	private QueryMetadataInterface metadata;
+	private boolean dependent;
 	
 	public RuleMergeCriteria(IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context, QueryMetadataInterface metadata) {
 		this.idGenerator = idGenerator;
@@ -137,7 +138,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
      */
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, TeiidComponentException {
-
+    	dependent = false;
         // Find strings of criteria and merge them, removing duplicates
         List<PlanNode> criteriaChains = new ArrayList<PlanNode>();
         findCriteriaChains(plan, criteriaChains, analysisRecord);
@@ -146,7 +147,10 @@ public final class RuleMergeCriteria implements OptimizerRule {
         for (PlanNode critNode : criteriaChains) {
             mergeChain(critNode, metadata);
         }
-
+        if (dependent) {
+        	//rules.push(new RuleAssignOutputElements(true));
+        	rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
+        }
         return plan;
     }
 
@@ -310,14 +314,34 @@ public final class RuleMergeCriteria implements OptimizerRule {
 	            }
 			}
             
+			//assume dependent
+			if ((sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && planCardinality.floatValue() != NewCalculateCostUtil.UNKNOWN_VALUE 
+					&& planCardinality.floatValue() < sourceCost / 8) || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && planCardinality.floatValue() <= 1000)) {
+				plannedResult.makeInd = true;
+			}
+			
+			/*if (plannedResult.makeInd 
+					&& plannedResult.query.getCorrelatedReferences() == null
+					&& !plannedResult.not
+					&& plannedResult.leftExpressions.size() == 1) {
+            	//TODO: this should just be a dependent criteria node to avoid sorts
+            }*/
+			
 			current.recordDebugAnnotation("Conditions met (hint or cost)", null, "Converting to a semi merge join", analysisRecord, metadata); //$NON-NLS-1$ //$NON-NLS-2$
 			
             PlanNode semiJoin = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
             semiJoin.addGroups(current.getGroups());
+            Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(plannedResult.rightExpressions);
+            semiJoin.addGroups(groups);
             semiJoin.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
             semiJoin.setProperty(NodeConstants.Info.JOIN_TYPE, plannedResult.not?JoinType.JOIN_ANTI_SEMI:JoinType.JOIN_SEMI);
             semiJoin.setProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA, plannedResult.nonEquiJoinCriteria);
-            
+            List<Criteria> joinCriteria = new ArrayList<Criteria>();
+            joinCriteria.addAll(plannedResult.nonEquiJoinCriteria);
+            for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
+            	joinCriteria.add(new CompareCriteria((Expression)plannedResult.rightExpressions.get(i), CompareCriteria.EQ, (Expression)plannedResult.leftExpressions.get(i)));
+            }
+            semiJoin.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
             semiJoin.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, plannedResult.leftExpressions);
             semiJoin.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, plannedResult.rightExpressions);
             semiJoin.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.ALREADY_SORTED);
@@ -334,11 +358,21 @@ public final class RuleMergeCriteria implements OptimizerRule {
             node.setProperty(NodeConstants.Info.PROCESSOR_PLAN, subPlan);
             node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectedSymbols);
             node.setProperty(NodeConstants.Info.EST_CARDINALITY, planCardinality);
+            node.addGroups(groups);
             root.addAsParent(semiJoin);
             semiJoin.addLastChild(node);
             PlanNode result = current.getParent();
             NodeEditor.removeChildNode(result, current);
             RuleImplementJoinStrategy.insertSort(semiJoin.getFirstChild(), (List<Expression>) plannedResult.leftExpressions, semiJoin, metadata, capFinder, true);
+            if (plannedResult.makeInd && !plannedResult.not) {
+            	//TODO: would like for an enhanced sort merge with the semi dep option to avoid the sorting
+            	//this is a little different than a typical dependent join in that the right is the independent side
+            	String id = RuleChooseDependent.nextId();
+            	PlanNode dep = RuleChooseDependent.getDependentCriteriaNode(id, plannedResult.rightExpressions, plannedResult.leftExpressions, node, metadata, null, false, null);
+            	semiJoin.getFirstChild().addAsParent(dep);
+            	semiJoin.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
+            	this.dependent = true;
+            }
             return result;
 		} catch (QueryPlannerException e) {
 			//can't be done - probably access patterns - what about dependent
@@ -393,13 +427,13 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			if (result.not && !isNonNull(query, rightExpr)) {
 				return result;
 			}
-			if (!unnest && !result.mergeJoin) {
-				return result;
-			}
 			if (result.type == null) {
 				result.type = scc.getClass();
 			}
 			result.mergeJoin = scc.getSubqueryHint().isMergeJoin();
+			if (!unnest && !result.mergeJoin) {
+				return result;
+			}
 			result.makeInd = scc.getSubqueryHint().isDepJoin();
 			result.query = query;
 			result.additionalCritieria = (Criteria)new CompareCriteria(scc.getLeftExpression(), scc.getOperator(), rightExpr).clone();
@@ -513,12 +547,20 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		plannedResult.leftExpressions = RuleChooseJoinStrategy.createExpressionSymbols(plannedResult.leftExpressions);
 		plannedResult.rightExpressions = RuleChooseJoinStrategy.createExpressionSymbols(plannedResult.rightExpressions);
 		
-		if (requireDistinct && !addGroupBy && !isDistinct(plannedResult.query, plannedResult.rightExpressions, metadata)) {
-			if (!requiredExpressions.isEmpty()) {
+		if (requireDistinct && !addGroupBy) {
+			//ensure that uniqueness applies to the in condition
+			if (plannedResult.rightExpressions.size() > 1 
+					&& (plannedResult.type != SubquerySetCriteria.class || !isDistinct(plannedResult.query, plannedResult.rightExpressions.subList(plannedResult.rightExpressions.size() - 1, plannedResult.rightExpressions.size()), metadata))) { 
 				return false;
 			}
-			plannedResult.query.getSelect().setDistinct(true);
-			plannedResult.madeDistinct = true;
+			
+			if (!isDistinct(plannedResult.query, plannedResult.rightExpressions, metadata)) {
+				if (!requiredExpressions.isEmpty()) {
+					return false;
+				}
+				plannedResult.query.getSelect().setDistinct(true);
+				plannedResult.madeDistinct = true;
+			}
 		}
 
 		if (addGroupBy) {

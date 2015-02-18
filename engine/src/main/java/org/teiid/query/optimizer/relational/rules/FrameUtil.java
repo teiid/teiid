@@ -476,6 +476,11 @@ public class FrameUtil {
      * @return
      */
     public static ProcessorPlan getNestedPlan(PlanNode accessNode) {
+    	//semi-join plans are put directly on the access node
+    	ProcessorPlan plan = (ProcessorPlan)accessNode.getProperty(NodeConstants.Info.PROCESSOR_PLAN);
+    	if (plan != null) {
+    		return plan;
+    	}
         PlanNode sourceNode = accessNode.getFirstChild(); 
         if (sourceNode == null) {
         	return null;

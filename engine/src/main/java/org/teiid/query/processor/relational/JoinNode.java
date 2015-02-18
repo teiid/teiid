@@ -138,8 +138,12 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         throws TeiidComponentException, TeiidProcessingException {
         // Set Up Join Strategy
         this.joinStrategy.initialize(this);
-        
-        joinStrategy.openLeft();
+
+        if (isDependent() && (this.joinType == JoinType.JOIN_ANTI_SEMI || this.joinType == JoinType.JOIN_SEMI)) {
+        	joinStrategy.openRight();
+        } else {
+        	joinStrategy.openLeft();
+        }
         
         if(!isDependent()) {
         	joinStrategy.openRight();
@@ -180,12 +184,24 @@ public class JoinNode extends SubqueryAwareRelationalNode {
                                           TeiidProcessingException {
     	try {
 	    	if (state == State.LOAD_LEFT) {
+	    		boolean rightDep = false;
+	    		//dependent semi joins are processed right first
+	    		if (isDependent() && (this.joinType == JoinType.JOIN_ANTI_SEMI || this.joinType == JoinType.JOIN_SEMI)) {
+	    			rightDep = true;
+	    			this.joinStrategy.openRight();
+		            this.joinStrategy.loadRight();
+		            TupleBuffer buffer = this.joinStrategy.rightSource.getTupleBuffer();
+	                //the tuplebuffer may be from a lower node, so pass in the schema
+	                dvs = new DependentValueSource(buffer, this.joinStrategy.rightSource.getSource().getElements());
+	                dvs.setDistinct(this.joinStrategy.rightSource.isExpresssionDistinct());
+	                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
+	    		}
 	        	if (this.joinType != JoinType.JOIN_FULL_OUTER || this.getJoinCriteria() == null) {
 	            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
 	            }
-	        	//left child was already opened by the join node
+	        	this.joinStrategy.openLeft();
 	            this.joinStrategy.loadLeft();
-	            if (isDependent()) { 
+	            if (isDependent() && !rightDep) { 
 	                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
 	                //the tuplebuffer may be from a lower node, so pass in the schema
 	                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
