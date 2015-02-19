@@ -22,14 +22,20 @@
 package org.teiid.jboss.rest;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.teiid.core.types.*;
 import org.teiid.core.util.ReaderInputStream;
+import org.teiid.core.util.StringUtil;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.query.function.source.XMLSystemFunctions;
@@ -38,64 +44,16 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public abstract class TeiidRSProvider {
 
-	public InputStream execute(String vdbName, int version,	String procedureName,
-			LinkedHashMap<String, String> parameters, String charSet, boolean passthroughAuth, boolean usingReturn) throws SQLException {
-        Object result = null;
+    public InputStream execute(String vdbName, int version, String procedureName, LinkedHashMap<String, String> parameters,
+            String charSet, boolean passthroughAuth, boolean usingReturn) throws SQLException {
         //the generated code sends a empty string rather than null.
         if (charSet != null && charSet.trim().isEmpty()) {
-        	charSet = null;
+            charSet = null;
         }
-
         Connection conn = getConnection(vdbName, version, passthroughAuth);
         try {
-        	StringBuilder sb = new StringBuilder();
-        	sb.append("{ "); //$NON-NLS-1$
-        	if (usingReturn) {
-        		sb.append("? = "); //$NON-NLS-1$
-        	}
-        	sb.append("CALL ").append(procedureName); //$NON-NLS-1$
-        	sb.append("("); //$NON-NLS-1$
-        	boolean first = true;
-        	for (Map.Entry<String, String> entry : parameters.entrySet()) {
-        		if (entry.getValue() == null) {
-        			continue;
-        		}
-        		if (!first) {
-        			sb.append(", "); //$NON-NLS-1$
-        		}
-        		first = false;
-        		sb.append(SQLStringVisitor.escapeSinglePart(entry.getKey())).append("=>?"); //$NON-NLS-1$
-        	}
-        	sb.append(") }"); //$NON-NLS-1$
-        	LinkedHashMap<String, Object> updatedParameters = getParameterTypes(conn, vdbName, procedureName, parameters);
-            CallableStatement statement = conn.prepareCall(sb.toString());
-            if (!parameters.isEmpty()) {
-                int i = usingReturn?2:1;
-                for (Object value : updatedParameters.values()) {
-                	if (value == null) {
-                		continue;
-                	}
-					statement.setObject(i++, value);
-                }
-            }
-
-            final boolean hasResultSet = statement.execute();
-            if (hasResultSet) {
-                ResultSet rs = statement.getResultSet();
-                if (rs.next()) {
-                    result = rs.getObject(1);
-                } else {
-                	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
-                }
-                rs.close();
-            }
-            else if (!usingReturn){
-            	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
-            } else {
-            	result = statement.getObject(1);
-            }
-            statement.close();
-            return handleResult(charSet, result);
+            LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
+            return executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
         } finally {
             if (conn != null) {
                 try {
@@ -105,33 +63,201 @@ public abstract class TeiidRSProvider {
             }
         }
     }
+    
+    public InputStream executePost(String vdbName, int version, String procedureName, MultipartFormDataInput parameters,
+            String charSet, boolean passthroughAuth, boolean usingReturn) throws SQLException {
+        //the generated code sends a empty string rather than null.
+        if (charSet != null && charSet.trim().isEmpty()) {
+            charSet = null;
+        }
+        Connection conn = getConnection(vdbName, version, passthroughAuth);
+        try {
+            LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
+            return executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
+    
+    public InputStream executeProc(Connection conn, String procedureName, LinkedHashMap<String, Object> parameters,
+            String charSet, boolean usingReturn) throws SQLException {
+        Object result = null;
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("{ "); //$NON-NLS-1$
+    	if (usingReturn) {
+    		sb.append("? = "); //$NON-NLS-1$
+    	}
+    	sb.append("CALL ").append(procedureName); //$NON-NLS-1$
+    	sb.append("("); //$NON-NLS-1$
+    	boolean first = true;
+    	for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+    		if (entry.getValue() == null) {
+    			continue;
+    		}
+    		if (!first) {
+    			sb.append(", "); //$NON-NLS-1$
+    		}
+    		first = false;
+    		sb.append(SQLStringVisitor.escapeSinglePart(entry.getKey())).append("=>?"); //$NON-NLS-1$
+    	}
+    	sb.append(") }"); //$NON-NLS-1$
+    	
+        CallableStatement statement = conn.prepareCall(sb.toString());
+        if (!parameters.isEmpty()) {
+            int i = usingReturn?2:1;
+            for (Object value : parameters.values()) {
+            	if (value == null) {
+            		continue;
+            	}
+				statement.setObject(i++, value);
+            }
+        }
 
-	private  LinkedHashMap<String, Object> getParameterTypes(Connection conn, String vdbName, String procedureName, LinkedHashMap<String, String> parameters) throws SQLException {
-	    String schemaName = procedureName.substring(0, procedureName.lastIndexOf('.')).replace('\"', ' ').trim();
-	    String procName = procedureName.substring(procedureName.lastIndexOf('.')+1).replace('\"', ' ').trim();
-	    LinkedHashMap<String, Object> values = new LinkedHashMap<String, Object>();
-	    try {
-	        ResultSet rs = conn.getMetaData().getProcedureColumns(vdbName, schemaName, procName, "%"); //$NON-NLS-1$
-	        while(rs.next()) {
-	            String columnName = rs.getString(4);
-	            int columnDataType = rs.getInt(6);
-	            Class runtimeType = DataTypeManager.getRuntimeType(Class.forName(JDBCSQLTypeInfo.getJavaClassName(columnDataType)));
-	            Object value = parameters.get(columnName);
-	            if (value != null) {
-	                Transform t = DataTypeManager.getTransform(String.class, runtimeType);
-	                if (t != null) {
-	                    value = t.transform(parameters.get(columnName), runtimeType);
-	                }
-	            }
-	            values.put(columnName, value);
-	        }
-	        rs.close();
-	        return values;
-	    } catch (ClassNotFoundException e) {
-	        throw new SQLException(e);
-        } catch(TransformationException e) {
+        final boolean hasResultSet = statement.execute();
+        if (hasResultSet) {
+            ResultSet rs = statement.getResultSet();
+            if (rs.next()) {
+                result = rs.getObject(1);
+            } else {
+            	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
+            }
+            rs.close();
+        }
+        else if (!usingReturn){
+        	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
+        } else {
+        	result = statement.getObject(1);
+        }
+        statement.close();
+        return handleResult(charSet, result);
+    }
+
+    private LinkedHashMap<String, Object> convertParameters(Connection conn, String vdbName, String procedureName,
+            LinkedHashMap<String, String> inputParameters) throws SQLException {
+        
+        Map<String, Class> expectedTypes = getParameterTypes(conn, vdbName, procedureName);
+        LinkedHashMap<String, Object> expectedValues = new LinkedHashMap<String, Object>();
+        try {
+            for (String columnName : inputParameters.keySet()) {
+                Class runtimeType = expectedTypes.get(columnName);
+                if (runtimeType == null) {
+                    throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50105, columnName,
+                            procedureName));
+                }                
+                Object value = inputParameters.get(columnName);
+                if (runtimeType.isAssignableFrom(Array.class)) {
+                    List<String> array = StringUtil.split((String)value, ","); //$NON-NLS-1$
+                    value = array.toArray(new String[array.size()]);
+                }
+                else {
+                    if (value != null && DataTypeManager.isTransformable(String.class, runtimeType)) {
+                        Transform t = DataTypeManager.getTransform(String.class, runtimeType);
+                        value = t.transform(value, runtimeType);
+                    }
+                }
+                expectedValues.put(columnName, value);
+            }
+            return expectedValues;
+        } catch (TransformationException e) {
             throw new SQLException(e);
         }
+    }
+    
+    private LinkedHashMap<String, Object> convertParameters(Connection conn, String vdbName, String procedureName,
+            MultipartFormDataInput form) throws SQLException {
+        
+        Map<String, Class> runtimeTypes = getParameterTypes(conn, vdbName, procedureName);
+        LinkedHashMap<String, Object> expectedValues = new LinkedHashMap<String, Object>();
+        Map<String, List<InputPart>> inputParameters = form.getFormDataMap();
+        
+        for (String columnName : inputParameters.keySet()) {
+            Class runtimeType = runtimeTypes.get(columnName);
+            if (runtimeType == null) {
+                throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50105, columnName, procedureName));
+            }
+            if (runtimeType.isAssignableFrom(Array.class)) {
+                List<InputPart> valueStreams = inputParameters.get(columnName);
+                ArrayList array = new ArrayList();
+                try {
+                    for (InputPart part : valueStreams) {
+                        array.add(part.getBodyAsString());
+                    }
+                } catch (IOException e) {
+                    throw new SQLException(e);
+                }
+                expectedValues.put(columnName, array.toArray(new Object[array.size()]));
+            } else {
+                final InputPart part = inputParameters.get(columnName).get(0);
+                try {
+                    expectedValues.put(columnName, convertToRuntimeType(runtimeType, part));
+                } catch (IOException e) {
+                    throw new SQLException(e);
+                }
+            }
+        }
+        return expectedValues;
+    }
+
+    private Object convertToRuntimeType(Class runtimeType, final InputPart part) throws IOException,
+            SQLException {
+        if (runtimeType.isAssignableFrom(SQLXML.class)) {
+            return new SQLXMLImpl(new InputStreamFactory() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return part.getBody(InputStream.class, null);
+                }
+            });
+        }
+        else if (runtimeType.isAssignableFrom(Blob.class)) {
+            return new BlobImpl(new InputStreamFactory() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return part.getBody(InputStream.class, null);
+                }
+            });
+        }
+        else if (runtimeType.isAssignableFrom(Clob.class)) {
+            return new ClobImpl(new InputStreamFactory() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return part.getBody(InputStream.class, null);
+                }
+            }, -1);                        
+        }
+        else if (DataTypeManager.isTransformable(String.class, runtimeType)) {
+            try {
+                return DataTypeManager.transformValue(part.getBodyAsString(), runtimeType);
+            } catch (TransformationException e) {
+                throw new SQLException(e);
+            }
+        }
+        return part.getBodyAsString();
+    }    
+    
+    private LinkedHashMap<String, Class> getParameterTypes(Connection conn, String vdbName, String procedureName)
+            throws SQLException {
+        String schemaName = procedureName.substring(0, procedureName.lastIndexOf('.')).replace('\"', ' ').trim();
+        String procName = procedureName.substring(procedureName.lastIndexOf('.')+1).replace('\"', ' ').trim();	    
+        LinkedHashMap<String, Class> expectedTypes = new LinkedHashMap<String, Class>();
+        try {
+            ResultSet rs = conn.getMetaData().getProcedureColumns(vdbName, schemaName, procName, "%"); //$NON-NLS-1$
+            while(rs.next()) {
+                String columnName = rs.getString(4);
+                int columnDataType = rs.getInt(6);
+                Class runtimeType = DataTypeManager
+                        .getRuntimeType(Class.forName(JDBCSQLTypeInfo.getJavaClassName(columnDataType)));
+                expectedTypes.put(columnName, runtimeType);
+            }
+            rs.close();
+            return expectedTypes;
+        } catch (ClassNotFoundException e) {
+            throw new SQLException(e);
+        }	    
 	}
 
 	private InputStream handleResult(String charSet, Object result) throws SQLException {
@@ -163,7 +289,8 @@ public abstract class TeiidRSProvider {
 		return new ByteArrayInputStream(result.toString().getBytes(charSet==null?Charset.defaultCharset():Charset.forName(charSet)));
 	}
 
-	public InputStream executeQuery(String vdbName, int vdbVersion, String sql, boolean json, boolean passthroughAuth) throws SQLException {
+	public InputStream executeQuery(String vdbName, int vdbVersion, String sql, boolean json, boolean passthroughAuth) 
+	        throws SQLException {
 		Connection conn = getConnection(vdbName, vdbVersion, passthroughAuth);
 		Object result = null;
 		try {

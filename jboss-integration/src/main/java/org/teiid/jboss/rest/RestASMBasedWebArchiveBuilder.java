@@ -209,7 +209,6 @@ public class RestASMBasedWebArchiveBuilder {
     
     private byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
     	ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-    	FieldVisitor fv;
     	MethodVisitor mv;
     	AnnotationVisitor av0;
     	boolean hasValidProcedures = false;
@@ -316,16 +315,27 @@ public class RestASMBasedWebArchiveBuilder {
 		int paramsSize = params.size();
 		MethodVisitor mv;
 		
+		boolean post = false;
+        if (method.toUpperCase().equals("POST")) {
+            post = true;
+        }
+		
 		AnnotationVisitor av0;
 		{
-        	StringBuilder paramSignature = new StringBuilder();
-        	paramSignature.append("(");
-        	for (int i = 0; i < paramsSize; i++) {
-        		paramSignature.append("Ljava/lang/String;");
-        	}
-        	paramSignature.append(")");
-    		
-    	mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), paramSignature+"Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });
+    	
+		StringBuilder paramSignature = new StringBuilder();
+    	paramSignature.append("(");
+    	for (int i = 0; i < paramsSize; i++) {
+    		paramSignature.append("Ljava/lang/String;");
+    	}
+    	paramSignature.append(")");
+    	
+    	if (post) {
+    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });    	    
+    	}
+    	else {
+    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), paramSignature+"Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });
+    	}
     	{
     	av0 = mv.visitAnnotation("Ljavax/ws/rs/Produces;", true);
     	{
@@ -348,24 +358,36 @@ public class RestASMBasedWebArchiveBuilder {
     	av0 = mv.visitAnnotation("Ljavax/annotation/security/PermitAll;", true);
     	av0.visitEnd();
     	}
-    	
-    	// post only accepts Form inputs, not path params
-    	HashSet<String> pathParms = getPathParameters(uri);
-    	for (int i = 0; i < paramsSize; i++)
+        
+    	if(post)
     	{
-
-        String paramType = "Ljavax/ws/rs/FormParam;";
-        if (method.toUpperCase().equals("GET")) {
-            paramType = "Ljavax/ws/rs/QueryParam;";
+    	    av0 = mv.visitAnnotation("Ljavax/ws/rs/Consumes;", true);
+    	    {
+    	    AnnotationVisitor av1 = av0.visitArray("value");
+    	    av1.visit(null, "multipart/form-data");
+    	    av1.visitEnd();
+    	    }
+    	    av0.visitEnd();
         }
-        if (pathParms.contains(params.get(i).getName())){
-            paramType = "Ljavax/ws/rs/PathParam;";
-        }
-
-		av0 = mv.visitParameterAnnotation(i, paramType, true);
-		av0.visit("value", params.get(i).getName());
-		av0.visitEnd();
-		}
+        
+    	if(!post) {
+        	// post only accepts Form inputs, not path params
+        	HashSet<String> pathParms = getPathParameters(uri);
+        	for (int i = 0; i < paramsSize; i++)
+        	{
+                String paramType = "Ljavax/ws/rs/FormParam;";
+                if (method.toUpperCase().equals("GET")) {
+                    paramType = "Ljavax/ws/rs/QueryParam;";
+                }
+                if (pathParms.contains(params.get(i).getName())){
+                    paramType = "Ljavax/ws/rs/PathParam;";
+                }
+        
+        		av0 = mv.visitParameterAnnotation(i, paramType, true);
+        		av0.visit("value", params.get(i).getName());
+        		av0.visitEnd();
+    		}
+    	}
     	
     	mv.visitCode();
     	Label l0 = new Label();
@@ -373,44 +395,69 @@ public class RestASMBasedWebArchiveBuilder {
     	Label l2 = new Label();
     	mv.visitTryCatchBlock(l0, l1, l2, "java/sql/SQLException");
     	mv.visitLabel(l0);
-    	mv.visitTypeInsn(NEW, "java/util/LinkedHashMap");
-    	mv.visitInsn(DUP);
-    	mv.visitMethodInsn(INVOKESPECIAL, "java/util/LinkedHashMap", "<init>", "()V");
-
-    	mv.visitVarInsn(ASTORE, paramsSize+1);
-    	for (int i = 0; i < paramsSize; i++) {
-    		mv.visitVarInsn(ALOAD, paramsSize+1);
-    		mv.visitLdcInsn(params.get(i).getName());
-    		mv.visitVarInsn(ALOAD, i+1);
-    		mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-    		mv.visitInsn(POP);
+    	
+    	if (!post) {
+        	mv.visitTypeInsn(NEW, "java/util/LinkedHashMap");
+        	mv.visitInsn(DUP);
+        	mv.visitMethodInsn(INVOKESPECIAL, "java/util/LinkedHashMap", "<init>", "()V");
+    
+        	mv.visitVarInsn(ASTORE, paramsSize+1);
+        	for (int i = 0; i < paramsSize; i++) {
+        		mv.visitVarInsn(ALOAD, paramsSize+1);
+        		mv.visitLdcInsn(params.get(i).getName());
+        		mv.visitVarInsn(ALOAD, i+1);
+        		mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        		mv.visitInsn(POP);
+        	}
+        	mv.visitVarInsn(ALOAD, 0);
+        	mv.visitLdcInsn(vdbName);
+        	mv.visitIntInsn(BIPUSH, vdbVersion);
+        	
+        	mv.visitLdcInsn(procedure.getSQLString());
+        	
+        	mv.visitVarInsn(ALOAD, paramsSize+1);
+        	mv.visitLdcInsn(charSet==null?"":charSet);
+        	mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
+        	mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
+        	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;ZZ)Ljava/io/InputStream;");
+        	mv.visitLabel(l1);
+        	mv.visitInsn(ARETURN);
+        	mv.visitLabel(l2);
+        	mv.visitFrame(F_SAME1, 0, null, 1, new Object[] {"java/sql/SQLException"});
+        	mv.visitVarInsn(ASTORE, paramsSize+1);
+        	mv.visitTypeInsn(NEW, "javax/ws/rs/WebApplicationException");
+        	mv.visitInsn(DUP);
+        	mv.visitVarInsn(ALOAD, paramsSize+1);
+        	mv.visitFieldInsn(GETSTATIC, "javax/ws/rs/core/Response$Status", "INTERNAL_SERVER_ERROR", "Ljavax/ws/rs/core/Response$Status;");
+        	mv.visitMethodInsn(INVOKESPECIAL, "javax/ws/rs/WebApplicationException", "<init>", "(Ljava/lang/Throwable;Ljavax/ws/rs/core/Response$Status;)V");
+        	mv.visitInsn(ATHROW);
+        	mv.visitMaxs(7, paramsSize+2);
+        	mv.visitEnd();
     	}
-    	
-    	mv.visitVarInsn(ALOAD, 0);
-    	
-    	mv.visitLdcInsn(vdbName);
-    	mv.visitIntInsn(BIPUSH, vdbVersion);
-    	
-    	mv.visitLdcInsn(procedure.getSQLString());
-    	
-    	mv.visitVarInsn(ALOAD, paramsSize+1);
-    	mv.visitLdcInsn(charSet==null?"":charSet);
-    	mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
-    	mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
-    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;ZZ)Ljava/io/InputStream;");
-    	mv.visitLabel(l1);
-    	mv.visitInsn(ARETURN);
-    	mv.visitLabel(l2);
-    	mv.visitFrame(F_SAME1, 0, null, 1, new Object[] {"java/sql/SQLException"});
-    	mv.visitVarInsn(ASTORE, paramsSize+1);
-    	mv.visitTypeInsn(NEW, "javax/ws/rs/WebApplicationException");
-    	mv.visitInsn(DUP);
-    	mv.visitVarInsn(ALOAD, paramsSize+1);
-    	mv.visitFieldInsn(GETSTATIC, "javax/ws/rs/core/Response$Status", "INTERNAL_SERVER_ERROR", "Ljavax/ws/rs/core/Response$Status;");
-    	mv.visitMethodInsn(INVOKESPECIAL, "javax/ws/rs/WebApplicationException", "<init>", "(Ljava/lang/Throwable;Ljavax/ws/rs/core/Response$Status;)V");
-    	mv.visitInsn(ATHROW);
-    	mv.visitMaxs(7, paramsSize+2);
-    	mv.visitEnd();
+    	else {
+    	    mv.visitVarInsn(ALOAD, 0);
+    	    mv.visitLdcInsn(vdbName);
+    	    mv.visitIntInsn(BIPUSH, vdbVersion);
+    	    mv.visitLdcInsn(procedure.getSQLString());
+    	    mv.visitVarInsn(ALOAD, 1);
+    	    mv.visitLdcInsn(charSet==null?"":charSet);
+    	    mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
+    	    mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
+    	    mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executePost", "(Ljava/lang/String;ILjava/lang/String;Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;Ljava/lang/String;ZZ)Ljava/io/InputStream;");
+    	    mv.visitLabel(l1);
+    	    mv.visitInsn(ARETURN);
+    	    mv.visitLabel(l2);
+    	    mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/sql/SQLException"});
+    	    mv.visitVarInsn(ASTORE, 2);
+    	    mv.visitTypeInsn(NEW, "javax/ws/rs/WebApplicationException");
+    	    mv.visitInsn(DUP);
+    	    mv.visitVarInsn(ALOAD, 2);
+    	    mv.visitFieldInsn(GETSTATIC, "javax/ws/rs/core/Response$Status", "INTERNAL_SERVER_ERROR", "Ljavax/ws/rs/core/Response$Status;");
+    	    mv.visitMethodInsn(INVOKESPECIAL, "javax/ws/rs/WebApplicationException", "<init>", "(Ljava/lang/Throwable;Ljavax/ws/rs/core/Response$Status;)V");
+    	    mv.visitInsn(ATHROW);
+    	    mv.visitMaxs(8, 3);
+    	    mv.visitEnd();
+    	}
     	}
 	}
 	

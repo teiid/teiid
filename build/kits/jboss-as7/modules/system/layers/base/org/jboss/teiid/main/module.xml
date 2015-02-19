@@ -56,7 +56,8 @@
         <module name="org.jaxen" />
         <module name="org.apache.cxf"/> <!-- for OAuth -->
         <module name="org.apache.cxf.impl"/> <!-- for OAuth -->
-        <module name="org.apache.cxf.impl.frontend-jaxrs"/>  <!-- for OAuth -->              
+        <module name="org.apache.cxf.impl.frontend-jaxrs"/>  <!-- for OAuth -->   
+        <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service -->           
     </dependencies>
 
 </module>

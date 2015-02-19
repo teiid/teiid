@@ -25,16 +25,21 @@ package org.teiid.arquillian;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Properties;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
 import org.junit.Before;
@@ -93,15 +98,15 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
 		
 		// get based call
-		String response = httpCall("http://localhost:8080/sample_1/view/g1/123", "GET", null);
-		String expected = "<rows p1=\"123\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>";
+		String response = httpCall("http://localhost:8080/sample_1/view/g1/123?p2=test", "GET", null);
+		String expected = "<rows p1=\"123\" p2=\"test\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>";
 		assertEquals("response did not match expected", expected, response);
 
 		this.internalConnection.close();
 		
 		//try the same thing through a vdb
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample-ws@mm://localhost:31000;user=user;password=user", null);
-		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123')) as x");
+		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123?p2=test')) as x");
 		this.internalResultSet.next();
 		assertEquals(expected, this.internalResultSet.getString(1));
     }
@@ -119,16 +124,24 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
 		
 		String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
+        HttpEntity entity = MultipartEntityBuilder.create()
+                .addTextBody("p1", "456")
+                .build();
+		
 		
 		// post based call with default
-		String response = httpCall("http://localhost:8080/sample_1/view/g1post", "POST", params);
+		String response = httpMultipartPost(entity, "http://localhost:8080/sample_1/view/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 
 		// post based call
-		params += "&" + URLEncoder.encode("p2", "UTF-8") + "=" + URLEncoder.encode("2", "UTF-8");
-		params += "&" + URLEncoder.encode("p3", "UTF-8") + "=" + URLEncoder.encode("string value", "UTF-8");
-		response = httpCall("http://localhost:8080/sample_1/view/g1post", "POST", params);
-		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		entity = MultipartEntityBuilder.create()
+                .addTextBody("p1", "456")
+                .addTextBody("p2", "2")
+                .addTextBody("p3", "string value")
+                .addBinaryBody("p4", "<root><p4>bar</p4></root>".getBytes(), ContentType.create("application/xml"), "foo.xml")
+                .build();		
+		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/view/g1post");
+		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\" p4=\"bar\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 		
 		// ad-hoc procedure
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
@@ -136,6 +149,15 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
     }	
 	
+	private String httpMultipartPost(HttpEntity entity, String url ) throws ClientProtocolException, IOException {
+        HttpPost httpPost = new HttpPost(url);
+        //httpPost.addHeader("Authorization", "Basic "+Base64.encodeBytes(("user:user").getBytes()));
+        httpPost.setEntity(entity);
+        HttpClient httpClient = new DefaultHttpClient();
+        HttpResponse response = httpClient.execute(httpPost);
+        return ObjectConverterUtil.convertToString(new InputStreamReader(response.getEntity().getContent(), Charset
+                .forName("UTF-8")));
+	}
 	
 	private String httpCall(String url, String method, String params) throws Exception {
 		HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
