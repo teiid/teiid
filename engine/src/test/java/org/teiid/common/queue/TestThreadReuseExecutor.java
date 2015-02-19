@@ -24,35 +24,38 @@ package org.teiid.common.queue;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.resource.spi.work.Work;
 
+import org.junit.After;
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.dqp.internal.process.FutureWork;
-import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 
 /**
  */
 public class TestThreadReuseExecutor {
 	
+	ThreadReuseExecutor pool = null;
+	
+	@After public void tearDown() {
+		if (pool != null) {
+			pool.shutdownNow();
+		}
+	}
+	
     @Test public void testQueuing() throws Exception {
         final long SINGLE_WAIT = 50;
         final int WORK_ITEMS = 10;
         final int MAX_THREADS = 5;
 
-        final ThreadReuseExecutor pool = new ThreadReuseExecutor("test", MAX_THREADS); //$NON-NLS-1$
+        pool = new ThreadReuseExecutor("test", MAX_THREADS); //$NON-NLS-1$
         
         for(int i=0; i<WORK_ITEMS; i++) {
             pool.execute(new FakeWorkItem(SINGLE_WAIT));
@@ -70,7 +73,7 @@ public class TestThreadReuseExecutor {
         final long SINGLE_WAIT = 50;
         final long NUM_THREADS = 5;
 
-        ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+        pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         
         for(int i=0; i<NUM_THREADS; i++) {            
         	pool.execute(new FakeWorkItem(SINGLE_WAIT));
@@ -90,13 +93,13 @@ public class TestThreadReuseExecutor {
     }
     
     @Test(expected=RejectedExecutionException.class) public void testShutdown() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+    	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         pool.shutdown();
     	pool.execute(new FakeWorkItem(1));
     }
     
     @Test public void testFailingWork() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+    	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	final Semaphore signal = new Semaphore(1);
     	pool.execute(new Work() {
     		@Override
@@ -114,7 +117,7 @@ public class TestThreadReuseExecutor {
     }
     
     @Test public void testPriorities() throws Exception {
-    	final ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
+    	pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
     	FutureWork<Boolean> work1 = new FutureWork<Boolean>(new Callable<Boolean>() {
     		public Boolean call() throws Exception {
     			synchronized (pool) {
