@@ -305,19 +305,24 @@ public class RestASMBasedWebArchiveBuilder {
 		
 		List<ProcedureParameter> params = new ArrayList<ProcedureParameter>(procedure.getParameters().size());
 		boolean usingReturn = false;
+		boolean hasLobInput = false;
 		for (ProcedureParameter p : procedure.getParameters()) {
 			if (p.getType() == Type.In || p.getType() == Type.InOut) {
 				params.add(p);
 			} else if (p.getType() == Type.ReturnValue && procedure.getResultSet() == null) {
 				usingReturn = true;
 			}
+			if (!hasLobInput) {
+			    String runtimeType = p.getRuntimeType();
+			    hasLobInput = DataTypeManager.isLOB(runtimeType) || DataTypeManager.DefaultDataTypes.VARBINARY.equals(runtimeType);
+			}
 		}
 		int paramsSize = params.size();
 		MethodVisitor mv;
 		
-		boolean post = false;
-        if (method.toUpperCase().equals("POST")) {
-            post = true;
+		boolean useMultipart = false;
+        if (method.toUpperCase().equals("POST") && hasLobInput) {
+            useMultipart = true;
         }
 		
 		AnnotationVisitor av0;
@@ -330,7 +335,7 @@ public class RestASMBasedWebArchiveBuilder {
     	}
     	paramSignature.append(")");
     	
-    	if (post) {
+    	if (useMultipart) {
     	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });    	    
     	}
     	else {
@@ -359,7 +364,7 @@ public class RestASMBasedWebArchiveBuilder {
     	av0.visitEnd();
     	}
         
-    	if(post)
+    	if(useMultipart)
     	{
     	    av0 = mv.visitAnnotation("Ljavax/ws/rs/Consumes;", true);
     	    {
@@ -370,7 +375,7 @@ public class RestASMBasedWebArchiveBuilder {
     	    av0.visitEnd();
         }
         
-    	if(!post) {
+    	if(!useMultipart) {
         	// post only accepts Form inputs, not path params
         	HashSet<String> pathParms = getPathParameters(uri);
         	for (int i = 0; i < paramsSize; i++)
@@ -396,7 +401,7 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitTryCatchBlock(l0, l1, l2, "java/sql/SQLException");
     	mv.visitLabel(l0);
     	
-    	if (!post) {
+    	if (!useMultipart) {
         	mv.visitTypeInsn(NEW, "java/util/LinkedHashMap");
         	mv.visitInsn(DUP);
         	mv.visitMethodInsn(INVOKESPECIAL, "java/util/LinkedHashMap", "<init>", "()V");

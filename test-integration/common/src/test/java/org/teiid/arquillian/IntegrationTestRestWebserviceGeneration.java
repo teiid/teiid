@@ -109,10 +109,44 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123?p2=test')) as x");
 		this.internalResultSet.next();
 		assertEquals(expected, this.internalResultSet.getString(1));
+		admin.undeploy("sample-vdb.xml");
+		Thread.sleep(2000);
     }
 	
-	@Test
+    @Test
     public void testPostOperation() throws Exception {
+        admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+        
+        this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
+        
+        execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
+        this.internalResultSet.next();
+        
+        assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
+        
+        String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
+        
+        // post based call with default
+        String response = httpCall("http://localhost:8080/sample_1/view/g1simplepost", "POST", params);
+        assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+
+        // post based call
+        params += "&" + URLEncoder.encode("p2", "UTF-8") + "=" + URLEncoder.encode("2", "UTF-8");
+        params += "&" + URLEncoder.encode("p3", "UTF-8") + "=" + URLEncoder.encode("string value", "UTF-8");
+        response = httpCall("http://localhost:8080/sample_1/view/g1simplepost", "POST", params);
+        assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+        
+        // ad-hoc procedure
+        params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
+        response = httpCall("http://localhost:8080/sample_1/view/query", "POST", params);
+        assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+        admin.undeploy("sample-vdb.xml");
+        Thread.sleep(2000);
+    }
+    
+	@Test
+    public void testMultipartPostOperation() throws Exception {
 		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
@@ -147,6 +181,8 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
 		response = httpCall("http://localhost:8080/sample_1/view/query", "POST", params);
 		assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		admin.undeploy("sample-vdb.xml");
+		Thread.sleep(2000);
     }	
 	
 	private String httpMultipartPost(HttpEntity entity, String url ) throws ClientProtocolException, IOException {

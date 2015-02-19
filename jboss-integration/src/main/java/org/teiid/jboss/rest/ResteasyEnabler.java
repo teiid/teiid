@@ -31,9 +31,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.ModelController;
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminFactory;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.AdminFactory.AdminImpl;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -69,8 +67,31 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	@Override
 	public synchronized void added(String name, int version, CompositeVDB vdb, boolean reloading) {
 	}
+	
 	@Override
-	public void beforeRemove(String name, int version, CompositeVDB vdb) {
+	public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+        if (this.vdbName.equals(name) && this.vdbVersion == version) {
+    
+            // we only want un-deploy what is auto-generated previously 
+            final String warName = buildName(name, version);
+
+            if (this.deployed.get()) {
+                this.deployed.set(false);
+                if (!this.shutdownListener.isShutdownInProgress()) {
+                    this.executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                            ((AdminImpl)admin).undeploy(warName, true);
+                            } catch (AdminException e) {
+                                // during shutdown some times the logging and other subsystems are shutdown, so this operation may not succeed. 
+                                LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("failed_to_remove", warName)); //$NON-NLS-1$
+                            }                       
+                        }
+                    });
+                }
+            }
+        }	    
 	}	
 	@Override
 	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb, boolean reloading) {
@@ -84,7 +105,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 			
 			String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
 	
-			final String warName = buildName(vdb);
+			final String warName = buildName(name, version);
 			if (generate != null && Boolean.parseBoolean(generate)
 					&& hasRestMetadata(vdb)
 					&& !this.deployed.get()
@@ -136,33 +157,11 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	
 	@Override
 	public synchronized void removed(String name, int version, CompositeVDB cvdb) {
-		if (this.vdbName.equals(name) && this.vdbVersion == version) {
-			VDBMetaData vdb = cvdb.getVDB();
-	
-			// we only want un-deploy what is auto-generated previously 
-			final String warName = buildName(vdb);
 
-			if (this.deployed.get()) {
-				this.deployed.set(false);
-				if (!this.shutdownListener.isShutdownInProgress()) {
-					this.executor.execute(new Runnable() {
-						@Override
-						public void run() {
-							try {
-							((AdminImpl)admin).undeploy(warName, true);
-							} catch (AdminException e) {
-								// during shutdown some times the logging and other subsystems are shutdown, so this operation may not succeed. 
-								LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("failed_to_remove", warName)); //$NON-NLS-1$
-							}						
-						}
-					});
-				}
-			}
-		}
 	}
 	
-	private String buildName(VDBMetaData vdb) {
-		return vdb.getName().toLowerCase()+"_"+vdb.getVersion()+".war"; //$NON-NLS-1$ //$NON-NLS-2$
+	private String buildName(String name, int version) {
+		return name+"_"+version+".war"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private boolean hasRestMetadata(VDBMetaData vdb) {
