@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Dependencies: org.jboss.teiid, org.jboss.teiid.client, org.jboss.resteasy.resteasy-jaxrs
+Dependencies: org.jboss.teiid.web.resteasy, org.jboss.teiid.client

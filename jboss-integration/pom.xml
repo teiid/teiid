@@ -96,6 +96,11 @@
         <artifactId>asm</artifactId>
         <scope>provided</scope>
     </dependency>
+    <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-multipart-provider</artifactId>
+        <scope>provided</scope>
+    </dependency>                             
     
     <!-- This dependency is to read the ra.xml file details -->
     <dependency>

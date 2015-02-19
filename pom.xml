@@ -920,7 +920,12 @@
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>tjws</artifactId>
                 <version>${version.org.jboss.resteasy.tjws}</version>
-            </dependency>                 
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-multipart-provider</artifactId>
+                <version>${version.org.jboss.resteasy}</version>
+            </dependency>                             
             <dependency>
                 <groupId>com.force.api</groupId>
                 <artifactId>force-wsc</artifactId>
@@ -1179,7 +1184,12 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
                 <version>${version.org.apache.httpcomponents.httpcore}</version>
-            </dependency> 
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>${version.org.apache.httpcomponents.httpclient}</version>
+            </dependency>              
             <dependency>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
