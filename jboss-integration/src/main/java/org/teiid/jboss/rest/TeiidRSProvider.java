@@ -206,12 +206,16 @@ public abstract class TeiidRSProvider {
     private Object convertToRuntimeType(Class runtimeType, final InputPart part) throws IOException,
             SQLException {
         if (runtimeType.isAssignableFrom(SQLXML.class)) {
-            return new SQLXMLImpl(new InputStreamFactory() {
+            SQLXMLImpl xml = new SQLXMLImpl(new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
                     return part.getBody(InputStream.class, null);
                 }
             });
+            if (charset(part) != null) {
+                xml.setEncoding(charset(part));
+            }
+            return xml;
         }
         else if (runtimeType.isAssignableFrom(Blob.class)) {
             return new BlobImpl(new InputStreamFactory() {
@@ -222,12 +226,16 @@ public abstract class TeiidRSProvider {
             });
         }
         else if (runtimeType.isAssignableFrom(Clob.class)) {
-            return new ClobImpl(new InputStreamFactory() {
+            ClobImpl clob = new ClobImpl(new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
                     return part.getBody(InputStream.class, null);
                 }
-            }, -1);                        
+            }, -1);
+            if (charset(part) != null) {
+                clob.setEncoding(charset(part));
+            }            
+            return clob;
         }
         else if (DataTypeManager.isTransformable(String.class, runtimeType)) {
             try {
@@ -237,6 +245,10 @@ public abstract class TeiidRSProvider {
             }
         }
         return part.getBodyAsString();
+    }
+
+    private String charset(final InputPart part) {
+        return part.getMediaType().getParameters().get("charset"); //$NON-NLS-1$
     }    
     
     private LinkedHashMap<String, Class> getParameterTypes(Connection conn, String vdbName, String procedureName)
