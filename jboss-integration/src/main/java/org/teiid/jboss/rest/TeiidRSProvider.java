@@ -34,6 +34,7 @@ import java.util.Map;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.teiid.core.types.*;
+import org.teiid.core.util.Base64;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.StringUtil;
 import org.teiid.jboss.IntegrationPlugin;
@@ -154,6 +155,9 @@ public abstract class TeiidRSProvider {
                     List<String> array = StringUtil.split((String)value, ","); //$NON-NLS-1$
                     value = array.toArray(new String[array.size()]);
                 }
+                else if (runtimeType.isAssignableFrom(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+                    value = Base64.decode((String)value);
+                }
                 else {
                     if (value != null && DataTypeManager.isTransformable(String.class, runtimeType)) {
                         Transform t = DataTypeManager.getTransform(String.class, runtimeType);
@@ -236,6 +240,9 @@ public abstract class TeiidRSProvider {
                 clob.setEncoding(charset(part));
             }            
             return clob;
+        }
+        else if (runtimeType.isAssignableFrom(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+            return Base64.decode(part.getBodyAsString());
         }
         else if (DataTypeManager.isTransformable(String.class, runtimeType)) {
             try {
