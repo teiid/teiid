@@ -314,7 +314,7 @@ public class RestASMBasedWebArchiveBuilder {
 			}
 			if (!hasLobInput) {
 			    String runtimeType = p.getRuntimeType();
-			    hasLobInput = DataTypeManager.isLOB(runtimeType) || DataTypeManager.DefaultDataTypes.VARBINARY.equals(runtimeType);
+			    hasLobInput = DataTypeManager.isLOB(runtimeType);
 			}
 		}
 		int paramsSize = params.size();
