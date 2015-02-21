@@ -128,6 +128,11 @@
             <groupId>org.wololo</groupId>
             <artifactId>jts2geojson</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>org.osgeo</groupId>
+            <artifactId>proj4j</artifactId>
+        </dependency>
 
         <dependency>
               <groupId>xom</groupId>
@@ -137,7 +142,7 @@
         <dependency>
               <groupId>jaxen</groupId>
               <artifactId>jaxen</artifactId>    
-        </dependency>         
+        </dependency>
                           
 	</dependencies>
 

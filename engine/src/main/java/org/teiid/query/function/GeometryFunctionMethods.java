@@ -30,6 +30,7 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class GeometryFunctionMethods {
@@ -37,7 +38,7 @@ public class GeometryFunctionMethods {
     @TeiidFunction(name=SourceSystemFunctions.ST_ASTEXT, 
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true,
-                   pushdown=PushDown.CAN_PUSHDOWN                   )
+                   pushdown=PushDown.CAN_PUSHDOWN)
     public static ClobType asText(GeometryType geometry) 
             throws FunctionExecutionException {
        return GeometryUtils.geometryToClob(geometry, false);
@@ -240,5 +241,15 @@ public class GeometryFunctionMethods {
 	public static Boolean equals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         return GeometryUtils.equals(geom1, geom2);
 	}
-    
+
+    @TeiidFunction(name=SourceSystemFunctions.ST_TRANSFORM,
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType transform(CommandContext context,
+                                         GeometryType geom, 
+                                         int srid) 
+            throws FunctionExecutionException {        
+        return GeometryTransformUtils.transform(context, geom, srid);
+    }
 }

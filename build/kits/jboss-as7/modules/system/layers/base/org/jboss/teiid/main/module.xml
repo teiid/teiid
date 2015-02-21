@@ -9,6 +9,7 @@
         <resource-root path="nux-${version.nux}.jar" />
         <resource-root path="jts-${version.jts}.jar" />
         <resource-root path="jts2geojson-${version.jts2geojson}.jar" />
+        <resource-root path="proj4j-${version.proj4j}.jar" />
         
         <resource-root path="deployments" />
     </resources>
