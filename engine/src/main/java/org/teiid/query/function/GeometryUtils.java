@@ -59,14 +59,20 @@ import com.vividsolutions.jts.io.gml2.GMLWriter;
 /**
  * Utility methods for geometry
  * TODO: determine if we should use buffermanager to minimize memory footprint
- * TODO: Split into GeometryFilterUtils and GeometryConvertUtils. - Tom
  */
 public class GeometryUtils {
 	
-    public static ClobType geometryToClob(GeometryType geometry) 
+    public static ClobType geometryToClob(GeometryType geometry, 
+                                          boolean withSrid) 
             throws FunctionExecutionException {
         Geometry jtsGeometry = getGeometry(geometry);
-        return new ClobType(new ClobImpl(jtsGeometry.toText()));
+        int srid = jtsGeometry.getSRID();
+        String geomText = "";
+        if (withSrid && srid != GeometryType.UNKNOWN_SRID) {
+            geomText += "SRID=" + jtsGeometry.getSRID() + ";";
+        }
+        geomText += jtsGeometry.toText();
+        return new ClobType(new ClobImpl(geomText));
     }
 
     public static GeometryType geometryFromClob(ClobType wkt)
@@ -129,10 +135,14 @@ public class GeometryUtils {
         }
     }    
     
-    public static ClobType geometryToGml(GeometryType geometry) 
+    public static ClobType geometryToGml(GeometryType geometry, 
+                                         boolean withGmlPrefix) 
             throws FunctionExecutionException {        
         Geometry jtsGeometry = getGeometry(geometry);
         GMLWriter writer = new GMLWriter();
+        if (!withGmlPrefix) {
+            writer.setPrefix(null);
+        }
         String gmlText = writer.write(jtsGeometry);
         return new ClobType(new ClobImpl(gmlText));
     }

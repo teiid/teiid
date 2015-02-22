@@ -38,8 +38,18 @@ public class GeometryFunctionMethods {
                    category=FunctionCategoryConstants.GEOMETRY,
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN                   )
-    public static ClobType asText(GeometryType geometry) throws FunctionExecutionException {
-       return GeometryUtils.geometryToClob(geometry);
+    public static ClobType asText(GeometryType geometry) 
+            throws FunctionExecutionException {
+       return GeometryUtils.geometryToClob(geometry, false);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ASEWKT,
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
+    public static ClobType asEwkt(GeometryType geometry)
+            throws FunctionExecutionException {
+        return GeometryUtils.geometryToClob(geometry, true);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_ASBINARY,
@@ -66,7 +76,16 @@ public class GeometryFunctionMethods {
                    nullOnNull=true)
     public static ClobType asGml(GeometryType geometry) 
             throws FunctionExecutionException {
-        return GeometryUtils.geometryToGml(geometry);
+        return GeometryUtils.geometryToGml(geometry, true);
+    }
+
+    @TeiidFunction(name=SourceSystemFunctions.ST_ASKML,
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   pushdown=PushDown.CAN_PUSHDOWN,
+                   nullOnNull=true)
+    public static ClobType asKml(GeometryType geometry) 
+            throws FunctionExecutionException {
+        return GeometryUtils.geometryToGml(geometry, false);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,

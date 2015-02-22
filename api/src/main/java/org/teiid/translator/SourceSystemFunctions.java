@@ -166,9 +166,11 @@ public class SourceSystemFunctions {
 	public static final String UUID = "uuid"; //$NON-NLS-1$
 
     public static final String ST_ASTEXT = "st_astext"; //$NON-NLS-1$
+    public static final String ST_ASEWKT = "st_asewkt"; //$NON-NLS-1$
     public static final String ST_ASBINARY = "st_asbinary"; //$NON-NLS-1$
     public static final String ST_ASGEOJSON = "st_asgeojson"; //$NON-NLS-1$
     public static final String ST_ASGML = "st_asgml"; //$NON-NLS-1$
+    public static final String ST_ASKML = "st_askml"; //$NON-NLS-1$
     public static final String ST_GEOMFROMTEXT = "st_geomfromtext"; //$NON-NLS-1$
     public static final String ST_GEOMFROMWKB = "st_geomfromwkb"; //$NON-NLS-1$
     public static final String ST_GEOMFROMGEOJSON = "st_geomfromgeojson"; //$NON-NLS-1$

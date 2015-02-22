@@ -161,6 +161,28 @@ public class TestGeometry {
                 "POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))"
         );
     }
+
+    @Test
+    public void testAsEwkt() throws Exception {
+        assertEval("ST_AsEWKT(ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326))",
+                   "SRID=4326;POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))");
+        assertEval("ST_AsEWKT(ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))'))",
+                   "POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))");
+    }
+    
+    @Test
+    public void testAsKml() throws Exception {
+        assertEval("ST_AsKML(ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326))",
+                   "<Polygon>\n" + 
+                   "  <outerBoundaryIs>\n"+
+                   "    <LinearRing>\n"+
+                   "      <coordinates>\n"+
+                   "        0.0,0.0 0.0,1.0 1.0,1.0 1.0,0.0 0.0,0.0 \n"+
+                   "      </coordinates>\n"+
+                   "    </LinearRing>\n"+
+                   "  </outerBoundaryIs>\n"+
+                   "</Polygon>\n");
+    }
     
     private void assertEval(String expr, String result) 
             throws Exception {
