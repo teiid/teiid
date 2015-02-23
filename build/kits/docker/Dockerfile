@@ -12,7 +12,8 @@ MAINTAINER Ramesh Reddy <rareddy@jboss.org>
 
 
 ENV WORKING_DIR /opt/jboss
-ENV JBOSS_HOME $WORKING_DIR/jboss-eap-6.3
+ENV JBOSS_EAP jboss-eap-6.3
+ENV JBOSS_HOME $WORKING_DIR/$JBOSS_EAP
 
 USER root
 
@@ -30,10 +31,12 @@ RUN unzip -q -o -d $WORKING_DIR $WORKING_DIR/temp/jboss-eap.zip && \
 
 RUN chown -R jboss:jboss ${JBOSS_HOME}/ #\
 
+VOLUME ["/opt/jboss/$JBOSS_EAP/standalone", "/opt/jboss/$JBOSS_EAP/domain"]
+
 USER jboss
 
 EXPOSE 9990 8080 31000 35432
 
 #Run Teiid Server
-CMD ["/opt/jboss/jboss-eap-6.3/bin/standalone.sh", "-c", "standalone-teiid.xml", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
+CMD ["/bin/sh", "-c", "/opt/jboss/jboss-eap-6.3/bin/standalone.sh", "-c", "standalone-teiid.xml", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
 
