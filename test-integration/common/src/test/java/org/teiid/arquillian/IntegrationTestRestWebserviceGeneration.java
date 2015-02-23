@@ -22,10 +22,13 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -172,7 +175,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
                 .addTextBody("p1", "456")
                 .addTextBody("p2", "2")
                 .addTextBody("p3", "string value")
-                .addBinaryBody("p4", "<root><p4>bar</p4></root>".getBytes(), ContentType.create("application/xml"), "foo.xml")
+                .addBinaryBody("p4", "<root><p4>bar</p4></root>".getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
                 .build();		
 		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/view/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\" p4=\"bar\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
