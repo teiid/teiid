@@ -47,7 +47,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.AggregationOptions;
 import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -158,13 +157,8 @@ public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements
     			throw new TranslatorException(MongoDBPlugin.Event.TEIID18021, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18021, collectionName));
     		}
     		
-            AggregationOptions options = AggregationOptions.builder()
-                    .batchSize(this.executionContext.getBatchSize())
-                    .outputMode(AggregationOptions.OutputMode.CURSOR)
-                    .allowDiskUse(this.executionFactory.useDisk())
-                    .build();
-    		
-    		results = collection.aggregate(operations, options);
+            this.results = collection.aggregate(operations,
+                    this.executionFactory.getOptions(this.executionContext.getBatchSize()));
 		}
 	}
 
@@ -206,7 +200,10 @@ public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements
 	
 	@Override
 	public void close() {
-		this.results = null;
+	    if (this.results != null) {
+	        this.results.close();
+	        this.results = null;
+	    }
 	}
 
 	@Override
