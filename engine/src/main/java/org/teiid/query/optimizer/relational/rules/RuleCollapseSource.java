@@ -40,6 +40,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -104,10 +105,15 @@ public final class RuleCollapseSource implements OptimizerRule {
                 //find all pushdown functions and mark them to be evaluated by the source
                 for (Function f : FunctionCollectorVisitor.getFunctions(queryCommand, false)) {
                 	FunctionDescriptor fd = f.getFunctionDescriptor();
-    				if (f.isEval() && modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
+    				if (f.isEval()) {
+    					if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
     								&& fd.getMethod() != null 
     								&& CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
-    					f.setEval(false);
+    						f.setEval(false);
+    					} else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
+    							&& CapabilitiesUtil.supportsScalarFunction(modelId, f, metadata, capFinder)) {
+    						f.setEval(false);
+    					}
     				}
                 }
             	plan = addDistinct(metadata, capFinder, accessNode, plan, queryCommand, capFinder);
