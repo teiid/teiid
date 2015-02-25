@@ -84,9 +84,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
     public void visit(Function obj) {
         FunctionDescriptor fd = obj.getFunctionDescriptor();
 		this.setDeterminismLevel(fd.getDeterministic());
-        if (fd.getDeterministic() == Determinism.NONDETERMINISTIC) {
-            evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
-        } else if (fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
+        if (fd.getDeterministic() == Determinism.NONDETERMINISTIC || fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
         	if (obj.isEval()) {
         		evaluationNotPossible(EvaluationLevel.PROCESSING);
         	} else {
