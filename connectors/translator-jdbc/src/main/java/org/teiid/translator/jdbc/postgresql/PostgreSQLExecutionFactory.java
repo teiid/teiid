@@ -65,6 +65,14 @@ import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
+	private static final class NonIntegralNumberToBoolean extends
+			FunctionModifier {
+		@Override
+		public List<?> translate(Function function) {
+			return Arrays.asList(function.getParameters().get(0), " <> 0"); //$NON-NLS-1$
+		}
+	}
+
 	private static final class PostgreSQLFormatFunctionModifier extends
 			OracleFormatFunctionModifier {
 		private PostgreSQLFormatFunctionModifier(String prefix) {
@@ -182,6 +190,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
     	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
+    	convertModifier.addConvert(FunctionModifier.FLOAT, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
+    	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
     	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {

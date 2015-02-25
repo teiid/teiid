@@ -7726,7 +7726,7 @@ public class TestProcessor {
     
         // Construct data manager with data
         HardcodedDataManager hdm = new HardcodedDataManager();
-        hdm.addData("SELECT RAND() FROM pm1.g1", expected);
+        hdm.addData("SELECT RAND() FROM pm1.g1", new List[] {Arrays.asList(.1), Arrays.asList(.2)});
         hdm.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList(1, "a")});
         BasicSourceCapabilities bsc = new BasicSourceCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -7735,6 +7735,23 @@ public class TestProcessor {
         CommandContext cc = createCommandContext();
         ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
 
+        helpProcess(plan, cc, hdm, expected);
+        
+        bsc.setFunctionSupport(SourceSystemFunctions.RAND, false);
+        
+        plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+
+        hdm = new HardcodedDataManager();
+        hdm.addData("SELECT 'a' FROM pm1.g1", new List[] {Arrays.asList("a"), Arrays.asList("a")});
+        hdm.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList(1, "a")});
+
+        Random r = new Random(0);
+        r.nextDouble();
+        expected = new List[] { 
+                Arrays.asList(r.nextDouble(), "a"),
+                Arrays.asList(r.nextDouble(), "a"),
+        };
+        
         helpProcess(plan, cc, hdm, expected);
     }
     

@@ -589,4 +589,13 @@ public class TestPostgreSQLTranslator {
     	assertFalse(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_GEOMFROMGEOJSON));
     }
     
+    @Test public void testBooleanConversion() throws Exception {
+        String input = "SELECT cast(bigdecimalvalue as boolean), cast(doublenum as boolean) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT SmallA.BigDecimalValue <> 0, cast(SmallA.DoubleNum AS boolean) FROM SmallA";  //$NON-NLS-1$
+
+        helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output);
+    }
+    
 }

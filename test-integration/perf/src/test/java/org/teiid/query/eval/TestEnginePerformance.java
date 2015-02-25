@@ -301,6 +301,19 @@ public class TestEnginePerformance {
 		
 		runTask(iterations, threadCount, new PreparedPlanTask(preparedValues, metadata, plan, command, expectedRowCount));
 	}
+	
+	private void helpTestTextTable(int iterations, int threadCount, String file, int expectedRowCount) throws QueryParserException,
+		TeiidException, InterruptedException, Exception {
+		String sql = "select * from texttable(cast(? as clob) columns x integer, y string) as x"; //$NON-NLS-1$
+		List<?> preparedValues = Arrays.asList(TestTextTable.clobFromFile(file));
+		Command command = QueryParser.getQueryParser().parseCommand(sql);
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder();
+		
+		ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, createCommandContext());
+		
+		runTask(iterations, threadCount, new PreparedPlanTask(preparedValues, metadata, plan, command, expectedRowCount));
+	}
 		
 	private void processPreparedPlan(List<?> values, Command command,
 			QueryMetadataInterface metadata, ProcessorDataManager dataManager,
@@ -376,6 +389,10 @@ public class TestEnginePerformance {
 	
 	@Test public void runXMLTable_16_5mb() throws Exception {
     	helpTestXMLTable(4, 16, "test.xml", 50000);
+	}
+	
+	@Test public void runTextTable_1_50mb() throws Exception {
+    	helpTestTextTable(10, 1, "test.txt", 2000000);
 	}
 	
 	@Test public void runLike_1() throws Exception {

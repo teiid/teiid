@@ -45,10 +45,7 @@ import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBRef;
+import com.mongodb.*;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
@@ -604,5 +601,13 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		}
+	}
+	
+	public AggregationOptions getOptions(int batchSize) {
+	    if (this.version.equals(TWO_6)) {
+            return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.CURSOR)
+                    .allowDiskUse(useDisk()).build();
+	    }
+        return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.INLINE).build();
 	}
 }

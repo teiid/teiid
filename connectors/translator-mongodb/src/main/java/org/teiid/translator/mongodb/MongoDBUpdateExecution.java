@@ -84,11 +84,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 
 		DBCollection collection = getCollection(this.visitor.mongoDoc.getTargetTable());
 		MongoDocument mongoDoc = this.visitor.mongoDoc;
-        AggregationOptions options = AggregationOptions.builder()
-                .batchSize(this.executionContext.getBatchSize())
-                .outputMode(AggregationOptions.OutputMode.CURSOR)
-                .allowDiskUse(this.executionFactory.useDisk())
-                .build();		
+        AggregationOptions options = this.executionFactory.getOptions(this.executionContext.getBatchSize());		
 
         List<WriteResult> executionResults = new ArrayList<WriteResult>();
 

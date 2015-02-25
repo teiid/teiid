@@ -35,12 +35,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.AggregationOptions;
-import com.mongodb.BasicDBObject;
-import com.mongodb.Cursor;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
+import com.mongodb.*;
 
 public class MongoDBQueryExecution extends MongoDBBaseExecution implements ResultSetExecution {
 	private Select command;
@@ -104,12 +99,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			buildAggregate(ops, "$limit", this.visitor.limit); //$NON-NLS-1$
 
 			try {
-			    AggregationOptions options = AggregationOptions.builder()
-			            .batchSize(this.executionContext.getBatchSize())
-			            .outputMode(AggregationOptions.OutputMode.CURSOR)
-			            .allowDiskUse(this.executionFactory.useDisk())
-			            .build();
-				this.results = collection.aggregate(ops, options);
+                this.results = collection.aggregate(ops, this.executionFactory.getOptions(this.executionContext.getBatchSize()));
 			} catch (MongoException e) {
 				throw new TranslatorException(e);
 			}
@@ -146,8 +136,10 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 	@Override
 	public void close() {
-		this.results.close();
-		this.results = null;
+	    if (this.results != null) {
+    		this.results.close();
+    		this.results = null;
+	    }
 	}
 
 	@Override
