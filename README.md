@@ -23,5 +23,3 @@ Enter the following:
 	
 you can find the deployment artifacts in the "teiid/build/target" directory once the build is completed.
 
-On a *nix platform you can create a bundled zip containing Teiid, EAP, the web console, and necessary patches by running install.sh  
-
