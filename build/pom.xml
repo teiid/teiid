@@ -5,9 +5,18 @@
         <version>8.11.0.Alpha1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
+  
   <artifactId>teiid</artifactId>
   <name>Build</name>
   <description>Teiid Build</description>
+  
+  <properties>
+      <!-- Directory name from upstream JBoss server dist. -->
+      <dir.jboss-orig>jboss-eap-6.3</dir.jboss-orig>
+      <!-- Teiid server directory name. -->
+      <dir.server>teiid-${project.version}</dir.server>
+  </properties>
+  
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -21,9 +30,11 @@
             <groupId>net.sf.retrotranslator</groupId>
             <artifactId>retrotranslator-transformer</artifactId>
         </dependency>        
-    </dependencies>     
+    </dependencies>   
+      
     <build>
         <outputDirectory>target/kits</outputDirectory>
+        
         <resources>
             <resource>
                 <directory>kits</directory>
@@ -52,6 +63,7 @@
                 </excludes>
             </resource>
         </resources>
+        
         <pluginManagement>
           <plugins>
             <plugin>
@@ -66,31 +78,67 @@
             </plugin>
           </plugins>
         </pluginManagement>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-
-            <configuration>
-              <descriptors>
-                <descriptor>assembly/client-jar.xml</descriptor>
-                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
-                <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
-                <descriptor>assembly/embedded-dist.xml</descriptor>
-                <descriptor>assembly/docker.xml</descriptor>
-              </descriptors>
-            </configuration>
-
-            <executions>
-              <execution>
-                <id>create-assemblies</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-
+        
+        <plugins>                        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-server-deps</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.jboss.as</groupId>
+                                    <artifactId>jboss-as-dist</artifactId>
+                                    <version>${version.org.jboss.as}</version>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.teiid.web-console</groupId>
+                                    <artifactId>teiid-console-dist</artifactId>
+                                    <version>${version.teiid.console}</version>
+                                    <classifier>jboss-as7</classifier>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}/${dir.jboss-orig}</outputDirectory>
+                                    <overWrite>true</overWrite>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>assembly/src.xml</descriptor>
+                        <descriptor>assembly/client-jar.xml</descriptor>
+                        <descriptor>assembly/console-jar.xml</descriptor>    
+                        <descriptor>assembly/jboss-as7/dist.xml</descriptor>
+                        <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                        <descriptor>assembly/embedded-dist.xml</descriptor>
+                        <descriptor>assembly/server.xml</descriptor>
+                        <descriptor>assembly/docker.xml</descriptor>            
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-assemblies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -138,6 +186,7 @@
                     </execution>
                 </executions>
             </plugin>
+                        
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -169,101 +218,35 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>jboss-eap-dist</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.jboss.as</groupId>
-                                    <artifactId>jboss-as-dist</artifactId>
-                                    <version>${version.org.jboss.as}</version>
-                                    <type>zip</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/teiid-${project.version}-docker</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                    <!-- 
-                    <execution>
-                        <id>teiid-dist</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.jboss.teiid</groupId>
-                                    <artifactId>teiid</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>jboss-dist</classifier>
-                                    <type>zip</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/docker</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                     -->
-                      <execution>
-                        <id>console-dist</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.jboss.teiid.web-console</groupId>
-                                    <artifactId>teiid-console-dist</artifactId>
-                                    <version>${version.teiid.console}</version>
-                                    <classifier>jboss-as7</classifier>
-                                    <type>zip</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/teiid-${project.version}-docker</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+
         </plugins>
     </build>
     
     <profiles>
-      <profile>
-        <!-- 
+        <profile>
+            <!--
             This profile is activated manually, as in "mvn ... -P release ..."
-  		  -->
-        <id>release</id>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-assembly-plugin</artifactId>
-              <configuration>
-                <descriptors>
-                  <descriptor>assembly/src.xml</descriptor>
-                  <descriptor>assembly/client-jar.xml</descriptor>
-                  <descriptor>assembly/console-jar.xml</descriptor>    
-                  <descriptor>assembly/jboss-as7/dist.xml</descriptor>
-                  <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
-                  <descriptor>assembly/embedded-dist.xml</descriptor>
-                  <descriptor>assembly/docker.xml</descriptor>
-                </descriptors>
-              </configuration>
-            </plugin>
-
-          </plugins>
-        </build>
-      </profile>
-    </profiles>
+            -->
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>assembly/src.xml</descriptor>
+                                <descriptor>assembly/client-jar.xml</descriptor>
+                                <descriptor>assembly/console-jar.xml</descriptor>
+                                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
+                                <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                                <descriptor>assembly/embedded-dist.xml</descriptor>
+                                <descriptor>assembly/server.xml</descriptor>
+                                <descriptor>assembly/docker.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>    
 </project>
