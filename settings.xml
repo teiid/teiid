@@ -58,12 +58,12 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
       </repositories> 
     </profile>    
     <profile>
-      <id>jboss-eap-alpha</id>
+      <id>jboss-techpreview</id>
       <repositories>
         <repository>
-          <id>jboss-eap-alpha</id>
-          <name>JBoss EAP 6.3.0.Alpha</name>
-          <url>http://maven.repository.redhat.com/techpreview/eap6/6.3.0.Alpha/maven-repository/</url>
+          <id>jboss-techpreview</id>
+          <name>JBoss Tech Preview</name>
+          <url>https://maven.repository.redhat.com/techpreview/all/</url>
           <layout>default</layout>
           <releases>
             <enabled>true</enabled>
@@ -74,32 +74,32 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
           </snapshots>
         </repository>
       </repositories>
-    </profile> 
-		<profile>
-		  <id>jboss-jdg</id>
-		  <repositories>
-			<repository>
-			  <id>jboss-jdg</id>
-			  <name>JBoss JDG 6</name>
-			  <url>http://maven.repository.redhat.com/techpreview/jdg6/6.4.0/maven-repository/</url>
-			  <layout>default</layout>
-			  <releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			  </releases>
-			  <snapshots>
-				<enabled>false</enabled>
-			  </snapshots>
-			</repository>
-		  </repositories>
-		</profile>               
+    </profile>
+    <profile>
+      <id>jboss-earlyaccess</id>
+      <repositories>
+        <repository>
+          <id>jboss-earlyaccess</id>
+          <name>JBoss Early Access</name>
+          <url>https://maven.repository.redhat.com/earlyaccess/all/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>                     
   </profiles>
 
   <activeProfiles>
     <activeProfile>jboss-public-repository</activeProfile>
     <activeProfile>jboss-developer-repository</activeProfile>
-    <activeProfile>jboss-eap-alpha</activeProfile>
-    <activeProfile>jboss-jdg</activeProfile>
+    <activeProfile>jboss-techpreview</activeProfile>
+    <activeProfile>jboss-earlyaccess</activeProfile>
   </activeProfiles>
 
 </settings>
