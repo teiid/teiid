@@ -13,5 +13,6 @@
   <description>Experimental connectors in progress</description>
   <modules>
     <module>translator-yahoo</module>
+    <module>translator-logger</module>
   </modules>
 </project>
