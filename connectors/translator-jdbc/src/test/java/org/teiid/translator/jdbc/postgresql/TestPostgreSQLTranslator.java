@@ -251,7 +251,7 @@ public class TestPostgreSQLTranslator {
     
     @Test public void testDayOfWeek() throws Exception {
         String input = "SELECT dayofweek(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT (EXTRACT(DOW FROM cast(PARTS.PART_WEIGHT AS timestamp)) + 1) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST((EXTRACT(DOW FROM cast(PARTS.PART_WEIGHT AS timestamp)) + 1) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -259,7 +259,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testDayOfMonth() throws Exception {
         String input = "SELECT dayofmonth(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(DAY FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(DAY FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -267,7 +267,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testDayOfYear() throws Exception {
         String input = "SELECT dayofyear(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(DOY FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(DOY FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -275,7 +275,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testHour() throws Exception {
         String input = "SELECT hour(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(HOUR FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(HOUR FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -283,7 +283,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testMinute() throws Exception {
         String input = "SELECT minute(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(MINUTE FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(MINUTE FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -291,7 +291,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testMonth() throws Exception {
         String input = "SELECT month(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(MONTH FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(MONTH FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -299,7 +299,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testQuarter() throws Exception {
         String input = "SELECT quarter(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(QUARTER FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(QUARTER FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -307,7 +307,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testSecond() throws Exception {
         String input = "SELECT second(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(SECOND FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(SECOND FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -315,7 +315,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testWeek() throws Exception {
         String input = "SELECT week(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(WEEK FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(WEEK FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -323,7 +323,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testYear() throws Exception {
         String input = "SELECT year(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(YEAR FROM cast(PARTS.PART_WEIGHT AS timestamp)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT CAST(EXTRACT(YEAR FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 

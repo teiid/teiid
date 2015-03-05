@@ -65,6 +65,8 @@ import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
+	private static final String INTEGER_TYPE = "integer"; //$NON-NLS-1$
+
 	private static final class NonIntegralNumberToBoolean extends
 			FunctionModifier {
 		@Override
@@ -135,17 +137,17 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
         
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier(INTEGER_TYPE)); 
         registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier(INTEGER_TYPE)); 
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier(INTEGER_TYPE)); 
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         
@@ -179,7 +181,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
     	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
+    	convertModifier.addTypeMapping(INTEGER_TYPE, FunctionModifier.INTEGER); 
     	convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
     	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
     	convertModifier.addTypeMapping("float8", FunctionModifier.DOUBLE); //$NON-NLS-1$
@@ -218,7 +220,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addSourceConversion(new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				((Literal)function.getParameters().get(1)).setValue("integer"); //$NON-NLS-1$
+				((Literal)function.getParameters().get(1)).setValue(INTEGER_TYPE); 
 				return null;
 			}
 		}, FunctionModifier.BOOLEAN);
