@@ -104,9 +104,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		
 		Table entityTable = findTable(entityName, metadata);
 		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol("g0", entityName);
-		this.assosiatedTables.put(entityTable.getName(), this.resultEntityGroup);
-		this.aliasTableNames.put("g0", entityTable.getName());
+		this.resultEntityGroup = new GroupSymbol("g0", entityTable.getFullName());
+		this.assosiatedTables.put(entityTable.getFullName(), this.resultEntityGroup);
+		this.aliasTableNames.put("g0", entityTable.getFullName());
 		
 		if (key != null) {
 			this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
@@ -144,7 +144,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	for (ForeignKey fk:joinTable.getForeignKeys()) {
 	        		if (fk.getReferenceKey().getParent().equals(entityTable)) {
 
-	        			if(this.assosiatedTables.get(joinTable.getName()) == null) {
+	        			if(this.assosiatedTables.get(joinTable.getFullName()) == null) {
 		        			List<String> refColumns = fk.getReferenceColumns();
 		        			if (refColumns == null) {
 		        				refColumns = getColumnNames(entityTable.getPrimaryKey().getColumns());
@@ -160,7 +160,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	if (!associationFound) {
 	            	for (ForeignKey fk:entityTable.getForeignKeys()) {
 	            		if (fk.getReferenceKey().getParent().equals(joinTable)) {
-	            			if(this.assosiatedTables.get(joinTable.getName()) == null) {
+	            			if(this.assosiatedTables.get(joinTable.getFullName()) == null) {
 	            				List<String> refColumns = fk.getReferenceColumns();
 	            				if (refColumns == null) {
 	            					refColumns = getColumnNames(joinTable.getPrimaryKey().getColumns());
@@ -174,11 +174,11 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	}
 	        	
 	        	if (!associationFound) {
-	        		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16003, prop, resultEntityTable.getName()));
+	        		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16003, prop, resultEntityTable.getFullName()));
 	        	}
     			
     			entityTable = joinTable;
-    			this.resultEntityGroup = this.assosiatedTables.get(joinTable.getName());
+    			this.resultEntityGroup = this.assosiatedTables.get(joinTable.getFullName());
     			this.resultEntityTable = entityTable;	        	
 	        	
 	            if (propSplit.length > 1) {
@@ -252,7 +252,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16004, tableName));
     	}
     	
-    	String joinKey = (alias != null)?alias:joinTable.getName();
+    	String joinKey = (alias != null)?alias:joinTable.getFullName();
     	String aliasGroup = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
     	
     	for (ForeignKey fk:this.resultEntityTable.getForeignKeys()) {
@@ -264,7 +264,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     				}    				
     				addJoinTable(aliasGroup, joinType, joinTable, this.resultEntityTable, getColumnNames(fk.getColumns()), refColumns);    				
     			}
-    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getName());
+    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getFullName());
     		}
     	}
     	
@@ -278,7 +278,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     				}    				
     				addJoinTable(aliasGroup, joinType, joinTable, this.resultEntityTable, refColumns, getColumnNames(fk.getColumns()));
     			}
-    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getName());
+    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getFullName());
     		}
     	}
     	return null;
@@ -288,8 +288,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			final Table joinTable, final Table entityTable, List<String> pkColumns,
 			List<String> refColumns) {
 		
-		GroupSymbol joinGroup = new GroupSymbol(alias, joinTable.getName());
-		GroupSymbol entityGroup = this.assosiatedTables.get(entityTable.getName());
+		GroupSymbol joinGroup = new GroupSymbol(alias, joinTable.getFullName());
+		GroupSymbol entityGroup = this.assosiatedTables.get(entityTable.getFullName());
 		
 		List<Criteria> critList = new ArrayList<Criteria>();
 
@@ -310,8 +310,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), joinType, crit);
 		}
 		this.assosiatedTables.put(alias, joinGroup);
-		this.assosiatedTables.put(joinTable.getName(), joinGroup);
-		this.aliasTableNames.put(alias, joinTable.getName());
+		this.assosiatedTables.put(joinTable.getFullName(), joinGroup);
+		this.aliasTableNames.put(alias, joinTable.getFullName());
 	}
 
 	private Criteria buildEntityKeyCriteria(Table table, GroupSymbol entityGroup, OEntityKey entityKey) {
@@ -923,18 +923,20 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	}
 
 	private Table findTable(String tableName, MetadataStore store) {
-		for (Schema s : store.getSchemaList()) {
-			for (Table t : s.getTables().values()) {
-				if (t.getFullName().equals(tableName)) {
+		int idx = tableName.indexOf('.');
+		if (idx > 0) {
+			Schema s = store.getSchema(tableName.substring(0, idx));
+			if (s != null) {
+				Table t = s.getTable(tableName.substring(idx+1));
+				if (t != null) {
 					return t;
 				}
 			}
 		}
 		for (Schema s : store.getSchemaList()) {
-			for (Table t : s.getTables().values()) {
-				if (t.getName().equals(tableName)) {
-					return t;
-				}
+			Table t = s.getTables().get(tableName);
+			if (t != null) {
+				return t;
 			}
 		}		
 		return null;
