@@ -114,6 +114,8 @@ public class AnalysisRecord {
     public static final String PROP_THEN = "Then"; //$NON-NLS-1$
     public static final String PROP_ELSE = "Else"; //$NON-NLS-1$
 
+	public static final String PROP_PLANNING_TIME = "Planning Time"; //$NON-NLS-1$
+
     // Flags regarding what should be recorded
     private boolean recordQueryPlan;
     private boolean recordDebug;
