@@ -251,7 +251,7 @@ public class TestODataIntegration extends BaseResourceTest {
         ClientResponse<String> response = request.get(String.class);
         verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
         
-        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM nw.Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
         //Assert.assertEquals("", response.getEntity());		
 	}	
@@ -372,7 +372,7 @@ public class TestODataIntegration extends BaseResourceTest {
 	}	
 	
 	@Test
-	public void testProcedureCall() throws Exception {
+	public void testSelect() throws Exception {
 		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
@@ -393,9 +393,8 @@ public class TestODataIntegration extends BaseResourceTest {
         ClientResponse<String> response = request.get(String.class);
         verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
         
-        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM nw.Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
-        //Assert.assertEquals("", response.getEntity());	
         
 	}	
 	
