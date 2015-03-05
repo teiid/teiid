@@ -256,14 +256,14 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testNavigationalQuery() throws Exception {
 		testSelect(
-				"SELECT g1.EmployeeID, g1.OrderID, g1.CustomerID, g1.ShipVia FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID ORDER BY g1.OrderID",
+				"SELECT g1.EmployeeID, g1.OrderID, g1.CustomerID, g1.ShipVia FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID ORDER BY g1.OrderID",
 				"nw.Customers", null, "EmployeeID", null, -1, "nw.Orders", null);
 		testSelect(
-				"SELECT g2.UnitPrice, g2.OrderID, g2.ProductID FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12 ORDER BY g2.OrderID, g2.ProductID",
+				"SELECT g2.UnitPrice, g2.OrderID, g2.ProductID FROM (nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN nw.OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12 ORDER BY g2.OrderID, g2.ProductID",
 				"nw.Customers", null, "UnitPrice", null, -1,
 				"nw.Orders(12)/nw.OrderDetails", null);
 		testSelect(
-				"SELECT g2.UnitPrice, g2.OrderID, g2.ProductID FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12) ORDER BY g2.OrderID, g2.ProductID",
+				"SELECT g2.UnitPrice, g2.OrderID, g2.ProductID FROM (nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN nw.OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12) ORDER BY g2.OrderID, g2.ProductID",
 				"nw.Customers", null, "UnitPrice", null, -1,
 				"nw.Orders(12)/nw.OrderDetails", OEntityKey.create(33));
 	}
@@ -277,12 +277,12 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testFilterBasedAssosiation() throws Exception {
 		testSelect(
-				"SELECT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 INNER JOIN Customers AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.ContactName = 'Fred' ORDER BY g0.OrderID",
+				"SELECT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 INNER JOIN nw.Customers AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.ContactName = 'Fred' ORDER BY g0.OrderID",
 				"nw.Orders", "Customers/ContactName eq 'Fred'", "OrderID",
 				null, -1, null, null);
 		
 		testSelect(
-				"SELECT g0.ContactName, g0.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1 ORDER BY g0.CustomerID",
+				"SELECT g0.ContactName, g0.CustomerID FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1 ORDER BY g0.CustomerID",
 				"nw.Customers", "Orders/OrderID eq 1", "ContactName",
 				null, -1, null, null);
 		
@@ -299,7 +299,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testAny() throws Exception {	
 		testSelect(
-				"SELECT DISTINCT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 INNER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10 ORDER BY g0.OrderID",
+				"SELECT DISTINCT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 INNER JOIN nw.OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10 ORDER BY g0.OrderID",
 				"nw.Orders", "OrderDetails/any(ol: ol/Quantity gt 10)",
 				"OrderID", null, -1, null, null);
 	}	
@@ -315,7 +315,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testMultiEntitykey() throws Exception {
 		OEntityKey key = OEntityKey.parse("(11044)");
-		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND ((g1.OrderID = 11044) AND (g1.ProductID = 62)) ORDER BY g1.OrderID, g1.ProductID",
+		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN nw.OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND ((g1.OrderID = 11044) AND (g1.ProductID = 62)) ORDER BY g1.OrderID, g1.ProductID",
 				"nw.Orders", null,
 				"OrderID", null, -1, "nw.OrderDetails(OrderID=11044L,ProductID=62L)", key);		
 	}
