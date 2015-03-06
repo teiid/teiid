@@ -124,7 +124,7 @@ public class TestGeometry {
                 "</gml:Point>\n"
         );
         assertEval(
-                "ST_AsGML(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'))",
+                "ST_AsGML(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))', 4326))",
                 "<gml:Polygon>\n" +
                 "  <gml:outerBoundaryIs>\n" +
                 "    <gml:LinearRing>\n" +

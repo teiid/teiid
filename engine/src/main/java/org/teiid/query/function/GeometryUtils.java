@@ -62,17 +62,19 @@ import com.vividsolutions.jts.io.gml2.GMLWriter;
  */
 public class GeometryUtils {
 	
-    public static ClobType geometryToClob(GeometryType geometry, 
+    private static final int SRID_4326 = 4326;
+
+	public static ClobType geometryToClob(GeometryType geometry, 
                                           boolean withSrid) 
             throws FunctionExecutionException {
         Geometry jtsGeometry = getGeometry(geometry);
         int srid = jtsGeometry.getSRID();
-        String geomText = "";
+        StringBuilder geomText = new StringBuilder(); 
         if (withSrid && srid != GeometryType.UNKNOWN_SRID) {
-            geomText += "SRID=" + jtsGeometry.getSRID() + ";";
+            geomText.append("SRID=").append(jtsGeometry.getSRID()).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        geomText += jtsGeometry.toText();
-        return new ClobType(new ClobImpl(geomText));
+        geomText.append(jtsGeometry.toText());
+        return new ClobType(new ClobImpl(geomText.toString()));
     }
 
     public static GeometryType geometryFromClob(ClobType wkt)
@@ -140,8 +142,15 @@ public class GeometryUtils {
             throws FunctionExecutionException {        
         Geometry jtsGeometry = getGeometry(geometry);
         GMLWriter writer = new GMLWriter();
+        
         if (!withGmlPrefix) {
+        	if (geometry.getSrid() != SRID_4326) {
+        		throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31161));
+        	}
             writer.setPrefix(null);
+        } else if (geometry.getSrid() != GeometryType.UNKNOWN_SRID) {
+        	//TODO: should include the srsName
+        	//writer.setSrsName(String.valueOf(geometry.getSrid()));
         }
         String gmlText = writer.write(jtsGeometry);
         return new ClobType(new ClobImpl(gmlText));
