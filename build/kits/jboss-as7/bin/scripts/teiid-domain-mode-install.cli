@@ -5,6 +5,10 @@ connect
 /server-group=main-server-group:write-attribute(name=profile, value=ha)
 /server-group=main-server-group:write-attribute(name=socket-binding-group, value=ha-sockets)
 
+
+/profile=ha/subsystem=logging/logger=org.teiid:add 
+/profile=ha/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")  
+
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)
@@ -89,8 +93,8 @@ connect
 /profile=ha/subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
 /profile=ha/subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /profile=ha/subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
-/profile=ha//subsystem=resource-adapters/resource-adapter=cassandra:add(module=org.jboss.teiid.resource-adapter.cassandra)
-/profile=ha//subsystem=resource-adapters/resource-adapter=simpledb:add(module=org.jboss.teiid.resource-adapter.simpledb)
+/profile=ha/subsystem=resource-adapters/resource-adapter=cassandra:add(module=org.jboss.teiid.resource-adapter.cassandra)
+/profile=ha/subsystem=resource-adapters/resource-adapter=simpledb:add(module=org.jboss.teiid.resource-adapter.simpledb)
 /profile=ha/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /profile=ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 
