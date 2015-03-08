@@ -163,6 +163,11 @@ public class MetadataFactory implements Serializable {
 		return this.modelProperties;
 	}
 
+	/**
+	 * Get the metadata text for the first metadata element
+	 * @return
+	 */
+	@Deprecated
 	public String getRawMetadata() {
 		return this.rawMetadata;
 	}

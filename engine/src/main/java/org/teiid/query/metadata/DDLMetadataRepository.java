@@ -31,13 +31,13 @@ import org.teiid.translator.TranslatorException;
 public class DDLMetadataRepository extends MetadataRepository {
 	
 	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {
 		String ddl = factory.getModelProperties().getProperty("ddl");
-		if (ddl == null) {
-			ddl = factory.getRawMetadata();
-		}
 		if (ddl != null) {
-			factory.parse(new StringReader(ddl));
+			text = ddl;
+		}
+		if (text != null) {
+			factory.parse(new StringReader(text));
 		}
 	}	
 

@@ -86,6 +86,10 @@ public class TestVDBMetaData {
 		assertEquals("model-value-override", modelOne.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertFalse(modelOne.isVisible());
 		assertEquals("model description", modelOne.getDescription());
+		assertEquals("DDL", modelOne.getSourceMetadataType().get(0));
+		assertEquals("DDL Here", modelOne.getSourceMetadataText().get(0));
+		assertEquals("OTHER", modelOne.getSourceMetadataType().get(1));
+		assertEquals("other text", modelOne.getSourceMetadataText().get(1));
 		
 		modelTwo = vdb.getModel("model-two"); //$NON-NLS-1$
 		assertEquals("model-two", modelTwo.getName()); //$NON-NLS-1$
@@ -93,8 +97,8 @@ public class TestVDBMetaData {
 		assertTrue(modelTwo.getSourceNames().contains("s2")); //$NON-NLS-1$
 		assertEquals(Model.Type.VIRTUAL, modelTwo.getModelType()); // this is not persisted in the XML
 		assertEquals("model-value", modelTwo.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
-		assertEquals("DDL", modelTwo.getSchemaSourceType());
-		assertEquals("DDL Here", modelTwo.getSchemaText());
+		assertEquals("DDL", modelTwo.getSourceMetadataType().get(0));
+		assertEquals("DDL Here", modelTwo.getSourceMetadataText().get(0));
 		
 		
 		assertTrue(vdb.getValidityErrors().contains("There is an error in VDB")); //$NON-NLS-1$
@@ -171,6 +175,8 @@ public class TestVDBMetaData {
 		modelOne.setVisible(false);
 		modelOne.addMessage("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.setDescription("model description");
+		modelOne.addSourceMetadata("DDL", "DDL Here");
+		modelOne.addSourceMetadata("OTHER", "other text");
 		
 		vdb.addModel(modelOne);
 		
@@ -180,8 +186,7 @@ public class TestVDBMetaData {
 		modelTwo.addSourceMapping("s2", "translator", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelTwo.setModelType(Model.Type.VIRTUAL); //$NON-NLS-1$
 		modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
-		modelTwo.setSchemaSourceType("DDL");
-		modelTwo.setSchemaText("DDL Here");
+		modelTwo.addSourceMetadata("DDL", "DDL Here");
 		
 		vdb.addModel(modelTwo);
 		

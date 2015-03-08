@@ -342,9 +342,8 @@ public class VDBMetadataParser {
 			case METADATA:
 				Properties metdataProps = getAttributes(reader);
 				String type = metdataProps.getProperty(Element.TYPE.getLocalName(), "DDL");
-				String schema = reader.getElementText();
-				model.setSchemaSourceType(type);
-				model.setSchemaText(schema);
+				String text = reader.getElementText();
+				model.addSourceMetadata(type, text);
 				break;
              default: 
             	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element5",reader.getName(), 
@@ -605,10 +604,10 @@ public class VDBMetadataParser {
 			writer.writeEndElement();
 		}
 		
-		if (model.getSchemaSourceType() != null) {
+		for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
 			writer.writeStartElement(Element.METADATA.getLocalName());
-			writeAttribute(writer, Element.TYPE.getLocalName(), model.getSchemaSourceType());
-			writer.writeCData(model.getSchemaText());
+			writeAttribute(writer, Element.TYPE.getLocalName(), model.getSourceMetadataType().get(i));
+			writer.writeCData(model.getSourceMetadataText().get(i));
 			writer.writeEndElement();
 		}
 		

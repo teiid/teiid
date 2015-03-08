@@ -43,7 +43,7 @@
 									<xs:attribute name="connection-jndi-name" type="xs:string"/>
 								</xs:complexType>
 							</xs:element>
-                            <xs:element name="metadata" minOccurs="0" maxOccurs="1">
+                            <xs:element name="metadata" minOccurs="0" maxOccurs="unbounded">
                                 <xs:annotation>
                                     <xs:documentation>Schema metadata (tables, views, stored procedures, functions)
                                     definitions of the model. If this defined on source model, it becomes source metadata,

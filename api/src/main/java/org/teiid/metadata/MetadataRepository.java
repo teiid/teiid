@@ -28,6 +28,8 @@ import org.teiid.translator.TranslatorException;
 
 /**
  * A hook for externalizing view, procedure, and other metadata.
+ * 
+ * One of the two load methods should be overriden.
  */
 public abstract class MetadataRepository<F,C> {
 
@@ -36,11 +38,26 @@ public abstract class MetadataRepository<F,C> {
 	 * @param factory
 	 * @param executionFactory may be null if loading a virtual source
 	 * @param connectionFactory may be null if source is not available
+	 * @param text the text used to configure the load
 	 * @return
 	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
 	 */
-	public abstract void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException;
-
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory, String text) throws TranslatorException {
+		loadMetadata(factory, executionFactory, connectionFactory);
+	}
+	
+	/**
+	 * Loads the schema information for the vdb for the given schemaName. Loads table, procedures, functions, indexes etc.
+	 * @param factory
+	 * @param executionFactory may be null if loading a virtual source
+	 * @param connectionFactory may be null if source is not available
+	 * @return
+	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
+	 */
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException {
+		
+	}
+	
 	/**
 	 * Call back function, when "alter view" definition is called 
 	 * @param vdbName

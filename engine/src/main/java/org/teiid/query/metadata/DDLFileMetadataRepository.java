@@ -38,15 +38,15 @@ import org.teiid.translator.TranslatorException;
 public class DDLFileMetadataRepository extends MetadataRepository {
 	
 	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {
 		String ddlFile = factory.getModelProperties().getProperty("ddl-file");
-		if (ddlFile == null) {
-			ddlFile = factory.getRawMetadata();
-		}
 		if (ddlFile != null) {
-			VDBResource resource = factory.getVDBResources().get(ddlFile);
+			text = ddlFile;
+		}
+		if (text != null) {
+			VDBResource resource = factory.getVDBResources().get(text);
 			if (resource == null) {
-				throw new MetadataException(Event.TEIID31137, QueryPlugin.Util.gs(Event.TEIID31137, ddlFile));
+				throw new MetadataException(Event.TEIID31137, QueryPlugin.Util.gs(Event.TEIID31137, text));
 			}
 			InputStream is;
 			try {

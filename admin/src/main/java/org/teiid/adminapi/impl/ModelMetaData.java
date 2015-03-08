@@ -50,8 +50,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     protected boolean visible = true;
     protected List<Message> messages;
     protected transient List<Message> runtimeMessages;
-    protected String schemaSourceType;
-	protected String schemaText;
+    protected List<String> sourceMetadataType = new ArrayList<String>();
+	protected List<String> sourceMetadataText = new ArrayList<String>();
 	protected MetadataStatus metadataStatus = MetadataStatus.LOADING;
 
 	@Override
@@ -327,21 +327,64 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			return true;
 		}		
     }
+    
+    public void addSourceMetadata(String type, String text) {
+    	this.sourceMetadataType.add(type);
+    	this.sourceMetadataText.add(text);
+    }
 
+    /**
+     * @see #getSourceMetadataType()
+     */
+    @Deprecated
     public String getSchemaSourceType() {
-		return schemaSourceType;
+    	if (!sourceMetadataType.isEmpty()) {
+    		return sourceMetadataType.get(0);
+    	}
+    	return null;
 	}
 
+    /**
+     * @see #addSourceMetadata(String, String)
+     */
+    @Deprecated
 	public void setSchemaSourceType(String schemaSourceType) {
-		this.schemaSourceType = schemaSourceType;
+		if (!sourceMetadataType.isEmpty()) {
+			sourceMetadataType.set(0, schemaSourceType);
+		} else {
+			sourceMetadataType.add(schemaSourceType);
+		}
 	}
 
+    /**
+     * @see #getSourceMetadataText()
+     */
+    @Deprecated
 	public String getSchemaText() {
-		return schemaText;
+		if (!sourceMetadataText.isEmpty()) {
+    		return sourceMetadataText.get(0);
+    	}
+    	return null;
 	}
 
+    /**
+     * @see #addSourceMetadata(String, String)
+     */
+    @Deprecated
 	public void setSchemaText(String schemaText) {
-		this.schemaText = schemaText;
+		if (!sourceMetadataText.isEmpty()) {
+			sourceMetadataText.set(0, schemaText);
+		} else {
+			sourceMetadataText.add(schemaText);
+		}
+	}
+    
+    public List<String> getSourceMetadataType() {
+		return sourceMetadataType;
+	}
+    
+    public List<String> getSourceMetadataText() {
+		return sourceMetadataText;
 	}
 	
 	@Override

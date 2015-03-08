@@ -60,9 +60,31 @@ import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public abstract class AbstractVDBDeployer {
+	
+	/**
+	 * A wrapper to add a stateful text config
+	 */
+	private static class MetadataRepositoryWrapper<F, C> extends MetadataRepository<F, C> {
+
+		private MetadataRepository<F, C> repo;
+		private String text;
+		
+		public MetadataRepositoryWrapper(MetadataRepository<F, C> repo, String text) {
+			this.repo = repo;
+			this.text = text;
+		}
+		
+		@Override
+		public void loadMetadata(MetadataFactory factory,
+				ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException {
+			repo.loadMetadata(factory, executionFactory, connectionFactory, this.text);
+		}
+		
+	};
 	
 	protected ConcurrentSkipListMap<String, MetadataRepository<?, ?>> repositories = new ConcurrentSkipListMap<String, MetadataRepository<?, ?>>(String.CASE_INSENSITIVE_ORDER);
 	
@@ -104,7 +126,7 @@ public abstract class AbstractVDBDeployer {
 	}
 	
 	private MetadataRepository<?, ?> getMetadataRepository(VDBMetaData vdb, ModelMetaData model, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
-		if (model.getSchemaSourceType() == null) {
+		if (model.getSourceMetadataType().isEmpty()) {
 			if (defaultRepo != null) {
 				return defaultRepo;
 			}
@@ -113,17 +135,24 @@ public abstract class AbstractVDBDeployer {
 			}
 			throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), null));
 		}
-		String schemaTypes = model.getSchemaSourceType();
-		StringTokenizer st = new StringTokenizer(schemaTypes, ","); //$NON-NLS-1$
-		List<MetadataRepository<?, ?>> repos = new ArrayList<MetadataRepository<?,?>>(st.countTokens());
-		while (st.hasMoreTokens()) {
-			String repoType = st.nextToken().trim();
-			MetadataRepository<?, ?> current = getMetadataRepository(repoType);
-			if (current == null) {
-				throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), repoType));
+
+		List<MetadataRepository<?, ?>> repos = new ArrayList<MetadataRepository<?,?>>(2);
+		
+		for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
+			String schemaTypes = model.getSourceMetadataType().get(i);
+			
+			StringTokenizer st = new StringTokenizer(schemaTypes, ","); //$NON-NLS-1$
+			while (st.hasMoreTokens()) {
+				String repoType = st.nextToken().trim();
+				MetadataRepository<?, ?> current = getMetadataRepository(repoType);
+				if (current == null) {
+					throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), repoType));
+				}
+				current = new MetadataRepositoryWrapper(current, model.getSourceMetadataText().get(i));
+				repos.add(current);
 			}
-			repos.add(current);
 		}
+		
 		if (model.getModelType() == ModelMetaData.Type.PHYSICAL) {
 			repos.add(new DirectQueryMetadataRepository());
 		}

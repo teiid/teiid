@@ -8,6 +8,8 @@
         <description>model description</description>
         <property name="model-prop" value="model-value-override"></property>
         <source name="s1" translator-name="translator" connection-jndi-name="java:mybinding"></source>
+        <metadata type="DDL"><![CDATA[DDL Here]]></metadata>
+        <metadata type="OTHER">other text</metadata>
         <validation-error severity="ERROR">There is an error in VDB</validation-error>
     </model>
     <model name="model-two" type="VIRTUAL" visible="true">

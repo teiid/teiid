@@ -315,6 +315,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String PROPERTIES = "properties"; //$NON-NLS-1$
 		private static final String SOURCE_MAPPINGS = "source-mappings"; //$NON-NLS-1$
 		private static final String VALIDITY_ERRORS = "validity-errors"; //$NON-NLS-1$
+		private static final String METADATAS= "metadatas"; //$NON-NLS-1$
 		private static final String METADATA= "metadata"; //$NON-NLS-1$
 		private static final String METADATA_TYPE = "metadata-type"; //$NON-NLS-1$
 		private static final String METADATA_STATUS = "metadata-status"; //$NON-NLS-1$
@@ -354,11 +355,18 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					errorsNode.add(ValidationErrorMapper.INSTANCE.wrap(error, new ModelNode()));
 				}
 			}
-			if (model.getSchemaText() != null) {
-				node.get(METADATA).set(model.getSchemaText());
-			}
-			if (model.getSchemaSourceType() != null) {
-				node.get(METADATA_TYPE).set(model.getSchemaSourceType());
+			
+			if (!model.getSourceMetadataType().isEmpty()) {
+				ModelNode metadataNodes = node.get(METADATAS);
+				for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
+					ModelNode metadataNode = new ModelNode();
+					metadataNode.get(METADATA_TYPE).set(model.getSourceMetadataType().get(i));
+					String text = model.getSourceMetadataText().get(i);
+					if (text != null) {
+						metadataNode.get(METADATA).set(text);
+					}
+					metadataNodes.add(metadataNode);
+				}
 			}
 			node.get(METADATA_STATUS).set(model.getMetadataStatus().name());
 			return node;
@@ -415,11 +423,19 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					}
 				}
 			}
-			if (node.get(METADATA).isDefined()) {
-				model.setSchemaText(node.get(METADATA).asString());
-			}
-			if (node.get(METADATA_TYPE).isDefined()) {
-				model.setSchemaSourceType(node.get(METADATA_TYPE).asString());
+			if (node.get(METADATAS).isDefined()) {
+				List<ModelNode> metadataNodes = node.get(METADATAS).asList();
+				for (ModelNode modelNode : metadataNodes) {
+					String text = null;
+					String type = null;
+					if (modelNode.get(METADATA).isDefined()) {
+						text = modelNode.get(METADATA).asString();
+					}
+					if (modelNode.get(METADATA_TYPE).isDefined()) {
+						type = modelNode.get(METADATA_TYPE).asString();
+					}
+					model.addSourceMetadata(type, text);
+				}
 			}
 			if (node.get(METADATA_STATUS).isDefined()) {
 				model.setMetadataStatus(node.get(METADATA_STATUS).asString());
