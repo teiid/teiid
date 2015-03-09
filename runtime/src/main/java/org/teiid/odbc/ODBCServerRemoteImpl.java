@@ -21,7 +21,10 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.*;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
+import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
+import static org.teiid.odbc.PGUtil.convertType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -30,14 +33,7 @@ import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,11 +47,7 @@ import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.dqp.service.SessionService;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.PreparedStatementImpl;
-import org.teiid.jdbc.ResultSetImpl;
-import org.teiid.jdbc.StatementImpl;
-import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.TeiidURL;
@@ -239,6 +231,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             	serviceToken = result.getServiceToken();
             	if (result.isAuthenticated()) {
                 	info.put(ILogon.KRB5TOKEN, serviceToken);
+                	this.client.authenticationGSSContinue(serviceToken);
                 	// if delegation is in progress, participate in it.
                 	if (result.getDelegationCredential() != null) {
                 		info.put(GSSCredential.class.getName(), result.getDelegationCredential());
