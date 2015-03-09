@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="ldapVDB" version="1">
+    <model name="HRModel">
+        <source name="local" translator-name="translator-ldap" connection-jndi-name="java:/ldapDS"/>
+            <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE HR_Group (
+                    objectClass string[],
+                    DN string,
+                    sn string options (nameinsource 'sn'),
+                    uid string options (nameinsource 'uid'),
+                    mail string options (nameinsource 'mail'),
+                    name string options (nameinsource 'cn')
+                ) OPTIONS(nameinsource 'ou=HR,dc=example,dc=com', updatable true);
+            ]]> </metadata>
+    </model>
+</vdb>
