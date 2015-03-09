@@ -51,6 +51,7 @@ enum Element {
     
     POLICY_DECIDER_MODULE_ELEMENT("policy-decider-module", "policy-decider-module"),
     AUTHORIZATION_VALIDATOR_MODULE_ELEMENT("authorization-validator-module", "authorization-validator-module"),
+    PREPARSER_MODULE_ELEMENT("preparser-module", "preparser-module"),
 	
 	// buffer manager
 	BUFFER_SERVICE_ELEMENT("buffer-service"),

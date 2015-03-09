@@ -58,6 +58,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
+import org.teiid.CommandContext;
+import org.teiid.PreParser;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.common.queue.FakeWorkManager;
@@ -1309,6 +1311,32 @@ public class TestEmbeddedServer {
 		assertEquals("java.sql.Blob", rs.getMetaData().getColumnClassName(1));
 		rs.next();
 		assertEquals(77, rs.getBlob(1).length());
+	}
+	
+	@Test public void testPreParser() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setPreParser(new PreParser() {
+			
+			@Override
+			public String preParse(String command, CommandContext context) {
+				if (command.equals("select 'hello world'")) {
+					return "select 'goodbye'";
+				}
+				return command;
+			}
+		});
+		es.start(ec);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("y");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
+		es.deployVDB("x", mmd);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("select 'hello world'");
+		rs.next();
+		assertEquals("goodbye", rs.getString(1));
 	}
 
 }

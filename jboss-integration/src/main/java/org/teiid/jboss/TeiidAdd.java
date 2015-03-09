@@ -68,7 +68,9 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
+import org.teiid.PreParser;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
@@ -109,6 +111,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT,
 		TeiidConstants.QUERY_TIMEOUT,
 		TeiidConstants.WORKMANAGER,
+		TeiidConstants.PREPARSER_MODULE_ELEMENT,
 		TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT,
 		TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT,
 		
@@ -294,6 +297,27 @@ class TeiidAdd extends AbstractAddStepHandler {
     	});    	
     	newControllers.add(target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, authValidatorService).install());
     	
+    	final PreParser preParser;
+    	if (isDefined(PREPARSER_MODULE_ELEMENT, operation, context)) {
+    		preParser = buildService(PreParser.class, asString(PREPARSER_MODULE_ELEMENT, operation, context));
+    	} else {
+    		preParser = new PreParser() {
+				
+				@Override
+				public String preParse(String command, CommandContext context) {
+					return command;
+				}
+			};
+    	}
+    	
+    	ValueService<PreParser> preParserService = new ValueService<PreParser>(new org.jboss.msc.value.Value<PreParser>() {
+			@Override
+			public PreParser getValue() throws IllegalStateException, IllegalArgumentException {
+				return preParser;
+			}
+    	});    	
+    	newControllers.add(target.addService(TeiidServiceNames.PREPARSER, preParserService).install());
+    	
     	// resultset cache
     	boolean rsCache = true;
     	if (isDefined(RSC_ENABLE_ATTRIBUTE, operation, context) && !asBoolean(RSC_ENABLE_ATTRIBUTE, operation, context)) {
@@ -377,6 +401,7 @@ class TeiidAdd extends AbstractAddStepHandler {
         engineBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, engine.getTranslatorRepositoryInjector());
         engineBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, engine.getVdbRepositoryInjector());
         engineBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
+        engineBuilder.addDependency(TeiidServiceNames.PREPARSER, PreParser.class, engine.getPreParserInjector());
         engineBuilder.addDependency(rsCache?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, InternalEventDistributorFactory.class, engine.getEventDistributorFactoryInjector());

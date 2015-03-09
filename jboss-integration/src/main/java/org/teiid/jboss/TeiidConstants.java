@@ -160,6 +160,12 @@ public class TeiidConstants {
         .setAllowExpression(false)
         .build();
     
+    public static SimpleAttributeDefinition PREPARSER_MODULE_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PREPARSER_MODULE_ELEMENT.getModelName(), ModelType.STRING)
+    	.setXmlName(Element.PREPARSER_MODULE_ELEMENT.getXMLName())
+    	.setAllowNull(true)
+    	.setAllowExpression(false)
+    	.build();
+    
     // buffer manager
 	// BUFFER_SERVICE_ELEMENT("buffer-service",true, false, MeasurementUnit.NONE);
     public static SimpleAttributeDefinition USE_DISK_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.USE_DISK_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)

@@ -209,9 +209,15 @@
                 </xs:annotation>
             </xs:element>
             
-            <xs:element name="metadata-repository-module" type="xs:string" minOccurs="0" maxOccurs="1">
+            <!-- <xs:element name="metadata-repository-module" type="xs:string" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Runtime Metadata Updates can be made persistent though by configuring a "org.teiid.metadata.MetadataRepository"</xs:documentation>
+                </xs:annotation>
+            </xs:element> -->
+            
+            <xs:element name="preparser-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Incoming SQL can be modified by an "org.teiid.PreParser"</xs:documentation>
                 </xs:annotation>
             </xs:element>
             

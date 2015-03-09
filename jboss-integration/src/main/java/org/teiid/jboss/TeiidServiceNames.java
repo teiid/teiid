@@ -38,6 +38,7 @@ public class TeiidServiceNames {
 	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TUPLE_BUFFER = ServiceName.JBOSS.append("teiid", "tuple_buffer");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName AUTHORIZATION_VALIDATOR = ServiceName.JBOSS.append("teiid", "authorization-validator");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName PREPARSER = ServiceName.JBOSS.append("teiid", "preparser");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_FINISHED_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb-finished"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SWITCH_SVC_BASE = ServiceName.JBOSS.append("teiid", "switch"); //$NON-NLS-1$ //$NON-NLS-2$

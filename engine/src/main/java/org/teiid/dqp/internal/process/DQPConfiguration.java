@@ -21,6 +21,7 @@
  */
 package org.teiid.dqp.internal.process;
 
+import org.teiid.PreParser;
 import org.teiid.client.RequestMessage;
 
 
@@ -51,6 +52,7 @@ public class DQPConfiguration{
     private long queryTimeout;
     
     private transient AuthorizationValidator authorizationValidator;
+    private transient PreParser preParser;
 
 	public int getMaxActivePlans() {
 		return maxActivePlans;
@@ -167,6 +169,14 @@ public class DQPConfiguration{
 
 	public TeiidExecutor getTeiidExecutor() {
 		return new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, getMaxThreads());
+	}
+	
+	public void setPreParser(PreParser preParser) {
+		this.preParser = preParser;
+	}
+	
+	public PreParser getPreParser() {
+		return preParser;
 	}
 
 }

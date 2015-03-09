@@ -21,11 +21,8 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.parsing.ParseUtils.*;
 import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.ArrayList;
@@ -78,6 +75,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 
     	AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.marshallAsElement(node, writer);
     	POLICY_DECIDER_MODULE_ELEMENT.marshallAsElement(node, writer);
+    	PREPARSER_MODULE_ELEMENT.marshallAsElement(node, writer);
     	
     	if (like(node, Element.RESULTSET_CACHE_ELEMENT)){
     		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
@@ -257,6 +255,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 
     				case POLICY_DECIDER_MODULE_ELEMENT:
     				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
+    				case PREPARSER_MODULE_ELEMENT:
     				case WORKMANAGER:    					
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;

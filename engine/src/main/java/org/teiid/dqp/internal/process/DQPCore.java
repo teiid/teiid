@@ -255,6 +255,7 @@ public class DQPCore implements DQP {
 	    request.setExecutor(this.processWorkerPool);
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAuthorizationValidator(this.authorizationValidator);
+		request.setPreParser(this.config.getPreParser());
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         final RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);

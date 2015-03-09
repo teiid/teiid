@@ -36,6 +36,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.PreParser;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidRuntimeException;
@@ -68,6 +69,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
+	private final InjectedValue<PreParser> preParserInjector = new InjectedValue<PreParser>();
 	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
@@ -78,7 +80,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.transactionServerImpl.setXaTerminator(getXaTerminatorInjector().getValue());
 		this.transactionServerImpl.setTransactionManager(getTxnManagerInjector().getValue());
 		this.transactionServerImpl.setDetectTransactions(true);
-		
+		setPreParser(preParserInjector.getValue());
 		setAuthorizationValidator(authorizationValidatorInjector.getValue());
 		this.dqpCore.setBufferManager(bufferManagerInjector.getValue());
 		
@@ -174,6 +176,10 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 
 	public InjectedValue<AuthorizationValidator> getAuthorizationValidatorInjector() {
 		return authorizationValidatorInjector;
+	}
+	
+	public InjectedValue<PreParser> getPreParserInjector() {
+		return preParserInjector;
 	}
 
 	public InjectedValue<BufferManager> getBufferManagerInjector() {
