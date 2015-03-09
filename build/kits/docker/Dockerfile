@@ -16,11 +16,9 @@ ENV JBOSS_HOME $WORKING_DIR/$JBOSS_EAP
 
 USER root
 
-ADD teiid-${project.version}-server.zip $WORKING_DIR/teiid.zip
+COPY teiid-${project.version}-server.zip $WORKING_DIR/teiid.zip
 
-RUN cd $WORKING_DIR && unzip -q teiid.zip && rm teiid.zip
-
-RUN chown -R jboss:jboss ${JBOSS_HOME}/ #\
+RUN cd $WORKING_DIR && unzip -q teiid.zip && rm teiid.zip && chown -R jboss:jboss ${JBOSS_HOME}/ #\
 
 VOLUME ["$JBOSS_HOME/standalone", "$JBOSS_HOME/domain"]
 
