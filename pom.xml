@@ -1342,7 +1342,6 @@
               <groupId>org.codehaus.btm</groupId>
               <artifactId>btm</artifactId>
               <version>${version.org.codehaus.btm}</version>
-	      <scope>test</scope>
            </dependency>
            <dependency>
               <groupId>org.jboss.teiid.connectors.google</groupId>
