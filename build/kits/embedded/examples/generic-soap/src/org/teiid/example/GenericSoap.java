@@ -19,20 +19,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
 package org.teiid.example;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.stax.StAXSource;
 
-import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.resource.adapter.ws.WSManagedConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.ws.WSExecutionFactory;
+import org.teiid.util.StAXSQLXML;
 
 /**
  * This example shows invoking a generic soap service.
@@ -47,49 +53,90 @@ import org.teiid.translator.ws.WSExecutionFactory;
 @SuppressWarnings("nls")
 public class GenericSoap {
 	
+	static final String GET_ALL = "<GetAllStateInfo xmlns=\"http://www.teiid.org/stateService/\"/>";
+	static final String GET_ONE = "<GetStateInfo xmlns=\"http://www.teiid.org/stateService/\"><stateCode xmlns=\"\">CA</stateCode></GetStateInfo>";
+	
 	public static void main(String[] args) throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
-		es.start(new EmbeddedConfiguration());
 		
 		WSExecutionFactory ef = new WSExecutionFactory();
-		
-		//can use message mode if full control over the soap envelope is desired
-		//ef.setDefaultServiceMode(Mode.MESSAGE);
-		
-		es.addTranslator("ws", ef);
+		ef.start();
+		es.addTranslator("translator-ws", ef);
 		
 		//add a connection factory
 		WSManagedConnectionFactory wsmcf = new WSManagedConnectionFactory();
-		ConnectionFactory cf = wsmcf.createConnectionFactory();
-		es.addConnectionFactory("ws", cf);
+		es.addConnectionFactory("java:/StateServiceWebSvcSource", wsmcf.createConnectionFactory());
 		
-		//deploy a simple vdb with a web service model
-		ModelMetaData mmd = new ModelMetaData();
-		mmd.setName("y");
-		mmd.addSourceMapping("ws", "ws", "ws");
-		es.deployVDB("x", mmd);
+		es.start(new EmbeddedConfiguration());
 		
+		es.deployVDB(new FileInputStream(new File("webservice-vdb.xml")));
 		
-		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
-		Statement s = c.createStatement();
+		Connection c = es.getDriver().connect("jdbc:teiid:StateServiceVDB", null);
 		
-		//note the request is just the body contents since we are in payload mode, not message
-		//here the action is used as the soap action for a soap 1.1 call
-		ResultSet rs = s.executeQuery("select * from (call invoke(endpoint=>'http://www.w3schools.com/webservices/tempconvert.asmx', "
-				+ "action=>'http://www.w3schools.com/webservices/CelsiusToFahrenheit',"
-				+ "binding=>'SOAP11',"
-				+ "request=>'"
-				+ "<CelsiusToFahrenheit xmlns=\"http://www.w3schools.com/webservices/\"> <Celsius>12</Celsius> </CelsiusToFahrenheit>"
-				+ "')) x");
-		rs.next();
+		CallableStatement cStmt = c.prepareCall("{call invoke(?, ?, ?, ?, ?)}");
+		cStmt.setString(1, "SOAP11");
+		cStmt.setString(2, "");
+		cStmt.setObject(3, getSQLXML(GET_ALL));
+		cStmt.setString(4, "http://localhost:8080/StateService/stateService/StateServiceImpl?WSDL");
+		cStmt.setBoolean(5, Boolean.TRUE);
+		cStmt.execute();
+		StAXSQLXML xml = (StAXSQLXML) cStmt.getObject(1);
+		List<String> namelist = getResult(xml.getSource(StAXSource.class).getXMLStreamReader());
+		for(String item : namelist) {
+			System.out.println(item);
+		}
 		
-		//show the result message body
-		System.out.println(rs.getString(1));
-		
-		//you can also post process the results.  for example with xmltable to extract the desired information
+		cStmt = c.prepareCall("{call invoke(?, ?, ?, ?, ?)}");
+		cStmt.setString(1, "SOAP11");
+		cStmt.setString(2, "");
+		cStmt.setObject(3, getSQLXML(GET_ONE));
+		cStmt.setString(4, "http://localhost:8080/StateService/stateService/StateServiceImpl?WSDL");
+		cStmt.setBoolean(5, Boolean.TRUE);
+		cStmt.execute();
+		xml = (StAXSQLXML) cStmt.getObject(1);
+		namelist = getResult(xml.getSource(StAXSource.class).getXMLStreamReader());
+		System.out.println(namelist);
 		
 		c.close();
 		es.stop();
+	}
+
+	private static List<String> getResult(XMLStreamReader reader) throws XMLStreamException {
+		List<String> stateNames = new ArrayList<String>();
+		while (true) {
+			if (reader.getEventType() == XMLStreamConstants.END_DOCUMENT) {
+				break;
+			}		
+			if (reader.getEventType() == XMLStreamConstants.START_ELEMENT) {
+				String cursor = reader.getLocalName();
+				if (cursor.equals("Name")) {
+					reader.next();
+					String value = reader.getText();
+					stateNames.add(value);
+				}
+//				if (cursor.equals("Abbreviation")) {
+//					reader.next();
+//					String value = reader.getText();
+//					System.out.print(value + " ");
+//				}
+//				if (cursor.equals("Capital")) {
+//					reader.next();
+//					String value = reader.getText();
+//					System.out.print(value + " ");
+//				}
+//				if (cursor.equals("YearOfStatehood")) {
+//					reader.next();
+//					String value = reader.getText();
+//					System.out.println(value + " ");
+//				}
+			}
+			reader.next();
+		}
+		return stateNames;
+	}
+
+	private static Object getSQLXML(String request) {
+		return new SQLXMLImpl(request);
 	}	
 
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="StateServiceVDB" version="1">
+
+    <description>Shows how to call StateService Web Services</description>
+    
+    <property name="UseConnectorMetadata" value="true" />
+    <!--property name="{http://teiid.org/rest}auto-generate" value="true"/-->
+
+    <model name="StateService">
+        <source name="webservice" translator-name="translator-ws" connection-jndi-name="java:/StateServiceWebSvcSource"/>
+    </model>
+
+</vdb>
