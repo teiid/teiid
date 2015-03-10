@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TEIID_PATH=../../lib/*:../../optional/file/*:../../optional/jdbc/*:h2-1.3.161.jar
+TEIID_PATH=../../lib/*:../../optional/file/*:../../optional/jdbc/*:../../optional/jdbc/h2/*:../../optional/*
 
 javac -cp ${TEIID_PATH} src/org/teiid/example/*.java 
 

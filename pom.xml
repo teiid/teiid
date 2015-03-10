@@ -1342,7 +1342,13 @@
               <groupId>org.codehaus.btm</groupId>
               <artifactId>btm</artifactId>
               <version>${version.org.codehaus.btm}</version>
-	      <scope>test</scope>
+	      <scope>provided</scope>
+           </dependency>
+            <dependency>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-api</artifactId>
+              <version>1.7.2.redhat-3</version>
+              <scope>provided</scope>
            </dependency>
            <dependency>
               <groupId>org.jboss.teiid.connectors.google</groupId>
