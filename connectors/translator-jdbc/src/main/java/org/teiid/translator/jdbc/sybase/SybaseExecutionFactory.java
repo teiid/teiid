@@ -205,6 +205,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     		});
     	} else {
     		convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    		convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
     	}
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
 			@Override

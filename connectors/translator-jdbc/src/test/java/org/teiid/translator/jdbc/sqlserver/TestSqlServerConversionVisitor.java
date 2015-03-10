@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.cdk.api.TranslationUtility;
@@ -50,14 +49,11 @@ public class TestSqlServerConversionVisitor {
 
     private static SQLServerExecutionFactory trans = new SQLServerExecutionFactory();
     
-    @BeforeClass
-    public static void oneTimeSetup() throws TranslatorException {
-        trans.start();
-    }
-    
     @Before
     public void setUp() throws Exception {
+    	trans = new SQLServerExecutionFactory();
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
+    	trans.start();
     }
 
     public String getTestVDB() {
@@ -179,7 +175,9 @@ public class TestSqlServerConversionVisitor {
     }
     
     @Test public void testConvertDate2008() throws Exception {
+    	trans = new SQLServerExecutionFactory();
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+    	trans.start();
         String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
         String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.DateValue IN (CAST('2000-01-12' AS DATE), CAST('2000-02-02' AS DATE))"; //$NON-NLS-1$
                
@@ -189,9 +187,23 @@ public class TestSqlServerConversionVisitor {
     }
     
     @Test public void testTimeLiteral2008() throws Exception {
+    	trans = new SQLServerExecutionFactory();
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
-        String input = "select stringkey from bqt1.smalla where BQT1.SmallA.TimeValue = {t '00:00:00'}"; //$NON-NLS-1$
+    	trans.start();
+    	String input = "select stringkey from bqt1.smalla where BQT1.SmallA.TimeValue = {t '00:00:00'}"; //$NON-NLS-1$
         String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.TimeValue = cast('00:00:00' as time)"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test public void testTimestampConversion2008() throws Exception {
+    	trans = new SQLServerExecutionFactory();
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+    	trans.start();
+        String input = "select stringkey from bqt1.smalla where cast(BQT1.SmallA.Timestampvalue as time) = timevalue"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE cast(SmallA.TimestampValue AS time) = SmallA.TimeValue"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 
