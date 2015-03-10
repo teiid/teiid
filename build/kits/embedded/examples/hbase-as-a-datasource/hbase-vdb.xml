@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="hbasevdb" version="1">
+    <model name="Customer">
+        <source name="local" translator-name="translator-hbase" connection-jndi-name="java:/hbaseDS"/>
+        <metadata type="DDL"><![CDATA[
+
+SET NAMESPACE 'http://www.teiid.org/translator/hbase/2014' AS teiid_hbase;
+           
+CREATE FOREIGN TABLE Customer (
+    PK string OPTIONS (nameinsource 'ROW_ID'),
+    city string OPTIONS (nameinsource '"city"'),
+    name string OPTIONS (nameinsource '"name"'),
+    amount string OPTIONS (nameinsource '"amount"'),
+    product string OPTIONS (nameinsource '"product"'),
+    CONSTRAINT PK0 PRIMARY KEY(PK)
+) OPTIONS(nameinsource '"Customer"', "UPDATABLE" 'TRUE');
+         ]]> </metadata>
+    </model>
+</vdb>
