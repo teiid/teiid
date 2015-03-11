@@ -36,6 +36,8 @@ public interface UpdateExecution extends Execution {
 
 	/**
 	 * Returns the update counts for the execution.
+	 * <br>A single positive integer value is expected for non bulk/batch commands.
+	 * <br>bulk/batch should return an integer for each value/command.  1 for success, 0 for no info, -1 failure 
 	 * @return the update counts corresponding to the command executed
 	 * @throws DataNotAvailableException
 	 * @throws TranslatorException
