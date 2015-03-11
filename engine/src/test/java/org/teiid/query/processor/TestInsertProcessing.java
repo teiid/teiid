@@ -29,6 +29,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.validator.TestValidator;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -508,6 +509,13 @@ public class TestInsertProcessing {
         HardcodedDataManager hdm = new HardcodedDataManager(metadata);
         hdm.addData("INSERT INTO target (a) SELECT v_0.c_0 FROM (SELECT g_0.a AS c_0 FROM source AS g_0 GROUP BY g_0.a) AS v_0 GROUP BY v_0.c_0", Arrays.asList(1));
         TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)});
+    }
+    
+    @Test public void testValidation() throws Exception {
+    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    	String sql = "insert into pm1.g1 (e1) SELECT key_name FROM (select 'a' as key_name, 'b' as key_type) k  HAVING count(*)>1"; //$NON-NLS-1$
+     
+        TestValidator.helpValidate(sql, new String[]{"key_name"}, metadata);
     }
     
     @Test public void testAutoIncrementView() throws Exception {

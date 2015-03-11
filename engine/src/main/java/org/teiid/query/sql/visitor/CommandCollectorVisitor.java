@@ -30,6 +30,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
@@ -120,6 +121,13 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     @Override
     public void visit(WithQueryCommand obj) {
     	this.commands.add(obj.getCommand());
+    }
+    
+    @Override
+    public void visit(Insert obj) {
+    	if (obj.getQueryExpression() != null) {
+    		this.commands.add(obj.getQueryExpression());
+    	}
     }
     
     /**
