@@ -22,13 +22,10 @@
 package org.teiid.translator.salesforce.execution.visitors;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.teiid.language.*;
+import org.teiid.language.AndOr.Operator;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
@@ -46,14 +43,27 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	protected StringBuilder groupByClause = new StringBuilder();
 	protected StringBuilder havingClause = new StringBuilder();
 	private Boolean objectSupportsRetrieve;
+	private Condition implicitCondition;
 	
 	public SelectVisitor(RuntimeMetadata metadata) {
 		super(metadata);
 	}
 
-	public void visit(Select query) {
+	@Override
+    public void visit(Select query) {
 		super.visitNodes(query.getFrom());
-		super.visitNode(query.getWhere());
+
+		Condition condition = query.getWhere();
+		if (this.implicitCondition != null) {
+		    if (condition != null) {
+		        condition = LanguageFactory.INSTANCE.createAndOr(Operator.AND, condition, this.implicitCondition);
+		    }
+		    else {
+		        condition = implicitCondition;
+		    }
+		}
+		
+		super.visitNode(condition);
 		super.visitNode(query.getGroupBy());
 		if (query.getHaving() != null) {
 			//since the base is a criteria hierarchy visitor,
@@ -88,6 +98,10 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		}
 	}
 	
+    protected void addCriteria(Condition condition) {
+        this.implicitCondition  = condition;
+    }
+    
 	@Override
 	public void visit(GroupBy obj) {
 		this.groupByClause.append("GROUP BY "); //$NON-NLS-1$
