@@ -185,6 +185,13 @@ public class TestVisitors {
 		assertEquals("SELECT (SELECT Contact.Name FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
+    @Test public void testJoin4() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("SELECT Contact.Name FROM Account INNER JOIN Contact ON Account.Id = Contact.AccountId WHERE Contact.Name='foo' AND Account.Id=5"); //$NON-NLS-1$
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertEquals("SELECT Contact.Name FROM Contact WHERE ((Contact.Name = 'foo') AND (Account.Id = '5')) AND (Contact.AccountId != NULL)", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }	
+	
 	@Test public void testInnerJoin() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
 		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
