@@ -88,8 +88,8 @@ public class JoinQueryVisitor extends SelectVisitor {
 							this.leftTableInJoin = rightTableInJoin;
 							this.rightTableInJoin = t;
 						} 
-						//add is null criteria
-						visitNode(new Comparison(fKey, new Literal(null, fKey.getType()), Comparison.Operator.NE));
+   						//add is null criteria
+						addCriteria(new Comparison(fKey, new Literal(null, fKey.getType()), Comparison.Operator.NE));
 					}
 				} else {
 					// Only add the criteria to the query if it is not the join criteria.
@@ -104,7 +104,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 		}
 	}
 
-	@Override
+    @Override
 	public String getQuery() throws TranslatorException {
 		
 		if (isChildToParentJoin()) {
