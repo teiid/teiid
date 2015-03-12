@@ -570,4 +570,18 @@ public class TestTextTable {
         TestValidator.helpValidate(sql, new String[]{"TEXTTABLE('x' COLUMNS x string ROW DELIMITER '-' DELIMITER '-' HEADER) AS x"}, RealMetadataFactory.example1Cached());
     }
 	
+	@Test public void testDotHeader() throws Exception {
+    	String sql = "select x.x from texttable('h.1\na' COLUMNS x header 'h.1' string HEADER) x"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] {
+        		Arrays.asList("a"),
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        Command cmd = helpParse(sql);
+        assertEquals("SELECT x.x FROM TEXTTABLE('h.1\na' COLUMNS x 'h.1' string HEADER) AS x", cmd.toString());
+		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+    }
+	
 }

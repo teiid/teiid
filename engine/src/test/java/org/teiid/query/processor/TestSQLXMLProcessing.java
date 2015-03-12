@@ -41,6 +41,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
@@ -59,6 +60,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
@@ -266,6 +268,12 @@ public class TestSQLXMLProcessing {
         };    
     
         process(sql, expected);
+    }
+    
+    @Test(expected=QueryParserException.class) public void testXmlTableWithComplexIdentifier() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns \"x.y\" string path '@x', val string path '/.') as x"; //$NON-NLS-1$
+        
+        QueryParser.getQueryParser().parseCommand(sql);
     }
     
     @Test public void testXmlTableNull() throws Exception {

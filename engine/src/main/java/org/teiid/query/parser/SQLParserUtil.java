@@ -162,10 +162,10 @@ public class SQLParserUtil {
     	return true;
     }    
 
-    String validateName(String id, boolean element) throws ParseException {
+    String validateName(String id, boolean nonAlias) throws ParseException {
         if(id.indexOf('.') != -1) { 
             String key = "SQLParser.Invalid_alias"; //$NON-NLS-1$
-            if (element) {
+            if (nonAlias) {
                 key = "SQLParser.Invalid_short_name"; //$NON-NLS-1$
             }
             throw new ParseException(QueryPlugin.Util.getString(key, id)); 

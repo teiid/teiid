@@ -491,7 +491,11 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			if (col.isOrdinal()) {
 				continue;
 			}
-			Integer index = nameIndexes.get(col.getName().toUpperCase());
+			String name = col.getName().toUpperCase();
+			if (col.getHeader() != null) {
+				name = col.getHeader().toUpperCase();
+			}
+			Integer index = nameIndexes.get(name);
 			if (index == null) {
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30181, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30181, col.getName(), systemId));
 			}

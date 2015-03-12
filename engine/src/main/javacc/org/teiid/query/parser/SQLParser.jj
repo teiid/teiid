@@ -613,15 +613,15 @@ name=identifier
 description=Partial or full name of a single entity.
 example={code:sql}tbl.col{code}\n{code:sql}"tbl"."col"{code}
 */
-String id(Boolean validate) :
+String id(Boolean nonAlias) :
 {
 }
 {
   	(<ID>|nonReserved())
   	{
   		String id = normalizeId(getToken(0).image);
-  		if (validate != null) {
-  			return validateName(id, validate);
+  		if (nonAlias != null) {
+  			return validateName(id, nonAlias);
   		}
   		return id;
   	}
@@ -2623,6 +2623,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	boolean noTrim = false;
 	String selector = null;
 	Integer position = null;
+	String header = null;
 }
 {
 	name = id(Boolean.TRUE)
@@ -2633,6 +2634,10 @@ TextTable.TextColumn textColumn(ParseInfo info):
         return new TextTable.TextColumn(name); 
       } 
     ) | (
+        [
+            <HEADER>
+            header = stringVal()
+        ]
     	datatype = parseDataType()
     	[ 
     	  	<WIDTH>
@@ -2653,6 +2658,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
 			TextTable.TextColumn result = new TextTable.TextColumn(name, datatype.type, width, noTrim);
 			result.setSelector(selector);
 			result.setPosition(position);
+			result.setHeader(header);
 			return result;
 		}
     ) )
@@ -2918,7 +2924,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	Expression defaultExpr = null;
 }
 {
-	name = id(null)
+	name = id(Boolean.TRUE)
 	
 	((
 	  <FOR> <ORDINALITY> 

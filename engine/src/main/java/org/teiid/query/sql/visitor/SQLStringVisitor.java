@@ -1999,6 +1999,10 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(SPACE);
                 append(NonReserved.ORDINALITY);
             } else {
+	            if (col.getHeader() != null) {
+	            	outputLiteral(String.class, false, col.getHeader());
+	            	append(SPACE);
+	            }
 	            append(col.getType());
 	            if (col.getWidth() != null) {
 	                append(SPACE);

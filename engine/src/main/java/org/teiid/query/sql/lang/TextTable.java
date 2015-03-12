@@ -41,6 +41,7 @@ public class TextTable extends TableFunctionReference {
 		private String selector;
 		private Integer position;
 		private boolean ordinal;
+		private String header;
 		
 		public TextColumn(String name) {
 			super(name, DataTypeManager.DefaultDataTypes.INTEGER);
@@ -73,6 +74,14 @@ public class TextTable extends TableFunctionReference {
 			this.noTrim = noTrim;
 		}
 		
+		public String getHeader() {
+			return header;
+		}
+		
+		public void setHeader(String header) {
+			this.header = header;
+		}
+		
 		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
@@ -86,7 +95,8 @@ public class TextTable extends TableFunctionReference {
 			&& EquivalenceUtil.areEqual(selector, other.selector)
 			&& EquivalenceUtil.areEqual(position, other.position)
 			&& noTrim == other.noTrim
-			&& ordinal == other.ordinal;
+			&& ordinal == other.ordinal
+			&& EquivalenceUtil.areEqual(header, other.header);
 		}
 		
 		@Override
@@ -97,6 +107,7 @@ public class TextTable extends TableFunctionReference {
 			clone.selector = this.selector;
 			clone.position = this.position;
 			clone.ordinal = this.ordinal;
+			clone.header = this.header;
 			this.copyTo(clone);
 			return clone;
 		}
