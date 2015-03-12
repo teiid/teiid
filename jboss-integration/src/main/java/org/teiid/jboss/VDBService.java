@@ -542,6 +542,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         final ServiceLoader<MetadataRepository> serviceLoader =  ServiceLoader.load(MetadataRepository.class, moduleLoader);
         if (serviceLoader != null) {
         	for (MetadataRepository loader:serviceLoader) {
+        		loader = TeiidAdd.createTCCLProxy(MetadataRepository.class, loader); 
         		MetadataRepository old = this.repositories.putIfAbsent(repoType, loader);
         		return old!=null?old:loader;
         	}

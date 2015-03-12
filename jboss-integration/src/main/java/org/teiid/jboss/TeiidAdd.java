@@ -477,7 +477,12 @@ class TeiidAdd extends AbstractAddStepHandler {
         	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50089, type.getName(), moduleName));
         }
         final T instance = iter.next();
-        T proxy = (T) Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[] { type }, new InvocationHandler() {
+        T proxy = createTCCLProxy(type, instance);
+        return proxy;
+    }
+
+	static <T> T createTCCLProxy(Class<T> type, final T instance) {
+		T proxy = (T) Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[] { type }, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
@@ -491,8 +496,8 @@ class TeiidAdd extends AbstractAddStepHandler {
                 }
             }
         });
-        return proxy;
-    }
+		return proxy;
+	}
 		
     private BufferManagerService buildBufferManager(final OperationContext context, ModelNode node) throws OperationFailedException {
     	BufferManagerService bufferManger = new BufferManagerService();
