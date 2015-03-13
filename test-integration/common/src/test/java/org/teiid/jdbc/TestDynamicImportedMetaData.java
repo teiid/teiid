@@ -304,12 +304,11 @@ public class TestDynamicImportedMetaData {
     
     @Test public void testDroppedFk() throws Exception {
     	ModelMetaData mmd = new ModelMetaData();
-    	mmd.setSchemaSourceType("ddl");
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);"
+    			+ "create foreign table z (y integer, foreign key (y) references x)");
     	mmd.setName("foo");
     	mmd.addSourceMapping("x", "x", "x");
     	server.addTranslator("x", new ExecutionFactory());
-    	mmd.setSchemaText("create foreign table x (y integer primary key);"
-    			+ "create foreign table z (y integer, foreign key (y) references x)");
 		server.deployVDB("vdb", mmd);
     	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
     	
@@ -323,13 +322,30 @@ public class TestDynamicImportedMetaData {
     	assertEquals(0, fks.size());
 	}
     
-    @Test public void testMultiSource() throws Exception {
+    @Test public void testMultipleFK() throws Exception {
     	ModelMetaData mmd = new ModelMetaData();
-    	mmd.setSchemaSourceType("ddl");
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer, z integer, primary key (y, z));"
+    			+ "create foreign table z (y integer, z integer, y1 integer, z1 integer, foreign key (y, z) references x (y, z), foreign key (y1, z1) references x (y, z))");
     	mmd.setName("foo");
     	mmd.addSourceMapping("x", "x", "x");
     	server.addTranslator("x", new ExecutionFactory());
-    	mmd.setSchemaText("create foreign table x (y integer primary key);");
+		server.deployVDB("vdb", mmd);
+    	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importKeys", "true");
+    	MetadataFactory mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("test").getTables().get("vdb.foo.z");
+    	List<ForeignKey> fks = t.getForeignKeys();
+    	assertEquals(2, fks.size());
+	}
+    
+    @Test public void testMultiSource() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
 		server.deployVDB("vdb", mmd);
 		TeiidExecutionFactory tef = new TeiidExecutionFactory() {
 			@Override
@@ -367,11 +383,10 @@ public class TestDynamicImportedMetaData {
     
     @Test public void testMultiSourceImportError() throws Exception {
     	ModelMetaData mmd = new ModelMetaData();
-    	mmd.setSchemaSourceType("ddl");
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);");
     	mmd.setName("foo");
     	mmd.addSourceMapping("x", "x", "x");
     	server.addTranslator("x", new ExecutionFactory());
-    	mmd.setSchemaText("create foreign table x (y integer primary key);");
 		server.deployVDB("vdb", mmd);
 		TeiidExecutionFactory tef = new TeiidExecutionFactory() {
 			@Override
