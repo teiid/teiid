@@ -598,4 +598,13 @@ public class TestPostgreSQLTranslator {
             output);
     }
     
+    @Test public void testSelectStringLiteral() throws Exception {
+        String input = "SELECT 'a' FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT cast('a' AS bpchar) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
 }
