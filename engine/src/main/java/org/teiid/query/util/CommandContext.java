@@ -1055,7 +1055,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	 * Used by the system table logic
 	 * @return
 	 */
-	public Clob getSpatialSysRef() {
+	public Clob getSpatialRefSys() {
 		return new ClobImpl(new InputStreamFactory() {
 			
 			@Override

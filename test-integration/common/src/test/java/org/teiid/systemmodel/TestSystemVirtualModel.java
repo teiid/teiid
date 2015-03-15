@@ -268,7 +268,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 	
 	@Test public void testSpatial() throws Exception {
-		checkResult("testSpatial", "select * from spatial_sys_ref"); //$NON-NLS-1$ //$NON-NLS-2$
+		checkResult("testSpatial", "select * from spatial_ref_sys"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Test public void testGeometryColumns() throws Exception {

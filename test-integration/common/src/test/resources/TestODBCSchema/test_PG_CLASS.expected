@@ -41,7 +41,7 @@ oid          relname                                                            
 330          Schemas                                                            95            r        0            0.0        0            false        false     
 338          PK                                                                 95            i        0            0.0        0            false        false     
 341          UNIQUE0                                                            95            i        0            0.0        0            false        false     
-343          spatial_sys_ref                                                    95            v        0            0.0        0            false        false     
+343          spatial_ref_sys                                                    95            v        0            0.0        0            false        false     
 349          PK                                                                 95            i        0            0.0        0            false        false     
 351          Tables                                                             95            r        0            0.0        0            false        false     
 365          PK                                                                 95            i        0            0.0        0            false        false     
