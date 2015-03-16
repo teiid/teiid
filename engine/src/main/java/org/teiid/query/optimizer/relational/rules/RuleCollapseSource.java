@@ -411,16 +411,27 @@ public final class RuleCollapseSource implements OptimizerRule {
 	    	    query = outerQuery;
 
 	        }
-	        if (!CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) {
-				//if group by expressions are not support, add an inline view to compensate
-				query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, false);
-			}
-			if (query.getOrderBy() != null 
-					&& groupNode.hasBooleanProperty(Info.ROLLUP) 
-					&& !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, modelID, metadata, capFinder)) {
-				//if ordering is not directly supported over extended grouping, add an inline view to compensate
-				query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, true);
-			}
+	        
+	        if (query.getGroupBy() != null) {
+		        // we check for group by expressions here to create an ANSI SQL plan
+			    boolean hasExpression = false;
+			    boolean hasLiteral = false;
+			    for (final Iterator<Expression> iterator = query.getGroupBy().getSymbols().iterator(); iterator.hasNext();) {
+			    	Expression ex = iterator.next();
+			        hasExpression |= !(ex instanceof ElementSymbol);
+			        hasLiteral |= EvaluatableVisitor.willBecomeConstant(ex, true);
+			    } 
+			    if ((hasExpression && !CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) || hasLiteral) {
+			    	//if group by expressions are not support, add an inline view to compensate
+					query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, false);
+			    }
+				if (query.getOrderBy() != null 
+						&& groupNode.hasBooleanProperty(Info.ROLLUP) 
+						&& !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, modelID, metadata, capFinder)) {
+					//if ordering is not directly supported over extended grouping, add an inline view to compensate
+					query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, true);
+				}
+	        }
 		}
 		return query;
 	}		
@@ -855,16 +866,6 @@ public final class RuleCollapseSource implements OptimizerRule {
 	public static Query rewriteGroupByAsView(Query query, QueryMetadataInterface metadata, boolean addViewForOrderBy) {
 		if (query.getGroupBy() == null) {
 			return query;
-		}
-		if (!addViewForOrderBy) {
-		    // we check for group by expressions here to create an ANSI SQL plan
-		    boolean hasExpression = false;
-		    for (final Iterator<Expression> iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
-		        hasExpression = !(iterator.next() instanceof ElementSymbol);
-		    } 
-		    if (!hasExpression) {
-		    	return query;
-		    }
 		}
 		Select select = query.getSelect();
 		GroupBy groupBy = query.getGroupBy();

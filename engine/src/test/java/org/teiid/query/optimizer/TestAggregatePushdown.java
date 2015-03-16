@@ -1468,4 +1468,12 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN (SELECT g_1.e1 AS c_0 FROM pm1.g2 AS g_1 GROUP BY g_1.e1 ORDER BY AVG(g_1.e2) LIMIT 2) AS v_0 ON g_0.e1 = v_0.c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
     }
+    
+    @Test public void testGroupByConstant() throws Exception {
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
+        String sql = "SELECT x from (select 'aaa' as x FROM pm1.g1) AS g_0 GROUP BY x";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[]{"SELECT v_0.c_0 FROM (SELECT 'aaa' AS c_0 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); 
+    }
 }
