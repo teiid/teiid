@@ -41,10 +41,13 @@ import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.OutputStreamOutStream;
 import com.vividsolutions.jts.io.WKBWriter;
+import com.vividsolutions.jts.io.WKTReader;
+import org.teiid.query.function.GeometryTransformUtils;
 
 @SuppressWarnings("nls")
 public class TestGeometry {
@@ -233,6 +236,14 @@ public class TestGeometry {
         gml = "<gml:Polygon srsName=\"SDO:\" xmlns:gml=\"http://www.opengis.net/gml\"><gml:outerBoundaryIs><gml:LinearRing><gml:coordinates decimal=\".\" cs=\",\" ts=\" \">5,1 8,1 8,6 5,7 5,1 </gml:coordinates></gml:LinearRing></gml:outerBoundaryIs></gml:Polygon>";
         gt = GeometryUtils.geometryFromGml(new ClobType(ClobImpl.createClob(gml.toCharArray())), null);
         assertEquals(GeometryType.UNKNOWN_SRID, gt.getSrid());
+    }
 
+    @Test public void testTransform() throws Exception {
+        Geometry g0 = new WKTReader().read("POINT(426418.89 4957737.37)");
+        Geometry g1 = GeometryTransformUtils.transform(g0,
+                "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs", // EPSG:32632
+                "+proj=longlat +datum=WGS84 +no_defs" // EPSG:4326
+        );
+        assertEquals("POINT (8.07013599546795 44.76924401481436)", g1.toText());
     }
 }

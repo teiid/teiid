@@ -86,6 +86,7 @@
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.4.0</version.jts2geojson>
+        <version.proj4j>0.1.0</version.proj4j>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1515,6 +1516,11 @@
                 <groupId>org.wololo</groupId>
                 <artifactId>jts2geojson</artifactId>
                 <version>${version.jts2geojson}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.osgeo</groupId>
+                <artifactId>proj4j</artifactId>
+                <version>${version.proj4j}</version>
             </dependency>
         </dependencies>
 	</dependencyManagement>
