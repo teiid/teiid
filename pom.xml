@@ -45,8 +45,7 @@
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
         <jbossas-test-version>jboss-eap-6.3</jbossas-test-version>
-        <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
-        <version.core4j>0.5</version.core4j>        
+        <version.org.jboss.oreva>0.8.0</version.org.jboss.oreva>
         <jbossas-module-root>modules/system/layers/base</jbossas-module-root>
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.nux>1.6</version.nux>
@@ -883,9 +882,9 @@
                 <version>${version.javax.ws.rs}</version>
             </dependency>
             <dependency>
-              <groupId>org.odata4j</groupId>
-              <artifactId>odata4j-core</artifactId>
-              <version>${version.org.odata4j}</version>
+              <groupId>org.jboss.oreva</groupId>
+              <artifactId>odata-core</artifactId>
+              <version>${version.org.jboss.oreva}</version>
               <exclusions>
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
@@ -908,9 +907,9 @@
                 </exclusions>              
             </dependency>
             <dependency>
-                <artifactId>core4j</artifactId>
-                <groupId>org.core4j</groupId>
-                <version>${version.core4j}</version>
+                <artifactId>common</artifactId>
+                <groupId>org.jboss.oreva</groupId>
+                <version>${version.org.jboss.oreva}</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
