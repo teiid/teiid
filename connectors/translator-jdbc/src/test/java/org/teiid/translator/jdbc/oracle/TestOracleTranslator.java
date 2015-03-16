@@ -71,6 +71,7 @@ import org.teiid.translator.jdbc.JDBCQueryExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 @SuppressWarnings("nls")
 public class TestOracleTranslator {
@@ -83,6 +84,7 @@ public class TestOracleTranslator {
     public void setup() throws Exception {
         TRANSLATOR = new OracleExecutionFactory();  
         TRANSLATOR.setUseBindVariables(false);
+        TRANSLATOR.setDatabaseVersion(Version.DEFAULT_VERSION);
         TRANSLATOR.start();
     }
 
@@ -1152,6 +1154,7 @@ public class TestOracleTranslator {
 				return prefix; //don't use random for testing
 			}
 		};
+		ef.setDatabaseVersion(Version.DEFAULT_VERSION);
 		ef.start();
 		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
 		e.execute();

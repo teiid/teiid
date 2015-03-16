@@ -161,7 +161,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     protected Version getVersion() {
     	if (version == null) {
-    		return Version.DEFAULT_VERSION;
+    		throw new IllegalStateException("version not set"); //$NON-NLS-1$
     	}
     	return this.version;
     }

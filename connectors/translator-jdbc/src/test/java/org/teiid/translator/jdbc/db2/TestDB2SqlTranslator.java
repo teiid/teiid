@@ -35,6 +35,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 @SuppressWarnings("nls")
 public class TestDB2SqlTranslator {
@@ -281,6 +282,7 @@ public class TestDB2SqlTranslator {
     @Test public void testDB2ForI() throws Exception {
     	DB2ExecutionFactory db2 = new DB2ExecutionFactory();
     	db2.setdB2ForI(true);
+    	db2.setDatabaseVersion(Version.DEFAULT_VERSION);
     	assertFalse(db2.supportsFunctionsInGroupBy());
     	assertFalse(db2.supportsElementaryOlapOperations());
     	db2.setDatabaseVersion(DB2ExecutionFactory.SIX_1.toString());    	

@@ -182,7 +182,9 @@ public class ConnectorManager  {
             		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", getConnectionName())); //$NON-NLS-1$);
             	}
         		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Initializing the capabilities for", translatorName); //$NON-NLS-1$
-        		executionFactory.initCapabilities(connection);
+        		synchronized (executionFactory) {
+            		executionFactory.initCapabilities(connection);
+				}
         	} finally {
         		if (connection != null) {
         			translator.closeConnection(connection, connectionFactory);

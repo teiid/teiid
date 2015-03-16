@@ -22,7 +22,7 @@
 
 package org.teiid.translator.jdbc.sybase;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -38,6 +38,7 @@ import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.Version;
 
 
 /**
@@ -49,6 +50,7 @@ public class TestSybaseConvertModifier {
     
     @BeforeClass
     public static void setup() throws TranslatorException {
+    	trans.setDatabaseVersion(Version.DEFAULT_VERSION);
         trans.start();
     }
     

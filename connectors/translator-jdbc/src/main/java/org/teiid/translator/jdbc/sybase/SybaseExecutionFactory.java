@@ -180,32 +180,8 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
     	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
     	convertModifier.addTypeMapping("varchar(40)", FunctionModifier.STRING); //$NON-NLS-1$
-    	if (!hasTimeType()) {
-    		convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIME, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-        	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
-    			@Override
-    			public List<?> translate(Function function) {
-    				List<Object> result = new ArrayList<Object>();
-    				result.add("cast("); //$NON-NLS-1$
-    				boolean needsEnd = false;
-    				if (!nullPlusNonNullIsNull() && !ConcatFunctionModifier.isNotNull(function.getParameters().get(0))) {
-    					result.add("CASE WHEN "); //$NON-NLS-1$
-    					result.add(function.getParameters().get(0));
-    					result.add(" IS NOT NULL THEN "); //$NON-NLS-1$
-    					needsEnd = true;
-    				} 
-    				result.add("'1970-01-01 ' + "); //$NON-NLS-1$
-    				result.addAll(convertTimeToString(function));
-    				if (needsEnd) {
-    					result.add(" END"); //$NON-NLS-1$
-    				}
-    				result.add(" AS datetime)"); //$NON-NLS-1$
-    				return result;
-    			}
-    		});
-    	} else {
-    		convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    		convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+    	if (!isSourceRequiredForCapabilities()) {
+    		handleTimeConversions();
     	}
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
 			@Override
@@ -250,6 +226,36 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 			}
 		}); 
     }
+
+	private void handleTimeConversions() {
+		if (!hasTimeType()) {
+    		convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIME, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
+    			@Override
+    			public List<?> translate(Function function) {
+    				List<Object> result = new ArrayList<Object>();
+    				result.add("cast("); //$NON-NLS-1$
+    				boolean needsEnd = false;
+    				if (!nullPlusNonNullIsNull() && !ConcatFunctionModifier.isNotNull(function.getParameters().get(0))) {
+    					result.add("CASE WHEN "); //$NON-NLS-1$
+    					result.add(function.getParameters().get(0));
+    					result.add(" IS NOT NULL THEN "); //$NON-NLS-1$
+    					needsEnd = true;
+    				} 
+    				result.add("'1970-01-01 ' + "); //$NON-NLS-1$
+    				result.addAll(convertTimeToString(function));
+    				if (needsEnd) {
+    					result.add(" END"); //$NON-NLS-1$
+    				}
+    				result.add(" AS datetime)"); //$NON-NLS-1$
+    				return result;
+    			}
+    		});
+    	} else {
+    		convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    		convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+    	}
+	}
     
 	private List<Object> convertTimeToString(Function function) {
 		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 8)"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -418,6 +424,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not automatically determine if the jtds driver is in use"); //$NON-NLS-1$
 			}
 		}
+		handleTimeConversions();
 	}
 	
 	@Override

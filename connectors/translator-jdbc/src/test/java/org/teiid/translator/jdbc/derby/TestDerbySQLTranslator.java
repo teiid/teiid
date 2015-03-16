@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 @SuppressWarnings("nls")
 public class TestDerbySQLTranslator {
@@ -36,7 +37,8 @@ public class TestDerbySQLTranslator {
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
-        TRANSLATOR = new DerbyExecutionFactory();        
+        TRANSLATOR = new DerbyExecutionFactory();
+        TRANSLATOR.setDatabaseVersion(Version.DEFAULT_VERSION);
         TRANSLATOR.start();
     }
     

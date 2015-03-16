@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 @SuppressWarnings("nls")
 public class TestPostgreSQLTranslator {
@@ -38,6 +39,7 @@ public class TestPostgreSQLTranslator {
     @BeforeClass public static void setupOnce() throws Exception {
         TRANSLATOR = new PostgreSQLExecutionFactory(); 
         TRANSLATOR.setUseBindVariables(false);
+        TRANSLATOR.setDatabaseVersion(Version.DEFAULT_VERSION);
         TRANSLATOR.start();
     }
     
@@ -584,6 +586,7 @@ public class TestPostgreSQLTranslator {
     @Test public void testGeometryFunctions() throws Exception {
     	PostgreSQLExecutionFactory pgef = new PostgreSQLExecutionFactory();
     	pgef.setPostGisVersion("1.5");
+    	pgef.setDatabaseVersion(Version.DEFAULT_VERSION);
     	pgef.start();
     	assertTrue(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_ASBINARY));
     	assertFalse(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_GEOMFROMGEOJSON));

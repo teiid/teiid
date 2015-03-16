@@ -247,7 +247,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	    		if (versionInfo.contains("PROJ=")) { //$NON-NLS-1$
 	    			projSupported = true;
 	    		}
-	    		int index = versionInfo.indexOf("POSTGIS=");
+	    		int index = versionInfo.indexOf("POSTGIS="); //$NON-NLS-1$
 	    		if (index > -1) {
 	    			String version = versionInfo.substring(index+9, versionInfo.indexOf('"', index+9));
 	    	    	this.setPostGisVersion(version);

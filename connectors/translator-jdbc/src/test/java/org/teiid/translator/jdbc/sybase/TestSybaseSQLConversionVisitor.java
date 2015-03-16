@@ -33,6 +33,7 @@ import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 /**
  */
@@ -44,6 +45,7 @@ public class TestSybaseSQLConversionVisitor {
     @BeforeClass
     public static void setup() throws TranslatorException {
     	trans.setUseBindVariables(false);
+    	trans.setDatabaseVersion(Version.DEFAULT_VERSION);
         trans.start();
     }
 

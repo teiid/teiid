@@ -119,13 +119,15 @@ public class TranslatorUtil {
 				 throw new TeiidException(RuntimePlugin.Event.TEIID40024, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40024, executionClass));
 			}
 			executionFactory = (ExecutionFactory)o;
-			injectProperties(executionFactory, data);
-			ClassLoader orginalCL = Thread.currentThread().getContextClassLoader();
-			try {
-			    Thread.currentThread().setContextClassLoader(executionFactory.getClass().getClassLoader());
-			    executionFactory.start();
-			} finally {
-			    Thread.currentThread().setContextClassLoader(orginalCL);
+			synchronized (executionFactory) {
+				injectProperties(executionFactory, data);
+				ClassLoader orginalCL = Thread.currentThread().getContextClassLoader();
+				try {
+				    Thread.currentThread().setContextClassLoader(executionFactory.getClass().getClassLoader());
+				    executionFactory.start();
+				} finally {
+				    Thread.currentThread().setContextClassLoader(orginalCL);
+				}
 			}
 			return executionFactory;
 		} catch (InvocationTargetException e) {
