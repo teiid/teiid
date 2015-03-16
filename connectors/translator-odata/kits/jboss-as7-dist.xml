@@ -23,11 +23,11 @@
   
   <dependencySets>
         <dependencySet>
-          <outputDirectory>${jbossas-module-root}/org/odata4j/core/main</outputDirectory>
+          <outputDirectory>${jbossas-module-root}/org/jboss/oreva/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
-              <include>org.core4j:core4j</include>
-              <include>org.odata4j:odata4j-core</include>
+              <include>org.jboss.oreva:common</include>
+              <include>org.jboss.oreva:odata-core</include>
           </includes>
       </dependencySet>
       
