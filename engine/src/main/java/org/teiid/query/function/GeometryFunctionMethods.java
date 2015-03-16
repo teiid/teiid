@@ -75,18 +75,18 @@ public class GeometryFunctionMethods {
                    category=FunctionCategoryConstants.GEOMETRY,
         		   pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
-    public static ClobType asGml(GeometryType geometry) 
+    public static ClobType asGml(CommandContext context, GeometryType geometry) 
             throws FunctionExecutionException {
-        return GeometryUtils.geometryToGml(geometry, true);
+        return GeometryUtils.geometryToGml(context, geometry, true);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_ASKML,
                    category=FunctionCategoryConstants.GEOMETRY,
                    pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
-    public static ClobType asKml(GeometryType geometry) 
+    public static ClobType asKml(CommandContext context, GeometryType geometry) 
             throws FunctionExecutionException {
-        return GeometryUtils.geometryToGml(geometry, false);
+        return GeometryUtils.geometryToGml(context, geometry, false);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,

@@ -39,6 +39,7 @@ import org.teiid.jdbc.TeiidSQLException;
  * function uses the command context to lookup values from the SPATIAL_REF_SYS
  * system table.
  */
+@SuppressWarnings("nls")
 public class TestGeometryTransform extends AbstractQueryTest {
 
     private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
@@ -126,5 +127,16 @@ public class TestGeometryTransform extends AbstractQueryTest {
                 "POINT(584173 2594514)", 27572, 4326,
                 "POINT (2.1145411092971056 50.345602339855326)"
         );
+    }
+    
+    @Test public void testTransformForKml() throws Exception {
+    	String wkt= "POINT(390084.12 5025551.73)";
+    	int srcSrid = 32632;
+    	String sql = String.format("select ST_AsKML(ST_GeomFromText('%s',%d))", wkt, srcSrid); //$NON-NLS-1$
+        execute(sql);
+        internalResultSet.next();
+        String result = ClobType.getString(internalResultSet.getClob(1));
+        String expectedWkt = "<Point>\n  <coordinates>\n    7.596214015140495,45.37485400208321 \n  </coordinates>\n</Point>\n";
+        Assert.assertEquals(expectedWkt, result);
     }
 }

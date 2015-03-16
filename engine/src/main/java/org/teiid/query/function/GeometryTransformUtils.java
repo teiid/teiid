@@ -22,19 +22,10 @@
 
 package org.teiid.query.function;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiLineString;
-import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import org.osgeo.proj4j.CRSFactory;
 import org.osgeo.proj4j.CoordinateReferenceSystem;
 import org.osgeo.proj4j.CoordinateTransform;
@@ -45,6 +36,8 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.GeometryType;
 import org.teiid.jdbc.TeiidConnection;
 import org.teiid.query.QueryPlugin;
+
+import com.vividsolutions.jts.geom.*;
 
 /**
  * Wrapper around proj4j library to transform geometries to different coordinate
@@ -66,14 +59,28 @@ public class GeometryTransformUtils {
                                          GeometryType geom,
                                          int srid)
             throws FunctionExecutionException {
-        String srcParam = lookupProj4Text(ctx, geom.getSrid());
-        String tgtParam = lookupProj4Text(ctx, srid);
-
         Geometry jtsGeomSrc = GeometryUtils.getGeometry(geom);
-        Geometry jtsGeomTgt = transform(jtsGeomSrc, srcParam, tgtParam);
+
+        Geometry jtsGeomTgt = transform(ctx, jtsGeomSrc, srid);
 
         return GeometryUtils.getGeometryType(jtsGeomTgt, srid);
     }
+
+    /**
+     * Convert the raw geometry to the target srid coordinate system.
+     * @param ctx Command context used to lookup proj4 parameters from table.
+     * @param jtsGeomSrc Geometry to transform.
+     * @param srid Target SRID; must exist in SPATIAL_REF_SYS table.
+     * @return
+     * @throws FunctionExecutionException
+     */
+	static Geometry transform(CommandContext ctx, Geometry jtsGeomSrc, int srid) throws FunctionExecutionException {
+		String srcParam = lookupProj4Text(ctx, jtsGeomSrc.getSRID());
+        String tgtParam = lookupProj4Text(ctx, srid);
+
+        Geometry jtsGeomTgt = transform(jtsGeomSrc, srcParam, tgtParam);
+		return jtsGeomTgt;
+	}
 
     /**
      * Lookup proj4 parameters in SPATIAL_REF_SYS using SRID as key.

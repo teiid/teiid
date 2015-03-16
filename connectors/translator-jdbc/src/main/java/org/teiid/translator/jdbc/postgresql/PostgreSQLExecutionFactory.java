@@ -111,6 +111,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
 	
 	private Version postGisVersion = Version.DEFAULT_VERSION;
+	private boolean projSupported = false;
     
 	public PostgreSQLExecutionFactory() {
 		setMaxDependentInPredicates(1);
@@ -239,9 +240,19 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	ResultSet rs = null;
     	try {
 	    	s = connection.createStatement();
-	    	rs = s.executeQuery("select PostGIS_Lib_Version()"); //$NON-NLS-1$
+	    	rs = s.executeQuery("SELECT PostGIS_Full_Version()"); //$NON-NLS-1$
 	    	rs.next();
-	    	this.setPostGisVersion(rs.getString(1));
+	    	String versionInfo = rs.getString(1);
+	    	if (versionInfo != null) {
+	    		if (versionInfo.contains("PROJ=")) { //$NON-NLS-1$
+	    			projSupported = true;
+	    		}
+	    		int index = versionInfo.indexOf("POSTGIS=");
+	    		if (index > -1) {
+	    			String version = versionInfo.substring(index+9, versionInfo.indexOf('"', index+9));
+	    	    	this.setPostGisVersion(version);
+	    		}
+	    	}
     	} catch (SQLException e) {
     		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not determine PostGIS version"); //$NON-NLS-1$
     	} finally {
@@ -583,6 +594,10 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         if (this.postGisVersion.compareTo(TWO_0) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGEOJSON);
         }
+        if (this.projSupported) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_TRANSFORM);
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASKML);
+        }
         return supportedFunctions;
     }
     
@@ -754,6 +769,15 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
     public String getPostGisVersion() {
 		return postGisVersion.toString();
+	}
+    
+    public boolean isProjSupported() {
+		return projSupported;
+	}
+    
+    @TranslatorProperty(display="Proj support enabled", description="If PostGIS Proj support is enabled for ST_TRANSFORM",advanced=true)
+    public void setProjSupported(boolean projSupported) {
+		this.projSupported = projSupported;
 	}
     
     @Override

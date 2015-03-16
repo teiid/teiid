@@ -31,6 +31,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.teiid.CommandContext;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -137,7 +138,7 @@ public class GeometryUtils {
         }
     }    
     
-    public static ClobType geometryToGml(GeometryType geometry, 
+    public static ClobType geometryToGml(CommandContext ctx, GeometryType geometry, 
                                          boolean withGmlPrefix) 
             throws FunctionExecutionException {        
         Geometry jtsGeometry = getGeometry(geometry);
@@ -145,7 +146,10 @@ public class GeometryUtils {
         
         if (!withGmlPrefix) {
         	if (geometry.getSrid() != SRID_4326) {
-        		throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31161));
+        		if (geometry.getSrid() == GeometryType.UNKNOWN_SRID) {
+        			throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31161));
+        		}
+        		jtsGeometry = GeometryTransformUtils.transform(ctx, jtsGeometry, SRID_4326);
         	}
             writer.setPrefix(null);
         } else if (geometry.getSrid() != GeometryType.UNKNOWN_SRID) {

@@ -36,6 +36,7 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.function.GeometryTransformUtils;
 import org.teiid.query.function.GeometryUtils;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
@@ -47,7 +48,6 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.OutputStreamOutStream;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
-import org.teiid.query.function.GeometryTransformUtils;
 
 @SuppressWarnings("nls")
 public class TestGeometry {
@@ -185,6 +185,11 @@ public class TestGeometry {
                    "    </LinearRing>\n"+
                    "  </outerBoundaryIs>\n"+
                    "</Polygon>\n");
+    }
+    
+    @Test(expected=ExpressionEvaluationException.class)
+    public void testAsKmlException() throws Exception {
+        assertEval("ST_AsKML(ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))'))", null);
     }
     
     private void assertEval(String expr, String result) 
