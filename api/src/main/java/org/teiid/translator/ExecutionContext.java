@@ -125,13 +125,13 @@ public interface ExecutionContext {
     Serializable getExecutionPayload();
     
     /**
-     * Get the collection of general hints as a space concatinated string.
+     * Get the collection of general hints as a space concatenated string.
      * @return the general hint or null if none was specified
      */
     String getGeneralHint();
    
     /**
-     * Get the collection of hints designated for this source as a space concatinated string.
+     * Get the collection of hints designated for this source as a space concatenated string.
      * @return the source hint or null if none was specified
      */
     String getSourceHint();

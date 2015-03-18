@@ -160,7 +160,7 @@ public class Insert extends ProcedureContainer {
     public void setQueryExpression( QueryCommand query ) {
     	if (query instanceof Query) {
     		Query expr = (Query)query;
-    		//a singl row constructor query is the same as values 
+    		//a single row constructor query is the same as values 
     		if (expr.isRowConstructor()) {
     			this.values.clear();
     			this.queryExpression = null;

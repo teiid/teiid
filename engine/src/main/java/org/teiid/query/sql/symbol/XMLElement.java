@@ -33,7 +33,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
- * Represents XMLATTRIBUTES/XMLFOREST name value pairs
+ * Represents XMLElement
  */
 public class XMLElement implements Expression {
 
