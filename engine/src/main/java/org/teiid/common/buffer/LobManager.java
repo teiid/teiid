@@ -60,7 +60,7 @@ public class LobManager {
 	}
 	
 	private static class LobHolder {
-		Streamable<?> lob;
+		volatile Streamable<?> lob;
 		int referenceCount = 1;
 
 		public LobHolder(Streamable<?> lob) {

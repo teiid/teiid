@@ -506,12 +506,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					rowcount = resultsBuffer.getRowCount();
 					if (this.cid == null || !this.doneProducingBatches) {
 						resultsBuffer.remove();
-					} else {
-						try {
-							this.resultsBuffer.persistLobs();
-						} catch (TeiidComponentException e) {
-							LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
-						}
 					}
 					
 					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
@@ -655,7 +649,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					super.flushBatchDirect(batch, add);
 				}
 				synchronized (lobStreams) {
-					if (resultsBuffer.isLobs()) {
+					if (cid == null && resultsBuffer.isLobs()) {
 						super.flushBatchDirect(batch, false);
 					}
 					if (batch.getTerminationFlag()) {
@@ -801,6 +795,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         
         if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
 			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30008, originalCommand));
+		}
+		try {
+			this.resultsBuffer.persistLobs();
+		} catch (TeiidComponentException e) {
+			LogManager.logDetail(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
 		}
         dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
 	}

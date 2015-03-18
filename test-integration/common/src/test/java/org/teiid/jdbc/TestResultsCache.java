@@ -109,4 +109,17 @@ public class TestResultsCache {
 		assertFalse(rs.next());
 	}
 	
+	@Test public void testCacheHintWithLargeSQLXML() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
+		assertTrue(rs.next());
+		rs.getString(1);
+		assertFalse(rs.next());
+		rs.close();
+		rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
+		assertTrue(rs.next());
+		//rs.getString(1);
+		assertFalse(rs.next());
+	}
+	
 }
