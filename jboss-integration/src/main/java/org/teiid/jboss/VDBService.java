@@ -29,17 +29,13 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.controller.ModelController;
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
-import org.jboss.modules.ModuleLoader;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceContainer;
@@ -527,26 +523,12 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		if (repo != null) {
 			return repo;
 		}
-		final Module module;
-        ClassLoader moduleLoader = this.getClass().getClassLoader();
-        ModuleLoader ml = Module.getCallerModuleLoader();
-        if (repoType != null && ml != null) {
-	        try {
-            	module = ml.loadModule(ModuleIdentifier.create(repoType));
-            	moduleLoader = module.getClassLoader();
-	        } catch (ModuleLoadException e) {
-	            throw new VirtualDatabaseException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, repoType));
-	        }
-        }
-        
-        final ServiceLoader<MetadataRepository> serviceLoader =  ServiceLoader.load(MetadataRepository.class, moduleLoader);
-        if (serviceLoader != null) {
-        	for (MetadataRepository loader:serviceLoader) {
-        		loader = TeiidAdd.createTCCLProxy(MetadataRepository.class, loader); 
-        		MetadataRepository old = this.repositories.putIfAbsent(repoType, loader);
-        		return old!=null?old:loader;
-        	}
-        }
-		return null;
+		try {
+			repo = TeiidAdd.buildService(MetadataRepository.class, repoType);
+		} catch (OperationFailedException e) {
+			throw new VirtualDatabaseException(IntegrationPlugin.Event.TEIID50057, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, repoType));
+		}
+		MetadataRepository old = this.repositories.putIfAbsent(repoType, repo);
+		return old!=null?old:repo;	
 	}	
 }
