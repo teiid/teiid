@@ -148,7 +148,9 @@ public abstract class AbstractVDBDeployer {
 				if (current == null) {
 					throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), repoType));
 				}
-				current = new MetadataRepositoryWrapper(current, model.getSourceMetadataText().get(i));
+				if (model.getSourceMetadataText().size() > i) {
+					current = new MetadataRepositoryWrapper(current, model.getSourceMetadataText().get(i));
+				}
 				repos.add(current);
 			}
 		}
