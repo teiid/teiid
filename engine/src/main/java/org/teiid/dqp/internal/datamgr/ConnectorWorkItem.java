@@ -77,6 +77,7 @@ import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.util.CommandContext;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.*;
 import org.teiid.util.XMLInputStream;
@@ -521,7 +522,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 				continue;
 			}
 			if (convertToRuntimeType[i]) {
-				Object result = convertToRuntimeType(requestMsg.getBufferManager(), value, this.schema[i]);
+				Object result = convertToRuntimeType(requestMsg.getBufferManager(), value, this.schema[i], this.requestMsg.getCommandContext());
 				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
 					convertToRuntimeType[i] = false;
 				} else {
@@ -555,7 +556,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return row;
 	}
 	
-	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType) throws TransformationException {
+	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType, CommandContext context) throws TransformationException {
 		if (desiredType != DataTypeManager.DefaultDataClasses.XML || !(value instanceof Source)) {
 			if (value instanceof InputStreamFactory) {
 				return new BlobType(new BlobImpl((InputStreamFactory)value));
@@ -621,7 +622,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 					StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
 					SQLXMLImpl sqlxml;
 					try {
-						sqlxml = XMLSystemFunctions.saveToBufferManager(bm, sxt);
+						sqlxml = XMLSystemFunctions.saveToBufferManager(bm, sxt, context);
 					} catch (TeiidComponentException e) {
 						 throw new TransformationException(e);
 					} catch (TeiidProcessingException e) {

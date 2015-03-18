@@ -194,7 +194,7 @@ public class LobManager {
     
 	public Streamable<?> detachLob(final Streamable<?> lob, final FileStore store, byte[] bytes) throws TeiidComponentException {
 		// if this is not attached, just return
-		if (InputStreamFactory.getStorageMode(lob) != StorageMode.OTHER) {
+		if (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY) {
 			return lob;
 		}
 		
