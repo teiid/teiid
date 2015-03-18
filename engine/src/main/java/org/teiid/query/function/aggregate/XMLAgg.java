@@ -68,7 +68,7 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
     		if (concat == null) {
         		return null;
     		}
-    		result = concat.close();
+    		result = concat.close(commandContext);
     		concat = null;
     	}
         return result;

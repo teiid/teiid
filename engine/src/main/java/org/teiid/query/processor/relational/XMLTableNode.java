@@ -319,7 +319,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						continue;
 					}
 					if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), this.getBufferManager(), false);
+						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), this.getBufferManager(), false, getContext());
 						tuple.add(value);
 						continue;
 					}

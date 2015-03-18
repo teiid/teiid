@@ -25,6 +25,8 @@ package org.teiid.query.eval;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import org.junit.After;
 import org.junit.Before;
@@ -92,6 +94,20 @@ public class TestSystemPerformance extends AbstractQueryTest {
 			assertRowCount(COLS);
 			internalResultSet.close();
 		}
+	}
+	
+	@Test public void testSQLXML() throws Exception {
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		String sql = "select xmlelement(root, xmlelement(root1, xmlagg(x))) from (select xmlelement(x, tablename, xmlagg(xmlforest(name)), '\n') as x from sys.columns group by tablename) as y"; //$NON-NLS-1$
+		PreparedStatement s = c.prepareStatement(sql);
+		for (int i = 0; i < 100; i++) {
+			s.execute();
+			ResultSet rs = s.getResultSet();
+			rs.next();
+			rs.getString(1);
+			rs.close();
+		}
+		c.close();
 	}
 	
 }

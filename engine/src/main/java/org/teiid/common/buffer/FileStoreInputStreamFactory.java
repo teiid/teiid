@@ -51,18 +51,29 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 
 	@Override
 	public InputStream getInputStream() {
-		return getInputStream(0);
+		return getInputStream(0, -1);
 	}
 	
-	public InputStream getInputStream(long start) {
+	public InputStream getInputStream(long start, long len) {
 		if (fsos != null && !fsos.bytesWritten()) {
 			if (start > Integer.MAX_VALUE) {
 				throw new AssertionError("Invalid start " + start); //$NON-NLS-1$
 			}
 			int s = (int)start;
-			return new ByteArrayInputStream(fsos.getBuffer(), s, fsos.getCount() - s);
+			int intLen = fsos.getCount() - s;
+			if (len >= 0) {
+				intLen = (int)Math.min(len, len);
+			}
+			return new ByteArrayInputStream(fsos.getBuffer(), s, intLen);
 		}
-		return lobBuffer.createInputStream(start);
+		return lobBuffer.createInputStream(start, length);
+	}
+	
+	public byte[] getMemoryBytes() {
+		if (fsos != null && !fsos.bytesWritten() && fsos.getBuffer().length == fsos.getCount()) {
+			return fsos.getBuffer();
+		}
+		throw new IllegalStateException("In persistent mode or not closed for writing"); //$NON-NLS-1$
 	}
 	
 	@Override

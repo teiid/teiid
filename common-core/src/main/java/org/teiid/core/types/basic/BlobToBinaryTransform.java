@@ -48,7 +48,7 @@ public class BlobToBinaryTransform extends Transform {
         BlobType source = (BlobType)value;
         
         try {
-        	byte[] bytes = ObjectConverterUtil.convertToByteArray(source.getBinaryStream(), DataTypeManager.MAX_LOB_MEMORY_BYTES, true);
+        	byte[] bytes = ObjectConverterUtil.convertToByteArray(source.getBinaryStream(), DataTypeManager.MAX_VARBINARY_BYTES, true);
             return new BinaryType(bytes);         
         } catch (SQLException e) {
               throw new TransformationException(CorePlugin.Event.TEIID10080, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10080, new Object[] {getSourceType().getName(), getTargetType().getName()}));

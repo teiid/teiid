@@ -143,7 +143,14 @@ public abstract class Streamable<T> implements Externalizable {
     	MultiArrayOutputStream baos = null;
     	if (referenceStreamId == null) {
     		//TODO: detect when this buffering is not necessary
-    		baos = new MultiArrayOutputStream(DataTypeManager.MAX_LOB_MEMORY_BYTES);
+    		if (length > Integer.MAX_VALUE) {
+    			throw new AssertionError("Should not inline a lob of length " + length); //$NON-NLS-1$
+    		}
+    		if (length > 0) {
+    			baos = new MultiArrayOutputStream((int)length);
+    		} else {
+    			baos = new MultiArrayOutputStream(256);
+    		}
     		DataOutputStream dataOutput = new DataOutputStream(baos);
     		try {
     			writeReference(dataOutput);
@@ -158,6 +165,10 @@ public abstract class Streamable<T> implements Externalizable {
 		if (writeBuffer) {
 			baos.writeTo(out);
 		}
+    }
+    
+    protected boolean isBinary() {
+    	return true;
     }
     
     protected abstract void writeReference(DataOutput out) throws IOException;

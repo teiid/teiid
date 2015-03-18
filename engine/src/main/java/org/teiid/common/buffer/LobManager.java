@@ -305,6 +305,6 @@ public class LobManager {
 
 	public void remove() {
 		this.lobReferences.clear();
-		//we don't remove the filestore as there could be local connection references to the lob objects
+		this.lobStore.remove();
 	}
 }

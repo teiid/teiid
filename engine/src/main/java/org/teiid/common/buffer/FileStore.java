@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.teiid.common.buffer.AutoCleanupUtil.Removable;
+import org.teiid.core.types.DataTypeManager;
 
 public abstract class FileStore implements Removable {
 		
@@ -43,9 +44,11 @@ public abstract class FileStore implements Removable {
 		private boolean bytesWritten;
 		private boolean closed;
 		private byte[] singleByte = new byte[1];
+		private int maxSize;
 		
 		public FileStoreOutputStream(int size) {
-			this.buffer = new byte[size];
+			this.maxSize = size;
+			this.buffer = new byte[Math.min(size, 1<<8)];
 		}
 		
 		@Override
@@ -57,10 +60,15 @@ public abstract class FileStore implements Removable {
 		@Override
 		public void write(byte[] b, int off, int len) throws IOException {
 			checkOpen();
-			if (len > buffer.length) {
+			if (len > maxSize) {
 				flushBuffer();
 				writeDirect(b, off, len);
 				return;
+			}
+			if (!bytesWritten && buffer.length < maxSize && count + len > buffer.length) {
+				byte[] nextBuffer = new byte[Math.min(maxSize, DataTypeManager.nextPowOf2(count + len))];
+				System.arraycopy(buffer, 0, nextBuffer, 0, count);
+				buffer = nextBuffer;
 			}
 			int bufferedLength = Math.min(len, buffer.length - count);
 			if (count < buffer.length) {
@@ -90,7 +98,7 @@ public abstract class FileStore implements Removable {
 		
 		/**
 		 * Return the buffer.  Can be null if closed and the underlying filestore
-		 * has been writen to.
+		 * has been written to.
 		 * @return
 		 */
 		public byte[] getBuffer() {

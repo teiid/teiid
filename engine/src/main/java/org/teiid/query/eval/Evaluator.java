@@ -940,11 +940,11 @@ public class Evaluator {
 					}
 					type = Type.CONTENT;
 				}
-				XMLType val = rp.concat.close();
+				XMLType val = rp.concat.close(context);
 				val.setType(rp.type);
 				return val;
 			}
-			return xmlQuery.getXQueryExpression().createXMLType(result.iter, this.context.getBufferManager(), emptyOnEmpty);
+			return xmlQuery.getXQueryExpression().createXMLType(result.iter, this.context.getBufferManager(), emptyOnEmpty, context);
 		} catch (TeiidProcessingException e) {
 			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30333, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30333, e.getMessage()));
 		} catch (XPathException e) {

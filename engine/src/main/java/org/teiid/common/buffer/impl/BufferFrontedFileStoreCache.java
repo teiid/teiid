@@ -1080,7 +1080,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		try {
 			for (int i = 0; i < EVICTION_SCANS && next == EMPTY_ADDRESS; i++) {
 				//doing a cleanup may trigger the purging of resources
-				AutoCleanupUtil.doCleanup();
+				AutoCleanupUtil.doCleanup(true);
 				//scan the eviction queue looking for a victim
 				Iterator<PhysicalInfo> iter = memoryBufferEntries.getEvictionQueue().iterator();
 				while (((!acquire && lowBlocks(false)) || (acquire && (next = blocksInuse.getAndSetNextClearBit()) == EMPTY_ADDRESS)) && iter.hasNext()) {

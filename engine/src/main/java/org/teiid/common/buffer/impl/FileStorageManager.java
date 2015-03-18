@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.teiid.common.buffer.AutoCleanupUtil;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.TeiidComponentException;
@@ -159,7 +160,12 @@ public class FileStorageManager implements StorageManager {
 				//this is a weak check, concurrent access may push us over the max.  we are just trying to prevent large overage allocations
 				long used = usedBufferSpace.get() + bytesUsed;
 				if (used > maxBufferSpace) {
-					throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
+					System.gc(); //attempt a last ditch effort to cleanup
+					AutoCleanupUtil.doCleanup(false);
+					used = usedBufferSpace.get() + bytesUsed;
+					if (used > maxBufferSpace) {
+						throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
+					}
 				}
 			}
 			fileAccess.setLength(newLength);
@@ -168,9 +174,14 @@ public class FileStorageManager implements StorageManager {
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "sampling bytes used:", used); //$NON-NLS-1$
 			}
 			if (bytesUsed > 0 && used > maxBufferSpace) {
-				fileAccess.setLength(currentLength);
-				usedBufferSpace.addAndGet(-bytesUsed);
-				throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
+				System.gc(); //attempt a last ditch effort to cleanup
+				AutoCleanupUtil.doCleanup(false);
+				used = usedBufferSpace.get();
+				if (used > maxBufferSpace) {
+					fileAccess.setLength(currentLength);
+					usedBufferSpace.addAndGet(-bytesUsed);
+					throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
+				}
 			}
 		}
 	    

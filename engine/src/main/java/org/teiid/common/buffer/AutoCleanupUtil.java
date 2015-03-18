@@ -61,7 +61,7 @@ public class AutoCleanupUtil {
 	public static PhantomReference<Object> setCleanupReference(Object o, Removable r) {
 		PhantomCleanupReference ref = new PhantomCleanupReference(o, r);
 		REFERENCES.add(ref);
-		doCleanup();
+		doCleanup(true);
 		return ref;
 	}
 	
@@ -73,8 +73,9 @@ public class AutoCleanupUtil {
 		ref.clear();
 	}
 
-	public static void doCleanup() {
-		for (int i = 0; i < 10; i++) {
+	public static void doCleanup(boolean quick) {
+		int max = quick?10:Integer.MAX_VALUE;
+		for (int i = 0; i < max; i++) {
 			PhantomCleanupReference ref = (PhantomCleanupReference)QUEUE.poll();
 			if (ref == null) {
 				break;

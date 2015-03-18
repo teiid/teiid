@@ -67,7 +67,7 @@ public final class SaveOnReadInputStream extends FilterInputStream {
 				SaveOnReadInputStream.this.fsos.flush();
 				long start = SaveOnReadInputStream.this.fsisf.getLength();
 				SaveOnReadInputStream.this.close(); //force the pending read
-				InputStream is = SaveOnReadInputStream.this.fsisf.getInputStream(start);
+				InputStream is = SaveOnReadInputStream.this.fsisf.getInputStream(start, -1);
 				sis.setIn(is);
 			}
 			return fsisf.getInputStream();

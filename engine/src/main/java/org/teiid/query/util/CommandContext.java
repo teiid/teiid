@@ -188,6 +188,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		
 		private Map<LookupKey, TupleSource> lookups;
 		private TempTableStore sessionTempTableStore;
+		
+		private Set<InputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<InputStreamFactory, Boolean>());
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -777,6 +779,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 				}
 				this.globalState.lookups = null;
 			}
+			for (InputStreamFactory isf : this.globalState.created) {
+				try {
+					isf.free();
+				} catch (IOException e) {
+				}
+			}
+			this.globalState.created.clear();
 		}
 	}
 
@@ -1063,6 +1072,10 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 				return getClass().getClassLoader().getResourceAsStream("org/teiid/metadata/spatial_ref_sys.csv"); //$NON-NLS-1$
 			}
 		}, -1);
+	}
+
+	public void addCreatedLob(InputStreamFactory isf) {
+		this.globalState.created.add(isf);
 	}
 	
 }

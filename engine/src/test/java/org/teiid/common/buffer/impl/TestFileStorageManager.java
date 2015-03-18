@@ -134,6 +134,18 @@ public class TestFileStorageManager {
     	assertEquals(0, fsos.getCount());
     }
     
+    @Test public void testGrowth() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null);
+    	FileStore store = sm.createFileStore("0");
+    	FileStoreOutputStream fsos = store.createOutputStream(1<<15);
+    	assertTrue(fsos.getBuffer().length < 1<<15);
+    	fsos.write(1);
+    	fsos.write(new byte[1<<14]);
+    	fsos.flush();
+    	assertEquals(1 + (1<<14), fsos.getCount());
+    	assertEquals(1<<15, fsos.getBuffer().length);
+    }
+    
     @Test public void testClose() throws Exception {
     	FileStorageManager sm = getStorageManager(null, null);
     	FileStore store = sm.createFileStore("0");

@@ -80,7 +80,7 @@ public final class SizeUtility {
 	private static Set<Class<?>> VARIABLE_SIZE_TYPES = new HashSet<Class<?>>();
 	static {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, Math.max(100, DataTypeManager.nextPowOf2(DataTypeManager.MAX_STRING_LENGTH/16))});
-		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.VARBINARY, new int[] {100, Math.max(100, DataTypeManager.MAX_LOB_MEMORY_BYTES/32)});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.VARBINARY, new int[] {100, Math.max(100, DataTypeManager.MAX_VARBINARY_BYTES/32)});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DATE, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIME, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, new int[] {20, 28});

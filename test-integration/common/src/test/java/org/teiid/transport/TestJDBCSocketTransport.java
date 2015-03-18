@@ -49,12 +49,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -131,10 +131,15 @@ public class TestJDBCSocketTransport {
 	Connection conn;
 	
 	@Before public void setUp() throws Exception {
+		toggleInline(true);
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
 		conn = TeiidDriver.getInstance().connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
+	}
+
+	private void toggleInline(boolean inline) {
+		((BufferManagerImpl)server.getDqp().getBufferManager()).setInlineLobs(inline);
 	}
 	
 	@After public void tearDown() throws Exception {
@@ -154,10 +159,18 @@ public class TestJDBCSocketTransport {
 		assertTrue(s.execute("select xmlelement(name \"root\") from tables"));
 		s.getResultSet().next();
 		assertEquals("<root></root>", s.getResultSet().getString(1));
+		toggleInline(false);
+		assertTrue(s.execute("select xmlelement(name \"root\") from tables"));
+		s.getResultSet().next();
+		assertEquals("<root></root>", s.getResultSet().getString(1));
 	}
 	
 	@Test public void testLobStreaming1() throws Exception {
 		Statement s = conn.createStatement();
+		assertTrue(s.execute("select cast('' as clob) from tables"));
+		s.getResultSet().next();
+		assertEquals("", s.getResultSet().getString(1));
+		toggleInline(false);
 		assertTrue(s.execute("select cast('' as clob) from tables"));
 		s.getResultSet().next();
 		assertEquals("", s.getResultSet().getString(1));
@@ -359,7 +372,6 @@ public class TestJDBCSocketTransport {
 		geomString.append("100 100");
 		final GeometryType geo = GeometryUtils.geometryFromClob(new ClobType(new ClobImpl("POLYGON ((" + geomString + "))")));
 		long length = geo.length();
-		assertTrue(length > DataTypeManager.MAX_LOB_MEMORY_BYTES);
 		PreparedStatement s = conn.prepareStatement("select st_geomfrombinary(?)");
 		s.setBlob(1, new BlobImpl(new InputStreamFactory() {
 			
@@ -375,6 +387,13 @@ public class TestJDBCSocketTransport {
 		ResultSet rs = s.executeQuery();
 		rs.next();
 		Blob b = rs.getBlob(1);
+		assertEquals(length, b.length());
+		b.getBytes(1, (int) b.length());
+		
+		toggleInline(false);
+		rs = s.executeQuery();
+		rs.next();
+		b = rs.getBlob(1);
 		assertEquals(length, b.length());
 		b.getBytes(1, (int) b.length());
 	}

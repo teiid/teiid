@@ -227,11 +227,11 @@ public class TestConnectorWorkItem {
     	String str = "hello world";
     	
     	Object source = new StreamSource(new StringReader(str));
-    	XMLType xml = (XMLType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
+    	XMLType xml = (XMLType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML, null);
     	assertEquals(str, xml.getString());
     	
     	source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a/>")));
-    	xml = (XMLType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
+    	xml = (XMLType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML, null);
     	XMLInputFactory in = XMLType.getXmlInputFactory();
     	XMLStreamReader reader = in.createXMLStreamReader(new StringReader(xml.getString()));
     	assertEquals(XMLEvent.START_DOCUMENT, reader.getEventType());
@@ -241,7 +241,7 @@ public class TestConnectorWorkItem {
     	
     	byte[] bytes = str.getBytes(Streamable.ENCODING);
 		source = new InputStreamFactory.BlobInputStreamFactory(BlobType.createBlob(bytes));
-    	BlobType blob = (BlobType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.BLOB);
+    	BlobType blob = (BlobType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.BLOB, null);
     	
     	assertArrayEquals(bytes, ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()));
     }

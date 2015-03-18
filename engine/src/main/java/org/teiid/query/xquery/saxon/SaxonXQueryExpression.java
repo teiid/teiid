@@ -88,6 +88,7 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
 
 @SuppressWarnings("serial")
@@ -495,7 +496,7 @@ public class SaxonXQueryExpression {
 		}
 	}
 	
-    public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
+    public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty, CommandContext context) throws XPathException, TeiidComponentException, TeiidProcessingException {
 		Item item = iter.next();
 		if (item == null && !emptyOnEmpty) {
 			return null;
@@ -516,7 +517,7 @@ public class SaxonXQueryExpression {
 					IOException {
 			    QueryResult.serializeSequence(iter.getAnother(), config, writer, DEFAULT_OUTPUT_PROPERTIES);
 			}
-		});
+		}, context);
 		XMLType value = new XMLType(xml);
 		value.setType(type);
 		return value;

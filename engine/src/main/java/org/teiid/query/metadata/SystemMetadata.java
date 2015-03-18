@@ -79,7 +79,7 @@ public class SystemMetadata {
 				if ("string".equals(dt.getName())) { //$NON-NLS-1$
 					dt.setLength(DataTypeManager.MAX_STRING_LENGTH);
 				} else if ("varbinary".equals(dt.getName())) { //$NON-NLS-1$
-					dt.setLength(DataTypeManager.MAX_LOB_MEMORY_BYTES);
+					dt.setLength(DataTypeManager.MAX_VARBINARY_BYTES);
 				}
 				dataTypes.add(dt);
 				if (dt.isBuiltin()) {

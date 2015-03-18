@@ -104,6 +104,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					this.cancel();
 					return;
 				}
+				AutoCleanupUtil.doCleanup(false);
 				impl.cleaning.set(true);
 				try {
 					long evicted = impl.doEvictions(impl.maxProcessingBytes, true, impl.initialEvictionQueue);
