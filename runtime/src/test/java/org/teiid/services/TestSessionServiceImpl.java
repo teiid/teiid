@@ -1,6 +1,7 @@
 package org.teiid.services;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Properties;
 
@@ -16,23 +17,28 @@ import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
+import org.teiid.runtime.AuthenticationHandler;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
+
 
 @SuppressWarnings("nls")
 public class TestSessionServiceImpl {
 	SessionServiceImpl ssi;
 	@Before
 	public void setup() {
-		ssi = new SessionServiceImpl() {
-
-			@Override
-			protected TeiidLoginContext authenticate(String userName,
-					Credentials credentials, String applicationName,
-					String securityDomain)
-					throws LoginException {
-				return new TeiidLoginContext(userName, null, securityDomain, null);
-			}
-		};
+		ssi = new SessionServiceImpl();
+        ssi.setAuthenticationHandler(new AuthenticationHandler() {
+            @Override
+            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
+            @Override
+            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
+                    String applicationName) throws LoginException {
+                return new TeiidLoginContext(userName, null, securityDomain, null);
+            }
+        });
 	}
 	
 	@Test

@@ -98,7 +98,8 @@ public class TestJBossSessionServiceImpl extends TestCase {
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
         
         JBossSessionService jss = new JBossSessionService() {
-        	public SecurityDomainContext getSecurityDomain(String securityDomain) {
+        	@Override
+            public SecurityDomainContext getSecurityDomain(String securityDomain) {
         		if (securityDomain.equals("testFile")) {
         			return securityContext;
         		}
@@ -108,7 +109,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
         jss.setSecurityHelper(ms);
         jss.setSecurityDomain(domains);
         
-        TeiidLoginContext c = jss.authenticate("user1", credentials, null, domains); //$NON-NLS-1$ //$NON-NLS-2$
+        TeiidLoginContext c = jss.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$ 
         assertEquals("user1@testFile", c.getUserName()); //$NON-NLS-1$
     }
     
@@ -122,7 +123,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
         jss.setSecurityHelper(ms);
         jss.setSecurityDomain(domain);
         
-        TeiidLoginContext c = jss.passThroughLogin("user1", domain); //$NON-NLS-1$ //$NON-NLS-2$
+        TeiidLoginContext c = jss.passThroughLogin("user1", domain); //$NON-NLS-1$ 
         
         assertEquals("alreadylogged@passthrough", c.getUserName()); //$NON-NLS-1$
     }
@@ -146,13 +147,15 @@ public class TestJBossSessionServiceImpl extends TestCase {
         			throws SessionServiceException {
         		return Mockito.mock(VDBMetaData.class);
         	}
-        	public SecurityDomainContext getSecurityDomain(String securityDomain) {
+        	@Override
+            public SecurityDomainContext getSecurityDomain(String securityDomain) {
         		if (securityDomain.equals("somedomain")) {
         			return securityContext;
         		}
         		return null;
         	}        	
         };
+        jss.setAuthenticationHandler(jss);
         jss.setSecurityHelper(buildSecurityHelper());
 		jss.setSecurityDomain("somedomain");
 		
