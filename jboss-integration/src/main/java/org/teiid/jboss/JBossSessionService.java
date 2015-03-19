@@ -42,15 +42,17 @@ import org.jboss.security.negotiation.spnego.KerberosMessage;
 import org.teiid.dqp.service.GSSResult;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.runtime.AuthenticationHandler;
 import org.teiid.security.Credentials;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.services.TeiidLoginContext;
 
-public class JBossSessionService extends SessionServiceImpl {
+public class JBossSessionService extends SessionServiceImpl implements AuthenticationHandler {
+	
 	private AtomicLong count = new AtomicLong(0);
 	
 	@Override
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, String domain)
+	public TeiidLoginContext authenticate(String domain, String userName, Credentials credentials, String applicationName)
 			throws LoginException {
         final String baseUsername = getBaseUsername(userName);
 

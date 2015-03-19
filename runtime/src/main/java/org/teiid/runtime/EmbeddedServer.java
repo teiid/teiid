@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
+import java.sql.Timestamp;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -79,13 +80,7 @@ import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
-import org.teiid.jdbc.CallableStatementImpl;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
-import org.teiid.jdbc.PreparedStatementImpl;
-import org.teiid.jdbc.TeiidDriver;
-import org.teiid.jdbc.TeiidPreparedStatement;
-import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.jdbc.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -351,6 +346,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			this.sessionService.setSecurityDomain(config.getSecurityDomain());
 		} else {
 			this.sessionService.setSecurityDomain("teiid-security"); //$NON-NLS-1$
+		}
+		
+		if (config.getAuthenticationHandler() != null) {
+		    this.sessionService.setAuthenticationHandler(config.getAuthenticationHandler());
 		}
 
 		this.sessionService.setVDBRepository(repo);

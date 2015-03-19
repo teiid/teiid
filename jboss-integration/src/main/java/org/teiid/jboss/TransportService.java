@@ -60,14 +60,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LocalServerConnection;
-import org.teiid.transport.LogonImpl;
-import org.teiid.transport.ODBCSocketListener;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketListener;
-import org.teiid.transport.WireProtocol;
+import org.teiid.transport.*;
 
 public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
 	private transient LogonImpl logon;
@@ -115,7 +108,8 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.setVDBRepository(this.getVdbRepository());
 		this.sessionService = new JBossSessionService();
 		if (this.authenticationDomain != null) {
-			this.sessionService.setSecurityDomain(this.authenticationDomain);			
+			this.sessionService.setSecurityDomain(this.authenticationDomain);	
+			this.sessionService.setAuthenticationHandler((JBossSessionService)this.sessionService);
 		}
 		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
