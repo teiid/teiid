@@ -118,7 +118,7 @@ public class TestResultsCache {
 		rs.close();
 		rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
 		assertTrue(rs.next());
-		//rs.getString(1);
+		rs.getString(1);
 		assertFalse(rs.next());
 	}
 	

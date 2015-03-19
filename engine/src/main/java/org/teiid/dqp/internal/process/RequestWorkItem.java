@@ -798,7 +798,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		}
 		try {
 			this.resultsBuffer.persistLobs();
-		} catch (TeiidComponentException e) {
+		} catch (TeiidException e) {
 			LogManager.logDetail(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
 		}
         dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);

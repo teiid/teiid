@@ -21,9 +21,7 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +42,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings({"nls", "unchecked"})
+@SuppressWarnings({"nls"})
 public class TestCachedResults {
 	
 	@Test

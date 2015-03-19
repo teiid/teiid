@@ -542,7 +542,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 							lobStore = requestMsg.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
 							lobBuffer = new byte[1 << 14];
 						}
-						result = requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+						requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
 					} else if (value == result) {
 						convertToDesiredRuntimeType[i] = false;
 						continue;

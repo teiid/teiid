@@ -1286,9 +1286,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 	
 	@Override
-	public Streamable<?> persistLob(Streamable<?> lob, FileStore store,
+	public void persistLob(Streamable<?> lob, FileStore store,
 			byte[] bytes) throws TeiidComponentException {
-		return LobManager.persistLob(lob, store, bytes, inlineLobs, DataTypeManager.MAX_LOB_MEMORY_BYTES);
+		LobManager.persistLob(lob, store, bytes, inlineLobs, DataTypeManager.MAX_LOB_MEMORY_BYTES);
 	}
 
 	public void invalidCacheGroup(Long gid) {
