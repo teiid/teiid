@@ -541,6 +541,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			    		}
 			    		if (o != null) {
 			    			writer.append(o.toString());
+			    		} else {
+			    			writer.append('0');
 			    		}
 			    	}
 		    	}	
