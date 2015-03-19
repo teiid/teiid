@@ -28,6 +28,8 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -36,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import javax.ws.rs.core.MediaType;
 
@@ -170,7 +173,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getRegistry().addPerRequestResource(EntityRequestResource.class);
 		deployment.getRegistry().addPerRequestResource(MetadataResource.class);
 		deployment.getRegistry().addPerRequestResource(ServiceDocumentResource.class);
-		deployment.getProviderFactory().registerProviderInstance(ODataBatchProvider.class);
+		deployment.getProviderFactory().registerProvider(ODataBatchProvider.class);
 		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
 		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
 		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");		
@@ -485,6 +488,10 @@ public class TestODataIntegration extends BaseResourceTest {
 	        assertTrue(!response.getEntity().contains("xyz"));
 	        
 	        //follow the skip
+	        URL url = new URL((String) contentHandler.value);
+	        String skip = getQueryParameter(URLDecoder.decode(url.getQuery(), "UTF-8"), "$skiptoken");
+	        assertTrue(skip.indexOf(LocalClient.DELIMITER) != -1);
+	        
 	        request = new ClientRequest((String) contentHandler.value);
 	        response = request.get(String.class);
 	        assertEquals(200, response.getStatus());
@@ -499,6 +506,58 @@ public class TestODataIntegration extends BaseResourceTest {
 			es.stop();
 		}
 	}
+	
+    public String getQueryParameter(String queryPath, String param) {
+        if (queryPath != null) {
+            StringTokenizer st = new StringTokenizer(queryPath, "&");
+            while (st.hasMoreTokens()) {
+                String token = st.nextToken();
+                int index = token.indexOf('=');
+                if (index != -1) {
+                    String key = token.substring(0, index);
+                    String value = token.substring(index + 1);
+                    if (key.equals(param)) {
+                        return value;
+                    }
+                }
+            }
+        }
+        return null;
+    }	
+	
+    @Test public void testNoSkipToken() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.setSchemaSourceType("ddl");
+            mmd.setModelType(Type.VIRTUAL);
+            mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            props.setProperty("batch-size", "0");
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+            
+            ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
+            ClientResponse<String> response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            JSONParser parser = new JSONParser();
+            JSONValueExtractor contentHandler = new JSONValueExtractor("__next");
+            parser.parse(response.getEntity(), contentHandler);
+            assertNotNull(contentHandler.next);
+            assertTrue(response.getEntity().contains("abc"));
+            assertTrue(response.getEntity().contains("xyz"));
+            
+            assertNull(contentHandler.value);
+        } finally {
+            es.stop();
+        }
+    }	
 	
 	@Test public void testCount() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
@@ -606,6 +665,47 @@ public class TestODataIntegration extends BaseResourceTest {
 	        request.body("application/json", "{\"c\":5}");
 	        response = request.put(String.class);
 	        assertEquals(200, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+		
+	@Test public void testBatch() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+			@Override
+			public boolean supportsCompareCriteriaEquals() {
+				return true;
+			}
+		};
+		hc.addUpdate("DELETE FROM x WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
+		es.addTranslator("x", hc);
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("m");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+			mmd.addSourceMapping("x", "x", null);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+			String post = "Content-Type: application/http\n"
+					+ "Content-Transfer-Encoding:binary\n"
+					+ "\nDELETE /odata/northwind/x(a='a',b='b') HTTP/1.1\n"
+					//+ "Host: host\n"
+					+ "--batch_36522ad7-fc75-4b56-8c71-56071383e77b\n";
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers/$batch"));
+	        request.body(ODataBatchProvider.MULTIPART_MIXED, post); 
+			
+	        ClientResponse<String> response = request.post(String.class);
+	        assertEquals(202, response.getStatus());
 		} finally {
 			es.stop();
 		}
