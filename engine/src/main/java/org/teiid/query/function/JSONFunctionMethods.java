@@ -112,7 +112,7 @@ public class JSONFunctionMethods {
 		private Stack<Integer> position = new Stack<Integer>();
 		
 		public JSONBuilder(BufferManager bm) {
-			fs = bm.createFileStore("xml"); //$NON-NLS-1$
+			fs = bm.createFileStore("json"); //$NON-NLS-1$
 			fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 		    writer = fsisf.getWriter();
 		}
