@@ -37,15 +37,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Timer;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,34 +60,17 @@ import org.teiid.core.BundleUtil.Event;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.deployers.CompositeGlobalTableStore;
-import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.ContainerLifeCycleListener;
-import org.teiid.deployers.UDFMetaData;
-import org.teiid.deployers.VDBLifeCycleListener;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
-import org.teiid.dqp.internal.process.CachedResults;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.PreparedPlan;
-import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.internal.process.TeiidExecutor;
-import org.teiid.dqp.internal.process.TransactionServerImpl;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
-import org.teiid.jdbc.CallableStatementImpl;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
-import org.teiid.jdbc.PreparedStatementImpl;
-import org.teiid.jdbc.TeiidDriver;
-import org.teiid.jdbc.TeiidPreparedStatement;
-import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.jdbc.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -365,6 +340,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			this.sessionService.setSecurityDomain(config.getSecurityDomain());
 		} else {
 			this.sessionService.setSecurityDomain("teiid-security"); //$NON-NLS-1$
+		}
+		
+		if (config.getAuthenticationHandler() != null) {
+		    this.sessionService.setAuthenticationHandler(config.getAuthenticationHandler());
 		}
 
 		this.sessionService.setVDBRepository(repo);
