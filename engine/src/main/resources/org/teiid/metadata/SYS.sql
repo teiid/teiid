@@ -251,3 +251,5 @@ as select c.VDBName, c.SchemaName, c.TableName, c.Name,
   nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}srid') as integer), 0),
   nvl((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}type'), 'GEOMETRY') 
   from sys.columns as c where DataType = 'geometry';
+  
+CREATE FOREIGN PROCEDURE ARRAYITERATE (val object[]) RETURNS TABLE (col object);

@@ -54,6 +54,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
@@ -210,6 +211,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private enum SystemProcs {
 		GETXMLSCHEMAS,
+		ARRAYITERATE
 	}
 	
 	private static final TreeMap<String, Integer> levelMap = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
@@ -1276,8 +1278,24 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30553, e);
 			}
 			break;
+		case ARRAYITERATE:
+			Object array = ((Constant)proc.getParameter(1).getExpression()).getValue();
+			if (array != null) {
+				Object[] vals = null;
+				if (array instanceof Object[]) {
+					vals = (Object[])array;
+				} else {
+					ArrayImpl arrayImpl = (ArrayImpl)array;
+					vals = arrayImpl.getValues();
+				}
+				for (Object o : vals) {
+					rows.add(Arrays.asList(o));
+				}
+			}
 		}
 		return new CollectionTupleSource(rows.iterator());
+		
+			
 	}
 	
 	public MetadataRepository getMetadataRepository(AbstractMetadataRecord target, VDBMetaData vdb) {

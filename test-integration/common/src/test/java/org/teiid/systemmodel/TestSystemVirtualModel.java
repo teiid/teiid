@@ -61,20 +61,17 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
     	ModelMetaData mmd = new ModelMetaData();
     	mmd.setName("x");
     	mmd.setModelType(Type.VIRTUAL);
-    	mmd.setSchemaSourceType("DDL");
-    	mmd.setSchemaText("create view t as select 1");
+    	mmd.addSourceMetadata("DDL", "create view t as select 1");
     	ModelMetaData mmd1 = new ModelMetaData();
     	mmd1.setName("y");
     	mmd1.setModelType(Type.VIRTUAL);
-    	mmd1.setSchemaSourceType("DDL");
-    	mmd1.setSchemaText("create view T as select 1");
+    	mmd1.addSourceMetadata("DDL", "create view T as select 1");
     	server.deployVDB("test", mmd, mmd1);
     	
     	ModelMetaData mmd2 = new ModelMetaData();
     	mmd2.setName("x");
     	mmd2.setModelType(Type.VIRTUAL);
-    	mmd2.setSchemaSourceType("DDL");
-    	mmd2.setSchemaText("create view t (g geometry options (\"teiid_spatial:srid\" 3819)) as select null;");
+    	mmd2.addSourceMetadata("DDL", "create view t (g geometry options (\"teiid_spatial:srid\" 3819)) as select null;");
     	server.deployVDB("test1", mmd2);
     }
     
@@ -275,5 +272,16 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		this.internalConnection.close();
 		this.internalConnection = server.createConnection("jdbc:teiid:test1");
 		checkResult("testGeometryColumns", "select * from GEOMETRY_COLUMNS"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testArrayIterate() throws Exception {
+		String sql = "select array_get(cast(x.col as string[]), 2) from (exec arrayiterate((('a', 'b'),('c','d')))) x"; //$NON-NLS-1$
+		this.execute(sql);
+		assertResults(new String[] {"expr1[string]", "b", "d"});
+		
+		sql = "select array_get(cast(x.col as string[]), 2) from (exec arrayiterate(null)) x"; //$NON-NLS-1$
+		this.execute(sql);
+		assertRowCount(0);
+		
 	}
 }
