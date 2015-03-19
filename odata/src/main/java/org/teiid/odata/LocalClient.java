@@ -59,7 +59,8 @@ public class LocalClient implements Client {
 	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
 	private static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
 	static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
-
+	static final String DELIMITER = "--" ; //$NON-NLS-1$
+	
 	private volatile VDBMetaData vdb;
 	private String vdbName;
 	private int vdbVersion;
@@ -192,7 +193,7 @@ public class LocalClient implements Client {
 
 	@Override
 	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, QueryInfo queryInfo) {
-		Connection connection = null;
+	    ConnectionImpl connection = null;
 		try {
 			boolean cache = queryInfo != null && this.batchSize > 0; 
 			if (cache) {
@@ -215,11 +216,25 @@ public class LocalClient implements Client {
 				}
 			}
 
-			String sql = query.toString();
-
-			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
-
 			connection = getConnection();
+			String sessionId = connection.getServerConnection().getLogonResult().getSessionID();
+			
+			String skipToken = null;			
+			if (queryInfo.skipToken != null) {
+			    skipToken = queryInfo.skipToken;
+			    if (cache) {
+    			    int idx = queryInfo.skipToken.indexOf(DELIMITER);
+    			    sessionId = queryInfo.skipToken.substring(0, idx);
+    			    skipToken = queryInfo.skipToken.substring(idx+2);
+    			    
+			    }
+			}
+			String sql = query.toString();
+			if (cache) {
+			    sql += " /* "+ sessionId +" */"; //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
+			
 			final PreparedStatement stmt = connection.prepareStatement(sql, cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			if (parameters!= null && !parameters.isEmpty()) {
 				for (int i = 0; i < parameters.size(); i++) {
@@ -255,8 +270,8 @@ public class LocalClient implements Client {
 				skipSize = queryInfo.skip;
 			}
 			//skip based upon the skipToken
-			if (queryInfo != null && queryInfo.skipToken != null) {
-				skipSize += Integer.parseInt(queryInfo.skipToken);
+			if (skipToken != null) {
+				skipSize += Integer.parseInt(skipToken);
 			}
 			if (skipSize > 0) {
 				count += skip(cache, rs, skipSize);
@@ -302,10 +317,10 @@ public class LocalClient implements Client {
 				int end = skipSize + result.size();
 				if (getCount) {
 					if (end < Math.min(top, count)) {
-						result.setSkipToken(String.valueOf(end));
+						result.setNextToken(nextToken(cache, sessionId, end));
 					}
 				} else if (rs.next()) {
-					result.setSkipToken(String.valueOf(end));
+				    result.setNextToken(nextToken(cache, sessionId, end));
 					//will force the entry to cache or is effectively a no-op when already cached
 					rs.last();	
 				}
@@ -322,7 +337,14 @@ public class LocalClient implements Client {
 			}
 		}
 	}
-
+	
+	private String nextToken(boolean cache, String sessionid, int skip) {
+	    if (cache) {
+	        return sessionid+DELIMITER+String.valueOf(skip);
+	    }
+	    return String.valueOf(skip);
+	}
+	
 	private int skip(boolean cache, final ResultSet rs, int skipSize)
 			throws SQLException {
 		int skipped = 0;

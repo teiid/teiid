@@ -21,21 +21,23 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.*;
 
 import javax.ws.rs.core.MediaType;
 
@@ -49,11 +51,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.odata4j.core.OEntities;
-import org.odata4j.core.OEntity;
-import org.odata4j.core.OEntityKey;
-import org.odata4j.core.OProperties;
-import org.odata4j.core.OProperty;
+import org.odata4j.core.*;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmSimpleType;
@@ -61,11 +59,7 @@ import org.odata4j.edm.EdmType;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.Responses;
-import org.odata4j.producer.resources.EntitiesRequestResource;
-import org.odata4j.producer.resources.EntityRequestResource;
-import org.odata4j.producer.resources.MetadataResource;
-import org.odata4j.producer.resources.ODataBatchProvider;
-import org.odata4j.producer.resources.ServiceDocumentResource;
+import org.odata4j.producer.resources.*;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -488,6 +482,10 @@ public class TestODataIntegration extends BaseResourceTest {
 	        assertTrue(!response.getEntity().contains("xyz"));
 	        
 	        //follow the skip
+	        URL url = new URL((String) contentHandler.value);
+	        String skip = getQueryParameter(URLDecoder.decode(url.getQuery(), "UTF-8"), "$skiptoken");
+	        assertTrue(skip.indexOf(LocalClient.DELIMITER) != -1);
+	        
 	        request = new ClientRequest((String) contentHandler.value);
 	        response = request.get(String.class);
 	        assertEquals(200, response.getStatus());
@@ -502,6 +500,58 @@ public class TestODataIntegration extends BaseResourceTest {
 			es.stop();
 		}
 	}
+	
+    public String getQueryParameter(String queryPath, String param) {
+        if (queryPath != null) {
+            StringTokenizer st = new StringTokenizer(queryPath, "&");
+            while (st.hasMoreTokens()) {
+                String token = st.nextToken();
+                int index = token.indexOf('=');
+                if (index != -1) {
+                    String key = token.substring(0, index);
+                    String value = token.substring(index + 1);
+                    if (key.equals(param)) {
+                        return value;
+                    }
+                }
+            }
+        }
+        return null;
+    }	
+	
+    @Test public void testNoSkipToken() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.setSchemaSourceType("ddl");
+            mmd.setModelType(Type.VIRTUAL);
+            mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            props.setProperty("batch-size", "0");
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+            
+            ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
+            ClientResponse<String> response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            JSONParser parser = new JSONParser();
+            JSONValueExtractor contentHandler = new JSONValueExtractor("__next");
+            parser.parse(response.getEntity(), contentHandler);
+            assertNotNull(contentHandler.next);
+            assertTrue(response.getEntity().contains("abc"));
+            assertTrue(response.getEntity().contains("xyz"));
+            
+            assertNull(contentHandler.value);
+        } finally {
+            es.stop();
+        }
+    }	
 	
 	@Test public void testCount() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
@@ -613,7 +663,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			es.stop();
 		}
 	}
-	
+		
 	@Test public void testBatch() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
 		HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {

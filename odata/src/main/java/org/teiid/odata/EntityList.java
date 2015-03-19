@@ -28,12 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.odata4j.core.OEntities;
-import org.odata4j.core.OEntity;
-import org.odata4j.core.OEntityKey;
-import org.odata4j.core.OLink;
-import org.odata4j.core.OLinks;
-import org.odata4j.core.OProperty;
+import org.odata4j.core.*;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmNavigationProperty;
 import org.odata4j.edm.EdmProperty;
@@ -90,7 +85,7 @@ class EntityList extends ArrayList<OEntity>{
 		return this.skipToken;
 	}
 	
-	public void setSkipToken(String skipToken) {
+	public void setNextToken(String skipToken) {
 		this.skipToken = skipToken;
 	}
 	
