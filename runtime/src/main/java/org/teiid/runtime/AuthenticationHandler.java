@@ -25,7 +25,7 @@ import javax.security.auth.login.LoginException;
 
 import org.teiid.security.GSSResult;
 import org.teiid.security.Credentials;
-import org.teiid.services.TeiidLoginContext;
+import org.teiid.security.TeiidLoginContext;
 
 public interface AuthenticationHandler {
     

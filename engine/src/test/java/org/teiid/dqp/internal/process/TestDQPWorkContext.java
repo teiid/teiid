@@ -22,12 +22,15 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.security.Principal;
 import java.util.Map;
 
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -36,7 +39,10 @@ import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
+import org.teiid.security.TeiidLoginContext;
 
 
 public class TestDQPWorkContext {
@@ -97,10 +103,6 @@ public class TestDQPWorkContext {
 				return mycontext == context;
 			}
 			@Override
-			public Subject getSubjectInContext(String securityDomain) {
-				return null;
-			}
-			@Override
 			public Object getSecurityContext() {
 				return this.mycontext;
 			}
@@ -118,16 +120,30 @@ public class TestDQPWorkContext {
 				this.mycontext = context;
 				return old;
 			}
-			@Override
-			public String getSecurityDomain(Object context) {
-				return null;
-			}
+            @Override
+            public Subject getSubjectInContext(String securityDomain) {
+                return null;
+            }
+            @Override
+            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
+                    String applicationName) throws LoginException {
+                return null;
+            }
+            @Override
+            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
+            @Override
+            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
+                return null;
+            }
 		};	
 		Object previousSC = sc.createSecurityContext("test", null, null, null); //$NON-NLS-1$
 		sc.associateSecurityContext(previousSC);
 		
 		DQPWorkContext message = new DQPWorkContext() {
-		    public Subject getSubject() {
+		    @Override
+            public Subject getSubject() {
 		    	return new Subject();
 		    }			
 		};

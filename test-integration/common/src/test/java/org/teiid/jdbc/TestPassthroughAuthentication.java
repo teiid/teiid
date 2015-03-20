@@ -21,18 +21,22 @@
  */
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.security.Principal;
 
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
+import org.teiid.security.TeiidLoginContext;
 
 @SuppressWarnings("nls")
 public class TestPassthroughAuthentication {
@@ -47,7 +51,8 @@ public class TestPassthroughAuthentication {
 	@BeforeClass public static void oneTimeSetup() throws Exception {
     	server.setUseCallingThread(true);
     	server.start(new EmbeddedConfiguration() {
-    		public SecurityHelper getSecurityHelper() {
+    		@Override
+            public SecurityHelper getSecurityHelper() {
     			return securityHelper;
     		}  		
     	}, false);
@@ -109,10 +114,24 @@ public class TestPassthroughAuthentication {
 			return false;
 		}
 
-		@Override
-		public String getSecurityDomain(Object context) {
-			return null;
-		}
+        @Override
+        public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
+                String applicationName) throws LoginException {
+            return null;
+        }
+        @Override
+        public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+            return null;
+        }
+        @Override
+        public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
+            Subject s =  getSubjectInContext(securityDomain); 
+            if (s != null) {
+                return new TeiidLoginContext(userName+"@"+securityDomain, s, securityDomain, //$NON-NLS-1$
+                        getSecurityContext());
+            }
+            return null;
+        }
 		
 	};
 }

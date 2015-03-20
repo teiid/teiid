@@ -25,6 +25,9 @@ package org.teiid.security;
 import java.security.Principal;
 
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
+
+import org.teiid.security.GSSResult;
 
 public interface SecurityHelper {
 	
@@ -39,6 +42,11 @@ public interface SecurityHelper {
 	Subject getSubjectInContext(String securityDomain);
 	
 	boolean sameSubject(String securityDomain, Object context, Subject subject);
-	
-	String getSecurityDomain(Object context);
+
+    TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials, String applicationName)
+            throws LoginException;
+    
+    GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
+
+    TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException;
 }

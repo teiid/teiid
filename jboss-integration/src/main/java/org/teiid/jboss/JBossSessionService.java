@@ -44,8 +44,8 @@ import org.teiid.logging.LogManager;
 import org.teiid.runtime.AuthenticationHandler;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
+import org.teiid.security.TeiidLoginContext;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.services.TeiidLoginContext;
 
 public class JBossSessionService extends SessionServiceImpl implements AuthenticationHandler {
 	
