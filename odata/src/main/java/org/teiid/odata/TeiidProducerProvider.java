@@ -77,6 +77,10 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 			vdbName = getInitParameters().getProperty("allow-vdb"); //$NON-NLS-1$		
 		}
 		
+		if (vdbName == null) {
+		    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+		}
+		
 		int versionIdx = vdbName.indexOf('.');
 		if (versionIdx != -1) {
 			version = Integer.parseInt(vdbName.substring(versionIdx+1));
