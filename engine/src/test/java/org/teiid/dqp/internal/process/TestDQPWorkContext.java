@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.security.Principal;
 import java.util.Map;
 
 import javax.security.auth.Subject;
@@ -107,10 +106,6 @@ public class TestDQPWorkContext {
 				return this.mycontext;
 			}
 			@Override
-			public Object createSecurityContext(String securityDomain, Principal p,Object credentials, Subject subject) {
-				return securityDomain+"SC"; //$NON-NLS-1$ 
-			}
-			@Override
 			public void clearSecurityContext() {
 				this.mycontext = null;
 			}
@@ -133,12 +128,8 @@ public class TestDQPWorkContext {
             public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
             }
-            @Override
-            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-                return null;
-            }
 		};	
-		Object previousSC = sc.createSecurityContext("test", null, null, null); //$NON-NLS-1$
+		Object previousSC = "testSC";
 		sc.associateSecurityContext(previousSC);
 		
 		DQPWorkContext message = new DQPWorkContext() {

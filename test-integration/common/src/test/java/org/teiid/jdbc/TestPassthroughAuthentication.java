@@ -23,8 +23,6 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.fail;
 
-import java.security.Principal;
-
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
@@ -93,11 +91,6 @@ public class TestPassthroughAuthentication {
 		public Object getSecurityContext() {
 			return this.ctx;
 		}
-		@Override
-		public Object createSecurityContext(String securityDomain,
-				Principal p, Object credentials, Subject subject) {
-			return securityDomain+"SC";
-		}
 
 		@Override
 		public Subject getSubjectInContext(String securityDomain) {
@@ -123,15 +116,5 @@ public class TestPassthroughAuthentication {
         public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
             return null;
         }
-        @Override
-        public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-            Subject s =  getSubjectInContext(securityDomain); 
-            if (s != null) {
-                return new TeiidLoginContext(userName+"@"+securityDomain, s, securityDomain, //$NON-NLS-1$
-                        getSecurityContext());
-            }
-            return null;
-        }
-		
 	};
 }

@@ -22,31 +22,23 @@
 
 package org.teiid.security;
 
-import java.security.Principal;
-
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
-import org.teiid.security.GSSResult;
+public interface  SecurityHelper {
 
-public interface SecurityHelper {
-	
-	Object associateSecurityContext(Object context);
+    Object associateSecurityContext(Object context);
 	
 	void clearSecurityContext();
 	
 	Object getSecurityContext();
 	
-	Object createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject);
-
 	Subject getSubjectInContext(String securityDomain);
 	
 	boolean sameSubject(String securityDomain, Object context, Subject subject);
 
-    TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials, String applicationName)
+    Object authenticate(String securityDomain, String userName, Credentials credentials, String applicationName)
             throws LoginException;
     
     GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
-
-    TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException;
 }

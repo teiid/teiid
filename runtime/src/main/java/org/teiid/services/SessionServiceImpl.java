@@ -24,6 +24,8 @@ package org.teiid.services;
 
 
 import java.io.IOException;
+import java.security.Principal;
+import java.security.acl.Group;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -158,12 +160,15 @@ public class SessionServiceImpl implements SessionService {
 	        // if not authenticated, this method throws exception
             LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
 
-        	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
+            boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
+                    "false")); //$NON-NLS-1$
         	TeiidLoginContext membership = null;
         	if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
-                membership = this.securityHelper.passThroughLogin(securityDomain, userName);
+                membership = passThroughLogin(securityDomain, userName);
         	} else {
-	        	membership = this.securityHelper.authenticate(securityDomain, userName, credentials, applicationName);
+        	    final String baseUsername = getBaseUsername(userName);
+                membership = (TeiidLoginContext) this.securityHelper.authenticate(securityDomain, baseUsername, credentials,
+                        applicationName);
         	}
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
@@ -381,7 +386,7 @@ public class SessionServiceImpl implements SessionService {
 		return securityHelper;
 	}
 
-    public static String getBaseUsername(String username) {
+    static String getBaseUsername(String username) {
         if (username == null) {
             return username;
         }
@@ -420,7 +425,7 @@ public class SessionServiceImpl implements SessionService {
         return null;
     }
     
-    public static int getQualifierIndex(String username) {
+    static int getQualifierIndex(String username) {
         int index = username.length();
         while ((index = username.lastIndexOf(AT, --index)) != -1) {
             if (index > 0 && username.charAt(index - 1) != '\\') {
@@ -510,4 +515,24 @@ public class SessionServiceImpl implements SessionService {
 	public AuthenticationType getDefaultAuthenticationType() {
 		return defaultAuthenticationType;
 	}
+	
+    private String getUserName(Subject subject, String userName) {
+        Set<Principal> principals = subject.getPrincipals();
+        for (Principal p:principals) {
+            if (p instanceof Group) {
+                continue;
+            }
+            return p.getName();
+        }
+        return SessionServiceImpl.getBaseUsername(userName);
+    }
+        
+    public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
+        Subject existing = this.securityHelper.getSubjectInContext(securityDomain);
+        if (existing != null) {
+            return new TeiidLoginContext(getUserName(existing, userName) + AT + securityDomain, existing, securityDomain,
+                    this.securityHelper.getSecurityContext());
+        }
+        throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
+    }	
 }

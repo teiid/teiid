@@ -22,8 +22,6 @@
 
 package org.teiid.runtime;
 
-import java.security.Principal;
-
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
@@ -54,12 +52,6 @@ public class DoNothingSecurityHelper implements SecurityHelper {
 	}
 
 	@Override
-	public Object createSecurityContext(String securityDomain, Principal p,
-			Object credentials, Subject subject) {
-		return new Object();
-	}
-
-	@Override
 	public void clearSecurityContext() {
 
 	}
@@ -78,15 +70,5 @@ public class DoNothingSecurityHelper implements SecurityHelper {
     @Override
     public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
         return null;
-    }
-
-    @Override
-    public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-        Subject existing = getSubjectInContext(securityDomain);
-        if(existing != null) {
-            return new TeiidLoginContext(userName+"@"+securityDomain, existing, securityDomain, //$NON-NLS-1$
-                    getSecurityContext());
-        }
-        throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
     }
 }

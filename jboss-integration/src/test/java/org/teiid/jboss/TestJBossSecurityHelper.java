@@ -58,7 +58,8 @@ public class TestJBossSecurityHelper extends TestCase {
     	principals.add(p);
     	
     	final Subject subject = new Subject(false, principals, new HashSet(), new HashSet());
-    	JBossSecurityHelper sh = new JBossSecurityHelper() {
+    	@SuppressWarnings("serial")
+        JBossSecurityHelper sh = new JBossSecurityHelper() {
     	    @Override
     	    public Subject getSubjectInContext(String securityDomain) {
     	        if (securityDomain.equals("passthrough")) {
@@ -122,8 +123,10 @@ public class TestJBossSecurityHelper extends TestCase {
         final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
         
     	SecurityHelper ms = buildSecurityHelper(domain, securityContext);
-
-        TeiidLoginContext c = ms.passThroughLogin(domain, "user1"); //$NON-NLS-1$ 
+    	SessionServiceImpl ss = new SessionServiceImpl();
+    	ss.setSecurityHelper(ms);
+    	
+        TeiidLoginContext c = ss.passThroughLogin(domain, "user1"); //$NON-NLS-1$ 
         
         assertEquals("alreadylogged@passthrough", c.getUserName()); //$NON-NLS-1$
     }

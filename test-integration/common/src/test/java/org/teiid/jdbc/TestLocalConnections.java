@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.security.Principal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -431,12 +430,6 @@ public class TestLocalConnections {
 			}
 			
 			@Override
-			public Object createSecurityContext(String securityDomain, Principal p,
-					Object credentials, Subject subject) {
-				throw new UnsupportedOperationException();
-			}
-			
-			@Override
 			public void clearSecurityContext() {
 			}
 			
@@ -456,12 +449,6 @@ public class TestLocalConnections {
             @Override
             public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
-            }
-
-            @Override
-            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-                return new TeiidLoginContext(userName+"@"+securityDomain, new Subject(), securityDomain, //$NON-NLS-1$
-                        getSecurityContext());
             }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
@@ -523,12 +510,6 @@ public class TestLocalConnections {
 			}
 			
 			@Override
-			public Object createSecurityContext(String securityDomain, Principal p,
-					Object credentials, Subject subject) {
-				throw new UnsupportedOperationException();
-			}
-			
-			@Override
 			public void clearSecurityContext() {
 			}
 			
@@ -548,12 +529,6 @@ public class TestLocalConnections {
             @Override
             public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
-            }
-
-            @Override
-            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-                return new TeiidLoginContext(userName+"@"+securityDomain, new Subject(), securityDomain, //$NON-NLS-1$
-                        getSecurityContext());
             }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();

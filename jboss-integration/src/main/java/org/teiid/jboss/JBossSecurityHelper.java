@@ -24,8 +24,6 @@ package org.teiid.jboss;
 
 import java.io.Serializable;
 import java.security.Principal;
-import java.security.acl.Group;
-import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
@@ -46,12 +44,10 @@ import org.jboss.security.negotiation.spnego.KerberosMessage;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 import org.teiid.security.TeiidLoginContext;
-import org.teiid.services.SessionServiceImpl;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	private static final long serialVersionUID = 3598997061994110254L;
@@ -76,7 +72,6 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 		return SecurityActions.getSecurityContext();
 	}	
 	
-	@Override
 	public Object createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
 		return SecurityActions.createSecurityContext(p, credentials, subject, securityDomain);
 	}
@@ -113,8 +108,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
     @Override
     public TeiidLoginContext authenticate(String domain, String userName, Credentials credentials, String applicationName)
             throws LoginException {
-        final String baseUsername = SessionServiceImpl.getBaseUsername(userName);
-
+        
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
             // this is the configured login for teiid
@@ -127,7 +121,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
                 String credString = credentials==null?null:new String(credentials.getCredentialsAsCharArray());
                 boolean isValid = authManager.isValid(userPrincipal, credString, subject);
                 if (isValid) {
-                    String qualifiedUserName = baseUsername+AT+domain;
+                    String qualifiedUserName = userName+AT+domain;
                     Object securityContext = createSecurityContext(domain, userPrincipal, credString, subject);
                     LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
                     return new TeiidLoginContext(qualifiedUserName, subject, domain, securityContext);
@@ -210,26 +204,5 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
             }
         }
         return null;
-    }
-
-    private String getUserName(Subject subject, String userName) {
-        Set<Principal> principals = subject.getPrincipals();
-        for (Principal p:principals) {
-            if (p instanceof Group) {
-                continue;
-            }
-            return p.getName();
-        }
-        return SessionServiceImpl.getBaseUsername(userName);
-    }
-        
-    @Override
-    public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-        Subject existing = getSubjectInContext(securityDomain);
-        if (existing != null) {
-            return new TeiidLoginContext(getUserName(existing, userName) + AT + securityDomain, existing, securityDomain,
-                    getSecurityContext());
-        }
-        throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
     }
 }
