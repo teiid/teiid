@@ -34,6 +34,7 @@ import org.teiid.client.security.LogonException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 
