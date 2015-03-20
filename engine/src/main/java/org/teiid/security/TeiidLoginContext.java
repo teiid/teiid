@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.services;
+package org.teiid.security;
 
 import javax.security.auth.Subject;
 

@@ -341,10 +341,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		} else {
 			this.sessionService.setSecurityDomain("teiid-security"); //$NON-NLS-1$
 		}
-		
-		if (config.getAuthenticationHandler() != null) {
-		    this.sessionService.setAuthenticationHandler(config.getAuthenticationHandler());
-		}
 
 		this.sessionService.setVDBRepository(repo);
 		this.bufferService.setUseDisk(config.isUseDisk());

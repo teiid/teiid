@@ -44,32 +44,48 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
-import org.teiid.services.TeiidLoginContext;
+import org.teiid.security.TeiidLoginContext;
+import org.teiid.services.SessionServiceImpl;
 
 @SuppressWarnings("nls")
-public class TestJBossSessionServiceImpl extends TestCase {
+public class TestJBossSecurityHelper extends TestCase {
 
-    private SecurityHelper buildSecurityHelper() throws Exception {
+    private JBossSecurityHelper buildSecurityHelper(final String domain, final SecurityDomainContext sdc) 
+            throws Exception {
     	Principal p = Mockito.mock(Principal.class);
     	Mockito.stub(p.getName()).toReturn("alreadylogged"); //$NON-NLS-1$
     	HashSet<Principal> principals = new HashSet<Principal>();
     	principals.add(p);
     	
-    	Subject subject = new Subject(false, principals, new HashSet(), new HashSet());
-    	SecurityHelper sh = Mockito.mock(SecurityHelper.class);
-    	Mockito.stub(sh.getSubjectInContext("passthrough")).toReturn(subject); //$NON-NLS-1$
-    	
+    	final Subject subject = new Subject(false, principals, new HashSet(), new HashSet());
+    	JBossSecurityHelper sh = new JBossSecurityHelper() {
+    	    @Override
+    	    public Subject getSubjectInContext(String securityDomain) {
+    	        if (securityDomain.equals("passthrough")) {
+    	            return subject;
+    	        }
+    	        return null;
+    	    }
+    	    
+    	    @Override
+            protected SecurityDomainContext getSecurityDomainContext(String securityDomain) {
+    	        if (securityDomain.equals(domain)) {
+    	            return sdc;
+    	        }
+    	        return null;
+    	    }    	
+    	};
     	return sh;
     }
-    
        
     public void testAuthenticate() throws Exception {
     	Credentials credentials = new Credentials("pass1".toCharArray());
-        
-    	SecurityHelper ms = buildSecurityHelper();
-        
-        String domains = "testFile";
+
+    	String domains = "testFile";
         final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
+        
+    	JBossSecurityHelper ms = buildSecurityHelper(domains, securityContext);
+        
         AuthenticationManager authManager = new AuthenticationManager() {
 			public String getSecurityDomain() {
 				return null;
@@ -80,7 +96,6 @@ public class TestJBossSessionServiceImpl extends TestCase {
 			public boolean isValid(Principal principal, Object credential) {
 				return true;
 			}
-			
 			@Override
 			public Principal getTargetPrincipal(Principal anotherDomainPrincipal, Map<String, Object> contextMap) {
 				return null;
@@ -93,33 +108,18 @@ public class TestJBossSessionServiceImpl extends TestCase {
         
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
         
-        JBossSessionService jss = new JBossSessionService() {
-        	@Override
-            public SecurityDomainContext getSecurityDomain(String securityDomain) {
-        		if (securityDomain.equals("testFile")) {
-        			return securityContext;
-        		}
-        		return null;
-        	}
-        };
-        jss.setSecurityHelper(ms);
-        jss.setSecurityDomain(domains);
-        
-        TeiidLoginContext c = jss.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$ 
+        TeiidLoginContext c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$ 
         assertEquals("user1@testFile", c.getUserName()); //$NON-NLS-1$
     }
     
 
     public void testPassThrough() throws Exception {
-    	SecurityHelper ms = buildSecurityHelper();
-    	
         String domain = "passthrough";
-
-        JBossSessionService jss = new JBossSessionService();
-        jss.setSecurityHelper(ms);
-        jss.setSecurityDomain(domain);
+        final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
         
-        TeiidLoginContext c = jss.passThroughLogin("user1", domain); //$NON-NLS-1$ 
+    	SecurityHelper ms = buildSecurityHelper(domain, securityContext);
+
+        TeiidLoginContext c = ms.passThroughLogin(domain, "user1"); //$NON-NLS-1$ 
         
         assertEquals("alreadylogged@passthrough", c.getUserName()); //$NON-NLS-1$
     }
@@ -137,22 +137,14 @@ public class TestJBossSessionServiceImpl extends TestCase {
         
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
 		
-        JBossSessionService jss = new JBossSessionService() {
+        SessionServiceImpl jss = new SessionServiceImpl() {
         	@Override
         	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
         			throws SessionServiceException {
         		return Mockito.mock(VDBMetaData.class);
         	}
-        	@Override
-            public SecurityDomainContext getSecurityDomain(String securityDomain) {
-        		if (securityDomain.equals("somedomain")) {
-        			return securityContext;
-        		}
-        		return null;
-        	}        	
         };
-        jss.setAuthenticationHandler(jss);
-        jss.setSecurityHelper(buildSecurityHelper());
+        jss.setSecurityHelper(buildSecurityHelper("somedomain", securityContext));
 		jss.setSecurityDomain("somedomain");
 		
 		try {

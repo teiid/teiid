@@ -14,11 +14,10 @@ import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.dqp.service.GSSResult;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
-import org.teiid.runtime.AuthenticationHandler;
+import org.teiid.runtime.DoNothingSecurityHelper;
 import org.teiid.security.Credentials;
 
 @SuppressWarnings("nls")
@@ -27,17 +26,7 @@ public class TestSessionServiceImpl {
 	@Before
 	public void setup() {
 		ssi = new SessionServiceImpl();
-        ssi.setAuthenticationHandler(new AuthenticationHandler() {
-            @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
-                return null;
-            }
-            @Override
-            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
-                    String applicationName) throws LoginException {
-                return new TeiidLoginContext(userName, null, securityDomain, null);
-            }
-        });
+		ssi.setSecurityHelper(new DoNothingSecurityHelper());
 	}
 	
 	@Test
