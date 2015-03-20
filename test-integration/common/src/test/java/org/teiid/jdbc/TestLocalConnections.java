@@ -28,7 +28,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.security.Principal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -56,7 +55,6 @@ import org.teiid.core.util.Base64;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.service.GSSResult;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
@@ -67,6 +65,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 import org.teiid.security.TeiidLoginContext;
 import org.teiid.translator.*;
@@ -419,12 +418,6 @@ public class TestLocalConnections {
 			}
 			
 			@Override
-			public Object createSecurityContext(String securityDomain, Principal p,
-					Object credentials, Subject subject) {
-				throw new UnsupportedOperationException();
-			}
-			
-			@Override
 			public void clearSecurityContext() {
 			}
 			
@@ -444,12 +437,6 @@ public class TestLocalConnections {
             @Override
             public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
-            }
-
-            @Override
-            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-                return new TeiidLoginContext(userName+"@"+securityDomain, new Subject(), securityDomain, //$NON-NLS-1$
-                        getSecurityContext());
             }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
@@ -511,12 +498,6 @@ public class TestLocalConnections {
 			}
 			
 			@Override
-			public Object createSecurityContext(String securityDomain, Principal p,
-					Object credentials, Subject subject) {
-				throw new UnsupportedOperationException();
-			}
-			
-			@Override
 			public void clearSecurityContext() {
 			}
 			
@@ -536,12 +517,6 @@ public class TestLocalConnections {
             @Override
             public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
-            }
-
-            @Override
-            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-                return new TeiidLoginContext(userName+"@"+securityDomain, new Subject(), securityDomain, //$NON-NLS-1$
-                        getSecurityContext());
             }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();

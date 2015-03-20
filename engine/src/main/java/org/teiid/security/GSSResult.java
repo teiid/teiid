@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.dqp.service;
+package org.teiid.security;
 
 import org.ietf.jgss.GSSCredential;
 
