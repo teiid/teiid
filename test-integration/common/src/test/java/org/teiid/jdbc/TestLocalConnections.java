@@ -41,6 +41,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -55,6 +56,7 @@ import org.teiid.core.util.Base64;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.service.GSSResult;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
@@ -64,7 +66,9 @@ import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
+import org.teiid.security.TeiidLoginContext;
 import org.teiid.translator.*;
 import org.teiid.transport.LogonImpl;
 
@@ -407,12 +411,7 @@ public class TestLocalConnections {
 			public Subject getSubjectInContext(String securityDomain) {
 				return new Subject();
 			}
-			
-			@Override
-			public String getSecurityDomain(Object context) {
-				return "teiid-security";
-			}
-			
+						
 			@Override
 			public Object getSecurityContext() {
 				calls++;
@@ -435,6 +434,23 @@ public class TestLocalConnections {
 				currentContext = context;
 				return result;
 			}
+
+            @Override
+            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
+                    String applicationName) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
+                return new TeiidLoginContext(userName+"@"+securityDomain, new Subject(), securityDomain, //$NON-NLS-1$
+                        getSecurityContext());
+            }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
 		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
@@ -488,12 +504,7 @@ public class TestLocalConnections {
 			public Subject getSubjectInContext(String securityDomain) {
 				return new Subject();
 			}
-			
-			@Override
-			public String getSecurityDomain(Object context) {
-				return "teiid-security";
-			}
-			
+						
 			@Override
 			public Object getSecurityContext() {
 				return currentContext;
@@ -515,6 +526,23 @@ public class TestLocalConnections {
 				currentContext = context;
 				return result;
 			}
+
+            @Override
+            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
+                    String applicationName) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
+                return new TeiidLoginContext(userName+"@"+securityDomain, new Subject(), securityDomain, //$NON-NLS-1$
+                        getSecurityContext());
+            }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
 		server.getClientServiceRegistry().setSecurityHelper(securityHelper);

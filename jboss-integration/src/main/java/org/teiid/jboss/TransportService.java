@@ -106,10 +106,9 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	public void start(StartContext context) throws StartException {
 		this.setSecurityHelper(new JBossSecurityHelper());
 		this.setVDBRepository(this.getVdbRepository());
-		this.sessionService = new JBossSessionService();
+		this.sessionService = new SessionServiceImpl();
 		if (this.authenticationDomain != null) {
-			this.sessionService.setSecurityDomain(this.authenticationDomain);	
-			this.sessionService.setAuthenticationHandler((JBossSessionService)this.sessionService);
+			this.sessionService.setSecurityDomain(this.authenticationDomain);				
 		}
 		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);

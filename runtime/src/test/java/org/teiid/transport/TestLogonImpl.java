@@ -44,15 +44,13 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.Base64;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.service.GSSResult;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
-import org.teiid.runtime.AuthenticationHandler;
+import org.teiid.runtime.DoNothingSecurityHelper;
 import org.teiid.security.Credentials;
-import org.teiid.security.SecurityHelper;
+import org.teiid.security.TeiidLoginContext;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.services.TeiidLoginContext;
 
 @SuppressWarnings("nls")
 public class TestLogonImpl {
@@ -61,21 +59,20 @@ public class TestLogonImpl {
 	@Before
 	public void setup() {
 		ssi = new SessionServiceImpl();
-        ssi.setAuthenticationHandler(new AuthenticationHandler() {
-            @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
-                return null;
-            }
+		ssi.setSecurityHelper(new DoNothingSecurityHelper() {
+		    @Override
+            public Subject getSubjectInContext(String securityDomain) {
+		        if (securityDomain.equals("SC")) {
+		            return new Subject();
+		        }
+		        return null;
+		    }
             @Override
             public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
                     String applicationName) throws LoginException {
-                return new TeiidLoginContext(userName, null, securityDomain, null);
-            }
-        });		
-		
-		SecurityHelper sc = Mockito.mock(SecurityHelper.class);
-		Mockito.stub(sc.getSubjectInContext("SC")).toReturn(new Subject());
-		ssi.setSecurityHelper(sc);
+                return new TeiidLoginContext(userName, new Subject(), securityDomain, new Object()); 
+            }		    
+		});
 	}
 	
 	@Test
