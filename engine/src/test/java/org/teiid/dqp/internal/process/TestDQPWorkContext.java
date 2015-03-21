@@ -22,9 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Map;
 
@@ -41,7 +39,6 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
-import org.teiid.security.TeiidLoginContext;
 
 
 public class TestDQPWorkContext {
@@ -98,10 +95,6 @@ public class TestDQPWorkContext {
 			Object mycontext = null;
 			
 			@Override
-			public boolean sameSubject(String securityDomain, Object context,	Subject subject) {
-				return mycontext == context;
-			}
-			@Override
 			public Object getSecurityContext() {
 				return this.mycontext;
 			}
@@ -120,8 +113,8 @@ public class TestDQPWorkContext {
                 return null;
             }
             @Override
-            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
-                    String applicationName) throws LoginException {
+            public Object authenticate(String securityDomain, String baseUserName,
+            		Credentials credentials, String applicationName) throws LoginException {
                 return null;
             }
             @Override

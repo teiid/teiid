@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.security.auth.Subject;
 
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
@@ -125,6 +126,13 @@ public class LocalServerConnection implements ServerConnection {
 	}
 	
 	public synchronized void authenticate() throws ConnectionException, CommunicationException {
+		Object previousSecurityContext = workContext.getSecurityHelper().associateSecurityContext(workContext.getSession().getSecurityContext());
+		try {
+			logoff(); 
+		} finally {
+			workContext.getSecurityHelper().associateSecurityContext(previousSecurityContext);
+		}
+		workContext.setSecurityContext(previousSecurityContext);
         try {
         	this.result = this.getService(ILogon.class).logon(this.connectionProperties);
         } catch (LogonException e) {
@@ -155,15 +163,9 @@ public class LocalServerConnection implements ServerConnection {
 							&& workContext.getSession().getSessionId() != null
 							//if configured without a security domain the context will be null
 							&& workContext.getSession().getSecurityDomain() != null
-							&& !csr.getSecurityHelper().sameSubject(workContext.getSession().getSecurityDomain(), workContext.getSession().getSecurityContext(), workContext.getSubject())) {
+							&& !sameSubject(workContext)) {
 						//TODO: this is an implicit changeUser - we may want to make this explicit, but that would require pools to explicitly use changeUser
 						LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40115, workContext.getSession().getSessionId()));
-						Object previousSecurityContext = workContext.getSecurityHelper().associateSecurityContext(workContext.getSession().getSecurityContext());
-						try {
-							logoff(); 
-						} finally {
-							workContext.getSecurityHelper().associateSecurityContext(previousSecurityContext);
-						}
 						authenticate();
 					}
 					
@@ -181,7 +183,20 @@ public class LocalServerConnection implements ServerConnection {
 			}
 		}));
 	}
-
+	
+	public static boolean sameSubject(DQPWorkContext workContext) {
+		Object currentContext = workContext.getSecurityHelper().getSecurityContext();
+		
+		if (currentContext != null) {
+			Subject currentUser = workContext.getSecurityHelper().getSubjectInContext(workContext.getSecurityDomain());
+			if (workContext.getSubject() != null && currentUser != null && workContext.getSubject().equals(currentUser)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	@Override
 	public boolean isOpen(long msToTest) {
 		if (shutdown) {

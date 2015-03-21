@@ -21,7 +21,7 @@
  */
 package org.teiid.jdbc;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
@@ -34,7 +34,6 @@ import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
-import org.teiid.security.TeiidLoginContext;
 
 @SuppressWarnings("nls")
 public class TestPassthroughAuthentication {
@@ -100,16 +99,10 @@ public class TestPassthroughAuthentication {
 			}
 			return null;
 		}
-
+		
 		@Override
-		public boolean sameSubject(String securityDomain,
-				Object context, Subject subject) {
-			return false;
-		}
-
-        @Override
-        public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
-                String applicationName) throws LoginException {
+		public Object authenticate(String securityDomain, String baseUserName,
+				Credentials credentials, String applicationName) throws LoginException {
             return null;
         }
         @Override

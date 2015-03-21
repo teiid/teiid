@@ -35,6 +35,7 @@ import junit.framework.TestCase;
 import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.security.AuthenticationManager;
 import org.jboss.security.SimplePrincipal;
+import org.jboss.security.plugins.JBossSecurityContext;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -43,8 +44,6 @@ import org.teiid.client.security.InvalidSessionException;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
-import org.teiid.security.SecurityHelper;
-import org.teiid.security.TeiidLoginContext;
 import org.teiid.services.SessionServiceImpl;
 
 @SuppressWarnings("nls")
@@ -109,27 +108,12 @@ public class TestJBossSecurityHelper extends TestCase {
         
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);
         
-        TeiidLoginContext c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$ 
-        assertEquals("user1@testFile", c.getUserName()); //$NON-NLS-1$
-    }
-    
-
-    public void testPassThrough() throws Exception {
-        String domain = "passthrough";
-        final SecurityDomainContext securityContext = Mockito.mock(SecurityDomainContext.class);
-        
-    	SecurityHelper ms = buildSecurityHelper(domain, securityContext);
-    	SessionServiceImpl ss = new SessionServiceImpl();
-    	ss.setSecurityHelper(ms);
-    	
-        TeiidLoginContext c = ss.passThroughLogin(domain, "user1"); //$NON-NLS-1$ 
-        
-        assertEquals("alreadylogged@passthrough", c.getUserName()); //$NON-NLS-1$
+        Object c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$ 
+        assertTrue(c instanceof JBossSecurityContext); //$NON-NLS-1$
+        assertEquals(domains, ((JBossSecurityContext)c).getSecurityDomain());
     }
     
 	public void validateSession(boolean securityEnabled) throws Exception {
-		final TeiidLoginContext impl =  Mockito.mock(TeiidLoginContext.class);
-		Mockito.stub(impl.getUserName()).toReturn("steve@somedomain");
 		final ArrayList<String> domains = new ArrayList<String>();
 		domains.add("somedomain");				
 	
