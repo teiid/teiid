@@ -41,20 +41,18 @@ import org.jboss.security.SubjectInfo;
 import org.jboss.security.negotiation.Constants;
 import org.jboss.security.negotiation.common.NegotiationContext;
 import org.jboss.security.negotiation.spnego.KerberosMessage;
-import org.teiid.core.TeiidRuntimeException;
+import org.teiid.security.GSSResult;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.security.Credentials;
-import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
-import org.teiid.security.TeiidLoginContext;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	private static final long serialVersionUID = 3598997061994110254L;
 	public static final String AT = "@"; //$NON-NLS-1$
 	
 	@Override
-	public Object associateSecurityContext(Object newContext) {
+	public SecurityContext associateSecurityContext(Object newContext) {
 		SecurityContext context = SecurityActions.getSecurityContext();
 		if (newContext != context) {
 			SecurityActions.setSecurityContext((SecurityContext)newContext);
@@ -68,11 +66,11 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	}
 	
 	@Override
-	public Object getSecurityContext() {
+	public SecurityContext getSecurityContext() {
 		return SecurityActions.getSecurityContext();
 	}	
 	
-	public Object createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
+	public SecurityContext createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
 		return SecurityActions.createSecurityContext(p, credentials, subject, securityDomain);
 	}
 
@@ -88,47 +86,25 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	}
 
 	@Override
-	public boolean sameSubject(String securityDomain, Object context, Subject subject) {
-		if (context == null) {
-			throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50090, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50090));
-		}
-		SecurityContext previousContext = (SecurityContext)context;
-		Subject previousUser = previousContext.getSubjectInfo().getAuthenticatedSubject();
-		
-		SecurityContext currentContext = SecurityActions.getSecurityContext();
-		if (currentContext != null && currentContext.getSecurityDomain().equals(securityDomain)) {
-			Subject currentUser = currentContext.getSubjectInfo().getAuthenticatedSubject();
-			if (previousUser.equals(currentUser)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-    @Override
-    public TeiidLoginContext authenticate(String domain, String userName, Credentials credentials, String applicationName)
-            throws LoginException {
-        
-        // If username specifies a domain (user@domain) only that domain is authenticated against.
-        // If username specifies no domain, then all domains are tried in order.
-            // this is the configured login for teiid
+	public SecurityContext authenticate(String domain,
+			String baseUsername, Credentials credentials, String applicationName) throws LoginException {
+	    // If username specifies a domain (user@domain) only that domain is authenticated against.
         SecurityDomainContext securityDomainContext = getSecurityDomainContext(domain);
         if (securityDomainContext != null) {
             AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
             if (authManager != null) {
-                Principal userPrincipal = new SimplePrincipal(userName);
+                Principal userPrincipal = new SimplePrincipal(baseUsername);
                 Subject subject = new Subject();
                 String credString = credentials==null?null:new String(credentials.getCredentialsAsCharArray());
                 boolean isValid = authManager.isValid(userPrincipal, credString, subject);
                 if (isValid) {
-                    String qualifiedUserName = userName+AT+domain;
-                    Object securityContext = createSecurityContext(domain, userPrincipal, credString, subject);
-                    LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
-                    return new TeiidLoginContext(qualifiedUserName, subject, domain, securityContext);
+                	SecurityContext securityContext = createSecurityContext(domain, userPrincipal, credString, subject);
+                    LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", baseUsername, "\" in security domain", domain}); //$NON-NLS-1$ //$NON-NLS-2$
+                    return securityContext;
                 }                       
             }
         }
-        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, userName ));       
+        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, baseUsername, domain ));       
     }           
     
     @Override
@@ -145,7 +121,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
                 
                 try {
                     context.associate();
-                    SecurityContext securityContext = (SecurityContext)createSecurityContext(securityDomain, new SimplePrincipal("temp"), null, new Subject()); //$NON-NLS-1$
+                    SecurityContext securityContext = createSecurityContext(securityDomain, new SimplePrincipal("temp"), null, new Subject()); //$NON-NLS-1$
                     previous = associateSecurityContext(securityContext);
                     
                     Subject subject = new Subject();
@@ -178,7 +154,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
                 }
             }
         }
-        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, "GSS Auth" )); //$NON-NLS-1$     
+        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, "GSS Auth", securityDomain)); //$NON-NLS-1$     
     }
 
     private GSSResult buildGSSResult(NegotiationContext context, String securityDomain) throws LoginException {

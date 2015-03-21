@@ -31,7 +31,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
@@ -57,7 +61,6 @@ import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
-import org.teiid.security.TeiidLoginContext;
 
 
 /**
@@ -162,18 +165,19 @@ public class SessionServiceImpl implements SessionService {
 
             boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
                     "false")); //$NON-NLS-1$
-        	TeiidLoginContext membership = null;
-        	if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
-                membership = passThroughLogin(securityDomain, userName);
+        	String baseUserName = getBaseUsername(userName);
+    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
+        		subject = this.securityHelper.getSubjectInContext(securityDomain);
+    	        if (subject == null) {
+    	        	throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
+    	        }
+    	        userName = escapeName(getUserName(subject, baseUserName)) + AT + securityDomain;
+    	        securityContext = this.securityHelper.getSecurityContext();
         	} else {
-        	    final String baseUsername = getBaseUsername(userName);
-                membership = (TeiidLoginContext) this.securityHelper.authenticate(securityDomain, baseUsername, credentials,
-                        applicationName);
+        		userName = escapeName(baseUserName) + AT + securityDomain;
+        		securityContext = this.securityHelper.authenticate(securityDomain, baseUserName, credentials, applicationName);
+        		subject = this.securityHelper.getSubjectInContext(securityDomain);
         	}
-	        userName = membership.getUserName();
-	        securityDomain = membership.getSecurityDomain();
-	        securityContext = membership.getSecurityContext();
-	        subject = membership.getSubject();
 		}
 		else {
         	LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40117)); 
@@ -524,15 +528,7 @@ public class SessionServiceImpl implements SessionService {
             }
             return p.getName();
         }
-        return SessionServiceImpl.getBaseUsername(userName);
+        return userName;
     }
         
-    public TeiidLoginContext passThroughLogin(String securityDomain, String userName) throws LoginException {
-        Subject existing = this.securityHelper.getSubjectInContext(securityDomain);
-        if (existing != null) {
-            return new TeiidLoginContext(getUserName(existing, userName) + AT + securityDomain, existing, securityDomain,
-                    this.securityHelper.getSecurityContext());
-        }
-        throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
-    }	
 }

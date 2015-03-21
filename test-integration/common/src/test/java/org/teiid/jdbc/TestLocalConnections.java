@@ -49,6 +49,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
+import org.apache.cxf.common.security.SimplePrincipal;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,7 +75,6 @@ import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
-import org.teiid.security.TeiidLoginContext;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
@@ -407,20 +407,14 @@ public class TestLocalConnections {
 	}
 
 	static int calls;
-	static Object currentContext = new Object();
+	static Subject currentContext = new Subject();
 	
 	@Test public void testPassThroughDifferentUsers() throws Throwable {
 		SecurityHelper securityHelper = new SecurityHelper() {
 			
 			@Override
-			public boolean sameSubject(String securityDomain, Object context,
-					Subject subject) {
-				return context == currentContext;
-			}
-			
-			@Override
 			public Subject getSubjectInContext(String securityDomain) {
-				return new Subject();
+				return currentContext;
 			}
 						
 			@Override
@@ -436,13 +430,13 @@ public class TestLocalConnections {
 			@Override
 			public Object associateSecurityContext(Object context) {
 				Object result = currentContext;
-				currentContext = context;
+				currentContext = (Subject)context;
 				return result;
 			}
-
-            @Override
-            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
-                    String applicationName) throws LoginException {
+			
+			@Override
+			public Object authenticate(String securityDomain, String baseUserName,
+					Credentials credentials, String applicationName) throws LoginException {
                 return null;
             }
 
@@ -460,16 +454,17 @@ public class TestLocalConnections {
 			
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery("select session_id()");
-			Object o = currentContext;
+			Subject o = currentContext;
 			currentContext = null;
 			s.cancel();
 			currentContext = o;
 			rs.next();
 			String id = rs.getString(1);
 			rs.close();
-			assertEquals(2, calls);
+			assertEquals(4, calls);
 			server.getSessionService().pingServer(id);
-			currentContext = new Object();
+			currentContext = new Subject();
+			currentContext.getPrincipals().add(new SimplePrincipal("x"));
 			rs = s.executeQuery("select session_id()");
 			rs.next();
 			String id1 = rs.getString(1);
@@ -494,12 +489,6 @@ public class TestLocalConnections {
 		SecurityHelper securityHelper = new SecurityHelper() {
 			
 			@Override
-			public boolean sameSubject(String securityDomain, Object context,
-					Subject subject) {
-				return context == currentContext;
-			}
-			
-			@Override
 			public Subject getSubjectInContext(String securityDomain) {
 				return new Subject();
 			}
@@ -516,13 +505,13 @@ public class TestLocalConnections {
 			@Override
 			public Object associateSecurityContext(Object context) {
 				Object result = currentContext;
-				currentContext = context;
+				currentContext = (Subject)context;
 				return result;
 			}
-
-            @Override
-            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
-                    String applicationName) throws LoginException {
+			
+			@Override
+			public Object authenticate(String securityDomain, String baseUserName,
+					Credentials credentials, String applicationName) throws LoginException {
                 return null;
             }
 
@@ -557,7 +546,7 @@ public class TestLocalConnections {
 			
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery("select session_id()");
-			Object o = currentContext;
+			Subject o = currentContext;
 			currentContext = null;
 			s.cancel();
 			currentContext = o;
