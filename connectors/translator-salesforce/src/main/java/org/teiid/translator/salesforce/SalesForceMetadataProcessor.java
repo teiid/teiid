@@ -1,11 +1,28 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 package org.teiid.translator.salesforce;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import javax.resource.ResourceException;
 
@@ -16,19 +33,10 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.*;
 import org.teiid.translator.TranslatorProperty.PropertyType;
-import org.teiid.translator.TypeFacility;
 
-import com.sforce.soap.partner.ChildRelationship;
-import com.sforce.soap.partner.DescribeGlobalResult;
-import com.sforce.soap.partner.DescribeGlobalSObjectResult;
-import com.sforce.soap.partner.DescribeSObjectResult;
-import com.sforce.soap.partner.Field;
-import com.sforce.soap.partner.FieldType;
-import com.sforce.soap.partner.PicklistEntry;
+import com.sforce.soap.partner.*;
 
 public class SalesForceMetadataProcessor implements MetadataProcessor<SalesforceConnection>{
 	private MetadataFactory metadataFactory;
@@ -39,6 +47,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	private List<Column> columns;
 	private boolean auditModelFields = false;
 	private boolean normalizeNames = true;
+	private Pattern excludeTables;
+	private Pattern includeTables;
 
 	// Audit Fields
 	public static final String AUDIT_FIELD_CREATED_BY_ID = "CreatedById"; //$NON-NLS-1$
@@ -162,8 +172,11 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 						col = column;
 					}
 				}
-				if (null == col) throw new RuntimeException(
-	                    "ERROR !!foreign key column not found!! " + child.getName() + relationship.getField()); //$NON-NLS-1$
+				if (null == col)
+                 {
+                    throw new RuntimeException(
+                            "ERROR !!foreign key column not found!! " + child.getName() + relationship.getField()); //$NON-NLS-1$
+                }
 	
 				
 				String name = "FK_" + parent.getName() + "_" + col.getName();//$NON-NLS-1$ //$NON-NLS-2$
@@ -199,6 +212,9 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		if (normalizeNames) {
 			name = NameUtil.normalizeName(name);
 		}
+		if (!allowedToAdd(name)) {
+		    return;
+		}
 		Table table = metadataFactory.addTable(name);
 		
 		table.setNameInSource(objectMetadata.getName());
@@ -222,7 +238,18 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		}
 	}
 
-	private void getRelationships(DescribeSObjectResult objectMetadata) {
+	boolean allowedToAdd(String name) {
+	    if (!shouldInclude(name)) {
+	        return false;
+	    }
+	    
+	    if (shouldExclude(name)) {
+	        return false;
+	    }
+	    return true;
+    }
+
+    private void getRelationships(DescribeSObjectResult objectMetadata) {
 		ChildRelationship[] children = objectMetadata.getChildRelationships();
 		if(children != null && children.length > 0) {
 			this.relationships.put(objectMetadata.getName(), children);
@@ -376,4 +403,36 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     public void setNormalizeNames(boolean normalizeNames) {
 		this.normalizeNames = normalizeNames;
 	}
+    
+    public void setExcludeTables(String excludeTables) {
+        this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+    }
+
+    @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
+    public String getExcludeTables() {
+        return this.excludeTables.pattern();
+    }
+    
+    protected boolean shouldExclude(String fullName) {
+        if (this.excludeTables == null) {
+            return false;
+        }
+        return excludeTables != null && excludeTables.matcher(fullName).matches();
+    }
+
+    public void setIncludeTables(String excludeTables) {
+        this.includeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+    }
+
+    @TranslatorProperty(display="Include Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will included in import.  Applied after table names are retrieved.")
+    public String getIncludeTables() {
+        return this.includeTables.pattern();
+    }
+    
+    protected boolean shouldInclude(String fullName) {
+        if (includeTables == null) {
+            return true;
+        }
+        return includeTables != null && includeTables.matcher(fullName).matches();
+    }
 }
