@@ -41,6 +41,7 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.json.simple.ContentHandler;
@@ -196,14 +197,25 @@ public class JSONFunctionMethods {
 			return writer;
 		}
 		
-		public ClobType close() throws TeiidProcessingException {
+		public ClobType close(CommandContext cc) throws TeiidProcessingException {
 			try {
 				writer.close();
 			} catch (IOException e) {
 				remove();
 				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30442, e);
 			}
+			if (fsisf.getStorageMode() == StorageMode.MEMORY) {
+		        //detach if just in memory
+		    	byte[] bytes = fsisf.getMemoryBytes();
+		    	fsisf.free();
+		    	ClobType result = new ClobType(new ClobImpl(new String(bytes, Streamable.CHARSET)));
+		        result.setType(Type.JSON);
+		        return result;
+			}
 	        ClobType result = new ClobType(new ClobImpl(fsisf, -1));
+	        if (cc != null) {
+	        	cc.addCreatedLob(fsisf);
+	        }
 	        result.setType(Type.JSON);
 	        return result;
 		}

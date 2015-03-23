@@ -571,6 +571,9 @@ public class ConnectorWorkItem implements ConnectorWork {
 	
 				try {
 					SaveOnReadInputStream is = new SaveOnReadInputStream(((DataSource)value).getInputStream(), fsisf);
+					if (context != null) {
+						context.addCreatedLob(fsisf);
+					}
 					return new BlobType(new BlobImpl(is.getInputStreamFactory()));
 				} catch (IOException e) {
 					throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
@@ -609,6 +612,9 @@ public class ConnectorWorkItem implements ConnectorWork {
 					final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 
 					value = new SaveOnReadInputStream(is, fsisf).getInputStreamFactory();
+					if (context != null) {
+						context.addCreatedLob(fsisf);
+					}
 				} else if (value instanceof StAXSource) {
 					//TODO: do this lazily.  if the first access to get the STaXSource, then 
 					//it's more efficient to let the processing happen against STaX
@@ -617,6 +623,9 @@ public class ConnectorWorkItem implements ConnectorWork {
 						final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
 						final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 						value = new SaveOnReadInputStream(new XMLInputStream(ss, XMLSystemFunctions.getOutputFactory(true)), fsisf).getInputStreamFactory();
+						if (context != null) {
+							context.addCreatedLob(fsisf);
+						}
 					} catch (XMLStreamException e) {
 						throw new TransformationException(e);
 					}

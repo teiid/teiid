@@ -70,7 +70,7 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
         		return null;
     		}
     		concat.end(true);
-    		result = concat.close();
+    		result = concat.close(commandContext);
     		concat = null;
     	}
         return result;

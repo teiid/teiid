@@ -1033,7 +1033,7 @@ public class Evaluator {
 			}
 			builder.end(false);
 			if (returnValue) {
-				ClobType result = builder.close();
+				ClobType result = builder.close(context);
 				builder = null;
 				return result;
 			}
@@ -1095,7 +1095,7 @@ public class Evaluator {
 			}
 			builder.end(true);
 			if (returnValue) {
-				ClobType result = builder.close();
+				ClobType result = builder.close(context);
 				builder = null;
 				return result;
 			}
