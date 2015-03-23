@@ -220,7 +220,10 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     public synchronized void close() {
     	lobBuffer = null;
-    	lobStore = null; //can still be referenced by lobs and will be cleaned-up by reference
+    	if (lobStore != null) {
+    		lobStore.remove();
+    		lobStore = null;
+    	}
     	if (!manager.removeState(this.id)) {
     		return; //already closed
     	}

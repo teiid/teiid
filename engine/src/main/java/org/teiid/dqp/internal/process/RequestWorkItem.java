@@ -1242,13 +1242,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void done() {
 		doneProducingBatches();
+		addToCache();
 		//TODO: we could perform more tracking to know what source lobs are in use
 		if (this.resultsBuffer.getLobCount() == 0) {
 			for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
 				connectorRequest.fullyCloseSource();
 		    }
 		}
-		addToCache();
 	}
 
 	private void doneProducingBatches() {

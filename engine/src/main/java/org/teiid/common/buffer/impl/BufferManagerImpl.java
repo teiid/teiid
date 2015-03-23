@@ -1046,6 +1046,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	
 	void removeCacheGroup(Long id, Boolean prefersMemory) {
 		cleanSoftReferences();
+		if (cache == null) {
+			return; //this could be called after shutdown
+		}
 		Collection<Long> vals = cache.removeCacheGroup(id);
 		long overhead = vals.size() * BATCH_OVERHEAD;
 		overheadBytes.addAndGet(-overhead);
