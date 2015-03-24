@@ -61,7 +61,8 @@ public abstract class JDBCBaseExecution implements Execution  {
     protected int fetchSize;
 
     // Set during execution
-    protected Statement statement;
+    protected volatile Statement statement;
+	private volatile boolean canceled;
 
     // ===========================================================================================================================
     // Constructors
@@ -125,9 +126,16 @@ public abstract class JDBCBaseExecution implements Execution  {
         return translatedCommand;
     }
 
-    public synchronized void close() {
+    public void close() {
         try {
             if (statement != null) {
+            	if (canceled) {
+            		try {
+            			this.executionFactory.intializeConnectionAfterCancel(connection);
+            		} catch (SQLException e) {
+            			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+            		}
+            	}
                 statement.close();
             }
         } catch (SQLException e) {
@@ -135,12 +143,14 @@ public abstract class JDBCBaseExecution implements Execution  {
         } 
     }
 
-    public synchronized void cancel() throws TranslatorException {
+    public void cancel() throws TranslatorException {
         // if both the DBMS and driver support aborting an SQL
         try {
-            if (statement != null) {
-                statement.cancel();
-            }
+        	Statement s = this.statement;
+        	if (s != null) {
+        		s.cancel();
+        		this.canceled = true;
+        	}
         } catch (SQLException e) {
             // Defect 16187 - DataDirect does not support the cancel() method for
             // Statement.cancel() for DB2 and Informix. Here we are tolerant
@@ -158,7 +168,7 @@ public abstract class JDBCBaseExecution implements Execution  {
 		}
     }
 
-    protected synchronized Statement getStatement() throws SQLException {
+    protected Statement getStatement() throws SQLException {
         if (statement != null) {
             statement.close();
             statement = null;
@@ -168,7 +178,7 @@ public abstract class JDBCBaseExecution implements Execution  {
         return statement;
     }
 
-    protected synchronized CallableStatement getCallableStatement(String sql) throws SQLException {
+    protected CallableStatement getCallableStatement(String sql) throws SQLException {
         if (statement != null) {
             statement.close();
             statement = null;
@@ -178,7 +188,7 @@ public abstract class JDBCBaseExecution implements Execution  {
         return (CallableStatement)statement;
     }
 
-    protected synchronized PreparedStatement getPreparedStatement(String sql) throws SQLException {
+    protected PreparedStatement getPreparedStatement(String sql) throws SQLException {
         if (statement != null) {
             statement.close();
             statement = null;

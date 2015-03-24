@@ -1056,4 +1056,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         return null;
     }
     
+    @Override
+    public void intializeConnectionAfterCancel(Connection c) throws SQLException {
+    	//Oracle JDBC has a timing bug with cancel during result set iteration
+    	//that can cause the next statement on the connection to throw an exception
+    	//doing an isvalid check seems to allow the connection to be safely reused
+    	c.isValid(1);
+    }
 }
