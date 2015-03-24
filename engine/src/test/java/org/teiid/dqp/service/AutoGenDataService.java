@@ -161,7 +161,7 @@ public class AutoGenDataService extends ConnectorManager{
 			}
 			
 			@Override
-			public void cancel(boolean premature) {
+			public void cancel() {
 				
 			}
 			

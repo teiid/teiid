@@ -253,7 +253,7 @@ public class ConnectorManager  {
     	stopped = true;
         //ensure that all requests receive a response
         for (ConnectorWork workItem : this.requestStates.values()) {
-    		workItem.cancel(true);
+    		workItem.cancel();
 		}
     }
 

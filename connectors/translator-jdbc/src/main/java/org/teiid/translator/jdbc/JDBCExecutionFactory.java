@@ -1488,5 +1488,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public boolean useUnicodePrefix() {
 		return false;
 	}
+
+	
+	/**
+	 * Implemented if the {@link Connection} needs initialized after a statement cancel
+	 * @param c
+	 * @throws SQLException 
+	 */
+	public void intializeConnectionAfterCancel(Connection c) throws SQLException {
+	}
 	
 }
