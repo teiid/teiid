@@ -52,6 +52,7 @@ connect
 /profile=ha/subsystem=teiid/translator=mysql5:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=oracle:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=postgresql:add(module=org.jboss.teiid.translator.jdbc)
+/profile=ha/subsystem=teiid/translator=greenplum:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=sqlserver:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=sybase:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=sybaseiq:add(module=org.jboss.teiid.translator.jdbc)
