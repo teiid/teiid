@@ -186,7 +186,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 40, translators.size());  // infinispan is not configured OOTB
+		assertEquals(translators.toString(), 41, translators.size());  // infinispan is not configured OOTB
 
 		JavaArchive jar = getLoopyArchive();
 		

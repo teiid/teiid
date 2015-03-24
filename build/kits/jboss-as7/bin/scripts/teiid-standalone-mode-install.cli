@@ -43,6 +43,7 @@
 /subsystem=teiid/translator=mysql5:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=oracle:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=postgresql:add(module=org.jboss.teiid.translator.jdbc)
+/subsystem=teiid/translator=greenplum:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=sqlserver:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=sybase:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=teiid:add(module=org.jboss.teiid.translator.jdbc)
