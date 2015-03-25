@@ -23,20 +23,40 @@ package org.teiid.jboss.rest;
 
 import static org.objectweb.asm.Opcodes.*;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.objectweb.asm.*;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
 
 
@@ -336,10 +356,10 @@ public class RestASMBasedWebArchiveBuilder {
     	paramSignature.append(")");
     	
     	if (useMultipart) {
-    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });    	    
+    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });    	    
     	}
     	else {
-    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), paramSignature+"Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });
+    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), paramSignature+"Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });
     	}
     	{
     	av0 = mv.visitAnnotation("Ljavax/ws/rs/Produces;", true);
@@ -424,7 +444,7 @@ public class RestASMBasedWebArchiveBuilder {
         	mv.visitLdcInsn(charSet==null?"":charSet);
         	mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
         	mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
-        	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;ZZ)Ljava/io/InputStream;");
+        	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
         	mv.visitLabel(l1);
         	mv.visitInsn(ARETURN);
         	mv.visitLabel(l2);
@@ -448,7 +468,7 @@ public class RestASMBasedWebArchiveBuilder {
     	    mv.visitLdcInsn(charSet==null?"":charSet);
     	    mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
     	    mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
-    	    mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executePost", "(Ljava/lang/String;ILjava/lang/String;Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;Ljava/lang/String;ZZ)Ljava/io/InputStream;");
+    	    mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executePost", "(Ljava/lang/String;ILjava/lang/String;Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;Ljava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
     	    mv.visitLabel(l1);
     	    mv.visitInsn(ARETURN);
     	    mv.visitLabel(l2);
@@ -470,7 +490,7 @@ public class RestASMBasedWebArchiveBuilder {
 		MethodVisitor mv;
 		{
 			AnnotationVisitor av0;
-			mv = cw.visitMethod(ACC_PUBLIC, "sqlQuery"+context, "(Ljava/lang/String;)Ljava/io/InputStream;", null, null);
+			mv = cw.visitMethod(ACC_PUBLIC, "sqlQuery"+context, "(Ljava/lang/String;)Ljavax/ws/rs/core/StreamingOutput;", null, null);
 			{
 			av0 = mv.visitAnnotation("Ljavax/ws/rs/Produces;", true);
 			{
@@ -506,7 +526,7 @@ public class RestASMBasedWebArchiveBuilder {
 			mv.visitVarInsn(ALOAD, 1);
 			mv.visitInsn(context.equals("xml")?ICONST_0:ICONST_1);
 			mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
-			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executeQuery", "(Ljava/lang/String;ILjava/lang/String;ZZ)Ljava/io/InputStream;");
+			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executeQuery", "(Ljava/lang/String;ILjava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
 			mv.visitLabel(l1);
 			mv.visitInsn(ARETURN);
 			mv.visitLabel(l2);

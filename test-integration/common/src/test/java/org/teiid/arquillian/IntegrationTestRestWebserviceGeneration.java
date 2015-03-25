@@ -112,6 +112,11 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123?p2=test')) as x");
 		this.internalResultSet.next();
 		assertEquals(expected, this.internalResultSet.getString(1));
+
+		//test a large doc
+		response = httpCall("http://localhost:8080/sample_1/view/largedoc", "GET", null);
+		assertEquals(327801, response.length());
+		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
     }

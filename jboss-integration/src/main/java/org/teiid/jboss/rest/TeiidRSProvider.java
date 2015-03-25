@@ -24,17 +24,30 @@ package org.teiid.jboss.rest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
+
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.teiid.core.types.*;
 import org.teiid.core.util.Base64;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.StringUtil;
 import org.teiid.jboss.IntegrationPlugin;
@@ -45,48 +58,66 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public abstract class TeiidRSProvider {
 
-    public InputStream execute(String vdbName, int version, String procedureName, LinkedHashMap<String, String> parameters,
-            String charSet, boolean passthroughAuth, boolean usingReturn) throws SQLException {
-        //the generated code sends a empty string rather than null.
-        if (charSet != null && charSet.trim().isEmpty()) {
-            charSet = null;
-        }
-        Connection conn = getConnection(vdbName, version, passthroughAuth);
-        try {
-            LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
-            return executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                }
-            }
-        }
+    public StreamingOutput execute(final String vdbName, final int version, final String procedureName, final LinkedHashMap<String, String> parameters,
+    		final String charSet, final boolean passthroughAuth, final boolean usingReturn) throws SQLException {
+    	return new StreamingOutput() {
+			
+			@Override
+			public void write(OutputStream output) throws IOException,
+					WebApplicationException {
+				Connection conn = null;
+				try {
+					conn = getConnection(vdbName, version, passthroughAuth);
+			        LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
+			        InputStream is = executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
+			        ObjectConverterUtil.write(output, is, -1);
+				} catch (SQLException e) {
+					throw new WebApplicationException(e);
+				} finally {
+		            if (conn != null) {
+		                try {
+		                    conn.close();
+		                } catch (SQLException e) {
+		                }
+		            }
+		        }
+			}
+		};
     }
-    
-    public InputStream executePost(String vdbName, int version, String procedureName, MultipartFormDataInput parameters,
-            String charSet, boolean passthroughAuth, boolean usingReturn) throws SQLException {
-        //the generated code sends a empty string rather than null.
-        if (charSet != null && charSet.trim().isEmpty()) {
-            charSet = null;
-        }
-        Connection conn = getConnection(vdbName, version, passthroughAuth);
-        try {
-            LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
-            return executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                }
-            }
-        }
+	
+    public StreamingOutput executePost(final String vdbName, final int version, final String procedureName, final MultipartFormDataInput parameters,
+            final String charSet, final boolean passthroughAuth, final boolean usingReturn) throws SQLException {
+    	return new StreamingOutput() {
+			
+			@Override
+			public void write(OutputStream output) throws IOException,
+					WebApplicationException {
+				Connection conn = null;
+				try {
+					conn = getConnection(vdbName, version, passthroughAuth);
+					LinkedHashMap<String, Object> updatedParameters = convertParameters(conn, vdbName, procedureName, parameters);
+			        InputStream is = executeProc(conn, procedureName, updatedParameters, charSet, usingReturn);
+			        ObjectConverterUtil.write(output, is, -1);
+				} catch (SQLException e) {
+					throw new WebApplicationException(e);
+				} finally {
+		            if (conn != null) {
+		                try {
+		                    conn.close();
+		                } catch (SQLException e) {
+		                }
+		            }
+		        }
+			}
+		};
     }
     
     public InputStream executeProc(Connection conn, String procedureName, LinkedHashMap<String, Object> parameters,
             String charSet, boolean usingReturn) throws SQLException {
+    	//the generated code sends a empty string rather than null.
+        if (charSet != null && charSet.trim().isEmpty()) {
+            charSet = null;
+        }
         Object result = null;
     	StringBuilder sb = new StringBuilder();
     	sb.append("{ "); //$NON-NLS-1$
@@ -127,14 +158,12 @@ public abstract class TeiidRSProvider {
             } else {
             	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
             }
-            rs.close();
         }
         else if (!usingReturn){
         	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
         } else {
         	result = statement.getObject(1);
         }
-        statement.close();
         return handleResult(charSet, result);
     }
 
@@ -308,32 +337,41 @@ public abstract class TeiidRSProvider {
 		return new ByteArrayInputStream(result.toString().getBytes(charSet==null?Charset.defaultCharset():Charset.forName(charSet)));
 	}
 
-	public InputStream executeQuery(String vdbName, int vdbVersion, String sql, boolean json, boolean passthroughAuth) 
+	public StreamingOutput executeQuery(final String vdbName, final int vdbVersion, final String sql, boolean json, final boolean passthroughAuth) 
 	        throws SQLException {
-		Connection conn = getConnection(vdbName, vdbVersion, passthroughAuth);
-		Object result = null;
-		try {
-			Statement statement = conn.createStatement();
-            final boolean hasResultSet = statement.execute(sql);
-            if (hasResultSet) {
-                ResultSet rs = statement.getResultSet();
-                if (rs.next()) {
-                    result = rs.getObject(1);
-                } else {
-                	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
-                }
-                rs.close();
-            }
-			statement.close();
-			return handleResult(Charset.defaultCharset().name(), result);
-		} finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                }
-            }
-		}
+		return new StreamingOutput() {
+			
+			@Override
+			public void write(OutputStream output) throws IOException,
+					WebApplicationException {
+				Connection conn = null;
+				try {
+					conn = getConnection(vdbName, vdbVersion, passthroughAuth);					
+					Statement statement = conn.createStatement();
+		            final boolean hasResultSet = statement.execute(sql);
+		            Object result = null;
+		            if (hasResultSet) {
+		                ResultSet rs = statement.getResultSet();
+		                if (rs.next()) {
+		                    result = rs.getObject(1);
+		                } else {
+		                	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092));
+		                }
+		            }
+					InputStream is = handleResult(Charset.defaultCharset().name(), result);
+					ObjectConverterUtil.write(output, is, -1);
+				} catch (SQLException e) {
+					throw new WebApplicationException(e);
+				} finally {
+					try {
+						if (conn != null) {
+							conn.close();
+						}
+					} catch (SQLException e) {
+					}
+				}
+			}
+		};
 	}
 
 	private Connection getConnection(String vdbName, int version, boolean passthough) throws SQLException {

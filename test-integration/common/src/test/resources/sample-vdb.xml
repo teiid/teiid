@@ -36,7 +36,12 @@
             AS
             BEGIN
                 SELECT XMLELEMENT(NAME "rows", XMLATTRIBUTES (g1SimplePost.p1 as p1, g1SimplePost.p2 as p2, g1SimplePost.p3 as p3), XMLAGG(XMLELEMENT(NAME "row", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1;
-            END                                                     
+            END
+            CREATE VIRTUAL PROCEDURE largedoc() RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "REST:METHOD" 'GET', "REST:URI" 'largedoc')
+            AS
+            BEGIN
+                WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(name "row", xmlforest(n, n)))) FROM t;
+            END
             ]]> </metadata>
     </model>
 
