@@ -130,7 +130,19 @@
         <outputDirectory>modules/system/layers/base/org/jboss/teiid/olingo/main</outputDirectory>
       </binaries>
     </moduleSet>
-
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-jboss-security</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/security/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+    
     <moduleSet>
         <useAllReactorProjects>true</useAllReactorProjects>
         <includes>

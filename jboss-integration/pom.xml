@@ -96,6 +96,7 @@
         <artifactId>asm</artifactId>
         <scope>provided</scope>
     </dependency>
+    
     <dependency>
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-multipart-provider</artifactId>
@@ -115,27 +116,6 @@
         <scope>provided</scope>
     </dependency> 
     
-    <dependency>
-        <groupId>org.apache.cxf</groupId>
-        <artifactId>cxf-rt-rs-security-oauth</artifactId>
-        <scope>provided</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.apache.cxf</groupId>
-        <artifactId>cxf-rt-rs-security-oauth2</artifactId>
-        <scope>provided</scope>
-    </dependency>     
-    <dependency>
-      <groupId>org.apache.cxf</groupId>
-      <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-rs-security-xml</artifactId>
-        </exclusion>            
-      </exclusions>
-    </dependency>      
     <dependency>
         <groupId>org.jboss.as</groupId>
         <artifactId>jboss-as-subsystem-test-framework</artifactId>
@@ -173,7 +153,6 @@
       <artifactId>translator-jdbc</artifactId>
       <scope>test</scope>
     </dependency>    
-    
   </dependencies>
   
 </project>

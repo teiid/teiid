@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.web.cxf">
-
+    <resources>
+        <resource-root path="teiid-jboss-security-${project.version}.jar" />
+    </resources>
     <dependencies>
         <module name="org.apache.cxf" /> <!-- for OAuth -->
         <module name="org.apache.cxf.impl" /> <!-- for OAuth -->
         <module name="org.apache.cxf.impl.frontend-jaxrs" />  <!-- for OAuth -->
-        <module name="org.jboss.teiid" export="true" />
+        <module name="org.picketbox"/>
+        <module name="org.jboss.as.security"/>
     </dependencies>
 
 </module>

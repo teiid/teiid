@@ -1535,6 +1535,7 @@
 		<module>hibernate-dialect</module>
 		<module>eclipselink-platform</module>
         <module>jboss-integration</module>
+        <module>jboss-security</module>
 		<module>test-integration</module>
         <module>client-jdk15</module>
 		<module>admin</module>
