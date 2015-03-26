@@ -56,7 +56,8 @@
         <module name="nu.xom" />
         <module name="org.jaxen" />
         <module name="org.jboss.resteasy.resteasy-jaxrs"/> <!--  REST Web Service --> 
-        <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service --> 
+        <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service -->
+        <module name="javax.ws.rs.api"/> <!--  REST Web Service -->
     </dependencies>
 
 </module>
