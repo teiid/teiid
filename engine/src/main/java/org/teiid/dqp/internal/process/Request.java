@@ -231,7 +231,7 @@ public class Request {
 			        	autoCleanLobs = false;
 			        }
 				} catch (TransformationException e) {
-					LogManager.logDetail(LogConstants.CTX_DQP, e);
+					LogManager.logDetail(LogConstants.CTX_DQP, e, "Improper value for", CLEAN_LOBS_ONCLOSE); //$NON-NLS-1$
 				}
 			}
         }
