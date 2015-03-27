@@ -31,15 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.InetSocketAddress;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1337,6 +1329,25 @@ public class TestEmbeddedServer {
 		ResultSet rs = s.executeQuery("select 'hello world'");
 		rs.next();
 		assertEquals("goodbye", rs.getString(1));
+	}
+	
+	@Test public void testTurnOffLobCleaning() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("y");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
+		es.deployVDB("x", mmd);
+
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		s.execute("select teiid_session_set('clean_lobs_onclose', false)");
+		ResultSet rs = s.executeQuery("WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 5000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
+		assertTrue(rs.next());
+		SQLXML val = rs.getSQLXML(1);
+		rs.close();
+		assertEquals(73906, val.getString().length());
 	}
 
 }

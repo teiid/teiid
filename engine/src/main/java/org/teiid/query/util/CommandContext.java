@@ -779,13 +779,15 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 				}
 				this.globalState.lookups = null;
 			}
-			for (InputStreamFactory isf : this.globalState.created) {
-				try {
-					isf.free();
-				} catch (IOException e) {
+			if (this.globalState.created != null) {
+				for (InputStreamFactory isf : this.globalState.created) {
+					try {
+						isf.free();
+					} catch (IOException e) {
+					}
 				}
+				this.globalState.created.clear();
 			}
-			this.globalState.created.clear();
 		}
 	}
 
@@ -1075,7 +1077,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 
 	public void addCreatedLob(InputStreamFactory isf) {
-		this.globalState.created.add(isf);
+		if (this.globalState.created != null) {
+			this.globalState.created.add(isf);
+		}
+	}
+
+	public void disableAutoCleanLobs() {
+		this.globalState.created = null;
 	}
 	
 }

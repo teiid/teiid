@@ -42,6 +42,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
@@ -95,6 +96,7 @@ import org.teiid.query.validator.ValidatorReport;
  */
 public class Request {
     
+	private static final String CLEAN_LOBS_ONCLOSE = "clean_lobs_onclose"; //$NON-NLS-1$
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
@@ -218,6 +220,24 @@ public class Request {
                 || LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
+        boolean autoCleanLobs = true;
+        if (this.workContext.getSession().isEmbedded()) {
+	        Object value = this.workContext.getSession().getSessionVariables().get(CLEAN_LOBS_ONCLOSE);
+	        if (value != null) {
+				value = DataTypeManager.convertToRuntimeType(value, false);
+				try {
+					value = DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.BOOLEAN);
+			        if (!(Boolean)value) {
+			        	autoCleanLobs = false;
+			        }
+				} catch (TransformationException e) {
+					LogManager.logDetail(LogConstants.CTX_DQP, e);
+				}
+			}
+        }
+        if (!autoCleanLobs) {
+        	context.disableAutoCleanLobs();
+        }
         context.setExecutor(this.executor);
         context.setAuthoriziationValidator(authorizationValidator);
         context.setTempTableStore(tempTableStore);
