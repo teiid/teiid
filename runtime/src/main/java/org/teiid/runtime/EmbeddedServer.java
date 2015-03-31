@@ -59,6 +59,9 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.WorkerPoolStatistics;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.EngineStatisticsMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -67,11 +70,13 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.client.DQP;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.BundleUtil.Event;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -865,15 +870,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		return this.transports.get(transport).getPort();
 	}
 	
-	protected Collection<ExecutionFactory<?, ?>> getTranslators() {
-		return this.translators.values();
-	}
-	
 	public Admin getAdmin() {
 		return AdminFactory.getInstance().createAdmin(this);
 	}
 	
-	static class AdminFactory {
+	private static class AdminFactory {
 		
 		private static AdminFactory INSTANCE = new AdminFactory();
 		
@@ -897,26 +898,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				this.embeddedServer = embeddedServer;
 			}
 			
-			private VDBMetaData checkVDB(String vdbName) throws AdminProcessingException {
-				VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName);
-				return vdb;
-			}
-			
-			private VDBMetaData checkVDB(String vdbName, int vdbVersion) throws AdminProcessingException {
-				VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName, vdbVersion);
-				if (vdb == null){
-					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40131, vdbName, vdbVersion));
-				}
-				Status status = vdb.getStatus();
-				if (status != VDB.Status.ACTIVE) {
-					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40132, vdbName, vdbVersion, status));
-				}
-				return vdb;
-			}
-
 			@Override
 			public void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException {
-				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40130, "assignToModel"));
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40130, "assignToModel")); //$NON-NLS-1$
 				
 			}
 
@@ -942,7 +926,23 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 					}
 				}
 				
-				
+			}
+			
+			private VDBMetaData checkVDB(String vdbName) throws AdminProcessingException {
+				VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName);
+				return vdb;
+			}
+			
+			private VDBMetaData checkVDB(String vdbName, int vdbVersion) throws AdminProcessingException {
+				VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName, vdbVersion);
+				if (vdb == null){
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40131, vdbName, vdbVersion));
+				}
+				Status status = vdb.getStatus();
+				if (status != VDB.Status.ACTIVE) {
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40132, vdbName, vdbVersion, status));
+				}
+				return vdb;
 			}
 
 			@Override
@@ -1028,11 +1028,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 				synchronized(vdb) {
 					try {
-						//TODO-- need remove model cache first
+						// need remove model cache first
 						VDBMetaData currentVdb = this.embeddedServer.repo.removeVDB(vdbName, vdbVersion);
 						ConnectorManagerRepository cmr = this.embeddedServer.cmr;
 						UDFMetaData udf = currentVdb.getAttachment(UDFMetaData.class);
-						//TODO-- need get the visibilityMap from runtime
+						// need get the visibilityMap from runtime
 						LinkedHashMap<String, VDBResources.Resource> visibilityMap = new LinkedHashMap<String, VDBResources.Resource>();
 						MetadataStore store = new MetadataStore();
 						this.embeddedServer.repo.addVDB(currentVdb, store, visibilityMap, udf, cmr, false);
@@ -1047,7 +1047,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			public Collection<? extends org.teiid.adminapi.Translator> getTranslators() throws AdminException {
 				
 				List<org.teiid.adminapi.Translator> list = new ArrayList<org.teiid.adminapi.Translator>();
-				for(ExecutionFactory<?,?> ef : this.embeddedServer.getTranslators()){
+				for(ExecutionFactory<?,?> ef : this.embeddedServer.translators.values()){
 					list.add(TranslatorUtil.buildTranslatorMetadata(ef, null));
 				}
 				return list;
@@ -1097,12 +1097,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			@Override
 			public Collection<? extends PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
 				// Embedded dosn't load ra.xml
-				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getTemplatePropertyDefinitions"));
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getTemplatePropertyDefinitions")); //$NON-NLS-1$
 			}
 
 			@Override
 			public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName) throws AdminException {
-				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40130, "getTranslatorPropertyDefinitions"));
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40130, "getTranslatorPropertyDefinitions")); //$NON-NLS-1$
 			}
 
 			@Override
@@ -1137,135 +1137,198 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 						}
 					}
 				} catch (ConnectorManagerException e) {
-					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, translatorName, type, e));
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40138, translatorName, type, e));
 				}
 				return list;
 			}
 
 			@Override
 			public Collection<? extends Transaction> getTransactions() throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				return this.embeddedServer.dqp.getTransactions();
 			}
 
 			@Override
 			public void clearCache(String cacheType) throws AdminException {
-				// TODO Auto-generated method stub
 				
+				if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
+					this.embeddedServer.rs.clearAll();
+				} else if(cacheType.equals(Admin.Cache.PREPARED_PLAN_CACHE.name())) {
+					this.embeddedServer.ppc.clearAll();
+				} else {
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40139, cacheType, Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE, Admin.Cache.PREPARED_PLAN_CACHE));
+				}
 			}
 
 			@Override
 			public void clearCache(String cacheType, String vdbName, int vdbVersion) throws AdminException {
-				// TODO Auto-generated method stub
 				
+				checkVDB(vdbName, vdbVersion);
+
+				if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
+					this.embeddedServer.rs.clearForVDB(vdbName, vdbVersion);
+				} else if(cacheType.equals(Admin.Cache.PREPARED_PLAN_CACHE.name())) {
+					this.embeddedServer.ppc.clearForVDB(vdbName, vdbVersion);
+				} else {
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40139, cacheType, Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE, Admin.Cache.PREPARED_PLAN_CACHE));
+				}
 			}
 
 			@Override
 			public Collection<? extends CacheStatistics> getCacheStats(String cacheType) throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				
+				if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
+					return Arrays.asList(buildCacheStats(cacheType, this.embeddedServer.rs));
+				} else if(cacheType.equals(Admin.Cache.PREPARED_PLAN_CACHE.name())) {
+					return Arrays.asList(buildCacheStats(cacheType, this.embeddedServer.ppc));
+				} else {
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40139, cacheType, Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE, Admin.Cache.PREPARED_PLAN_CACHE));
+				}				
+			}
+			
+			@SuppressWarnings("rawtypes")
+			private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
+				CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
+				stats.setName(name);
+				stats.setHitRatio(cache.getRequestCount() == 0?0:((double)cache.getCacheHitCount()/cache.getRequestCount())*100);
+				stats.setTotalEntries(cache.getTotalCacheEntries());
+				stats.setRequestCount(cache.getRequestCount());
+				return stats;
 			}
 
 			@Override
 			public Collection<? extends EngineStatistics> getEngineStats()throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				
+				EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
+				try {
+					//embedded no logon, odata, odbc 
+					stats.setSessionCount(this.embeddedServer.sessionService.getActiveSessionsCount());
+					stats.setTotalMemoryUsedInKB(this.embeddedServer.bufferService.getHeapCacheMemoryInUseKB());
+					stats.setMemoryUsedByActivePlansInKB(this.embeddedServer.bufferService.getHeapMemoryInUseByActivePlansKB());
+					stats.setDiskWriteCount(this.embeddedServer.bufferService.getDiskWriteCount());
+					stats.setDiskReadCount(this.embeddedServer.bufferService.getDiskReadCount());
+					stats.setCacheReadCount(this.embeddedServer.bufferService.getCacheReadCount());
+					stats.setCacheWriteCount(this.embeddedServer.bufferService.getCacheWriteCount());
+					stats.setDiskSpaceUsedInMB(this.embeddedServer.bufferService.getUsedDiskBufferSpaceMB());
+					stats.setActivePlanCount(this.embeddedServer.dqp.getActivePlanCount());
+					stats.setWaitPlanCount(this.embeddedServer.dqp.getWaitingPlanCount());
+					stats.setMaxWaitPlanWaterMark(this.embeddedServer.dqp.getMaxWaitingPlanWatermark());
+					return Arrays.asList(stats);
+				} catch (SessionServiceException e) {
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40140, "getEngineStats", e)); //$NON-NLS-1$
+				}
+				
 			}
 
 			@Override
 			public void terminateSession(String sessionId)throws AdminException {
-				// TODO Auto-generated method stub
-				
+				this.embeddedServer.sessionService.terminateSession(sessionId, DQPWorkContext.getWorkContext().getSessionId());
 			}
 
 			@Override
 			public void cancelRequest(String sessionId, long executionId)throws AdminException {
-				// TODO Auto-generated method stub
-				
+				try {
+					this.embeddedServer.dqp.cancelRequest(sessionId, executionId);
+				} catch (TeiidComponentException e) {
+					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40141, sessionId, executionId, e));
+				}
 			}
 
 			@Override
 			public void terminateTransaction(String transactionId)throws AdminException {
-				// TODO Auto-generated method stub
-				
+				this.embeddedServer.dqp.terminateTransaction(transactionId);
 			}
 
 			@Override
 			public void close() {
-				// TODO Auto-generated method stub
-				
+				this.embeddedServer.stop();
 			}
 
 			@Override
 			public void addDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
-				// TODO Auto-generated method stub
-				
+				VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
+				synchronized(vdb) {
+					DataPolicyMetadata policy = getPolicy(vdb, dataRole);
+					policy.addMappedRoleName(mappedRoleName);			
+				}
 			}
+			
+			private DataPolicyMetadata getPolicy(VDBMetaData vdb, String policyName)throws AdminProcessingException {
+				DataPolicyMetadata policy = vdb.getDataPolicyMap().get(policyName);	
+				if (policy == null) {
+					 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40092, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40092, policyName, vdb.getName(), vdb.getVersion()));
+				}
+				return policy;
+			}	
 
 			@Override
 			public void removeDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
-				// TODO Auto-generated method stub
-				
+				VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
+				synchronized(vdb) {
+					DataPolicyMetadata policy = getPolicy(vdb, dataRole);
+					policy.removeMappedRoleName(mappedRoleName);
+				}
 			}
 
 			@Override
 			public void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException {
-				// TODO Auto-generated method stub
-				
+				VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
+				synchronized(vdb) {
+					DataPolicyMetadata policy = getPolicy(vdb, dataRole);
+					policy.setAnyAuthenticated(anyAuthenticated);
+				}
 			}
 
 			@Override
 			public void createDataSource(String deploymentName, String templateName, Properties properties) throws AdminException {
-				// TODO Auto-generated method stub
-				
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "createDataSource")); //$NON-NLS-1$
 			}
 
 			@Override
 			public Properties getDataSource(String deployedName) throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getDataSource")); //$NON-NLS-1$
 			}
 
 			@Override
 			public void deleteDataSource(String deployedName) throws AdminException {
-				// TODO Auto-generated method stub
-				
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "deleteDataSource")); //$NON-NLS-1$
 			}
 
 			@Override
 			public Collection<String> getDataSourceNames() throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getDataSourceNames")); //$NON-NLS-1$
 			}
 
 			@Override
 			public Set<String> getDataSourceTemplateNames() throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getDataSourceTemplateNames")); //$NON-NLS-1$
 			}
 
 			@Override
 			public void markDataSourceAvailable(String jndiName) throws AdminException {
-				// TODO Auto-generated method stub
-				
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "markDataSourceAvailable")); //$NON-NLS-1$
 			}
 
 			@Override
 			public String getSchema(String vdbName, int vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				
+				VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
+				
+				MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
+				Schema schema = metadataStore.getSchema(modelName);
+				String ddl = DDLStringVisitor.getDDLString(schema, allowedTypes, typeNamePattern);
+				return ddl;
 			}
 
 			@Override
 			public String getQueryPlan(String sessionId, int executionId)throws AdminException {
-				// TODO Auto-generated method stub
-				return null;
+				PlanNode plan = this.embeddedServer.dqp.getPlan(sessionId, executionId);
+				return plan.toXml();
 			}
 
 			@Override
 			public void restart() {
-				// TODO Auto-generated method stub
-				
+				// embedded once stop can not restart
+				throw new RuntimeException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "restart")); //$NON-NLS-1$
 			}
 			
 		}

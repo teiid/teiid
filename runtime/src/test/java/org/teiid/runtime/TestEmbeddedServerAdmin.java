@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -21,11 +22,15 @@ import javax.resource.ResourceException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.CacheStatistics;
+import org.teiid.adminapi.EngineStatistics;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
@@ -33,6 +38,7 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.WorkerPoolStatistics;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
@@ -48,7 +54,6 @@ public class TestEmbeddedServerAdmin {
 	
 	private static Admin admin;
 	private static EmbeddedServer server;
-	private static Connection conn;
 	
 	@BeforeClass
 	public static void init() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, FileNotFoundException, IOException, ResourceException, SQLException {
@@ -65,7 +70,10 @@ public class TestEmbeddedServerAdmin {
 		
 		server.deployVDB(new FileInputStream(new File("src/test/resources/adminapi-test-vdb.xml")));
 		admin = server.getAdmin();
-		conn = server.getDriver().connect("jdbc:teiid:AdminAPITestVDB", new Properties());
+	}
+	
+	private Connection newSession() throws SQLException {
+		return server.getDriver().connect("jdbc:teiid:AdminAPITestVDB", new Properties());
 	}
 	
 	@Test
@@ -167,21 +175,23 @@ public class TestEmbeddedServerAdmin {
 		assertTrue(cacheTypes.contains("QUERY_SERVICE_RESULT_SET_CACHE"));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
-	public void testGetSessions() throws AdminException {
-		@SuppressWarnings("unchecked")
+	public void testGetSessions() throws AdminException, SQLException {
+		Connection conn = newSession();
 		List<Session> sessions = (List<Session>) admin.getSessions();
 		assertEquals(1, sessions.size());
 		assertEquals("AdminAPITestVDB", sessions.get(0).getVDBName());
 		assertEquals(1, sessions.get(0).getVDBVersion());
 		assertEquals("JDBC", sessions.get(0).getApplicationName());
 		assertNotNull(sessions.get(0).getSessionId());
+		conn.close();
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetRequests() throws AdminException, SQLException {
-		Connection conn = server.getDriver().connect("jdbc:teiid:AdminAPITestVDB", new Properties());
+		Connection conn = newSession();
 		Statement stmt = conn.createStatement();
 		String command = "SELECT * FROM helloworld" ;
 		ResultSet rs = stmt.executeQuery(command);
@@ -197,7 +207,7 @@ public class TestEmbeddedServerAdmin {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetRequest() throws AdminException, SQLException {
-		Connection conn = server.getDriver().connect("jdbc:teiid:AdminAPITestVDB", new Properties());
+		Connection conn = newSession();
 		Statement stmt = conn.createStatement();
 		String command = "SELECT * FROM helloworld" ;
 		ResultSet rs = stmt.executeQuery(command);
@@ -224,22 +234,153 @@ public class TestEmbeddedServerAdmin {
 		assertEquals(19, list.size());
 	}
 	
-	@AfterClass
-	public static void destory() throws SQLException {
-		conn.close();
-		admin.close();
-		server.stop();
+	@Test
+	public void testGetTransactions() throws AdminException {
+		//need enhance
+		admin.getTranslators();
 	}
 	
-	public static void main(String[] args) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, FileNotFoundException, IOException, AdminException, ResourceException, SQLException {
+	public void testClearCache() throws AdminException{
+		admin.clearCache("PREPARED_PLAN_CACHE");
+		admin.clearCache("QUERY_SERVICE_RESULT_SET_CACHE");
+		admin.clearCache("PREPARED_PLAN_CACHE", "AdminAPITestVDB", 1);
+		admin.clearCache("QUERY_SERVICE_RESULT_SET_CACHE", "AdminAPITestVDB", 1);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testGetCacheStats() throws AdminException {
+		List<CacheStatistics> list = (List<CacheStatistics>) admin.getCacheStats("PREPARED_PLAN_CACHE");
+		assertEquals(list.get(0).getName(), Admin.Cache.PREPARED_PLAN_CACHE.name());
+		list = (List<CacheStatistics>) admin.getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE");
+		assertEquals(list.get(0).getName(), Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name());
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testGetEngineStats() throws AdminException, SQLException {
+		Connection conn1 = newSession();
+		Connection conn2 = newSession();
+		List<EngineStatistics> list = (List<EngineStatistics>) admin.getEngineStats();
+		assertEquals(2, list.get(0).getSessionCount());
+		conn1.close();
+		conn2.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testTerminateSession() throws AdminException, SQLException {
+		Connection conn = newSession();
+		List<Session> sessions = (List<Session>) admin.getSessions();
+		String sessionId = sessions.get(0).getSessionId();
+		admin.terminateSession(sessionId);
+		assertEquals(0, admin.getSessions().size());
+		conn.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testCancelRequest() throws AdminException, SQLException {
+		Connection conn = newSession();
+		Statement stmt = conn.createStatement();
+		String command = "SELECT * FROM helloworld" ;
+		ResultSet rs = stmt.executeQuery(command);
+		List<Session> sessions = (List<Session>) admin.getSessions();
+		String id = sessions.get(0).getSessionId();
+		List<Request> requests = (List<Request>) admin.getRequestsForSession(id);
+		long executionId = requests.get(0).getExecutionId();
+		assertEquals(1, admin.getRequests().size());
+		admin.cancelRequest(id, executionId);
+		assertEquals(0, admin.getRequests().size());
+		rs.close();
+		stmt.close();
+		conn.close();
+	}
+	
+	@Ignore("This test need enable DataRole Configuration in 'adminapi-test-vdb.xml'")
+	@Test
+	public void testDataRoleMapping() throws AdminException {
 		
-		init();
+		String vdbName = "AdminAPITestVDB";
+		int vdbVersion = 1;
+		String policyName = "TestDataRole";
+		DataPolicyMetadata policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
+		assertEquals(1, policy.getMappedRoleNames().size());
 		
-		System.out.println();
+		admin.addDataRoleMapping(vdbName, vdbVersion, policyName, "test-role-name");
+		policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
+		assertEquals(2, policy.getMappedRoleNames().size());
 		
-		System.out.println(admin.getSessions());
+		admin.removeDataRoleMapping(vdbName, vdbVersion, policyName, "test-role-name");
+		policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
+		assertEquals(1, policy.getMappedRoleNames().size());
 		
-		destory();
+		
+		boolean previous = policy.isAnyAuthenticated();
+		admin.setAnyAuthenticatedForDataRole(vdbName, vdbVersion, policyName, !previous);
+		policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
+		assertEquals(!previous, policy.isAnyAuthenticated());
+		admin.setAnyAuthenticatedForDataRole(vdbName, vdbVersion, policyName, previous);
+	}
+	
+	private DataPolicyMetadata getPolicy(VDB vdb, String policyName) {
+		VDBMetaData vdbMetaData = (VDBMetaData) vdb;
+		return vdbMetaData.getDataPolicyMap().get(policyName);
+	}	
+	
+	@Test
+	public void testTerminateTransaction() throws AdminException {
+		// need enhance
+		admin.terminateTransaction("xid");
+	}
+	
+	@Test(expected = AdminProcessingException.class)
+	public void testDataSources() throws AdminException{
+		admin.createDataSource("", "", new Properties());
+		admin.getDataSource("");
+		admin.deleteDataSource("");
+		admin.getDataSourceNames();
+		admin.getDataSourceTemplateNames();
+		admin.markDataSourceAvailable("");
+	}
+	
+	@Test
+	public void testGetSchema() throws AdminException {
+		String expected = "CREATE VIEW helloworld (\n" + 
+						  "	expr1 string\n" +
+						  ")\n"  +
+						  "AS\n" +
+						  "SELECT 'HELLO WORLD';";
+		EnumSet<SchemaObjectType> allowedTypes = EnumSet.of(Admin.SchemaObjectType.TABLES);
+		String schema = admin.getSchema("AdminAPITestVDB", 1, "TestModel",  allowedTypes, "helloworld");
+		assertEquals(expected, schema);
+		schema = admin.getSchema("AdminAPITestVDB", 1, "TestModel",  null, null);
+		assertEquals(expected, schema);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testGetQueryPlan() throws SQLException, AdminException {
+				
+		Connection conn = newSession();
+		Statement stmt = conn.createStatement();
+		stmt.execute("set showplan on");
+		String command = "SELECT * FROM helloworld" ;
+		ResultSet rs = stmt.executeQuery(command);
+		List<Session> sessions = (List<Session>) admin.getSessions();
+		String sessionId = sessions.get(0).getSessionId();
+		List<Request> requests = (List<Request>) admin.getRequestsForSession(sessionId);
+		int executionId = (int) requests.get(0).getExecutionId();
+		String plan = admin.getQueryPlan(sessionId, executionId);
+		assertNotNull(plan);
+		rs.close();
+		stmt.close();
+		conn.close();
+	}
+	
+	@AfterClass
+	public static void destory() throws SQLException {
+		admin.close();
 	}
 
 }

@@ -12,7 +12,19 @@
 			]]>
 		</metadata>
     </model>
-	
-	
-	
+<!--     
+     <data-role name="TestDataRole"  >
+        <description>Test Data Role</description>
+
+        <permission>
+            <resource-name>TestModel</resource-name>
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+            <allow-delete>true</allow-delete>
+        </permission>
+
+        <mapped-role-name>anonymous</mapped-role-name>
+    </data-role>
+	 -->
 </vdb>
