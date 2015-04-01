@@ -762,20 +762,20 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	};
     }
     
-	@TranslatorProperty(display="PostGIS Version", description="The version of the PostGIS extension.",advanced=true)
     public void setPostGisVersion(String postGisVersion) {
 		this.postGisVersion = Version.getVersion(postGisVersion);
 	}
     
+    @TranslatorProperty(display="PostGIS Version", description="The version of the PostGIS extension.",advanced=true)
     public String getPostGisVersion() {
 		return postGisVersion.toString();
 	}
     
+    @TranslatorProperty(display="Proj support enabled", description="If PostGIS Proj support is enabled for ST_TRANSFORM",advanced=true)
     public boolean isProjSupported() {
 		return projSupported;
 	}
     
-    @TranslatorProperty(display="Proj support enabled", description="If PostGIS Proj support is enabled for ST_TRANSFORM",advanced=true)
     public void setProjSupported(boolean projSupported) {
 		this.projSupported = projSupported;
 	}
