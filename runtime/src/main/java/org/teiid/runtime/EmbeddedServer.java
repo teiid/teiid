@@ -46,6 +46,7 @@ import javax.transaction.TransactionManager;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.VirtualFile;
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -847,6 +848,22 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	public int getPort(int transport) {
 		return this.transports.get(transport).getPort();
+	}
+	
+	protected ConcurrentHashMap<String, ExecutionFactory<?, ?>> getTranslators() {
+		return this.translators;
+	}
+	
+	protected SessionAwareCache<CachedResults> getRsCache() {
+		return this.rs;
+	}
+	
+	protected SessionAwareCache<PreparedPlan> getPpcCache() {
+		return this.ppc;
+	}
+	
+	public Admin getAdmin() {
+		return EmbeddedAdminFactory.getInstance().createAdmin(this);
 	}
 
 	static class ShutDownListener implements ContainerLifeCycleListener {
