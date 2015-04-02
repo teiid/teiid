@@ -90,7 +90,8 @@ public class TestEmbeddedServerAdmin {
 		server.addConnectionFactory("java:/test-file", managedconnectionFactory.createConnectionFactory());
 		
 		server.deployVDB(new FileInputStream(new File("src/test/resources/adminapi-test-vdb.xml")));
-		admin = server.getAdmin();
+//		admin = server.getAdmin();
+		admin = EmbeddedAdminFactory.getInstance().createAdmin(server);
 	}
 	
 	private Connection newSession() throws SQLException {
