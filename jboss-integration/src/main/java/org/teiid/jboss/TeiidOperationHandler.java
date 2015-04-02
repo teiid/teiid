@@ -21,12 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -72,17 +67,9 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
-import org.teiid.adminapi.impl.EngineStatisticsMetadata;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.TransactionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBMetadataMapper;
+import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.ExtendedPropertyMetadata;
@@ -101,6 +88,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.runtime.EmbeddedAdminFactory;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -694,17 +682,8 @@ class CacheStatistics extends BaseCachehandler {
 		}
 
 		ModelNode result = context.getResult();
-		CacheStatisticsMetadata stats = buildCacheStats(cacheType, cache);
+		CacheStatisticsMetadata stats = cache.buildCacheStats(cacheType);
 		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
-	}
-
-	private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
-		CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
-		stats.setName(name);
-		stats.setHitRatio(cache.getRequestCount() == 0?0:((double)cache.getCacheHitCount()/cache.getRequestCount())*100);
-		stats.setTotalEntries(cache.getTotalCacheEntries());
-		stats.setRequestCount(cache.getRequestCount());
-		return stats;
 	}
 
 	@Override
@@ -1626,20 +1605,9 @@ class EngineStatistics extends TeiidOperationHandler {
 
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
-		EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
 		try {
 			BufferManagerService bufferMgrSvc = getBufferManager(context);
-			stats.setSessionCount(getSessionCount(context));
-			stats.setTotalMemoryUsedInKB(bufferMgrSvc.getHeapCacheMemoryInUseKB());
-			stats.setMemoryUsedByActivePlansInKB(bufferMgrSvc.getHeapMemoryInUseByActivePlansKB());
-			stats.setDiskWriteCount(bufferMgrSvc.getDiskWriteCount());
-			stats.setDiskReadCount(bufferMgrSvc.getDiskReadCount());
-			stats.setCacheReadCount(bufferMgrSvc.getCacheReadCount());
-			stats.setCacheWriteCount(bufferMgrSvc.getCacheWriteCount());
-			stats.setDiskSpaceUsedInMB(bufferMgrSvc.getUsedDiskBufferSpaceMB());
-			stats.setActivePlanCount(engine.getActivePlanCount());
-			stats.setWaitPlanCount(engine.getWaitingPlanCount());
-			stats.setMaxWaitPlanWaterMark(engine.getMaxWaitingPlanWatermark());
+			EngineStatisticsMetadata stats = EmbeddedAdminFactory.createEngineStats(getSessionCount(context), bufferMgrSvc, engine);
 			VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.wrap(stats, context.getResult());
 		} catch (AdminException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));

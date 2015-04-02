@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheFactory;
@@ -346,5 +347,14 @@ public class SessionAwareCache<T> {
 
 	public boolean isTransactional() {
 		return this.localCache.isTransactional() || this.distributedCache.isTransactional();
+	}
+	
+	public CacheStatisticsMetadata buildCacheStats(String name) {
+		CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
+		stats.setName(name);
+		stats.setHitRatio(this.getRequestCount() == 0?0:((double)this.getCacheHitCount()/this.getRequestCount())*100);
+		stats.setTotalEntries(this.getTotalCacheEntries());
+		stats.setRequestCount(this.getRequestCount());
+		return stats;
 	}
 }

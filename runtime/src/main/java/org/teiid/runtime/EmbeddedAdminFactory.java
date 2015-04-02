@@ -32,20 +32,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.CacheStatistics;
-import org.teiid.adminapi.EngineStatistics;
-import org.teiid.adminapi.PropertyDefinition;
-import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Session;
-import org.teiid.adminapi.Transaction;
-import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.WorkerPoolStatistics;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.EngineStatisticsMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -61,6 +50,7 @@ import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.SessionServiceException;
@@ -69,6 +59,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.services.BufferServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 
@@ -83,12 +74,30 @@ public class EmbeddedAdminFactory {
 	public static EmbeddedAdminFactory getInstance() {
 		return INSTANCE;
 	}
+	
+	public static EngineStatisticsMetadata createEngineStats(
+			int activeSessionsCount, BufferServiceImpl bufferService,
+			DQPCore dqp) {
+		EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
+		stats.setSessionCount(activeSessionsCount);
+		stats.setTotalMemoryUsedInKB(bufferService.getHeapCacheMemoryInUseKB());
+		stats.setMemoryUsedByActivePlansInKB(bufferService.getHeapMemoryInUseByActivePlansKB());
+		stats.setDiskWriteCount(bufferService.getDiskWriteCount());
+		stats.setDiskReadCount(bufferService.getDiskReadCount());
+		stats.setCacheReadCount(bufferService.getCacheReadCount());
+		stats.setCacheWriteCount(bufferService.getCacheWriteCount());
+		stats.setDiskSpaceUsedInMB(bufferService.getUsedDiskBufferSpaceMB());
+		stats.setActivePlanCount(dqp.getActivePlanCount());
+		stats.setWaitPlanCount(dqp.getWaitingPlanCount());
+		stats.setMaxWaitPlanWaterMark(dqp.getMaxWaitingPlanWatermark());
+		return stats;
+	}
 
-	public Admin createAdmin(EmbeddedServer embeddedServer) {
+	Admin createAdmin(EmbeddedServer embeddedServer) {
 		return new AdminImpl(embeddedServer);
 	}
 	
-	private class AdminImpl implements Admin {
+	private static class AdminImpl implements Admin {
 		
 		private EmbeddedServer embeddedServer;
 
@@ -271,12 +280,10 @@ public class EmbeddedAdminFactory {
 			return Arrays.asList(this.embeddedServer.dqp.getWorkerPoolStatistics());
 		}
 
-		@SuppressWarnings("static-access")
 		@Override
 		public Collection<String> getCacheTypes() throws AdminException {
 			Set<String> cacheTypes = new HashSet<String>();
-			cacheTypes.addAll(this.embeddedServer.getRsCache().getCacheTypes());
-			cacheTypes.addAll(this.embeddedServer.getPpcCache().getCacheTypes());
+			cacheTypes.addAll(SessionAwareCache.getCacheTypes());
 			return cacheTypes;
 		}
 
@@ -309,7 +316,7 @@ public class EmbeddedAdminFactory {
 
 		@Override
 		public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName) throws AdminException {
-			//Embedded dosn't load ra.xml
+			//deprecated
 			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40130, "getTranslatorPropertyDefinitions")); //$NON-NLS-1$
 		}
 
@@ -319,6 +326,9 @@ public class EmbeddedAdminFactory {
 			List<PropertyDefinition> list = new ArrayList<PropertyDefinition>();
 			try {
 				ExecutionFactory<?,?> ef = this.embeddedServer.getExecutionFactory(translatorName);
+				if (ef == null) {
+					return null;
+				}
 				VDBTranslatorMetaData translator = TranslatorUtil.buildTranslatorMetadata(ef, null);
 				PropertyType propType = PropertyType.valueOf(type.toString().toUpperCase());
 				if (translator != null) {
@@ -385,41 +395,21 @@ public class EmbeddedAdminFactory {
 		public Collection<? extends CacheStatistics> getCacheStats(String cacheType) throws AdminException {
 			
 			if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
-				return Arrays.asList(buildCacheStats(cacheType, this.embeddedServer.getRsCache()));
+				return Arrays.asList(this.embeddedServer.getRsCache().buildCacheStats(cacheType));
 			} else if(cacheType.equals(Admin.Cache.PREPARED_PLAN_CACHE.name())) {
-				return Arrays.asList(buildCacheStats(cacheType, this.embeddedServer.getPpcCache()));
+				return Arrays.asList(this.embeddedServer.getPpcCache().buildCacheStats(cacheType));
 			} else {
 				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40139, cacheType, Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE, Admin.Cache.PREPARED_PLAN_CACHE));
 			}				
 		}
 		
-		@SuppressWarnings("rawtypes")
-		private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
-			CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
-			stats.setName(name);
-			stats.setHitRatio(cache.getRequestCount() == 0?0:((double)cache.getCacheHitCount()/cache.getRequestCount())*100);
-			stats.setTotalEntries(cache.getTotalCacheEntries());
-			stats.setRequestCount(cache.getRequestCount());
-			return stats;
-		}
-
 		@Override
-		public Collection<? extends EngineStatistics> getEngineStats()throws AdminException {
+		public Collection<? extends EngineStatistics> getEngineStats() throws AdminException {
 			
-			EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
 			try {
 				//embedded no logon, odata, odbc 
-				stats.setSessionCount(this.embeddedServer.sessionService.getActiveSessionsCount());
-				stats.setTotalMemoryUsedInKB(this.embeddedServer.bufferService.getHeapCacheMemoryInUseKB());
-				stats.setMemoryUsedByActivePlansInKB(this.embeddedServer.bufferService.getHeapMemoryInUseByActivePlansKB());
-				stats.setDiskWriteCount(this.embeddedServer.bufferService.getDiskWriteCount());
-				stats.setDiskReadCount(this.embeddedServer.bufferService.getDiskReadCount());
-				stats.setCacheReadCount(this.embeddedServer.bufferService.getCacheReadCount());
-				stats.setCacheWriteCount(this.embeddedServer.bufferService.getCacheWriteCount());
-				stats.setDiskSpaceUsedInMB(this.embeddedServer.bufferService.getUsedDiskBufferSpaceMB());
-				stats.setActivePlanCount(this.embeddedServer.dqp.getActivePlanCount());
-				stats.setWaitPlanCount(this.embeddedServer.dqp.getWaitingPlanCount());
-				stats.setMaxWaitPlanWaterMark(this.embeddedServer.dqp.getMaxWaitingPlanWatermark());
+				EngineStatisticsMetadata stats = createEngineStats(
+						this.embeddedServer.sessionService.getActiveSessionsCount(), this.embeddedServer.bufferService, this.embeddedServer.dqp);
 				return Arrays.asList(stats);
 			} catch (SessionServiceException e) {
 				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40140, "getEngineStats", e)); //$NON-NLS-1$
@@ -448,7 +438,7 @@ public class EmbeddedAdminFactory {
 
 		@Override
 		public void close() {
-			this.embeddedServer.stop();
+			//nothing to do
 		}
 
 		@Override
@@ -530,6 +520,9 @@ public class EmbeddedAdminFactory {
 		@Override
 		public String getQueryPlan(String sessionId, int executionId)throws AdminException {
 			PlanNode plan = this.embeddedServer.dqp.getPlan(sessionId, executionId);
+			if (plan == null) {
+				return null;
+			}
 			return plan.toXml();
 		}
 

@@ -36,7 +36,7 @@ import org.teiid.runtime.RuntimePlugin;
 public abstract class RuntimeVDB {
 	private VDBMetaData vdb;
 	private VDBModificationListener listener;
-	private boolean restartInProgress = false;
+	private volatile boolean restartInProgress = false;
 	
 	public static class ReplaceResult {
 		public boolean isNew;
