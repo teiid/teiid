@@ -202,11 +202,24 @@ public class EmbeddedAdminFactory {
 
 		@Override
 		public void deploy(String deployName, InputStream content) throws AdminException {
+			if (!deployName.endsWith("-vdb.xml")) { //$NON-NLS-1$
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40142, deployName)); 
+			}
 			try {
 				this.embeddedServer.deployVDB(content);
 			} catch (Exception e) {
 				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40133, deployName, e), e);
 			}
+			//non xml would be inelegant for embedded - we don't want to create an intermediate copy
+            /*File f = null;
+			try {
+				f = File.createTempFile(deployName, "vdb"); //$NON-NLS-1$
+				f.deleteOnExit();
+				ObjectConverterUtil.write(content, f);
+				this.embeddedServer.deployVDBZip(f.toURI().toURL());
+			} catch (Exception e) {
+				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40133, deployName, e), e);
+			}*/ 
 		}
 
 		@Override

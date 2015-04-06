@@ -21,10 +21,7 @@
  */
 package org.teiid.runtime;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,20 +42,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.CacheStatistics;
-import org.teiid.adminapi.EngineStatistics;
-import org.teiid.adminapi.PropertyDefinition;
-import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Session;
-import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.RequestMetadata;
@@ -158,7 +145,7 @@ public class TestEmbeddedServerAdmin {
 	public void testDeployUndeploy() throws AdminException, FileNotFoundException {
 		admin.undeploy("AdminAPITestVDB");
 		assertNull(admin.getVDB("AdminAPITestVDB", 1));
-		admin.deploy("AdminAPITestVDB", new FileInputStream(new File("src/test/resources/adminapi-test-vdb.xml")));
+		admin.deploy("AdminAPITestVDB-vdb.xml", new FileInputStream(new File("src/test/resources/adminapi-test-vdb.xml")));
 		assertNotNull(admin.getVDB("AdminAPITestVDB", 1));
 	}
 	
