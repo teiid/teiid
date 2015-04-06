@@ -286,7 +286,7 @@ public class SQLParserUtil {
     	return false;
 	}
 	
-	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?\\s*(min:\\d{1,19})?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
     
 	static CacheHint getQueryCacheOption(String query) {
     	Matcher match = CACHE_HINT.matcher(query);
@@ -306,7 +306,11 @@ public class SQLParserUtil {
     		if (scope != null) {
     			scope = scope.substring(6);
     			hint.setScope(scope);
-    		}    		
+    		}
+    		String min = match.group(7);
+    		if (min != null) {
+    			hint.setMinRows(Long.valueOf(min.substring(4)));
+    		}
     		return hint;
     	}
     	return null;

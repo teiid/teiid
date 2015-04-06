@@ -401,6 +401,32 @@ public class TestODataIntegration extends BaseResourceTest {
         
 	}	
 	
+	@Test
+	public void testGetEntity() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create view x (a string primary key) as select 'a';");
+			mmd.setModelType(Type.VIRTUAL);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')"));
+	        ClientResponse<String> response = request.get(String.class);
+	        Assert.assertEquals(200, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+	
 	@Test public void testInvalidCharacterReplacement() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
 		es.start(new EmbeddedConfiguration());
