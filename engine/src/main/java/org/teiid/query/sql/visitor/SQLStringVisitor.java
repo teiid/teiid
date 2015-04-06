@@ -1171,6 +1171,16 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(CacheHint.SCOPE);
             append(obj.getScope());            
         }
+        if (obj.getMinRows() != null) {
+        	if (!addParens) {
+                append(Tokens.LPAREN);
+                addParens = true;
+            } else {
+                append(SPACE);
+            }     
+            append(CacheHint.MIN);
+            append(obj.getMinRows());
+        }
         if (addParens) {
             append(Tokens.RPAREN);
         }

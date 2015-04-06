@@ -781,6 +781,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         }
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
+        	if (originalCommand.getCacheHint().getMinRows() != null && resultsBuffer.getRowCount() <= originalCommand.getCacheHint().getMinRows()) {
+        		LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Not caching result as there are fewer rows than needed", resultsBuffer.getRowCount()); //$NON-NLS-1$
+        		return;
+        	}
 			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().isPrefersMemory());
         	if (originalCommand.getCacheHint().getDeterminism() != null) {
 				determinismLevel = originalCommand.getCacheHint().getDeterminism();
