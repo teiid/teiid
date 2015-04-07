@@ -1226,4 +1226,16 @@ public class TestOracleTranslator {
         String output = "INSERT INTO COLA_MARKETS (MKT_ID, NAME, SHAPE) SELECT COLA_MARKETS.MKT_ID, COLA_MARKETS.NAME, COLA_MARKETS.SHAPE FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test public void testVarbinaryComparison() throws Exception {
+        String input = "select bin_col from binary_test where bin_col = x'ab'"; //$NON-NLS-1$
+        String output = "SELECT binary_test.BIN_COL FROM binary_test WHERE binary_test.BIN_COL = HEXTORAW('AB')"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testVarbinaryInsert() throws Exception {
+        String input = "insert into binary_test (bin_col) values (x'bc')"; //$NON-NLS-1$
+        String output = "INSERT INTO binary_test (BIN_COL) VALUES (HEXTORAW('BC'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

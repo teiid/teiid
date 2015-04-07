@@ -123,6 +123,8 @@ public class RealMetadataFactory {
         Table lobTable = createPhysicalGroup("LobTbl", lob); //$NON-NLS-1$
         Table library = createPhysicalGroup("LOB_TESTING_ONE", lob); //$NON-NLS-1$
         
+        Table bin = createPhysicalGroup("binary_test", lob); //$NON-NLS-1$
+        
         // add direct query procedure
         ColumnSet<Procedure> nativeProcResults = createResultSet("bqt1.nativers", new String[] {"tuple"}, new String[] { DataTypeManager.DefaultDataTypes.OBJECT}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ProcedureParameter nativeparam = createParameter("param", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
@@ -132,7 +134,10 @@ public class RealMetadataFactory {
         nativeProc.setResultSet(nativeProcResults);        
         
         createElements( library, new String[] { "CLOB_COLUMN", "BLOB_COLUMN", "KEY_EMULATOR" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        		new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, DataTypeManager.DefaultDataTypes.INTEGER }); 
+        		new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, DataTypeManager.DefaultDataTypes.INTEGER });
+        
+        createElements( bin, new String[] { "BIN_COL" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        		new String[] { DataTypeManager.DefaultDataTypes.VARBINARY }); 
 
         // Create virtual groups
         QueryNode vqtn1 = new QueryNode("SELECT * FROM BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
