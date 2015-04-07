@@ -879,6 +879,7 @@ public class DQPCore implements DQP {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setUseCallingThread(true);
         workContext.setSession(session);
+        workContext.setAdmin(true);
 
         try {
             workContext.runInContext(new Callable<Void>() {
