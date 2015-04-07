@@ -60,7 +60,7 @@ public class TestTeiidLanguageToCQL {
 		testTranslation("select count(*) from Person limit 10", "SELECT COUNT(*) FROM Person LIMIT 10");
 		testTranslation("select id, name, age from Person where id=1 and age>=18 and age<=100", "SELECT id, name, age FROM Person WHERE id = 1 AND age >= 18 AND age <= 100");
 		testTranslation("select id, name, age from Person where id in(1,2,3)", "SELECT id, name, age FROM Person WHERE id IN (1, 2, 3)");
-		testTranslation("select id from Person where bday = {ts '1900-01-01 12:00:00'} and employed = true", "SELECT id FROM Person WHERE bday = '1900-01-01 12:00:00.0' AND employed = TRUE");
+		testTranslation("select id from Person where bday = {ts '1900-01-01 12:00:00'} and employed = true", "SELECT id FROM Person WHERE bday = -2208927600000 AND employed = TRUE");
 		testTranslation("select id from Person where custom = X'abcd'", "SELECT id FROM Person WHERE custom = 0xABCD");
 	}
 	

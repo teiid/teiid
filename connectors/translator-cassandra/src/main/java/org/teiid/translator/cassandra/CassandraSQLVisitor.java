@@ -24,6 +24,7 @@ package org.teiid.translator.cassandra;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
+import java.util.Date;
 import java.util.UUID;
 
 import org.teiid.language.LanguageObject;
@@ -83,6 +84,10 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 	public void visit(Literal obj) {
 		if (obj.getValue() == null) {
 			super.visit(obj);
+			return;
+		}
+		if (obj.getValue() instanceof Date) {
+			buffer.append(((Date)obj.getValue()).getTime());
 			return;
 		}
 		//cassandra directly parses uuids
