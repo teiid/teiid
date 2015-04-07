@@ -1072,7 +1072,7 @@ public class AdminFactory {
 
 		@Override
 		public void cancelRequest(String sessionId, long executionId) throws AdminException {
-			final ModelNode request = buildRequest("teiid", "terminate-session", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
+			final ModelNode request = buildRequest("teiid", "cancel-request", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
 			if (request == null) {
 				return;
 			}
