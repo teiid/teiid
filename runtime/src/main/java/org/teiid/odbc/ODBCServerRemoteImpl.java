@@ -21,10 +21,7 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
-import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
-import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
-import static org.teiid.odbc.PGUtil.convertType;
+import static org.teiid.odbc.PGUtil.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -33,7 +30,14 @@ import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +54,11 @@ import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.dqp.service.SessionService;
-import org.teiid.jdbc.*;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.PreparedStatementImpl;
+import org.teiid.jdbc.ResultSetImpl;
+import org.teiid.jdbc.StatementImpl;
+import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.AuthenticationType;
@@ -58,7 +66,10 @@ import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.transport.*;
+import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCClientInstance;
+import org.teiid.transport.PgBackendProtocol;
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
 
 /**
@@ -266,6 +277,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				String key = (String)keys.nextElement();
 				this.connection.setExecutionProperty(key, this.props.getProperty(key));
 			}
+			StatementImpl s = this.connection.createStatement();
+			s.execute("select teiid_session_set('resolve_groupby_positional', true)"); //$NON-NLS-1$
 			this.client.authenticationSucess(hash, hash);
 			ready();
 		} catch (SQLException e) {

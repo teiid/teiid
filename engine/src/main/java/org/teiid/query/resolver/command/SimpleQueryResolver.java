@@ -32,6 +32,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
@@ -48,6 +49,7 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
@@ -236,7 +238,26 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(obj.getCriteria());
             visitNode(obj.getGroupBy());
             visitNode(obj.getHaving());
-            visitNode(obj.getSelect()); 
+            visitNode(obj.getSelect());
+            GroupBy groupBy = obj.getGroupBy();
+            if (groupBy != null) {
+            	Object var = DQPWorkContext.getWorkContext().getSession().getSessionVariables().get("resolve_groupby_positional"); //$NON-NLS-1$
+            	if (Boolean.TRUE.equals(var)) {
+	            	for (int i = 0; i < groupBy.getCount(); i++) {
+	            		List<Expression> select = obj.getSelect().getProjectedSymbols();
+	            		Expression ex = groupBy.getSymbols().get(i);
+	            		ex = SymbolMap.getExpression(ex);
+	            		if (ex instanceof Constant && ex.getType() == DataTypeManager.DefaultDataClasses.INTEGER) {
+	            			Integer val = (Integer) ((Constant)ex).getValue();
+	            			if (val != null && val > 0 && val <= select.size()) {
+	            				Expression selectExpression = select.get(val - 1);
+	            				selectExpression = SymbolMap.getExpression(selectExpression);
+	            				groupBy.getSymbols().set(i, (Expression) selectExpression.clone());
+	            			}
+	            		}
+	            	}
+            	}
+            }
             visitNode(obj.getLimit());
         }
         

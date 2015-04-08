@@ -609,5 +609,11 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertTrue(s.execute("select * from tables order by name"));
 		conn.setAutoCommit(true);
 	}
+	
+	@Test public void testGropuByPositional() throws Exception {
+		Statement s = conn.createStatement();
+		//would normally throw an exception, but is allowable over odbc
+		s.execute("select name, count(schemaname) from tables group by 1");
+	}
 
 }
