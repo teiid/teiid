@@ -25,13 +25,15 @@ package org.teiid.translator.ldap;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttribute;
+import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
@@ -40,6 +42,8 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
+import org.teiid.language.Literal;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
@@ -89,17 +93,13 @@ public class TestQueryExecution {
         LdapContext connection = Mockito.mock(LdapContext.class);
         LdapContext ctx = Mockito.mock(LdapContext.class);
         Mockito.stub(connection.lookup("ou=Infrastructure,ou=Support,o=DEMOCORP,c=AU")).toReturn(ctx);
-        Attributes attribs = Mockito.mock(Attributes.class);
-        Attribute attrib = Mockito.mock(Attribute.class);
-        Mockito.stub(attrib.size()).toReturn(2);
+        BasicAttributes attributes = new BasicAttributes(true);
+        BasicAttribute attrib = new BasicAttribute("objectClass");
+        attributes.put(attrib);
+        attrib.add("foo");
+        attrib.add("bar");
         
-        NamingEnumeration attribValues = new SimpleNamingEnumeration(Arrays.asList("foo", "bar").iterator());
-        
-        Mockito.stub(attrib.getAll()).toReturn(attribValues);
-        
-        Mockito.stub(attribs.get("objectClass")).toReturn(attrib);
-        
-        final SearchResult sr = new SearchResult("x", null, attribs);
+        final SearchResult sr = new SearchResult("x", null, attributes);
         
         NamingEnumeration<SearchResult> enumeration = new SimpleNamingEnumeration(Arrays.asList(sr).iterator());
         
@@ -116,6 +116,14 @@ public class TestQueryExecution {
         result = execution.next();
         assertEquals(Arrays.asList("bar"), result);
         assertNull(execution.next());
+	}
+	
+	@Test public void testMultiAttribute() throws NamingException {
+		Column c = new Column();
+		c.setDefaultValue(LDAPQueryExecution.MULTIVALUED_CONCAT);
+		Attribute a = LDAPUpdateExecution.createBasicAttribute("x", new Literal("a?b?c", String.class), c);
+		assertEquals(3, a.size());
+		assertEquals("b", Collections.list(a.getAll()).get(1));
 	}
 	
 }

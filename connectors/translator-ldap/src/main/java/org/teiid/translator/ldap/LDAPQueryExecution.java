@@ -113,7 +113,8 @@ import org.teiid.translator.TypeFacility;
  */
 public class LDAPQueryExecution implements ResultSetExecution {
 
-	private static final String delimiter = "?"; //$NON-NLS-1$
+	static final String MULTIVALUED_CONCAT = "multivalued-concat"; //$NON-NLS-1$
+	static final String delimiter = "?"; //$NON-NLS-1$
 	
 	private LDAPSearchDetails searchDetails;
 	private LdapContext ldapCtx;
@@ -390,7 +391,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		}
 		Object objResult = null;
 		try {
-			if(TypeFacility.RUNTIME_TYPES.STRING.equals(modelAttrClass) && "multivalued-concat".equalsIgnoreCase(multivalAttr)) { //$NON-NLS-1$
+			if(TypeFacility.RUNTIME_TYPES.STRING.equals(modelAttrClass) && MULTIVALUED_CONCAT.equalsIgnoreCase(multivalAttr)) { 
 				// mpw 5/09
 				// Order the multi-valued attrs alphabetically before creating a single string, 
 				// using the delimiter to separate each token

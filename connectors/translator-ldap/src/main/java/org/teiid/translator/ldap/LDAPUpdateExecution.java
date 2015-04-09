@@ -32,11 +32,13 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.LdapContext;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
@@ -177,7 +179,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// create a new 
 			else {
 				Attribute insertAttr = createBasicAttribute(nameInsertElement,
-						literal);
+						literal, insertElement.getMetadataObject());
 				insertAttrs.put(insertAttr);
 			}
 		}
@@ -202,8 +204,8 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		}
 	}
 
-	private Attribute createBasicAttribute(String id,
-			Expression expr) {
+	static Attribute createBasicAttribute(String id,
+			Expression expr, Column col) {
 		Attribute attr = new BasicAttribute(id);
 		if (expr instanceof org.teiid.language.Array) {
 			List<Expression> exprs = ((org.teiid.language.Array)expr).getExpressions();
@@ -217,6 +219,13 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			Literal l = (Literal)expr;
 			Object insertValue = null;
 			if (l.getValue() != null) {
+				if (LDAPQueryExecution.MULTIVALUED_CONCAT.equalsIgnoreCase(col.getDefaultValue())) {
+					List<String> vals = StringUtil.split(l.getValue().toString(), "?"); //$NON-NLS-1$
+					for (String val : vals) {
+						attr.add(val);
+					}
+					return attr;
+				}
 				insertValue = IQueryToLdapSearchParser.getExpressionString(l);
 			}
 			attr.add(insertValue);
@@ -325,7 +334,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// value, we don't do any special handling of it right
 			// now.  But maybe null should mean to delete an
 			// attribute?
-			Attribute attribute = createBasicAttribute(nameLeftElement, rightExpr);
+			Attribute attribute = createBasicAttribute(nameLeftElement, rightExpr, leftElement.getMetadataObject());
 	        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, attribute);
 		}
 		// just try to update an LDAP entry using the DN and
