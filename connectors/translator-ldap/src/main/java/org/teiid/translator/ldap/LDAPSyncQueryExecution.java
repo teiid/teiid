@@ -149,7 +149,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12002, contextName));
 			}
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.createContextError"); //$NON-NLS-1$
-			throw new TranslatorException(msg); 
+			throw new TranslatorException(ne, msg); 
 		}
 	}
 

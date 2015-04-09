@@ -134,7 +134,7 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 			initContext = new InitialLdapContext(connenv, null);
 		} catch(NamingException ne){ 
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.directoryNamingError",ne.getExplanation()); //$NON-NLS-1$
-			throw new ResourceException(msg);
+			throw new ResourceException(msg, ne);
 		} 
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Successfully obtained initial LDAP context."); //$NON-NLS-1$
 		return initContext;
