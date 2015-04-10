@@ -416,7 +416,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testLargeMax() throws TeiidComponentException {
-		createLayeredCache(1 << 20, 1 << 30, true);
+		createLayeredCache(1 << 20, 1 << 30, false);
 	}
 	
 }
