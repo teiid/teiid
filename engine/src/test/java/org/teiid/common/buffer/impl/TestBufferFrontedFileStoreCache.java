@@ -415,4 +415,8 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(655360, cache.getDiskUsage());
 	}
 	
+	@Test public void testLargeMax() throws TeiidComponentException {
+		createLayeredCache(1 << 20, 1 << 30, true);
+	}
+	
 }

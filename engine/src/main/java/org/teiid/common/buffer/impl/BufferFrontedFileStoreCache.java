@@ -583,10 +583,10 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			maxMemoryBlocks -= (indirect/ADDRESSES_PER_BLOCK + (indirect%ADDRESSES_PER_BLOCK>0?1:0) + 1);
 		}
 		List<BlockStore> stores = new ArrayList<BlockStore>();
-		int size = BLOCK_SIZE;
+		long size = BLOCK_SIZE;
 		int files = 32; //this allows us to have 64 terabytes of smaller block sizes
 		do {
-			stores.add(new BlockStore(this.storageManager, size, 30, files));
+			stores.add(new BlockStore(this.storageManager, (int)size, 30, files));
 			size <<=1;
 			if (files > 1) {
 				files >>= 1;
@@ -1169,6 +1169,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	}
 	
 	public void setMaxStorageObjectSize(int maxStorageBlockSize) {
+		if (maxStorageBlockSize > (1 << 30)) {
+			throw new TeiidRuntimeException("max storage block size cannot exceed 1 GB"); //$NON-NLS-1$
+		}
 		this.maxStorageObjectSize = maxStorageBlockSize;
 	}
 	
