@@ -1282,6 +1282,14 @@ public class Evaluator {
 			}
 	    }
 	    
+	    if (fd.getProcedure() != null) {
+	    	try {
+				return evaluateProcedure(function, tuple, values);
+			} catch (TeiidProcessingException e) {
+				throw new ExpressionEvaluationException(e);
+			}
+	    }
+	    
 	    // Check for special lookup function
 	    if(function.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 	        if(dataMgr == null) {
@@ -1347,6 +1355,12 @@ public class Evaluator {
 			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
 		}
 		return context;
+	}
+
+	protected Object evaluateProcedure(Function function, List<?> tuple,
+			Object[] values) throws TeiidComponentException,
+			TeiidProcessingException {
+		throw new UnsupportedOperationException("Procedure evaluation not possible with a base Evaluator"); //$NON-NLS-1$
 	}   
 	    
 }

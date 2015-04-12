@@ -4936,7 +4936,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 			proc.setVirtual(virtual);
 			proc.setFunction(function);
 			if (stmt != null){
-			    if (function || !virtual) {
+			    if (!virtual) {
 			         throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
 			    }
 				proc.setQueryPlan((comment != null?comment.image+" ":"") + stmt.toString());

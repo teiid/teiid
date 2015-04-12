@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.Map;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -215,6 +217,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	private int currentTuples = 0;
 	
 	private Map<Function, ScalarSubquery> functionState;
+	private Map<List<?>, QueryProcessor> procedureState;
 	
 	public SubqueryAwareEvaluator(Map elements, ProcessorDataManager dataMgr,
 			CommandContext context, BufferManager manager) {
@@ -353,6 +356,52 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		TupleSourceValueIterator iter = new TupleSourceValueIterator(state.collector.collectTuples().createIndexedTupleSource(), 0);
 		state.blocked = false;
 		return iter;
+	}
+	
+	/**
+	 * Implements procedure function handling.
+	 * TODO: cache results
+	 */
+	@Override
+	protected Object evaluateProcedure(Function function, List<?> tuple,
+			Object[] values) throws TeiidComponentException, TeiidProcessingException {
+		QueryProcessor qp = null;
+		List<?> key = Arrays.asList(function, Arrays.asList(values));
+		if (procedureState != null) {
+			qp = this.procedureState.get(key); 
+		}
+		if (qp == null) {
+			String args = Collections.nCopies(values.length, '?').toString().substring(1);
+			args = args.substring(0, args.length() - 1);
+			String fullName = function.getFunctionDescriptor().getFullName();
+			String call = String.format("call %1$s(%2$s)", fullName, args); //$NON-NLS-1$
+			qp = this.context.getQueryProcessorFactory().createQueryProcessor(call, fullName, this.context, values);
+			if (this.procedureState == null) {
+				this.procedureState = new HashMap<List<?>, QueryProcessor>();
+			}
+			this.procedureState.put(key, qp);
+		}
+		
+		//just in case validate the rows being returned
+		TupleBatch tb = qp.nextBatch();
+		TupleBatch next = tb;
+		while (!next.getTerminationFlag()) {
+			if (next.getEndRow() >= 2) {
+				break;
+			}
+			next = qp.nextBatch();
+		}
+		if (next.getEndRow() >= 2) {
+			throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30345, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30345, function));
+		}
+		
+		Object result = null;
+		if (next.getRowCount() > 0) {
+			result = next.getTuples().get(0).get(0);
+		}
+		this.procedureState.remove(key);
+		qp.closeProcessing();
+	    return result;
 	}
 	
 	/**

@@ -561,7 +561,7 @@ public class DDLStringVisitor {
 		else {
 			append(FOREIGN);
 		}
-		append(SPACE).append(PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
+		append(SPACE).append(procedure.isFunction()?FUNCTION:PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
 		append(LPAREN);
 		
 		boolean first = true;
@@ -681,6 +681,12 @@ public class DDLStringVisitor {
 		if (!options.isEmpty()) {
 			append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}		
+		
+		/*if (function.getDefinition() != null) {
+			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+			append(function.getDefinition());
+		}*/
+		
 		append(SQLConstants.Tokens.SEMICOLON);		
 	}
 

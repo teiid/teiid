@@ -264,6 +264,14 @@ public class TestDDLStringVisitor {
 				"OPTIONS (JAVA_CLASS 'foo', JAVA_MEHTOD 'bar');";
 		helpTest(ddl, expected);
 	}
+	
+	@Test
+	public void testNonPushdownFunction1() throws Exception {
+		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(p1 integer, p2 string) RETURNS integer\n" + 
+				"as return repeat(p2, p1);";
+		String expected = "CREATE VIRTUAL FUNCTION SourceFunc(OUT \"return\" integer RESULT, IN p1 integer, IN p2 string)\nAS\nRETURN repeat(p2, p1);";
+		helpTest(ddl, expected);
+	}
 
 	private void helpTest(String ddl, String expected) {
 		Schema s = TestDDLParser.helpParse(ddl, "model").getSchema();

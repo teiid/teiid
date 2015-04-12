@@ -97,6 +97,12 @@ public class CompositeVDB {
 					}
 					udfs.add(new FunctionTree(schema.getName(), source, true));
 				}
+				if (!schema.getProcedures().isEmpty()) {
+					FunctionTree ft = FunctionTree.getFunctionProcedures(schema);
+					if (ft != null) {
+						udfs.add(ft);
+					}
+				}
 			}
 		}
 		
@@ -104,7 +110,7 @@ public class CompositeVDB {
 		metadata.setUseOutputNames(false);		
 		return metadata;
 	}
-	
+
 	public VDBMetaData getVDB() {
 		return this.mergedVDB;
 	}

@@ -70,7 +70,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
 	 * CAN_PUSHDOWN = If the source supports the function, then it will be pushed down. Must supply the Java impl
 	 * CANNOT_PUSHDOWN = It will not be pushed down, evaluated in Teiid. Must supply the Java impl
 	 * MUST_PUSHDOWN = Function must be pushed to source, no need to supply Java impl.
-	 * SYNTHETIC = system functions?
+	 * SYNTHETIC = system functions that will be rewritten
 	 */
 	public enum PushDown {CAN_PUSHDOWN, CANNOT_PUSHDOWN, MUST_PUSHDOWN, SYNTHETIC};
     

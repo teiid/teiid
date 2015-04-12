@@ -210,8 +210,9 @@ public class FunctionMetadataValidator {
      * @throws FunctionMetadataException Thrown if category is not valid in some way
      */
     public static final void validateCategory(String category) throws FunctionMetadataException {
-        validateIsNotNull(category, "Category"); //$NON-NLS-1$
-        validateLength(category, MAX_LENGTH, "Category"); //$NON-NLS-1$
+        if (category != null) {
+        	validateLength(category, MAX_LENGTH, "Category"); //$NON-NLS-1$
+        }
     }
 
     /**

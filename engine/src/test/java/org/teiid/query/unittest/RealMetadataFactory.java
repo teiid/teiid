@@ -372,6 +372,12 @@ public class RealMetadataFactory {
 			if (!schema.getFunctions().isEmpty()) {
 				udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
 			}
+			if (!schema.getProcedures().isEmpty()) {
+				FunctionTree ft = FunctionTree.getFunctionProcedures(schema);
+				if (ft != null) {
+					udfs.add(ft);
+				}
+			}
 		}
     	TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
     	vdbMetaData.addAttchment(TransformationMetadata.class, metadata);

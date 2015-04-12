@@ -38,8 +38,11 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Schema;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.util.CommandContext;
 
 
@@ -401,5 +404,21 @@ public class FunctionTree {
         // No descriptor at this location in tree
         return null;
     }
+    
+    public static FunctionTree getFunctionProcedures(Schema schema) {
+		UDFSource dummySource = new UDFSource(Collections.EMPTY_LIST);
+		FunctionTree ft = null;
+		for (Procedure p : schema.getProcedures().values()) {
+			if (p.isFunction() && p.getQueryPlan() != null) {
+				if (ft == null) {
+					ft = new FunctionTree(schema.getName(), dummySource, false);
+				}
+				FunctionMethod fm = SQLParserUtil.createFunctionMethod(p);
+				FunctionDescriptor fd = ft.addFunction(schema.getName(), dummySource, fm, false);
+				fd.setProcedure(p);
+			}
+		}
+		return ft;
+	}
 
 }

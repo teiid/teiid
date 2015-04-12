@@ -575,6 +575,9 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31161,
     	TEIID31162, // Missing proj4 text.
     	TEIID31163, // Failed to lookup proj4 text.
-    	TEIID31164 // Unsupported geometry type.
+    	TEIID31164, // Unsupported geometry type.
+    	TEIID31165, 
+    	TEIID31166,
+    	TEIID31167,
 	}
 }

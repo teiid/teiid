@@ -573,6 +573,19 @@ public class SQLParserUtil {
     
 	static void replaceProcedureWithFunction(MetadataFactory factory,
 			Procedure proc) throws MetadataException {
+		if (proc.isFunction() && proc.getQueryPlan() != null) {
+			return;
+		}
+		FunctionMethod method = createFunctionMethod(proc);
+
+		//remove the old proc
+		factory.getSchema().getResolvingOrder().remove(factory.getSchema().getResolvingOrder().size() - 1);
+		factory.getSchema().getProcedures().remove(proc.getName());
+		
+		factory.getSchema().addFunction(method);
+	}
+
+	public static FunctionMethod createFunctionMethod(Procedure proc) {
 		FunctionMethod method = new FunctionMethod();
 		method.setName(proc.getName());
 		method.setPushdown(proc.isVirtual()?FunctionMethod.PushDown.CAN_PUSHDOWN:FunctionMethod.PushDown.MUST_PUSHDOWN);
@@ -637,8 +650,7 @@ public class SQLParserUtil {
 		if (method.getInvocationMethod() != null) {
     		method.setPushdown(PushDown.CAN_PUSHDOWN);
     	}
-		factory.getSchema().addFunction(method);
-		factory.getSchema().getProcedures().remove(proc.getName());
+		return method;
 	}
     
     void setProcedureOptions(Procedure proc) {

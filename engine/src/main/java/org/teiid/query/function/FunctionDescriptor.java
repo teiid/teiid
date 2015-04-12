@@ -41,6 +41,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
 
@@ -68,6 +69,8 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     private transient Method invocationMethod;
     
     private ClassLoader classLoader;
+
+	private Procedure procedure;
 	
     FunctionDescriptor() {
     }
@@ -135,6 +138,14 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     public boolean requiresContext() {
         return this.requiresContext;
     }
+    
+    public Procedure getProcedure() {
+		return procedure;
+	}
+    
+    public void setProcedure(Procedure procedure) {
+		this.procedure = procedure;
+	}
     
 	@Override
 	public String toString() {

@@ -525,7 +525,7 @@ public class TestDDLParser {
 	}
 	
 	@Test(expected=MetadataException.class) public void testInvalidFunctionBody() throws Exception {
-		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
+		String ddl = "CREATE FOREIGN FUNCTION SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		

@@ -191,6 +191,8 @@ public class MetadataValidator {
 								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31107, p.getFullName()));
 							}
 							hasReturn = true;
+						} else if (p.isFunction() && param.getType() != ProcedureParameter.Type.In) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31165, p.getFullName(), param.getFullName()));
 						}
 						if (!names.add(param.getName())) {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31106, p.getFullName(), param.getFullName()));
@@ -199,6 +201,15 @@ public class MetadataValidator {
 					if (!p.isVirtual() && !model.isSource()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31077, p.getFullName(), model.getName()));
 					}
+					if (p.isFunction()) {
+						if (!hasReturn) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31166, p.getFullName()));
+						}
+						if (p.isVirtual() && p.getQueryPlan() == null) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31167, p.getFullName()));
+						}
+					}
+					
 				}
 				
 				for (FunctionMethod func:schema.getFunctions().values()) {
@@ -256,7 +267,7 @@ public class MetadataValidator {
 						}						
 					} else if (record instanceof Procedure) {
 						Procedure p = (Procedure)record;
-						if (p.isVirtual() && !p.isFunction()) {
+						if (p.isVirtual()) {
 							if (p.getQueryPlan() == null) {
 								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getFullName(), model.getName()));
 							}

@@ -2343,6 +2343,28 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, hdm, metadata);
     }
     
+    @Test public void testUDF() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL FUNCTION f1(VARIADIC e1 integer) RETURNS integer as return array_length(e1);", "x", "y");
+        
+        ProcessorPlan plan = helpGetPlan("select f1(1, 2, 1)", metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        helpProcess(plan, cc, new HardcodedDataManager(), new List[] {Arrays.asList(3)});
+    }
+    
+    @Test public void testUDFCorrelated() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL FUNCTION f1(x integer) RETURNS string as return (select e1 from g1 where e2 = x/2); create foreign table g1 (e1 string, e2 integer);", "x", "y");
+        
+        ProcessorPlan plan = helpGetPlan("select * from g1, table ( select f1 (g1.e2)) t;", metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT y.g1.e1, y.g1.e2 FROM y.g1", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        hdm.addData("SELECT y.g1.e2, y.g1.e1 FROM y.g1", Arrays.asList(1, "a"), Arrays.asList(2, "b"));
+        hdm.setBlockOnce(true);
+        helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a", 1, null), Arrays.asList("b", 2, "a")});
+    }
+    
     private static final boolean DEBUG = false;
     
 }
