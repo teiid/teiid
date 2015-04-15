@@ -45,7 +45,7 @@
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
         <jbossas-test-version>jboss-eap-6.3</jbossas-test-version>
-        <version.org.jboss.oreva>0.8.0</version.org.jboss.oreva>
+        <version.org.jboss.oreva>0.8.1</version.org.jboss.oreva>
         <jbossas-module-root>modules/system/layers/base</jbossas-module-root>
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.nux>1.6</version.nux>
