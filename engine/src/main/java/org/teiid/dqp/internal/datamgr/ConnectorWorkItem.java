@@ -61,6 +61,8 @@ import org.teiid.dqp.internal.process.SaveOnReadInputStream;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
+import org.teiid.language.BatchedCommand;
+import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Call;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
@@ -72,6 +74,7 @@ import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SourceHint;
@@ -345,6 +348,9 @@ public class ConnectorWorkItem implements ConnectorWork {
 		} else if (command instanceof QueryCommand){
 			this.execution = Assertion.isInstanceOf(exec, ResultSetExecution.class, "QueryExpression Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
 		} else {
+			final boolean singleUpdateCount = connector.returnsSingleUpdateCount() 
+					&& (translatedCommand instanceof BatchedUpdates || (translatedCommand instanceof BatchedCommand && ((BatchedCommand)translatedCommand).getParameterValues() != null));
+			
 			Assertion.isInstanceOf(exec, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
 			this.execution = new ResultSetExecution() {
 				private int[] results;
@@ -367,6 +373,12 @@ public class ConnectorWorkItem implements ConnectorWork {
 						DataNotAvailableException {
 					if (results == null) {
 						results = ((UpdateExecution)exec).getUpdateCounts();
+					}
+					if (singleUpdateCount) {
+						if (index < results[0]) {
+							return CollectionTupleSource.UPDATE_ROW;
+						}
+						return null;
 					}
 					if (index < results.length) {
 						return Arrays.asList(results[index++]);

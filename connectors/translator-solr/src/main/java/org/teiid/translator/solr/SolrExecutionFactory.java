@@ -210,4 +210,9 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
     public boolean supportsAggregatesCountStar() {
     	return true;
     }	
+	
+	@Override
+	public boolean returnsSingleUpdateCount() {
+		return true;
+	}
 }

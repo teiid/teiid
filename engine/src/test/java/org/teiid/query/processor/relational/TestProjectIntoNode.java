@@ -39,6 +39,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.events.EventDistributor;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.FakeTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
@@ -164,6 +165,9 @@ public class TestProjectIntoNode {
                 assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
             } else {
                 fail("Unexpected command type"); //$NON-NLS-1$
+            }
+            if (batchSize > 1) {
+            	return CollectionTupleSource.createUpdateCountArrayTupleSource(batchSize);
             }
             List counts = Arrays.asList(new Object[] { new Integer(batchSize)});
             FakeTupleSource fakeTupleSource = new FakeTupleSource(null, new List[] {counts});

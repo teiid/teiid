@@ -508,4 +508,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsCompareCriteriaOrderedExclusive() {
 		return delegate.supportsCompareCriteriaOrderedExclusive();
 	}
+	@Override
+	public boolean returnsSingleUpdateCount() {
+		return delegate.returnsSingleUpdateCount();
+	}
 }

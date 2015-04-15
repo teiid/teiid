@@ -26,6 +26,7 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -252,8 +253,18 @@ public class ProjectIntoNode extends RelationalNode {
 
     private void checkExitConditions()  throws TeiidComponentException, BlockedException, TeiidProcessingException {
     	if (tupleSource != null) {
-	    	Integer count = (Integer)tupleSource.nextTuple().get(0);
-	        insertCount += count.intValue();
+    		if (mode == Mode.BATCH || mode == Mode.ITERATOR) {
+    			List<?> tuple = null;
+    			while ((tuple = tupleSource.nextTuple()) != null) {
+        			Integer count = (Integer)tuple.get(0);
+        			if (count > 0 ||  count == Statement.SUCCESS_NO_INFO) {
+        				insertCount++;
+        			}
+    			}
+	    	} else {
+	    		Integer count = (Integer)tupleSource.nextTuple().get(0);
+	    		insertCount += count.intValue();
+	    	}
 	        closeRequest();
 	        // Mark as processed
 	        tupleSourcesProcessed++; // This should set tupleSourcesProcessed to be the same as requestsRegistered

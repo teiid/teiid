@@ -116,12 +116,12 @@ public class TestInsertProcessing {
         
         if (doBulkInsert) {
             dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
+                                new List[] { Arrays.asList(1), Arrays.asList(1)});             
         } 
         else 
         if (doBatching) {
             dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
+                                new List[] { Arrays.asList(1),Arrays.asList(1)});             
         } else {
             dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
@@ -279,7 +279,7 @@ public class TestInsertProcessing {
 							while (ts.nextTuple() != null) {
 								count++;
 							}
-							return CollectionTupleSource.createUpdateCountTupleSource(count);
+							return CollectionTupleSource.createUpdateCountArrayTupleSource(count);
 						} catch (TeiidProcessingException e) {
 							throw new RuntimeException(e);
 						}
@@ -300,11 +300,11 @@ public class TestInsertProcessing {
         	switch (cap) {
 	        case BATCHED_UPDATES:
 	            dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
-	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
+	                    new List[] { Arrays.asList(1), Arrays.asList(1)});
 	            break;
 	        case INSERT_WITH_QUERYEXPRESSION:
 	        	dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$ 
-	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
+	                    new List[] { Arrays.asList(new Object[] { 2})});
 	        	break;
 	        }
         } else {
@@ -385,12 +385,12 @@ public class TestInsertProcessing {
         
         if (doBulkInsert) {
             dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(4)})});             
+                                new List[] { Arrays.asList(1), Arrays.asList(1), Arrays.asList(1), Arrays.asList(1)});             
         } 
         else 
         if (doBatching) {
             dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
+                                new List[] { Arrays.asList(1), Arrays.asList(1)});             
         } else {
             dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
