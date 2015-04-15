@@ -128,4 +128,8 @@ public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory
 	public boolean supportsBulkUpdate() {
 		return true;
 	}    
+    
+    public boolean returnsSingleUpdateCount() {
+    	return true;
+    }
 }

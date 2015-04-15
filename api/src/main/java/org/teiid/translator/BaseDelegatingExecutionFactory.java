@@ -500,4 +500,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public String getCollationLocale() {
 		return delegate.getCollationLocale();
 	}
+	@Override
+	public boolean returnsSingleUpdateCount() {
+		return delegate.returnsSingleUpdateCount();
+	}
 }

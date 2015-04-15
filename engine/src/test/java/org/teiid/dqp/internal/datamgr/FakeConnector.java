@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.BatchedCommand;
+import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -53,7 +55,11 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
     	executionCount++;
-        return new FakeExecution(executionContext);
+        FakeExecution result = new FakeExecution(executionContext);
+        if (command instanceof BatchedUpdates || (command instanceof BatchedCommand && ((BatchedCommand)command).getParameterValues() != null)) {
+        	result.batchOrBulk = true;
+        } 
+        return result;
     }
     
     @Override
@@ -73,6 +79,7 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     
     public final class FakeExecution implements ResultSetExecution, UpdateExecution {
         private int rowCount;
+        boolean batchOrBulk;
         ExecutionContext ec;
         
         public FakeExecution(ExecutionContext ec) {
@@ -93,6 +100,9 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
 		@Override
 		public int[] getUpdateCounts() throws DataNotAvailableException,
 				TranslatorException {
+			if (batchOrBulk) {
+				return new int[] {1, 1};
+			}
 			return new int[] {1};
 		}
 		

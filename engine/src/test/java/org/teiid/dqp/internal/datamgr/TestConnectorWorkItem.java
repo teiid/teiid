@@ -63,6 +63,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
@@ -132,13 +133,16 @@ public class TestConnectorWorkItem {
 	}
 
     @Test public void testUpdateExecution() throws Throwable {
-		AtomicResultsMessage results = helpExecuteUpdate();
+		AtomicResultsMessage results = helpExecuteUpdate(false);
 		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
 	}
 
-	private AtomicResultsMessage helpExecuteUpdate() throws Exception,
+	private AtomicResultsMessage helpExecuteUpdate(boolean batch) throws Exception,
 			Throwable {
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
+		if (batch) {
+			command = new BatchedUpdateCommand(Arrays.asList(command, command));
+		}
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
 		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager());
@@ -146,8 +150,15 @@ public class TestConnectorWorkItem {
 		return synchConnectorWorkItem.more();
 	}
 	
+	@Test public void testBatchUpdateExecution() throws Throwable {
+		AtomicResultsMessage results = helpExecuteUpdate(true);
+		assertEquals(2, results.getResults().length);
+		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
+		assertEquals(1, results.getResults()[1].get(0));
+	}
+	
 	@Test public void testExecutionWarning() throws Throwable {
-		AtomicResultsMessage results = helpExecuteUpdate();
+		AtomicResultsMessage results = helpExecuteUpdate(false);
 		assertEquals(1, results.getWarnings().size());
 	}
 	
