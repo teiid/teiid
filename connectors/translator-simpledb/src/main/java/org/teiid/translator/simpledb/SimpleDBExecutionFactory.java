@@ -148,4 +148,9 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
     public boolean supportsBulkUpdate() {
         return true;
     }
+    
+    @Override
+    public boolean returnsSingleUpdateCount() {
+    	return true;
+    }
 }

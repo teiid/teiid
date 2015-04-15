@@ -683,7 +683,7 @@ public class TempTable implements Cloneable, SearchableTable {
         int updateCount = up.process();
         tid.setCardinality(tree.getRowCount());
         tid.getTableData().dataModified(updateCount);
-        return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
+        return CollectionTupleSource.createUpdateCountArrayTupleSource(updateCount);
     }
 	
 	public TupleSource update(Criteria crit, final SetClauseList update) throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {

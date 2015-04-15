@@ -1244,4 +1244,15 @@ public class ExecutionFactory<F, C> {
 	public void setThreadBound(boolean threadBound) {
 		this.threadBound = threadBound;
 	}
+	
+	/**
+	 * True if the only a single value is returned for the update count.
+	 * This overrides the default expectation of a update count array
+	 * for bulk/batch commands.  It is expected that every command
+	 * is successful.
+	 * @return
+	 */
+	public boolean returnsSingleUpdateCount() {
+		return false;
+	}
 }
