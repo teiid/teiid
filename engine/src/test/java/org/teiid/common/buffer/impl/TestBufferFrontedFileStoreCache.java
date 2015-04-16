@@ -80,7 +80,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 
 	@Test public void testAddGetMultiBlock() throws Exception {
-		cache = createLayeredCache(1 << 26, 1 << 26, true);
+		cache = createLayeredCache(1 << 26, 1 << 26, true, true);
 		
 		CacheEntry ce = new CacheEntry(2l);
 		Serializer<Integer> s = new SimpleSerializer();
@@ -159,7 +159,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testEviction() throws Exception {
-		cache = createLayeredCache(1<<15, 1<<15, true);
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
 		assertEquals(3, cache.getMaxMemoryBlocks());
 		
 		CacheEntry ce = new CacheEntry(2l);
@@ -190,7 +190,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testEvictionFails() throws Exception {
-		cache = createLayeredCache(1<<15, 1<<15, false);
+		cache = createLayeredCache(1<<15, 1<<15, false, true);
 		BufferManagerImpl bmi = Mockito.mock(BufferManagerImpl.class);
 		cache.setBufferManager(bmi);
 		Serializer<Integer> s = new SimpleSerializer();
@@ -213,7 +213,7 @@ public class TestBufferFrontedFileStoreCache {
 		cache.add(ce, s);
 	}
 
-	private static BufferFrontedFileStoreCache createLayeredCache(int bufferSpace, int objectSize, boolean memStorage) throws TeiidComponentException {
+	private static BufferFrontedFileStoreCache createLayeredCache(int bufferSpace, int objectSize, boolean memStorage, boolean allocate) throws TeiidComponentException {
 		BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
 		fsc.cleanerRunning.set(true); //prevent asynch affects
 		fsc.setMemoryBufferSpace(bufferSpace);
@@ -260,7 +260,7 @@ public class TestBufferFrontedFileStoreCache {
 			};
 			fsc.setStorageManager(sm);
 		}
-		fsc.initialize();
+		fsc.initialize(allocate);
 		return fsc;
 	}
 	
@@ -287,7 +287,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testDefragTruncateEmpty() throws Exception {
-		cache = createLayeredCache(1<<15, 1<<15, true);
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
 		cache.setMinDefrag(10000000);
 		Serializer<Integer> s = new SimpleSerializer();
 		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
@@ -316,7 +316,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testDefragTruncate() throws Exception {
-		cache = createLayeredCache(1<<15, 1<<15, true);
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
 		cache.setMinDefrag(10000000);
 		Serializer<Integer> s = new SimpleSerializer();
 		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
@@ -350,7 +350,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testDefragTruncateCompact() throws Exception {
-		cache = createLayeredCache(1<<15, 1<<15, true);
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
 		cache.setCompactBufferFiles(true);
 		cache.setTruncateInterval(1);
 		cache.setMinDefrag(10000000);
@@ -382,7 +382,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testDefragMin() throws Exception {
-		cache = createLayeredCache(1<<15, 1<<15, true);
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
 		cache.setMinDefrag(10000000);
 		Serializer<Integer> s = new SimpleSerializer();
 		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
@@ -416,7 +416,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testLargeMax() throws TeiidComponentException {
-		createLayeredCache(1 << 20, 1 << 30, false);
+		createLayeredCache(1 << 20, 1 << 30, false, false);
 	}
 	
 }
