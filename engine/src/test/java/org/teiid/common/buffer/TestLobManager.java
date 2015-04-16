@@ -23,6 +23,7 @@ package org.teiid.common.buffer;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -69,6 +70,14 @@ public class TestLobManager {
 			
 		}));
 		
+		BlobType blobEmpty = new BlobType(new BlobImpl(new InputStreamFactory() {
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ByteArrayInputStream(new byte[0]);
+			}
+			
+		}));
+		
 		FileStore fs1 = buffMgr.createFileStore("blob");
 		FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs1, Streamable.ENCODING);
 		FileStoreOutputStream fsos = fsisf.getOuputStream();
@@ -79,9 +88,9 @@ public class TestLobManager {
 		
 		assertNotNull(blob1.getReferenceStreamId());
 		
-		LobManager lobManager = new LobManager(new int[] {0, 1, 2}, fs);
+		LobManager lobManager = new LobManager(new int[] {0, 1, 2, 3}, fs);
 		lobManager.setMaxMemoryBytes(4);
-		List<?> tuple = Arrays.asList(clob, blob, blob1);
+		List<?> tuple = Arrays.asList(clob, blob, blob1, blobEmpty);
 		lobManager.updateReferences(tuple, ReferenceMode.CREATE);
 		
 		assertNotNull(blob1.getReferenceStreamId());
