@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="UCanAccessVDB" version="1">
+
+	<description>The UCanAccess Translator Test VDB</description>
+	
+	<property name="UseConnectorMetadata" value="true" />
+	
+	<model name="TestData">
+        <!-- 
+          JDBC Import settings 
+          
+          importer.useFullSchemaName directs the importer to drop the source 
+          schema from the Teiid object name, so that the Teiid fully qualified name
+          will be in the form of <model name>.<table name>
+        -->
+        <property name="importer.useFullSchemaName" value="false"/>
+           
+         <source name="ucanaccess-translator" translator-name="translator-ucanaccess" connection-jndi-name="java:/UCanAccessDS"/>
+    </model>
+	
+    <model name="TestUCanAccess" type="VIRTUAL">
+        
+        <metadata type="DDL"><![CDATA[
+               
+        CREATE VIEW EmpDataView (
+        	ID integer,
+        	LASTNAME string,
+        	FIRSTNAME string,
+        	MIDDLENAME string,
+        	EMPID string,
+        	DEPARTMENT string,
+        	ANNUALSALARY string,
+        	TITLE string,
+        	HOMEPHONE string,
+        	MANAGER string,
+        	STREET string,
+        	CITY string,
+        	STATE string,
+        	ZIP string
+        ) AS SELECT
+        	E.ID,
+        	E.LASTNAME,
+        	E.FIRSTNAME,
+        	E.MIDDLENAME,
+        	E.EMPID,
+        	E.DEPARTMENT,
+        	E.ANNUALSALARY,
+        	E.TITLE,
+        	E.HOMEPHONE,
+        	E.MANAGER,
+        	E.STREET,
+        	E.CITY,
+        	E.STATE,
+        	E.ZIP FROM TestData.EmpData AS E;
+		
+		CREATE VIEW T21View (
+			ID integer,
+			DESCR string
+		) AS SELECT
+			t21.ID,
+			t21.DESCR FROM TestData.T21 AS t21;
+		
+		CREATE VIEW TestFunctionView (
+			f1 biginteger
+		) AS SELECT ucanaccess.DCount('*','T20','id > 100') FROM T20;
+
+         ]]> </metadata>
+    </model>
+</vdb>
