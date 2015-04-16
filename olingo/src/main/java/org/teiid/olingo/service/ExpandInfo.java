@@ -19,26 +19,40 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo;
+package org.teiid.olingo.service;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
-public class ContextAwareHttpSerlvetRequest extends HttpServletRequestDelegate {
-    private String contextPath;
+import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.teiid.olingo.api.ProjectedColumn;
 
-    public ContextAwareHttpSerlvetRequest(HttpServletRequest delegate) {
-        super(delegate);
+public class ExpandInfo {
+    private String navigationName;
+    private EdmEntityType entityType;
+    private final List<ProjectedColumn> projectedColumns;
+    private boolean collection; 
+    
+    public ExpandInfo(String name, EdmEntityType entityType,
+            List<ProjectedColumn> projectedColumns, boolean collection) {
+        this.navigationName = name;
+        this.entityType = entityType;
+        this.projectedColumns = projectedColumns;
+        this.collection = collection;
     }
 
-    public void setContextPath(String path) {
-        this.contextPath = path;
+    public String getNavigationName() {
+        return navigationName;
     }
 
-    @Override
-    public String getContextPath() {
-        if (contextPath != null) {
-            return contextPath;
-        }
-        return super.getContextPath();
+    public EdmEntityType getEntityType() {
+        return entityType;
+    }
+
+    public List<ProjectedColumn> getProjectedColumns() {
+        return projectedColumns;
+    }
+
+    public boolean isCollection() {
+        return collection;
     }
 }

@@ -3,13 +3,15 @@
     <model name="PM1">
         <source name="text-connector2" translator-name="loopback" />
          <metadata type="DDL"><![CDATA[
-                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY, e3 double);
+                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY, e3 double) OPTIONS(UPDATABLE true);
                 CREATE FOREIGN TABLE G2 (e1 string, e2 integer PRIMARY KEY, CONSTRAINT FK0 FOREIGN KEY (e2) REFERENCES G1 (e2)) OPTIONS (UPDATABLE 'true');
+                CREATE FOREIGN TABLE NoPKTable (e1 string, e2 integer, e3 double);
+                CREATE FOREIGN TABLE StreamTable (e1 integer PRIMARY KEY, e2 xml, e3 Blob);                
         ]]> </metadata>
     </model>
 
-    <model name="PM2">
-        <source name="text-connector2" translator-name="loopback" />
+    <model name="PM2" visible="false">
+        <source name="text-connector2" translator-name="loopback"/>
          <metadata type="DDL"><![CDATA[
                 CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY, e3 double);
                 CREATE FOREIGN TABLE G2 (e1 string PRIMARY KEY, e2 integer, CONSTRAINT FK0 FOREIGN KEY (e2) REFERENCES G1 (e2) ) OPTIONS (UPDATABLE 'true');
@@ -28,10 +30,36 @@
                UNION ALL
                SELECT e1, e2 FROM PM2.G1;
                
-            CREATE VIRTUAL PROCEDURE proc (x string) returns string AS
+            CREATE VIEW G4 (e1 string PRIMARY KEY, e2 integer, CONSTRAINT FKX FOREIGN KEY (e1) REFERENCES G1(e2)) OPTIONS (UPDATABLE 'true') AS
+               SELECT e1, e2 FROM PM1.G1
+               UNION ALL
+               SELECT e1, e2 FROM PM2.G1;
+                           
+            CREATE VIRTUAL PROCEDURE proc (x string) returns string OPTIONS (UPDATECOUNT 0) AS
             BEGIN
                 return x;
             END
+            CREATE VIRTUAL PROCEDURE procResultSet(x string, y integer) returns TABLE(x string, y integer) OPTIONS (UPDATECOUNT 0) AS
+            BEGIN
+                select x, y;
+            END            
+            CREATE VIRTUAL PROCEDURE procXML (x string) returns XML OPTIONS (UPDATECOUNT 0) AS
+            BEGIN
+                DECLARE XML VARIABLES.load = (SELECT XMLELEMENT("name", x));
+                return VARIABLES.load;
+            END
+            CREATE VIRTUAL PROCEDURE procComposableXML (x string) returns TABLE(load XML) OPTIONS (UPDATECOUNT 0) AS
+            BEGIN
+                SELECT XMLELEMENT("name", x);
+            END            
+            CREATE VIRTUAL PROCEDURE actionXML (x XML) returns XML OPTIONS (UPDATECOUNT 0) AS
+            BEGIN
+                return x;
+            END
+            CREATE PROCEDURE getCustomers(IN p2 timestamp, IN p3 decimal) RETURNS timestamp OPTIONS (UPDATECOUNT 0) AS
+            BEGIN 
+              return p2;
+            END                                   
         ]]> </metadata>
     </model>
 

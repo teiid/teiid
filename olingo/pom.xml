@@ -139,6 +139,15 @@
             <artifactId>odata-server-core</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-server-core-ext</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>        
+        
         <!--  runtime dependencies -->
         <dependency>
             <groupId>commons-codec</groupId>
@@ -153,11 +162,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>

@@ -31,6 +31,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.codec.DecoderException;
+import org.apache.olingo.commons.api.edm.EdmParameter;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
+import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.commons.api.edm.EdmType;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmPrimitiveTypeFactory;
+import org.teiid.core.TeiidException;
 
 @SuppressWarnings("nls")
 public class LiteralParser {
@@ -174,4 +182,74 @@ public class LiteralParser {
                 .append(calendar.get(Calendar.SECOND));
         return java.sql.Time.valueOf(sb.toString());
     }
+    
+    public static Object parseLiteral(EdmParameter edmParameter, Class<?> runtimeType, String value)
+            throws TeiidException {
+        EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
+                .valueOf(edmParameter.getType()
+                        .getFullQualifiedName()
+                        .getFullQualifiedNameAsString().substring(4)));
+        
+        try {
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length()-1);
+            }
+            Object converted =  primitiveType.valueOfString(value, 
+                    edmParameter.isNullable(), 
+                    edmParameter.getMaxLength(), 
+                    edmParameter.getPrecision(), 
+                    edmParameter.getScale(), 
+                    true, 
+                    runtimeType);        
+            return converted;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TeiidException(e);
+        }
+    }
+    
+    public static Object parseLiteral(EdmProperty edmProperty, Class<?> runtimeType, String value)
+            throws TeiidException {
+        EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
+                .valueOf(edmProperty.getType()
+                        .getFullQualifiedName()
+                        .getFullQualifiedNameAsString().substring(4)));
+        
+        try {
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length()-1);
+            }
+            Object converted =  primitiveType.valueOfString(value, 
+                    edmProperty.isNullable(), 
+                    edmProperty.getMaxLength(), 
+                    edmProperty.getPrecision(), 
+                    edmProperty.getScale(), 
+                    true, 
+                    runtimeType);        
+            return converted;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TeiidException(e);
+        }
+    }
+    
+    public static Object parseLiteral(EdmType type, Class<?> runtimeType, String value)
+            throws TeiidException {
+        EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
+                .valueOf(type.getFullQualifiedName().getFullQualifiedNameAsString().substring(4)));
+        
+        try {
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length()-1);
+            }
+            Object converted =  primitiveType.valueOfString(value,
+                    false,
+                    null, 
+                    null, 
+                    null, 
+                    true, 
+                    runtimeType);        
+            return converted;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TeiidException(e);
+        }
+    }    
 }

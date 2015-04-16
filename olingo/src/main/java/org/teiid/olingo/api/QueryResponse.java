@@ -19,14 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo;
+package org.teiid.olingo.api;
 
-class SQLParam {
-    final Object value;
-    final Integer sqlType;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-    public SQLParam(Object value, Integer sqlType) {
-        this.value = value;
-        this.sqlType = sqlType;
-    }
+public interface QueryResponse extends BaseResponse {
+    void addRow(ResultSet rs) throws SQLException;
+    long size();
+    void setCount(long count);
+    void setNextToken(String token);
+    String getNextToken();
 }
