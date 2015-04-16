@@ -22,6 +22,10 @@
 
 package org.teiid.core.types;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.sql.rowset.serial.SerialBlob;
 
 import junit.framework.TestCase;
@@ -79,6 +83,20 @@ public class TestBlobValue extends TestCase {
         SerialBlob blob1 = new SerialBlob(testString.getBytes());
         BlobType bv1 = new BlobType(blob1);
         assertEquals(0, bv1.compareTo(bv));
+    }
+    
+    public void testBlobImplGetBytes() throws Exception {
+    	BlobImpl b = new BlobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ByteArrayInputStream(new byte[0]);
+			}
+		});
+    	byte[] b1 = b.getBytes(1, 0);
+    	assertEquals(0, b1.length);
+    	byte[] b2 = b.getBytes(1, 1);
+    	assertEquals(0, b2.length);
     }
     
 }
