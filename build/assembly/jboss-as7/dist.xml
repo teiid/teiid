@@ -11,32 +11,44 @@
   <baseDirectory>teiid-${project.version}</baseDirectory>
 
   <fileSets>
-          
     <fileSet>
-        <directory>target/kits/jboss-as7</directory>
-        <outputDirectory>/</outputDirectory>      
-        <includes>
-          <include>**/*.sh</include>
-        </includes>   
-        <fileMode>755</fileMode>  
-    </fileSet> 
-          
-    <fileSet>
-        <directory>target/kits/jboss-as7</directory>
-        <outputDirectory>/</outputDirectory>      
-        <excludes>
-          <exclude>**/*.sh</exclude>
-        </excludes>      
+        <directory>target/kits/jboss-as7/bin/scripts</directory>
+        <outputDirectory>${cli.scriploc}</outputDirectory>           
     </fileSet>
     
     <fileSet>
-        <directory>target/kits/jboss-as7</directory>
-        <outputDirectory>/</outputDirectory>      
-        <excludes>
-          <exclude>**/*.properties</exclude>
-        </excludes>      
-    </fileSet>    
-          
+        <directory>target/kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}/</outputDirectory>      
+     
+    </fileSet> 
+  
+     <fileSet>
+        <directory>target/kits/jboss-as7/docs</directory>
+        <outputDirectory>docs</outputDirectory>      
+     </fileSet>             
+    
+     <fileSet>  
+        <directory>target</directory>
+        <outputDirectory>${jdbcjar.loc}</outputDirectory>      
+        <includes>
+          <include>teiid-*-jdbc.jar</include>
+        </includes>      
+    </fileSet>
+    
+    <fileSet>  
+        <directory>target</directory>
+        <outputDirectory>${adminshell.loc}</outputDirectory>      
+        <includes>
+        <!-- deliver the adminshell kit in zip form -->
+          <include>teiid-*-adminshell-dist.zip</include>
+        </includes>      
+    </fileSet>
+    
+	<fileSet>
+        <directory>target/kits/jboss-as7/vdb</directory>
+        <outputDirectory>${vdb.loc}</outputDirectory>         
+    </fileSet>             
+
     <fileSet>
         <directory>../client/src/main/resources</directory>
         <includes>
@@ -66,7 +78,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/common-core/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/common-core/main</outputDirectory>
       </binaries>
     </moduleSet>
 
@@ -78,7 +90,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/api/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/api/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -90,7 +102,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>    
             
@@ -102,7 +114,7 @@
       <binaries>
 		<includeDependencies>false</includeDependencies>
 		<unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -114,7 +126,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
       </binaries>
     </moduleSet>    
 
@@ -148,7 +160,7 @@
                     <useTransitiveDependencies>true</useTransitiveDependencies>
                 </dependencySet>
             </dependencySets>
-            <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>
     </moduleSet>
     
@@ -161,7 +173,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/admin/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/admin/main</outputDirectory>
       </binaries>
     </moduleSet>    
     

@@ -21,7 +21,7 @@
 	    
 	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
 	    
-	    <jbossas-module-root>modules/system/layers/base</jbossas-module-root>
+	    <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
     
 	    <!-- commenting out to use jboss bom versions -->
         <!--version.org.jboss.resteasy>2.3.6.Final</version.org.jboss.resteasy   2.3.7.Final -->
@@ -200,6 +200,22 @@
       </build>
     </profile>
         
+    <profile>
+      <id>releasewithjavadoc</id>
+      <properties>
+        <!--maven.javadoc.skip>true</maven.javadoc.skip-->
+        <skipTests>true</skipTests>
+      </properties>
+      <modules>
+        <module>build</module>        
+      </modules>
+      <build>
+        <plugins>
+       
+        </plugins>
+      </build>
+    </profile>
+            
     <profile>
       <id>docs</id>
       <modules>
