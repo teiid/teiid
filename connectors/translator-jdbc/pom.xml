@@ -36,22 +36,7 @@
           <groupId>org.hibernate</groupId>
           <artifactId>hibernate-core</artifactId>
           <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-runtime</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-client</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-			<groupId>org.codehaus.btm</groupId>
-			<artifactId>btm</artifactId>
-			<scope>test</scope>
-		</dependency>      
+        </dependency>  
     </dependencies>
     
     <build>
