@@ -419,4 +419,9 @@ public class TestBufferFrontedFileStoreCache {
 		createLayeredCache(1 << 20, 1 << 30, false, false);
 	}
 	
+	@Test public void testNonAlignedMaxBlocks() throws TeiidComponentException {
+		BufferFrontedFileStoreCache bf = createLayeredCache(1 << 20, 8000000, false, false);
+		assertEquals(974, bf.getMaxMemoryBlocks());
+	}
+	
 }
