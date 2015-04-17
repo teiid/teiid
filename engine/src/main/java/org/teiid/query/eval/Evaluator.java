@@ -806,6 +806,14 @@ public class Evaluator {
 					Reader r = new StringReader(string);
 					type = validate(xp, r);
 				}
+			} else if (value instanceof BinaryType) {
+				BinaryType string = (BinaryType)value;
+				result = new SQLXMLImpl(string.getBytesDirect());
+				result.setCharset(Streamable.CHARSET);
+				if (!xp.isWellFormed()) {
+					Reader r = result.getCharacterStream();
+					type = validate(xp, r);
+				}
 			} else {
 				InputStreamFactory isf = null;
 				Streamable<?> s = (Streamable<?>)value;

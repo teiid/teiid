@@ -52,6 +52,7 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.MetadataStore;
@@ -307,6 +308,16 @@ public class TestSQLXMLProcessing {
         List<?>[] expected = new List<?>[] {
         		Arrays.asList(new BinaryType(new byte[] {0xf, (byte)0xab})),
         		Arrays.asList(new BinaryType(new byte[] {0x1F, 0x1C})),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlTableBOM() throws Exception {
+        String sql = "select * from xmltable('/a' passing xmlparse(document X'EFBBBF" + PropertiesUtils.toHex("<a/>".getBytes("UTF-8")) + "' wellformed)) as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<a/>"),
         };    
     
         process(sql, expected);
@@ -648,6 +659,16 @@ public class TestSQLXMLProcessing {
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("a<a/>")
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlParseBOM() throws Exception {
+    	String sql = "select xmlparse(content X'EFBBBF" + PropertiesUtils.toHex("<a/>".getBytes("UTF-8")) + "')"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("﻿<a/>")
         };    
     
         process(sql, expected);

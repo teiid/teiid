@@ -1484,7 +1484,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(XMLParse obj) {
     	if (obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.STRING && 
     			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.CLOB &&
-    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.BLOB) {
+    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.BLOB &&
+    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.VARBINARY) {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xmlparse_type"), obj); //$NON-NLS-1$
     	}
     }
