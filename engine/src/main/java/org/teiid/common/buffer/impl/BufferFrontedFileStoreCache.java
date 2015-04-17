@@ -576,7 +576,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		}
 		memoryWritePermits = new Semaphore(blocks);
 		maxMemoryBlocks = Math.min(MAX_DOUBLE_INDIRECT, blocks);
-		maxMemoryBlocks = Math.min(maxMemoryBlocks, maxStorageObjectSize>>LOG_BLOCK_SIZE + ((maxStorageObjectSize&BufferFrontedFileStoreCache.BLOCK_MASK)>0?1:0));
+		maxMemoryBlocks = Math.min(maxMemoryBlocks, (maxStorageObjectSize>>LOG_BLOCK_SIZE) + ((maxStorageObjectSize&BufferFrontedFileStoreCache.BLOCK_MASK)>0?1:0));
 		//try to maintain enough freespace so that writers don't block in cleaning
 		cleaningThreshold = Math.min(maxMemoryBlocks<<4, blocks>>1);
 		criticalCleaningThreshold = Math.min(maxMemoryBlocks<<2, blocks>>2);
