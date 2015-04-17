@@ -8,6 +8,15 @@
   <artifactId>teiid</artifactId>
   <name>Build</name>
   <description>Teiid Build</description>
+  
+      <properties>
+    	<!-- properties to control placement of artifacts in the kit-->
+            <jdbcjar.loc>dataVirtualization/jdbc</jdbcjar.loc>
+            <adminshell.loc>dataVirtualization/teiid-adminshell</adminshell.loc>
+            <cli.scriploc>/cli-scripts</cli.scriploc>
+            <vdb.loc>dataVirtualization/vdb</vdb.loc>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -166,6 +175,29 @@
                     </execution>
                 </executions>
             </plugin>
+            
+<plugin>
+   <groupId>org.apache.maven.plugins</groupId>
+   <artifactId>maven-install-plugin</artifactId>
+   <!--version>2.5.1</version-->
+   <configuration>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid</artifactId>
+      <version>${project.version}</version>
+      <packaging>jar</packaging>
+      <file>${basedir}/target/teiid-${project.version}-jdbc.jar</file>
+      <generatePom>true</generatePom>
+   </configuration>
+   <executions>
+      <execution>
+         <id>install-jar-lib</id>
+         <goals>
+            <goal>install-file</goal>
+         </goals>
+         <phase>package</phase>
+      </execution>
+   </executions>
+</plugin>            
         </plugins>
     </build>
     
@@ -184,8 +216,8 @@
                   <descriptor>assembly/src.xml</descriptor>
                   <descriptor>assembly/client-jar.xml</descriptor>
                   <descriptor>assembly/console-jar.xml</descriptor>    
-                  <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                   <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                  <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                   <descriptor>assembly/embedded-dist.xml</descriptor>
                 </descriptors>
               </configuration>
