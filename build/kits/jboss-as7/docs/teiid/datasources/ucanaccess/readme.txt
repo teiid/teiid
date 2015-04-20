@@ -9,7 +9,7 @@ Step 1: Installing the Driver Module
 
 	2) Overlay the "modules" directory on the "<jboss-as>/modules" directory
 
-	3) Unzip 1) will get 5 jars(ucanaccess-[version].jar,hsqldb.jar,jackcess-[version].jar,commons-lang-[version].jar,commons-logging-[version].jar), copy all these jars into the "<jboss-as>/modules/org/apache/phoenix/main" directory.
+	3) Unzip 1) will get 5 jars(ucanaccess-[version].jar,hsqldb.jar,jackcess-[version].jar,commons-lang-[version].jar,commons-logging-[version].jar), copy all these jars into the "<jboss-as>/modules/net/ucanaccess/main" directory.
 
 	4) Start server
 

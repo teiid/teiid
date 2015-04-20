@@ -186,7 +186,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 41, translators.size());  // infinispan is not configured OOTB
+		assertEquals(translators.toString(), 42, translators.size());  // infinispan is not configured OOTB
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -467,8 +467,6 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testDataRoleMapping() throws Exception{
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
-//		Thread.sleep(2000);		
-		
 		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
 
 		VDB vdb = admin.getVDB("bqt", 2);
