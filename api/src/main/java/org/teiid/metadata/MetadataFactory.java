@@ -85,8 +85,6 @@ public class MetadataFactory implements Serializable {
 	private transient ModelMetaData model;
 	private transient Map<String, ? extends VDBResource> vdbResources;
 	private List<Grant> grants;
-	private List<String> startTriggers;
-	private List<String> shutdownTriggers;
 
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
 	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
@@ -130,6 +128,13 @@ public class MetadataFactory implements Serializable {
 		msb = longHash(schemaName, msb);
 		this.idPrefix = "tid:" + hex(msb, 12); //$NON-NLS-1$
 		setUUID(this.schema);
+		if (modelProperties != null) {
+			for (Map.Entry<Object, Object> entry : modelProperties.entrySet()) {
+				if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
+					this.schema.setProperty(resolvePropertyKey(this, (String) entry.getKey()), (String) entry.getValue());
+				}
+			}
+		}
 		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
 	}
@@ -853,6 +858,22 @@ public class MetadataFactory implements Serializable {
 		}
 		setUUID(functionMethod.getOutputParameter());
 		this.schema.addFunction(functionMethod);
+	}
+
+	public static String resolvePropertyKey(MetadataFactory factory, String key) {
+	 	int index = key.indexOf(':');
+	 	if (index > 0 && index < key.length() - 1) {
+	 		String prefix = key.substring(0, index);
+	 		String uri = BUILTIN_NAMESPACES.get(prefix);
+	 		if (uri == null) {
+	 			uri = factory.getNamespaces().get(prefix);
+	 		}
+	 		if (uri != null) {
+	 			key = '{' +uri + '}' + key.substring(index + 1, key.length());
+	 		}
+	 		//TODO warnings or errors if not resolvable 
+	 	}
+	 	return key;
 	}
 
 }

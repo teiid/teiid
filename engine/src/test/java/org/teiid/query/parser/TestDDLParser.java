@@ -722,8 +722,8 @@ public class TestDDLParser {
 	@Test public void testKeyResolve() {
 		MetadataFactory mf = new MetadataFactory(null, 1, "foo", getDataTypes(), new Properties(), null);
 		mf.addNamespace("x", "http://x");
-		assertEquals("{http://x}z", SQLParserUtil.resolvePropertyKey(mf, "x:z"));
-		assertEquals("y:z", SQLParserUtil.resolvePropertyKey(mf, "y:z"));
+		assertEquals("{http://x}z", MetadataFactory.resolvePropertyKey(mf, "x:z"));
+		assertEquals("y:z", MetadataFactory.resolvePropertyKey(mf, "y:z"));
 	}
 	
 	@Test public void testCreateError() {

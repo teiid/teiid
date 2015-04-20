@@ -5354,7 +5354,7 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 	 (value = nonNumericLiteral()
 	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 
-	 	key = resolvePropertyKey(factory, key);
+	 	key = MetadataFactory.resolvePropertyKey(factory, key);
 	 	String val = null;
 	 	if (!value.isNull()) {
 	 		val = value.getValue().toString();
