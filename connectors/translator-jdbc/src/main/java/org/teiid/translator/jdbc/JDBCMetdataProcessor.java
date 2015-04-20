@@ -605,14 +605,14 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			while (indexInfo.next()) {
 				short type = indexInfo.getShort(7);
 				if (type == DatabaseMetaData.tableIndexStatistic) {
-					tableInfo.table.setCardinality(indexInfo.getInt(11));
+					tableInfo.table.setCardinality(getCardinality(indexInfo));
 					cardinalitySet = true;
 					continue;
 				}
 				short ordinalPosition = indexInfo.getShort(8);
 				if (useAnyIndexCardinality && !cardinalitySet) {
-					int cardinality = indexInfo.getInt(11);
-					tableInfo.table.setCardinality(Math.max(cardinality, tableInfo.table.getCardinality()));
+					long cardinality = getCardinality(indexInfo);
+					tableInfo.table.setCardinality(Math.max(cardinality, (long)tableInfo.table.getCardinalityAsFloat()));
 				}
 				if (ordinalPosition <= savedOrdinalPosition) {
 					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique) 
@@ -644,6 +644,27 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			}
 			indexInfo.close();
 		}
+	}
+
+	/**
+	 * Get the cardinality, trying first using getLong for tables with more than max int rows
+	 * @param indexInfo
+	 * @return
+	 * @throws SQLException
+	 */
+	private long getCardinality(ResultSet indexInfo) throws SQLException {
+		long result = Table.UNKNOWN_CARDINALITY;
+		try {
+			result = indexInfo.getLong(11);
+			
+		} catch (SQLException e) {
+			//can't get as long, try int
+			result = indexInfo.getInt(11);
+		}
+		if (indexInfo.wasNull()) {
+			return Table.UNKNOWN_CARDINALITY;
+		}
+		return result;
 	}
 
 	/**
