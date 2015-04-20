@@ -32,7 +32,10 @@ import org.teiid.cache.Cachable;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.parser.ParseInfo;
 
 
@@ -162,6 +165,37 @@ public class TestSessionAwareCache {
 		assertTrue(cache.get(id) != null);
 		assertTrue(cache.remove(id, Determinism.SESSION_DETERMINISTIC) != null);
 		assertNull(cache.get(id));
+	}
+	
+	@Test public void testTtl() {
+		
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+		
+		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Cachable result = Mockito.mock(Cachable.class);
+		
+		//make sure defaults are returned
+		assertNull(cache.computeTtl(id, result, null));
+		assertEquals(Long.valueOf(1), cache.computeTtl(id, result, 1l));
+		
+		AccessInfo ai = new AccessInfo();
+		Mockito.stub(result.getAccessInfo()).toReturn(ai);
+		
+		Table t = new Table();
+		t.setProperty(DataModifiable.DATA_TTL, "2");
+		ai.addAccessedObject(t);
+		
+		assertEquals(Long.valueOf(2), cache.computeTtl(id, result, null));
+		
+		Table t1 = new Table();
+		Schema s = new Schema();
+		t1.setParent(s);
+		s.setProperty(DataModifiable.DATA_TTL, "0");
+		ai.addAccessedObject(t1);
+		
+		//ensure that the min and the parent are used
+		assertEquals(Long.valueOf(0), cache.computeTtl(id, result, null));
 	}
 
 	public static DQPWorkContext buildWorkContext() {
