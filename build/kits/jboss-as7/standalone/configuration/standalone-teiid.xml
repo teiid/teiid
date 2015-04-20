@@ -407,6 +407,7 @@
             <translator name="impala" module="org.jboss.teiid.translator.hive"/>
             <translator name="prestodb" module="org.jboss.teiid.translator.prestodb"/>
             <translator name="hbase" module="org.jboss.teiid.translator.hbase"/>
+            <translator name="ucanaccess" module="org.jboss.teiid.translator.jdbc"/>
         </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <unbounded-queue-thread-pool name="teiid-async">
