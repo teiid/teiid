@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.core.types.BinaryType;
 import org.teiid.language.Parameter;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Table;
@@ -42,6 +43,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.TestProcessor;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -615,6 +617,38 @@ public class TestPreparedStatementBatchedUpdate {
 
     	// Verify all the queries that were run
     	assertEquals("Unexpected queries executed -", finalQueryList, dataManager.getQueries()); //$NON-NLS-1$
+    }
+    
+    @Test public void testBulkBytePushdown() throws Exception {
+		String preparedSql = "insert into g1 (e1) values (?)"; //$NON-NLS-1$
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table g1 (e1 varbinary) options (updatable true)", "y", "z");
+        
+		// Create a testable prepared plan cache
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
+		
+		// Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("INSERT INTO g1 (e1) VALUES (?)", new List[] {Arrays.asList(1), Arrays.asList(1)}); //$NON-NLS-1$
+		// Source capabilities must support batched updates
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        capFinder.addCapabilities("z", caps); //$NON-NLS-1$
+        
+		ArrayList<List<?>> values = new ArrayList<List<?>>(2);
+		values.add(Arrays.asList(new byte[1]));  //$NON-NLS-1$
+		values.add(Arrays.asList(new byte[1]));  //$NON-NLS-1$
+    	
+    	List<?>[] expected = new List[] { 
+    			Arrays.asList(1), Arrays.asList(1)
+        };
+    	
+    	// Create the plan and process the query
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, tm, prepPlanCache, false, false, false, tm.getVdbMetaData());
+    	Insert insert = (Insert)dataManager.getCommandHistory().iterator().next();
+    	Constant c = (Constant)insert.getValues().get(0);
+    	assertTrue(c.isMultiValued());
+    	assertTrue(((List<?>)c.getValue()).get(0) instanceof BinaryType);
     }
 
 }
