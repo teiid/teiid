@@ -181,7 +181,11 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         	super.getContext().setVariableContext(parentContext);
         }
         createVariableContext();
-        
+        CommandContext cc = super.getContext();
+        if (cc != null) {
+        	//create fresh local state
+        	setContext(cc.clone());
+        }
         done = false;
         currentState = null;
         finalTupleSource = null;
@@ -673,8 +677,9 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     	try {
         	this.currentVarContext = this.currentVarContext.getParentContext();
         	this.cursorStates = this.cursorStates.getParentContext();
-	    	program.getTempTableStore().removeTempTables();
-	    	this.getContext().setTempTableStore(getTempTableStore());
+        	TempTableStore tempTableStore = program.getTempTableStore();
+			this.getContext().setTempTableStore(tempTableStore.getParentTempTableStore());
+        	tempTableStore.removeTempTables();
 			if (program.startedTxn()) {
 	    		TransactionService ts = this.getContext().getTransactionServer();
 	    		TransactionContext tc = this.blockContext;

@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -85,8 +86,11 @@ public class TestAsynch {
     	server.deployVDB("x", mmd);
     }
     
-    @AfterClass public static void oneTimeTeardown() throws Exception {
+    @After public void teardown() {
     	partIds.clear();
+    }
+    
+    @AfterClass public static void oneTimeTeardown() throws Exception {
     	server.stop();
     }
     
@@ -340,4 +344,49 @@ public class TestAsynch {
 		assertEquals(partIds.get(1), partIds.get(2));
 	}
 
+	/**
+	 * Runs sufficient iterations to ensure the temptablestore state is correct
+	 * @throws Exception
+	 */
+	@Test public void testAsynchAnon() throws Exception {
+		String query = "begin\n" +
+				"insert into #mom_collectors select 'a' as hostname, 123 as port, 1 as id from sometable;\n" +
+				"insert into #apm_collectors select 'a' as hostname, 124 as port, 12 as id from sometable;\n"+
+				"select 'add', hostname, port, id from #mom_collectors\n"+
+				"where (hostname, port) not in (select (hostname, port) from #apm_collectors)\n"+
+				"union select 'delete', hostname, port, id from #apm_collectors\n"+
+				"where (hostname, port) not in (select (hostname, port) from #mom_collectors) with return; end";
+		Statement stmt = this.internalConnection.createStatement();
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
+		ef.addData("SELECT someTable.col FROM someTable", Collections.nCopies(1, Arrays.asList(1)));
+		ts.setExecutionProperty("autoCommitTxn", "off");
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		ts.submitExecute(query, new StatementCallback() {
+			int rowCount;
+			@Override
+			public void onRow(Statement s, ResultSet rs) {
+				try {
+					rowCount++;
+					if (rowCount == 100000) {
+						s.close();
+					}
+				} catch (SQLException e) {
+					result.getResultsReceiver().exceptionOccurred(e);
+					throw new RuntimeException(e);
+				}
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(rowCount);
+			}
+		}, new RequestOptions().continuous(true));
+		assertEquals(100000, result.get().intValue());
+	}
+	
 }

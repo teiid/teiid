@@ -365,6 +365,10 @@ public class TempTableStore {
 		this.parentTempTableStore = parentTempTableStore;
 	}
     
+    public TempTableStore getParentTempTableStore() {
+		return parentTempTableStore;
+	}
+    
     public boolean hasTempTable(String tempTableName) {
     	return tempTables.containsKey(tempTableName) || foreignTempTables.containsKey(tempTableName);
     }
