@@ -188,7 +188,8 @@ public class PreparedStatementRequest extends Request {
 				}
 				for (int i = 0; i < values.size(); i++) {
 					List<Object> multiValue = multiValues.get(i);
-					multiValue.add(values.get(i));
+					Object value = this.context.getVariableContext().getGlobalValue(this.prepPlan.getReferences().get(i).getContextSymbol());
+					multiValue.add(value);
 				}
 			} else { //just accumulate copies of the command/plan - clones are not necessary
 				if (command == null) {
