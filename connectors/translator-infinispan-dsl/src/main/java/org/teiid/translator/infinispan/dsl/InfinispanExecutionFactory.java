@@ -75,7 +75,7 @@ public class InfinispanExecutionFactory extends
 	
 	@Override
 	public int getMaxFromGroups() {
-		return 1;
+		return 2;
 	}
 
 	@Override
