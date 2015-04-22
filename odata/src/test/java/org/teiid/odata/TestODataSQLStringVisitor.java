@@ -24,12 +24,18 @@ package org.teiid.odata;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.odata4j.core.OEntities;
+import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OProperties;
+import org.odata4j.edm.EdmDataServices;
+import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.expression.BoolCommonExpression;
 import org.odata4j.expression.CommonExpression;
@@ -43,7 +49,10 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.Update;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -319,6 +328,24 @@ public class TestODataSQLStringVisitor {
 				"nw.Orders", null,
 				"OrderID", null, -1, "nw.OrderDetails(OrderID=11044L,ProductID=62L)", key);		
 	}
+	
+	@Test public void testUpdates() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind", "nw");		
+		ODataSQLBuilder visitor = new ODataSQLBuilder(metadata.getMetadataStore(), false);
+		OEntityKey key = OEntityKey.parse("(11044)");
+		EdmDataServices eds = LocalClient.buildMetadata(metadata.getVdbMetaData(), metadata.getMetadataStore());
+		EdmEntitySet entitySet = eds.getEdmEntitySet("Categories");
+		Delete delete = visitor.delete(entitySet, key);
+		assertEquals("DELETE FROM nw.Categories WHERE nw.Categories.CategoryID = 11044", delete.toString()); 
+		
+		OEntity entity = OEntities.create(entitySet, key, (List)Arrays.asList(OProperties.string("Description", "foo")), null);
+		Update update = visitor.update(entitySet, entity);
+		assertEquals("UPDATE nw.Categories SET Description = ? WHERE nw.Categories.CategoryID = 11044", update.toString());
+		
+		Insert insert = visitor.insert(entitySet, entity);
+		assertEquals("INSERT INTO nw.Categories (Description) VALUES (?)", insert.toString());
+	}
+
 }
 
 
