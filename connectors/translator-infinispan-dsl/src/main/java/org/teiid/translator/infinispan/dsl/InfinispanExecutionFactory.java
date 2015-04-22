@@ -70,12 +70,12 @@ public class InfinispanExecutionFactory extends
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(true);
 	
-		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+		setSupportedJoinCriteria(SupportedJoinCriteria.ANY);
 	}
 	
 	@Override
 	public int getMaxFromGroups() {
-		return 2;
+		return 1;
 	}
 
 	@Override
@@ -122,11 +122,21 @@ public class InfinispanExecutionFactory extends
 	public boolean supportsCompareCriteriaOrdered() {
 		return Boolean.TRUE.booleanValue();
 	}
-	
+		
 	@Override
 	public boolean supportsLikeCriteria() {
 		return Boolean.TRUE.booleanValue();
 	}	
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.ExecutionFactory#supportsNotCriteria()
+	 */
+	@Override
+	public boolean supportsNotCriteria() {
+		return Boolean.TRUE.booleanValue();
+	}
 
 	@Override
 	public boolean supportsLikeCriteriaEscapeCharacter() {
