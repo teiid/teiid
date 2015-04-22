@@ -921,6 +921,10 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		this.criteria = builder.getCriteria();
 		stack.push(criteria);
 	}
+	
+	private Table findTable(EdmEntitySet entity, MetadataStore store) {
+		return findTable(entity.getType().getFullyQualifiedTypeName(), store);
+	}
 
 	private Table findTable(String tableName, MetadataStore store) {
 		int idx = tableName.indexOf('.');
@@ -968,9 +972,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	
 	public Insert insert(EdmEntitySet entitySet, OEntity entity) {
 
-		Table entityTable = findTable(entitySet.getName(), this.metadata);
+		Table entityTable = findTable(entitySet, this.metadata);
 		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol(entitySet.getName());
+		this.resultEntityGroup = new GroupSymbol(entityTable.getFullName());
 	    
 		List values = new ArrayList();
 		
@@ -993,7 +997,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	
 	//TODO: allow the generated key building.
 	public OEntityKey buildEntityKey(EdmEntitySet entitySet, OEntity entity, Map<String, Object> generatedKeys) {
-		Table entityTable = findTable(entitySet.getName(), this.metadata);
+		Table entityTable = findTable(entitySet, this.metadata);
 		KeyRecord pk = entityTable.getPrimaryKey();
 		List<OProperty<?>> props = new ArrayList<OProperty<?>>();
 		for (Column c:pk.getColumns()) {
@@ -1022,9 +1026,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	public Delete delete(EdmEntitySet entitySet, OEntityKey entityKey) {
 		
-		Table entityTable = findTable(entitySet.getName(), this.metadata);
+		Table entityTable = findTable(entitySet, this.metadata);
 		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol(entitySet.getName());
+		this.resultEntityGroup = new GroupSymbol(entityTable.getFullName());
 
 		Delete delete = new Delete();
 		delete.setGroup(this.resultEntityGroup);
@@ -1034,9 +1038,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	}
 
 	public Update update(EdmEntitySet entitySet, OEntity entity) {
-		Table entityTable = findTable(entitySet.getName(), this.metadata);
+		Table entityTable = findTable(entitySet, this.metadata);
 		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol(entitySet.getName());
+		this.resultEntityGroup = new GroupSymbol(entityTable.getFullName());
 		
 		Update update = new Update();
 		update.setGroup(this.resultEntityGroup);
