@@ -7,6 +7,12 @@
 /socket-binding-group=full-ha-sockets/socket-binding=teiid-jdbc:add(port=31000)
 /socket-binding-group=full-ha-sockets/socket-binding=teiid-odbc:add(port=35432)
 
+/profile=ha/subsystem=logging/logger=org.teiid:add 
+/profile=ha/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")  
+
+/profile=full-ha/subsystem=logging/logger=org.teiid:add 
+/profile=full-ha/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")  
+
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)

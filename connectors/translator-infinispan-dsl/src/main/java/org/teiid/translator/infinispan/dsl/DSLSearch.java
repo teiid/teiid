@@ -328,7 +328,13 @@ public final class DSLSearch   {
 			Column col = ((ColumnReference) lhs).getMetadataObject();
 
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return  queryBuilder.not().having(getNameInSource(col)).in(v);
+				}
 				return  queryBuilder.having(getNameInSource(col)).in(v);
+			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getNameInSource(col)).in(v);
 			}
 			return fcbc.having(getNameInSource(col)).in(v);
 		}
@@ -359,7 +365,13 @@ public final class DSLSearch   {
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return queryBuilder.not().having(getNameInSource(c)).like(value);
+				}
 				return queryBuilder.having(getNameInSource(c)).like(value);
+			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getNameInSource(c)).like(value);
 			}
 			return fcbc.having(getNameInSource(c)).like(value);
 		} 
@@ -376,7 +388,13 @@ public final class DSLSearch   {
 		Column c =  ((ColumnReference) exp).getMetadataObject();
 
 		if (fcbc == null) {
+			if (obj.isNegated()) {
+				return queryBuilder.not().having(getNameInSource(c)).isNull();
+			}
 			return queryBuilder.having(getNameInSource(c)).isNull();
+		}
+		if (obj.isNegated()) {
+			return fcbc.not().having(getNameInSource(c)).isNull();
 		}
 		return fcbc.having(getNameInSource(c)).isNull();
 
