@@ -392,9 +392,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		}
 	}
 
-	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException {
+	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws ResourceException {
 		try {
-			return partnerConnection.describeSObject(objectName);
+			return partnerConnection.describeSObjects(objectName);
 		} catch (InvalidSObjectFault e) {
 			throw new ResourceException(e);
 		} catch (UnexpectedErrorFault e) {

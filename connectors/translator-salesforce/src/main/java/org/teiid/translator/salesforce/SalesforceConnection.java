@@ -60,7 +60,7 @@ public interface SalesforceConnection extends Connection {
 	
 	public DescribeGlobalResult getObjects() throws ResourceException;
 	
-	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException;
+	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws ResourceException;
 	
 	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws ResourceException;
 

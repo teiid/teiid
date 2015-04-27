@@ -21,7 +21,11 @@
  */
 package org.teiid.translator.salesforce;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.resource.ResourceException;
@@ -33,16 +37,25 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.*;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 
-import com.sforce.soap.partner.*;
+import com.sforce.soap.partner.ChildRelationship;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeGlobalSObjectResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
+import com.sforce.soap.partner.Field;
+import com.sforce.soap.partner.FieldType;
+import com.sforce.soap.partner.PicklistEntry;
 
 public class SalesForceMetadataProcessor implements MetadataProcessor<SalesforceConnection>{
 	private MetadataFactory metadataFactory;
 	private SalesforceConnection connection;
 	
-	private Map<String, Table> tableMap = new HashMap<String, Table>();
+	private Map<String, Table> tableMap = new LinkedHashMap<String, Table>();
 	private Map<String, ChildRelationship[]> relationships = new LinkedHashMap<String, ChildRelationship[]>();
 	private List<Column> columns;
 	private boolean auditModelFields = false;
@@ -131,6 +144,19 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			for (DescribeGlobalSObjectResult object : objects) {
 				addTable(object);
 			}  
+			
+			List<String> names = new ArrayList<String>();
+			for (String name : this.tableMap.keySet()) {
+				names.add(name);
+				if (names.size() < 100) {
+					continue;
+				}
+				getColumnsAndRelationships(names);
+			}
+			if (!names.isEmpty()) {
+				getColumnsAndRelationships(names);
+			}
+			
 			addRelationships();
 			
 			// Mark id fields are auto increment values, as they are not allowed to be updated
@@ -144,6 +170,25 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		} catch (ResourceException e) {
 			throw new TranslatorException(e);
 		}
+	}
+
+	private void getColumnsAndRelationships(List<String> names)
+			throws TranslatorException {
+		try {
+			DescribeSObjectResult objectMetadatas[] = connection.getObjectMetaData(names.toArray(new String[names.size()]));
+			for (DescribeSObjectResult objectMetadata : objectMetadatas) {
+				getRelationships(objectMetadata);
+				Table table = this.tableMap.get(objectMetadata.getName());
+				boolean hasUpdateableColumn = addColumns(objectMetadata, table);
+				// Some SF objects return true for isUpdateable() but have no updateable columns.
+				if(hasUpdateableColumn && objectMetadata.isUpdateable()) {
+					table.setSupportsUpdate(true);
+				}
+			}
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
+		}
+		names.clear();
 	}
 
 	private void addRelationships() {
@@ -200,14 +245,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		return result;
 	}
 
-	private void addTable(DescribeGlobalSObjectResult object) throws TranslatorException {
-		DescribeSObjectResult objectMetadata = null;
-		try {
-			objectMetadata = connection.getObjectMetaData(object.getName());
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
-		
+	private void addTable(DescribeGlobalSObjectResult objectMetadata) {
 		String name = objectMetadata.getName();
 		if (normalizeNames) {
 			name = NameUtil.normalizeName(name);
@@ -219,8 +257,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		
 		table.setNameInSource(objectMetadata.getName());
 		tableMap.put(objectMetadata.getName(), table);
-		getRelationships(objectMetadata);
-
+		
 		table.setProperty(TABLE_CUSTOM, String.valueOf(objectMetadata.isCustom()));
 		table.setProperty(TABLE_SUPPORTS_CREATE, String.valueOf(objectMetadata.isCreateable()));
 		table.setProperty(TABLE_SUPPORTS_DELETE, String.valueOf(objectMetadata.isDeletable()));
@@ -229,13 +266,6 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		table.setProperty(TABLE_SUPPORTS_REPLICATE, String.valueOf(objectMetadata.isReplicateable()));
 		table.setProperty(TABLE_SUPPORTS_RETRIEVE, String.valueOf(objectMetadata.isRetrieveable()));
 		table.setProperty(TABLE_SUPPORTS_SEARCH, String.valueOf(objectMetadata.isSearchable()));
-
-		boolean hasUpdateableColumn = addColumns(objectMetadata, table);
-		
-		// Some SF objects return true for isUpdateable() but have no updateable columns.
-		if(hasUpdateableColumn && objectMetadata.isUpdateable()) {
-			table.setSupportsUpdate(true);
-		}
 	}
 
 	boolean allowedToAdd(String name) {
@@ -256,7 +286,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		}
 	}
 
-	private boolean addColumns(DescribeSObjectResult objectMetadata, Table table) throws TranslatorException {
+	private boolean addColumns(DescribeSObjectResult objectMetadata, Table table) {
 		boolean hasUpdateableColumn = false;
 		Field[] fields = objectMetadata.getFields();
 		for (Field field : fields) {
