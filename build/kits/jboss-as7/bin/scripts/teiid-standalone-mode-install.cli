@@ -1,6 +1,9 @@
 /socket-binding-group=standard-sockets/socket-binding=teiid-jdbc:add(port=31000)
 /socket-binding-group=standard-sockets/socket-binding=teiid-odbc:add(port=35432)
 
+/subsystem=logging/logger=org.teiid:add 
+/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")
+
 /subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl:add(batching=true)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
