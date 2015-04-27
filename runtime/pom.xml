@@ -12,6 +12,25 @@
   <packaging>bundle</packaging>
     
     <build>
+    	<outputDirectory>target/classes</outputDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.xml</exclude>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -21,6 +40,23 @@
                         <Import-Package>!org.jboss.*,*</Import-Package>
                     </instructions>
                 </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                  <execution>
+                    <id>create-assemblies</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>single</goal>
+                    </goals>
+                  </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>  
@@ -132,6 +168,43 @@
 					<artifactId>jboss-interceptors-api_1.2_spec</artifactId>
 				</exclusion>
 			</exclusions>
-	</dependency>    
+	</dependency>   
+	<dependency>
+			<groupId>org.jboss.ironjacamar</groupId>
+			<artifactId>ironjacamar-jdbc</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jboss.spec.javax.transaction</groupId>
+					<artifactId>jboss-transaction-api_1.1_spec</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.jboss.ironjacamar</groupId>
+			<artifactId>ironjacamar-core-api</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jboss.spec.javax.transaction</groupId>
+					<artifactId>jboss-transaction-api_1.1_spec</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.jboss.ironjacamar</groupId>
+			<artifactId>ironjacamar-core-impl</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jboss.spec.javax.transaction</groupId>
+					<artifactId>jboss-transaction-api_1.1_spec</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency> 
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
   </dependencies>
 </project>
