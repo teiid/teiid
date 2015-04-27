@@ -240,8 +240,14 @@ public final class DSLSearch implements SearchType   {
 		} else if (criteria instanceof In) {
 			fcc = visit((In) criteria, queryBuilder, fcbc);
 
+			// IsNull does not work with hibernate, it causes an exception:
+			/* 		Caused by: org.hibernate.search.SearchException: Search parameter on field name could not be converted. Are the parameter and the field 
+			 * 		of the same type?Alternatively, apply the ignoreFieldBridge() option to pass String parameters
+			 */
 		} else if (criteria instanceof IsNull) {
-			fcc = visit( (IsNull) criteria, queryBuilder, fcbc);
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25054, "Is Null"));
+
+//			fcc = visit( (IsNull) criteria, queryBuilder, fcbc);
 		} else {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25054, criteria.toString()));
 
@@ -365,8 +371,14 @@ public final class DSLSearch implements SearchType   {
 			Column col = ((ColumnReference) lhs).getMetadataObject();
 
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return  queryBuilder.not().having(getRecordName(col)).in(v);
+				}
 				return  queryBuilder.having(getRecordName(col)).in(v);
 			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getRecordName(col)).in(v);
+			}			
 			return fcbc.having(getRecordName(col)).in(v);
 		}
 		return null;
@@ -396,7 +408,13 @@ public final class DSLSearch implements SearchType   {
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return queryBuilder.not().having(getRecordName(c)).like(value);
+				}
 				return queryBuilder.having(getRecordName(c)).like(value);
+			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getRecordName(c)).like(value);
 			}
 			return fcbc.having(getRecordName(c)).like(value);
 		} 

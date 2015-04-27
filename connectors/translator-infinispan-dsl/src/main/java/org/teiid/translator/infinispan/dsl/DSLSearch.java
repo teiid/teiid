@@ -329,7 +329,13 @@ public final class DSLSearch   {
 			Column col = ((ColumnReference) lhs).getMetadataObject();
 
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return  queryBuilder.not().having(getRecordName(col)).in(v);
+				}
 				return  queryBuilder.having(getRecordName(col)).in(v);
+			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getRecordName(col)).in(v);
 			}
 			return fcbc.having(getRecordName(col)).in(v);
 		}
@@ -359,9 +365,17 @@ public final class DSLSearch   {
 
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
+
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return queryBuilder.not().having(getRecordName(c)).like(value);
+				}
 				return queryBuilder.having(getRecordName(c)).like(value);
 			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getRecordName(c)).like(value);
+			}
+
 			return fcbc.having(getRecordName(c)).like(value);
 		} 
 		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25052, new Object[] { literalExp.toString(), "LIKE" }));
@@ -377,8 +391,15 @@ public final class DSLSearch   {
 		Column c =  ((ColumnReference) exp).getMetadataObject();
 
 		if (fcbc == null) {
+			if (obj.isNegated()) {
+				return queryBuilder.not().having(getRecordName(c)).isNull();
+			}
 			return queryBuilder.having(getRecordName(c)).isNull();
 		}
+		if (obj.isNegated()) {
+			return fcbc.not().having(getRecordName(c)).isNull();
+		}
+
 		return fcbc.having(getRecordName(c)).isNull();
 
 	}	
