@@ -132,6 +132,11 @@ public class InfinispanExecutionFactory extends
 	public boolean supportsLikeCriteriaEscapeCharacter() {
 		return Boolean.TRUE.booleanValue();
 	}	
+	
+	@Override
+	public boolean supportsNotCriteria() {
+		return Boolean.TRUE.booleanValue();
+	}
 
 	public List<Object> search(Select command, String cacheName,
 			InfinispanConnection connection, ExecutionContext executionContext)

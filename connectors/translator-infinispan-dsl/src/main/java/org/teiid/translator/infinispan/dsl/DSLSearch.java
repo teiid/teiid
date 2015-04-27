@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.infinispan.dsl;
 
+import static org.teiid.language.visitor.SQLStringVisitor.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -192,11 +194,6 @@ public final class DSLSearch   {
 		} else if (criteria instanceof Comparison) {
 			fcc = visit((Comparison) criteria,  queryBuilder, fcbc);
 
-		} else if (criteria instanceof Exists) {
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-					"Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
-			// TODO Exists should be supported in a future release.
-
 		} else if (criteria instanceof Like) {
 			fcc = visit((Like) criteria, queryBuilder, fcbc);
 
@@ -205,17 +202,17 @@ public final class DSLSearch   {
 
 		} else if (criteria instanceof IsNull) {
 			fcc = visit( (IsNull) criteria, queryBuilder, fcbc);
+		} else if (criteria instanceof Not) {
+			Condition c = ((Not)criteria).getCriteria();
+			if (fcbc == null) {
+				fcc = queryBuilder.not(buildQueryFromWhereClause(c, queryBuilder, fcbc));
+			} else {
+				fcc = fcbc.not(buildQueryFromWhereClause(c, queryBuilder, fcbc));
+			}
 		} else {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25054, criteria.toString()));
 
 		}
-		// else if (criteria instanceof Not) {
-		//			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing NOT criteria."); //$NON-NLS-1$
-		// isNegated = true;
-		// filterList.addAll(getSearchFilterFromWhereClause(((Not)criteria).getCriteria(),
-		// new LinkedList<String>()));
-		// }
-
 		return fcc;
 	}
 
@@ -328,7 +325,13 @@ public final class DSLSearch   {
 			Column col = ((ColumnReference) lhs).getMetadataObject();
 
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return  queryBuilder.not().having(getNameInSource(col)).in(v);
+				}
 				return  queryBuilder.having(getNameInSource(col)).in(v);
+			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getNameInSource(col)).in(v);
 			}
 			return fcbc.having(getNameInSource(col)).in(v);
 		}
@@ -358,8 +361,15 @@ public final class DSLSearch   {
 
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
+
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return queryBuilder.not().having(getNameInSource(c)).like(value);
+				}
 				return queryBuilder.having(getNameInSource(c)).like(value);
+			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getNameInSource(c)).like(value);
 			}
 			return fcbc.having(getNameInSource(c)).like(value);
 		} 
@@ -376,10 +386,15 @@ public final class DSLSearch   {
 		Column c =  ((ColumnReference) exp).getMetadataObject();
 
 		if (fcbc == null) {
+			if (obj.isNegated()) {
+				return queryBuilder.not().having(getNameInSource(c)).isNull();
+			}
 			return queryBuilder.having(getNameInSource(c)).isNull();
 		}
+		if (obj.isNegated()) {
+			return fcbc.not().having(getNameInSource(c)).isNull();
+		}
 		return fcbc.having(getNameInSource(c)).isNull();
-
 	}	
 
 	protected static Object escapeReservedChars(final Object value) {

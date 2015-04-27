@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,21 +35,7 @@ import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.SortOrder;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.Delete;
-import org.teiid.language.Exists;
-import org.teiid.language.Expression;
-import org.teiid.language.In;
-import org.teiid.language.IsNull;
-import org.teiid.language.Like;
-import org.teiid.language.Literal;
-import org.teiid.language.OrderBy;
-import org.teiid.language.Select;
-import org.teiid.language.SortSpecification;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -226,30 +212,31 @@ public final class DSLSearch implements SearchType   {
 		} else if (criteria instanceof Comparison) {
 			fcc = visit((Comparison) criteria,  queryBuilder, fcbc);
 
-		} else if (criteria instanceof Exists) {
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-					"Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
-			// TODO Exists should be supported in a future release.
-
 		} else if (criteria instanceof Like) {
 			fcc = visit((Like) criteria, queryBuilder, fcbc);
 
 		} else if (criteria instanceof In) {
 			fcc = visit((In) criteria, queryBuilder, fcbc);
 
+			// IsNull does not work with hibernate, it causes an exception:
+			/* 		Caused by: org.hibernate.search.SearchException: Search parameter on field name could not be converted. Are the parameter and the field 
+			 * 		of the same type?Alternatively, apply the ignoreFieldBridge() option to pass String parameters
+			 */
 		} else if (criteria instanceof IsNull) {
-			fcc = visit( (IsNull) criteria, queryBuilder, fcbc);
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25054, "Is Null"));
+
+//			fcc = visit( (IsNull) criteria, queryBuilder, fcbc);
+		} else if (criteria instanceof Not) {
+			Condition c = ((Not)criteria).getCriteria();
+			if (fcbc == null) {
+				fcc = queryBuilder.not(buildQueryFromWhereClause(c, queryBuilder, fcbc));
+			} else {
+				fcc = fcbc.not(buildQueryFromWhereClause(c, queryBuilder, fcbc));
+			}
 		} else {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25054, criteria.toString()));
 
 		}
-		// else if (criteria instanceof Not) {
-		//			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing NOT criteria."); //$NON-NLS-1$
-		// isNegated = true;
-		// filterList.addAll(getSearchFilterFromWhereClause(((Not)criteria).getCriteria(),
-		// new LinkedList<String>()));
-		// }
-
 		return fcc;
 	}
 
@@ -362,8 +349,14 @@ public final class DSLSearch implements SearchType   {
 			Column col = ((ColumnReference) lhs).getMetadataObject();
 
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return  queryBuilder.not().having(getRecordName(col)).in(v);
+				}
 				return  queryBuilder.having(getRecordName(col)).in(v);
 			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getRecordName(col)).in(v);
+			}			
 			return fcbc.having(getRecordName(col)).in(v);
 		}
 		return null;
@@ -393,7 +386,13 @@ public final class DSLSearch implements SearchType   {
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
 			if (fcbc == null) {
+				if (obj.isNegated()) {
+					return queryBuilder.not().having(getRecordName(c)).like(value);
+				}
 				return queryBuilder.having(getRecordName(c)).like(value);
+			}
+			if (obj.isNegated()) {
+				return fcbc.not().having(getRecordName(c)).like(value);
 			}
 			return fcbc.having(getRecordName(c)).like(value);
 		} 
@@ -410,10 +409,15 @@ public final class DSLSearch implements SearchType   {
 		Column c =  ((ColumnReference) exp).getMetadataObject();
 
 		if (fcbc == null) {
+			if (obj.isNegated()) {
+				return queryBuilder.not().having(getRecordName(c)).isNull();
+			}
 			return queryBuilder.having(getRecordName(c)).isNull();
 		}
+		if (obj.isNegated()) {
+			return fcbc.not().having(getRecordName(c)).isNull();
+		}
 		return fcbc.having(getRecordName(c)).isNull();
-
 	}	
 
 	protected static Object escapeReservedChars(final Object value) {
