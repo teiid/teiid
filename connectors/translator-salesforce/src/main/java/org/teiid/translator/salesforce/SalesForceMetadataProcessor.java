@@ -209,6 +209,10 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				
 				Table child = tableMap.get(relationship.getChildSObject());
 				
+				if (child == null) {
+					continue; //child must have been excluded
+				}
+				
 				Column col = null;
 				columns = child.getColumns();
 				for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
