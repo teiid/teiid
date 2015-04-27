@@ -116,6 +116,12 @@ public class TestInfinispanJndiDSLSearch extends BasicSearchTest {
 					
 		performTest(command, 1, 4);
 	}	
+
+	@Test public void testQueryNotLikeCriteria() throws Exception {	
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeName not like 'TradeName 2%'"); //$NON-NLS-1$
+					
+		performTest(command, 2, 4);
+	}	
 	
 	@Test public void testQueryCompareEQBoolean() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  Settled = 'false'"); //$NON-NLS-1$
@@ -127,6 +133,18 @@ public class TestInfinispanJndiDSLSearch extends BasicSearchTest {
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  Settled <> 'false'"); //$NON-NLS-1$
 					
 		performTest(command, 1, 4);
+	}	
+		
+	@Test public void testQueryIn() throws Exception {	
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId in ('1', '2')"); //$NON-NLS-1$
+					
+		performTest(command, 2, 4);
+	}
+	
+	@Test public void testQueryNotIn() throws Exception {	
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId not in ('2')"); //$NON-NLS-1$
+					
+		performTest(command, 2, 4);
 	}		
 	
 	@Test public void testQueryRangeBetween() throws Exception {	

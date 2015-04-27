@@ -38,6 +38,7 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.DataNotAvailableException;
@@ -91,8 +92,10 @@ public class ObjectExecution implements ResultSetExecution {
 	@Override
 	public void execute() throws TranslatorException {
 
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-				"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.TRACE)) {
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+					"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 
 		String nameInSource = ((NamedTable)query.getFrom().get(0)).getMetadataObject().getNameInSource();
 	    
