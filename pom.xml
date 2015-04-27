@@ -86,6 +86,7 @@
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.4.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
+	<version.narayana>5.0.4.Final</version.narayana>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1521,6 +1522,11 @@
                 <artifactId>proj4j</artifactId>
                 <version>${version.proj4j}</version>
             </dependency>
+	    <dependency>
+		<groupId>org.jboss.narayana.jta</groupId>
+		<artifactId>narayana-jta</artifactId>
+		<version>${version.narayana}</version>
+	    </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>

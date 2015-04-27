@@ -118,6 +118,20 @@
         <groupId>postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <scope>test</scope>
-    </dependency>    
+    </dependency>
+    <dependency>
+			<groupId>org.jboss.narayana.jta</groupId>
+			<artifactId>narayana-jta</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hornetq</groupId>
+					<artifactId>hornetq-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jboss.spec.javax.interceptor</groupId>
+					<artifactId>jboss-interceptors-api_1.2_spec</artifactId>
+				</exclusion>
+			</exclusions>
+	</dependency>    
   </dependencies>
 </project>

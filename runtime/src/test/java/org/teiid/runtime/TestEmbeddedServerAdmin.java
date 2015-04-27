@@ -64,9 +64,11 @@ public class TestEmbeddedServerAdmin {
 	private static EmbeddedServer server;
 	
 	@BeforeClass
-	public static void init() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, FileNotFoundException, IOException, ResourceException, SQLException {
+	public static void init() throws Exception {
 		server = new EmbeddedServer();
-		server.start(new EmbeddedConfiguration());
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.setTransactionManager(EmbeddedHelper.getTransactionManager());
+		server.start(config);
 		
 		FileExecutionFactory executionFactory = new FileExecutionFactory();
 		executionFactory.start();
@@ -244,9 +246,13 @@ public class TestEmbeddedServerAdmin {
 	}
 	
 	@Test
-	public void testGetTransactions() throws AdminException {
-		//need enhance
-		admin.getTranslators();
+	public void testGetTransactions() throws AdminException, SQLException {
+
+		Connection conn = newSession();
+		conn.setAutoCommit(false);
+		assertEquals(0, admin.getTransactions().size());
+		conn.commit();		
+		conn.close();
 	}
 	
 	public void testClearCache() throws AdminException{

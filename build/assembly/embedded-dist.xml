@@ -40,6 +40,15 @@
         <useTransitiveDependencies>true</useTransitiveDependencies>
         <scope>provided</scope>
      </dependencySet>
+     <dependencySet>
+        <includes>
+          <include>org.jboss.narayana.jta:narayana-jta:jar</include>
+        </includes>
+        <outputDirectory>lib</outputDirectory>
+        <unpack>false</unpack>
+        <useTransitiveDependencies>false</useTransitiveDependencies>
+        <scope>provided</scope>
+     </dependencySet>
       <dependencySet>
         <includes>
           <include>com.h2database:h2:jar</include>

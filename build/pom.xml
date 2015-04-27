@@ -42,7 +42,12 @@
             <groupId>org.codehaus.btm</groupId>
             <artifactId>btm</artifactId>
             <scope>provided</scope>
-        </dependency>      
+        </dependency>
+	<dependency>
+            <groupId>org.jboss.narayana.jta</groupId>
+            <artifactId>narayana-jta</artifactId>
+            <scope>provided</scope>
+        </dependency> 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
