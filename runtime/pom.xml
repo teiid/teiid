@@ -12,25 +12,6 @@
   <packaging>bundle</packaging>
     
     <build>
-    	<outputDirectory>target/classes</outputDirectory>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>**/*.xml</include>
-                    <include>**/*.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>**/*.xml</exclude>
-                    <exclude>**/*.properties</exclude>
-                </excludes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -40,23 +21,6 @@
                         <Import-Package>!org.jboss.*,*</Import-Package>
                     </instructions>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>kits/embedded-dist.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                  <execution>
-                    <id>create-assemblies</id>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                  </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>  
@@ -158,6 +122,7 @@
     <dependency>
 			<groupId>org.jboss.narayana.jta</groupId>
 			<artifactId>narayana-jta</artifactId>
+			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.hornetq</groupId>
@@ -172,6 +137,7 @@
 	<dependency>
 			<groupId>org.jboss.ironjacamar</groupId>
 			<artifactId>ironjacamar-jdbc</artifactId>
+			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.jboss.spec.javax.transaction</groupId>
@@ -183,6 +149,7 @@
 		<dependency>
 			<groupId>org.jboss.ironjacamar</groupId>
 			<artifactId>ironjacamar-core-api</artifactId>
+			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.jboss.spec.javax.transaction</groupId>
@@ -194,6 +161,7 @@
 		<dependency>
 			<groupId>org.jboss.ironjacamar</groupId>
 			<artifactId>ironjacamar-core-impl</artifactId>
+			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.jboss.spec.javax.transaction</groupId>

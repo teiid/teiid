@@ -35,7 +35,6 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import javax.naming.Context;
 import javax.resource.ResourceException;
 import javax.sql.DataSource;
 import javax.transaction.TransactionManager;
@@ -43,10 +42,10 @@ import javax.transaction.TransactionManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
-//import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.EmbeddedHelper;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.TypeFacility;
 
@@ -95,7 +94,9 @@ public class TestHBaseExecution {
         executionFactory.start();
         server.addTranslator("translator-hbase", executionFactory);
         
-        DataSource ds = TestHBaseUtil.setupDataSource("java:/hbaseDS", JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
+        DataSource ds = EmbeddedHelper.newDataSource(JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
+        server.addConnectionFactory("java:/hbaseDS", ds);
+        
         Connection c = ds.getConnection();
         TestHBaseUtil.executeUpdate(c, CUSTOMER);
     	TestHBaseUtil.executeUpdate(c, TYPES_TEST);
@@ -104,9 +105,7 @@ public class TestHBaseExecution {
     	TestHBaseUtil.insertTestData(c);
         
     	TestHBaseUtil.close(c);
-    	
-    	System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "bitronix.tm.jndi.BitronixInitialContextFactory");
-        
+    	        
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
         server.start(config);
