@@ -23,6 +23,9 @@
 	    
 	    <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
     
+    	<version.org.codehaus.groovy>2.3.6</version.org.codehaus.groovy>
+    	<version.jline>2.9-redhat-0</version.jline>
+    	
 	    <!-- commenting out to use jboss bom versions -->
         <!--version.org.jboss.resteasy>2.3.6.Final</version.org.jboss.resteasy   2.3.7.Final -->
         <!--version.org.hibernate>4.2.10.Final</version.org.hibernate    4.2.12.Final -->
@@ -82,7 +85,6 @@
         <version.xom>1.2.7.redhat-4</version.xom>
         <version.dom4j>1.6.1.redhat-6</version.dom4j>
         
-        <!-- NOTE using the CR8 bom version will cause the commons-integration-tests to fail -->
         <version.com.h2database>1.3.152</version.com.h2database>
                 
         <!-- integration stack bom propererties -->
@@ -1177,10 +1179,15 @@
             	<artifactId>jansi</artifactId>
             	<version>1.2.1</version>
         	</dependency>
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${version.org.codehaus.groovy}</version>
+            </dependency>        	
 			<dependency>
 				<groupId>jline</groupId>
 				<artifactId>jline</artifactId>
-				<version>0.9.94</version>
+				<version>${version.jline}</version>
 				<exclusions>
 					<exclusion>
 						<groupId>junit</groupId>
