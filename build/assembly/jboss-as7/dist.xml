@@ -19,9 +19,17 @@
     <fileSet>
         <directory>target/kits/jboss-as7/modules</directory>
         <outputDirectory>${jbossas-module-root}/</outputDirectory>      
-     
+        <excludes>
+          <exclude>layers.conf</exclude>
+        </excludes>      
     </fileSet> 
-  
+    <fileSet>
+        <directory>target/kits/jboss-as7/modules</directory>
+        <includes>
+            <include>layers.conf</include>
+        </includes>                
+        <outputDirectory>modules</outputDirectory>
+    </fileSet>    
      <fileSet>
         <directory>target/kits/jboss-as7/docs</directory>
         <outputDirectory>docs</outputDirectory>      
