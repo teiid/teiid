@@ -1,41 +1,51 @@
 
 /**
  * This script will deploy a VDB and then verify the status of its deployment
+ *  
+ * Can run this by passing parameters or using entering based on the prompts.
  *
- * Changes to make before executing:
- *     - set VDB_NAME
+ * Passing Parameters:
+ *  ./adminshell.sh -Dvdbname=value -Dvdbfile={path_to_vdb_file} .  ./examples/DeployAndVerifyVDB.groovy
+ *
+ * Optional changes to make before executing:
  *     - (optional) set VDB_VERSION
- *    - set VDB_FILE: path to the vdb.xml file
  *
  */
 public class DeployAndVerifyVDB{
+	
+    public static VDB_NAME = System.getProperty( 'vdbname' )
+    public static VDB_VERSION = System.getProperty( 'vdbversion', '1' )
+    public static VDB_FILE = System.getProperty( 'vdbfile' )
     
-
-    public final static VDB_NAME = "vdb_name"
-    public final static int VDB_VERSION = 1
-    public final static VDB_FILE = "{path_to_vdb_xml_file}"
+    public static int vdbversion = 1
     
     public void execute() {
 
-        if ( VDB_NAME.equals( "vdb_name") ) {
-          println( "**** Must change VDB_NAME property to the VDB you want to print")
-          return
+        if ( VDB_NAME.equals( null) ) {
+ 			println ( 'Must pass in -Dvdbname argument')
+ 			disconnect()		
+ 			return	
         }
         
-        if ( VDB_FILE.equals( "{path_to_vdb_xml_file}") ) {
-          println( "**** Must change VDB_FILE property to the path location to the vdb file")
-          return
+        if ( VDB_FILE.equals( null ) ) {
+ 			println ( 'Must pass in -Dvdbfilename argument')
+ 			disconnect()
+ 			return			
         }        
+        
+        vdbversion = Integer.valueOf( VDB_VERSION )
 
         connectAsAdmin( )
         
         println( "Deploying VDB " + VDB_NAME )
-        boolean deployed = deployAndVerifyVDB (VDB_FILE, VDB_NAME, VDB_VERSION)
+        boolean deployed = deployAndVerifyVDB (VDB_FILE, VDB_NAME, vdbversion)
         
         println( "Deployed VDB " + VDB_NAME + " is deployed " + deployed );
+        println( "disconnect" );
         disconnect()
         
     } /* main */
+    
     
     public boolean deployAndVerifyVDB (VDBfile, VDBname, VDBversion) {
         
