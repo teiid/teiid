@@ -144,7 +144,7 @@
                                             <version>${version.org.jboss.resteasy}</version>
                                             <type>jar</type>
                                             <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
+                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}/${jbossas-module-root}/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>org.jboss.resteasy</groupId>
@@ -152,7 +152,7 @@
                                             <version>${version.org.jboss.resteasy}</version>
                                             <type>jar</type>
                                             <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
+                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}/${jbossas-module-root}/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
                                         </artifactItem>                                                                                
                                     </artifactItems>
                                 </configuration>
@@ -170,7 +170,7 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/${jbossas-test-version}/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/${jbossas-test-version}/${jbossas-module-root}/org/jboss/resteasy/resteasy-jaxrs/main</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>src/test/resources</directory>
@@ -200,7 +200,26 @@
                                         </resource>
                                     </resources>
                                 </configuration>
-                            </execution>                            
+                            </execution>   
+                            <execution>
+                                <id>copy-resources3</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/${jbossas-test-version}/standalone/configuration</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>../../build/kits/jboss-as7/standalone/configuration/</directory>
+                                            <includes>
+                                            <include>standalone-teiid.xml</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>                                                           
                         </executions>
                     </plugin>                    
                     <plugin>
