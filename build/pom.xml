@@ -12,7 +12,7 @@
   
   <properties>
       <!-- Directory name from upstream JBoss server dist. -->
-      <dir.jboss-orig>jboss-eap-6.3</dir.jboss-orig>
+      <dir.jboss-orig>${jbossas-test-version}</dir.jboss-orig>
       <!-- Teiid server directory name. -->
       <dir.server>teiid-${project.version}</dir.server>
   </properties>
