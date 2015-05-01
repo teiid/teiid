@@ -14,7 +14,7 @@
   <fileSets>
           
     <fileSet>
-        <directory>target/kits/jboss-as7</directory>
+        <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <includes>
           <include>**/*.sh</include>
@@ -23,7 +23,7 @@
     </fileSet> 
           
     <fileSet>
-        <directory>target/kits/jboss-as7</directory>
+        <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.sh</exclude>
@@ -31,12 +31,37 @@
     </fileSet>
     
     <fileSet>
-        <directory>target/kits/jboss-as7</directory>
+        <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.properties</exclude>
         </excludes>      
-    </fileSet>    
+    </fileSet>  
+    
+    <fileSet>
+        <directory>target/kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>  
+    </fileSet> 
+          
+    <fileSet>
+        <directory>target/kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>      
+        <excludes>
+          <exclude>**/*.sh</exclude>
+        </excludes>      
+    </fileSet>
+    
+    <fileSet>
+        <directory>target/kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>      
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>      
+    </fileSet> 
           
     <fileSet>
         <directory>../client/src/main/resources</directory>
@@ -67,7 +92,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/common-core/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/common-core/main</outputDirectory>
       </binaries>
     </moduleSet>
 
@@ -79,7 +104,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/api/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/api/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -91,7 +116,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>    
             
@@ -103,7 +128,7 @@
       <binaries>
 		<includeDependencies>false</includeDependencies>
 		<unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -115,7 +140,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -127,7 +152,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/olingo/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/olingo/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -139,7 +164,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/security/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/security/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -151,7 +176,7 @@
         <binaries>
             <includeDependencies>false</includeDependencies>
             <unpack>false</unpack>
-            <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
             <attachmentClassifier>odata4</attachmentClassifier>
         </binaries>
     </moduleSet> 
@@ -195,6 +220,11 @@
                         <exclude>io.netty:netty</exclude>
                         <exclude>org.apache.olingo:*</exclude>
                         <exclude>com.fasterxml.jackson.core:*</exclude>
+                        <exclude>net.sf.saxon:Saxon-HE</exclude>
+                        <exclude>nux:nux</exclude>
+                        <exclude>org.wololo:jts2geojson</exclude>
+                        <exclude>org.osgeo:proj4j</exclude>
+                        <exclude>com.vividsolutions:jts</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
@@ -204,7 +234,7 @@
                     <includes>
                         <include>org.apache.olingo:*</include>
                     </includes>
-                    <outputDirectory>modules/system/layers/base/org/apache/olingo</outputDirectory>
+                    <outputDirectory>${jbossas-module-root}/org/apache/olingo</outputDirectory>
                 </dependencySet>
                 <dependencySet>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
@@ -215,8 +245,38 @@
                     </includes>
                     <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/main</outputDirectory>
                 </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>net.sf.saxon:Saxon-HE</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/net/sf/saxon/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>nux:nux</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/nux/nux/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.wololo:jts2geojson</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/wololo/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.osgeo:proj4j</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/osgeo/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.vividsolutions:jts</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/vividsolutions/main</outputDirectory>
+                </dependencySet>                                                                                    
             </dependencySets>
-            <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>
     </moduleSet>
     
@@ -229,7 +289,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/system/layers/base/org/jboss/teiid/admin/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/admin/main</outputDirectory>
       </binaries>
     </moduleSet>    
 

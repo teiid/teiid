@@ -1,5 +1,8 @@
 <module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.webservice">
-    
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+        
     <main-class name="org.teiid.oauth.OAuthUtil"/>
     
     <resources>

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module xmlns="urn:jboss:module:1.0" name="org.antlr" slot="4.1">
-    <resources>
-        <resource-root path="antlr4-runtime-${version.org.antlr}.jar" />
-    </resources>
-</module>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="net.sf.saxon">
+	<properties>
+		<property name="jboss.api" value="private" />
+	</properties>
+
+	<resources>
+		<resource-root path="Saxon-HE-${version.net.sourceforge.saxon}.jar" />
+	</resources>
+
+	<dependencies>
+		<module name="javax.api" />
+	</dependencies>
+
+</module>
