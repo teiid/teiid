@@ -220,6 +220,11 @@
                         <exclude>io.netty:netty</exclude>
                         <exclude>org.apache.olingo:*</exclude>
                         <exclude>com.fasterxml.jackson.core:*</exclude>
+                        <exclude>net.sf.saxon:Saxon-HE</exclude>
+                        <exclude>nux:nux</exclude>
+                        <exclude>org.wololo:jts2geojson</exclude>
+                        <exclude>org.osgeo:proj4j</exclude>
+                        <exclude>com.vividsolutions:jts</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
@@ -240,6 +245,36 @@
                     </includes>
                     <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/main</outputDirectory>
                 </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>net.sf.saxon:Saxon-HE</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/net/sf/saxon/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>nux:nux</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/nux/nux/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.wololo:jts2geojson</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/wololo/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.osgeo:proj4j</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/osgeo/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.vividsolutions:jts</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/vividsolutions/main</outputDirectory>
+                </dependencySet>                                                                                    
             </dependencySets>
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>

@@ -1,22 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid">
+    <properties>
+        <property name="jboss.api" value="UNSUPPORTED"/>
+    </properties>
+    
     <resources>
         <resource-root path="teiid-engine-${project.version}.jar" />
         <resource-root path="teiid-jboss-integration-${project.version}.jar" />
         <resource-root path="teiid-metadata-${project.version}.jar" />
-        <resource-root path="teiid-runtime-${project.version}.jar" />
-        <resource-root path="Saxon-HE-${version.net.sourceforge.saxon}.jar" />
-        <resource-root path="nux-${version.nux}.jar" />
-        <resource-root path="jts-${version.jts}.jar" />
-        <resource-root path="jts2geojson-${version.jts2geojson}.jar" />
-        <resource-root path="proj4j-${version.proj4j}.jar" />
-        
+        <resource-root path="teiid-runtime-${project.version}.jar" />        
         <resource-root path="deployments" />
     </resources>
 
     <dependencies>
         <module name="javax.api" />
-        <module name="javax.xml.bind.api" />
         <module name="javax.resource.api"/>         
         <module name="sun.jdk" optional="true"/> <!-- Kerberos -->          
         <module name="org.jboss.teiid.common-core" />
@@ -53,7 +50,12 @@
         <module name="org.jboss.ironjacamar.api"/>
         <module name="org.jboss.ironjacamar.impl"/>
         <module name="org.jgroups"/>
-        <module name="nu.xom" />
+        <module name="nu.xom"/>
+        <module name="nux.nux"/>
+        <module name="net.sf.saxon"/>
+        <module name="com.vividsolutions"/>
+        <module name="org.osgeo"/>
+        <module name="org.wololo"/>
         <module name="org.jaxen" />
         <module name="org.jboss.resteasy.resteasy-jaxrs"/> <!--  REST Web Service --> 
         <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service -->

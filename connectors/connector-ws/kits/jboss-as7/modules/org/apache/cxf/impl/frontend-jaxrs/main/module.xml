@@ -1,5 +1,8 @@
 <module xmlns="urn:jboss:module:1.1" name="org.apache.cxf.impl.frontend-jaxrs">
-   
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
     <resources>
         <resource-root path="cxf-rt-frontend-jaxrs-${version.org.apache.cxf}.jar"/>
         <!-- This is to fix NPE in CXF, can be removed later versions -->
