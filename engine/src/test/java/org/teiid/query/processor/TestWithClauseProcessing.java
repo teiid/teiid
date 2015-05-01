@@ -358,4 +358,11 @@ public class TestWithClauseProcessing {
 	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
+	@Test public void testScalarInlining() throws TeiidComponentException, TeiidProcessingException {
+	    String sql = "WITH t(n) AS ( select 1 ) SELECT n FROM t as t1, pm1.g1"; //$NON-NLS-1$
+
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	}
 }

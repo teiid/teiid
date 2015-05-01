@@ -83,6 +83,7 @@ import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
@@ -190,17 +191,32 @@ public class QueryRewriter {
             	if (removeOrderBy && queryCommand.getLimit() == null) {
             		queryCommand.setOrderBy(null);
                 }
+            	Map<Object, WithQueryCommand> replacements = null;
             	if (queryCommand.getWith() != null) {
-            		for (WithQueryCommand withQueryCommand : queryCommand.getWith()) {
+            		outer: for (WithQueryCommand withQueryCommand : queryCommand.getWith()) {
             			if (withQueryCommand.getColumns() == null) {
             				List<ElementSymbol> columns = ResolverUtil.resolveElementsInGroup(withQueryCommand.getGroupSymbol(), metadata);
             				withQueryCommand.setColumns(LanguageObject.Util.deepClone(columns, ElementSymbol.class));
             			}
 						rewriteSubqueryContainer(withQueryCommand, true);
+						
+						//check for scalar with clauses
+						if (GroupCollectorVisitor.getGroups(withQueryCommand.getCommand(), false).isEmpty()) {
+							//if deterministic, just inline
+							for (Expression ex : FunctionCollectorVisitor.getFunctions(withQueryCommand.getCommand(), false, true)) {
+					            if (FunctionCollectorVisitor.isNonDeterministic(ex)) {
+					            	continue outer;
+					            }
+							}
+							if (replacements == null) {
+								replacements = new HashMap<Object, WithQueryCommand>();
+							}
+							replacements.put(withQueryCommand.getGroupSymbol().getMetadataID(), withQueryCommand);
+						}
 					}
             	}
                 if(command instanceof Query) {
-                    command = rewriteQuery((Query) command);
+                    command = rewriteQuery((Query) command, replacements);
                 }else {
                     command = rewriteSetQuery((SetQuery) command);
                 }
@@ -384,7 +400,7 @@ public class QueryRewriter {
         }
     }
     
-	private Command rewriteQuery(Query query)
+	private Command rewriteQuery(Query query, Map<Object, WithQueryCommand> replacements)
              throws TeiidComponentException, TeiidProcessingException{
         
         // Rewrite from clause
@@ -393,7 +409,7 @@ public class QueryRewriter {
             List<FromClause> clauses = new ArrayList<FromClause>(from.getClauses().size());
             Iterator<FromClause> clauseIter = from.getClauses().iterator();
             while(clauseIter.hasNext()) {
-                clauses.add( rewriteFromClause(query, clauseIter.next()) );
+                clauses.add( rewriteFromClause(query, clauseIter.next(), replacements) );
             }
             from.setClauses(clauses);
         } else {
@@ -745,10 +761,10 @@ public class QueryRewriter {
         return setQuery;
     }
 
-	private FromClause rewriteFromClause(Query parent, FromClause clause)
+	private FromClause rewriteFromClause(Query parent, FromClause clause, Map<Object, WithQueryCommand> replacements)
 			 throws TeiidComponentException, TeiidProcessingException{
 		if(clause instanceof JoinPredicate) {
-			return rewriteJoinPredicate(parent, (JoinPredicate) clause);
+			return rewriteJoinPredicate(parent, (JoinPredicate) clause, replacements);
         } else if (clause instanceof SubqueryFromClause) {
             rewriteSubqueryContainer((SubqueryFromClause)clause, true);
         } else if (clause instanceof TextTable) {
@@ -761,11 +777,19 @@ public class QueryRewriter {
         } else if (clause instanceof ArrayTable) {
         	ArrayTable at = (ArrayTable)clause;
         	at.setArrayValue(rewriteExpressionDirect(at.getArrayValue()));
+        } else if (clause instanceof UnaryFromClause) {
+        	if (replacements != null) {
+        		UnaryFromClause ufc = (UnaryFromClause) clause;
+				WithQueryCommand command = replacements.get(ufc.getGroup().getMetadataID());
+        		if (command != null) {
+        			ufc.setExpandedCommand((Command) command.getCommand().clone());
+        		}
+        	}
         }
         return clause;
 	}
 
-	private JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate)
+	private JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate, Map<Object, WithQueryCommand> replacements)
 			 throws TeiidComponentException, TeiidProcessingException{
 		List joinCrits = predicate.getJoinCriteria();
 		if(joinCrits != null && joinCrits.size() > 0) {
@@ -791,8 +815,8 @@ public class QueryRewriter {
             predicate.setRightClause(leftClause);
         }
 
-        predicate.setLeftClause( rewriteFromClause(parent, predicate.getLeftClause() ));
-        predicate.setRightClause( rewriteFromClause(parent, predicate.getRightClause() ));
+        predicate.setLeftClause( rewriteFromClause(parent, predicate.getLeftClause(), replacements));
+        predicate.setRightClause( rewriteFromClause(parent, predicate.getRightClause(), replacements ));
     
 		return predicate;
 	}
