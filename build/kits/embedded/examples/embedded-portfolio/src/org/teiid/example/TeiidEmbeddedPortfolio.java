@@ -39,7 +39,6 @@ import org.h2.tools.Server;
 import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.runtime.EmbeddedHelper;
 import org.teiid.translator.file.FileExecutionFactory;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
 

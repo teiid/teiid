@@ -48,6 +48,30 @@
         <useTransitiveDependencies>false</useTransitiveDependencies>
         <scope>provided</scope>
       </dependencySet>
+      <dependencySet>
+          <includes>
+             <include>org.jboss.narayana.jta:narayana-jta:jar</include>
+          </includes>
+          <outputDirectory>lib</outputDirectory>
+          <unpack>false</unpack>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <scope>provided</scope>
+      </dependencySet>
+      <dependencySet>
+          <includes>
+              <include>org.jboss.ironjacamar:ironjacamar-jdbc:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-core-api:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-core-impl:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-api:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-impl:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-spi:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-spec-api:jar</include>
+              <include>org.jboss:jboss-transaction-spi:jar</include>
+          </includes>
+          <outputDirectory>optional/jdbc/tm</outputDirectory>
+          <unpack>false</unpack>
+          <scope>provided</scope>
+       </dependencySet>
    </dependencySets>
   
   <moduleSets>
@@ -94,30 +118,6 @@
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
                 </dependencySet>
-		<dependencySet>
-       		  <includes>
-          	    <include>org.jboss.narayana.jta:narayana-jta</include>
-        	  </includes>
-        	  <outputDirectory>lib</outputDirectory>
-        	  <unpack>false</unpack>
-        	  <useTransitiveDependencies>false</useTransitiveDependencies>
-        	  <scope>provided</scope>
-    	        </dependencySet>
-		<dependencySet>
-        	  <includes>
-          	    <include>org.jboss.ironjacamar:ironjacamar-jdbc</include>
-          	    <include>org.jboss.ironjacamar:ironjacamar-core-api</include>
-          	    <include>org.jboss.ironjacamar:ironjacamar-core-impl</include>
-          	    <include>org.jboss.ironjacamar:ironjacamar-common-api</include>
-        	    <include>org.jboss.ironjacamar:ironjacamar-common-impl</include>
-         	    <include>org.jboss.ironjacamar:ironjacamar-common-spi</include>
-		    <include>org.jboss.ironjacamar:ironjacamar-spec-api</include>
-		    <include>org.jboss:jboss-transaction-spi</include>
-        	  </includes>
-        	  <outputDirectory>optional/jdbc/tm</outputDirectory>
-        	  <unpack>false</unpack>
-        	  <scope>provided</scope>
-    	        </dependencySet>
             </dependencySets>
             <outputDirectory>lib</outputDirectory>
         </binaries>

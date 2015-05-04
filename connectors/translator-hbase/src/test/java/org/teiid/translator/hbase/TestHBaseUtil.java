@@ -25,6 +25,8 @@ import java.io.FileReader;
 import java.math.BigDecimal;
 import java.sql.*;
 
+import javax.sql.DataSource;
+
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.MetadataFactory;
@@ -35,6 +37,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 
+import bitronix.tm.resource.jdbc.PoolingDataSource;
 
 @SuppressWarnings("nls")
 public class TestHBaseUtil {
@@ -64,6 +67,44 @@ public class TestHBaseUtil {
     public static Connection getDriverConnection(String driver, String url, String user, String pass) throws Exception {
         Class.forName(driver);
         return DriverManager.getConnection(url, user, pass); 
+    }
+    
+    static PoolingDataSource pds = null ;
+    
+    public static DataSource setupDataSource(String jndiName) {
+        if (null != pds)
+            return pds;
+        
+        pds = new PoolingDataSource();
+        pds.setUniqueName(jndiName);
+        pds.setClassName("bitronix.tm.resource.jdbc.lrc.LrcXADataSource");
+        pds.setMaxPoolSize(5);
+        pds.setAllowLocalTransactions(true);
+        pds.getDriverProperties().put("user", "");
+        pds.getDriverProperties().put("password", "");
+        pds.getDriverProperties().put("url", "jdbc:phoenix:127.0.0.1:2181");
+        pds.getDriverProperties().put("driverClassName", "org.apache.phoenix.jdbc.PhoenixDriver");
+        pds.init();
+        
+        return pds;
+    }
+    
+    public static DataSource setupDataSource(String jndiName, String driver, String url, String user, String pass) {
+        if (null != pds)
+            return pds;
+        
+        pds = new PoolingDataSource();
+        pds.setUniqueName(jndiName);
+        pds.setClassName("bitronix.tm.resource.jdbc.lrc.LrcXADataSource");
+        pds.setMaxPoolSize(5);
+        pds.setAllowLocalTransactions(true);
+        pds.getDriverProperties().put("user", user);
+        pds.getDriverProperties().put("password", pass);
+        pds.getDriverProperties().put("url", url);
+        pds.getDriverProperties().put("driverClassName", driver);
+        pds.init();
+        
+        return pds;
     }
     
     public static void executeBatchedUpdateDataType(Connection conn, String sql) throws SQLException {

@@ -32,7 +32,6 @@ import java.sql.Statement;
 import javax.sql.DataSource;
 
 import org.teiid.runtime.EmbeddedConfiguration;
-import org.teiid.runtime.EmbeddedHelper;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.hbase.HBaseExecutionFactory;
 
