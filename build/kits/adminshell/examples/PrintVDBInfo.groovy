@@ -1,21 +1,23 @@
-
-
 /**
  *
- * This script will print out the details for all deployed VDBs.
+ * This script will print out the details for a deployed VDB.
  *
- * Changes to make to use:
- *     - set property VDB_NAME
+ * Can run this by passing the -Dvdbname argument.  The following is an example:
+ *
+ *  ./adminshell.sh -Dvdbname={value}  .  ./examples/PrintVDBInfo.groovy
+ *
+ *  where {value} is the name of the VDB to be printed
  */
 public class PrintVDBInfo {
 
-    public VDB_NAME = "vdb_name"
-    
+    public static VDB_NAME = System.getProperty( 'vdbname' )
     
     def execute( ) {  
-        if ( VDB_NAME.equals( "vdb_name") ) {
-          println( "**** Must change VDB_NAME property to the VDB you want to print")
-        }
+        if ( VDB_NAME.equals( null) ) {
+ 			println ( 'Must pass in -Dvdbname argument')
+ 			disconnect()		
+ 			return	
+        }    
 
         connectAsAdmin()
         
@@ -27,7 +29,7 @@ public class PrintVDBInfo {
     
     
     def printVDBOutput( vdbName ) {
-       println( "---- PRINT VDBs ---------")
+       println( "---- PRINT VDB ---------")
        def v=getVDBs()
  
         for ( vdb in v ) {
