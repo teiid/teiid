@@ -181,7 +181,7 @@ public class AnalysisRecord {
     public void addAnnotation(Annotation annotation) {
         this.annotations.add(annotation);
         if (this.recordDebug()) {
-        	this.println(annotation.getPriority() + " " + annotation.getCategory() + " " + annotation.getAnnotation() + " - " + annotation.getResolution()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        	this.println(annotation.toString());
         }
     }
     

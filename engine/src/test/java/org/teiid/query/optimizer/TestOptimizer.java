@@ -6550,7 +6550,7 @@ public class TestOptimizer {
     	Object modelID = metadata.getMetadataStore().getSchema("pm1");
     	AnalysisRecord record = new AnalysisRecord(true, true);
     	pn.recordDebugAnnotation("hello", modelID, "world", record, metadata);
-    	assertEquals("[QueryAnnotation<Relational Planner, LOW,hello pm1,world Unknown: 0(groups=[]>]", record.getAnnotations().toString());
+    	assertEquals("[LOW [Relational Planner] hello pm1 - world Unknown: 0(groups=[]]", record.getAnnotations().toString());
     }
     
 	@Test public void testRecursiveView() throws Exception {
