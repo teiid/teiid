@@ -632,7 +632,7 @@ public class TestCalculateCostUtil {
     @Test public void testCompoundCriteriaEstimate() throws Exception {
         String crit = "US.accounts.account = 10 and US.accounts.account = US.accounts.customer"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit, 1000, 640, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit, 1000, 720, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
 
     @Test public void testCompoundCriteriaEstimate1() throws Exception {
@@ -669,11 +669,11 @@ public class TestCalculateCostUtil {
     @Test public void testCompoundCriteriaEstimate4() throws Exception {
         String crit = "US.accounts.account = 10 and US.accounts.account = US.accounts.customer and US.accounts.customer < 100"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit, 1000, 64, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit, 1000, 86, TestVirtualDepJoin.exampleVirtualDepJoin());
         
         String crit1 = "US.accounts.account = US.accounts.customer and US.accounts.customer < 100 and US.accounts.account = 10"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit1, 1000, 64, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit1, 1000, 81, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
     
     @Test public void testCompoundCriteriaEstimate5() throws Exception {
@@ -686,6 +686,18 @@ public class TestCalculateCostUtil {
         String crit = "US.accounts.account is null or US.accounts.account = US.accounts.customer"; //$NON-NLS-1$
         
         helpTestEstimateCost(crit, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, TestVirtualDepJoin.exampleVirtualDepJoin());
+    }
+    
+    @Test public void testCompoundCriteriaEstimate7() throws Exception {
+        String critString = "US.accounts.account = 10"; //$NON-NLS-1$
+        helpTestEstimateCost(critString, 1000, 800, TestVirtualDepJoin.exampleVirtualDepJoin());
+        
+        critString = "US.accounts.customer < 100"; //$NON-NLS-1$
+        helpTestEstimateCost(critString, 800, 80, TestVirtualDepJoin.exampleVirtualDepJoin());
+        
+        String crit = "US.accounts.account = 10 and US.accounts.customer < 100"; //$NON-NLS-1$
+        
+        helpTestEstimateCost(crit, 1000, 90, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
         
     //min and max are not set, so the default estimate is returned

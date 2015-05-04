@@ -672,7 +672,7 @@ public class NewCalculateCostUtil {
                         continue;
                     }
                     if (childCost != UNKNOWN_VALUE) {
-                        cost *= nextCost/childCost;
+                        cost = (Math.min(cost, nextCost) + (cost * nextCost/childCost))/2;
                     } else {
                         if (cost == UNKNOWN_VALUE) {
                             cost = nextCost;
@@ -821,6 +821,10 @@ public class NewCalculateCostUtil {
         if(predicateCriteria instanceof CompareCriteria) {
             CompareCriteria compCrit = (CompareCriteria) predicateCriteria;
                         
+            if (compCrit.isOptional()) {
+        		return childCost;
+        	}
+            
             if (compCrit.getOperator() == CompareCriteria.EQ || compCrit.getOperator() == CompareCriteria.NE){
                 if (unknownChildCost && (!usesKey || multiGroup)) {
                     return UNKNOWN_VALUE;
