@@ -31,7 +31,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import javax.naming.Context;
+
+import javax.sql.DataSource;
+
 import org.h2.tools.RunScript;
 import org.h2.tools.Server;
 import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
@@ -39,8 +41,6 @@ import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.file.FileExecutionFactory;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
-
-import bitronix.tm.resource.jdbc.PoolingDataSource;
 
 
 /**
@@ -93,17 +93,15 @@ public class TeiidEmbeddedPortfolio {
 	}
 	
 	private static Server h2Server = null;
-	private static PoolingDataSource pds = null ;
 	
 	public static void main(String[] args) throws Exception {
-		
-		System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "bitronix.tm.jndi.BitronixInitialContextFactory");
-		
+				
 		// setup accounts database (if you already have external database this is not needed)
 		// for schema take look at "data/customer-schema.sql" file.
 		startH2Server();
-		setupH2DataSource();
-		initSamplesData();
+		
+		DataSource ds = EmbeddedHelper.newDataSource("org.h2.Driver", "jdbc:h2:mem://localhost/~/account", "sa", "sa");
+		initSamplesData(ds);
 		
 		EmbeddedServer server = new EmbeddedServer();
 		
@@ -112,6 +110,8 @@ public class TeiidEmbeddedPortfolio {
 		executionFactory.start();
 		server.addTranslator("translator-h2", executionFactory);
 		
+		server.addConnectionFactory("java:/accounts-ds", ds);
+		
     	FileExecutionFactory fileExecutionFactory = new FileExecutionFactory();
     	fileExecutionFactory.start();
     	server.addTranslator("file", fileExecutionFactory);
@@ -119,8 +119,10 @@ public class TeiidEmbeddedPortfolio {
     	FileManagedConnectionFactory managedconnectionFactory = new FileManagedConnectionFactory();
 		managedconnectionFactory.setParentDirectory("data");
 		server.addConnectionFactory("java:/marketdata-file", managedconnectionFactory.createConnectionFactory());
-		
-		server.start(new EmbeddedConfiguration());
+	
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.setTransactionManager(EmbeddedHelper.getTransactionManager());	
+		server.start(config);
     	
 		server.deployVDB(new FileInputStream(new File("portfolio-vdb.xml")));
 		
@@ -137,25 +139,10 @@ public class TeiidEmbeddedPortfolio {
 		h2Server.stop();
 	}
 
-	private static void initSamplesData() throws FileNotFoundException, SQLException {
-		RunScript.execute(pds.getConnection(), new FileReader("data/customer-schema.sql"));
+	private static void initSamplesData(DataSource ds) throws FileNotFoundException, SQLException {
+		RunScript.execute(ds.getConnection(), new FileReader("data/customer-schema.sql"));
 	}
 
-	private static void setupH2DataSource() {
-		if (null != pds)
-			return;
-		
-		pds = new PoolingDataSource();
-		pds.setUniqueName("java:/accounts-ds");
-		pds.setClassName("bitronix.tm.resource.jdbc.lrc.LrcXADataSource");
-		pds.setMaxPoolSize(5);
-		pds.setAllowLocalTransactions(true);
-		pds.getDriverProperties().put("user", "sa");
-		pds.getDriverProperties().put("password", "sa");
-		pds.getDriverProperties().put("url", "jdbc:h2:mem://localhost/~/account");
-		pds.getDriverProperties().put("driverClassName", "org.h2.Driver");
-		pds.init();
-	}
 
 	private static void startH2Server() throws SQLException {
 		h2Server = Server.createTcpServer().start();	

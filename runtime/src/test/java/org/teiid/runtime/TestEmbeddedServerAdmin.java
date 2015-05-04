@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,8 +34,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
-import javax.resource.ResourceException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -51,10 +48,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.deployers.VirtualDatabaseException;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.file.FileExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -64,9 +58,10 @@ public class TestEmbeddedServerAdmin {
 	private static EmbeddedServer server;
 	
 	@BeforeClass
-	public static void init() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, FileNotFoundException, IOException, ResourceException, SQLException {
+	public static void init() throws Exception {
 		server = new EmbeddedServer();
-		server.start(new EmbeddedConfiguration());
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		server.start(config);
 		
 		FileExecutionFactory executionFactory = new FileExecutionFactory();
 		executionFactory.start();
@@ -244,9 +239,13 @@ public class TestEmbeddedServerAdmin {
 	}
 	
 	@Test
-	public void testGetTransactions() throws AdminException {
-		//need enhance
-		admin.getTranslators();
+	public void testGetTransactions() throws AdminException, SQLException {
+
+		Connection conn = newSession();
+		conn.setAutoCommit(false);
+		assertEquals(0, admin.getTransactions().size());
+		conn.commit();		
+		conn.close();
 	}
 	
 	public void testClearCache() throws AdminException{

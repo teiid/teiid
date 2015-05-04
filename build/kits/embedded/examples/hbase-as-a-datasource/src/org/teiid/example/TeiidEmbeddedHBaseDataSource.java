@@ -29,14 +29,11 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import javax.naming.Context;
 import javax.sql.DataSource;
 
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.hbase.HBaseExecutionFactory;
-
-import bitronix.tm.resource.jdbc.PoolingDataSource;
 
 @SuppressWarnings("nls")
 public class TeiidEmbeddedHBaseDataSource {
@@ -75,10 +72,9 @@ public class TeiidEmbeddedHBaseDataSource {
 
 	public static void main(String[] args) throws Exception {
 		
-		DataSource ds = setupPhoenixDataSource("java:/hbaseDS", JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
-		initSamplesData(ds);
+		DataSource ds = EmbeddedHelper.newDataSource(JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
 		
-		System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "bitronix.tm.jndi.BitronixInitialContextFactory");
+		initSamplesData(ds);
 		
 		EmbeddedServer server = new EmbeddedServer();
 		
@@ -86,7 +82,11 @@ public class TeiidEmbeddedHBaseDataSource {
 		factory.start();
 		server.addTranslator("translator-hbase", factory);
 		
-		server.start(new EmbeddedConfiguration());
+		server.addConnectionFactory("java:/hbaseDS", ds);
+		
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.setTransactionManager(EmbeddedHelper.getTransactionManager());	
+		server.start(config);
     	
 		server.deployVDB(new FileInputStream(new File("hbase-vdb.xml")));
 		
@@ -116,23 +116,5 @@ public class TeiidEmbeddedHBaseDataSource {
     static final String JDBC_USER = "";
     static final String JDBC_PASS = "";
 
-	static PoolingDataSource pds = null ;
-	
-	private static DataSource setupPhoenixDataSource(String jndiName, String driver, String url, String user, String pass) {
-        if (null != pds)
-            return pds;
-        
-        pds = new PoolingDataSource();
-        pds.setUniqueName(jndiName);
-        pds.setClassName("bitronix.tm.resource.jdbc.lrc.LrcXADataSource");
-        pds.setMaxPoolSize(5);
-        pds.setAllowLocalTransactions(true);
-        pds.getDriverProperties().put("user", user);
-        pds.getDriverProperties().put("password", pass);
-        pds.getDriverProperties().put("url", url);
-        pds.getDriverProperties().put("driverClassName", driver);
-        pds.init();
-        
-        return pds;
-    }
+
 }
