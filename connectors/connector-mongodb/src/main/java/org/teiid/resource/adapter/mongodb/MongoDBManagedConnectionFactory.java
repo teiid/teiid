@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.net.ssl.SSLSocketFactory;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
@@ -43,10 +44,14 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(MongoDBManagedConnectionFactory.class);
 
+	public enum SecurityType {None, SCRAM_SHA_1, MONGODB_CR, Kerberos, X509};
 	private String remoteServerList=null;
 	private String username;
 	private String password;
 	private String database;
+	private String securityType = SecurityType.None.name();
+	private String authDatabase;
+	private Boolean ssl;
 
 	@Override
 	@SuppressWarnings("serial")
@@ -59,18 +64,13 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 		}
 
 		final List<ServerAddress> servers = getServers();
-		if (servers != null) {
-    		//if options needed then use URL format
-    		final MongoClientOptions options = MongoClientOptions.builder().build();
-    
+		if (servers != null) {    
     		return new BasicConnectionFactory<MongoDBConnectionImpl>() {
     			@Override
     			public MongoDBConnectionImpl getConnection() throws ResourceException {
-    				MongoCredential credential = null;
-    				if (MongoDBManagedConnectionFactory.this.username != null && MongoDBManagedConnectionFactory.this.password != null) {
-    					credential = MongoCredential.createMongoCRCredential(MongoDBManagedConnectionFactory.this.username, MongoDBManagedConnectionFactory.this.database, MongoDBManagedConnectionFactory.this.password.toCharArray());
-    				}
-    				return new MongoDBConnectionImpl(MongoDBManagedConnectionFactory.this.database, servers, credential, options);
+                    return new MongoDBConnectionImpl(
+                            MongoDBManagedConnectionFactory.this.database,
+                            servers, getCredential(), getOptions());
     			}
     		};
 		}
@@ -88,7 +88,38 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         };
 		
 	}
-
+	
+	private MongoCredential getCredential() {
+	    
+        MongoCredential credential = null;        
+        if (this.securityType.equals(SecurityType.SCRAM_SHA_1.name())) {
+            credential = MongoCredential.createScramSha1Credential(this.username, this.authDatabase, this.password.toCharArray());            
+        } 
+        else if (this.securityType.equals(SecurityType.MONGODB_CR.name())) {
+            credential = MongoCredential.createMongoCRCredential(this.username, this.authDatabase, this.password.toCharArray());
+        }
+        else if (this.securityType.equals(SecurityType.Kerberos.name())) {
+            credential = MongoCredential.createGSSAPICredential(this.username);
+        }
+        else if (this.securityType.equals(SecurityType.X509.name())) {
+            credential = MongoCredential.createMongoX509Credential(this.username);
+        }        
+        else if (MongoDBManagedConnectionFactory.this.username != null && MongoDBManagedConnectionFactory.this.password != null) {
+            // to support legacy pre-3.0 authentication 
+            credential = MongoCredential.createMongoCRCredential(MongoDBManagedConnectionFactory.this.username, MongoDBManagedConnectionFactory.this.database, MongoDBManagedConnectionFactory.this.password.toCharArray());
+        }
+        return credential;
+	}
+	
+	private MongoClientOptions getOptions() {
+        //if options needed then use URL format
+        final MongoClientOptions.Builder builder = MongoClientOptions.builder();
+        if (getSsl()) {
+            builder.socketFactory(SSLSocketFactory.getDefault());
+        }
+        return builder.build();
+	}
+	
 	/**
 	 * Returns the <code>host:port[;host:port...]</code> list that identifies the remote servers
 	 * to include in this cluster;
@@ -121,6 +152,14 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 	public void setPassword(String googlePassword) {
 		this.password = googlePassword;
 	}
+	
+    public Boolean getSsl() {
+        return this.ssl;
+    }
+
+    public void setSsl(Boolean ssl) {
+        this.ssl = ssl;
+    }	
 
 	public String getDatabase() {
 		return this.database;
@@ -129,6 +168,22 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 	public void setDatabase(String database) {
 		this.database = database;
 	}
+	
+    public String getSecurityType() {
+        return this.securityType;
+    }
+
+    public void setSecurityType(String securityType) {
+        this.securityType = securityType;
+    }
+    
+    public String getAuthDatabase() {
+        return this.authDatabase;
+    }
+
+    public void setAuthDatabase(String database) {
+        this.authDatabase = database;
+    }    
 
 	protected MongoClientURI getConnectionURI() {
         String serverlist = getRemoteServerList();

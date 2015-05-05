@@ -60,6 +60,24 @@
                <config-property-type>java.lang.String</config-property-type>
             </config-property>             
             
+            <config-property>
+                <description>{$display:"Authentication Mechanism",$allowed:["None","SCRAM_SHA_1","MONGODB_CR", "Kerberos","X509"], $description:"Type of Authentication to used", $required:"false"}</description>
+                <config-property-name>SecurityType</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
+            
+            <config-property>
+               <description>{$display:"Authentication Database",$description:"MongoDB Database Name for user authentication in case of MONGODB-CR",$required:"optional"}</description> 
+               <config-property-name>AuthDatabase</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>            
+            
+            <config-property>
+               <description>{$display:"Use SSL Connections",$description:"Use SSL Connections",$required:"optional"}</description> 
+               <config-property-name>Ssl</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+            </config-property>             
+                        
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>
