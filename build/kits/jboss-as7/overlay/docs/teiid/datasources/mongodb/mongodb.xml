@@ -25,7 +25,8 @@
                         SecurityType is one of :["None","SCRAM_SHA_1","MONGODB_CR", "Kerberos","X509"]
                          
                         <config-property name="SecurityType">SCRAM_SHA_1</config-property>
-                        <config-property name="AuthDatabase">test</config-property>                                                                                
+                        <config-property name="AuthDatabase">test</config-property>
+                        <config-property name="Ssl">false</config-property>                                                                                
                         -->  
                 </connection-definition>
             </connection-definitions>

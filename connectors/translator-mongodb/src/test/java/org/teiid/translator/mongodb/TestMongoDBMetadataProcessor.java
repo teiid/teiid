@@ -74,14 +74,16 @@ public class TestMongoDBMetadataProcessor {
         		"\tcol1 string,\n" + 
         		"\tcol2 string,\n" + 
         	    "\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n"+
-        	    "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n"+        		
+        	    "\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n"+       
+        	    "\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
         		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table');\n" + 
         		"\n" + 
         		"CREATE FOREIGN TABLE embedded (\n" + 
         		"\tcol1 string,\n" + 
         		"\tcol2 string,\n" + 
         		"\t\"_id\" integer OPTIONS (UPDATABLE FALSE),\n" + 
-        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
+        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
+        		"\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
         		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
         		"\n" +
         		"CREATE FOREIGN TABLE \"table\" (\n" + 

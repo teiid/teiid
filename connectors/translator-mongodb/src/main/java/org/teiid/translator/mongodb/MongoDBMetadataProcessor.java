@@ -174,6 +174,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     pkColumns.add(c.getName());
                 }
                 metadataFactory.addPrimaryKey("PK0", pkColumns, childTable); //$NON-NLS-1$
+                metadataFactory.addForiegnKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
             }
         }
         else {
