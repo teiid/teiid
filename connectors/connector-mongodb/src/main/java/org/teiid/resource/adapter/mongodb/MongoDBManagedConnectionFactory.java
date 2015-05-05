@@ -161,7 +161,7 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 	}
 	
     public Boolean getSsl() {
-        return this.ssl;
+        return this.ssl != null?this.ssl:false;
     }
 
     public void setSsl(Boolean ssl) {

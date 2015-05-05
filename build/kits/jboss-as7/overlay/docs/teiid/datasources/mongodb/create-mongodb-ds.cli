@@ -4,4 +4,6 @@
 /subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Database:add(value="${database}")
 #/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Username:add(value="${username}")
 #/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Password:add(value="${password}")
+#/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=SecurityType:add(value="SCRAM_SHA_1")
+#/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=AuthDatabase:add(value="${database}")
 /subsystem=resource-adapters/resource-adapter=mongodb:activate
