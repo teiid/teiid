@@ -93,10 +93,14 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 	    
         MongoCredential credential = null;        
         if (this.securityType.equals(SecurityType.SCRAM_SHA_1.name())) {
-            credential = MongoCredential.createScramSha1Credential(this.username, this.authDatabase, this.password.toCharArray());            
+            credential = MongoCredential.createScramSha1Credential(this.username, 
+                    (this.authDatabase == null) ? this.database: this.authDatabase, 
+                    this.password.toCharArray());            
         } 
         else if (this.securityType.equals(SecurityType.MONGODB_CR.name())) {
-            credential = MongoCredential.createMongoCRCredential(this.username, this.authDatabase, this.password.toCharArray());
+            credential = MongoCredential.createMongoCRCredential(this.username, 
+                    (this.authDatabase == null) ? this.database: this.authDatabase, 
+                    this.password.toCharArray());
         }
         else if (this.securityType.equals(SecurityType.Kerberos.name())) {
             credential = MongoCredential.createGSSAPICredential(this.username);
@@ -104,9 +108,12 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         else if (this.securityType.equals(SecurityType.X509.name())) {
             credential = MongoCredential.createMongoX509Credential(this.username);
         }        
-        else if (MongoDBManagedConnectionFactory.this.username != null && MongoDBManagedConnectionFactory.this.password != null) {
+        else if (this.username != null && this.password != null) {
             // to support legacy pre-3.0 authentication 
-            credential = MongoCredential.createMongoCRCredential(MongoDBManagedConnectionFactory.this.username, MongoDBManagedConnectionFactory.this.database, MongoDBManagedConnectionFactory.this.password.toCharArray());
+            credential = MongoCredential.createMongoCRCredential(
+                    MongoDBManagedConnectionFactory.this.username,
+                    (this.authDatabase == null) ? this.database: this.authDatabase, 
+                    this.password.toCharArray());
         }
         return credential;
 	}
@@ -154,7 +161,7 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 	}
 	
     public Boolean getSsl() {
-        return this.ssl;
+        return this.ssl != null?this.ssl:false;
     }
 
     public void setSsl(Boolean ssl) {

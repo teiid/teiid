@@ -17,8 +17,16 @@
                       <config-property name="Database">test</config-property>
                         <!-- 
                             Uncomment these properties to supply user name and password
+                        
                         <config-property name="Username">user</config-property>
                         <config-property name="Password">user</config-property>
+
+                        after 2.6 the default security is changed, so below properties also needed
+                        SecurityType is one of :["None","SCRAM_SHA_1","MONGODB_CR", "Kerberos","X509"]
+                         
+                        <config-property name="SecurityType">SCRAM_SHA_1</config-property>
+                        <config-property name="AuthDatabase">test</config-property>
+                        <config-property name="Ssl">false</config-property>                                                                                
                         -->  
                 </connection-definition>
             </connection-definitions>
