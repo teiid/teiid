@@ -262,7 +262,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			getExecutor().execute(new Runnable() {
 				@Override
 				public void run() {
-					String query = "execute SYSADMIN.loadMatView('"+table.getParent().getName()+"','"+table.getName()+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					String query = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 					try {
 						executeQuery(vdb, query);
 						scheduleJob(vdb, table, ttl, ttl);

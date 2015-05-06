@@ -423,5 +423,39 @@ public class TestMatViews {
 		assertEquals(1, rs.getInt(1));
 		assertFalse(rs.next());
 	}
+	
+	@Test public void testMatViewProceduresWithSameName() throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+    	mmd.setName("x");
+    	mmd.setModelType(Type.VIRTUAL);
+    	mmd.addSourceMetadata("DDL", "create view T as select 1");
+    	ModelMetaData mmd1 = new ModelMetaData();
+    	mmd1.setName("y");
+    	mmd1.setModelType(Type.VIRTUAL);
+    	mmd1.addSourceMetadata("DDL", "create view T as select 1");
+    	server.deployVDB("test", mmd, mmd1);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:test", null);
+		Statement s = c.createStatement();
+		try {
+			s.execute("call sysadmin.matviewstatus('x', 'T')");
+		} catch (TeiidSQLException e) {
+			e.getTeiidCode().equals("TEIID30167");
+		}
+
+		try {
+			s.execute("call sysadmin.loadmatview('x', 'T')");
+		} catch (TeiidSQLException e) {
+			e.getTeiidCode().equals("TEIID30167");
+		}
+
+		try {
+			s.execute("call sysadmin.updateMatView('x', 'T')");
+		} catch (TeiidSQLException e) {
+			e.getTeiidCode().equals("TEIID30167");
+		}
+
+	}
+	
 
 }
