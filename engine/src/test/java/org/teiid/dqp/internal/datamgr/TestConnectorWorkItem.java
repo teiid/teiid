@@ -65,6 +65,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -406,5 +407,14 @@ public class TestConnectorWorkItem {
 			//should throw the conversion error
 		}
     }
+    
+	@Test public void testSourcHints() throws Exception {
+		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
+		command.setSourceHint(new SourceHint());
+		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
+		arm.setCommand(command);
+		ConnectorManager cm = TestConnectorManager.getConnectorManager();
+		cm.registerRequest(arm);
+	}
 
 }
