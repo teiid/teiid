@@ -904,7 +904,7 @@ public class TestMMDatabaseMetaData {
         expected.put("getSQLStateType", new Integer(2)); //$NON-NLS-1$
 
         // return type -- String
-        expected.put("getCatalogSeparator", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getCatalogSeparator", "."); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getCatalogTerm", "VirtualDatabase"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDatabaseProductName", "Teiid Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDatabaseProductVersion", ApplicationInfo.getInstance().getMajorReleaseVersion()+"."+ApplicationInfo.getInstance().getMinorReleaseVersion()); //$NON-NLS-1$ //$NON-NLS-2$

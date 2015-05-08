@@ -184,6 +184,46 @@ public class TestDynamicImportedMetaData {
     	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("X.DUP");
     	assertEquals("\"x\".\"dup\"", t.getNameInSource());
     }
+
+    public static class DatabaseMetaDataProxy {
+		public String getCatalogSeparator() {
+			return ":";
+		}
+	}
+    
+    public static class ConnectionProxy {
+
+		private final Connection conn;
+
+		private ConnectionProxy(Connection conn) {
+			this.conn = conn;
+		}
+
+		public DatabaseMetaData getMetaData() throws SQLException {
+			DatabaseMetaData dmd = conn.getMetaData();
+			dmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new DatabaseMetaDataProxy(), dmd}, new Class<?>[] {DatabaseMetaData.class});
+			return dmd;
+		}
+	}
+    
+    @Test public void testUseCatalogSeparator() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	final Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	Connection conn1 = (Connection) SimpleMock.createSimpleMock(new Object[] {new ConnectionProxy(conn), conn}, new Class<?>[] {Connection.class});
+    	mf = getMetadata(importProperties, conn1);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("test:X.DUP");
+    	assertEquals("\"test\":\"x\".\"dup\"", t.getNameInSource());
+    }
     
     @Test public void testUseQualified() throws Exception {
     	MetadataFactory mf = createMetadataFactory("x", new Properties());

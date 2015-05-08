@@ -89,6 +89,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	private boolean quoteNameInSource = true;
 	private boolean useProcedureSpecificName;
 	private boolean useCatalogName = true;
+	private String catalogSeparator = String.valueOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
 	private boolean autoCreateUniqueConstraints = true;
 	private boolean useQualifiedName = true;
 	
@@ -138,6 +139,13 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 						unsignedTypes.add(name);
 					}
 				}
+			}
+		}
+		
+		if (useCatalogName) {
+			String separator = metadata.getCatalogSeparator();
+			if (separator != null && !separator.isEmpty()) {
+				this.catalogSeparator = separator;
 			}
 		}
 		
@@ -692,7 +700,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
 			}
 			if (useCatalogName && catalogName != null && catalogName.length() > 0) {
-				fullName = (quoted?quoteName(catalogName):catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+				fullName = (quoted?quoteName(catalogName):catalogName) + catalogSeparator + fullName;
 			}
 		}
 		return fullName;
@@ -899,11 +907,18 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
     
     @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
     public String getExcludeTables() {
+    	if (this.excludeTables == null) {
+    		return null;
+    	}
         return this.excludeTables.pattern();
     }
     
     @TranslatorProperty(display="Exclude Procedures", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid procedure name will exclude it from import.  Applied after procedure names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
     public String getExcludeProcedures() {
+    	if (this.excludeProcedures == null) {
+    		return null;
+    	}
         return this.excludeProcedures.pattern();
     }    
+    
 }

@@ -467,7 +467,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * @throws SQLException, should never occur.
      */
     public String getCatalogSeparator() throws SQLException {
-        return EMPTY_STRING;
+        return "."; //$NON-NLS-1$
     }
 
     public String getCatalogTerm() throws SQLException {
