@@ -563,8 +563,12 @@ public class LocalClient implements Client {
 					return OProperties.binary(propName, ((SQLXML)value).getString().getBytes());
 				}
 			}
+			value = DataTypeManager.convertToRuntimeType(value, true);
 			value = t!=null?t.transform(value, targetType):value;
 			value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+			if (value instanceof BinaryType) {
+				value = ((BinaryType)value).getBytesDirect();
+			}
 			return OProperties.simple(propName, expectedType, value);
 		}
 		value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
