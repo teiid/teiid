@@ -189,6 +189,14 @@ public final class RuleMergeVirtual implements
             	if (jt.isOuter() && (hasCriteria || jt != JoinType.JOIN_LEFT_OUTER || FrameUtil.findJoinSourceNode(parentJoin.getFirstChild()) == frame)) {
         			return root; //cannot remove if the no source side is an outer side
             	}
+            	if (sources.isEmpty()) {
+	            	PlanNode left = FrameUtil.findJoinSourceNode(parentJoin.getFirstChild());
+	            	boolean isLeft = left == frame;
+	            	PlanNode other = isLeft? FrameUtil.findJoinSourceNode(parentJoin.getLastChild()):left;
+	            	if (other != null && (SymbolMap)other.getProperty(NodeConstants.Info.CORRELATED_REFERENCES) != null) {
+	            		return root; //TODO: we don't have the logic yet to then replace the correlated references
+	            	}
+            	}
             }
         }
 
@@ -196,9 +204,9 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
-        //we dont' have to check for null dependent with no source without criteria since there must be a row
+        //we don't have to check for null dependent with no source without criteria since there must be a row
         if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, metadata, sources, !sources.isEmpty() || frame.getParent() != parentJoin)) {
-        	//TODO: propogate constants if just inhibited by subquery/non-deterministic expressions
+        	//TODO: propagate constants if just inhibited by subquery/non-deterministic expressions
             return root;
         }
 

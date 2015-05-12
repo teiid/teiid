@@ -7808,6 +7808,14 @@ public class TestProcessor {
         // Run query
         helpProcess(plan, hdm, expected);
     } 
+
+    @Test public void testLateralJoinWithScalarView() {
+        String sql = "SELECT CAST(g1.col AS string), g0.a FROM (select 'a' as a, ('a',) as c) AS g0, TABLE(select array_get(g0.c, 1) as col) AS g1 WHERE ENDSWITH('a', CAST(g1.col AS string)) = TRUE ORDER BY g0.a"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        helpProcess(plan, fdm, new List[] {Arrays.asList("a", "a")});
+    }
     
     private static final boolean DEBUG = false;
 }
