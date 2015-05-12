@@ -35,7 +35,13 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.*;
+import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.Transform;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.*;
 import org.teiid.logging.LogConstants;
@@ -500,8 +506,12 @@ public class LocalClient implements Client {
 					return OProperties.binary(propName, ((SQLXML)value).getString().getBytes());
 				}
 			}
+			value = DataTypeManager.convertToRuntimeType(value, true);
 			value = t!=null?t.transform(value, targetType):value;
 			value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+			if (value instanceof BinaryType) {
+				value = ((BinaryType)value).getBytesDirect();
+			}
 			return OProperties.simple(propName, expectedType, value);
 		}
 		value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
