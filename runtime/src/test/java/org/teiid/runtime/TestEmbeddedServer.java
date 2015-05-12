@@ -54,6 +54,10 @@ import org.teiid.CommandContext;
 import org.teiid.PreParser;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
+import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
@@ -1348,6 +1352,31 @@ public class TestEmbeddedServer {
 		SQLXML val = rs.getSQLXML(1);
 		rs.close();
 		assertEquals(73906, val.getString().length());
+	}
+	
+	@Test
+	public void testBufferManagerProperties() throws TranslatorException {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		
+		ec.setUseDisk(true);
+		ec.setBufferDirectory(System.getProperty("java.io.tmpdir"));
+		ec.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
+		ec.setMaxReserveKb(BufferManager.DEFAULT_RESERVE_BUFFER_KB);
+		ec.setMaxProcessingKb(BufferManager.DEFAULT_MAX_PROCESSING_KB);
+		
+		ec.setInlineLobs(true);
+		ec.setMaxOpenFiles(FileStorageManager.DEFAULT_MAX_OPEN_FILES);
+		ec.setMaxBufferSpace(FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20);
+		ec.setMaxFileSize(SplittableStorageManager.DEFAULT_MAX_FILESIZE);
+		ec.setEncryptFiles(false);
+		
+		ec.setMaxStorageObjectSize(BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE);
+		ec.setMemoryBufferOffHeap(false);
+		
+		started = false;
+		es.addTranslator(MyEF.class);
+		es.start(ec);
+		assertTrue(started);
 	}
 
 }
