@@ -91,6 +91,12 @@
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-engine</artifactId>
             <scope>provided</scope>
         </dependency>
@@ -143,10 +149,16 @@
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-server-core-ext</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-        </dependency>        
+        </dependency>
+        
+		<dependency>
+		    <groupId>com.fasterxml.jackson.core</groupId>
+		    <artifactId>jackson-databind</artifactId>
+		</dependency> 
         
         <!--  runtime dependencies -->
         <dependency>
