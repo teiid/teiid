@@ -65,10 +65,4 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
             "SUBSTR('1234214', 1, 11)"); //$NON-NLS-1$
     }
     
-    public void test2() throws Exception {
-        Literal arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
-        Literal count = LANG_FACTORY.createLiteral(new Integer(2), Integer.class);
-        helpTestMod(arg1, count, "right", //$NON-NLS-1$
-            "SUBSTR('1234214', (-1 * 2))"); //$NON-NLS-1$
-    }
 }

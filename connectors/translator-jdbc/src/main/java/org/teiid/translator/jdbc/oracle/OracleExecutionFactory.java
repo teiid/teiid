@@ -154,7 +154,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "INSTR", true)); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
         registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
@@ -782,7 +781,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         supportedFunctions.add("RPAD"); //$NON-NLS-1$
-        supportedFunctions.add("RIGHT"); //$NON-NLS-1$
+        //supportedFunctions.add("RIGHT"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
         supportedFunctions.add("TRANSLATE"); //$NON-NLS-1$

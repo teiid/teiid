@@ -97,7 +97,7 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("cast(double(", function.getParameters().get(0), ") as real)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
-    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("char"), FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("varchar"), FunctionModifier.STRING); //$NON-NLS-1$
     	convertModifier.addTypeConversion(new NullHandlingFormatModifier("smallint"), FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
     	convertModifier.addTypeConversion(new NullHandlingFormatModifier("integer"), FunctionModifier.INTEGER); //$NON-NLS-1$
     	convertModifier.addTypeConversion(new NullHandlingFormatModifier("bigint"), FunctionModifier.LONG); //$NON-NLS-1$

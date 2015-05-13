@@ -171,7 +171,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = BYTE
     
     public void testByteToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "varchar(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testByteToBoolean() throws Exception {
@@ -209,7 +209,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = SHORT
     
     public void testShortToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "string", "char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "string", "varchar(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testShortToBoolean() throws Exception {
@@ -247,7 +247,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = INTEGER
     
     public void testIntegerToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "string", "char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "string", "varchar(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testIntegerToBoolean() throws Exception {
@@ -285,7 +285,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = LONG
     
     public void testLongToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "string", "char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "string", "varchar(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testLongToBoolean() throws Exception {
@@ -323,7 +323,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = BIGINTEGER
     
     public void testBigIntegerToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "string", "char(1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "string", "varchar(1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigIntegerToBoolean() throws Exception {
@@ -361,7 +361,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = FLOAT
     
     public void testFloatToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "string", "char(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "string", "varchar(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testFloatToBoolean() throws Exception {
@@ -399,7 +399,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = DOUBLE
     
     public void testDoubleToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "string", "char(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "string", "varchar(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDoubleToBoolean() throws Exception {
@@ -437,7 +437,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = BIGDECIMAL
     
     public void testBigDecimalToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "string", "char(1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "string", "varchar(1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigDecimalToBoolean() throws Exception {
@@ -475,7 +475,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = DATE
 
     public void testDateToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "string", "char({d '2003-11-01'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "string", "varchar({d '2003-11-01'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDateToTimestamp() throws Exception {
@@ -485,7 +485,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = TIME
 
     public void testTimeToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "string", "char({t '23:59:59'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "string", "varchar({t '23:59:59'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testTimeToTimestamp() throws Exception {
@@ -496,7 +496,7 @@ public class TestDB2ConvertModifier extends TestCase {
     
     public void testTimestampToString() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "char({ts '2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "varchar({ts '2003-11-01 12:05:02.0'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testTimestampToDate() throws Exception {

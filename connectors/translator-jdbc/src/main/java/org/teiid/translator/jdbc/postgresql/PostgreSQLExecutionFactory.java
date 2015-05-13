@@ -133,8 +133,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        if (getVersion().compareTo(NINE_0) <= 0) {
+	        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        }
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
         
@@ -413,7 +414,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
-        supportedFunctions.add("RIGHT"); //$NON-NLS-1$
+        if (getVersion().compareTo(NINE_0) > 0) {
+        	supportedFunctions.add("RIGHT"); //$NON-NLS-1$
+        }
         supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
