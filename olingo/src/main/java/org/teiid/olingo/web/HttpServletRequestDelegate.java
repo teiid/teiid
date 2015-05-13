@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo;
+package org.teiid.olingo.web;
 
 import java.io.BufferedReader;
 import java.io.IOException;

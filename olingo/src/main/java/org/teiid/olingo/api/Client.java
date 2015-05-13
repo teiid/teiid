@@ -19,58 +19,47 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo;
+package org.teiid.olingo.api;
 
-import java.sql.ResultSet;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.core.TeiidException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.symbol.Expression;
 
 public interface Client {
-
+    public static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
+    public static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
+    public static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
+    public static final String CHARSET = "charset"; //$NON-NLS-1$
+    
     VDBMetaData getVDB();
 
     MetadataStore getMetadataStore();
 
-    BaseResponse executeCall(String sql, List<SQLParam> sqlParams, SingletonPrimitiveType returnType);
+    void executeCall(String sql, List<SQLParameter> sqlParams, ProcedureReturnType returnType,
+            OperationResponse response) throws SQLException;
 
-    void executeSQL(Query query, List<SQLParam> parameters, boolean countQuery, Integer skip, Integer top, QueryResponse respose);
+    void executeSQL(Query query, List<SQLParameter> parameters,
+            boolean calculateTotalSize, Integer skip, Integer top, String nextOption, int pageSize,
+            QueryResponse response) throws SQLException;
 
-    CountResponse executeCount(Query query, List<SQLParam> parameters);
+    CountResponse executeCount(Query query, List<SQLParameter> parameters) throws SQLException;
 
-    UpdateResponse executeUpdate(Command command, List<SQLParam> parameters);
+    UpdateResponse executeUpdate(Command command, List<SQLParameter> parameters) throws SQLException;
+        
+    String startTransaction() throws SQLException;
 
+    void commit(String txnId) throws SQLException;
+    
+    void rollback(String txnId) throws SQLException;
+    
     String getProperty(String name);
-}
-
-interface UpdateResponse {
-    Map<String, Object> getGeneratedKeys();
-    int getUpdateCount();
-}
-
-interface CountResponse {
-    long getCount();
-}
-
-interface BaseResponse {
-}
-
-interface ProjectedColumn {
-    Expression getExpression();
-    boolean isVisible();
-}
-
-interface QueryResponse {
-    void addRow(ResultSet rs) throws SQLException, TeiidException;
-    long size();
-    void setCount(long count);
-    void setNext(long row);
+    
+    Connection open() throws SQLException;
+    
+    void close() throws SQLException;
 }

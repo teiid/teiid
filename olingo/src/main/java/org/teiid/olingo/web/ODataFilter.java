@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo;
+package org.teiid.olingo.web;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -37,25 +38,28 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-import org.teiid.core.TeiidRuntimeException;
+import org.apache.olingo.server.api.ODataHttpHandler;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.olingo.ODataPlugin;
+import org.teiid.olingo.api.Client;
+import org.teiid.olingo.service.LocalClient;
+import org.teiid.olingo.service.OlingoBridge;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.vdb.runtime.VDBKey;
 
 public class ODataFilter implements Filter, VDBLifeCycleListener {
 
-    public static final String SCHEMA_NAME = "schema-name"; //$NON-NLS-1$
     protected String proxyBaseURI;
     protected Properties initProperties;
-    protected Map<VDBKey, SoftReference<Client>> clientMap = Collections
-            .synchronizedMap(new LRUCache<VDBKey, SoftReference<Client>>());
+    protected Map<VDBKey, SoftReference<OlingoBridge>> contextMap = Collections
+            .synchronizedMap(new LRUCache<VDBKey, SoftReference<OlingoBridge>>());
     private volatile boolean listenerRegistered = false;
-
+    
     @Override
     public void init(FilterConfig config) throws ServletException {
         // handle proxy-uri in the case of cloud environments
@@ -104,7 +108,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             int endIdx = uri.indexOf('/', idx + 8);
             if (endIdx == -1) {
-                throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
+                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
             }
 
             vdbName = uri.substring(idx + 8, endIdx);
@@ -112,7 +116,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (modelIdx == -1) {
                 modelName = uri.substring(endIdx + 1).trim();
                 if (modelName.isEmpty()) {
-                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
+                    throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
                 }
             } else {
                 modelName = uri.substring(endIdx + 1, modelIdx);
@@ -128,88 +132,99 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             vdbName = vdbName.trim();
             if (vdbName.isEmpty()) {
-                throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
             }
 
             ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);
             contextAwareRequest.setContextPath(contextPath);
             httpRequest = contextAwareRequest;
-            key = new VDBKey(vdbName, version);
         } else {
-            if (this.initProperties.getProperty("vdb-name") == null || this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ //$NON-NLS-2$
+            if (this.initProperties.getProperty("vdb-name") == null || 
+                    this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ //$NON-NLS-2$
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
-            version = Integer.parseInt(this.initProperties
-                    .getProperty("vdb-version")); //$NON-NLS-1$
+            version = Integer.parseInt(this.initProperties.getProperty("vdb-version")); //$NON-NLS-1$
             int modelIdx = uri.indexOf('/', uri.indexOf('/'));
             if (modelIdx == -1) {
                 modelName = uri.substring(uri.indexOf('/') + 1).trim();
                 if (modelName.isEmpty()) {
-                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+                    throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
                 }
             }
             modelName = uri.substring(uri.indexOf('/'), uri.indexOf('/', uri.indexOf('/')));
         }
-
-        SoftReference<Client> ref = this.clientMap.get(key);
-        Client client = null;
+        
+        key = new VDBKey(vdbName, version);
+        
+        SoftReference<OlingoBridge> ref = this.contextMap.get(key);
+        OlingoBridge context = null;
         if (ref != null) {
-            client = ref.get();
+            context = ref.get();
         }
-        if (client == null) {
-            client = buildClient(vdbName, version, this.initProperties);
-            if (!this.listenerRegistered) {
-                synchronized (this) {
-                    if (!this.listenerRegistered) {
-                        ConnectionImpl connection = null;
-                        if (client instanceof LocalClient) {
-                            try {
-                                connection = ((LocalClient) client).getConnection();
-                                LocalServerConnection lsc = (LocalServerConnection) connection.getServerConnection();
-                                lsc.addListener(this);
-                                this.listenerRegistered = true;
-                            } catch (SQLException e) {
-                                LogManager.logWarning(LogConstants.CTX_ODATA,
-                                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014));
-                            } finally {
-                                if (connection != null) {
-                                    try {
-                                        connection.close();
-                                    } catch (SQLException e) {
-                                    }
-                                }
-                            }
-                        }
+        
+        if (context == null) {
+            context = new OlingoBridge();
+            ref = new SoftReference<OlingoBridge>(context);
+            this.contextMap.put(key, ref);
+        }
+        
+        Client client = buildClient(vdbName, version, this.initProperties);
+        try {
+            Connection connection = client.open();
+            registerVDBListener(client, connection);
+            ODataHttpHandler handler = context.getHandler(client, modelName);
+            httpRequest.setAttribute(ODataHttpHandler.class.getName(), handler);
+            httpRequest.setAttribute(Client.class.getName(), client);
+            chain.doFilter(httpRequest, response);
+        } catch(SQLException e) {
+            throw new ServletException(e);
+        } finally {
+            try {
+                client.close();
+            } catch (SQLException e) {
+                //ignore
+            }
+        }
+    }
+    
+    private void registerVDBListener(Client client, Connection conn) {
+        if (!this.listenerRegistered) {
+            synchronized (this) {
+                if (!this.listenerRegistered) {
+                    if (client instanceof LocalClient) {
+                        try {
+                            ConnectionImpl connection = (ConnectionImpl)conn;
+                            LocalServerConnection lsc = (LocalServerConnection) connection.getServerConnection();
+                            lsc.addListener(this);
+                            this.listenerRegistered = true;
+                        } catch (SQLException e) {
+                            LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014));
+                        } 
                     }
                 }
             }
-            ref = new SoftReference<Client>(client);
-            this.clientMap.put(key, ref);
         }
-        httpRequest.setAttribute(Client.class.getName(), client);
-        httpRequest.setAttribute(SCHEMA_NAME, modelName);
-        chain.doFilter(httpRequest, response);
     }
-
+    
     public Client buildClient(String vdbName, int version, Properties props) {
-        return new LocalClient(vdbName, version, props);
+        return new LocalClient(vdbName, version, props);        
     }
-
+        
     @Override
     public void destroy() {
-        this.clientMap.clear();
+        this.contextMap.clear();
     }
 
     @Override
     public void removed(String name, int version, CompositeVDB vdb) {
-        this.clientMap.remove(new VDBKey(name, version));
+        this.contextMap.remove(new VDBKey(name, version));
     }
 
     @Override
     public void finishedDeployment(String name, int version, CompositeVDB vdb,
             boolean reloading) {
-        this.clientMap.remove(new VDBKey(name, version));
+        this.contextMap.remove(new VDBKey(name, version));
     }
 
     @Override

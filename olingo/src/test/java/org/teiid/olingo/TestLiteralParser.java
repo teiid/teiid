@@ -33,20 +33,20 @@ import org.junit.Test;
 @SuppressWarnings("nls")
 public class TestLiteralParser {
 
-	@Test
-	public void test() throws Exception {
-		assertEquals(4, LiteralParser.parseLiteral("4"));
-		assertEquals(4.5, LiteralParser.parseLiteral("4.5"));
-		assertEquals(true, LiteralParser.parseLiteral("true"));
-		assertEquals(false, LiteralParser.parseLiteral("FALSE"));
-		assertEquals(null, LiteralParser.parseLiteral("null"));
-		assertEquals("hello", LiteralParser.parseLiteral("'hello'"));
-		assertEquals(Date.valueOf("2008-01-10"), LiteralParser.parseLiteral("2008-01-10"));
-		assertEquals(Time.valueOf("13:20:00"), LiteralParser.parseLiteral("13:20:00"));
-		assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse("2008-10-13T01:02:03").getTime()), LiteralParser.parseLiteral("2008-10-13T01:02:03"));
-		assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse("2008-10-13T00:00:00").getTime()), LiteralParser.parseLiteral("2008-10-13T00:00:00"));
-		assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse("2008-10-13T01:02:03.222").getTime()), LiteralParser.parseLiteral("2008-10-13T01:02:03.2222"));
-		//assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ").parse("2008-10-13T01:02:03.222Z").getTime()), LiteralParser.parseLiteral("2008-10-13T01:02:03.222+02:00"));
-	}
+    @Test
+    public void test() throws Exception {
+        assertEquals(4, LiteralParser.parseLiteral("4"));
+        assertEquals(4.5, LiteralParser.parseLiteral("4.5"));
+        assertEquals(true, LiteralParser.parseLiteral("true"));
+        assertEquals(false, LiteralParser.parseLiteral("FALSE"));
+        assertEquals(null, LiteralParser.parseLiteral("null"));
+        assertEquals("hello", LiteralParser.parseLiteral("'hello'"));
+        assertEquals(Date.valueOf("2008-01-10"), LiteralParser.parseLiteral("2008-01-10"));
+        assertEquals(Time.valueOf("13:20:00"), LiteralParser.parseLiteral("13:20:00"));
+        assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse("2008-10-13T01:02:03").getTime()), LiteralParser.parseLiteral("2008-10-13T01:02:03"));
+        assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse("2008-10-13T00:00:00").getTime()), LiteralParser.parseLiteral("2008-10-13T00:00:00"));
+        assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse("2008-10-13T01:02:03.222").getTime()), LiteralParser.parseLiteral("2008-10-13T01:02:03.2222"));
+        //assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ").parse("2008-10-13T01:02:03.222Z").getTime()), LiteralParser.parseLiteral("2008-10-13T01:02:03.222+02:00"));
+    }
 
 }

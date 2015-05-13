@@ -9,7 +9,7 @@
     
     <filter>
        <filter-name>ODataFilter</filter-name>
-       <filter-class>org.teiid.olingo.ODataFilter</filter-class>
+       <filter-class>org.teiid.olingo.web.ODataFilter</filter-class>
        <!-- 
         In cloud environment or if under a proxy, update the below url with address of the proxy to generate 
         odata links correctly.       
@@ -43,6 +43,12 @@
             <param-name>local-transport-name</param-name>
             <param-value>odata</param-value>       
        </init-param>
+       <!-- 
+       <init-param>
+            <param-name>charset</param-name>
+            <param-value>UTF-8</param-value>       
+       </init-param>
+        -->        
     </filter>
     
     <filter-mapping>
@@ -52,7 +58,7 @@
          
     <servlet>
         <servlet-name>odata4</servlet-name>
-        <servlet-class>org.teiid.olingo.ODataServlet</servlet-class>
+        <servlet-class>org.teiid.olingo.web.ODataServlet</servlet-class>
     </servlet>     
     
     <servlet-mapping>

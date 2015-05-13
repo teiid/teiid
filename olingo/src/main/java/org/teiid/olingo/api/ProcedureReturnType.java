@@ -19,13 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo;
+package org.teiid.olingo.api;
 
-import org.teiid.metadata.Table;
-import org.teiid.query.sql.symbol.GroupSymbol;
 
-public interface ODataQueryContext {
-    public String getNextAliasGroup();
-    public Table getEdmEntityTable();
-    public GroupSymbol getEdmEntityTableGroup();
+public interface ProcedureReturnType {
+    boolean hasResultSet();
+    boolean hasResultSetBasedLob();
+    Integer getSqlType();
 }
