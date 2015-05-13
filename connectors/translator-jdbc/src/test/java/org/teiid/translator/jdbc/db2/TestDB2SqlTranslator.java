@@ -106,7 +106,7 @@ public class TestDB2SqlTranslator {
     @Test
     public void testSelectNullLiteral() throws Exception {
         String input = "select null + 1 as x, null || 'a', char(null) from BQT1.Smalla"; //$NON-NLS-1$       
-        String output = "SELECT cast(NULL AS integer) AS x, cast(NULL AS char), cast(NULL AS char(1)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT cast(NULL AS integer) AS x, cast(NULL AS varchar), cast(NULL AS char(1)) FROM SmallA";  //$NON-NLS-1$
         
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
                 input, 
@@ -133,7 +133,7 @@ public class TestDB2SqlTranslator {
      */
     @Test public void testLocate() throws Exception {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT LOCATE(char(SmallA.IntNum), 'chimp', 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT LOCATE(varchar(SmallA.IntNum), 'chimp', 1) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -167,7 +167,7 @@ public class TestDB2SqlTranslator {
      */
     @Test public void testLocate3() throws Exception {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
-        String output = "SELECT LOCATE(char(SmallA.IntNum), '234567890', 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
+        String output = "SELECT LOCATE(varchar(SmallA.IntNum), '234567890', 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -289,6 +289,15 @@ public class TestDB2SqlTranslator {
     
     @Test public void testTempTable() throws Exception {
     	assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    }
+    
+    @Test public void testRight() throws Exception {
+        String input = "SELECT right(intkey, 2) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT right(varchar(SmallA.IntKey), 2) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
     }
 
 }
