@@ -95,10 +95,32 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
 	
+	private int processorBatchSize ;
+	private int maxReserveKb ;
+	private int maxProcessingKb ;
+	private boolean inlineLobs = true;
+	private int maxOpenFiles ;
+	
+	private long maxBufferSpace ;
+	private long maxFileSize ;
+	private boolean encryptFiles = false;
+	private int maxStorageObjectSize ;
+	private boolean memoryBufferOffHeap = false;
+	private int memoryBufferSpace ;
+	
 	private DefaultCacheManager manager;
 	private SimpleChannelFactory channelFactory;
 	
 	public EmbeddedConfiguration() {
+		processorBatchSize = -1;
+		maxReserveKb = -1;
+		maxProcessingKb = -1;
+		maxOpenFiles = -1;
+		maxBufferSpace = -1;
+		maxFileSize = -1;
+		maxStorageObjectSize = -1;
+		memoryBufferSpace = -1;
+		
 		DefaultAuthorizationValidator authorizationValidator = new DefaultAuthorizationValidator();
 		authorizationValidator.setPolicyDecider(new DataRolePolicyDecider());
 		this.setAuthorizationValidator(authorizationValidator);
@@ -260,4 +282,92 @@ public class EmbeddedConfiguration extends DQPConfiguration {
     public TeiidExecutor getAsynchWorkExecutor() {
         return new ThreadReuseExecutor("Asynchronus Workers", getMaxAsyncThreads()); //$NON-NLS-1$
     }
+
+	public int getProcessorBatchSize() {
+		return processorBatchSize;
+	}
+
+	public void setProcessorBatchSize(int processorBatchSize) {
+		this.processorBatchSize = processorBatchSize;
+	}
+
+	public int getMaxReserveKb() {
+		return maxReserveKb;
+	}
+
+	public void setMaxReserveKb(int maxReserveKb) {
+		this.maxReserveKb = maxReserveKb;
+	}
+
+	public int getMaxProcessingKb() {
+		return maxProcessingKb;
+	}
+
+	public void setMaxProcessingKb(int maxProcessingKb) {
+		this.maxProcessingKb = maxProcessingKb;
+	}
+
+	public boolean isInlineLobs() {
+		return inlineLobs;
+	}
+
+	public void setInlineLobs(boolean inlineLobs) {
+		this.inlineLobs = inlineLobs;
+	}
+
+	public int getMaxOpenFiles() {
+		return maxOpenFiles;
+	}
+
+	public void setMaxOpenFiles(int maxOpenFiles) {
+		this.maxOpenFiles = maxOpenFiles;
+	}
+
+	public long getMaxBufferSpace() {
+		return maxBufferSpace;
+	}
+
+	public void setMaxBufferSpace(long maxBufferSpace) {
+		this.maxBufferSpace = maxBufferSpace;
+	}
+
+	public long getMaxFileSize() {
+		return maxFileSize;
+	}
+
+	public void setMaxFileSize(long maxFileSize) {
+		this.maxFileSize = maxFileSize;
+	}
+
+	public boolean isEncryptFiles() {
+		return encryptFiles;
+	}
+
+	public void setEncryptFiles(boolean encryptFiles) {
+		this.encryptFiles = encryptFiles;
+	}
+
+	public int getMaxStorageObjectSize() {
+		return maxStorageObjectSize;
+	}
+
+	public void setMaxStorageObjectSize(int maxStorageObjectSize) {
+		this.maxStorageObjectSize = maxStorageObjectSize;
+	}
+
+	public boolean isMemoryBufferOffHeap() {
+		return memoryBufferOffHeap;
+	}
+
+	public void setMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
+		this.memoryBufferOffHeap = memoryBufferOffHeap;
+	}
+
+	public int getMemoryBufferSpace() {
+		return memoryBufferSpace;
+	}
+
+	public void setMemoryBufferSpace(int memoryBufferSpace) {
+		this.memoryBufferSpace = memoryBufferSpace;
+	}
 }

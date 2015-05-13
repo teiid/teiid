@@ -344,13 +344,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 
 		this.sessionService.setVDBRepository(repo);
-		this.bufferService.setUseDisk(config.isUseDisk());
-		if (config.isUseDisk()) {
-			if (config.getBufferDirectory() == null) {
-				config.setBufferDirectory(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
-			}
-			this.bufferService.setDiskDirectory(config.getBufferDirectory());
-		}
+		setBufferManagerProperties(config);
 		BufferService bs = getBufferService();
 		this.dqp.setBufferManager(bs.getBufferManager());
 
@@ -388,6 +382,40 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(false);
 		running = true;
+	}
+
+	private void setBufferManagerProperties(EmbeddedConfiguration config) {
+		
+		this.bufferService.setUseDisk(config.isUseDisk());
+		if (config.isUseDisk()) {
+			if (config.getBufferDirectory() == null) {
+				config.setBufferDirectory(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
+			}
+			this.bufferService.setDiskDirectory(config.getBufferDirectory());
+		}
+		
+		if(config.getProcessorBatchSize() != -1)
+			this.bufferService.setProcessorBatchSize(config.getProcessorBatchSize());
+		if(config.getMaxReserveKb() != -1)
+			this.bufferService.setMaxReserveKb(config.getMaxReserveKb());
+		if(config.getMaxProcessingKb() != -1)
+			this.bufferService.setMaxProcessingKb(config.getMaxProcessingKb());
+		this.bufferService.setInlineLobs(config.isInlineLobs());
+		if(config.getMaxOpenFiles() != -1)
+			this.bufferService.setMaxOpenFiles(config.getMaxOpenFiles());
+		
+		if(config.getMaxBufferSpace() != -1)
+			this.bufferService.setMaxBufferSpace(config.getMaxBufferSpace());
+		if(config.getMaxFileSize() != -1) 
+			this.bufferService.setMaxFileSize(config.getMaxFileSize());
+		this.bufferService.setEncryptFiles(config.isEncryptFiles());
+		if(config.getMaxStorageObjectSize() != -1) {
+			this.bufferService.setMaxStorageObjectSize(config.getMaxStorageObjectSize());
+		}
+		this.bufferService.setMemoryBufferOffHeap(config.isMemoryBufferOffHeap());
+		if(config.getMemoryBufferSpace() != -1)
+			this.bufferService.setMemoryBufferSpace(config.getMemoryBufferSpace());
+		
 	}
 
 	private void initDriver() {
