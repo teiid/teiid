@@ -393,23 +393,25 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
 		// add return type
 		EdmType returnType = function.getReturnType();
-		if (returnType.isSimple()) {
-			mf.addProcedureParameter("return", ODataTypeManager.teiidType(((EdmSimpleType)returnType).getFullyQualifiedTypeName()), ProcedureParameter.Type.ReturnValue, procedure); //$NON-NLS-1$
-		}
-		else if (returnType instanceof EdmComplexType) {
-			procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
-			addProcedureTableReturn(mf, procedure, returnType);
-		}
-		else if (returnType instanceof EdmEntityType) {
-			procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
-			addProcedureTableReturn(mf, procedure, returnType);
-		}
-		else if (returnType instanceof EdmCollectionType) {
-			procedure.setProperty(ENTITY_TYPE, ((EdmCollectionType)returnType).getItemType().getFullyQualifiedTypeName());
-			addProcedureTableReturn(mf, procedure, ((EdmCollectionType)returnType).getItemType());
-		}
-		else {
-			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, function.getName(), returnType.getFullyQualifiedTypeName()));
+		if (returnType != null) {
+    		if (returnType.isSimple()) {
+    			mf.addProcedureParameter("return", ODataTypeManager.teiidType(((EdmSimpleType)returnType).getFullyQualifiedTypeName()), ProcedureParameter.Type.ReturnValue, procedure); //$NON-NLS-1$
+    		}
+    		else if (returnType instanceof EdmComplexType) {
+    			procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
+    			addProcedureTableReturn(mf, procedure, returnType);
+    		}
+    		else if (returnType instanceof EdmEntityType) {
+    			procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
+    			addProcedureTableReturn(mf, procedure, returnType);
+    		}
+    		else if (returnType instanceof EdmCollectionType) {
+    			procedure.setProperty(ENTITY_TYPE, ((EdmCollectionType)returnType).getItemType().getFullyQualifiedTypeName());
+    			addProcedureTableReturn(mf, procedure, ((EdmCollectionType)returnType).getItemType());
+    		}
+    		else {
+    			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, function.getName(), returnType.getFullyQualifiedTypeName()));
+    		}
 		}
 	}
 

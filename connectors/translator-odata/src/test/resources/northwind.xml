@@ -488,6 +488,9 @@
         <FunctionImport Name="TopCustomers" EntitySet="Customers" ReturnType="Collection(NorthwindModel.Customer)" m:HttpMethod="GET">
           <Parameter Name="city" Type="Edm.String" Mode="In" />
         </FunctionImport>
+        <FunctionImport Name="executeVoid" EntitySet="Customers" m:HttpMethod="POST">
+          <Parameter Name="city" Type="Edm.String" Mode="In" />
+        </FunctionImport>        
         <EntitySet Name="Categories" EntityType="NorthwindModel.Category" />
         <EntitySet Name="CustomerDemographics" EntityType="NorthwindModel.CustomerDemographic" />
         <EntitySet Name="Customers" EntityType="NorthwindModel.Customer" />

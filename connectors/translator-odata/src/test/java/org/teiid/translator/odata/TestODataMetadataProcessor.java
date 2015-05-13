@@ -32,7 +32,16 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.odata4j.edm.*;
+import org.odata4j.edm.EdmAssociation;
+import org.odata4j.edm.EdmAssociationEnd;
+import org.odata4j.edm.EdmComplexType;
+import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmEntityType;
+import org.odata4j.edm.EdmMultiplicity;
+import org.odata4j.edm.EdmNavigationProperty;
+import org.odata4j.edm.EdmProperty;
+import org.odata4j.edm.EdmReferentialConstraint;
+import org.odata4j.edm.EdmSimpleType;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -43,6 +52,7 @@ import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
@@ -81,7 +91,11 @@ public class TestODataMetadataProcessor {
 		//System.out.println(ddl);	
 		
 		MetadataFactory mf2 = new MetadataFactory(null, 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); 
-		QueryParser.getQueryParser().parseDDL(mf2, ddl);		
+		QueryParser.getQueryParser().parseDDL(mf2, ddl);	
+		
+		Procedure p = mf.getSchema().getProcedure("executeVoid");
+		assertNotNull(p);
+		assertEquals(1, p.getParameters().size());
 	}
 	
 	@Test
