@@ -22,6 +22,9 @@
 
 package org.teiid.query.optimizer;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -29,7 +32,10 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.FakeDataStore;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -541,6 +547,27 @@ public class TestUnionPlanning {
                 1       // UnionAll
             });    
     	
+    }
+    
+    @Test public void testCostingWithGroupingAndOrder() throws Exception {
+    	String sql = "select e1 as admissionid,e2 as patgroup,e3 as ward,e4 as admtime, 'wh' as origin from pm1.g1 gd "
+    			+ " group by e1,e2,e3,e4 UNION ALL select e1,e2,e3,e4, 'prod' from pm1.g2 gd"
+    			+ " group by e1,e2,e3,e4 order by admtime limit 1";
+    	
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+    	
+    	TransformationMetadata tm = RealMetadataFactory.example1();
+    	RealMetadataFactory.setCardinality("pm1.g1", 1000, tm);
+    	RealMetadataFactory.setCardinality("pm1.g2", 1000, tm);
+    	
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+                new String[] { "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g2 AS g_0", "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING);
+
+		FakeDataManager dataManager = new FakeDataManager();
+		FakeDataStore.sampleData2(dataManager);
+		TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("b",1,true,null,"wh")} );
     }
     
     //TODO: enhancement for ordering over a partition

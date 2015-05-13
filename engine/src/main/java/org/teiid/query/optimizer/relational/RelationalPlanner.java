@@ -814,7 +814,7 @@ public class RelationalPlanner {
 		PlanNode result = null;
 		switch (cmd.getType()) {
 		case Command.TYPE_QUERY:
-			result = createQueryPlan((QueryCommand)cmd);
+			result = createQueryPlan((QueryCommand)cmd, null);
 			break;
 		case Command.TYPE_INSERT:
 		case Command.TYPE_UPDATE:
@@ -1068,7 +1068,7 @@ public class RelationalPlanner {
         return projectNode;
     }
 
-	PlanNode createQueryPlan(QueryCommand command)
+	PlanNode createQueryPlan(QueryCommand command, OrderBy parentOrderBy)
 		throws TeiidComponentException, TeiidProcessingException {
 		//plan with
 		List<WithQueryCommand> withList = command.getWith();
@@ -1079,14 +1079,14 @@ public class RelationalPlanner {
         // Build canonical plan
     	PlanNode node = null;
         if(command instanceof Query) {
-            node = createQueryPlan((Query) command);
+            node = createQueryPlan((Query) command, parentOrderBy);
         } else {
             hints.hasSetQuery = true;
             SetQuery query = (SetQuery)command;
             SourceHint previous = this.sourceHint;
             this.sourceHint = SourceHint.combine(previous, query.getProjectedQuery().getSourceHint());
-            PlanNode leftPlan = createQueryPlan( query.getLeftQuery());
-            PlanNode rightPlan = createQueryPlan( query.getRightQuery());
+            PlanNode leftPlan = createQueryPlan( query.getLeftQuery(), command.getOrderBy());
+            PlanNode rightPlan = createQueryPlan( query.getRightQuery(), null);
             node = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
             node.setProperty(NodeConstants.Info.SET_OPERATION, query.getOperation());
             node.setProperty(NodeConstants.Info.USE_ALL, query.isAll());
@@ -1106,7 +1106,7 @@ public class RelationalPlanner {
         return node;
     }
 
-    private PlanNode createQueryPlan(Query query)
+    private PlanNode createQueryPlan(Query query, OrderBy parentOrderBy)
 		throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
 
         PlanNode plan = null;
@@ -1142,7 +1142,7 @@ public class RelationalPlanner {
     			hasGrouping = true;
     		}
     		if(hasGrouping) {
-    			plan = attachGrouping(plan, query, aggs);
+    			plan = attachGrouping(plan, query, aggs, parentOrderBy);
     		}
 
     		// Attach having criteria node on top
@@ -1558,12 +1558,13 @@ public class RelationalPlanner {
 	 * Attach a grouping node at top of tree.
 	 * @param plan Existing plan
 	 * @param aggs 
+	 * @param parentOrderBy 
 	 * @param groupBy Group by clause, which may be null
 	 * @return Updated plan
 	 * @throws TeiidComponentException 
 	 * @throws QueryMetadataException 
 	 */
-	private PlanNode attachGrouping(PlanNode plan, Query query, Collection<AggregateSymbol> aggs) throws QueryMetadataException, TeiidComponentException {
+	private PlanNode attachGrouping(PlanNode plan, Query query, Collection<AggregateSymbol> aggs, OrderBy parentOrderBy) throws QueryMetadataException, TeiidComponentException {
 		GroupBy groupBy = query.getGroupBy();
 		List<Expression> groupingCols = null;
 		PlanNode groupNode = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
@@ -1606,6 +1607,7 @@ public class RelationalPlanner {
 		replaceExpressions(query.getHaving(), mapping, subMapping);
 		replaceExpressions(query.getSelect(), mapping, subMapping);
 		replaceExpressions(query.getOrderBy(), mapping, subMapping);
+		replaceExpressions(parentOrderBy, mapping, subMapping);
         // Mark in hints
         hints.hasAggregates = true;
         
