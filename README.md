@@ -11,7 +11,7 @@ Teiid is a data virtualization system that allows applications to use data from 
 - Wiki - https://community.jboss.org/wiki/TheTeiidProject
 
 ## To build Teiid
-- install JDK 1.6 or higher
+- install JDK 1.7 or higher
 - install maven 3 - http://maven.apache.org/download.html
 - Create a github account and fork Teiid
 
