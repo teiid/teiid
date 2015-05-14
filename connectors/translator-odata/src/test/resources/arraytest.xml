@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<edmx:Edmx Version="1.0"
+	xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx">
+	<edmx:DataServices m:DataServiceVersion="2.0"
+		xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+		<Schema Namespace="PM1"
+			xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+			<EntityType Name="G2">
+				<Key>
+					<PropertyRef Name="e1" />
+				</Key>
+				<Property Name="e1" Type="Edm.Int32" Nullable="true" />
+				<Property Name="e3" Type="List(Edm.Int32)" Nullable="true" />
+			</EntityType>
+			<ComplexType Name="ARRAYITERATE_RSParam">
+				<Property Name="col" Type="Edm.Binary" Nullable="true" />
+			</ComplexType>
+			<EntityContainer Name="PM1" m:IsDefaultEntityContainer="true">
+				<EntitySet Name="G2" EntityType="PM1.G2" />
+				<FunctionImport Name="ARRAYITERATE"	ReturnType="Collection(PM1.ARRAYITERATE_RSParam)" m:HttpMethod="GET">
+					<Parameter Name="val" Type="List(Edm.Binary)" Mode="In" Nullable="true" />
+				</FunctionImport>
+			</EntityContainer>
+		</Schema>
+	</edmx:DataServices>
+</edmx:Edmx>

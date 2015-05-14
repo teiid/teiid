@@ -51,6 +51,7 @@ public class ODataPlugin {
 		TEIID17014,
 		TEIID17015,
 		TEIID17016,
-		TEIID17017
+		TEIID17017,
+		TEIID17018
 	}
 }

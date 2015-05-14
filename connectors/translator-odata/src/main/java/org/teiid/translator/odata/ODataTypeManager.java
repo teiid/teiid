@@ -78,6 +78,19 @@ public class ODataTypeManager {
 	}
 	
 	public static String teiidType(String odataType) {
+        if (odataType.startsWith(CollectionKind.Bag.name() + "(")
+                && odataType.endsWith(")")) {
+            odataType = odataType.substring(4, odataType.length() - 1);
+            return odatakeyed.get(odataType)+"[]";
+        } else if (odataType.startsWith(CollectionKind.List.name() + "(")
+                && odataType.endsWith(")")) {
+            odataType = odataType.substring(5, odataType.length() - 1);
+            return odatakeyed.get(odataType)+"[]";
+        } else if (odataType.startsWith(CollectionKind.Collection.name() + "(")
+                && odataType.endsWith(")")) {
+            odataType = odataType.substring(11, odataType.length() - 1);
+            return odatakeyed.get(odataType)+"[]";
+        }	    
 		return odatakeyed.get(odataType);
 	}
 	
