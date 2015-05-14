@@ -30,6 +30,7 @@ import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Properties;
 
 import javax.ws.rs.core.Response;
 
@@ -65,7 +66,6 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
-
 	@Test
 	public void testOdata() throws Exception {
 		String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
@@ -107,5 +107,52 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
 		response = client.invoke("GET", null);
 		assertEquals(200, statusCode);
+		admin.undeploy("loopy-vdb.xml");
 	}
+	
+    @Test
+    public void testReadOdataMetadata() throws Exception {
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+                "<vdb name=\"Loopy\" version=\"1\">\n" + 
+                "    <model name=\"MarketData\">\n" + 
+                "        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" + 
+                "         <metadata type=\"DDL\"><![CDATA[\n" + 
+                "                CREATE FOREIGN TABLE G1 (e1 string[], e2 integer PRIMARY KEY);\n" + 
+                "                CREATE FOREIGN TABLE G2 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" + 
+                "        ]]> </metadata>\n" + 
+                "    </model>\n" + 
+                "</vdb>";
+        
+        admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+        
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        
+        String vdb2 = "<?xml version='1.0' encoding='UTF-8'?>\n" + 
+                "<vdb name=\"TestOData\" version=\"1\">\n" + 
+                "    <model name=\"TestOData\" type=\"PHYSICAL\" visible=\"true\">\n" +
+                "     <property name=\"importer.entityContainer\" value=\"MarketData\"/>\n"+
+                "     <property name=\"importer.schemaNamespace\" value=\"MarketData\"/>\n"+
+                "     <source name=\"TestOData\" translator-name=\"odata\" connection-jndi-name=\"java:/TestOData\"/>\n" + 
+                "    </model>\n" + 
+                "</vdb>";
+        
+        Properties p = new Properties();
+        p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
+        p.setProperty("EndPoint", "http://localhost:8080/odata/Loopy.1");
+        p.setProperty("SecurityType", "HTTPBasic");
+        p.setProperty("AuthUserName", "user");
+        p.setProperty("AuthPassword", "user");
+        admin.createDataSource("TestOData", "webservice", p); 
+        
+        admin.deploy("test-vdb.xml", new ReaderInputStream(new StringReader(vdb2), Charset.forName("UTF-8")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "TestOData", 1, 30000));
+        
+        this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:TestOData@mm://localhost:31000;user=user;password=user", null);
+        
+        execute("SELECT Name FROM Sys.Tables Where name='G1'"); //$NON-NLS-1$
+        assertResultsSetEquals("Name[string]\nG1");        
+        
+        admin.undeploy("loopy-vdb.xml");
+        admin.undeploy("test-vdb.xml");
+    }	
 }
