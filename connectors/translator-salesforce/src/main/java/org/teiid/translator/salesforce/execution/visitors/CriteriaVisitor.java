@@ -55,6 +55,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected static final String ORDER_BY = "ORDER BY"; //$NON-NLS-1$
     protected static final String LIMIT = "LIMIT"; //$NON-NLS-1$
     protected static final String SPACE = " "; //$NON-NLS-1$
+    protected static final String AND = "AND"; //$NON-NLS-1$
     protected static final String EXCLUDES = "EXCLUDES"; //$NON-NLS-1$
     protected static final String INCLUDES = "includes"; //$NON-NLS-1$
     protected static final String COMMA = ","; //$NON-NLS-1$
@@ -439,14 +440,20 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected void addCriteriaString(StringBuilder result) {
     	addCriteriaString(WHERE, result);
 	}
-    
-    protected void addCriteriaString(String clause, StringBuilder result) {
-    	if(hasCriteria()) {
-			result.append(clause).append(SPACE);
-			for (String string : criteriaList) {
-				result.append(string);
-			}
-			result.append(SPACE);
-		}
-	}
+
+  protected void addCriteriaString(String clause, StringBuilder result) {
+    if(hasCriteria()) {
+      result.append(clause).append(SPACE);
+      int numberOfCriterion = criteriaList.size();
+      for (int i = 0; i < numberOfCriterion; i++) {
+        if(i == (numberOfCriterion-1)) {
+          result.append(criteriaList.get(i));
+        }
+        else {
+          result.append(criteriaList.get(i)).append(SPACE).append(AND).append(SPACE);
+        }
+      }
+      result.append(SPACE);
+    }
+  }
 }
