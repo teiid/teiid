@@ -437,7 +437,7 @@ public class TestLocalConnections {
             }
 
             @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+            public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
             }
 		};
@@ -512,7 +512,7 @@ public class TestLocalConnections {
             }
 
             @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+            public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
             }
 		};

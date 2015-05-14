@@ -108,7 +108,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
     }           
     
     @Override
-    public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+    public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
         
         SecurityDomainContext securityDomainContext = getSecurityDomainContext(securityDomain);
         if (securityDomainContext != null) {

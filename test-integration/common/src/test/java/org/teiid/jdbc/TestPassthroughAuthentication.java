@@ -106,7 +106,7 @@ public class TestPassthroughAuthentication {
             return null;
         }
         @Override
-        public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+        public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
             return null;
         }
 	};

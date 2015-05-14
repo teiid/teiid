@@ -71,5 +71,5 @@ public interface  SecurityHelper {
 	 * @return
 	 * @throws LoginException
 	 */
-	GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
+	GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
 }

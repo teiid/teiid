@@ -516,7 +516,7 @@ public class SessionServiceImpl implements SessionService {
 		if (securityDomain == null ) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40059, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40059));
 		}
-		return this.securityHelper.neogitiateGssLogin(securityDomain, serviceTicket);
+		return this.securityHelper.negotiateGssLogin(securityDomain, serviceTicket);
 	}
 	
 	public AuthenticationType getDefaultAuthenticationType() {
