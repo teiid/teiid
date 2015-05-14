@@ -25,21 +25,49 @@ import java.io.InputStreamReader;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.odata4j.edm.*;
+import org.odata4j.edm.EdmAssociation;
+import org.odata4j.edm.EdmAssociationEnd;
+import org.odata4j.edm.EdmCollectionType;
+import org.odata4j.edm.EdmComplexType;
+import org.odata4j.edm.EdmDataServices;
+import org.odata4j.edm.EdmEntityContainer;
+import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmEntityType;
+import org.odata4j.edm.EdmFunctionImport;
+import org.odata4j.edm.EdmFunctionParameter;
+import org.odata4j.edm.EdmMultiplicity;
+import org.odata4j.edm.EdmNavigationProperty;
+import org.odata4j.edm.EdmProperty;
+import org.odata4j.edm.EdmReferentialConstraint;
+import org.odata4j.edm.EdmSchema;
+import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.edm.EdmType;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
-import org.teiid.translator.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
@@ -70,12 +98,24 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         this.ef = ef;
     }
 
+	// TEIID-3471
+    private Map<String, List<String>> resteasySpecificHeaders() {
+        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        headers.put("Accept", Arrays.asList("application/xml;charset=utf-8")); //$NON-NLS-1$
+        headers.put("Content-Type", Arrays.asList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
+        return headers;
+    }	
+	
     private EdmDataServices getEds(WSConnection conn) throws TranslatorException {
         try {
             BaseQueryExecution execution = new BaseQueryExecution(ef, null, null, conn);
             BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
             if (call.getResponseCode() != Status.OK.getStatusCode()) {
-                throw execution.buildError(call);
+                execution = new BaseQueryExecution(ef, null, null, conn);
+                call = execution.executeDirect("GET", "$metadata", null, resteasySpecificHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
+                if (call.getResponseCode() != Status.OK.getStatusCode()) {
+                    throw execution.buildError(call);
+                }
             }
 
             Blob out = (Blob)call.getOutputParameterValues().get(0);
@@ -83,6 +123,8 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
             return eds;
         } catch (SQLException e) {
+            throw new TranslatorException(e);
+        } catch (Exception e) {
             throw new TranslatorException(e);
         }
 	}
@@ -135,7 +177,9 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
 		// add columns
 		for (EdmProperty ep:entitySet.getType().getProperties().toList()) {
-			if (ep.getType().isSimple()) {
+			if (ep.getType().isSimple() 
+			        || (ep.getType() instanceof EdmCollectionType 
+			        && ((EdmCollectionType)ep.getType()).getItemType().isSimple())) {
 				addPropertyAsColumn(mf, table, ep, entitySet);
 			}
 			else {
@@ -145,7 +189,9 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 				// creates verbose columns but safe.
 				EdmComplexType embedded = (EdmComplexType)ep.getType();
 				for (EdmProperty property:embedded.getProperties().toList()) {
-					if (property.getType().isSimple()) {
+					if (property.getType().isSimple()
+					        || (property.getType() instanceof EdmCollectionType 
+		                    && ((EdmCollectionType)property.getType()).getItemType().isSimple())) {
 						Column column = addPropertyAsColumn(mf, table, property, entitySet, ep.getName());
 						column.setProperty(COMPLEX_TYPE, embedded.getName()); // complex type
 						column.setProperty(COLUMN_GROUP, ep.getName()); // name of parent column
@@ -173,7 +219,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
 			EdmEntityType toEntity = toEnd.getType();
 
-			// no support for self-joins
+			// no support for self-joinsaddPropertyAsColumn
 			if (same(fromEntity, toEntity)) {
 				continue;
 			}
