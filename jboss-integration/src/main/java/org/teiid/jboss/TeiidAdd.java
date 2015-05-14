@@ -114,6 +114,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.PREPARSER_MODULE_ELEMENT,
 		TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT,
 		TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT,
+		TeiidConstants.DATA_ROLES_REQUIRED_ELEMENT,
 		
 		// object replicator
 		TeiidConstants.DC_STACK_ATTRIBUTE,
@@ -215,7 +216,10 @@ class TeiidAdd extends AbstractAddStepHandler {
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();
     	vdbRepository.setSystemFunctionManager(systemFunctionManager);
-    	
+    	if (isDefined(DATA_ROLES_REQUIRED_ELEMENT, operation, context) && asBoolean(DATA_ROLES_REQUIRED_ELEMENT, operation, context)) {
+    		vdbRepository.setDataRolesRequired(true);
+    	}
+
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
     	newControllers.add(target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install());
 		

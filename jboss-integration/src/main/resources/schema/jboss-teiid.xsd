@@ -197,6 +197,12 @@
                 </xs:annotation>
             </xs:element>                             
             
+            <xs:element name="data-roles-required" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false">
+                <xs:annotation>
+                    <xs:documentation>If data roles are required. default false</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
             <xs:element name="authorization-validator-module" type="xs:string" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>An authorization validator that by default uses data role information stored in VDBs. Provide module name.</xs:documentation>

@@ -154,6 +154,12 @@ public class TeiidConstants {
         .setAllowExpression(false)
         .build();
     
+    public static SimpleAttributeDefinition DATA_ROLES_REQUIRED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.DATA_ROLES_REQUIRED_ELEMENT.getModelName(), ModelType.BOOLEAN)
+    	.setXmlName(Element.DATA_ROLES_REQUIRED_ELEMENT.getXMLName())
+    	.setAllowNull(true)
+    	.setAllowExpression(false)
+    	.build();
+    
     public static SimpleAttributeDefinition AUTHORIZATION_VALIDATOR_MODULE_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.getModelName(), ModelType.STRING)
         .setXmlName(Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.getXMLName())
         .setAllowNull(true)

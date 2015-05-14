@@ -1378,5 +1378,18 @@ public class TestEmbeddedServer {
 		es.start(ec);
 		assertTrue(started);
 	}
+	
+	@Test(expected=VirtualDatabaseException.class)
+	public void testRequireRoles() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		es.repo.setDataRolesRequired(true);
+		
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("y");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
+		es.deployVDB("x", mmd);
+	}
 
 }

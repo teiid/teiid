@@ -72,10 +72,12 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	DETECTING_CHANGE_EVENTS_ELEMENT.marshallAsElement(node, false, writer);
     	QUERY_TIMEOUT.marshallAsElement(node, false, writer);
     	WORKMANAGER.marshallAsElement(node, false, writer);
-
-    	AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.marshallAsElement(node, writer);
-    	POLICY_DECIDER_MODULE_ELEMENT.marshallAsElement(node, writer);
-    	PREPARSER_MODULE_ELEMENT.marshallAsElement(node, writer);
+    	
+    	DATA_ROLES_REQUIRED_ELEMENT.marshallAsElement(node, false, writer);
+    	AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.marshallAsElement(node, false, writer);
+    	POLICY_DECIDER_MODULE_ELEMENT.marshallAsElement(node, false, writer);
+    	
+    	PREPARSER_MODULE_ELEMENT.marshallAsElement(node, false, writer);
     	
     	if (like(node, Element.RESULTSET_CACHE_ELEMENT)){
     		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());

@@ -50,6 +50,7 @@ enum Element {
     WORKMANAGER("workmanager", "workmanager"),
     
     POLICY_DECIDER_MODULE_ELEMENT("policy-decider-module", "policy-decider-module"),
+    DATA_ROLES_REQUIRED_ELEMENT("data-roles-required", "data-roles-required"),
     AUTHORIZATION_VALIDATOR_MODULE_ELEMENT("authorization-validator-module", "authorization-validator-module"),
     PREPARSER_MODULE_ELEMENT("preparser-module", "preparser-module"),
 	

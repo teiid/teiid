@@ -65,7 +65,7 @@ import org.teiid.vdb.runtime.VDBKey;
  * Repository for VDBs
  */
 public class VDBRepository implements Serializable{
-	private static final String LIFECYCLE_CONTEXT = LogConstants.CTX_RUNTIME + ".VDBLifeCycleListener";
+	private static final String LIFECYCLE_CONTEXT = LogConstants.CTX_RUNTIME + ".VDBLifeCycleListener"; //$NON-NLS-1$
 	private static final long serialVersionUID = 312177538191772674L;
 	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
 	
@@ -80,6 +80,7 @@ public class VDBRepository implements Serializable{
 	private Map<String, Datatype> datatypeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition vdbAdded = lock.newCondition();
+	private boolean dataRolesRequired;
 	
 	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr, boolean reload) throws VirtualDatabaseException {
 		VDBKey key = vdbId(vdb);
@@ -88,6 +89,10 @@ public class VDBRepository implements Serializable{
 		if (this.systemStore == null) {
 			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40022, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
 		}	
+		
+		if (dataRolesRequired && vdb.getDataPolicyMap().isEmpty()) {
+			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40143, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40143, vdb));
+		}
 		
 		if (this.odbcEnabled && odbcStore == null) {
 			this.odbcStore = getODBCMetadataStore();
@@ -406,4 +411,12 @@ public class VDBRepository implements Serializable{
 		}
 		return this.pendingDeployments.get(key);
 	}	
+	
+	public boolean isDataRolesRequired() {
+		return dataRolesRequired;
+	}
+	
+	public void setDataRolesRequired(boolean requireDataRoles) {
+		this.dataRolesRequired = requireDataRoles;
+	}
 }
