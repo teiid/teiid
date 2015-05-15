@@ -97,25 +97,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 	public void setExecutionfactory(ODataExecutionFactory ef) {
         this.ef = ef;
     }
-
-	// TEIID-3471
-    private Map<String, List<String>> resteasySpecificHeaders() {
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        headers.put("Accept", Arrays.asList("application/xml;charset=utf-8")); //$NON-NLS-1$
-        headers.put("Content-Type", Arrays.asList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
-        return headers;
-    }	
 	
     private EdmDataServices getEds(WSConnection conn) throws TranslatorException {
         try {
             BaseQueryExecution execution = new BaseQueryExecution(ef, null, null, conn);
             BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
             if (call.getResponseCode() != Status.OK.getStatusCode()) {
-                execution = new BaseQueryExecution(ef, null, null, conn);
-                call = execution.executeDirect("GET", "$metadata", null, resteasySpecificHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
-                if (call.getResponseCode() != Status.OK.getStatusCode()) {
-                    throw execution.buildError(call);
-                }
+                throw execution.buildError(call);
             }
 
             Blob out = (Blob)call.getOutputParameterValues().get(0);
