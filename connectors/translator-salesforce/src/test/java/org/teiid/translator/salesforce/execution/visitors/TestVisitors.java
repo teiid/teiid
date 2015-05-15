@@ -42,6 +42,7 @@ import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -79,9 +80,15 @@ public class TestVisitors {
     		//load the metadata as captured from 8.9 on 9/3/2014
     		mf.parse(new FileReader(UnitTestUtil.getTestDataFile("sf.ddl")));
 
+    		SalesForceExecutionFactory factory = new SalesForceExecutionFactory();
+    		factory.start();
+    		for (FunctionMethod func : factory.getPushDownFunctions()) {
+    			mf.addFunction(func);
+    		}
+    		
     		SalesForceMetadataProcessor.addProcedrues(mf);
 
-            // Create Contacts group - which has differnt name in sources
+            // Create Contacts group - which has different name in sources
             Table contactTable = RealMetadataFactory.createPhysicalGroup("Contacts", mf.getSchema()); //$NON-NLS-1$
             contactTable.setNameInSource("Contact"); //$NON-NLS-1$
             contactTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
@@ -322,6 +329,26 @@ public class TestVisitors {
 		String source = "SELECT Case.Origin, (SELECT CaseSolution.SolutionId FROM CaseSolutions) FROM Case";
 		helpTest(sql, source);
 		
+	}
+	
+	@Test public void testInMulti() throws Exception {
+		String sql = "select id from idea where categories in ('a', 'b')";
+		String source = "SELECT Idea.Id FROM Idea WHERE Categories includes('a','b')";
+		helpTest(sql, source);
+		
+		sql = "select id from idea where categories not in ('a', 'b')";
+		source = "SELECT Idea.Id FROM Idea WHERE Categories EXCLUDES('a','b')";
+		helpTest(sql, source);	
+	}
+	
+	@Test public void testIncludExclude() throws Exception {
+		String sql = "select id from idea where includes(categories, 'a,b')";
+		String source = "SELECT Idea.Id FROM Idea WHERE Categories includes('a','b')";
+		helpTest(sql, source);
+		
+		sql = "select id from idea where excludes(categories, 'a')";
+		source = "SELECT Idea.Id FROM Idea WHERE Categories EXCLUDES('a')";
+		helpTest(sql, source);	
 	}
 	
 }
