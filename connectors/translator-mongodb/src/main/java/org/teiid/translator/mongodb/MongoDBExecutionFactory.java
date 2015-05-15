@@ -55,6 +55,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	private static final String MONGO = "mongo"; //$NON-NLS-1$
 	public static final Version TWO_4 = Version.getVersion("2.4"); //$NON-NLS-1$
     public static final Version TWO_6 = Version.getVersion("2.6"); //$NON-NLS-1$
+    public static final Version THREE_0 = Version.getVersion("3.0"); //$NON-NLS-1$
     
     public static final String FUNC_GEO_WITHIN = "geoWithin"; //$NON-NLS-1$
 	public static final String FUNC_GEO_INTERSECTS = "geoIntersects"; //$NON-NLS-1$
@@ -67,7 +68,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	public static final String AVOID_PROJECTION = "AVOID_PROJECTION"; //$NON-NLS-1$
     
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-	private Version version = TWO_4;
+	private Version version = TWO_6;
 	private boolean useDisk = true;
 	private boolean supportsAggregatesCount = true;
 	
@@ -604,10 +605,10 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	}
 	
 	public AggregationOptions getOptions(int batchSize) {
-	    if (this.version.equals(TWO_6)) {
-            return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.CURSOR)
-                    .allowDiskUse(useDisk()).build();
+	    if (this.version.compareTo(TWO_4) < 0) {
+	        return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.INLINE).build();
 	    }
-        return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.INLINE).build();
+        return AggregationOptions.builder().batchSize(batchSize).outputMode(AggregationOptions.OutputMode.CURSOR)
+                .allowDiskUse(useDisk()).build();
 	}
 }

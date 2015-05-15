@@ -978,8 +978,14 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 		// maxdistance
 		append(args.get(paramIndex++));
-		builder.pop().add("$maxDistance", this.onGoingExpression.pop()); //$NON-NLS-1$
+		BasicDBObjectBuilder b= builder.pop();
+		b.add("$maxDistance", this.onGoingExpression.pop()); //$NON-NLS-1$
 
+		if (this.executionFactory.getVersion().compareTo(MongoDBExecutionFactory.TWO_6) >= 0) {
+            // mindistance
+            append(args.get(paramIndex++));
+            b.add("$minDistance", this.onGoingExpression.pop()); //$NON-NLS-1$
+		}
 		return builder.get();
 	}
 
