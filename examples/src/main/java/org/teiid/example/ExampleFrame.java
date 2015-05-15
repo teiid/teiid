@@ -51,16 +51,16 @@ public class ExampleFrame extends JFrame {
 		super(name);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         
-        area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        area.setFont(new Font("Monospaced", Font.PLAIN, 12));//$NON-NLS-1$ 
 		JScrollPane scroll = new JScrollPane(area,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		add(scroll,BorderLayout.CENTER);
-		area.setText(readFileContent(pathName, "readme.txt"));
+		area.setText(readFileContent(pathName, "readme.txt")); //$NON-NLS-1$ 
 		
 		JMenuBar bar = new JMenuBar();
 		setJMenuBar(bar);
-		JMenu readme = new JMenu("ReadMe");
-		JMenu vdb = new JMenu("VDB");
-		JMenu run = new JMenu("Run");
+		JMenu readme = new JMenu("ReadMe"); //$NON-NLS-1$ 
+		JMenu vdb = new JMenu("VDB"); //$NON-NLS-1$ 
+		JMenu run = new JMenu("Run"); //$NON-NLS-1$ 
 		
 		bar.add(readme);
 		bar.add(vdb);
@@ -69,7 +69,7 @@ public class ExampleFrame extends JFrame {
 		readme.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				area.setText(readFileContent(pathName, "readme.txt"));
+				area.setText(readFileContent(pathName, "readme.txt")); //$NON-NLS-1$ 
 				isEdit = false;
 			}
 		});
@@ -91,17 +91,17 @@ public class ExampleFrame extends JFrame {
 		});
 		
 		JPanel lnfPanel = new JPanel();
-		JButton readmeButton = new JButton("ReadMe");
+		JButton readmeButton = new JButton("ReadMe"); //$NON-NLS-1$ 
 		readmeButton.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				area.setText(readFileContent(pathName, "readme.txt"));
+				area.setText(readFileContent(pathName, "readme.txt")); //$NON-NLS-1$ 
 				isEdit = false;
 			}
 		});
 	    lnfPanel.add(readmeButton);
 	    
-	    JButton vdbButton = new JButton("VDB");
+	    JButton vdbButton = new JButton("VDB"); //$NON-NLS-1$ 
 	    vdbButton.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -111,7 +111,7 @@ public class ExampleFrame extends JFrame {
 		});
 	    lnfPanel.add(vdbButton);
 	    
-	    JButton runButton = new JButton("Run");
+	    JButton runButton = new JButton("Run"); //$NON-NLS-1$ 
 	    runButton.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -130,9 +130,9 @@ public class ExampleFrame extends JFrame {
 
 		try {
 			Class<?> clas = this.getClass().getClassLoader().loadClass(className);
-			Method method = clas.getMethod("execute", new Class[]{String.class});
+			Method method = clas.getMethod("execute", new Class[]{String.class}); //$NON-NLS-1$ 
 			method.invoke(clas.newInstance(), new Object[]{vdb});
-			area.setText("Success");
+			area.setText("Success"); //$NON-NLS-1$ 
 		} catch (Throwable e) {
 			area.setText(e.getMessage());
 			e.printStackTrace();

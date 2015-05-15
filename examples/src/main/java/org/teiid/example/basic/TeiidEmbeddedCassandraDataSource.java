@@ -68,7 +68,7 @@ public class TeiidEmbeddedCassandraDataSource extends ExampleBase {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new TeiidEmbeddedCassandraDataSource().execute(FileUtils.readFileContent("cassandra-as-a-datasourse", "cassandra-vdb.xml"));
+		new TeiidEmbeddedCassandraDataSource().execute(FileUtils.readFileContent("cassandra-as-a-datasourse", "cassandra-vdb.xml")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private static void initCassandraProperties() throws IOException {

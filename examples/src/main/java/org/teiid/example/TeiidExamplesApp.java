@@ -36,7 +36,7 @@ public class TeiidExamplesApp extends JFrame {
 	private static final long serialVersionUID = -2006764910415872215L;
 	
 	public TeiidExamplesApp() {
-		super("JBoss Teiid examples");
+		super("JBoss Teiid examples");//$NON-NLS-1$
         setContentPane(createContentPane());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}

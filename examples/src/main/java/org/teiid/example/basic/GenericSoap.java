@@ -54,22 +54,22 @@ public class GenericSoap extends ExampleBase {
 		
 		WSExecutionFactory ef = new WSExecutionFactory();
 		ef.start();
-		server.addTranslator("translator-ws", ef);
+		server.addTranslator("translator-ws", ef);//$NON-NLS-1$
 		
 		WSManagedConnectionFactory wsmcf = new WSManagedConnectionFactory();
-		server.addConnectionFactory("java:/StateServiceWebSvcSource", wsmcf.createConnectionFactory());
+		server.addConnectionFactory("java:/StateServiceWebSvcSource", wsmcf.createConnectionFactory());//$NON-NLS-1$
 		
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:StateServiceVDB", null);
+		conn = server.getDriver().connect("jdbc:teiid:StateServiceVDB", null);//$NON-NLS-1$
 		
-		CallableStatement cStmt = conn.prepareCall("{call invoke(?, ?, ?, ?, ?)}");
-		cStmt.setString(1, "SOAP11");
+		CallableStatement cStmt = conn.prepareCall("{call invoke(?, ?, ?, ?, ?)}");//$NON-NLS-1$
+		cStmt.setString(1, "SOAP11");//$NON-NLS-1$
 		cStmt.setString(2, "");
 		cStmt.setObject(3, new SQLXMLImpl(GET_ALL));
-		cStmt.setString(4, "http://localhost:8080/StateService/stateService/StateServiceImpl?WSDL");
+		cStmt.setString(4, "http://localhost:8080/StateService/stateService/StateServiceImpl?WSDL");//$NON-NLS-1$
 		cStmt.setBoolean(5, Boolean.TRUE);
 		cStmt.execute();
 		StAXSQLXML xml = (StAXSQLXML) cStmt.getObject(1);
@@ -77,11 +77,11 @@ public class GenericSoap extends ExampleBase {
 		
 		System.out.println("\n");
 		
-		cStmt = conn.prepareCall("{call invoke(?, ?, ?, ?, ?)}");
+		cStmt = conn.prepareCall("{call invoke(?, ?, ?, ?, ?)}");//$NON-NLS-1$
 		cStmt.setString(1, "SOAP11");
 		cStmt.setString(2, "");
 		cStmt.setObject(3, new SQLXMLImpl(GET_ONE));
-		cStmt.setString(4, "http://localhost:8080/StateService/stateService/StateServiceImpl?WSDL");
+		cStmt.setString(4, "http://localhost:8080/StateService/stateService/StateServiceImpl?WSDL");//$NON-NLS-1$
 		cStmt.setBoolean(5, Boolean.TRUE);
 		cStmt.execute();
 		xml = (StAXSQLXML) cStmt.getObject(1);

@@ -47,7 +47,7 @@ public abstract class ExampleBase {
 		
 		if(isRemote) {
 			SocketConfiguration s = new SocketConfiguration();
-			InetSocketAddress addr = new InetSocketAddress("localhost", 31000);
+			InetSocketAddress addr = new InetSocketAddress("localhost", 31000);//$NON-NLS-1$ 
 			s.setBindAddress(addr.getHostName());
 			s.setPortNumber(addr.getPort());
 			s.setProtocol(WireProtocol.teiid);
