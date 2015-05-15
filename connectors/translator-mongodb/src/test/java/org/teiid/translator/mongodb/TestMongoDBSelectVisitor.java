@@ -431,9 +431,9 @@ public class TestMongoDBSelectVisitor {
     
     @Test
     public void testGeoNearFunction() throws Exception {
-    	String query = "SELECT mongo.geonear(user_id, (cast(1.0 as double), cast(2.0 as double)), 22) FROM users";
+    	String query = "SELECT mongo.geonear(user_id, (cast(1.0 as double), cast(2.0 as double)), 22, 10) FROM users";
 		helpExecute(query, "users",
-				"{ \"_m0\" : { \"user_id\" : { \"$near\" : { \"$geometry\" : { \"type\" : \"Point\" , \"coordinates\" : [ [ 1.0 , 2.0]]} , \"$maxDistance\" : 22}}}}",
+				"{ \"_m0\" : { \"user_id\" : { \"$near\" : { \"$geometry\" : { \"type\" : \"Point\" , \"coordinates\" : [ [ 1.0 , 2.0]]} , \"$maxDistance\" : 22 , \"$minDistance\" : 10}}}}",
 				null);
     }   
     
