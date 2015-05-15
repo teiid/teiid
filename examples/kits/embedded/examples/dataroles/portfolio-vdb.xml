@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="Portfolio" version="1">
+
+    <description>The Portfolio Dynamic VDB</description>
+    
+    <!-- 
+      Setting to use connector supplied metadata. Can be "true" or "cached".  
+      "true" will obtain metadata once for every launch of Teiid. 
+      "cached" will save a file containing the metadata into 
+      the deploy/<vdb name>/<vdb version/META-INF directory
+    -->
+    <property name="UseConnectorMetadata" value="true" />
+
+    <!-- 
+      Each model represents a access to one or more sources.
+      The name of the model will be used as a top level schema name
+      for all of the metadata imported from the connector.
+    
+      NOTE: Multiple models, with different import settings, can be bound to 
+      the same connector binding and will be treated as the same source at
+      runtime. 
+    --> 
+    <model name="MarketData">
+        <!-- 
+            Each source represents a translator and data source. There are 
+            pre-defined translators, or you can create one.
+        -->
+        <source name="text-connector" translator-name="file" connection-jndi-name="java:/marketdata-file"/>
+    </model>
+    
+    
+    <model name="Stocks" type="VIRTUAL">
+        <metadata type="DDL"><![CDATA[
+                
+        CREATE VIEW StockPrices (
+            symbol string,
+            price bigdecimal
+            )
+            AS  
+               SELECT SP.symbol, SP.price
+                FROM (EXEC MarketData.getTextFiles('*.txt')) AS f, 
+                    TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) AS SP;
+                 
+        ]]> </metadata>
+    </model>
+    
+    <!-- For detailed description about data roles please refer to Reference Guide's Data Roles chapter -->
+    <data-role name="ReadOnly" any-authenticated="true">
+        <description>Allow ReadOnly Operations by default to any authenticated user</description>
+
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-read>true</allow-read>
+        </permission>
+        
+        <permission>
+            <resource-name>MarketData</resource-name>
+            <allow-read>true</allow-read>
+        </permission>                 
+	
+	<!-- can see any state Account but New York -->
+		<permission>
+            <resource-name>Accounts.Customer</resource-name>
+	    	<condition>state &lt;&gt; 'New York'</condition>
+        </permission>
+
+	<!-- not allowed to see SSN -->
+       	<permission>
+            <resource-name>Accounts.Customer.SSN</resource-name>
+            <mask>null</mask>
+        </permission>
+        
+		<permission>
+            <resource-name>Accounts.Account.SSN</resource-name>
+            <mask>null</mask>
+        </permission>
+        
+        <permission>
+            <resource-name>Stocks</resource-name>
+            <allow-read>true</allow-read>
+        </permission>              
+
+ 		<permission>
+            <resource-name>Stocks.StockPrices.Price</resource-name>
+	    	<mask order="1">CASE WHEN hasRole('Prices') = true THEN Price END</mask>
+        </permission>        
+
+    </data-role>
+    <data-role name="Prices"  >
+        <description>Allow ReadOnly Operations to see pricing</description>
+     	
+		<mapped-role-name>prices</mapped-role-name>
+    </data-role>
+    
+    <data-role name="ReadWrite">
+        <description>Allow Reads and Writes</description>
+
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+	    <allow-delete>true</allow-delete>
+        </permission>
+        
+        <permission>
+            <resource-name>MarketData</resource-name>
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+	    	<allow-delete>true</allow-delete>
+        </permission> 
+        
+	<!-- can see all rows -->
+		<permission>
+            <resource-name>Accounts.Customer</resource-name>
+	   		<condition>true</condition>
+        </permission>
+        
+	<!-- allowed to see SSN, note the use of the order attribute
+	     to indicate that these masks have precedence -->
+       	<permission>
+            <resource-name>Accounts.Customer.SSN</resource-name>
+            <mask order="1">SSN</mask>
+        </permission>
+        
+		<permission>
+            <resource-name>Accounts.Account.SSN</resource-name>
+            <mask order="1">SSN</mask>
+        </permission>
+  	      
+        <!--
+            This mapped role must defined in the JAAS security domain. Use the
+	    sample UserRolesLoginModules based roles file provided in this 
+	    sample directory. Copy the "teiid-security-roles.properties" and 
+	    "teiid-security-users.proeprties" into 
+	    "<jboss-install>/modules/org/jboss/teiid/conf" directory and 
+	    replace the old ones.
+        -->
+        <mapped-role-name>superuser</mapped-role-name>
+    </data-role>
+
+</vdb>

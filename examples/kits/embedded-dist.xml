@@ -1,0 +1,66 @@
+<!--This script builds a zip for Embedded Installation -->
+<assembly>
+
+    <id>embedded-dist</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>kits/embedded</directory>
+            <outputDirectory>/</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/*</include>
+            </includes>
+            <fileMode>755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/java</directory>
+            <outputDirectory>/sources</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+    
+    <files>
+        <file>
+            <source>${project.build.directory}/${project.artifactId}-${project.version}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+        </file>
+    </files>
+    
+    <dependencySets>
+    	<dependencySet>
+          <includes>
+             <include>org.jboss.narayana.jta:narayana-jta:jar</include>
+          </includes>
+          <outputDirectory>lib</outputDirectory>
+          <unpack>false</unpack>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+      </dependencySet>
+      <dependencySet>
+          <includes>
+              <include>org.jboss.ironjacamar:ironjacamar-jdbc:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-core-api:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-core-impl:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-api:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-impl:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-spi:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-spec-api:jar</include>
+              <include>org.jboss:jboss-transaction-spi:jar</include>
+          </includes>
+          <outputDirectory>optional/jdbc/tm</outputDirectory>
+          <unpack>false</unpack>
+       </dependencySet>
+    </dependencySets>
+    
+ 
+
+</assembly>
