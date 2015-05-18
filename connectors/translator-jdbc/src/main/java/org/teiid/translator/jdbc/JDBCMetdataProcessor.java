@@ -119,7 +119,13 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			throws SQLException {
 		DatabaseMetaData metadata = conn.getMetaData();
 		
-		quoteString = metadata.getIdentifierQuoteString();
+		if (this.quoteString == null) {
+			try {
+				quoteString = metadata.getIdentifierQuoteString();
+			} catch (SQLException e) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Assuming identifier quoting not supported"); //$NON-NLS-1$
+			}
+		}
 		if (quoteString != null && quoteString.trim().length() == 0) {
 			quoteString = null;
 		}
@@ -920,5 +926,9 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
     	}
         return this.excludeProcedures.pattern();
     }    
+    
+    public void setQuoteString(String quoteString) {
+		this.quoteString = quoteString;
+	}
     
 }

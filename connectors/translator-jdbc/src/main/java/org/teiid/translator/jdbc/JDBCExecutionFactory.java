@@ -219,14 +219,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
-		try {
-			DatabaseMetaData metadata = connection.getMetaData();
-			String fullVersion = metadata.getDatabaseProductVersion();
-			setDatabaseVersion(fullVersion);
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		}
 	}
 
     @Override
@@ -1192,6 +1184,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public void obtainedConnection(Connection connection) {
         if (initialConnection.compareAndSet(true, false)) {
+        	try {
+    			DatabaseMetaData metadata = connection.getMetaData();
+    			String fullVersion = metadata.getDatabaseProductVersion();
+    			setDatabaseVersion(fullVersion);
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
+    		} catch (SQLException e) {
+    			LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11002));
+    		}
             afterInitialConnectionObtained(connection);
         }
     }

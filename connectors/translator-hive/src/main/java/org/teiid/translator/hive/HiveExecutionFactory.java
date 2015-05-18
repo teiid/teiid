@@ -58,7 +58,7 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
         convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-        convert.addTypeMapping("binary", FunctionModifier.BLOB); //$NON-NLS-1$
+        convert.addTypeMapping("binary", FunctionModifier.BLOB, FunctionModifier.VARBINARY); //$NON-NLS-1$
         convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
         convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$        
         // unsupported types
@@ -191,5 +191,6 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     public boolean supportsGroupByRollup() {
         //https://cwiki.apache.org/confluence/display/Hive/Enhanced+Aggregation,+Cube,+Grouping+and+Rollup
         return true;
-    }    
+    }   
+    
 }
