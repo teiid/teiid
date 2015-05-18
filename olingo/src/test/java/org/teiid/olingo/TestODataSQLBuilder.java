@@ -656,7 +656,12 @@ public class TestODataSQLBuilder {
                 "");
     }    
     
-
+    @Test
+    public void test$RootOverPath() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq $root/G1(1)/e1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = (SELECT g1.e1 FROM PM1.G1 AS g1 WHERE g1.e2 = 1) ORDER BY g0.e2");
+    } 
+    
     @Test
     public void testAny() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/any(ol: ol/e2 gt 10)"), 

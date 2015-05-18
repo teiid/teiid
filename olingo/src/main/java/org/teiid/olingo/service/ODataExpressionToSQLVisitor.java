@@ -33,7 +33,9 @@ import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
+import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResourceCount;
+import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceIt;
 import org.apache.olingo.server.api.uri.UriResourceLambdaAll;
 import org.apache.olingo.server.api.uri.UriResourceLambdaAny;
@@ -104,6 +106,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private Lambda lambda;
     private boolean count;
     private ItResource itResource;
+    private ItResource rootResource;
     
     public ODataExpressionToSQLVisitor(Table table, GroupSymbol tableGroup,
             boolean prepared, UriInfo info, MetadataStore metadata,
@@ -411,7 +414,10 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     public void visit(UriResourcePrimitiveProperty info) {
         if (this.lambda != null) {
             this.stack.add(new ElementSymbol(info.getProperty().getName(), this.lambda.getGroupSymbol()));
-        } else {
+        } else if (this.rootResource != null) {
+            this.stack.add(new ScalarSubquery(buildRootSubQuery(info.getProperty().getName(), this.rootResource)));
+        }
+        else {
             this.stack.add(new ElementSymbol(info.getProperty().getName(), this.tableGroup));
         }
     }
@@ -536,7 +542,8 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         
         if (info.getType() instanceof SingletonPrimitiveType) {
             String group = this.nameGenerator.getNextGroup();
-            ElementSymbol es = new ElementSymbol("col", new GroupSymbol(group));
+            GroupSymbol groupSymbol = new GroupSymbol(group);
+            ElementSymbol es = new ElementSymbol("col", groupSymbol);
             String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
             Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
             this.stack.push(castFunction);
@@ -556,6 +563,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             
             AliasSymbol expression = new AliasSymbol(this.itResource.getReferencedProperty().getShortName(), castFunction);
             this.itResource.setProjectedFromClause(fromClause);
+            this.itResource.setProjectedGroup(groupSymbol);
             this.itResource.setProjectedProperty(new ProjectedColumn(expression, true, info.getType(), true));
         }
         else {
@@ -565,5 +573,47 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     
     @Override
     public void visit(UriResourceRoot info) {
+        this.rootResource = new ItResource();
+    }
+    
+    @Override
+    public void visit(UriResourceEntitySet info) {
+        if (this.rootResource != null) {
+            Table table = ODataSQLBuilder.findTable(info.getEntitySet(), this.metadata);
+            EdmEntityType edmEntityType = info.getEntitySet().getEntityType();
+            GroupSymbol groupSymbol = new GroupSymbol(this.nameGenerator.getNextGroup(), table.getFullName()); //$NON-NLS-1$
+            
+            // URL is like /entitySet(key)s
+            Criteria criteria = null;
+            if (info.getKeyPredicates() != null && !info.getKeyPredicates().isEmpty()) {
+                List<UriParameter> keys = info.getKeyPredicates();
+                try {
+                    criteria = ODataSQLBuilder.buildEntityKeyCriteria(table, groupSymbol, keys, getUriInfo(),
+                            this.metadata, this.nameGenerator);
+                } catch (TeiidException e) {
+                    this.exceptions.add(e);
+                }
+            }
+            
+            this.rootResource.setReferencedTable(table);
+            this.rootResource.setProjectedGroup(groupSymbol);
+            this.rootResource.setCriteria(criteria);
+            this.rootResource.setEdmEntityType(edmEntityType);
+        }
+        else {
+            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16043, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16043)));
+        }
+    }
+    
+    public QueryCommand buildRootSubQuery(String element, ItResource resource) {
+        Select s1 = new Select();
+        s1.addSymbol(new ElementSymbol(element, resource.getProjectedGroup())); 
+        From f1 = new From();
+        f1.addGroup(resource.getProjectedGroup());
+        Query q1 = new Query();
+        q1.setSelect(s1);
+        q1.setFrom(f1);    
+        q1.setCriteria(resource.getCriteria());  
+        return q1;
     }
 }

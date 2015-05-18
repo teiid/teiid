@@ -163,19 +163,21 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
     }
     
-    class ItResource {
+    static class ItResource {
         private ElementSymbol referencedProperty;
         private Table referencedTable;
         private ProjectedColumn projectedProperty;
         private FromClause projectedFromClause;
-        
-        public ItResource(ElementSymbol es, Table table) {
-            this.referencedProperty = es;
-            this.referencedTable = table;
-        }
+        private Criteria criteria;
+        private EdmEntityType edmEntityType;
+        private GroupSymbol groupSymbol;
 
-        public ItResource(Table table) {
-            this(null, table);
+        public void setReferencedProperty(ElementSymbol referencedProperty) {
+            this.referencedProperty = referencedProperty;
+        }
+        
+        public void setReferencedTable(Table referencedTable) {
+            this.referencedTable = referencedTable;
         }
 
         public ElementSymbol getReferencedProperty() {
@@ -200,6 +202,30 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
         public void setProjectedFromClause(FromClause projectedFromClause) {
             this.projectedFromClause = projectedFromClause;
+        }
+
+        public Criteria getCriteria() {
+            return criteria;
+        }
+        
+        public void setCriteria(Criteria criteria) {
+            this.criteria = criteria;
+        }
+
+        public void setEdmEntityType(EdmEntityType edmEntityType) {
+            this.edmEntityType = edmEntityType;
+        }
+
+        public EdmEntityType getEdmEntityType() {
+            return edmEntityType;
+        }
+
+        public GroupSymbol getProjectedGroup() {
+            return this.groupSymbol;
+        }
+        
+        public void setProjectedGroup(GroupSymbol groupSymbol) {
+            this.groupSymbol = groupSymbol;
         }
     }
     
@@ -315,7 +341,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             
             joinTable(entityType, expandTable, expandGroup, null, property.isCollection(), JoinType.JOIN_LEFT_OUTER);
             
-            this.itResource = new ItResource(expandTable);
+            this.itResource = new ItResource();
+            this.itResource.setReferencedTable(expandTable);
             
             // process $filter
             if (ei.getFilterOption() != null) {
@@ -420,7 +447,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 this.exceptions.add(e);
             }
         }
-        this.itResource = new ItResource(this.edmEntityTable);        
+        this.itResource = new ItResource();
+        this.itResource.setReferencedTable(this.edmEntityTable);
     }
 
     static Criteria buildEntityKeyCriteria(Table table, GroupSymbol tableGroup,
@@ -616,20 +644,15 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 joinTable(lambda.getType(), lambda.getTable(), lambda.getGroupSymbol(), null, 
                         (joinFK(this.edmEntityTable, lambda.getTable()) == null), JoinType.JOIN_INNER);
                 
-                this.edmEntityTableGroup = lambda.getGroupSymbol();
-                this.edmEntityTable = lambda.getTable();
-                this.edmEntityType = lambda.getType();                
+//                this.edmEntityTableGroup = lambda.getGroupSymbol();
+//                this.edmEntityTable = lambda.getTable();
+//                this.edmEntityType = lambda.getType();                
                 
                 this.distinct = true;
-                this.criteria = filterCriteria;
-            }
-            else {
-                this.criteria = filterCriteria;
             }
         }
-        else {
-            this.criteria = filterCriteria;
-        }
+        
+        this.criteria = filterCriteria;
     }
 
     static ForeignKey joinFK(Table currentTable, Table referenceTable) {
@@ -656,7 +679,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         this.edmEntityTableGroup = joinGroup;
         this.edmEntityTable = joinTable;
         this.edmEntityType = joinTableType;
-        this.itResource = new ItResource(this.edmEntityTable);
+        this.itResource = new ItResource();
+        this.itResource.setReferencedTable(this.edmEntityTable);
     }
 
     private void joinTable(EdmEntityType joinTableType, Table joinTable,
@@ -728,7 +752,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         ElementSymbol es = new ElementSymbol(propertyName, this.edmEntityTableGroup);
         addVisibleColumn(propertyName, es, this.edmEntityType);
         
-        this.itResource = new ItResource(es, this.edmEntityTable);
+        this.itResource = new ItResource();
+        this.itResource.setReferencedTable(this.edmEntityTable);
+        this.itResource.setReferencedProperty(es);
         this.selectionComplete = true;
     }
     
