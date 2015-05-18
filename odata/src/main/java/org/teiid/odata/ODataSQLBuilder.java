@@ -759,13 +759,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		Expression target = stack.pop();
 		visitNode(expr.getValue());
 		Expression value = stack.pop();		
-/*<<<<<<< HEAD
-		this.criteria = new CompareCriteria(new Function("LOCATE", new Expression[] {value, target, new Constant(1)}), CompareCriteria.EQ, new Constant(1));
-		stack.push(this.criteria);
-======= */
+
 		Criteria criteria = new CompareCriteria(new Function("LOCATE", new Expression[] {value, target, new Constant(1)}), CompareCriteria.EQ, new Constant(1));
 		stack.push(criteria);
-//>>>>>>> a45e7fa... TEIID-3671
 	}
 
 	@Override

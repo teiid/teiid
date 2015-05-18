@@ -334,7 +334,7 @@ public class ExecutionFactory<F, C> {
 	}	
 	
 	/**
-	 * Get Metadata Processor for the translator to read the metadata
+	 * Get a MetadataProcessor for the translator to read the metadata.  Typically this will return a new instance.
 	 * @return
 	 */
 	public MetadataProcessor<C> getMetadataProcessor() {

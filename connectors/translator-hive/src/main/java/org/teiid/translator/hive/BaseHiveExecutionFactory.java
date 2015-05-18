@@ -37,9 +37,9 @@ import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
@@ -49,6 +49,7 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
 	
 	protected ConvertModifier convert = new ConvertModifier();
+	protected boolean useDatabaseMetaData;
 
     @Override
     public JDBCUpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
@@ -227,11 +228,17 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     @Deprecated
     @Override
     protected JDBCMetdataProcessor createMetadataProcessor() {
-        return (HiveMetadataProcessor)getMetadataProcessor();
+        return getMetadataProcessor();
     }
     
     @Override
-    public MetadataProcessor<Connection> getMetadataProcessor(){
+    public JDBCMetdataProcessor getMetadataProcessor(){
+    	if (useDatabaseMetaData) {
+    		JDBCMetdataProcessor processor = new JDBCMetdataProcessor();
+    		processor.setImportKeys(false);
+    		processor.setQuoteString("`"); //$NON-NLS-1$
+    		return processor;
+    	}
         return new HiveMetadataProcessor();
     }
 
@@ -267,4 +274,13 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	}
     	return false;
     }
+    
+    @TranslatorProperty(display="Use DatabaseMetaData", description= "Use DatabaseMetaData (typical JDBC logic) for importing")
+    public boolean isUseDatabaseMetaData() {
+		return useDatabaseMetaData;
+	}
+    
+    public void setUseDatabaseMetaData(boolean useDatabaseMetaData) {
+		this.useDatabaseMetaData = useDatabaseMetaData;
+	}
 }
