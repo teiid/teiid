@@ -42,7 +42,9 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
@@ -71,6 +73,16 @@ public class TestDataEntitySchemaBuilder {
 	    	assertEdmSchema(expected, actual);
 	    }
 	}
+	
+    @Test
+    public void testArrayIterateMetadata() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind", "nw");       
+        StringWriter sw = new StringWriter();
+        EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+        EdmxFormatWriter.write(eds, sw);
+        
+        //System.out.println(sw.toString());
+    }	
 	
     @Test
     public void testMetadataWithSelfJoin() throws Exception {
@@ -269,4 +281,28 @@ public class TestDataEntitySchemaBuilder {
     	}		
 		return metadata;
 	}	
+	
+    @Test
+    public void testArrayType() throws Exception {
+        ModelMetaData model = new ModelMetaData();
+        model.setName("nw");
+        model.setModelType(Type.PHYSICAL);
+        MetadataFactory mf = new MetadataFactory("northwind", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), model);
+        
+        EdmDataServices edm = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new FileReader(UnitTestUtil.getTestDataFile("arraytest.xml"))));
+        ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
+        PropertiesUtils.setBeanProperties(metadataProcessor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
+        metadataProcessor.getMetadata(mf, edm);
+        
+        Column c = mf.getSchema().getTable("G2").getColumnByName("e3");
+        assertEquals("integer[]", c.getRuntimeType());
+        
+        Procedure p = mf.getSchema().getProcedure("ARRAYITERATE");
+        assertEquals("varbinary[]", p.getParameters().get(0).getRuntimeType());
+        assertEquals("varbinary",  p.getResultSet().getColumns().get(0).getRuntimeType());
+       
+        
+        //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        //System.out.println(ddl);
+    }
 }
