@@ -72,8 +72,6 @@ import org.teiid.query.util.CommandContext;
  *                        source
  *                          d
  * </pre>
- * 
- * TODO: non-ansi joins
  */
 public class RuleDecomposeJoin implements OptimizerRule {
 
@@ -102,8 +100,12 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		}
 
 		PlanNode left = joinNode.getFirstChild();
-		if (left.getType() != NodeConstants.Types.SOURCE) {
-			return root;
+		while (left.getType() != NodeConstants.Types.SOURCE) {
+			if (left.getType() == NodeConstants.Types.SELECT && left.hasBooleanProperty(Info.IS_PHANTOM)) {
+				left = left.getFirstChild();
+			} else {
+				return root;
+			}
 		}
 		
 		Map<ElementSymbol, List<Set<Constant>>> partitionInfo = (Map<ElementSymbol, List<Set<Constant>>>)left.getProperty(Info.PARTITION_INFO);
@@ -119,8 +121,12 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		
 		PlanNode right = joinNode.getLastChild();
 		
-		if (right.getType() != NodeConstants.Types.SOURCE) {
-			return root;
+		while (right.getType() != NodeConstants.Types.SOURCE) {
+			if (right.getType() == NodeConstants.Types.SELECT && right.hasBooleanProperty(Info.IS_PHANTOM)) {
+				right = right.getFirstChild();
+			} else {
+				return root;
+			}
 		}
 		
 		Map<ElementSymbol, List<Set<Constant>>> rightPartionInfo = (Map<ElementSymbol, List<Set<Constant>>>)right.getProperty(Info.PARTITION_INFO);

@@ -188,6 +188,29 @@ public class TestUnionPlanning {
         });                                    
     }
     
+    @Test public void testUnionPushDownWithJoinNonAnsi() {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A, (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B where a.intkey = b.intkey", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
+            new String[] { "SELECT g_0.intkey, g_1.intkey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (g_0.intkey IN (3, 4)) AND (g_1.intkey IN (3, 4))", 
+        	"SELECT g_0.intkey, g_1.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1, 2)) AND (g_1.intkey IN (1, 2))" }, TestOptimizer.SHOULD_SUCCEED); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        });                                    
+    }
+    
     @Test public void testUnionPushDownWithJoinNoMatches() {
         TestOptimizer.helpPlan("select * from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (5, 6) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (7, 8)) B on a.intkey = b.intkey", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
             new String[] {}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$  

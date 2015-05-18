@@ -747,12 +747,12 @@ public class RelationalPlanner {
         if(hints.hasVirtualGroups) {
             rules.push(RuleConstants.MERGE_VIRTUAL);
         }
-        if(hints.hasCriteria) {
-            rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
-        }
         if (hints.hasJoin && hints.hasSetQuery) {
             rules.push(RuleConstants.DECOMPOSE_JOIN);
             rules.push(RuleConstants.MERGE_VIRTUAL);
+            rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
+        } else if(hints.hasCriteria) {
+        	rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
         }
         if (hints.hasJoin && hints.hasOptionalJoin) {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
