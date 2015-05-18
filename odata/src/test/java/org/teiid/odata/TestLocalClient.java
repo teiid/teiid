@@ -44,7 +44,7 @@ public class TestLocalClient {
 		assertEquals(EdmSimpleType.BINARY, ODataTypeManager.odataType("varbinary"));
 		LocalClient.buildPropery("x", EdmSimpleType.BINARY, new byte[] {-1}, null);
 		LocalClient.buildPropery("x", EdmSimpleType.STRING, new ClobImpl("foo"), null).getValue().equals("foo");
-		LocalClient.buildPropery("x", EdmSimpleType.BINARY, new BlobType(new byte[] {-1}), null);
+		LocalClient.buildPropery("x", EdmSimpleType.BINARY, BlobType.createBlob(new byte[] {-1}), null);
 		LocalClient.buildPropery("x", EdmSimpleType.STRING, new SQLXMLImpl("</a>"), null).getValue().equals("</a>");
 	}
 	
