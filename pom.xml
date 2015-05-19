@@ -42,7 +42,7 @@
         <!--version.commons-logging>1.1.3</version.commons-logging   -->
         <!--version.wsdl4j>1.6.3</version.wsdl4j-->
       
-		<version.javax.ws.rs>2.0-m10</version.javax.ws.rs> <!-- override eap to resolve classNotFoundException -->
+        <version.javax.ws.rs>2.0-m10</version.javax.ws.rs> <!-- override eap to resolve classNotFoundException -->
 	    
         <version.org.jboss.logging.jboss-logging>${version.org.jboss.logging}</version.org.jboss.logging.jboss-logging>
         
@@ -52,19 +52,19 @@
         <version.org.jboss.arquillian.core>${version.org.jboss.arquillian}</version.org.jboss.arquillian.core>
         <version.javax.enterprise>${version.javax.enterprise.cdi}</version.javax.enterprise>
         <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>${version.org.hibernate.javax.persistence}</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
-	    <version.org.apache.cxf-jaxrs>${version.org.apache.cxf}</version.org.apache.cxf-jaxrs>
+	<version.org.apache.cxf-jaxrs>${version.org.apache.cxf}</version.org.apache.cxf-jaxrs>
 
-	    <version.org.springframework>3.2.12.RELEASE</version.org.springframework>
-	    <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
+	<version.org.springframework>3.2.12.RELEASE</version.org.springframework>
+	<version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
     
         
         <!-- versions required by infinispan 6.1 -->
         <version.org.hibernate>4.2.0.Final</version.org.hibernate>
         <version.org.hibernate.search>4.5.0.Final</version.org.hibernate.search>
 	
-		<version.commons-httpclient>3.1</version.commons-httpclient>
+	<version.commons-httpclient>3.1</version.commons-httpclient>
 
-		<!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
+	<!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
         <version.jaxen>1.1.3.redhat-3</version.jaxen> <!--  1.1.3  -->
 
         
@@ -98,7 +98,7 @@
         <version.connector-api>1.5</version.connector-api>
         <arquillian-container-version>7.2.2.Final-redhat-4</arquillian-container-version>
         <jbossas-test-version>jboss-eap-6.4</jbossas-test-version>
-        <version.org.jboss.oreva>0.8.3</version.org.jboss.oreva>
+        <version.org.jboss.oreva>0.8.4</version.org.jboss.oreva>
         <version.com.force.api>26.0.0</version.com.force.api>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
