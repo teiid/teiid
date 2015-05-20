@@ -22,7 +22,7 @@
 					
 					<!-- comma separate list of cache name to cache class;primary key -->
 					<config-property name="CacheTypeMap">
-						local-quickstart-cache:com.client.quickstart.pojo.Orders;id
+						local-quickstart-cache:com.client.quickstart.pojo.Stock;id
 					</config-property>
 					
 					<!-- JNDI lookup name of the Infinispan cache container.  other options include remote hot rod access and
@@ -36,3 +36,4 @@
     
     </resource-adapters>
 </subsystem>
+                
