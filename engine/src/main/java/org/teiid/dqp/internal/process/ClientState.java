@@ -24,7 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -36,7 +36,7 @@ import org.teiid.query.tempdata.TempTableStore;
  */
 //TODO: merge with DQPWorkContext
 class ClientState {
-	List<RequestID> requests;
+	LinkedHashSet<RequestID> requests;
 	TempTableStore sessionTables;
 	volatile SessionMetadata session;
 	
@@ -46,7 +46,7 @@ class ClientState {
 	
 	public synchronized void addRequest(RequestID requestID) {
 		if (requests == null) {
-			requests = new LinkedList<RequestID>();
+			requests = new LinkedHashSet<RequestID>(2);
 		}
 		requests.add(requestID);
 	}

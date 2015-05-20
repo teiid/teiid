@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,7 +34,6 @@ import org.teiid.core.util.ExecutorUtils;
 
 /**
  * Specialized timer that can purge tasks in lg(n) time
- * Uses lock escalation to minimize contention for adding/removing tasks.
  * Will only hold a thread while there are pending tasks.
  */
 public class EnhancedTimer {
@@ -64,12 +62,7 @@ public class EnhancedTimer {
 		@Override
 		public boolean cancel(boolean mayInterruptIfRunning) {
 			if (!isDone()) {
- 				lock.readLock().lock();
-				try {
-					return queue.remove(this);
-				} finally {
-					lock.readLock().unlock();
-				}
+				queue.remove(this);	
 			}
 			return super.cancel(mayInterruptIfRunning);
 		}
@@ -84,7 +77,6 @@ public class EnhancedTimer {
 	private final Executor taskExecutor;
 	private final Executor bossExecutor;
 	private boolean running;
-	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	
 	/**
 	 * Constructs a new Timer that directly executes tasks off of a single-thread thread pool.
@@ -117,30 +109,28 @@ public class EnhancedTimer {
 	
 	private boolean doTasks() throws InterruptedException {
 		Task task = null;
-		lock.writeLock().lock();
 		try {
-			if (queue.isEmpty()) {
-				synchronized (this) {
-					lock.writeLock().unlock();
+			task = queue.first();
+		} catch (NoSuchElementException e) {
+			synchronized (this) {
+				if (queue.isEmpty()) {
 					running = false;
 					return false;
 				}
-			}
-			task = queue.first();
-			long toWait = task.endTime - System.currentTimeMillis();
-			if (toWait > 0) {
-				synchronized (this) {
-					lock.writeLock().unlock();
-					this.wait(toWait);
-					return true; //try again (guards against spurious wake-ups)
-				}
-			}
-			queue.pollFirst();
-		} finally {
-			if (lock.writeLock().isHeldByCurrentThread()) {
-				lock.writeLock().unlock();
+				return true;
+			}			
+		}
+		long toWait = task.endTime - System.currentTimeMillis();
+		if (toWait > 0) {
+			synchronized (this) {
+				this.wait(toWait);
+				return true; //try again (guards against spurious wake-ups)
 			}
 		}
+		if (task.isCancelled()) {
+			return true;
+		}
+		queue.remove(task);
 		try {
 			taskExecutor.execute(task);
 		} catch (Throwable t) {
@@ -157,7 +147,6 @@ public class EnhancedTimer {
 	 */
 	public Task add(Runnable task, long delay) {
 		Task result = new Task(task, delay);
-		lock.readLock().lock();
 		try {
 			if (this.queue.add(result) 
 					&& this.queue.first() == result) {
@@ -171,8 +160,6 @@ public class EnhancedTimer {
 			}
 		} catch (NoSuchElementException e) {
 			//shouldn't happen
-		} finally {
-			lock.readLock().unlock();
 		}
 		return result;
 	}
