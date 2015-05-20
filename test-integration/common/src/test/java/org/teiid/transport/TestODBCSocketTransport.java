@@ -578,5 +578,14 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		//would normally throw an exception, but is allowable over odbc
 		s.execute("select name, count(schemaname) from tables group by 1");
 	}
+	
+	@Test public void testImplicitPortalClosing() throws Exception {
+		PreparedStatement s = conn.prepareStatement("select 1");
+		s.executeQuery();
+		
+		s.executeQuery();
+		
+		assertEquals(1, odbcServer.server.getDqp().getRequests().size());
+	}
 
 }

@@ -271,7 +271,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				this.connection.setExecutionProperty(key, this.props.getProperty(key));
 			}
 			StatementImpl s = this.connection.createStatement();
-			s.execute("select teiid_session_set('resolve_groupby_positional', true)"); //$NON-NLS-1$
+			try {
+				s.execute("select teiid_session_set('resolve_groupby_positional', true)"); //$NON-NLS-1$
+			} finally {
+				s.close();
+			}
 			this.client.authenticationSucess(hash, hash);
 			ready();
 		} catch (SQLException e) {
@@ -487,7 +491,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		// An unnamed portal is destroyed at the end of the transaction, or as soon as 
 		// the next Bind statement specifying the unnamed portal as destination is issued. 
 		if (bindName == null || bindName.length() == 0) {
-			this.portalMap.remove(UNNAMED);
+			Portal p = this.portalMap.remove(UNNAMED);
+			if (p != null) {
+				closePortal(p);
+			}
 			bindName  = UNNAMED;
 		} else if (this.portalMap.get(bindName) != null || this.cursorMap.get(bindName) != null) {
 			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40111, bindName));
@@ -719,7 +726,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return;
 		}
 		//46.2.3 Note that a simple Query message also destroys the unnamed portal.
-		this.portalMap.remove(UNNAMED);
+		Portal p = this.portalMap.remove(UNNAMED);
+		if (p != null) {
+			closePortal(p);
+		}
 		this.preparedMap.remove(UNNAMED);
 		query = query.trim();
 		if (query.length() == 0) {
@@ -1047,18 +1057,22 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			String schema = meta.getSchemaName(i);
 			if (schema != null) {
 				final PreparedStatementImpl ps = this.connection.prepareStatement("select attrelid, attnum, typoid from matpg_relatt where attname = ? and relname = ? and nspname = ?"); //$NON-NLS-1$
-				ps.setString(1, name);
-				ps.setString(2, table);
-				ps.setString(3, schema);	
-				ResultSet rs = ps.executeQuery();
-				if (rs.next()) {
-					info.reloid = rs.getInt(1);
-					info.attnum = rs.getShort(2);
-					int specificType = rs.getInt(3);
-					if (!rs.wasNull()) {
-						info.type = specificType;
-					}
-				}					
+				try {
+					ps.setString(1, name);
+					ps.setString(2, table);
+					ps.setString(3, schema);	
+					ResultSet rs = ps.executeQuery();
+					if (rs.next()) {
+						info.reloid = rs.getInt(1);
+						info.attnum = rs.getShort(2);
+						int specificType = rs.getInt(3);
+						if (!rs.wasNull()) {
+							info.type = specificType;
+						}
+					}	
+				} finally {
+					ps.close();
+				}
 			}
 			result.add(info);
 		}
