@@ -22,6 +22,7 @@
 
 package org.teiid.translator.loopback;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -100,7 +101,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 
             // If we're asynch and the wait time was longer than the poll interval,
             // then just say we don't have results instead
-            if(randomTimeToWait > this.config.getPollIntervalInMilli()) {
+            if(this.config.getPollIntervalInMilli() >= 0 && randomTimeToWait > this.config.getPollIntervalInMilli()) {
             	waited = true;
                 DataNotAvailableException dnae = new DataNotAvailableException(randomTimeToWait);
                 dnae.setStrict(true);
@@ -207,41 +208,51 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 		List<Object> newRow = new ArrayList<Object>(types.size());
 		String incrementedString = incrementString(staticStringValue,rowNumber);
 		for (Class<?> type : types) {
-			if (type.equals(Integer.class)) {
-				newRow.add(rowNumber.intValue());
-			} else if (type.equals(java.lang.Short.class)) {
-				newRow.add(rowNumber.shortValue());
-			} else if (type.equals(java.lang.Long.class)) {
-				newRow.add(rowNumber.longValue());
-			} else if (type.equals(java.lang.Float.class)) {
-				newRow.add(rowNumber.floatValue()/10);
-			} else if (type.equals(java.lang.Double.class)) {
-				newRow.add(rowNumber.doubleValue()/10);
-			} else if (type.equals(java.lang.Character.class)) {
-				newRow.add((char)((((rowNumber.byteValue()&0xff) + 2)%26) + 97));
-			} else if (type.equals(java.lang.Byte.class)) {
-				newRow.add(rowNumber.byteValue());
-			} else if (type.equals(java.lang.Boolean.class)) {
-				newRow.add(rowNumber.intValue()%2!=0);
-			} else if (type.equals(java.math.BigInteger.class)) {
-				newRow.add(rowNumber);
-			} else if (type.equals(java.math.BigDecimal.class)) {
-				newRow.add(new BigDecimal(rowNumber, 1));
-			} else if (type.equals(java.sql.Date.class)) {
-				newRow.add(new Date(DAY_SECONDS * 1000 * (rowNumber.intValue()%DATE_PERIOD)));
-			} else if (type.equals(java.sql.Time.class)) {
-				newRow.add(new Time((rowNumber.intValue()%DAY_SECONDS) * 1000));
-			} else if (type.equals(java.sql.Timestamp.class)) {
-				newRow.add(new Timestamp(rowNumber.longValue()));
-			} else if (type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
-				newRow.add(this.config.getTypeFacility().convertToRuntimeType(incrementedString.toCharArray()));
-			} else if (type.equals(TypeFacility.RUNTIME_TYPES.BLOB) || type.equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) {
-				newRow.add(this.config.getTypeFacility().convertToRuntimeType(incrementedString.getBytes()));
-			} else {
-				newRow.add(incrementedString);
-			}
+			Object val = getVal(incrementedString, type);
+			newRow.add(val);
 		}
 		row = newRow;
+	}
+
+	Object getVal(String incrementedString, Class<?> type) {
+		Object val;
+		if (type.equals(Integer.class)) {
+			val = rowNumber.intValue();
+		} else if (type.equals(java.lang.Short.class)) {
+			val = rowNumber.shortValue();
+		} else if (type.equals(java.lang.Long.class)) {
+			val = rowNumber.longValue();
+		} else if (type.equals(java.lang.Float.class)) {
+			val = rowNumber.floatValue()/10;
+		} else if (type.equals(java.lang.Double.class)) {
+			val = rowNumber.doubleValue()/10;
+		} else if (type.equals(java.lang.Character.class)) {
+			val = (char)((((rowNumber.byteValue()&0xff) + 2)%26) + 97);
+		} else if (type.equals(java.lang.Byte.class)) {
+			val = rowNumber.byteValue();
+		} else if (type.equals(java.lang.Boolean.class)) {
+			val = rowNumber.intValue()%2!=0;
+		} else if (type.equals(java.math.BigInteger.class)) {
+			val = rowNumber;
+		} else if (type.equals(java.math.BigDecimal.class)) {
+			val = new BigDecimal(rowNumber, 1);
+		} else if (type.equals(java.sql.Date.class)) {
+			val = new Date(DAY_SECONDS * 1000 * (rowNumber.intValue()%DATE_PERIOD));
+		} else if (type.equals(java.sql.Time.class)) {
+			val = new Time((rowNumber.intValue()%DAY_SECONDS) * 1000);
+		} else if (type.equals(java.sql.Timestamp.class)) {
+			val = new Timestamp(rowNumber.longValue());
+		} else if (type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
+			val = this.config.getTypeFacility().convertToRuntimeType(incrementedString.toCharArray());
+		} else if (type.equals(TypeFacility.RUNTIME_TYPES.BLOB) || type.equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) {
+			val = this.config.getTypeFacility().convertToRuntimeType(incrementedString.getBytes());
+		} else if (type.isArray()) {
+			val = Array.newInstance(type.getComponentType(), 1);
+			Array.set(val, 0, getVal(incrementedString, type.getComponentType()));
+		} else {
+			val = incrementedString;
+		}
+		return val;
 	}
 	
 	/**

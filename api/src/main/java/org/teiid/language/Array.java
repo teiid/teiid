@@ -24,8 +24,8 @@ package org.teiid.language;
 
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.visitor.LanguageObjectVisitor;
-import org.teiid.translator.TypeFacility;
 
 public class Array implements Expression {
 
@@ -39,7 +39,7 @@ public class Array implements Expression {
 	
 	@Override
 	public Class<?> getType() {
-		return TypeFacility.RUNTIME_TYPES.OBJECT;
+		return DataTypeManager.getArrayType(baseType);
 	}
 
 	@Override

@@ -2,8 +2,7 @@ package org.teiid.translator.loopback;
 
 import java.util.List;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.teiid.cdk.api.ConnectorHost;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.translator.TranslatorException;
@@ -44,6 +43,8 @@ public class TestHelper {
                         }
                     } else if(actualValue == null) {
                     	Assert.fail("Row " + r + ", Col " + c + ": Expected " + expectedValue + " but got null"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                    } else if (expectedValue.getClass().isArray() && !expectedValue.getClass().getComponentType().isPrimitive()) {
+                    	Assert.assertArrayEquals("Row " + r + ", Col " + c + ": Expected " + expectedValue + " but got " + actualValue, (Object[])expectedValue, (Object[])actualValue); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                     } else {
                     	Assert.assertEquals("Row " + r + ", Col " + c + ": Expected " + expectedValue + " but got " + actualValue, expectedValue, actualValue); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                     }

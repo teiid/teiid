@@ -154,4 +154,8 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 		return super.getDelegateName();
 	}
 	
+	@Override
+	public boolean returnsSingleUpdateCount() {
+		return true;
+	}
 }

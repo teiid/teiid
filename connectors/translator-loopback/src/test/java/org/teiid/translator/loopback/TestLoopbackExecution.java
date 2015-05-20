@@ -35,7 +35,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.translator.TranslatorException;
 
-
+@SuppressWarnings("nls")
 public class TestLoopbackExecution  {
 
     public LoopbackExecutionFactory exampleProperties(int waitTime, int rowCount) {
@@ -129,6 +129,13 @@ public class TestLoopbackExecution  {
                                 {new Integer(0)},
                                 {new Integer(0)}};
         TestHelper.helpTestQuery(false, "SELECT intkey FROM BQT1.SmallA LIMIT 3", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), 0, 100, expected); //$NON-NLS-1$
+    }
+    
+    @Test public void testArrayType() throws TranslatorException {
+    	Object[][] expected = {{new Integer[] {0}, new String[] {"ABCDEFGHIJ"}},
+                {new Integer[] {0}, new String[] {"ABCDEFGHIJ"}},
+                {new Integer[] {0}, new String[] {"ABCDEFGHIJ"}}};
+    	TestHelper.helpTestQuery(false, "SELECT (1,2), ('a',) FROM BQT1.SmallA LIMIT 3", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), 0, 100, expected); //$NON-NLS-1$
     }
     
 }
