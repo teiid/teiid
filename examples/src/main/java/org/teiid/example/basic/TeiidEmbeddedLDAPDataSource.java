@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.teiid.example.ExampleBase;
 import org.teiid.example.util.FileUtils;
@@ -41,8 +42,12 @@ public class TeiidEmbeddedLDAPDataSource extends ExampleBase {
 	private static String ldapAdminUserDN = "cn=Manager,dc=example,dc=com";
 	private static String ldapAdminPassword = "redhat";
 	
-	@Override
 	public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
+	
+	@Override
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 
 		initLDAPProperties();
 		
@@ -50,27 +55,29 @@ public class TeiidEmbeddedLDAPDataSource extends ExampleBase {
 		
 		LDAPExecutionFactory factory = new LDAPExecutionFactory();
 		factory.start();
-		server.addTranslator("translator-ldap", factory);
+		server.addTranslator("translator-ldap", factory); //$NON-NLS-1$
 		
 		LDAPManagedConnectionFactory managedconnectionFactory = new LDAPManagedConnectionFactory();
 		managedconnectionFactory.setLdapUrl(ldapUrl);
 		managedconnectionFactory.setLdapAdminUserDN(ldapAdminUserDN);
 		managedconnectionFactory.setLdapAdminUserPassword(ldapAdminPassword);
-		server.addConnectionFactory("java:/ldapDS", managedconnectionFactory.createConnectionFactory());
+		server.addConnectionFactory("java:/ldapDS", managedconnectionFactory.createConnectionFactory()); //$NON-NLS-1$
 		
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:ldapVDB", null);
+		conn = server.getDriver().connect("jdbc:teiid:ldapVDB", null); //$NON-NLS-1$
 		
-		executeQuery(conn, "SELECT * FROM HR_Group");
+		executeQuery(conn, "SELECT * FROM HR_Group", queue); //$NON-NLS-1$
 		
 		tearDown();
+		
+		add(queue, "Exit"); //$NON-NLS-1$
 	}
 
 	public static void main(String[] args) throws Exception {
-		new TeiidEmbeddedLDAPDataSource().execute(FileUtils.readFileContent("ldap-as-a-datasource", "ldap-vdb.xml"));
+		new TeiidEmbeddedLDAPDataSource().execute(FileUtils.readFileContent("ldap-as-a-datasource", "ldap-vdb.xml")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private static void initLDAPProperties() throws IOException {
@@ -79,19 +86,19 @@ public class TeiidEmbeddedLDAPDataSource extends ExampleBase {
 		InputStream input = null;
 		
 		try { 
-			input = new FileInputStream(FileUtils.readFile("ldap-as-a-datasource", "ldap.properties"));
+			input = new FileInputStream(FileUtils.readFile("ldap-as-a-datasource", "ldap.properties")); //$NON-NLS-1$ //$NON-NLS-2$
 			prop.load(input);
 			
-			if(prop.getProperty("ldap.url") != null) {
-				ldapUrl = prop.getProperty("ldap.url");
+			if(prop.getProperty("ldap.url") != null) { //$NON-NLS-1$
+				ldapUrl = prop.getProperty("ldap.url"); //$NON-NLS-1$
 			}
 			
-			if(prop.getProperty("ldap.adminUserDN") != null) {
-				ldapAdminUserDN = prop.getProperty("ldap.adminUserDN");
+			if(prop.getProperty("ldap.adminUserDN") != null) { //$NON-NLS-1$
+				ldapAdminUserDN = prop.getProperty("ldap.adminUserDN"); //$NON-NLS-1$
 			}
 			
-			if(prop.getProperty("ldap.adminUserPassword") != null) {
-				ldapAdminPassword = prop.getProperty("ldap.adminUserPassword");
+			if(prop.getProperty("ldap.adminUserPassword") != null) { //$NON-NLS-1$
+				ldapAdminPassword = prop.getProperty("ldap.adminUserPassword"); //$NON-NLS-1$
 			}
 	 
 		} catch (IOException e) {

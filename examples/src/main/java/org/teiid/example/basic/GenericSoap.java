@@ -23,6 +23,7 @@ package org.teiid.example.basic;
 
 import java.io.ByteArrayInputStream;
 import java.sql.CallableStatement;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.example.ExampleBase;
@@ -47,8 +48,12 @@ public class GenericSoap extends ExampleBase {
 	static final String GET_ALL = "<GetAllStateInfo xmlns=\"http://www.teiid.org/stateService/\"/>";
 	static final String GET_ONE = "<GetStateInfo xmlns=\"http://www.teiid.org/stateService/\"><stateCode xmlns=\"\">CA</stateCode></GetStateInfo>";
 	
-	@Override
 	public void execute(String vdb) throws Exception {
+	    execute(vdb, null);
+	}
+	
+	@Override
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 
 		server = new EmbeddedServer();
 		
@@ -73,9 +78,9 @@ public class GenericSoap extends ExampleBase {
 		cStmt.setBoolean(5, Boolean.TRUE);
 		cStmt.execute();
 		StAXSQLXML xml = (StAXSQLXML) cStmt.getObject(1);
-		System.out.println(xml.getString());
+		add(queue, xml.getString());
 		
-		System.out.println("\n");
+		add(queue,"\n"); //$NON-NLS-1$
 		
 		cStmt = conn.prepareCall("{call invoke(?, ?, ?, ?, ?)}");//$NON-NLS-1$
 		cStmt.setString(1, "SOAP11");
@@ -85,9 +90,11 @@ public class GenericSoap extends ExampleBase {
 		cStmt.setBoolean(5, Boolean.TRUE);
 		cStmt.execute();
 		xml = (StAXSQLXML) cStmt.getObject(1);
-		System.out.println(xml.getString());
+		add(queue, xml.getString());
 		
 		tearDown();
+		
+		add(queue, "Exit");
 	}	
 	
 	public static void main(String[] args) throws Exception {

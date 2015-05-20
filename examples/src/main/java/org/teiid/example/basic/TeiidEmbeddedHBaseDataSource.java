@@ -26,6 +26,7 @@ import static org.teiid.example.util.JDBCUtils.executeUpdate;
 
 import java.io.ByteArrayInputStream;
 import java.sql.Connection;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.sql.DataSource;
 
@@ -37,9 +38,13 @@ import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.hbase.HBaseExecutionFactory;
 
 public class TeiidEmbeddedHBaseDataSource extends ExampleBase {
+    
+    public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
 	
 	@Override
-	public void execute(String vdb) throws Exception {
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 		
 		DataSource ds = EmbeddedHelper.newDataSource(JDBC_DRIVER, JDBC_URL, JDBC_USER, JDBC_PASS);
 		
@@ -49,37 +54,39 @@ public class TeiidEmbeddedHBaseDataSource extends ExampleBase {
 		
 		HBaseExecutionFactory factory = new HBaseExecutionFactory();
 		factory.start();
-		server.addTranslator("translator-hbase", factory);
+		server.addTranslator("translator-hbase", factory); //$NON-NLS-1$
 		
-		server.addConnectionFactory("java:/hbaseDS", ds);
+		server.addConnectionFactory("java:/hbaseDS", ds); //$NON-NLS-1$
 		
 		start(false);
     	
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:hbasevdb", null);
+		conn = server.getDriver().connect("jdbc:teiid:hbasevdb", null); //$NON-NLS-1$
 		
-		executeQuery(conn, "SELECT * FROM Customer");
-		executeQuery(conn, "SELECT * FROM Customer ORDER BY name, city DESC");
-		
+		executeQuery(conn, "SELECT * FROM Customer", queue); //$NON-NLS-1$
+		executeQuery(conn, "SELECT * FROM Customer ORDER BY name, city DESC", queue); //$NON-NLS-1$
+		 
 		tearDown();
+		
+		add(queue, "Exit"); //$NON-NLS-1$
 	}
 	
 
 
 	public static void main(String[] args) throws Exception {
-		new TeiidEmbeddedHBaseDataSource().execute(FileUtils.readFileContent("hbase-as-a-datasource", "hbase-vdb.xml"));
+		new TeiidEmbeddedHBaseDataSource().execute(FileUtils.readFileContent("hbase-as-a-datasource", "hbase-vdb.xml")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private static void initSamplesData(DataSource ds) throws Exception {
 		Connection conn = ds.getConnection();
 		// init test data
 		executeUpdate(conn, CUSTOMER);
-		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('101', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
-		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('102', 'Atlanta, GA', 'Jane Brown', '$200.00', 'Lamps')");
-		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('103', 'Pittsburgh, PA', 'Bill Green', '$500.00', 'Desk')");
-		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('104', 'St. Louis, MO', 'Jack Black', '$8000.00', 'Bed')");
-		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('105', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')");
+		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('101', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')"); //$NON-NLS-1$
+		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('102', 'Atlanta, GA', 'Jane Brown', '$200.00', 'Lamps')"); //$NON-NLS-1$
+		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('103', 'Pittsburgh, PA', 'Bill Green', '$500.00', 'Desk')"); //$NON-NLS-1$
+		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('104', 'St. Louis, MO', 'Jack Black', '$8000.00', 'Bed')"); //$NON-NLS-1$
+		executeUpdate(conn, "UPSERT INTO \"Customer\" VALUES('105', 'Los Angeles, CA', 'John White', '$400.00', 'Chairs')"); //$NON-NLS-1$
 		JDBCUtils.close(conn);
 	}
 

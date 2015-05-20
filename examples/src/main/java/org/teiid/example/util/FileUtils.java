@@ -37,8 +37,8 @@ public class FileUtils {
 	 * @throws IOException 
 	 */
 	public static String readFileContent(String dir, String name) {
-		
-		File file = readFile(dir, name);
+
+	    File file = readFile(dir, name);
 		BufferedReader reader = null;
 		try {
 			
@@ -48,7 +48,7 @@ public class FileUtils {
 			
 			while( ( line = reader.readLine() ) != null ) {
 			    sb.append( line );
-			    sb.append("\n");
+			    sb.append("\n"); //$NON-NLS-1$
 			}
 			return sb.toString();
 		} catch (IOException e) {
@@ -72,7 +72,7 @@ public class FileUtils {
 	 */
 	public static String readFilePath(String dir, String name){
 
-		File baseDir = new File(System.getProperty("user.dir"));
+		File baseDir = new File(System.getProperty("user.dir")); //$NON-NLS-1$
 		File fileDir = find(baseDir, dir);
 		File fileItem = find(fileDir, name);
 		if(fileItem != null) {
@@ -89,7 +89,7 @@ public class FileUtils {
 	 */
 	public static File readFile(String dir, String name){
 
-		File baseDir = new File(System.getProperty("user.dir"));
+		File baseDir = new File(System.getProperty("user.dir")); //$NON-NLS-1$
 		File fileDir = find(baseDir, dir);
 		return find(fileDir, name);
 	}

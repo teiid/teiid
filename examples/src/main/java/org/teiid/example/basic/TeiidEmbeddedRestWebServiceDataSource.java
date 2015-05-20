@@ -24,6 +24,7 @@ package org.teiid.example.basic;
 import static org.teiid.example.util.JDBCUtils.executeQuery;
 
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.teiid.example.ExampleBase;
 import org.teiid.example.util.FileUtils;
@@ -33,31 +34,37 @@ import org.teiid.translator.ws.WSExecutionFactory;
 
 public class TeiidEmbeddedRestWebServiceDataSource extends ExampleBase {
 	
+    public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
+    
 	@Override
-	public void execute(String vdb) throws Exception {
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 
 		server = new EmbeddedServer();
 		
 		WSExecutionFactory factory = new WSExecutionFactory();
 		factory.start();
-		server.addTranslator("translator-rest", factory);
+		server.addTranslator("translator-rest", factory); //$NON-NLS-1$ 
 		
 		WSManagedConnectionFactory managedconnectionFactory = new WSManagedConnectionFactory();
-		server.addConnectionFactory("java:/CustomerRESTWebSvcSource", managedconnectionFactory.createConnectionFactory());
+		server.addConnectionFactory("java:/CustomerRESTWebSvcSource", managedconnectionFactory.createConnectionFactory()); //$NON-NLS-1$ 
 
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:restwebservice", null);
+		conn = server.getDriver().connect("jdbc:teiid:restwebservice", null); //$NON-NLS-1$ 
 		
-		executeQuery(conn, "SELECT customernumber, customername, city, country FROM CustomersView");
+		executeQuery(conn, "SELECT customernumber, customername, city, country FROM CustomersView", queue); //$NON-NLS-1$ 
 		
 		tearDown();
+		
+		add(queue, "Exit"); //$NON-NLS-1$
 	}
 
 	public static void main(String[] args) throws Exception {
-		new TeiidEmbeddedRestWebServiceDataSource().execute(FileUtils.readFileContent("webservices-as-a-datasource", "restwebservice-vdb.xml"));
+		new TeiidEmbeddedRestWebServiceDataSource().execute(FileUtils.readFileContent("webservices-as-a-datasource", "restwebservice-vdb.xml")); //$NON-NLS-1$  //$NON-NLS-2$ 
 	}
 
 	

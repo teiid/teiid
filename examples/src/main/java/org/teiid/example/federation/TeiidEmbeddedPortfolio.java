@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.sql.DataSource;
 
@@ -59,12 +60,16 @@ import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
  */
 public class TeiidEmbeddedPortfolio extends ExampleBase {
 	
+    public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
+    
 	@Override
-	public void execute(String vdb) throws Exception {
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 
 		startH2Server();
 		
-		DataSource ds = EmbeddedHelper.newDataSource("org.h2.Driver", "jdbc:h2:mem://localhost/~/account", "sa", "sa");
+		DataSource ds = EmbeddedHelper.newDataSource("org.h2.Driver", "jdbc:h2:mem://localhost/~/account", "sa", "sa"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		initSamplesData(ds);
 		
 		server = new EmbeddedServer();
@@ -72,33 +77,35 @@ public class TeiidEmbeddedPortfolio extends ExampleBase {
 		H2ExecutionFactory executionFactory = new H2ExecutionFactory() ;
 		executionFactory.setSupportsDirectQueryProcedure(true);
 		executionFactory.start();
-		server.addTranslator("translator-h2", executionFactory);
+		server.addTranslator("translator-h2", executionFactory); //$NON-NLS-1$ 
 		
-		server.addConnectionFactory("java:/accounts-ds", ds);
+		server.addConnectionFactory("java:/accounts-ds", ds); //$NON-NLS-1$ 
 		
     	FileExecutionFactory fileExecutionFactory = new FileExecutionFactory();
     	fileExecutionFactory.start();
-    	server.addTranslator("file", fileExecutionFactory);
+    	server.addTranslator("file", fileExecutionFactory); //$NON-NLS-1$ 
     	
     	FileManagedConnectionFactory managedconnectionFactory = new FileManagedConnectionFactory();
-		managedconnectionFactory.setParentDirectory(FileUtils.readFilePath("embedded-portfolio", "data"));
-		server.addConnectionFactory("java:/marketdata-file", managedconnectionFactory.createConnectionFactory());
+		managedconnectionFactory.setParentDirectory(FileUtils.readFilePath("embedded-portfolio", "data")); //$NON-NLS-1$  //$NON-NLS-2$ 
+		server.addConnectionFactory("java:/marketdata-file", managedconnectionFactory.createConnectionFactory()); //$NON-NLS-1$ 
 		
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:Portfolio", null);
+		conn = server.getDriver().connect("jdbc:teiid:Portfolio", null); //$NON-NLS-1$ 
 		
-		executeQuery(conn, "SELECT * FROM Product");
-		executeQuery(conn, "SELECT * FROM StockPrices");
-		executeQuery(conn, "SELECT * FROM Stock");
-		executeQuery(conn, "SELECT stock.* from (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock");
-		executeQuery(conn, "select product.symbol, stock.price, company_name from product, (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock where product.symbol=stock.symbol");
+		executeQuery(conn, "SELECT * FROM Product", queue); //$NON-NLS-1$ 
+		executeQuery(conn, "SELECT * FROM StockPrices", queue); //$NON-NLS-1$ 
+		executeQuery(conn, "SELECT * FROM Stock", queue); //$NON-NLS-1$ 
+		executeQuery(conn, "SELECT stock.* from (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock", queue); //$NON-NLS-1$ 
+		executeQuery(conn, "select product.symbol, stock.price, company_name from product, (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock where product.symbol=stock.symbol", queue); //$NON-NLS-1$ 
 		
 		tearDown();
 		
 		stopH2Server();
+		
+		add(queue, "Exit"); //$NON-NLS-1$
 	}	
 	
 	private static Server h2Server = null;

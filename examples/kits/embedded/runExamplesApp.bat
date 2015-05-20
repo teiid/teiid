@@ -2,7 +2,7 @@
 
 setLocal EnableDelayedExpansion
 set mainClasspath=lib\*;optional\*
-set mainClasspath=%mainClasspath%;optional\file\*;optional\jdbc\*;optional\jdbc\h2\*;optional\jdbc\tm\*
+set mainClasspath=%mainClasspath%;optional\file\*;optional\jdbc\*;optional\jdbc\h2\*;optional\tm\*
 set mainClasspath=%mainClasspath%;optional\excel\*
 set mainClasspath=%mainClasspath%;optional\webservice\*
 set mainClasspath=%mainClasspath%;optional\mongodb\*

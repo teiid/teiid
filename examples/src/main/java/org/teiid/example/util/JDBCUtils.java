@@ -21,7 +21,12 @@
  */
 package org.teiid.example.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,6 +35,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.concurrent.ArrayBlockingQueue;
+
+import org.teiid.example.util.TableRenderer.PrintStreamOutputDevice;
 
 public class JDBCUtils {
 	
@@ -39,38 +47,46 @@ public class JDBCUtils {
 	}
 
 	public static void close(Connection conn) throws SQLException {
-
-		if(null != conn) {
-			conn.close();
-			conn = null;
-		}
+	    close(null, null, conn);
 	}
 	
 	public static void close(Statement stmt) throws SQLException {
-
-		if(null != stmt) {
-			stmt.close();
-			stmt = null;
-		}
+	    close(null, stmt, null);
 	}
 	
+	public static void close(ResultSet rs) throws SQLException {
+	    close(rs, null, null);
+    }
+	
+	public static void close(Statement stmt, Connection conn) throws SQLException {
+	    close(null, stmt, conn);
+    }
+	
 	public static void close(ResultSet rs, Statement stmt) throws SQLException {
-
-		if (null != rs) {
-			rs.close();
-			rs = null;
-		}
-		
-		if(null != stmt) {
-			stmt.close();
-			stmt = null;
-		}
+	    close(rs, stmt, null);
+	}
+	
+	public static void close(ResultSet rs, Statement stmt, Connection conn) throws SQLException {
+	    if (null != rs) {
+            rs.close();
+            rs = null;
+        }
+        
+        if(null != stmt) {
+            stmt.close();
+            stmt = null;
+        }
+        
+        if(null != conn) {
+            conn.close();
+            conn = null;
+        }
 	}
 	
 
 	public static void executeQuery(Connection conn, String sql) throws SQLException {
 		
-		System.out.println("Query SQL: " + sql);
+		System.out.println("Query SQL: " + sql); //$NON-NLS-1$ 
 		
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -86,6 +102,49 @@ public class JDBCUtils {
 		System.out.println();
 		
 	}
+	
+	@SuppressWarnings("resource")
+    public static void executeQuery(Connection conn, String sql, ArrayBlockingQueue<String> queue) throws SQLException  {
+        
+	    if(queue == null) {
+	        executeQuery(conn, sql);
+	        return;
+	    }
+	    
+	    queue.add("Query SQL: " + sql + "\n"); //$NON-NLS-1$  //$NON-NLS-2$ 
+        
+        Statement stmt = null;
+        ResultSet rs = null;
+        ByteArrayOutputStream baos = null;
+        
+        try {
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(sql);
+            baos = new ByteArrayOutputStream();
+            PrintStream ps = new PrintStream(baos);
+            new ResultSetRenderer(rs, new PrintStreamOutputDevice(ps)).renderer();
+            String content = baos.toString(Charset.defaultCharset().name());
+            queue.add(content);
+        } catch (UnsupportedEncodingException e) {
+            queue.add(e.getMessage());
+        } catch (SQLException e) {
+            queue.add(e.getMessage());
+            throw e;
+        } finally {
+            close(rs, stmt);
+            if(null != baos) {
+                try {
+                    baos.close();
+                } catch (IOException e) {
+                   
+                }
+            }
+        }
+        
+        queue.add("\n"); //$NON-NLS-1$
+        
+    }
+	
 
 	public static boolean executeUpdate(Connection conn, String sql) throws SQLException {
 			
@@ -114,6 +173,14 @@ public class JDBCUtils {
 			this.columns = meta.getColumnCount();
 			setMeta(getDisplayMeta(meta));
 		}
+		
+		public ResultSetRenderer(ResultSet rs, OutputDevice out) throws SQLException {
+            super(out);
+            this.rs = rs;
+            this.meta = rs.getMetaData();
+            this.columns = meta.getColumnCount();
+            setMeta(getDisplayMeta(meta));
+        }
 		
 		@Override
 		public void renderer() {
@@ -150,10 +217,6 @@ public class JDBCUtils {
 			    int col = i+1;
 			    int alignment  = ColumnMetaData.ALIGN_LEFT;
 			    String columnLabel = m.getColumnLabel( col );
-			    /*
-			    int width = Math.max(m.getColumnDisplaySize(i),
-						 columnLabel.length());
-			    */
 			    switch (m.getColumnType( col )) {
 			    case Types.NUMERIC:  
 			    case Types.INTEGER: 

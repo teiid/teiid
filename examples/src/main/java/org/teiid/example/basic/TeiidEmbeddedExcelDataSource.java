@@ -22,6 +22,7 @@
 package org.teiid.example.basic;
 
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.teiid.example.ExampleBase;
 import org.teiid.example.util.FileUtils;
@@ -34,38 +35,43 @@ import static org.teiid.example.util.JDBCUtils.executeQuery;
 
 public class TeiidEmbeddedExcelDataSource extends ExampleBase {
 	
+    public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
+    
 	@Override
-	public void execute(String vdb) throws Exception {
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 		
 		server = new EmbeddedServer();
 		
 		ExcelExecutionFactory factory = new ExcelExecutionFactory();
 		factory.start();
 		factory.setSupportsDirectQueryProcedure(true);
-		server.addTranslator("excel", factory);
+		server.addTranslator("excel", factory); //$NON-NLS-1$
 		
 		FileManagedConnectionFactory managedconnectionFactory = new FileManagedConnectionFactory();
 		
-		managedconnectionFactory.setParentDirectory(FileUtils.readFilePath("excel-as-a-datasource", "data"));
+		managedconnectionFactory.setParentDirectory(FileUtils.readFilePath("excel-as-a-datasource", "data")); //$NON-NLS-1$ //$NON-NLS-2$
 		server.addConnectionFactory("java:/excel-file", managedconnectionFactory.createConnectionFactory());
 		
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:ExcelVDB", null);
+		conn = server.getDriver().connect("jdbc:teiid:ExcelVDB", null); //$NON-NLS-1$
 		
-		executeQuery(conn, "SELECT * FROM Sheet1");
+		executeQuery(conn, "SELECT * FROM Sheet1", queue); //$NON-NLS-1$
 		
-		executeQuery(conn, "SELECT * FROM PersonalHoldings");
+		executeQuery(conn, "SELECT * FROM PersonalHoldings", queue); //$NON-NLS-1$ 
 		
 		JDBCUtils.close(conn);
 		
 		server.stop();
 		
+		add(queue, "Exit"); //$NON-NLS-1$
 	}
 
 	public static void main(String[] args) throws Exception {
-		new TeiidEmbeddedExcelDataSource().execute(FileUtils.readFileContent("excel-as-a-datasource", "excel-vdb.xml"));
+		new TeiidEmbeddedExcelDataSource().execute(FileUtils.readFileContent("excel-as-a-datasource", "excel-vdb.xml")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

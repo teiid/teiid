@@ -110,6 +110,10 @@ public class TableRenderer{
     public TableRenderer(OutputDevice out) {
         this(null, out);
     }
+    
+    public TableRenderer(ColumnMetaData[] meta) {
+        this(meta, new PrintStreamOutputDevice(System.out));
+    }
 
     public void addRow(Column[] row) {
         updateColumnWidths(row);
@@ -259,12 +263,8 @@ public class TableRenderer{
         printHorizontalLine();
     }
 
-    protected String formatString(String text,
-                                  char fillchar,
-                                  int len,
-                                  int alignment) {
-        // System.out.println("[formatString] len: " + len + ", text.length: " + text.length());
-        // text = "hi";
+    protected String formatString(String text, char fillchar, int len, int alignment) {
+
         StringBuffer fillstr = new StringBuffer();
 
         if (len > 4000) {
@@ -317,8 +317,7 @@ public class TableRenderer{
             if (text == null) {
                 width = NULL_LENGTH;
                 columnText = null;
-            }
-            else {
+            } else {
                 width = 0;
                 StringTokenizer tok = new StringTokenizer(text, "\n\r");
                 columnText = new String[tok.countTokens()];
@@ -349,8 +348,7 @@ public class TableRenderer{
                 if (pos == lastPos) { // no whitespace found: hard cut
                     tmpRows.add(str.substring(lastPos, lastPos + autoCol));
                     lastPos = lastPos + autoCol;
-                }
-                else {
+                } else {
                     tmpRows.add(str.substring(lastPos, pos));
                     lastPos = pos + /* skip space: */ 1;
                 }
@@ -392,8 +390,7 @@ public class TableRenderer{
                     }
                     columnText = replaceRow(columnText, i, multiRows);
                     i += multiRows.length; // next loop pos here.
-                }
-                else {
+                } else {
                     if (colWidth > width) {
                         width = colWidth;
                     }
@@ -444,6 +441,14 @@ public class TableRenderer{
         		}
         		return row;
         	}
+        	
+        	public static Column[] form(List<?> list) {
+        	    Column[] row = new Column[list.size()];
+        	    for(int i = 0 ; i < list.size() ; i ++) {
+        	        row[i] = new Column(String.valueOf(list.get(i)));
+        	    }
+        	    return row;
+        	}
         }
     }
     
@@ -458,7 +463,7 @@ public class TableRenderer{
         /** the header of this column */
         private final String label;
 
-        /** minimum width of this column; ususally set by the header width */
+        /** minimum width of this column; usually set by the header width */
         private final int initialWidth;
 
         /** wrap columns automatically at this column; -1 = disabled */
@@ -532,7 +537,7 @@ public class TableRenderer{
         	public static ColumnMetaData[] create(int align, String... items) {
         		ColumnMetaData[] metadata = new ColumnMetaData [items.length];
         		for(int i = 0 ; i < items.length ; i ++) {
-        			metadata[i] = new ColumnMetaData(items[i], ColumnMetaData.ALIGN_CENTER);
+        			metadata[i] = new ColumnMetaData(items[i], align);
         		}
         		return metadata;
         	}
@@ -540,6 +545,19 @@ public class TableRenderer{
         	public static ColumnMetaData[] create(String... items) {
         		return create(ALIGN_CENTER, items);
         	}
+        	
+        	public static ColumnMetaData[] form(int align, String[] items) {
+        	    ColumnMetaData[] metadata = new ColumnMetaData [items.length];
+        	    for(int i = 0 ; i < items.length ; i ++){
+        	        metadata[i] = new ColumnMetaData(items[i], align);
+        	    }
+        	    return metadata;
+        	} 
+        	
+        	public static ColumnMetaData[] form(String[] items) {
+        	    return form(ALIGN_CENTER, items);
+        	}
+                
         }
     }
     

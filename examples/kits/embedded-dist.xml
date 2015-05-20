@@ -37,16 +37,9 @@
     </files>
     
     <dependencySets>
-    	<dependencySet>
-          <includes>
-             <include>org.jboss.narayana.jta:narayana-jta:jar</include>
-          </includes>
-          <outputDirectory>lib</outputDirectory>
-          <unpack>false</unpack>
-          <useTransitiveDependencies>false</useTransitiveDependencies>
-      </dependencySet>
       <dependencySet>
           <includes>
+          	  <include>org.jboss.narayana.jta:narayana-jta:jar</include>
               <include>org.jboss.ironjacamar:ironjacamar-jdbc:jar</include>
               <include>org.jboss.ironjacamar:ironjacamar-core-api:jar</include>
               <include>org.jboss.ironjacamar:ironjacamar-core-impl:jar</include>
@@ -56,7 +49,7 @@
               <include>org.jboss.ironjacamar:ironjacamar-spec-api:jar</include>
               <include>org.jboss:jboss-transaction-spi:jar</include>
           </includes>
-          <outputDirectory>optional/jdbc/tm</outputDirectory>
+          <outputDirectory>optional/tm</outputDirectory>
           <unpack>false</unpack>
        </dependencySet>
     </dependencySets>

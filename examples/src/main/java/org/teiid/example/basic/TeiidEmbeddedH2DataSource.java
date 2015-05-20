@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.sql.DataSource;
 
@@ -47,7 +48,7 @@ public class TeiidEmbeddedH2DataSource extends ExampleBase {
 	private static Server h2Server = null;
 	
 	public static void main(String[] args) throws Exception {
-		new TeiidEmbeddedH2DataSource().execute(FileUtils.readFileContent("rdbms-as-a-datasource", "h2-vdb.xml"));
+		new TeiidEmbeddedH2DataSource().execute(FileUtils.readFileContent("rdbms-as-a-datasource", "h2-vdb.xml")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private void stopH2Server() {
@@ -55,41 +56,47 @@ public class TeiidEmbeddedH2DataSource extends ExampleBase {
 	}
 
 	private void initSamplesData(DataSource ds) throws FileNotFoundException, SQLException {
-		RunScript.execute(ds.getConnection(), new InputStreamReader(new FileInputStream(FileUtils.readFile("rdbms-as-a-datasource", "customer-schema-h2.sql"))));
+		RunScript.execute(ds.getConnection(), new InputStreamReader(new FileInputStream(FileUtils.readFile("rdbms-as-a-datasource", "customer-schema-h2.sql")))); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 
 	private void startH2Server() throws SQLException {
 		h2Server = Server.createTcpServer().start();	
 	}
+	
+	public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
 
 	@Override
-	public void execute(String vdb) throws Exception {
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 		
 		startH2Server();
 		
-		DataSource ds = EmbeddedHelper.newDataSource("org.h2.Driver", "jdbc:h2:mem://localhost/~/account", "sa", "sa");
+		DataSource ds = EmbeddedHelper.newDataSource("org.h2.Driver", "jdbc:h2:mem://localhost/~/account", "sa", "sa"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		initSamplesData(ds);
 		
 		server = new EmbeddedServer();
 		
 		init("translator-h2", new H2ExecutionFactory());
 		
-		server.addConnectionFactory("java:/accounts-ds", ds);
+		server.addConnectionFactory("java:/accounts-ds", ds); //$NON-NLS-1$
 		
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:H2VDB", null);
+		conn = server.getDriver().connect("jdbc:teiid:H2VDB", null); //$NON-NLS-1$
 		
-		executeQuery(conn, "SELECT * FROM CUSTOMERVIEW");
+		executeQuery(conn, "SELECT * FROM CUSTOMERVIEW", queue); //$NON-NLS-1$
 		
-		executeQuery(conn, "SELECT SSN, FIRSTNAME, LASTNAME, ST_ADDRESS, CITY, STATE FROM Customer");
+		executeQuery(conn, "SELECT SSN, FIRSTNAME, LASTNAME, ST_ADDRESS, CITY, STATE FROM Customer", queue); //$NON-NLS-1$
 		
 		tearDown();
 		
 		stopH2Server();
+		
+		add(queue, "Exit");
 	}	
 
 }

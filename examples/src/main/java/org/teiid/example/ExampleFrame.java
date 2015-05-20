@@ -27,6 +27,7 @@ import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -130,9 +131,23 @@ public class ExampleFrame extends JFrame {
 
 		try {
 			Class<?> clas = this.getClass().getClassLoader().loadClass(className);
-			Method method = clas.getMethod("execute", new Class[]{String.class}); //$NON-NLS-1$ 
-			method.invoke(clas.newInstance(), new Object[]{vdb});
-			area.setText("Success"); //$NON-NLS-1$ 
+			Method method = clas.getMethod("execute", new Class[]{String.class, ArrayBlockingQueue.class}); //$NON-NLS-1$ 
+			final ArrayBlockingQueue<String> queue = new ArrayBlockingQueue<String>(100);
+			method.invoke(clas.newInstance(), new Object[]{vdb, queue});
+			new Thread(new Runnable(){
+
+                public void run() {
+                    String resp = "";
+                    try {
+                        while(!(resp = queue.take()).equals("Exit")){ //$NON-NLS-1$ 
+                            area.setText(area.getText() + "\n" + resp);//$NON-NLS-1$ 
+                        }
+                    } catch (InterruptedException e) {
+                        area.setText(area.getText() + e.getMessage());
+                    }
+                }
+			    
+			}).start();
 		} catch (Throwable e) {
 			area.setText(e.getMessage());
 			e.printStackTrace();

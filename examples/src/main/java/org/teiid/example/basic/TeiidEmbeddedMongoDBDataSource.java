@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.teiid.example.ExampleBase;
 import org.teiid.example.util.FileUtils;
@@ -41,8 +42,12 @@ public class TeiidEmbeddedMongoDBDataSource  extends ExampleBase {
 	private static String SERVERLIST = "127.0.0.1:27017" ;
 	private static String DBNAME = "mydb" ;
 	
-	@Override
 	public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
+	
+	@Override
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 		
 		initMongoProperties();
 
@@ -50,29 +55,31 @@ public class TeiidEmbeddedMongoDBDataSource  extends ExampleBase {
 		
 		MongoDBExecutionFactory factory = new MongoDBExecutionFactory();
 		factory.start();
-		server.addTranslator("translator-mongodb", factory);
+		server.addTranslator("translator-mongodb", factory); //$NON-NLS-1$ 
 		
 		MongoDBManagedConnectionFactory managedconnectionFactory = new MongoDBManagedConnectionFactory();
 		managedconnectionFactory.setRemoteServerList(SERVERLIST);
 		managedconnectionFactory.setDatabase(DBNAME);
-		server.addConnectionFactory("java:/mongoDS", managedconnectionFactory.createConnectionFactory());
+		server.addConnectionFactory("java:/mongoDS", managedconnectionFactory.createConnectionFactory()); //$NON-NLS-1$ 
 		
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:nothwind", null);
+		conn = server.getDriver().connect("jdbc:teiid:nothwind", null); //$NON-NLS-1$ 
 		
-		executeUpdate(conn, "DELETE FROM Employee");
-		executeUpdate(conn, "INSERT INTO Employee(employee_id, FirstName, LastName) VALUES (1, 'Teiid', 'JBoss')");
-		executeUpdate(conn, "INSERT INTO Employee(employee_id, FirstName, LastName) VALUES (2, 'Teiid', 'JBoss')");
-		executeQuery(conn, "SELECT * FROM Employee");
+		executeUpdate(conn, "DELETE FROM Employee"); //$NON-NLS-1$ 
+		executeUpdate(conn, "INSERT INTO Employee(employee_id, FirstName, LastName) VALUES (1, 'Teiid', 'JBoss')"); //$NON-NLS-1$ 
+		executeUpdate(conn, "INSERT INTO Employee(employee_id, FirstName, LastName) VALUES (2, 'Teiid', 'JBoss')"); //$NON-NLS-1$ 
+		executeQuery(conn, "SELECT * FROM Employee", queue); //$NON-NLS-1$ 
 		
 		tearDown();
+		
+		add(queue, "Exit"); //$NON-NLS-1$
 	}
 
 	public static void main(String[] args) throws Exception {
-		new TeiidEmbeddedMongoDBDataSource().execute(FileUtils.readFileContent("mongodb-as-a-datasource", "mongodb-vdb.xml"));
+		new TeiidEmbeddedMongoDBDataSource().execute(FileUtils.readFileContent("mongodb-as-a-datasource", "mongodb-vdb.xml")); //$NON-NLS-1$  //$NON-NLS-2$ 
 	}
 
 	private void initMongoProperties() throws IOException {
@@ -81,15 +88,15 @@ public class TeiidEmbeddedMongoDBDataSource  extends ExampleBase {
 		InputStream input = null;
 		
 		try { 
-			input = new FileInputStream(FileUtils.readFile("mongodb-as-a-datasource", "mongodb.properties"));
+			input = new FileInputStream(FileUtils.readFile("mongodb-as-a-datasource", "mongodb.properties")); //$NON-NLS-1$  //$NON-NLS-2$ 
 			prop.load(input);
 			
-			if(prop.getProperty("server.list") != null) {
-				SERVERLIST = prop.getProperty("server.list");
+			if(prop.getProperty("server.list") != null) { //$NON-NLS-1$
+				SERVERLIST = prop.getProperty("server.list"); //$NON-NLS-1$
 			}
 			
-			if(prop.getProperty("db.name") != null){
-				DBNAME = prop.getProperty("db.name");
+			if(prop.getProperty("db.name") != null){ //$NON-NLS-1$
+				DBNAME = prop.getProperty("db.name"); //$NON-NLS-1$
 			}
 	 
 		} catch (IOException e) {

@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.teiid.example.ExampleBase;
 import org.teiid.example.util.FileUtils;
@@ -40,8 +41,12 @@ public class TeiidEmbeddedCassandraDataSource extends ExampleBase {
 	private static String ADDRESS = "127.0.0.1";
 	private static String KEYSPACE = "demo";
 	
-	@Override
 	public void execute(String vdb) throws Exception {
+        execute(vdb, null);
+    }
+	
+	@Override
+	public void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception {
 		
 		initCassandraProperties();
 
@@ -49,22 +54,24 @@ public class TeiidEmbeddedCassandraDataSource extends ExampleBase {
 		
 		CassandraExecutionFactory factory = new CassandraExecutionFactory();
 		factory.start();
-		server.addTranslator("translator-cassandra", factory);
+		server.addTranslator("translator-cassandra", factory); //$NON-NLS-1$
 		
 		CassandraManagedConnectionFactory managedconnectionFactory = new CassandraManagedConnectionFactory();
 		managedconnectionFactory.setAddress(ADDRESS);
 		managedconnectionFactory.setKeyspace(KEYSPACE);
-		server.addConnectionFactory("java:/demoCassandra", managedconnectionFactory.createConnectionFactory());
+		server.addConnectionFactory("java:/demoCassandra", managedconnectionFactory.createConnectionFactory()); //$NON-NLS-1$
 		
 		start(false);
 		
 		server.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		
-		conn = server.getDriver().connect("jdbc:teiid:users", null);
+		conn = server.getDriver().connect("jdbc:teiid:users", null); //$NON-NLS-1$
 		
-		executeQuery(conn, "SELECT * FROM UsersView");
+		executeQuery(conn, "SELECT * FROM UsersView", queue); //$NON-NLS-1$
 		
 		tearDown();
+		
+		add(queue, "Exit"); //$NON-NLS-1$
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -77,15 +84,15 @@ public class TeiidEmbeddedCassandraDataSource extends ExampleBase {
 		InputStream input = null;
 		
 		try { 
-			input = new FileInputStream(FileUtils.readFile("cassandra-as-a-datasourse", "cassandra.properties"));
+			input = new FileInputStream(FileUtils.readFile("cassandra-as-a-datasourse", "cassandra.properties")); //$NON-NLS-1$ //$NON-NLS-2$
 			prop.load(input);
 			
-			if(prop.getProperty("cassandra.address") != null) {
-				ADDRESS = prop.getProperty("cassandra.address");
+			if(prop.getProperty("cassandra.address") != null) { //$NON-NLS-1$
+				ADDRESS = prop.getProperty("cassandra.address"); //$NON-NLS-1$
 			}
 			
-			if(prop.getProperty("cassandra.keyspace") != null){
-				KEYSPACE = prop.getProperty("cassandra.keyspace");
+			if(prop.getProperty("cassandra.keyspace") != null){ //$NON-NLS-1$
+				KEYSPACE = prop.getProperty("cassandra.keyspace"); //$NON-NLS-1$
 			}
 	 
 		} catch (IOException e) {

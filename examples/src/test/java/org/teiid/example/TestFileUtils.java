@@ -33,23 +33,22 @@ public class TestFileUtils {
 	@Test
 	public void testReadClassPathFile() throws IOException{
 		
-		assertNotNull(FileUtils.readFileContent("rdbms-as-a-datasource", "readme.txt"));
-		assertNotNull(FileUtils.readFileContent("rdbms-as-a-datasource", "customer-schema-h2.sql"));
-		assertNotNull(FileUtils.readFileContent("rdbms-as-a-datasource", "h2-vdb.xml"));
+		assertNotNull(FileUtils.readFileContent("rdbms-as-a-datasource", "readme.txt")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(FileUtils.readFileContent("rdbms-as-a-datasource", "customer-schema-h2.sql")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(FileUtils.readFileContent("rdbms-as-a-datasource", "h2-vdb.xml")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		assertNotNull(FileUtils.readFileContent("excel-as-a-datasource", "readme.txt"));
-		assertNotNull(FileUtils.readFileContent("excel-as-a-datasource", "otherholdings.xls"));
-		assertNotNull(FileUtils.readFileContent("excel-as-a-datasource", "excel-vdb.xml"));
+		assertNotNull(FileUtils.readFileContent("excel-as-a-datasource", "readme.txt")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(FileUtils.readFileContent("excel-as-a-datasource", "otherholdings.xls")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(FileUtils.readFileContent("excel-as-a-datasource", "excel-vdb.xml")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	}
 	
 	@Test
 	public void testReadFilePath() {
-		assertNotNull(FileUtils.readFilePath("excel-as-a-datasource", "data"));
-		assertNotNull(FileUtils.readFilePath("embedded-portfolio", "data"));
-		assertNotNull(FileUtils.readFilePath("embedded-portfolio", "data"));
+		assertNotNull(FileUtils.readFilePath("excel-as-a-datasource", "data")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(FileUtils.readFilePath("embedded-portfolio", "data")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertNotNull(FileUtils.readFilePath("embedded-portfolio", "data")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-//		System.out.println(path);
-	}
+ 	}
 
 }

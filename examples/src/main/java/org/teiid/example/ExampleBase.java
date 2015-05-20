@@ -23,6 +23,7 @@ package org.teiid.example;
 
 import java.net.InetSocketAddress;
 import java.sql.Connection;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
@@ -73,7 +74,15 @@ public abstract class ExampleBase {
 		}
 	}
 	
+	protected void add(ArrayBlockingQueue<String> queue, String item) {
+	    if(null != queue) {
+	        queue.add(item);
+	    } else {
+	        System.out.println(item);
+	    }
+	}
 	
-	public abstract void execute(String vdb) throws Exception;
+	
+	public abstract void execute(String vdb, ArrayBlockingQueue<String> queue) throws Exception;
 
 }

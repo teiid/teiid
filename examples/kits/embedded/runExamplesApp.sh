@@ -4,7 +4,7 @@
 cd `dirname $0`
 
 mainClasspath=lib/*:optional/*
-mainClasspath=${mainClasspath}:optional/file/*:optional/jdbc/*:optional/jdbc/h2/*:optional/jdbc/tm/*
+mainClasspath=${mainClasspath}:optional/file/*:optional/jdbc/*:optional/jdbc/h2/*:optional/tm/*
 mainClasspath=${mainClasspath}:optional/excel/*
 mainClasspath=${mainClasspath}:optional/webservice/*
 mainClasspath=${mainClasspath}:optional/mongodb/*
