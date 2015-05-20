@@ -170,6 +170,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     		}
             isClosed = true;
         }
+    	//we can do this because the statement can only have a
+    	//single resultset open currently
+    	if (this.statement.isCloseOnCompletion()) {
+    		this.statement.close();
+    	}
     }
     
 	public boolean isClosed() throws SQLException {

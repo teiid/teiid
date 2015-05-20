@@ -284,4 +284,22 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		assertRowCount(0);
 		
 	}
+	
+	@Test public void testCloseOnCompletion() throws Exception {
+		String sql = "values (1)"; //$NON-NLS-1$
+		this.execute(sql);
+		this.internalStatement.closeOnCompletion();
+		this.internalResultSet.close();
+		assertTrue(this.internalStatement.isClosed());
+		
+		sql = "values (1)"; //$NON-NLS-1$
+		this.execute(sql);
+		this.internalStatement.closeOnCompletion();
+		try {
+			this.internalStatement.execute(sql);
+			fail();
+		} catch (SQLException e) {
+			//implicitly closed
+		}
+	}
 }

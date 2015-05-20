@@ -156,6 +156,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     //Map<out/inout/return param index --> index in results>
     protected Map<Integer, Integer> outParamIndexMap = new HashMap<Integer, Integer>();
     protected Map<String, Integer> outParamByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+
+	private boolean closeOnCompletion;
     
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -221,8 +223,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.annotations = null;
 
         if ( this.resultSet != null ) {
-            this.resultSet.close();
-            this.resultSet = null;
+        	ResultSet rs = this.resultSet;
+        	this.resultSet = null;
+            rs.close();
+            checkStatement();
         }
 
         this.serverWarnings = null;
@@ -275,8 +279,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
         // close the the server's statement object (if necessary)
         if(resultSet != null) {
-            resultSet.close();
-            resultSet = null;
+        	ResultSet rs = this.resultSet;
+        	resultSet = null;
+            rs.close();
+            
         }
 
         isClosed = true;
@@ -1182,10 +1188,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
 
 	public void closeOnCompletion() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		this.closeOnCompletion = true;
 	}
 
 	public boolean isCloseOnCompletion() throws SQLException {
-		return false;
+		return closeOnCompletion;
 	}
 }
