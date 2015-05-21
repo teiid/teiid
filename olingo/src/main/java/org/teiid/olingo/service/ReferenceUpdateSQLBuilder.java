@@ -62,35 +62,21 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
     private boolean collection;
     private final ArrayList<SQLParameter> params = new ArrayList<SQLParameter>();
 
-    static class ScopedTable {
-        private Table table;
-        private EdmEntityType type;
-        private List<UriParameter> keys;
+    static class ScopedTable extends EntityResource {
         private ForeignKey fk;
         
-        public ScopedTable (Table table, EdmEntityType type, List<UriParameter> keys) {
-            this.table = table;
-            this.type = type;
-            this.keys = keys;
+        public ScopedTable (Table table, EdmEntityType type, List<UriParameter> keys) {            
+            setTable(table);
+            setEdmEntityType(type);
+            setGroupSymbol(new GroupSymbol(table.getFullName()));
+            setKeyPredicates(keys);
         }
-        public Table getTable() {
-            return table;
-        }
-        public EdmEntityType getType() {
-            return type;
-        }        
         public ForeignKey getFk() {
             return fk;
         }
         public void setFk(ForeignKey fk) {
             this.fk = fk;
         }
-        public List<UriParameter> getKeys() {
-            return keys;
-        }
-        public void setKeys(List<UriParameter> keys) {
-            this.keys = keys;
-        }        
     }
     
     public ReferenceUpdateSQLBuilder(MetadataStore metadata, String baseURI, ServiceMetadata serviceMetadata) {
@@ -101,7 +87,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriResourceEntitySet info) {
-        Table table = ODataSQLBuilder.findTable(info.getEntitySet(), this.metadata);
+        Table table = EntityResource.findTable(info.getEntitySet(), this.metadata);
         EdmEntityType type = info.getEntitySet().getEntityType();
         List<UriParameter> keys = info.getKeyPredicates();
         this.updateTable = new ScopedTable(table, type, keys);
@@ -111,12 +97,12 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
     public void visit(UriResourceNavigation info) {
         EdmNavigationProperty property = info.getProperty();
         
-        this.referenceTable = new ScopedTable(ODataSQLBuilder.findTable(property.getType(), 
+        this.referenceTable = new ScopedTable(EntityResource.findTable(property.getType(), 
                 this.metadata), property.getType(),
                 info.getKeyPredicates());
         
         if (property.isCollection()) {
-            ForeignKey fk = ODataSQLBuilder.joinFK(referenceTable.table, this.updateTable.table);
+            ForeignKey fk = EntityResource.joinFK(referenceTable.getTable(), this.updateTable.getTable());
             referenceTable.setFk(fk);
             
             ScopedTable temp = this.updateTable;
@@ -125,7 +111,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             this.collection = true;
         }
         else {
-            ForeignKey fk = ODataSQLBuilder.joinFK(this.updateTable.table, referenceTable.table);
+            ForeignKey fk = EntityResource.joinFK(this.updateTable.getTable(), referenceTable.getTable());
             this.updateTable.setFk(fk);
         }
     }    
@@ -137,10 +123,10 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 UriInfo uriInfo = ODataSQLBuilder.buildUriInfo(referenceId, this.baseURI, this.serviceMetadata);
                 UriResourceEntitySet uriEnitytSet = (UriResourceEntitySet)uriInfo.asUriInfoResource().getUriResourceParts().get(0);
                 if (this.collection) {
-                    this.updateTable.setKeys(uriEnitytSet.getKeyPredicates());
+                    this.updateTable.setKeyPredicates(uriEnitytSet.getKeyPredicates());
                 }
                 else {
-                    this.referenceTable.setKeys(uriEnitytSet.getKeyPredicates());
+                    this.referenceTable.setKeyPredicates(uriEnitytSet.getKeyPredicates());
                 }
             }
         } catch (UriParserException e) {
@@ -150,24 +136,23 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
         }
         
         try {
-            GroupSymbol tableGroup = new GroupSymbol(this.updateTable.getTable().getFullName());
             Update update = new Update();
-            update.setGroup(tableGroup);
+            update.setGroup(this.updateTable.getGroupSymbol());
             
-            List<String> columnNames = ODataSQLBuilder.getColumnNames(this.updateTable.getFk().getColumns());
+            List<String> columnNames = EntityResource.getColumnNames(this.updateTable.getFk().getColumns());
             for (int i = 0; i < columnNames.size(); i++) {
                 Column column = this.updateTable.getFk().getColumns().get(i);
                 String columnName = columnNames.get(i);
-                ElementSymbol symbol = new ElementSymbol(columnName, tableGroup);
+                ElementSymbol symbol = new ElementSymbol(columnName, this.updateTable.getGroupSymbol());
                 
-                EdmEntityType entityType = this.updateTable.getType();
+                EdmEntityType entityType = this.updateTable.getEdmEntityType();
                 EdmProperty edmProperty = (EdmProperty)entityType.getProperty(columnName);
                 
                 // reference table keys will be null for delete scenario
                 Object value = null;
                 if (!delete) {
                     UriParameter parameter = getParameter(this.updateTable.getFk().getReferenceColumns().get(i),
-                            this.referenceTable.getKeys());
+                            this.referenceTable.getKeyPredicates());
                     value = LiteralParser.parseLiteral(edmProperty, column.getJavaType(), parameter.getText());
                 }
                 
@@ -185,11 +170,8 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 pk = this.updateTable.getTable().getUniqueKeys().get(0);
             }
             
-            Criteria criteria = ODataSQLBuilder.buildEntityKeyCriteria(
-                    this.updateTable.getTable(), 
-                    tableGroup,
-                    this.updateTable.getKeys(), 
-                    null, this.metadata, null);
+            Criteria criteria = EntityResource.buildEntityKeyCriteria(
+                    this.updateTable, null, this.metadata, null, null);
             update.setCriteria(criteria);
             
             return update;

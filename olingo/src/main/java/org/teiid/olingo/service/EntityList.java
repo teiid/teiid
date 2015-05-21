@@ -61,16 +61,18 @@ public class EntityList extends EntityCollection implements QueryResponse {
     private final List<ProjectedColumn> projectedColumns;
     private String nextToken;
     private EdmEntityType entityType;
-    private ExpandInfo expandInfo;
+    private ExpandResource expandInfo;
     private Entity currentEntity;
 
     public EntityList(String invalidCharacterReplacement,
-            EdmEntityType entityType, List<ProjectedColumn> projectedColumns, ExpandInfo expandInfo) {
+            EntityResource resource) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
-        this.projectedColumns = projectedColumns;
-        this.entityType = entityType;
-        this.expandInfo = expandInfo;
-
+        this.projectedColumns = resource.getAllProjectedColumns();
+        this.entityType = resource.getEdmEntityType();
+        
+        if (resource.getExpands() != null && !resource.getExpands().isEmpty()) {
+            this.expandInfo = (ExpandResource)resource.getExpands().get(0);
+        }
     }
     
     @Override
@@ -88,7 +90,7 @@ public class EntityList extends EntityCollection implements QueryResponse {
         }
         
         if (this.expandInfo != null) {
-            Entity expand = createEntity(rs, this.expandInfo.getEntityType(),
+            Entity expand = createEntity(rs, this.expandInfo.getEdmEntityType(),
                     this.expandInfo.getProjectedColumns(),
                     this.invalidCharacterReplacement);
             
