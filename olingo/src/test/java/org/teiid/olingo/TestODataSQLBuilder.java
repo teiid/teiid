@@ -267,8 +267,11 @@ public class TestODataSQLBuilder {
     @Test
     public void test_$it_OverPrimitiveProperty() throws Exception {
         helpTest("/odata4/vdb/PM1/G3(e1='e1',e2=2)/e3?$filter=endswith($it, '.com')",
-                "SELECT CAST(g1.col AS string) AS e3, g0.e1, g0.e2 FROM PM1.G3 AS g0, TABLE(EXEC arrayiterate(g0.e3)) AS g1 "
-                + "WHERE ENDSWITH('.com', CAST(g1.col AS string)) = TRUE "
+                "SELECT g0.e1, g0.e2, CAST(g1.col AS string) AS e3 "
+                + "FROM PM1.G3 AS g0, "
+                + "TABLE(EXEC arrayiterate(g0.e3)) AS g1 "
+                + "WHERE ((g0.e1 = 'e1') AND (g0.e2 = 2)) "
+                + "AND (ENDSWITH('.com', CAST(g1.col AS string)) = TRUE) "
                 + "ORDER BY g0.e1, g0.e2");
     }
         
@@ -348,6 +351,12 @@ public class TestODataSQLBuilder {
                 "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = 1 ORDER BY g0.e2");
     }
 
+    @Test
+    public void testAliasWithExpression() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=$root/G2(1)/e1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = (SELECT g1.e1 FROM PM1.G2 AS g1 WHERE g1.e2 = 1) ORDER BY g0.e2");
+    }    
+    
     @Test
     public void testMultiEntitykey() throws Exception {
         helpTest("/odata4/vdb/PM1/G3(e1='1',e2=2)",
@@ -471,7 +480,7 @@ public class TestODataSQLBuilder {
         helpTest(
                 "/odata4/vdb/PM1/G2(1)/FK0",
                 "SELECT g1.e1, g1.e2, g1.e3 FROM PM1.G2 as g0 INNER JOIN PM1.G1 as g1 "
-                + "ON g0.e2 = g1.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
+                + "ON g1.e2 = g0.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
     }
 
     @Test
@@ -479,7 +488,7 @@ public class TestODataSQLBuilder {
         helpTest(
                 "/odata4/vdb/PM1/G2(1)/FK0?$select=e1",
                 "SELECT g1.e2, g1.e1 FROM PM1.G2 as g0 INNER JOIN PM1.G1 as g1 "
-                + "ON g0.e2 = g1.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
+                + "ON g1.e2 = g0.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
     }
 
     @Test
@@ -493,7 +502,7 @@ public class TestODataSQLBuilder {
         helpTest(
                 "/odata4/vdb/PM1/G2(1)/FK0/$ref",
                 "SELECT g1.e2 FROM PM1.G2 as g0 INNER JOIN PM1.G1 as g1 "
-                + "ON g0.e2 = g1.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
+                + "ON g1.e2 = g0.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
     }
 
     @Test
@@ -632,7 +641,7 @@ public class TestODataSQLBuilder {
     @Test
     public void testNavigationalQuery() throws Exception {
         helpTest("/odata4/vdb/PM1/G2(0)/FK0", "SELECT g1.e1, g1.e2, g1.e3 FROM PM1.G2 AS g0 "
-                + "INNER JOIN PM1.G1 AS g1 ON g0.e2 = g1.e2 WHERE g0.e2 = 0 ORDER BY g1.e2");
+                + "INNER JOIN PM1.G1 AS g1 ON g1.e2 = g0.e2 WHERE g0.e2 = 0 ORDER BY g1.e2");
 
         //Canonical query
         helpTest("/odata4/vdb/PM1/G2(0)/FK0(0)/e1", "SELECT g1.e1, g1.e2 FROM PM1.G1 AS g1 WHERE g1.e2 = 0 ORDER BY g1.e2");
@@ -656,7 +665,12 @@ public class TestODataSQLBuilder {
                 "");
     }    
     
-
+    @Test
+    public void test$RootOverPath() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq $root/G1(1)/e1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = (SELECT g1.e1 FROM PM1.G1 AS g1 WHERE g1.e2 = 1) ORDER BY g0.e2");
+    } 
+    
     @Test
     public void testAny() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/any(ol: ol/e2 gt 10)"), 
@@ -744,5 +758,15 @@ public class TestODataSQLBuilder {
                 + "LEFT OUTER JOIN PM1.G4 AS g1 "
                 + "ON g0.e2 = g1.e2 "
                 + "ORDER BY g0.e2, g1.e1 DESC");        
-    }    
+    }
+    
+//    @Test
+//    public void testSimpleCrossJoin() throws Exception {
+//        helpTest("/odata4/vdb/PM1/$crossjoin(G1, G2)",
+//                "SELECT g0.e1, g0.e2, g0.e3, g1.e1, g1.e2 "
+//                + "FROM PM1.G1 AS g0 "
+//                + "LEFT OUTER JOIN PM1.G4 AS g1 "
+//                + "ON g0.e2 = g1.e2 "
+//                + "ORDER BY g0.e2, g1.e1 DESC");        
+//    }    
 }

@@ -21,38 +21,44 @@
  */
 package org.teiid.olingo.service;
 
-import java.util.List;
-
 import org.apache.olingo.commons.api.edm.EdmEntityType;
-import org.teiid.olingo.api.ProjectedColumn;
+import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.server.api.uri.UriInfo;
+import org.teiid.core.TeiidException;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
+import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 
-public class ExpandInfo {
+
+public class ExpandResource extends EntityResource{
     private String navigationName;
-    private EdmEntityType entityType;
-    private final List<ProjectedColumn> projectedColumns;
-    private boolean collection; 
+    private boolean collection;
     
-    public ExpandInfo(String name, EdmEntityType entityType,
-            List<ProjectedColumn> projectedColumns, boolean collection) {
-        this.navigationName = name;
-        this.entityType = entityType;
-        this.projectedColumns = projectedColumns;
-        this.collection = collection;
+    public static ExpandResource buildExpand(EdmNavigationProperty property,
+            MetadataStore metadata, UniqueNameGenerator nameGenerator,
+            boolean useAlias, UriInfo uriInfo, URLParseService parseService) throws TeiidException {
+        
+        EdmEntityType type = property.getType();
+        ExpandResource resource = new ExpandResource();
+        build(resource, type, null, metadata, nameGenerator, useAlias, uriInfo, parseService);
+        resource.setNavigationName(property.getName());
+        resource.setCollection(property.isCollection());
+        return resource;
     }
-
+    
     public String getNavigationName() {
         return navigationName;
     }
-
-    public EdmEntityType getEntityType() {
-        return entityType;
+    
+    public void setNavigationName(String navigationName) {
+        this.navigationName = navigationName;
     }
-
-    public List<ProjectedColumn> getProjectedColumns() {
-        return projectedColumns;
-    }
-
+    
     public boolean isCollection() {
         return collection;
     }
+    
+    public void setCollection(boolean collection) {
+        this.collection = collection;
+    } 
 }

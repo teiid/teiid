@@ -34,6 +34,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriResourceCount;
+import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceIt;
 import org.apache.olingo.server.api.uri.UriResourceLambdaAll;
 import org.apache.olingo.server.api.uri.UriResourceLambdaAny;
@@ -57,21 +58,20 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Table;
 import org.teiid.olingo.LiteralParser;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.api.ODataExpressionVisitor;
 import org.teiid.olingo.api.ODataTypeManager;
-import org.teiid.olingo.api.ProjectedColumn;
 import org.teiid.olingo.api.SQLParameter;
-import org.teiid.olingo.service.ODataSQLBuilder.ItResource;
-import org.teiid.olingo.service.ODataSQLBuilder.UniqueNameGenerator;
+import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
+import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
@@ -80,7 +80,6 @@ import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
@@ -92,31 +91,31 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor implements  ODataExpressionVisitor{
+    static enum LambdaResourceKind {ALL, ANY};
     private final Stack<org.teiid.query.sql.symbol.Expression> stack = new Stack<org.teiid.query.sql.symbol.Expression>();
     private List<SQLParameter> params;
     private boolean prepared = false;
     private final List<TeiidException> exceptions = new ArrayList<TeiidException>();
     private final UriInfo uriInfo;
     private MetadataStore metadata;
-    private GroupSymbol tableGroup;
-    private Table table;
+    private EntityResource resource;    
     private UniqueNameGenerator nameGenerator;
-    private Lambda lambda;
-    private boolean count;
-    private ItResource itResource;
+    private EntityResource rootResource;
+    private URLParseService parseService;
+    private LambdaResourceKind lambdaKind;
+    private EntityResource lambdaResource;
     
-    public ODataExpressionToSQLVisitor(Table table, GroupSymbol tableGroup,
+    public ODataExpressionToSQLVisitor(EntityResource resource,
             boolean prepared, UriInfo info, MetadataStore metadata,
-            UniqueNameGenerator nameGenerator, ItResource itResource,
-            List<SQLParameter> params) {
-        this.table = table;
-        this.tableGroup = tableGroup;
+            UniqueNameGenerator nameGenerator, 
+            List<SQLParameter> params, URLParseService parseService) {
+        this.resource = resource;
         this.prepared = prepared;
         this.uriInfo = info;
         this.metadata = metadata;
         this.nameGenerator = nameGenerator;
-        this.itResource = itResource;
         this.params = params;
+        this.parseService = parseService;
     }
 
     public org.teiid.query.sql.symbol.Expression getExpression(Expression expr) throws TeiidException {
@@ -135,18 +134,28 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         return this.stack.pop();
     }
     
-    public Lambda getLambda() {
-        return lambda;
-    }    
+    public EntityResource getEntityResouce() {
+        return this.resource;
+    }
 
     @Override
     public void visit(Alias expr) {
-        Object value = LiteralParser.parseLiteral(this.uriInfo.getValueForAlias(expr.getParameterName()));
-        if (this.prepared) {
-            stack.add(new Reference(this.params.size()));
-            this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
-        } else {
-            this.stack.add(new Constant(value));
+        String strValue = this.uriInfo.getValueForAlias(expr.getParameterName());
+        if (strValue.startsWith("$root")) {
+            try {
+                this.stack.add(new ScalarSubquery(this.parseService.parse(strValue)));
+            } catch (TeiidException e) {
+                this.exceptions.add(e);
+            }
+        }
+        else {
+            Object value = LiteralParser.parseLiteral(strValue);
+            if (this.prepared) {
+                stack.add(new Reference(this.params.size()));
+                this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
+            } else {
+                this.stack.add(new Constant(value));
+            }
         }
     }
 
@@ -180,7 +189,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             binaryExpr  = new Function("-", new org.teiid.query.sql.symbol.Expression[] { lhs, rhs }); //$NON-NLS-1$
             break;
         case GT:
-            if (this.lambda != null && this.lambda.getKind() == Lambda.Kind.ALL) {
+            if (this.lambdaKind != null && this.lambdaKind == LambdaResourceKind.ALL) {
                 // lamba operator is reversed
                 binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), CompareCriteria.LT, SubqueryCompareCriteria.ALL);
             }
@@ -189,7 +198,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             break;
         case GE:
-            if (this.lambda != null && this.lambda.getKind() == Lambda.Kind.ALL) {
+            if (this.lambdaKind != null && this.lambdaKind == LambdaResourceKind.ALL) {
                 binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), CompareCriteria.LE, SubqueryCompareCriteria.ALL);
             }
             else {            
@@ -197,7 +206,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             break;
         case LT:
-            if (this.lambda != null && this.lambda.getKind() == Lambda.Kind.ALL) {
+            if (this.lambdaKind != null && this.lambdaKind == LambdaResourceKind.ALL) {
                 binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), CompareCriteria.GT, SubqueryCompareCriteria.ALL);
             }
             else {            
@@ -205,7 +214,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             break;
         case LE:
-            if (this.lambda != null && this.lambda.getKind() == Lambda.Kind.ALL) {
+            if (this.lambdaKind != null && this.lambdaKind == LambdaResourceKind.ALL) {
                 binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), CompareCriteria.GE, SubqueryCompareCriteria.ALL);
             }
             else {            
@@ -213,7 +222,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             break;
         case EQ:
-            if (this.lambda != null && this.lambda.getKind() == Lambda.Kind.ALL) {
+            if (this.lambdaKind != null && this.lambdaKind == LambdaResourceKind.ALL) {
                 binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), CompareCriteria.EQ, SubqueryCompareCriteria.ALL);
             }            
             else if (rhs instanceof Constant && ((Constant) rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
@@ -223,7 +232,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             break;
         case NE:
-            if (this.lambda != null && this.lambda.getKind() == Lambda.Kind.ALL) {
+            if (this.lambdaKind != null && this.lambdaKind == LambdaResourceKind.ALL) {
                 binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), CompareCriteria.NE, SubqueryCompareCriteria.ALL);
             }
             else if (rhs instanceof Constant && ((Constant) rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
@@ -409,134 +418,127 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     /////////////////////////////////////////////////////////////////////////
     @Override
     public void visit(UriResourcePrimitiveProperty info) {
-        if (this.lambda != null) {
-            this.stack.add(new ElementSymbol(info.getProperty().getName(), this.lambda.getGroupSymbol()));
-        } else {
-            this.stack.add(new ElementSymbol(info.getProperty().getName(), this.tableGroup));
+        if (this.rootResource != null) {
+            this.stack.add(new ScalarSubquery(buildRootSubQuery(info.getProperty().getName(), this.rootResource)));
+        }
+        else if (this.lambdaResource != null) {
+            this.stack.add(new ElementSymbol(info.getProperty().getName(), this.lambdaResource.getGroupSymbol()));
+        }
+        else {
+            this.stack.add(new ElementSymbol(info.getProperty().getName(), this.resource.getGroupSymbol()));
         }
     }
     
     @Override
     public void visit(UriResourceCount option) {
-        count = true;
     }
     
     @Override
     public void visit(UriResourceNavigation info) {
-        EdmEntityType type = (EdmEntityType)info.getType();
-        
-//        if (!count) {
-//            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16028, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16028)));
-//        }
-        
-        Table navigationTable = ODataSQLBuilder.findTable(type, this.metadata);
-        GroupSymbol navigationGroup = new GroupSymbol(this.nameGenerator.getNextGroup(), navigationTable.getFullName());//$NON-NLS-1$
-        
-        Query query = new Query();
-        query.setSelect(new Select(Arrays.asList(new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null))));
-        query.setFrom(new From(Arrays.asList(new UnaryFromClause(navigationGroup))));
+        try {
+            EntityResource navigationResource = EntityResource.build(
+                    (EdmEntityType) info.getType(), info.getKeyPredicates(), this.metadata,
+                    this.nameGenerator, true, getUriInfo(), this.parseService);
 
-        Criteria criteria = null;
-        ForeignKey fk = null;
-        if (info.isCollection()) {
-            fk = ODataSQLBuilder.joinFK(navigationTable, this.table);    
-        }
-        else {
-            fk = ODataSQLBuilder.joinFK(this.table, navigationTable);
-        }
-        
-        if (fk != null) {
-            List<String> lhsColumns = ODataSQLBuilder.getColumnNames(fk.getColumns());
-            List<String> rhsColumns = fk.getReferenceColumns();
-            for (int i = 0; i < lhsColumns.size(); i++) {
-                if (criteria == null) {
-                    criteria = new CompareCriteria(new ElementSymbol(lhsColumns.get(i), this.tableGroup),
-                            CompareCriteria.EQ, new ElementSymbol(rhsColumns.get(i), navigationGroup));
-                } else {
-                    Criteria subcriteria = new CompareCriteria(new ElementSymbol(lhsColumns.get(i), this.tableGroup),
-                            CompareCriteria.EQ, new ElementSymbol(rhsColumns.get(i), navigationGroup));
-                    criteria = new CompoundCriteria(CompoundCriteria.AND, criteria, subcriteria);
+            Query query = new Query();
+            query.setSelect(new Select(Arrays.asList(new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null))));
+            query.setFrom(new From(Arrays.asList(navigationResource.getFromClause())));
+
+            Criteria criteria = null;
+            ForeignKey fk = null;
+            if (info.isCollection()) {
+                fk = EntityResource.joinFK(navigationResource.getTable(), this.resource.getTable());    
+            }
+            else {
+                fk = EntityResource.joinFK(this.resource.getTable(), navigationResource.getTable());
+            }
+            
+            if (fk != null) {
+                List<String> lhsColumns = EntityResource.getColumnNames(fk.getColumns());
+                List<String> rhsColumns = fk.getReferenceColumns();
+                for (int i = 0; i < lhsColumns.size(); i++) {
+                    if (criteria == null) {
+                        criteria = new CompareCriteria(new ElementSymbol(lhsColumns.get(i), this.resource.getGroupSymbol()),
+                                CompareCriteria.EQ, new ElementSymbol(rhsColumns.get(i), navigationResource.getGroupSymbol()));
+                    } else {
+                        Criteria subcriteria = new CompareCriteria(new ElementSymbol(lhsColumns.get(i), this.resource.getGroupSymbol()),
+                                CompareCriteria.EQ, new ElementSymbol(rhsColumns.get(i), navigationResource.getGroupSymbol()));
+                        criteria = new CompoundCriteria(CompoundCriteria.AND, criteria, subcriteria);
+                    }
                 }
             }
+            else {
+                throw new TeiidException(ODataPlugin.Event.TEIID16037, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16037));
+            }            
+            query.setCriteria(criteria);
+            this.stack.add(new ScalarSubquery(query));
+        } catch (TeiidException e) {
+            this.exceptions.add(e);
         }
-        else {
-            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16037, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16037)));
-        }
-        
-        query.setCriteria(criteria);
-        this.stack.add(new ScalarSubquery(query));
     }
     
     @Override
     public void visit(UriResourceLambdaAll resource) {
-        this.lambda = new Lambda();
-        this.lambda.setKind(Lambda.Kind.ALL);
+        this.lambdaKind = LambdaResourceKind.ALL;
         UriResourceLambdaAll all = (UriResourceLambdaAll)resource;
         accept(all.getExpression());
     }
 
     @Override
     public void visit(UriResourceLambdaAny resource) {
-        this.lambda = new Lambda();
-        this.lambda.setKind(Lambda.Kind.ANY);
+        this.lambdaKind = LambdaResourceKind.ANY;
         UriResourceLambdaAny any = (UriResourceLambdaAny) resource;
         accept(any.getExpression());
     }
 
     @Override
     public void visit(UriResourceLambdaVariable resource) {
-        this.lambda.setName(resource.getVariableName());
-        this.lambda.setType((EdmEntityType)resource.getType());
-        this.lambda.setCollection(resource.isCollection());
-        Table table = ODataSQLBuilder.findTable(this.lambda.getType(), this.metadata);
-        this.lambda.setTable(table);
-        this.lambda.setGroupSymbol(new GroupSymbol(this.lambda.getName(), table.getFullName()));
+        try {
+            EntityResource lambda = EntityResource.build(
+                    (EdmEntityType) resource.getType(), null, this.metadata,
+                    this.nameGenerator, false, this.uriInfo,
+                    this.parseService);
+            lambda.setGroupSymbol(new GroupSymbol(resource.getVariableName(), lambda.getTable().getFullName()));
+            
+            if (this.lambdaKind == LambdaResourceKind.ALL) {
+                // ALL - needs to modeled as subquery
+                this.lambdaResource = lambda;
+            } 
+            else {
+                //ANY - Needs to be joined to resource.
+                this.resource.joinTable(
+                        lambda, 
+                        (EntityResource.joinFK(this.resource.getTable(), lambda.getTable()) == null), 
+                        JoinType.JOIN_INNER);
+                lambda.addCriteria(this.resource.getCriteria());
+                this.resource = lambda;                
+                this.resource.setDistinct(true);
+            }
+        } catch (TeiidException e) {
+            this.exceptions.add(e);
+        }
     }    
     
     private QueryCommand buildSubquery(org.teiid.query.sql.symbol.Expression projected) {
-        Criteria criteria = null;
-        
-        for (ForeignKey fk:this.lambda.getTable().getForeignKeys()) {
-            if (fk.getReferenceKey().getParent().equals(this.table)) {
-                List<String> refColumns = fk.getReferenceColumns();
-                if (refColumns == null) {
-                    refColumns = ODataSQLBuilder.getColumnNames(this.lambda.getTable().getPrimaryKey().getColumns());
-                }                   
-                
-                List<String> pkColumns = ODataSQLBuilder.getColumnNames(this.table.getPrimaryKey().getColumns());
-                List<Criteria> critList = new ArrayList<Criteria>();
-
-                for (int i = 0; i < refColumns.size(); i++) {
-                    critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i), this.tableGroup), CompareCriteria.EQ, new ElementSymbol(refColumns.get(i), this.lambda.getGroupSymbol())));
-                }                   
-                
-                criteria = critList.get(0);
-                for (int i = 1; i < critList.size(); i++) {
-                    criteria = new CompoundCriteria(CompoundCriteria.AND, criteria, critList.get(i));
-                }                           
-            }
-        }       
         Select s1 = new Select();
         s1.addSymbol(projected); 
-        From f1 = new From();
-        f1.addGroup(this.lambda.getGroupSymbol());
-        Query q1 = new Query();
-        q1.setSelect(s1);
-        q1.setFrom(f1);    
-        q1.setCriteria(criteria);
         
-        return q1;
+        Query q = new Query();
+        From from = new From();
+        from.addGroup(this.lambdaResource.getGroupSymbol());
+        q.setFrom(from);    
+        q.setCriteria(EntityResource.buildJoinCriteria(this.lambdaResource, this.resource));
+        
+        q.setSelect(s1);
+        return q;
     }
     
     @Override
     public void visit(UriResourceIt info) {
-        if (this.itResource == null) {
-            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16040, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16040)));
-        }
-        
         if (info.getType() instanceof SingletonPrimitiveType) {
             String group = this.nameGenerator.getNextGroup();
-            ElementSymbol es = new ElementSymbol("col", new GroupSymbol(group));
+            GroupSymbol groupSymbol = new GroupSymbol(group);
+            ElementSymbol es = new ElementSymbol("col", groupSymbol);
             String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
             Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
             this.stack.push(castFunction);
@@ -544,9 +546,10 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             StoredProcedure procedure = new StoredProcedure();
             procedure.setProcedureName("arrayiterate");
             
+            ElementSymbol projectedEs = (ElementSymbol)this.resource.getProjectedColumns().get(0).getExpression();
             List<SPParameter> params = new ArrayList<SPParameter>();
             SPParameter param = new SPParameter(1, SPParameter.IN, "val");
-            param.setExpression(this.itResource.getReferencedProperty());
+            param.setExpression(projectedEs);
             params.add(param);
             
             procedure.setParameter(param);
@@ -554,9 +557,14 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
             fromClause.setTable(true);
             
-            AliasSymbol expression = new AliasSymbol(this.itResource.getReferencedProperty().getShortName(), castFunction);
-            this.itResource.setProjectedFromClause(fromClause);
-            this.itResource.setProjectedProperty(new ProjectedColumn(expression, true, info.getType(), true));
+            EntityResource itResource = new EntityResource();
+            AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), castFunction);
+            itResource.setFromClause(fromClause);
+            itResource.setGroupSymbol(groupSymbol);            
+            itResource.addProjectedColumn(expression, true, info.getType(), true);
+            
+            this.resource.getProjectedColumns().remove(0);
+            this.resource.addSibiling(itResource);
         }
         else {
             this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16010, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010)));
@@ -565,5 +573,35 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     
     @Override
     public void visit(UriResourceRoot info) {
+        this.rootResource = new EntityResource();
+    }
+    
+    @Override
+    public void visit(UriResourceEntitySet info) {
+        if (this.rootResource != null) {
+            try {
+                EdmEntityType edmEntityType = info.getEntitySet().getEntityType();
+                this.rootResource = EntityResource.build(edmEntityType,
+                        info.getKeyPredicates(), this.metadata, this.nameGenerator,
+                        true, getUriInfo(), null);
+            } catch (TeiidException e) {
+                this.exceptions.add(e);
+            }
+        }
+        else {
+            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16043, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16043)));
+        }
+    }
+    
+    public QueryCommand buildRootSubQuery(String element, EntityResource resource) {
+        Select s1 = new Select();
+        s1.addSymbol(new ElementSymbol(element, resource.getGroupSymbol())); 
+        From f1 = new From();
+        f1.addGroup(resource.getGroupSymbol());
+        Query q1 = new Query();
+        q1.setSelect(s1);
+        q1.setFrom(f1);    
+        q1.setCriteria(resource.getCriteria());  
+        return q1;
     }
 }
