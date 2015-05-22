@@ -42,6 +42,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     
     private boolean order;
     private boolean deep;
+	private boolean skipEvaluatable;
     
     public PreOrPostOrderNavigator(LanguageVisitor visitor, boolean order, boolean deep) {
         super(visitor);
@@ -171,7 +172,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(ExistsCriteria obj) {
         preVisitVisitor(obj);
-        if (deep) {
+        if (deep && (!obj.shouldEvaluate() || !skipEvaluatable)) {
         	visitNode(obj.getCommand());
         }
         postVisitVisitor(obj);        
@@ -322,7 +323,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(ScalarSubquery obj) {
         preVisitVisitor(obj);
-        if (deep) {
+        if (deep && (!obj.shouldEvaluate() || !skipEvaluatable)) {
         	visitNode(obj.getCommand());
         }
         postVisitVisitor(obj);
@@ -683,5 +684,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, order, deep);
         object.acceptVisitor(nav);
     }
+    
+    public void setSkipEvaluatable(boolean skipEvaluatable) {
+		this.skipEvaluatable = skipEvaluatable;
+	}
 
 }

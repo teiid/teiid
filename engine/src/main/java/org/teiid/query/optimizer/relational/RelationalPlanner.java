@@ -431,7 +431,7 @@ public class RelationalPlanner {
             	} else {
             		this.withGroups.clear();
             	}
-            	GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, this.withGroups);
+            	GroupCollectorVisitor.getGroupsIgnoreInlineViewsAndEvaluatableSubqueries(command, this.withGroups);
             	List<WithQueryCommand> with = new ArrayList<WithQueryCommand>();
             	discoverWith(pushdownWith, command, with, new ArrayList<GroupSymbol>(this.withGroups));
             	if (!with.isEmpty()) {
@@ -475,7 +475,7 @@ public class RelationalPlanner {
 				continue;
 			}
 			TreeSet<GroupSymbol> temp = new TreeSet<GroupSymbol>(nonCorrelatedComparator);
-			GroupCollectorVisitor.getGroupsIgnoreInlineViews(clause.getCommand(), temp);
+			GroupCollectorVisitor.getGroupsIgnoreInlineViewsAndEvaluatableSubqueries(clause.getCommand(), temp);
 			temp.removeAll(this.withGroups);
 			discoverWith(pushdownWith, command, with, temp);
 			with.add(clause.clone());
