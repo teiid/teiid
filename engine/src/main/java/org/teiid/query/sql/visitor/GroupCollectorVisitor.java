@@ -33,6 +33,7 @@ import org.teiid.query.sql.lang.Into;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
@@ -162,10 +163,12 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect groups in
      */
-    public static void getGroupsIgnoreInlineViews(LanguageObject obj, Collection<GroupSymbol> groups) {
+    public static void getGroupsIgnoreInlineViewsAndEvaluatableSubqueries(LanguageObject obj, Collection<GroupSymbol> groups) {
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
         visitor.setIgnoreInlineViewGroups(true);
-        DeepPreOrderNavigator.doVisit(obj, visitor);  
+        PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
+        nav.setSkipEvaluatable(true);
+        obj.acceptVisitor(nav);  
         
         if(visitor.getInlineViewGroups() != null) {
             groups.removeAll(visitor.getInlineViewGroups());

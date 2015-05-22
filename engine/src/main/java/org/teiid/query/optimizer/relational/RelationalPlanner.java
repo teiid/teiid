@@ -288,7 +288,7 @@ public class RelationalPlanner {
             Command command = accessNode.getCommand();
             if (command instanceof QueryCommand) {
             	groups.clear();
-            	GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, groups);
+            	GroupCollectorVisitor.getGroupsIgnoreInlineViewsAndEvaluatableSubqueries(command, groups); 
             	List<WithQueryCommand> with = new ArrayList<WithQueryCommand>();
             	for (GroupSymbol groupSymbol : groups) {
             		WithQueryCommand clause = pushdownWith.get(groupSymbol.getNonCorrelationName());
