@@ -19,14 +19,6 @@
             </includes>
             <fileMode>755</fileMode>
         </fileSet>
-        <fileSet>
-            <directory>src/main/java</directory>
-            <outputDirectory>/sources</outputDirectory>
-            <filtered>true</filtered>
-            <includes>
-                <include>**/*</include>
-            </includes>
-        </fileSet>
     </fileSets>
     
     <files>

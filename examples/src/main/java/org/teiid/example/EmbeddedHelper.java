@@ -24,6 +24,14 @@ package org.teiid.example;
 import java.io.File;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import javax.resource.ResourceException;
 import javax.sql.DataSource;
@@ -125,6 +133,72 @@ public class EmbeddedHelper {
 		
 		return (DataSource) mcf.createConnectionFactory(cm);
 	}
+	
+	public static void enableLogger() {
+        enableLogger(Level.FINEST, "org.teiid"); //$NON-NLS-1$
+    }
+    
+    public static void enableLogger(Level level, String... names){
+        enableLogger(new TeiidLoggerFormatter(), Level.SEVERE, level, names);
+    }
+    
+    /**
+     * This method supply function for adjusting Teiid logging while running the Embedded mode.
+     * 
+     * For example, with parameters names is 'org.teiid.COMMAND_LOG' and level is 'FINEST' Teiid
+     * will show command logs in console.
+     * 
+     * @param formatter
+     *          The Formatter used in ConsoleHandler 
+     * @param rootLevel
+     *          The default logger level is 'INFO', this parameter used to adjust default logger level
+     * @param level
+     *          The logger level used in Logger
+     * @param names
+     *          The logger's name
+     */
+    public static void enableLogger(Formatter formatter, Level rootLevel, Level level, String... names){
+        
+        Logger rootLogger = Logger.getLogger("");
+        for(Handler handler : rootLogger.getHandlers()){
+            handler.setFormatter(formatter);
+            handler.setLevel(rootLevel);
+        }
+        
+        for(String name : names) {
+            Logger logger = Logger.getLogger(name);
+            logger.setLevel(level);
+            ConsoleHandler handler = new ConsoleHandler();
+            handler.setLevel(level);
+            handler.setFormatter(formatter);
+            logger.addHandler(handler);
+            logger.setUseParentHandlers(false);
+        }
+    }
+    
+    public static class TeiidLoggerFormatter extends Formatter {
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm SSS");
+
+        public String format(LogRecord record) {
+            StringBuffer sb = new StringBuffer();
+            sb.append(format.format(new Date(record.getMillis())) + " ");
+            sb.append(getLevelString(record.getLevel()) + " ");
+            sb.append("[" + record.getLoggerName() + "] (");
+            sb.append(Thread.currentThread().getName() + ") ");
+            sb.append(record.getMessage() + "\n");
+            return sb.toString();
+        }
+
+        private String getLevelString(Level level) {
+            String name = level.toString();
+            int size = name.length();
+            for(int i = size; i < 7 ; i ++){
+                name += " ";
+            }
+            return name;
+        }
+    }
 
 
 }

@@ -141,17 +141,6 @@
                     </execution>
                 </executions>
             </plugin>
-		    
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-                            <mainClass>org.teiid.example.TeiidExamplesApp</mainClass>
-                        </manifest>
-					</archive>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 	

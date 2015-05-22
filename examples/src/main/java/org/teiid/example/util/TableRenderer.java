@@ -64,7 +64,7 @@ import java.util.StringTokenizer;
  * </pre>
  *
  */
-public class TableRenderer{
+public class TableRenderer {
     
     private static final int MAX_CACHE_ELEMENTS = 500;
 
@@ -81,20 +81,12 @@ public class TableRenderer{
     protected final String colSeparator;
     protected final String colPreSeparator;
     
-    public TableRenderer(ColumnMetaData[] meta,
-                         OutputDevice out,
-                         String separator, 
-                         boolean enableHeader,
-                         boolean enableFooter) {
+    public TableRenderer(ColumnMetaData[] meta, OutputDevice out, String separator, boolean enableHeader, boolean enableFooter) {
+        
         this.meta = meta;
         this.out = out;
         this.enableHeader = enableHeader;
         this.enableFooter = enableFooter;
-
-        /*
-         * we cache the rows in order to dynamically determine the
-         * output width of each column.
-         */
         this.cacheRows = new ArrayList<Column[]>(MAX_CACHE_ELEMENTS);
         this.alreadyFlushed = false;
         this.writtenRows = 0;
