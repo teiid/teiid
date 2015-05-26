@@ -70,19 +70,6 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		}
 	}
 	
-	/*
-	 * Handling for cursor return values
-	 */
-	static final class RefCursorType {}
-	static int CURSOR_TYPE = -10;
-	static final String REF_CURSOR = "REF CURSOR"; //$NON-NLS-1$
-	
-	/*
-	 * handling for char bindings
-	 */
-	static final class FixedCharType {}
-	static int FIXED_CHAR_TYPE = 5000;
-
 	public HanaExecutionFactory() {
 	}
 
