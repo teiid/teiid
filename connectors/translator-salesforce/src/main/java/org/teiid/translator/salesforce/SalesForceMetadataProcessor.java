@@ -480,8 +480,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         }
         return includeTables != null && includeTables.matcher(fullName).matches();
     }
-
-    @TranslatorProperty(display="Import Statistics", category=PropertyType.IMPORT, description="Set to true to retreive cardinalities during import.")
+    
+    @TranslatorProperty(display="Import Statistics", category=PropertyType.IMPORT, description="Set to true to retrieve cardinalities during import.")
     public boolean isImportStatistics() {
 		return importStatistics;
 	}
