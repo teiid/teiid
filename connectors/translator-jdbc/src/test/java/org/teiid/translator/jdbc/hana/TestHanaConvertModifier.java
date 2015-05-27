@@ -22,7 +22,7 @@
 
 package org.teiid.translator.jdbc.hana;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -30,6 +30,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
@@ -42,6 +43,7 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 /**
  */
+@Ignore
 @SuppressWarnings("nls")
 public class TestHanaConvertModifier {
 
