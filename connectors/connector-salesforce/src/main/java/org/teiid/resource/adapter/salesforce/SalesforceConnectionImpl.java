@@ -22,17 +22,25 @@
 package org.teiid.resource.adapter.salesforce;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
 
 import javax.resource.ResourceException;
 
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -62,11 +70,14 @@ import com.sforce.soap.partner.fault.UnexpectedErrorFault;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
+import com.sforce.ws.transport.JdkHttpTransport;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 	
 	private BulkConnection bulkConnection; 
 	private PartnerConnection partnerConnection;
+	private ConnectorConfig config;
+	private String restEndpoint;
 	
 	public SalesforceConnectionImpl(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
 		login(username, password, mcf);
@@ -78,7 +89,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	
 	private void login(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
 
-		ConnectorConfig config = new ConnectorConfig();
+		config = new ConnectorConfig();
 
         config.setCompression(true);
         config.setTraceMessage(false);
@@ -126,14 +137,15 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	        int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
 	        int endIndex = endpoint.indexOf('/', index+7);
 	        String apiVersion = endpoint.substring(index+7,endIndex);
-	        String restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
-	        config.setRestEndpoint(restEndpoint);
+	        String bulkEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
+	        config.setRestEndpoint(bulkEndpoint);
 			// This value identifies Teiid as a SF certified solution.
 			// It was provided by SF and should not be changed.
 	        partnerConnection.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
 	        bulkConnection = new BulkConnection(config);
 			// Test the connection.
 			partnerConnection.getUserInfo();
+			restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "data/" + "v30.0";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } catch (AsyncApiException e) {
         	throw new ResourceException(e);
         } catch (ConnectionException e) {
@@ -141,6 +153,62 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		}
         
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
+	}
+	
+	@Override
+	public Long getCardinality(String sobject) throws ResourceException {
+		InputStream is = null;
+		try {
+			is = doRestHttpGet(new URL(restEndpoint + "/query/?explain=select+id+from+" + URLEncoder.encode(sobject, "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
+			String s = ObjectConverterUtil.convertToString(new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
+			//TODO: introduce a json parser
+			int index = s.indexOf("cardinality"); //$NON-NLS-1$
+			if (index < 0) {
+				return null;
+			}
+			index = s.indexOf(":", index); //$NON-NLS-1$
+			if (index < 0) {
+				return null;
+			}
+			int end = s.indexOf(",", index); //$NON-NLS-1$
+			if (end < 0) {
+				end = s.indexOf("}", index); //$NON-NLS-1$
+			}
+			if (end < 0) {
+				return null;
+			}
+			s = s.substring(index+1, end);
+			return Long.valueOf(s);
+		} catch (NumberFormatException e) {
+			throw new ResourceException(e);
+		} catch (MalformedURLException e) {
+			throw new ResourceException(e);
+		} catch (UnsupportedEncodingException e) {
+			throw new ResourceException(e);
+		} catch (IOException e) {
+			throw new ResourceException(e);
+		} finally {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
+	
+	private InputStream doRestHttpGet(URL url) throws IOException {
+		HttpURLConnection connection = JdkHttpTransport.createConnection(config, url, null); 
+		connection.setRequestProperty("Authorization", "Bearer " + config.getSessionId()); //$NON-NLS-1$ //$NON-NLS-2$
+
+		InputStream in = connection.getInputStream();
+
+		String encoding = connection.getHeaderField("Content-Encoding"); //$NON-NLS-1$
+		if ("gzip".equals(encoding)) { //$NON-NLS-1$
+			in = new GZIPInputStream(in);
+		}
+
+		return in;
 	}
 	
 	public boolean isValid() {

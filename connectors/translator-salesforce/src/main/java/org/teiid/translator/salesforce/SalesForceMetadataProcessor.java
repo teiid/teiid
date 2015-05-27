@@ -62,6 +62,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	private boolean normalizeNames = true;
 	private Pattern excludeTables;
 	private Pattern includeTables;
+	private boolean importStatistics;
 
 	// Audit Fields
 	public static final String AUDIT_FIELD_CREATED_BY_ID = "CreatedById"; //$NON-NLS-1$
@@ -161,6 +162,16 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			
 			// Mark id fields are auto increment values, as they are not allowed to be updated
 			for (Table table:this.metadataFactory.getSchema().getTables().values()) {
+				if (importStatistics) {
+					try {
+						Long val = this.connection.getCardinality(table.getNameInSource());
+						if (val != null) {
+							table.setCardinality(val);
+						}
+					} catch (Exception e) {
+						LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get cardinality for", table); //$NON-NLS-1$
+					}
+				}
 				for (Column column:table.getPrimaryKey().getColumns()) {
 					if (!column.isUpdatable()) {
 						column.setAutoIncremented(true);
@@ -469,4 +480,13 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         }
         return includeTables != null && includeTables.matcher(fullName).matches();
     }
+
+    @TranslatorProperty(display="Import Statistics", category=PropertyType.IMPORT, description="Set to true to retreive cardinalities during import.")
+    public boolean isImportStatistics() {
+		return importStatistics;
+	}
+    
+    public void setImportStatistics(boolean importStatistics) {
+		this.importStatistics = importStatistics;
+	}
 }
