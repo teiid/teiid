@@ -137,6 +137,10 @@ public class EmbeddedHelper {
 	public static void enableLogger() {
         enableLogger(Level.FINEST, "org.teiid"); //$NON-NLS-1$
     }
+	
+	public static void enableLogger(Level level) {
+        enableLogger(level, "org.teiid"); //$NON-NLS-1$
+    }
     
     public static void enableLogger(Level level, String... names){
         enableLogger(new TeiidLoggerFormatter(), Level.SEVERE, level, names);
