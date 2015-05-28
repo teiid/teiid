@@ -22,13 +22,16 @@
 
 package org.teiid.query.resolver;
 
+import java.sql.Clob;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.XMLType;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -139,6 +142,29 @@ public class TestFunctionResolving {
 		ResolverVisitor.resolveLanguageObject(func, tm);
 		return func;
 	}
+
+    /**
+     * Helper to verify the result of an expression.
+     *
+     * @param expr SQL expression.
+     * @param result Expected result.
+     * @throws Exception
+     */
+    public static void assertEval(String expr, String result)
+            throws Exception {
+        Expression ex = TestFunctionResolving.getExpression(expr);
+        Object val = Evaluator.evaluate(ex);
+        String valStr;
+        if (val instanceof Clob) {
+            valStr = ClobType.getString((Clob) val);
+        } else if (val instanceof XMLType) {
+            valStr = ((XMLType) val).getString();
+        } else {
+            valStr = val.toString();
+        }
+        assertEquals(result, valStr);
+    }
+
 	
 	/**
 	 * e1 is of type string, so 1 should be converted to string

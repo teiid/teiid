@@ -579,5 +579,6 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31165, 
     	TEIID31166,
     	TEIID31167,
+    	TEIID31168 // Unsupported regex flag.
 	}
 }

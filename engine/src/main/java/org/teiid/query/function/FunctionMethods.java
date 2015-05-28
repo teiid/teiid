@@ -49,6 +49,9 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -69,11 +72,13 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.SourceSystemFunctions;
 
 /**
  * Static method hooks for most of the function library.
@@ -1498,5 +1503,99 @@ public final class FunctionMethods {
 		List<String> tokens = StringUtil.tokenize(str, delimiter);
 		return tokens.toArray(new String[tokens.size()]);
 	}
-	
+
+    /**
+     * Perform find-replace operation on a string using regular expressions.
+     *
+     * See {@link java.util.regex.Pattern} for more information.
+     *
+     * @param context
+     * @param source Value to perform replacement on.
+     * @param regex Regular expression pattern.
+     * @param replacement Replacement string.
+     * @return Modified source if the pattern was matched, otherwise source.
+     * @throws FunctionExecutionException If regex pattern was invalid.
+     */
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+                   category=FunctionCategoryConstants.STRING,
+                   nullOnNull=true)
+    public static String regexpReplace(CommandContext context,
+                                       String source,
+                                       String regex,
+                                       String replacement)
+            throws FunctionExecutionException {
+        return regexpReplace(context, source, regex, replacement, ""); // $NON-NLS-1$
+    }
+
+    /**
+     * Perform find-replace operation on a string using regular expressions.
+     *
+     * See {@link java.util.regex.Pattern} for more information.
+     *
+     * Flags can be used to modify the matching behavior of the regular expression.
+     * <ul>
+     *   <li>g - Replaces all matches instead of just the first.</li>
+     *   <li>i - Performs case insensitive pattern match.</li>
+     *   <li>m - Changes behavior of "^" and "$" to match the beginning and end
+     *           of the line instead of the entire string.</li>
+     * </ul>
+     *
+     * @param context
+     * @param source Value to perform replacement on.
+     * @param regex Regular expression pattern.
+     * @param replacement Replacement string.
+     * @param flags Flags to modify behavior of the pattern.
+     * @return Modified source if the pattern was matched, otherwise source.
+     * @throws FunctionExecutionException If an invalid flag was supplied or if the
+     *                                    regex pattern was invalid.
+     */
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+                   category=FunctionCategoryConstants.STRING,
+                   nullOnNull=true)
+    public static String regexpReplace(CommandContext context,
+                                       String source,
+                                       String regex,
+                                       String replacement,
+                                       String flags)
+            throws FunctionExecutionException {
+        
+        // Parse regex flags into a bitmask for Pattern API.
+        // Exception is the 'g' flag which makes us call replaceAll instead of
+        // replaceFirst.
+        boolean global = false;
+        int bitFlags = 0;
+
+        for (int i = 0; i < flags.length(); ++i) {
+            char c = flags.charAt(i);
+            if (c == 'g') {
+                // Global match.
+                global = true;
+            } else if (c == 'i') {
+                // Case insensitive match.
+                bitFlags |= Pattern.CASE_INSENSITIVE;
+            } else if (c == 'm') {
+                // Change ^$ to match line endings instad of entire source.
+                bitFlags |= Pattern.MULTILINE;
+            } else {
+                throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31168, c));
+            }
+        }
+        
+        // Compile regex into pattern and do replacement.
+        Pattern pattern;
+        try {
+            pattern = CommandContext.getPattern(context, regex, bitFlags);
+        } catch (PatternSyntaxException e) {
+            throw new FunctionExecutionException(e);
+        }
+        Matcher matcher = pattern.matcher(source);
+        String result;
+        if (global) {
+            result = matcher.replaceAll(replacement);
+        } else {
+            result = matcher.replaceFirst(replacement);
+        }
+
+        return result;
+    }
 }
