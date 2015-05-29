@@ -109,12 +109,10 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier("Q"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier("D"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier("DDD"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "INSTR", true)); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
-        registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -127,23 +125,13 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		//TYPE CONVERION MODIFIERS////////////////////////////////
 		//////////////////////////////////////////////////////////
         ConvertModifier convertModifier = new ConvertModifier();
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        //TODO Add type mappings
+    	//convertModifier.addTypeMapping(nativeType, targetType);
+    	convertModifier.addTypeMapping("nvarchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
     	convertModifier.addTypeMapping("date", FunctionModifier.DATE, FunctionModifier.TIME); //$NON-NLS-1$
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
-    		@Override
-    		public List<?> translate(Function function) {
-    			return Arrays.asList("case when ", function.getParameters().get(0), " is null then null else to_date('1970-01-01 ' || to_char(",function.getParameters().get(0),", 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    		}
-    	});
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("trunc(cast(",function.getParameters().get(0)," AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", DATE_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIME_FORMAT)); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_varchar", DATE_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_varchar", TIME_FORMAT)); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -162,23 +150,9 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_char"), FunctionModifier.STRING); //$NON-NLS-1$
-    	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
-    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
-    			FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
-    	convertModifier.addTypeConversion(new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				if (Number.class.isAssignableFrom(function.getParameters().get(0).getType())) {
-					return Arrays.asList("trunc(", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				return Arrays.asList("trunc(to_number(", function.getParameters().get(0), "))"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		}, 
-		FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG,	FunctionModifier.BIGINTEGER);
-    	convertModifier.addNumericBooleanConversions();
+    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_varchar"), FunctionModifier.STRING); //$NON-NLS-1$
     	convertModifier.setWideningNumericImplicit(true);
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);//////////////////////////////////////////////////////////
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
 		
 	}
 	
@@ -205,6 +179,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
 		supportedFunctions.add(SourceSystemFunctions.UCASE); //No Need of ALIAS as both ucase and upper work in HANA
 		supportedFunctions.add(SourceSystemFunctions.RTRIM);
+		
 		///////////////////////////////////////////////////////////
 		//NUMERIC FUNCTIONS////////////////////////////////////////
 		///////////////////////////////////////////////////////////
