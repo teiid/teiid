@@ -57,6 +57,7 @@ import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.runtime.MaterializationManager;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -359,8 +360,16 @@ public class VDBRepository implements Serializable{
 	
 	private void notifyFinished(String name, int version, CompositeVDB v, boolean reloading) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, v.getVDB().getStatus()));
+		VDBLifeCycleListener mm = null;
 		for(VDBLifeCycleListener l:this.listeners) {
+			if (l instanceof MaterializationManager) {
+				mm = l;
+				continue; //defer to last
+			}
 			l.finishedDeployment(name, version, v, reloading);
+		}
+		if (mm != null) {
+			mm.finishedDeployment(name, version, v, reloading);
 		}
 	}
 	
