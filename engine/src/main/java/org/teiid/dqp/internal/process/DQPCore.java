@@ -233,7 +233,12 @@ public class DQPCore implements DQP {
     	return results;
 	}    
 
-	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) throws TeiidProcessingException {
+    @Override
+    public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) throws TeiidProcessingException {
+    	return executeRequest(reqID, requestMsg, null);
+    }
+    
+	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg, Long queryTimeout) throws TeiidProcessingException {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
     	checkActive(workContext);
 		RequestID requestID = workContext.getRequestID(reqID);
@@ -263,6 +268,9 @@ public class DQPCore implements DQP {
         addRequest(requestID, workItem, state);
         long timeout = workContext.getVDB().getQueryTimeout();
         timeout = Math.min(timeout>0?timeout:Long.MAX_VALUE, config.getQueryTimeout()>0?config.getQueryTimeout():Long.MAX_VALUE);
+        if (queryTimeout != null && queryTimeout > 0) {
+        	timeout = Math.min(timeout>0?timeout:Long.MAX_VALUE, queryTimeout);
+        }
         if (timeout < Long.MAX_VALUE) {
         	final long finalTimeout = timeout;
         	workItem.setCancelTask(this.cancellationTimer.add(new Runnable() {
@@ -870,8 +878,20 @@ public class DQPCore implements DQP {
 	    void onResults(List<String> columns,  List<? extends List<?>> results) throws Exception;
 	}
 
-    public static void executeQuery(final String command, final VDBMetaData vdb, final String user, final String app,
-            final long timoutInMilli, final DQPCore engine, final ResultsListener listener) throws Throwable {
+	/**
+	 * Execute the given query asynchly. Has a hard limit of only returning max rows fetch size rows.
+	 * @param command
+	 * @param vdb
+	 * @param user
+	 * @param app
+	 * @param timeoutInMilli
+	 * @param engine
+	 * @param listener
+	 * @return
+	 * @throws Throwable
+	 */
+    public static Future<?> executeQuery(final String command, final VDBMetaData vdb, final String user, final String app,
+            final long timeoutInMilli, final DQPCore engine, final ResultsListener listener) throws Throwable {
         final SessionMetadata session = TempTableDataManager.createTemporarySession(user, app, vdb); 
 
         final long requestID =  0L;
@@ -881,53 +901,84 @@ public class DQPCore implements DQP {
         workContext.setSession(session);
         workContext.setAdmin(true);
 
-        try {
-            workContext.runInContext(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    long start = System.currentTimeMillis();
-                    RequestMessage request = new RequestMessage(command);
-                    request.setExecutionId(requestID);
-                    request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
-                    Future<ResultsMessage> message = engine.executeRequest(requestID, request);
-                    ResultsMessage rm = null;
-                    if (timoutInMilli < 0) {
-                        rm = message.get();
-                    } else {
-                        rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
-                    }
-                    if (rm.getException() != null) {
-                         throw rm.getException();
-                    }
+        final ResultsFuture<Void> resultFuture = new ResultsFuture<Void>();
+        resultFuture.addCompletionListener(new ResultsFuture.CompletionListener<Void>() {
+        	
+        	@SuppressWarnings("unchecked")
+			@Override
+        	public void onCompletion(ResultsFuture<Void> future) {
+                ResultsFuture<?> response;
+				try {
+					response = engine.closeRequest(requestID);
+	                response.addCompletionListener(new ResultsFuture.CompletionListener() {
+	                	@Override
+	                	public void onCompletion(ResultsFuture future) {
+	                          engine.terminateSession(session.getSessionId());
+	              		  	}		                    		
+	                	}
+	    			);
+				} catch (Exception e) {
+					engine.terminateSession(session.getSessionId());
+				}
+        	}
+		});
+        
+        workContext.runInContext(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                RequestMessage request = new RequestMessage(command);
+                request.setExecutionId(requestID);
+                request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
+                ResultsFuture<ResultsMessage> message = engine.executeRequest(requestID, request, timeoutInMilli);
+                message.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+                	
+                	@Override
+                	public void onCompletion(
+                			ResultsFuture<ResultsMessage> future) {
+                		try {
+							ResultsMessage rm = future.get();
+		                    if (rm.getException() != null) {
+		                         throw rm.getException();
+		                    }
+		                    if (rm.isUpdateResult()) {
+		                        listener.onResults(Arrays.asList("update-count"), rm.getResultsList()); //$NON-NLS-1$
+		                        resultFuture.getResultsReceiver().receiveResults(null);
+		                    }
+		                    else {
+		                        processResult(rm);
+		                    }
+						} catch (Exception e) {
+							resultFuture.getResultsReceiver().exceptionOccurred(e);
+						}
+                	}
 
-                    if (rm.isUpdateResult()) {
-                        listener.onResults(Arrays.asList("update-count"), rm.getResultsList()); //$NON-NLS-1$
-                    }
-                    else {
-                        listener.onResults(Arrays.asList(rm.getColumnNames()), rm.getResultsList());
+					private void processResult(ResultsMessage rm) throws Exception {
+						if (rm.getException() != null) {
+	                         throw rm.getException();
+	                    }
+						listener.onResults(Arrays.asList(rm.getColumnNames()), rm.getResultsList());
 
-                        while (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
-                            long elapsed = System.currentTimeMillis() - start;
-                            message = engine.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
-                            rm = message.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
-                            listener.onResults(Arrays.asList(rm.getColumnNames()), rm.getResultsList());
-                        }
-                    }
-
-                    long elapsed = System.currentTimeMillis() - start;
-                    ResultsFuture<?> response = engine.closeRequest(requestID);
-                    response.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
-                    return null;
-                }
-            });
-        } finally {
-            workContext.runInContext(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    engine.terminateSession(session.getSessionId());
-                    return null;
-                }
-            });
-        }	    
+						if (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
+						    ResultsFuture<ResultsMessage> next = engine.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
+						    next.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+						    	@Override
+						    	public void onCompletion(
+						    			ResultsFuture<ResultsMessage> future) {
+						    		try {
+										processResult(future.get());
+									} catch (Exception e) {
+										resultFuture.getResultsReceiver().exceptionOccurred(e);
+									}
+						    	}
+							});
+						} else {
+							resultFuture.getResultsReceiver().receiveResults(null);
+						}
+					}
+				});
+                return null;
+            }
+        });
+        return resultFuture;
 	}
 }

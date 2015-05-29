@@ -1854,6 +1854,7 @@ public class RelationalPlanner {
 		boolean allow = false;
 		if (!(viewMatadataId instanceof TempMetadataID)) {
 			allow = Boolean.parseBoolean(metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false));
+			allow &= metadata.getMaterialization(viewMatadataId) != null;
 		}
 		if (allow) {
 			String statusTableName = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);

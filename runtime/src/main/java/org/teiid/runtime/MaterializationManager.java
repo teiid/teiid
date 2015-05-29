@@ -22,21 +22,25 @@
 package org.teiid.runtime;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
@@ -44,7 +48,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.vdb.runtime.VDBKey;
+import org.teiid.query.tempdata.TempTableDataManager;
 
 public abstract class MaterializationManager implements VDBLifeCycleListener {
 	
@@ -52,7 +56,6 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		void process(Table table);
 	}
 	
-	private Map<VDBKey, List<TimerTask>> scheduledTasks = Collections.synchronizedMap(new HashMap<VDBKey,List<TimerTask>>());
 	private ContainerLifeCycleListener shutdownListener;
 	
 	public MaterializationManager (ContainerLifeCycleListener shutdownListener) {
@@ -71,11 +74,11 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		final VDBMetaData vdb = cvdb.getVDB();
 		
         // cancel any matview load pending tasks
-		List<TimerTask> tasks = scheduledTasks.remove(new VDBKey(vdb.getName(), vdb.getVersion()));
+		Collection<Future<?>> tasks = cvdb.clearTasks();
 		if (tasks != null && !tasks.isEmpty()) {
-	        for (TimerTask tt:tasks) {
-	        	tt.cancel();
-	        }
+	        for (Future<?> f:tasks) {
+	        	f.cancel(true);
+        	}
 		}
         
         // If VDB is being undeployed, run the shutdown triggers
@@ -84,6 +87,9 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 				
 				@Override
 				public void process(Table table) {
+					if (table.getMaterializedTable() == null) {
+						return;
+					}
 					String remove = table.getProperty(MaterializationMetadataRepository.ON_VDB_DROP_SCRIPT, false);
 					if (remove != null) {
 						for (String cmd: StringUtil.tokenize(remove, ';')) {
@@ -104,13 +110,44 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	}
 
 	@Override
-	public void finishedDeployment(String name, int version, CompositeVDB cvdb, final boolean reloading) {
+	public void finishedDeployment(String name, int version, final CompositeVDB cvdb, final boolean reloading) {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();
 			doMaterializationActions(vdb, new MaterializationAction() {
 				@Override
-				public void process(Table table) {
+				public void process(final Table table) {
+					if (table.getMaterializedTable() == null) {
+						String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
+						if (ttlStr != null) {
+							long ttl = Long.parseLong(ttlStr);
+							if (ttl > 0) {
+								//TODO: make the interval based upon the state as with the external, but
+								//for now just refresh on schedule
+								Future<?> f = getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
+									@Override
+									public void run() {
+										boolean invalidate = TempTableDataManager.shouldInvalidate(vdb);
+										try {
+											executeAsynchQuery(vdb, "SYSADMIN.refreshMatView(" + table.getSQLString() + ", " + invalidate + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+										} catch (SQLException e) {
+											LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+										}
+									}
+								}, 0, ttl, TimeUnit.MILLISECONDS);
+								cvdb.addTask(f);
+								return;
+							}
+						}
+						//just a one time load
+						try {
+							//we use a count so that the load can cascade
+							executeAsynchQuery(vdb, "select count(*) from " + table.getSQLString()); //$NON-NLS-1$
+						} catch (SQLException e) {
+							LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+						} 
+						return;
+					}
 					if (!reloading) {
 						String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
 						if (start != null) {
@@ -128,7 +165,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 					if (ttlStr != null) {
 						long ttl = Long.parseLong(ttlStr);
 						if (ttl > 0) {
-							scheduleJob(vdb, table, ttl, 0L);
+							scheduleJob(cvdb, table, ttl, 0L);
 						}
 					}				
 				}
@@ -151,7 +188,6 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			for (Table table:schema.getTables().values()) {
 				// find external matview table
 				if (!table.isVirtual() || !table.isMaterialized() 
-						|| table.getMaterializedTable() == null
 						|| !Boolean.valueOf(table.getProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false))) {
 					continue;
 				}
@@ -160,36 +196,30 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		}
 	}
 	
-	public void scheduleJob(VDBMetaData vdb, Table table, long ttl, long delay) {
-		TimerTask task = new JobSchedular(vdb, table, ttl, delay);
+	public void scheduleJob(CompositeVDB vdb, Table table, long ttl, long delay) {
+		JobScheduler task = new JobScheduler(vdb, table, ttl, delay);
 		queueTask(vdb, task, delay);
 	}
 	
-	private void runJob(VDBMetaData vdb, Table table,  long ttl, long delay) {
-		TimerTask task = new QueryJob(vdb, table, ttl, delay);
+	private void runJob(CompositeVDB vdb, Table table,  long ttl, long delay) {
+		JobScheduler task = new QueryJob(vdb, table, ttl, delay);
 		queueTask(vdb, task, delay);
 	}	
 	
-	private void queueTask(VDBMetaData vdb, TimerTask task, long delay) {
-		VDBKey key = new VDBKey(vdb.getName(), vdb.getVersion());
-		List<TimerTask> tasks = scheduledTasks.get(key);
-		if (tasks == null) {
-			tasks = new ArrayList<TimerTask>();
-			scheduledTasks.put(key, tasks);
-		}
-		synchronized(tasks) {
-			tasks.add(task);
-		}
-		getTimer().schedule(task, (delay < 0)?0:delay);
+	private void queueTask(CompositeVDB vdb, JobScheduler task, long delay) {
+		ScheduledFuture<?> sf = getScheduledExecutorService().schedule(task, (delay < 0)?0:delay, TimeUnit.MILLISECONDS);
+		vdb.addTask(sf);
+		task.future = sf;
 	}
 	
-	class JobSchedular extends TimerTask {
+	class JobScheduler implements Runnable {
 		protected Table table;
 		protected long ttl;
 		protected long delay;
-		protected VDBMetaData vdb;
+		protected CompositeVDB vdb;
+		protected ScheduledFuture<?> future;
 		
-		public JobSchedular(VDBMetaData vdb, Table table, long ttl, long delay) {
+		public JobScheduler(CompositeVDB vdb, Table table, long ttl, long delay) {
 			this.vdb = vdb;
 			this.table = table;
 			this.ttl = ttl;
@@ -198,12 +228,12 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		
 		@Override
 		public void run() {
-			scheduledTasks.remove(this);
-			String query = "execute SYSADMIN.matViewStatus('"+table.getParent().getName()+"', '"+table.getName()+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			vdb.removeTask(future);
+			String query = "execute SYSADMIN.matViewStatus('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"', '"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
 			
 			List<Map<String, String>> result = null;
 			try {
-				result = executeQuery(vdb, query);
+				result = executeQuery(vdb.getVDB(), query);
 			} catch (SQLException e) {
 				LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
 				scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
@@ -224,19 +254,20 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			}
 			
 			long elapsed = System.currentTimeMillis() - updated;
+			long next = ttl;
 			if (loadstate == null || loadstate.equalsIgnoreCase("needs_loading") || !valid) { //$NON-NLS-1$
 				// no entry found run immediately
-				runJob(vdb, table, ttl, 0L); 
+				runJob(vdb, table, ttl, 0L);
 			}
 			else if (loadstate.equalsIgnoreCase("loading")) { //$NON-NLS-1$
 				// if the process is already loading do nothing
+				next = ttl - elapsed;
 			}
 			else if (loadstate.equalsIgnoreCase("loaded")) { //$NON-NLS-1$
 				if (elapsed >= ttl) {
 					runJob(vdb, table, ttl, 0L);
-				}
-				else {
-					scheduleJob(vdb, table, ttl, (ttl-elapsed));
+				} else {
+					next = ttl - elapsed;	
 				}
 			}
 			else if (loadstate.equalsIgnoreCase("failed_load")) { //$NON-NLS-1$
@@ -244,27 +275,29 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 					runJob(vdb, table, ttl, 0L);
 				}
 				else {
-					scheduleJob(vdb, table, ttl, Math.min(((ttl/4)-elapsed), (60000-elapsed)));
+					next = Math.min(((ttl/4)-elapsed), (60000-elapsed));
 				}
 			}
+			
+			scheduleJob(vdb, table, ttl, next);
 		}
 	}	
 	
-	class QueryJob extends JobSchedular {
+	class QueryJob extends JobScheduler {
 		
-		public QueryJob(VDBMetaData vdb,Table table, long ttl, long delay) {
+		public QueryJob(CompositeVDB vdb,Table table, long ttl, long delay) {
 			super(vdb, table, ttl, delay);
 		}
 
 		@Override
 		public void run() {
-			scheduledTasks.remove(this);
+			vdb.removeTask(future);
 			getExecutor().execute(new Runnable() {
 				@Override
 				public void run() {
 					String query = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 					try {
-						executeQuery(vdb, query);
+						executeQuery(vdb.getVDB(), query);
 						scheduleJob(vdb, table, ttl, ttl);
 					} catch (SQLException e) {
 						LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
@@ -274,9 +307,51 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 				}
 			});
 		}
-	}	
+	}
+	
+	public Future<?> executeAsynchQuery(VDBMetaData vdb, String command) throws SQLException {
+		try {
+			return DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, getDQP(), new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
+				@Override
+				public void onResults(List<String> columns,
+						List<? extends List<?>> results) throws Exception {
+					
+				}
+			});
+		} catch (Throwable e) {
+			throw new SQLException(e);
+		}
+	}
+	
+    public List<Map<String, String>> executeQuery(VDBMetaData vdb, String command) throws SQLException {
+        final List<Map<String, String>> rows = new ArrayList<Map<String,String>>();
+        try {
+        	Future<?> f = DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, getDQP(), new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
+                @Override
+                public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
+                    for (List<?> row:results) {
+                        TreeMap<String, String> rowResult = new TreeMap<String, String>();
+                        for (int colNum = 0; colNum < columns.size(); colNum++) {
+                            Object value = row.get(colNum);
+                            if (value != null) {
+                                if (value instanceof Timestamp) {
+                                    value = ((Timestamp)value).getTime();
+                                }
+                            }
+                            rowResult.put(columns.get(colNum), value == null?null:value.toString());
+                        }
+                        rows.add(rowResult);
+                    }
+                }
+            }); 
+        	f.get();
+        } catch (Throwable e) {
+            throw new SQLException(e);
+        }   
+        return rows;
+    }
 		
-	public abstract Timer getTimer();
 	public abstract Executor getExecutor();
-	public abstract List<Map<String, String>> executeQuery(VDBMetaData vdb, String cmd) throws SQLException;
+	public abstract ScheduledExecutorService getScheduledExecutorService();
+	public abstract DQPCore getDQP();
 }

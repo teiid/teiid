@@ -23,10 +23,13 @@ package org.teiid.deployers;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.Future;
 
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.VDBImport;
@@ -64,6 +67,7 @@ public class CompositeVDB {
 	private boolean metadataloadFinished = false;
 	private VDBMetaData mergedVDB;
 	private VDBMetaData originalVDB;
+	private Collection<Future<?>> tasks = Collections.synchronizedSet(new HashSet<Future<?>>());
 	
 	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores) throws VirtualDatabaseException {
 		this.vdb = vdb;
@@ -287,6 +291,20 @@ public class CompositeVDB {
 	
 	LinkedHashMap<VDBKey, CompositeVDB> getChildren() {
 		return children;
+	}
+
+	public Collection<Future<?>> clearTasks() {
+		ArrayList<Future<?>> copy = new ArrayList<Future<?>>(tasks);
+		tasks.clear();
+		return copy;
+	}
+
+	public void removeTask(Future<?> future) {
+		tasks.remove(future);
+	}
+
+	public void addTask(Future<?> future) {
+		tasks.add(future);
 	}
 	
 }

@@ -457,5 +457,27 @@ public class TestMatViews {
 
 	}
 	
-
+	@Test public void testInternalWithManagement() throws Exception {
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true) AS select 1, current_database()");
+		server.deployVDB("comp", mmd2);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+		Statement s = c.createStatement();
+		Thread.sleep(5000);
+		
+		//ensure that we are preloaded
+		ResultSet rs = s.executeQuery("select * from MatViews where name = 'v1'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		
+		//and queryable
+		rs = s.executeQuery("select * from v1");
+		rs.next();
+		assertEquals("1", rs.getString(1));
+	}
+	
 }

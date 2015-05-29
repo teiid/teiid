@@ -383,7 +383,9 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		}
 		//overlay the properties
 		String ttlString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_TTL, false);
-		if (ttlString != null) {
+		if (Boolean.valueOf(metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false))) {
+			hint.setTtl(null); //will be managed by the scheduler
+		} else if (ttlString != null) {
 			hint.setTtl(Long.parseLong(ttlString));
 		}
 		String memString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, false);

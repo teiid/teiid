@@ -21,32 +21,23 @@
  */
 package org.teiid.jboss;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
-import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.jdbc.TeiidSQLException;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.runtime.MaterializationManager;
 
 class MaterializationManagementService implements Service<MaterializationManager> {
 	
-	private Timer timer;
+	private ScheduledExecutorService scheduler;
 	private MaterializationManager manager;
 	protected final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();
 	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
@@ -59,12 +50,12 @@ class MaterializationManagementService implements Service<MaterializationManager
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		timer = new Timer("Teiid Timer", true); //$NON-NLS-1$
+		scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Teiid Timer")); //$NON-NLS-1$
 		manager = new MaterializationManager(shutdownListener) {
 			
 			@Override
-			public Timer getTimer() {
-				return timer;
+			public ScheduledExecutorService getScheduledExecutorService() {
+				return scheduler;
 			}
 			
 			@Override
@@ -73,36 +64,8 @@ class MaterializationManagementService implements Service<MaterializationManager
 			}
 			
 			@Override
-			public List<Map<String, String>> executeQuery(VDBMetaData vdb, String cmd) throws SQLException {
-				try {
-					ModelNode results = new ModelNode();
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50100, "executing="+cmd)); //$NON-NLS-1$
-					TeiidOperationHandler.executeQuery(vdb, dqpInjector.getValue(), cmd, -1, results, false);
-					ArrayList<Map<String, String>> rows = new ArrayList<Map<String,String>>();
-					int i = 0;
-					while(true) {
-						if (results.get(i).isDefined()) {
-							HashMap<String, String> row = new HashMap();
-							List<ModelNode> cols = results.get(i).asList();
-							for (ModelNode col:cols) {
-			        			if (!col.getType().equals(ModelType.PROPERTY)) {
-			        				continue;
-			        			}
-			    				org.jboss.dmr.Property p = col.asProperty();
-			    				row.put(p.getName(), p.getValue().asString());
-							}
-							rows.add(row);
-							i++;
-						}
-						else {
-							break;
-						}
-					}
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50100, results));
-					return rows;
-				} catch(Throwable t) {
-					throw new TeiidSQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50100, t));
-				}
+			public DQPCore getDQP() {
+				return dqpInjector.getValue();
 			}
 		};
 		
@@ -111,7 +74,7 @@ class MaterializationManagementService implements Service<MaterializationManager
 
 	@Override
 	public void stop(StopContext context) {
-		timer.cancel();
+		scheduler.shutdownNow();
 		vdbRepositoryInjector.getValue().removeListener(manager);
 	}
 

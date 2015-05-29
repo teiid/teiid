@@ -557,14 +557,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					} else {
 						boolean load = false;
 						if (!info.isUpToDate()) {
-							boolean invalidate = true;
-							VDBMetaData vdb = context.getVdb();
-							if (vdb != null) {
-								String val = vdb.getPropertyValue("lazy-invalidate"); //$NON-NLS-1$
-								if (val != null) {
-									invalidate = !Boolean.valueOf(val);
-								}
-							}
+							boolean invalidate = shouldInvalidate(context.getVdb());
 							load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, invalidate);
 							if (load) {
 								load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, invalidate);
@@ -865,4 +858,16 @@ public class TempTableDataManager implements ProcessorDataManager {
 		}
 		throw new TeiidRuntimeException(e);
 	}
+	
+	public static boolean shouldInvalidate(VDBMetaData vdb) {
+		boolean invalidate = true;
+		if (vdb != null) {
+			String val = vdb.getPropertyValue("lazy-invalidate"); //$NON-NLS-1$
+			if (val != null) {
+				invalidate = !Boolean.valueOf(val);
+			}
+		}
+		return invalidate;
+	}
+
 }

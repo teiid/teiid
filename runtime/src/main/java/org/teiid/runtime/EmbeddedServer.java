@@ -36,10 +36,15 @@ import java.net.UnknownHostException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.transaction.TransactionManager;
@@ -60,18 +65,35 @@ import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.BundleUtil.Event;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.deployers.*;
+import org.teiid.deployers.CompositeGlobalTableStore;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.ContainerLifeCycleListener;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
-import org.teiid.dqp.internal.process.*;
+import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
-import org.teiid.jdbc.*;
+import org.teiid.jdbc.CallableStatementImpl;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.PreparedStatementImpl;
+import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidPreparedStatement;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -93,6 +115,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.services.AbstractEventDistributorFactoryService;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
@@ -281,9 +304,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private SessionAwareCache<CachedResults> rs;
 	private SessionAwareCache<PreparedPlan> ppc;
 	protected ArrayList<SocketListener> transports = new ArrayList<SocketListener>();
-	private Timer timer;
+	private ScheduledExecutorService scheduler;
 	private MaterializationManager materializationMgr = null;
 	private ShutDownListener shutdownListener = new ShutDownListener();
+	private SimpleChannelFactory channelFactory;
 
 	public EmbeddedServer() {
 
@@ -317,7 +341,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.config = config;
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
+		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$
 		this.replicator = config.getObjectReplicator();
+		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
+			channelFactory = new SimpleChannelFactory(config);
+			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);			
+		}
 		if (config.getTransactionManager() == null) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 			this.transactionService.setTransactionManager((TransactionManager) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {TransactionManager.class}, new InvocationHandler() {
@@ -364,7 +393,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
 		this.services.setVDBRepository(this.repo);
-		this.timer = new Timer("Teiid Timer", true); //$NON-NLS-1$
 		this.materializationMgr = getMaterializationManager();
 		this.repo.addListener(this.materializationMgr);
 		this.logon = new LogonImpl(sessionService, null);
@@ -519,45 +547,23 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	protected MaterializationManager getMaterializationManager() {
-	    final TeiidExecutor executor = config.getAsynchWorkExecutor();
 	    return new MaterializationManager(this.shutdownListener) {
-            @Override
-            public Timer getTimer() {
-                return EmbeddedServer.this.timer;
-            }
+	    	
+	    	@Override
+	    	public ScheduledExecutorService getScheduledExecutorService() {
+	    		return scheduler;
+	    	}
 
             @Override
-            public Executor getExecutor() {
-                return executor;
+            public ScheduledExecutorService getExecutor() {
+                return scheduler;
             }
-
+            
             @Override
-            public List<Map<String, String>> executeQuery(VDBMetaData vdb, String command) throws SQLException {
-                final List<Map<String, String>> rows = new ArrayList<Map<String,String>>();
-                try {
-                    DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, dqp, new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
-                        @Override
-                        public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
-                            for (List<?> row:results) {
-                                TreeMap<String, String> rowResult = new TreeMap<String, String>();
-                                for (int colNum = 0; colNum < columns.size(); colNum++) {
-                                    Object value = row.get(colNum);
-                                    if (value != null) {
-                                        if (value instanceof Timestamp) {
-                                            value = ((Timestamp)value).getTime();
-                                        }
-                                    }
-                                    rowResult.put(columns.get(colNum), value == null?null:value.toString());
-                                }
-                                rows.add(rowResult);
-                            }
-                        }
-                    }); 
-                } catch (Throwable e) {
-                    throw new SQLException(e);
-                }   
-                return rows;
+            public DQPCore getDQP() {
+            	return dqp;
             }
+            
         };
 	}
 
@@ -797,9 +803,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (running == null || !running) {
 			return;
 		}
+		if (this.channelFactory != null) {
+			this.channelFactory.stop();
+		}
         this.shutdownListener.setShutdownInProgress(true);
         this.repo.removeListener(this.materializationMgr);
-        this.timer.cancel();
+        this.scheduler.shutdownNow();
 		for (SocketListener socket:this.transports) {
 			socket.stop();
 		}

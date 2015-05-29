@@ -35,6 +35,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.Future;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
 import org.jboss.as.connector.services.resourceadapters.deployment.InactiveResourceAdapterDeploymentService.InactiveResourceAdapterDeployment;
@@ -172,12 +173,13 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
         LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
         
         try {
-            DQPCore.executeQuery(command, vdb, user, "admin-console", timoutInMilli, engine, new DQPCore.ResultsListener() { //$NON-NLS-1$
+            Future<?> f = DQPCore.executeQuery(command, vdb, user, "admin-console", timoutInMilli, engine, new DQPCore.ResultsListener() { //$NON-NLS-1$
                 @Override
                 public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
                     writeResults(resultsNode, columns, results, timeAsString);
                 }
             }); 
+            f.get();
         } catch (Throwable e) {
             throw new OperationFailedException(new ModelNode().set(e.getMessage()));
         }

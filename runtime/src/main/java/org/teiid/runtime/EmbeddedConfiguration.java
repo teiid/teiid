@@ -25,59 +25,24 @@ package org.teiid.runtime;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.Executors;
 
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.DefaultCacheManager;
-import org.jgroups.Channel;
-import org.jgroups.ChannelListener;
-import org.jgroups.JChannel;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.dqp.internal.process.*;
+import org.teiid.dqp.internal.process.DQPConfiguration;
+import org.teiid.dqp.internal.process.DataRolePolicyDecider;
+import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
+import org.teiid.dqp.internal.process.TeiidExecutor;
+import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.replication.jgroups.ChannelFactory;
-import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.SocketConfiguration;
 
 public class EmbeddedConfiguration extends DQPConfiguration {
-	
-	private final class SimpleChannelFactory implements ChannelFactory, ChannelListener {
-		private final Map<Channel, String> channels = new WeakHashMap<Channel, String>();
-		
-		@Override
-		public Channel createChannel(String id) throws Exception {
-			JChannel channel = new JChannel(this.getClass().getClassLoader().getResource(getJgroupsConfigFile()));
-			channels.put(channel, id);
-			channel.addChannelListener(this);
-			return channel;
-		}
-
-		@Override
-		public void channelClosed(Channel channel) {
-			channels.remove(channel);
-		}
-
-		@Override
-		public void channelConnected(Channel channel) {
-		}
-
-		@Override
-		public void channelDisconnected(Channel channel) {
-		}
-		
-		void stop() {
-			for (Channel c : new ArrayList<Channel>(channels.keySet())) {
-				c.close();
-			}
-		}
-	}
 	
 	static final int DEFAULT_MAX_ASYNC_WORKERS = 10;
 	private SecurityHelper securityHelper;
@@ -109,7 +74,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int memoryBufferSpace ;
 	
 	private DefaultCacheManager manager;
-	private SimpleChannelFactory channelFactory;
 	
 	public EmbeddedConfiguration() {
 		processorBatchSize = -1;
@@ -153,10 +117,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	}
 	
 	public ObjectReplicator getObjectReplicator() {
-		if (this.objectReplicator == null && jgroupsConfigFile != null) {
-			channelFactory = new SimpleChannelFactory();
-			this.objectReplicator = new JGroupsObjectReplicator(channelFactory, Executors.newCachedThreadPool());			
-		}
 		return objectReplicator;
 	}
 	
@@ -247,9 +207,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		if (manager != null) {
 			manager.stop();
 		}
-		if (channelFactory != null) {
-			channelFactory.stop();
-		}
 	}
 	
 	public void addTransport(SocketConfiguration configuration) {
@@ -277,10 +234,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 
     public void setMaxAsyncThreads(int maxAsyncThreads) {
         this.maxAsyncThreads = maxAsyncThreads;
-    }
-
-    public TeiidExecutor getAsynchWorkExecutor() {
-        return new ThreadReuseExecutor("Asynchronus Workers", getMaxAsyncThreads()); //$NON-NLS-1$
     }
 
 	public int getProcessorBatchSize() {
