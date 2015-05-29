@@ -22,28 +22,13 @@
 package org.teiid.olingo.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
-import org.apache.olingo.commons.api.edm.provider.CsdlAction;
-import org.apache.olingo.commons.api.edm.provider.CsdlActionImport;
-import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
-import org.apache.olingo.commons.api.edm.provider.CsdlEntityContainer;
-import org.apache.olingo.commons.api.edm.provider.CsdlEntitySet;
-import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
-import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
-import org.apache.olingo.commons.api.edm.provider.CsdlFunctionImport;
-import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
-import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
-import org.apache.olingo.commons.api.edm.provider.CsdlParameter;
-import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
-import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
-import org.apache.olingo.commons.api.edm.provider.CsdlReferentialConstraint;
-import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
-import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
+import org.apache.olingo.commons.api.edm.provider.*;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
@@ -105,8 +90,8 @@ public class OData4EntitySchemaBuilder {
     }
 
     static void buildEntityTypes(String namespace, org.teiid.metadata.Schema schema, CsdlSchema edmSchema) {
-        Map<String, CsdlEntitySet> entitySets = new HashMap<String, CsdlEntitySet>();
-        Map<String, CsdlEntityType> entityTypes = new HashMap<String, CsdlEntityType>();
+        Map<String, CsdlEntitySet> entitySets = new LinkedHashMap<String, CsdlEntitySet>();
+        Map<String, CsdlEntityType> entityTypes = new LinkedHashMap<String, CsdlEntityType>();
         
         String fullSchemaName = namespace+"."+schema.getName();
 

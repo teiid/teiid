@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -153,26 +152,26 @@ public class TestODataIntegration {
                 response.getContentAsString());        
     }
     @Test
-    public void tesSystemMetadata() throws Exception {
+    public void testSystemMetadata() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/SYS/$metadata");
         assertEquals(200, response.getStatus());
     }
 
     @Test
-    public void tesServiceMetadata() throws Exception {
+    public void testServiceMetadata() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/VM1");
         assertEquals(200, response.getStatus());
         String expected = "{\n" + 
                 "  \"@odata.context\" : \""+baseURL+"/loopy/VM1/$metadata\",\n" + 
                 "  \"value\" : [ {\n" + 
-                "    \"name\" : \"G4\",\n" + 
-                "    \"url\" : \"G4\"\n" + 
+                "    \"name\" : \"G1\",\n" + 
+                "    \"url\" : \"G1\"\n" + 
                 "  }, {\n" + 
                 "    \"name\" : \"G2\",\n" + 
                 "    \"url\" : \"G2\"\n" + 
                 "  }, {\n" + 
-                "    \"name\" : \"G1\",\n" + 
-                "    \"url\" : \"G1\"\n" + 
+                "    \"name\" : \"G4\",\n" + 
+                "    \"url\" : \"G4\"\n" + 
                 "  } ]\n" + 
                 "}";
         assertEquals(expected, response.getContentAsString());
