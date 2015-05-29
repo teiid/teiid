@@ -235,12 +235,12 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 	private FunctionMethod addFunction(Method method, TeiidFunction f,
 			String name) {
 		FunctionMethod func = MetadataFactory.createFunctionFromMethod(name, method);
-		func.setDescription(QueryPlugin.Util.getString("SystemSource." + name + "_description")); //$NON-NLS-1$ //$NON-NLS-2$
+		func.setDescription(QueryPlugin.Util.getString(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_description"))); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setCategory(f.category());
 		for (int i = 0; i < func.getInputParameterCount(); i++) {
-			func.getInputParameters().get(i).setDescription("SystemSource." + name + "_param" + (i+1)); //$NON-NLS-1$ //$NON-NLS-2$
+			func.getInputParameters().get(i).setDescription(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_param" + (i+1))); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		func.getOutputParameter().setDescription("SystemSource." + name + "_result"); //$NON-NLS-1$ //$NON-NLS-2$
+		func.getOutputParameter().setDescription(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_result")); //$NON-NLS-1$ //$NON-NLS-2$
 		if (f.nullOnNull()) {
 			func.setNullOnNull(true);
 		}
@@ -1047,7 +1047,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     private void addXmlComment() {
         functions.add(new FunctionMethod(SourceSystemFunctions.XMLCOMMENT, QueryPlugin.Util.getString("SystemSource.xmlcomment_description"), XML, XML_FUNCTION_CLASS, "xmlComment", //$NON-NLS-1$ //$NON-NLS-2$  
                             new FunctionParameter[] { 
-                                new FunctionParameter("value", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlcomment_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                new FunctionParameter("value", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlcomment_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlcomment_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
 
