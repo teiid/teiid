@@ -30,6 +30,7 @@ import java.util.TimeZone;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.unittest.TimestampUtil;
@@ -117,5 +118,28 @@ public class TestFunctionMethods {
 				new Timestamp(TimestampUtil.createDate(113, 2, 4).getTime()),
 				new Timestamp(TimestampUtil.createDate(113, 2, 3).getTime()), true));
 	}
-		 
+
+    @Test public void regexpReplaceOkay() throws Exception {
+        assertEquals(
+                "fooXbaz",
+                FunctionMethods.regexpReplace(null, "foobarbaz", "b..", "X")
+        );
+        assertEquals(
+                "fooXX",
+                FunctionMethods.regexpReplace(null, "foobarbaz", "b..", "X", "g")
+        );
+        assertEquals(
+                "fooXarYXazY",
+                FunctionMethods.regexpReplace(null, "foobarbaz", "b(..)", "X$1Y", "g")
+        );
+        assertEquals(
+                "fooBXRbXz",
+                FunctionMethods.regexpReplace(null, "fooBARbaz", "a", "X", "gi")
+        );
+    }
+
+    @Test(expected=FunctionExecutionException.class)
+    public void regexpInvalidFlagsBad() throws Exception {
+        FunctionMethods.regexpReplace(null, "foobarbaz", "b..", "X", "y");
+    }
 }

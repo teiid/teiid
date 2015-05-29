@@ -34,7 +34,6 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
-import org.teiid.core.types.XMLType;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.GeometryTransformUtils;
 import org.teiid.query.function.GeometryUtils;
@@ -48,6 +47,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.OutputStreamOutStream;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
+import static org.teiid.query.resolver.TestFunctionResolving.assertEval;
 
 @SuppressWarnings("nls")
 public class TestGeometry {
@@ -190,19 +190,6 @@ public class TestGeometry {
     @Test(expected=ExpressionEvaluationException.class)
     public void testAsKmlException() throws Exception {
         assertEval("ST_AsKML(ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))'))", null);
-    }
-    
-    private void assertEval(String expr, String result) 
-            throws Exception {
-        Expression ex = TestFunctionResolving.getExpression(expr);        
-        Object val = Evaluator.evaluate(ex);
-        String valStr = null;
-        if (val instanceof Clob) {
-            valStr = ClobType.getString((Clob) val);
-        } else if (val instanceof XMLType) {            
-            valStr = ((XMLType) val).getString();
-        }
-        assertEquals(result, valStr);
     }
     
     @Test public void testEquals() throws Exception {

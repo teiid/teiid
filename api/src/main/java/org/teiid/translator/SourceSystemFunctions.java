@@ -55,6 +55,7 @@ public class SourceSystemFunctions {
 	public static final String LOCATE = "locate"; //$NON-NLS-1$
 	public static final String LTRIM = "ltrim"; //$NON-NLS-1$
 	public static final String REPEAT = "repeat"; //$NON-NLS-1$
+	public static final String REGEXP_REPLACE = "regexp_replace"; //$NON-NLS-1$
 	public static final String REPLACE = "replace"; //$NON-NLS-1$
 	public static final String RIGHT = "right"; //$NON-NLS-1$
 	public static final String RPAD = "rpad"; //$NON-NLS-1$

@@ -48,6 +48,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.resolver.TestFunctionResolving;
+import static org.teiid.query.resolver.TestFunctionResolving.assertEval;
 import org.teiid.query.sql.lang.CollectionValueIterator;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
@@ -499,5 +500,18 @@ public class TestExpressionEvaluator {
     	
     	TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
     }
-    
+
+    @Test public void testRegexpReplaceOkay() throws Exception {
+        // Test replace-first vs replace-all.
+        assertEval("regexp_replace('foobarbaz', 'b..', 'X')", "fooXbaz");
+        assertEval("regexp_replace('foobarbaz', 'b..', 'X', 'g')", "fooXX");
+        // Test replace-all with capture group.
+        assertEval("regexp_replace('foobarbaz', 'b(..)', 'X$1Y', 'g')", "fooXarYXazY");
+        // Test case-insensitive matching.
+        assertEval("regexp_replace('fooBARbaz', 'a', 'X', 'g')", "fooBARbXz");
+        assertEval("regexp_replace('fooBARbaz', 'a', 'X', 'gi')", "fooBXRbXz");
+        // Test multiline.
+        assertEval("regexp_replace('foo\nbar\nbaz', '(b[\\d\\w\\s]+?)$', 'X', 'g')", "foo\nX");
+        assertEval("regexp_replace('foo\nbar\nbaz', '(b[\\d\\w\\s]+?)$', 'X', 'gm')", "foo\nX\nX");
+    }
 }
