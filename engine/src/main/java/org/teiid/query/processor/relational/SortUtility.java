@@ -386,7 +386,20 @@ public class SortUtility {
 	}
     
     protected void mergePhase() throws TeiidComponentException, TeiidProcessingException {
-        long desiredSpace = activeTupleBuffers.size() * (long)schemaSize;
+        if (this.activeTupleBuffers.size() > 1) {
+        	doMerge();
+        }
+    	
+        // Close sorted source (all others have been removed)
+    	Assertion.assertTrue(doneReading);
+    	activeTupleBuffers.get(0).close();
+    	activeTupleBuffers.get(0).setForwardOnly(false);
+        this.phase = DONE;
+        return;
+    }
+    
+    protected void doMerge() throws TeiidComponentException, TeiidProcessingException {
+    	long desiredSpace = activeTupleBuffers.size() * (long)schemaSize;
         int toForce = (int)Math.min(desiredSpace, Math.max(2*schemaSize, this.bufferManager.getMaxProcessingSize()));
         int reserved = 0;
         
@@ -469,13 +482,6 @@ public class SortUtility {
         } finally {
         	this.bufferManager.releaseBuffers(reserved);
         }
-    	
-        // Close sorted source (all others have been removed)
-    	Assertion.assertTrue(doneReading);
-    	activeTupleBuffers.get(0).close();
-    	activeTupleBuffers.get(0).setForwardOnly(false);
-        this.phase = DONE;
-        return;
     }
 
 	private void incrementWorkingTuple(ArrayList<SortedSublist> subLists, SortedSublist sortedSublist) throws TeiidComponentException, TeiidProcessingException {
