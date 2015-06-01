@@ -26,8 +26,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.core.TeiidRuntimeException;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
 
@@ -83,12 +81,8 @@ public class GroupContext implements Cloneable {
         return result;
     }
     
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException err) {
-             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30446, err);
-        }
+    public GroupContext clone() {
+    	return new GroupContext(parent, new LinkedList<GroupSymbol>(groups));
     }
     
     /** 

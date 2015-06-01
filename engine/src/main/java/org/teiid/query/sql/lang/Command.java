@@ -156,10 +156,6 @@ public abstract class Command implements LanguageObject {
         getExternalGroupContexts().addGroup(group);
     }
     
-    public void addExternalGroupsToContext(Collection<GroupSymbol> groups) {
-        getExternalGroupContexts().getGroups().addAll(groups);
-    }
-
     public void setExternalGroupContexts(GroupContext root) {
         if (root == null) {
             this.externalGroups = null;
