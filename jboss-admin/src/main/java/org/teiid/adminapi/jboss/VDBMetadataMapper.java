@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.adminapi.impl;
+package org.teiid.adminapi.jboss;
 
 import java.util.Collection;
 import java.util.List;
@@ -40,6 +40,20 @@ import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
+import org.teiid.adminapi.impl.AdminObjectImpl;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.EngineStatisticsMetadata;
+import org.teiid.adminapi.impl.EntryMetaData;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.SourceMappingMetadata;
+import org.teiid.adminapi.impl.TransactionMetadata;
+import org.teiid.adminapi.impl.VDBImportMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;

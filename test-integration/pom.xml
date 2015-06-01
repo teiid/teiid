@@ -45,7 +45,11 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-admin</artifactId>
-        </dependency>        
+        </dependency>  
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-jboss-admin</artifactId>
+        </dependency>               
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>

@@ -58,6 +58,12 @@
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-jboss-admin</artifactId>
+      <scope>provided</scope>
+    </dependency>  
+        
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-metadata</artifactId>
     </dependency>
         

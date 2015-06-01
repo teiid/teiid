@@ -493,7 +493,18 @@
                 <groupId>org.jboss.teiid</groupId>
                 <artifactId>teiid-admin</artifactId>
                 <version>${project.version}</version>
-            </dependency>  
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-admin</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>                                                      
+            <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-jboss-admin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-adminshell</artifactId>
@@ -651,17 +662,7 @@
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-vfs</artifactId>
-                <version>${version.org.jboss.jboss-vfs}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.jboss.logging</groupId>
-                        <artifactId>jboss-logging</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.jboss.logging</groupId>
-                        <artifactId>jboss-logging-spi</artifactId>
-                    </exclusion>
-                </exclusions>                
+                <version>${version.org.jboss.jboss-vfs}</version>                
             </dependency>              
             <dependency>
                 <groupId>org.jboss.as</groupId>
@@ -1543,12 +1544,13 @@
 		<module>adminshell</module>
 		<module>hibernate-dialect</module>
 		<module>eclipselink-platform</module>
-        <module>jboss-integration</module>
-        <module>jboss-security</module>
+		<module>jboss-integration</module>
+		<module>jboss-security</module>
 		<module>test-integration</module>
-        <module>client-jdk15</module>
+		<module>client-jdk15</module>
 		<module>admin</module>
-        <module>odata</module>
-        <module>olingo</module>
-  </modules>
+		<module>jboss-admin</module>
+		<module>odata</module>
+		<module>olingo</module>
+	</modules>
 </project>

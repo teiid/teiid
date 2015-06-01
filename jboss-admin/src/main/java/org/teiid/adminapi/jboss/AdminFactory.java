@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.adminapi;
+package org.teiid.adminapi.jboss;
 
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REMOVE_OPERATION;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
@@ -45,12 +45,30 @@ import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminPlugin;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.CacheStatistics;
+import org.teiid.adminapi.DomainAware;
+import org.teiid.adminapi.EngineStatistics;
+import org.teiid.adminapi.PropertyDefinition;
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.WorkerPoolStatistics;
+import org.teiid.adminapi.Admin.SchemaObjectType;
+import org.teiid.adminapi.Admin.TranlatorPropertyType;
+import org.teiid.adminapi.AdminPlugin.Event;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.*;
-import org.teiid.adminapi.impl.VDBMetadataMapper.RequestMetadataMapper;
-import org.teiid.adminapi.impl.VDBMetadataMapper.SessionMetadataMapper;
-import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
+import org.teiid.adminapi.jboss.VDBMetadataMapper.RequestMetadataMapper;
+import org.teiid.adminapi.jboss.VDBMetadataMapper.SessionMetadataMapper;
+import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.core.util.ObjectConverterUtil;
 
 

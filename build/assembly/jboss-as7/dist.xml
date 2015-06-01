@@ -293,6 +293,17 @@
       </binaries>
     </moduleSet>    
 
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-jboss-admin</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
+      </binaries>
+    </moduleSet> 
   
      
     <!-- ******************************************************** 

@@ -36,7 +36,6 @@ import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBMetadataMapper;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.translator.ExecutionFactory;
 

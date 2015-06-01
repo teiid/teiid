@@ -41,11 +41,11 @@ public class TestVDBMetadataParser {
 		VDBMetadataParser.validate(in);
 		in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
 		VDBMetaData vdb = VDBMetadataParser.unmarshell(in);
-		TestVDBMetaData.validateVDB(vdb);
+		TestVDBUtility.validateVDB(vdb);
 	}
 	
 	@Test public void testExcludeImported() throws Exception {
-		VDBMetaData metadata = TestVDBMetaData.buildVDB();
+		VDBMetaData metadata = TestVDBUtility.buildVDB();
 		assertNotNull(metadata.getModel("model-one"));
 		metadata.setImportedModels(Collections.singleton("model-one"));
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();

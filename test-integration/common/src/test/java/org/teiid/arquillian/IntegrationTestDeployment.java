@@ -54,6 +54,7 @@ import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
 
