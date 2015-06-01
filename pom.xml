@@ -577,15 +577,57 @@
                <groupId>org.jboss.teiid.connectors</groupId>
                <artifactId>translator-file</artifactId>
                <version>${project.version}</version>
-               <scope>test</scope>
            </dependency>
            <dependency>
                <groupId>org.jboss.teiid.connectors</groupId>
                <artifactId>connector-file</artifactId>
                <version>${project.version}</version>
                <classifier>lib</classifier>
-               <scope>test</scope>
            </dependency>
+	    <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>translator-excel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+	    <dependency>
+               <groupId>org.jboss.teiid.connectors</groupId>
+               <artifactId>connector-ws</artifactId>
+               <version>${project.version}</version>
+               <classifier>lib</classifier>
+           </dependency>
+           <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>connector-mongodb</artifactId>
+                <version>${project.version}</version>
+                <classifier>lib</classifier>
+           </dependency>
+           <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>translator-mongodb</artifactId>
+                <version>${project.version}</version>
+           </dependency>
+           <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>translator-hbase</artifactId>
+                <version>${project.version}</version>
+           </dependency>
+           <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>connector-ldap</artifactId>
+                <version>${project.version}</version>
+                <classifier>lib</classifier>
+           </dependency>
+           <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>translator-ldap</artifactId>
+                <version>${project.version}</version>
+           </dependency>
+           <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>connector-cassandra</artifactId>
+                <version>${project.version}</version>
+                <classifier>lib</classifier>
+          </dependency>
       <!-- External dependencies -->
             <dependency>
                 <groupId>org.jboss.as</groupId>
@@ -1550,5 +1592,6 @@
 		<module>admin</module>
         <module>odata</module>
         <module>olingo</module>
+	<module>examples</module>
   </modules>
 </project>

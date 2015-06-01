@@ -22,15 +22,14 @@
 
 package org.teiid.example;
 
+import static org.teiid.example.util.JDBCUtils.execute;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import javax.sql.DataSource;
 
@@ -59,38 +58,6 @@ import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
  */
 @SuppressWarnings("nls")
 public class TeiidEmbeddedPortfolio {
-
-	private static void execute(Connection connection, String sql, boolean closeConn) throws Exception {
-		try {
-			Statement statement = connection.createStatement();
-			
-			boolean hasResults = statement.execute(sql);
-			if (hasResults) {
-				ResultSet results = statement.getResultSet();
-				ResultSetMetaData metadata = results.getMetaData();
-				int columns = metadata.getColumnCount();
-				System.out.println("Results");
-				for (int row = 1; results.next(); row++) {
-					System.out.print(row + ": ");
-					for (int i = 0; i < columns; i++) {
-						if (i > 0) {
-							System.out.print(",");
-						}
-						System.out.print(results.getString(i+1));
-					}
-					System.out.println();
-				}
-				results.close();
-			}
-			statement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			if (connection != null && closeConn) {
-				connection.close();
-			}
-		}		
-	}
 	
 	private static Server h2Server = null;
 	
@@ -130,8 +97,10 @@ public class TeiidEmbeddedPortfolio {
 		
 		execute(c, "select * from Product", false);
 		execute(c, "select * from StockPrices", false);
-		execute(c, "select * from Stock", true);
-		
+		execute(c, "select * from Stock", false);
+		execute(c, "SELECT stock.* from (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock", false);
+		execute(c, "select product.symbol, stock.price, company_name from product, (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock where product.symbol=stock.symbol", true); 
+				
 		stopH2Server();
 	}
 

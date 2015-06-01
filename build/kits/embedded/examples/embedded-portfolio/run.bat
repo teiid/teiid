@@ -1,4 +1,4 @@
-TEIID_PATH=..\..\lib\*;..\..\optional\file\*;..\..\optional\jdbc\*;..\..\optional\jdbc\h2\*;..\..\optional\jdbc\tm\*;..\..\optional\*
+TEIID_PATH=..\..\lib\*;..\..\optional\file\*;..\..\optional\jdbc\*;..\..\optional\jdbc\h2\*;..\..\optional\jdbc\*;..\..\optional\*
 
 javac -cp %TEIID_PATH% src\org\teiid\example\*.java 
 
