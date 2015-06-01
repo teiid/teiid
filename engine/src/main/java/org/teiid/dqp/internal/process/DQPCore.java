@@ -890,7 +890,7 @@ public class DQPCore implements DQP {
 	 * @return
 	 * @throws Throwable
 	 */
-    public static Future<?> executeQuery(final String command, final VDBMetaData vdb, final String user, final String app,
+    public static ResultsFuture<?> executeQuery(final String command, final VDBMetaData vdb, final String user, final String app,
             final long timeoutInMilli, final DQPCore engine, final ResultsListener listener) throws Throwable {
         final SessionMetadata session = TempTableDataManager.createTemporarySession(user, app, vdb); 
 

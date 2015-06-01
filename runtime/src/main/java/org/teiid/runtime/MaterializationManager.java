@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,6 +37,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.client.util.ResultsFuture.CompletionListener;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
@@ -201,9 +205,27 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		queueTask(vdb, task, delay);
 	}
 	
-	private void runJob(CompositeVDB vdb, Table table,  long ttl, long delay) {
-		JobScheduler task = new QueryJob(vdb, table, ttl, delay);
-		queueTask(vdb, task, delay);
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void runJob(final CompositeVDB vdb, final Table table, final long ttl) {
+		String command = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+		try {
+			executeAsynchQuery(vdb.getVDB(), command).addCompletionListener(new CompletionListener() {
+				@Override
+				public void onCompletion(ResultsFuture future) {
+					try {
+						future.get();
+						scheduleJob(vdb, table, ttl, ttl);
+					} catch (InterruptedException e) {
+					} catch (ExecutionException e) {
+						LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+						scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
+					}
+				}
+			});
+		} catch (SQLException e) {
+			LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+			scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
+		}
 	}	
 	
 	private void queueTask(CompositeVDB vdb, JobScheduler task, long delay) {
@@ -257,7 +279,8 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			long next = ttl;
 			if (loadstate == null || loadstate.equalsIgnoreCase("needs_loading") || !valid) { //$NON-NLS-1$
 				// no entry found run immediately
-				runJob(vdb, table, ttl, 0L);
+				runJob(vdb, table, ttl);
+				return;
 			}
 			else if (loadstate.equalsIgnoreCase("loading")) { //$NON-NLS-1$
 				// if the process is already loading do nothing
@@ -265,51 +288,23 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			}
 			else if (loadstate.equalsIgnoreCase("loaded")) { //$NON-NLS-1$
 				if (elapsed >= ttl) {
-					runJob(vdb, table, ttl, 0L);
-				} else {
-					next = ttl - elapsed;	
-				}
+					runJob(vdb, table, ttl);
+					return;
+				} 
+				next = ttl - elapsed;	
 			}
 			else if (loadstate.equalsIgnoreCase("failed_load")) { //$NON-NLS-1$
 				if (elapsed > ttl/4 || elapsed > 60000) { // exceeds 1/4 of cached time or 5 mins
-					runJob(vdb, table, ttl, 0L);
+					runJob(vdb, table, ttl);
+					return;
 				}
-				else {
-					next = Math.min(((ttl/4)-elapsed), (60000-elapsed));
-				}
+				next = Math.min(((ttl/4)-elapsed), (60000-elapsed));
 			}
-			
 			scheduleJob(vdb, table, ttl, next);
 		}
 	}	
 	
-	class QueryJob extends JobScheduler {
-		
-		public QueryJob(CompositeVDB vdb,Table table, long ttl, long delay) {
-			super(vdb, table, ttl, delay);
-		}
-
-		@Override
-		public void run() {
-			vdb.removeTask(future);
-			getExecutor().execute(new Runnable() {
-				@Override
-				public void run() {
-					String query = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-					try {
-						executeQuery(vdb.getVDB(), query);
-						scheduleJob(vdb, table, ttl, ttl);
-					} catch (SQLException e) {
-						LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-						scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
-						return;						
-					}
-				}
-			});
-		}
-	}
-	
-	public Future<?> executeAsynchQuery(VDBMetaData vdb, String command) throws SQLException {
+	public ResultsFuture<?> executeAsynchQuery(VDBMetaData vdb, String command) throws SQLException {
 		try {
 			return DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, getDQP(), new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
 				@Override
@@ -345,6 +340,14 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
                 }
             }); 
         	f.get();
+        } catch (InterruptedException e) {
+        	//break
+        	throw new TeiidRuntimeException(e); 
+        } catch (ExecutionException e) {
+        	if (e.getCause() != null) {
+                throw new SQLException(e.getCause()); 
+        	}
+        	throw new SQLException(e);
         } catch (Throwable e) {
             throw new SQLException(e);
         }   
