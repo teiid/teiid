@@ -65,7 +65,7 @@ public final class PureZipFileSystem implements FileSystem {
 
 	private static AtomicInteger counter = new AtomicInteger();
 	
-	public static VirtualFile mount(URL url) throws IOException, URISyntaxException {
+    public static VirtualFile mount(URL url) throws IOException, URISyntaxException {
 		//we treat each zip as unique if it's possible that it 
 		String fileName = "teiid-vdb-" + url.toExternalForm(); //$NON-NLS-1$
 		VirtualFile root = VFS.getChild(fileName);

@@ -6,9 +6,9 @@
         <version>8.11.0.Beta4-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>teiid-admin</artifactId>
-	<name>admin</name>
-	<description>Admin API for Teiid</description>
+	<artifactId>teiid-jboss-admin</artifactId>
+	<name>jboss-admin</name>
+	<description>Admin API for Teiid in JBoss EAP environment</description>
     <packaging>bundle</packaging>
     
     <build>
@@ -26,7 +26,7 @@
     </build>    
     
 	<dependencies>
-		<dependency>
+	  <dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
 			<scope>provided</scope>
@@ -35,11 +35,35 @@
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-admin</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-admin</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
 			<scope>provided</scope>
-		</dependency>   
+		</dependency>
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-dmr</artifactId>    
+        </dependency>    
+        <dependency>
+            <groupId>org.jboss.as</groupId>
+            <artifactId>jboss-as-cli</artifactId>
+        </dependency> 
+        <dependency>
+            <groupId>org.jboss.as</groupId>
+            <artifactId>jboss-as-controller</artifactId>   
+        </dependency>
 	</dependencies>
 </project>

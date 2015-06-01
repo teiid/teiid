@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.adminapi.impl;
+package org.teiid.adminapi.jboss;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,6 +28,8 @@ import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.jboss.VDBMetadataMapper;
 @SuppressWarnings("nls")
 public class TestRequestMetadata {
 	

@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import org.teiid.adminapi.*;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.VDB.ConnectionType;
+import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.adminshell.Help.Doc;
 
 

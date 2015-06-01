@@ -120,7 +120,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         this.metadataStatus = status;
     }
     
-    void setMetadataStatus(String status) {
+    public void setMetadataStatus(String status) {
     	if (status != null) {
     		this.metadataStatus = Model.MetadataStatus.valueOf(status);
     	}

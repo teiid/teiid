@@ -32,10 +32,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.ModelController;
 import org.teiid.adminapi.*;
-import org.teiid.adminapi.AdminFactory.AdminImpl;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.jboss.AdminFactory;
+import org.teiid.adminapi.jboss.AdminFactory.AdminImpl;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
