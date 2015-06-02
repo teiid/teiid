@@ -288,7 +288,7 @@ oid          attrelid     attname                                               
 441          440          UID                                                                1043         -1      1       54           true        false         false    
 442          440          Uses_UID                                                           1043         -1      2       54           true        false         false    
 444          443          resourcePath                                                       1043         -1      1       259          false       false         false    
-445          443          contents                                                           14939        -1      2       -2147483645  false       false         false    
+445          443          contents                                                           14939        -1      2       2147483647   false       false         false    
 447          446          resourcePath                                                       1043         -1      1       259          false       false         false    
 449          448          VDBName                                                            1043         -1      1       259          true        false         false    
 450          448          SchemaName                                                         1043         -1      2       259          true        false         false    
@@ -352,8 +352,8 @@ oid          attrelid     attname                                               
 582          579          encoding                                                           23           4       3       8            false       false         false    
 583          579          datlastsysoid                                                      23           4       4       8            false       false         false    
 584          579          datallowconn                                                       1042         1       5       5            false       false         false    
-585          579          datconfig                                                          705          -2      6       -2147483645  false       false         false    
-586          579          datacl                                                             705          -2      7       -2147483645  false       false         false    
+585          579          datconfig                                                          705          -2      6       2147483647   false       false         false    
+586          579          datacl                                                             705          -2      7       2147483647   false       false         false    
 587          579          datdba                                                             23           4       8       8            false       false         false    
 588          579          dattablespace                                                      23           4       9       8            false       false         false    
 590          589          objoid                                                             23           4       1       8            false       false         false    
@@ -378,10 +378,10 @@ oid          attrelid     attname                                               
 613          610          proretset                                                          16           1       3       5            false       false         false    
 614          610          prorettype                                                         23           4       4       8            false       false         false    
 615          610          pronargs                                                           21           2       5       6            false       false         false    
-616          610          proargtypes                                                        <null>       <null>  6       -2147483645  false       false         false    
-617          610          proargnames                                                        <null>       <null>  7       -2147483645  false       false         false    
-618          610          proargmodes                                                        <null>       <null>  8       -2147483645  false       false         false    
-619          610          proallargtypes                                                     <null>       <null>  9       -2147483645  false       false         false    
+616          610          proargtypes                                                        <null>       <null>  6       2147483647   false       false         false    
+617          610          proargnames                                                        <null>       <null>  7       2147483647   false       false         false    
+618          610          proargmodes                                                        <null>       <null>  8       2147483647   false       false         false    
+619          610          proallargtypes                                                     <null>       <null>  9       2147483647   false       false         false    
 620          610          pronamespace                                                       23           4       10      8            false       false         false    
 622          621          oid                                                                23           4       1       8            false       false         false    
 624          623          oid                                                                23           4       1       8            false       false         false    
