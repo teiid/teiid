@@ -88,11 +88,22 @@ public final class FunctionMethods {
 
 	// ================== Function = plus =====================
 
-	public static int plus(int x, int y) {
-		return x + y;
+	public static int plus(int x, int y) throws FunctionExecutionException {
+		long result = (long)x + y;
+		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
+		}
+		return (int)result;
 	}
 	
-	public static long plus(long x, long y) {
+	public static long plus(long x, long y) throws FunctionExecutionException {
+		if (y > 0) {
+			if (x > Long.MAX_VALUE - y) {
+				throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).add(BigInteger.valueOf(y))));
+			}
+		} else if (x < Long.MIN_VALUE - y) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).add(BigInteger.valueOf(y))));
+		}
 		return x + y;
 	}
 	
@@ -114,11 +125,22 @@ public final class FunctionMethods {
 
 	// ================== Function = minus =====================
 
-	public static int minus(int x, int y) {
-		return x - y;
+	public static int minus(int x, int y) throws FunctionExecutionException {
+		long result = (long)x - y;
+		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
+		}
+		return (int)result;
 	}
 	
-	public static long minus(long x, long y) {
+	public static long minus(long x, long y) throws FunctionExecutionException {
+		if (y > 0) {
+			if (x < Long.MIN_VALUE + y) {
+				throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).subtract(BigInteger.valueOf(y))));
+			}
+		} else if (x > Long.MAX_VALUE + y) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).subtract(BigInteger.valueOf(y))));
+	    } 
 		return x - y;
 	}
 	
@@ -140,11 +162,20 @@ public final class FunctionMethods {
 
 	// ================== Function = multiply =====================
 
-	public static int multiply(int x, int y) {
-		return x * y;
+	public static int multiply(int x, int y) throws FunctionExecutionException {
+		long result = (long)x * y;
+		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
+		}
+		return (int)result;
 	}
 	
-	public static long multiply(long x, long y) {
+	public static long multiply(long x, long y) throws FunctionExecutionException {
+		if ((y > 0 && (x > Long.MAX_VALUE/y || x < Long.MIN_VALUE/y))
+				|| ((y < -1) && (x > Long.MIN_VALUE/y || x < Long.MAX_VALUE/y))
+				|| (y == -1 && x == Long.MIN_VALUE)) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).multiply(BigInteger.valueOf(y))));
+		}
 		return x * y;
 	}
 	
@@ -166,11 +197,17 @@ public final class FunctionMethods {
 
 	// ================== Function = divide =====================
 
-	public static int divide(int x, int y) {
+	public static int divide(int x, int y) throws FunctionExecutionException {
+		if (x == Integer.MIN_VALUE && y == -1) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, (long)Integer.MAX_VALUE + 1));
+		}
 		return x / y;
 	}
 	
-	public static long divide(long x, long y) {
+	public static long divide(long x, long y) throws FunctionExecutionException {
+		if (x == Long.MIN_VALUE && y == -1) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1))));
+		}
 		return x / y;
 	}
 	
@@ -199,11 +236,17 @@ public final class FunctionMethods {
 
 	// ================== Function = abs =====================
 
-	public static int abs(int x) {
+	public static int abs(int x) throws FunctionExecutionException {
+		if (x == Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, (long)Integer.MAX_VALUE + 1));
+		}
 		return Math.abs(x);
 	}
 	
-	public static long abs(long x) {
+	public static long abs(long x) throws FunctionExecutionException {
+		if (x == Long.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1))));
+		}
 		return Math.abs(x);
 	}
 	

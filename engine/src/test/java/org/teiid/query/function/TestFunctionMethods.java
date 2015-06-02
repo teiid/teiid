@@ -142,4 +142,77 @@ public class TestFunctionMethods {
     public void regexpInvalidFlagsBad() throws Exception {
         FunctionMethods.regexpReplace(null, "foobarbaz", "b..", "X", "y");
     }
+    
+    @Test(expected=FunctionExecutionException.class) public void testAbsIntBounds() throws FunctionExecutionException {
+    	FunctionMethods.abs(Integer.MIN_VALUE);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testAbsLongBounds() throws FunctionExecutionException {
+    	FunctionMethods.abs(Long.MIN_VALUE);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testPlusLongBounds() throws FunctionExecutionException {
+    	FunctionMethods.plus(Long.MIN_VALUE, -1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testPlusLongBounds1() throws FunctionExecutionException {
+    	FunctionMethods.plus(Long.MAX_VALUE, 1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testPlusIntBounds() throws FunctionExecutionException {
+    	FunctionMethods.plus(Integer.MIN_VALUE, -1);
+    }
+        
+    @Test(expected=FunctionExecutionException.class) public void testPlusIntBounds1() throws FunctionExecutionException {
+    	FunctionMethods.plus(Integer.MAX_VALUE, 1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMinusIntBounds1() throws FunctionExecutionException {
+    	FunctionMethods.minus(Integer.MAX_VALUE, -1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMinusLongBounds() throws FunctionExecutionException {
+    	FunctionMethods.minus(Long.MIN_VALUE, 1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMinusLongBounds1() throws FunctionExecutionException {
+    	FunctionMethods.minus(Long.MAX_VALUE, -1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMinusIntBounds() throws FunctionExecutionException {
+    	FunctionMethods.minus(Integer.MIN_VALUE, 1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testDivideIntBounds() throws FunctionExecutionException {
+    	FunctionMethods.divide(Integer.MIN_VALUE, -1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testDivedLongBounds() throws FunctionExecutionException {
+    	FunctionMethods.divide(Long.MIN_VALUE, -1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMultLongBounds() throws FunctionExecutionException {
+    	FunctionMethods.multiply(Long.MIN_VALUE, -1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMultLongBounds1() throws FunctionExecutionException {
+    	FunctionMethods.multiply(Long.MAX_VALUE, 2);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMultLongBounds2() throws FunctionExecutionException {
+    	FunctionMethods.multiply(Long.MIN_VALUE, -2);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMultIntBounds() throws FunctionExecutionException {
+    	FunctionMethods.multiply(Integer.MIN_VALUE, -1);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMultIntBounds1() throws FunctionExecutionException {
+    	FunctionMethods.multiply(Integer.MAX_VALUE, 2);
+    }
+    
+    @Test(expected=FunctionExecutionException.class) public void testMultIntBounds2() throws FunctionExecutionException {
+    	FunctionMethods.multiply(Integer.MIN_VALUE, -2);
+    }
+    
 }
