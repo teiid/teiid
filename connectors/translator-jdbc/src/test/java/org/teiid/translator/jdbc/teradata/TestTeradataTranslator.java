@@ -75,7 +75,7 @@ public class TestTeradataTranslator {
     }
     
     @Test public void testTimestampToTime() throws Exception {
-    	helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "time", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
+    	helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "time", "cast(TIMESTAMP 2011-05-05 09:16:34.22 AS TIME)");
     }
     
     @Test public void testIntegerToString() throws Exception {
@@ -178,6 +178,12 @@ public class TestTeradataTranslator {
 	@Test public void testInValues() throws Exception {
 		String input = "SELECT INTKEY FROM BQT1.SmallA WHERE STRINGKEY IN (INTKEY, 'a', 'b') AND STRINGKEY NOT IN (SHORTVALUE, 'c') AND INTKEY IN (1, 2) ORDER BY intkey";
 		String out = "SELECT SmallA.IntKey FROM SmallA WHERE (SmallA.StringKey = cast(SmallA.IntKey AS varchar(4000)) OR SmallA.StringKey IN ('a', 'b')) AND (SmallA.StringKey <> cast(SmallA.ShortValue AS varchar(4000)) AND SmallA.StringKey NOT IN ('c')) AND SmallA.IntKey IN (1, 2) ORDER BY 1";
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
+	}	
+	
+	@Test public void testDateTimeLiterals() throws Exception {
+		String input = "SELECT {t '12:00:00'}, {d '2015-01-01'}, {ts '2015-01-01 12:00:00.1'}";
+		String out = "SELECT TIME 12:00:00, DATE 2015-01-01, TIMESTAMP 2015-01-01 12:00:00.1";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}	
 
