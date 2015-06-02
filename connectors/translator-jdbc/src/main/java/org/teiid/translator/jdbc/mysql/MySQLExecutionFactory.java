@@ -121,7 +121,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addTypeConversion(new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				return Arrays.asList(function.getParameters().get(0), " + 0.0"); //$NON-NLS-1$
+				return Arrays.asList("(", function.getParameters().get(0), " + 0.0)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);
     	convertModifier.addNumericBooleanConversions();

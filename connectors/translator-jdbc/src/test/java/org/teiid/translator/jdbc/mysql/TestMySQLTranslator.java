@@ -414,4 +414,13 @@ public class TestMySQLTranslator {
             output, TRANSLATOR);
     }
 
+    @Test public void testBigDecimalConversion() throws Exception {
+        String input = "SELECT cast(stringkey as bigdecimal) * 2 FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT ((SmallA.StringKey + 0.0) * 2) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
 }
