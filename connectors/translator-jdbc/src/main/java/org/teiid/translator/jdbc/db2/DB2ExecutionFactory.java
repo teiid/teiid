@@ -41,6 +41,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	public static final Version EIGHT_0 = Version.getVersion("8.0"); //$NON-NLS-1$
 	public static final Version NINE_1 = Version.getVersion("9.1"); //$NON-NLS-1$
+	public static final Version NINE_5 = Version.getVersion("9.5"); //$NON-NLS-1$
 
 	public static final Version FIVE_4 = Version.getVersion("5.4"); //$NON-NLS-1$
 	public static final Version SIX_1 = Version.getVersion("6.1"); //$NON-NLS-1$
@@ -118,7 +119,9 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		supportedFunctions.add("IFNULL"); //$NON-NLS-1$
 		supportedFunctions.add("NVL"); //$NON-NLS-1$ 
 		supportedFunctions.add("COALESCE"); //$NON-NLS-1$
-		supportedFunctions.add(SourceSystemFunctions.ROUND); //$NON-NLS-1$
+		if (getVersion().compareTo(isdB2ForI()?SIX_1:NINE_5) >= 0) {
+			supportedFunctions.add(SourceSystemFunctions.ROUND);
+		}
 		return supportedFunctions;
 	}
 
