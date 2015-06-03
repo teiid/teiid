@@ -118,6 +118,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		supportedFunctions.add("IFNULL"); //$NON-NLS-1$
 		supportedFunctions.add("NVL"); //$NON-NLS-1$ 
 		supportedFunctions.add("COALESCE"); //$NON-NLS-1$
+		supportedFunctions.add(SourceSystemFunctions.ROUND); //$NON-NLS-1$
 		return supportedFunctions;
 	}
 
