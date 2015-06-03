@@ -98,7 +98,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
 				type = TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 			} else if (column.getType().getName().equals(com.datastax.driver.core.DataType.Name.CUSTOM)
 					|| column.getType().getName().equals(com.datastax.driver.core.DataType.Name.BLOB)) {
-				type = TypeFacility.RUNTIME_NAMES.VARBINARY;
+				type = TypeFacility.RUNTIME_NAMES.BLOB;
 			}
 			
 			Column c = factory.addColumn(column.getName(), type, table);

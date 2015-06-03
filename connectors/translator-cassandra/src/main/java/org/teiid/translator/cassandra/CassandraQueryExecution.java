@@ -105,9 +105,6 @@ public class CassandraQueryExecution implements ResultSetExecution {
 			case BIGINT:
 				values.add(Long.valueOf(row.getLong(i)));
 				break;
-			case BLOB:
-				values.add(row.getBytes(i));
-				break;
 			case BOOLEAN:
 				values.add(Boolean.valueOf(row.getBool(i)));
 				break;
