@@ -43,10 +43,11 @@ public final class OracleMetadataProcessor extends
 		JDBCMetdataProcessor {
 
 	private boolean useGeometryType;
+	private boolean useIntegralTypes;
 	
 	@Override
-	protected String getRuntimeType(int type, String typeName,
-			int precision) {
+	protected String getRuntimeType(int type, String typeName, int precision,
+			int scale) {
 		//overrides for varchar2 and nvarchar2
 		if (type == 12 || (type == Types.OTHER && typeName != null && StringUtil.indexOfIgnoreCase(typeName, "char") > -1)) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.STRING;
@@ -54,7 +55,22 @@ public final class OracleMetadataProcessor extends
 	    if (useGeometryType && "SDO_GEOMETRY".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
 	        return TypeFacility.RUNTIME_NAMES.GEOMETRY;
 	    }
-		return super.getRuntimeType(type, typeName, precision);
+	    if (useIntegralTypes && scale == 0 && (type == Types.NUMERIC || type == Types.DECIMAL)) {
+	    	if (precision <= 2) {
+	    		return TypeFacility.RUNTIME_NAMES.BYTE;
+	    	}
+	    	if (precision <= 4) {
+	    		return TypeFacility.RUNTIME_NAMES.SHORT;
+	    	}
+	    	if (precision <= 9) {
+	    		return TypeFacility.RUNTIME_NAMES.INTEGER;
+	    	}
+	    	if (precision <= 18) {
+	    		return TypeFacility.RUNTIME_NAMES.LONG;
+	    	}
+	    	return TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+	    }
+		return super.getRuntimeType(type, typeName, precision, scale);
 	}
 
 	@Override
@@ -135,5 +151,14 @@ public final class OracleMetadataProcessor extends
     		}
     	}
     }
+	
+	@TranslatorProperty (display="Use Integral Types", category=PropertyType.IMPORT, description="Use Integral Types rather Decimal when the scale is 0.")
+	public boolean isUseIntegralTypes() {
+		return useIntegralTypes;
+	}
+	
+	public void setUseIntegralTypes(boolean useIntegralTypes) {
+		this.useIntegralTypes = useIntegralTypes;
+	}
 
 }

@@ -451,4 +451,28 @@ public class TestDynamicImportedMetaData {
 		server.addConnectionFactory("teiid2", ds1);
 		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("multi.xml")));
 	}
+    
+    @Test public void testUseScale() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("x");
+    	
+    	Column c = mf.addColumn("x", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, dup);
+    	c.setPrecision(10);
+    	c.setScale(2);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+    	
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("x");
+    	c = t.getColumnByName("x");
+    	assertEquals(10, c.getPrecision());
+    	assertEquals(2, c.getScale());
+    }
 }

@@ -228,7 +228,8 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				}
 				BaseColumn record = null;
 				int precision = columns.getInt(8);
-				String runtimeType = getRuntimeType(sqlType, typeName, precision);
+				int scale = columns.getInt(10);
+				String runtimeType = getRuntimeType(sqlType, typeName, precision, scale);
 				switch (columnType) {
 				case DatabaseMetaData.procedureColumnResult:
 					record = metadataFactory.addProcedureResultSetColumn(columnName, runtimeType, procedure);
@@ -249,9 +250,9 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					continue; //shouldn't happen
 				}
 				record.setNativeType(typeName);
-				record.setPrecision(columns.getInt(8));
+				record.setPrecision(precision);
 				record.setLength(columns.getInt(9));
-				record.setScale(columns.getInt(10));
+				record.setScale(scale);
 				record.setRadix(columns.getInt(11));
 				record.setNullType(NullType.values()[columns.getInt(12)]);
 				record.setAnnotation(columns.getString(13));
@@ -414,11 +415,13 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 		int type = columns.getInt(5);
 		String typeName = columns.getString(6);
 		int columnSize = columns.getInt(7);
-		String runtimeType = getRuntimeType(type, typeName, columnSize);
+		int scale = columns.getInt(9);
+		String runtimeType = getRuntimeType(type, typeName, columnSize, scale);
 		//note that the resultset is already ordered by position, so we can rely on just adding columns in order
 		Column column = metadataFactory.addColumn(columnName, runtimeType, table);
 		column.setNameInSource(quoteName(columnName));
 		column.setPrecision(columnSize);
+		column.setScale(scale); //assume that null means 0
 		column.setLength(columnSize);
 		column.setNativeType(typeName);
 		column.setRadix(columns.getInt(10));
@@ -451,6 +454,10 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			column.setAutoIncremented("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
 		}
 		return column;
+	}
+	
+	protected String getRuntimeType(int type, String typeName, int precision, int scale) {
+		return getRuntimeType(type, typeName, precision);
 	}
 
 	protected String getRuntimeType(int type, String typeName, int precision) {
