@@ -152,7 +152,7 @@ public final class OracleMetadataProcessor extends
     	}
     }
 	
-	@TranslatorProperty (display="Use Integral Types", category=PropertyType.IMPORT, description="Use Integral Types rather Decimal when the scale is 0.")
+	@TranslatorProperty (display="Use Integral Types", category=PropertyType.IMPORT, description="Use integral types rather than decimal when the scale is 0.")
 	public boolean isUseIntegralTypes() {
 		return useIntegralTypes;
 	}
