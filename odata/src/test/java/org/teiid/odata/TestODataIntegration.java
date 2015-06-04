@@ -259,7 +259,8 @@ public class TestODataIntegration extends BaseResourceTest {
         
         Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM nw.Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
-        //Assert.assertEquals("", response.getEntity());		
+        Assert.assertTrue(response.getEntity().contains("nw.Customer"));		
+        Assert.assertTrue(!response.getEntity().contains("//Customer"));
 	}	
 	
 	@Test
