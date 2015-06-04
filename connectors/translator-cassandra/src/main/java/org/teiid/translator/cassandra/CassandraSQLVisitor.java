@@ -24,9 +24,15 @@ package org.teiid.translator.cassandra;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.UUID;
 
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
@@ -114,6 +120,30 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 		if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
 			buffer.append("0x") //$NON-NLS-1$
 			  .append(obj.getValue());
+			return;
+		}
+		if (type == TypeFacility.RUNTIME_TYPES.BLOB) {
+			buffer.append("0x"); //$NON-NLS-1$
+			Blob b = (Blob)obj.getValue();
+			InputStream binaryStream = null;
+			try {
+				if (b.length() > Integer.MAX_VALUE) {
+					throw new AssertionError("Blob is too large"); //$NON-NLS-1$
+				}
+				binaryStream = b.getBinaryStream();
+				PropertiesUtils.toHex(buffer, binaryStream);
+			} catch (SQLException e) {
+				throw new TeiidRuntimeException(e);
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(e);
+			} finally {
+				if (binaryStream != null) {
+					try {
+						binaryStream.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 			return;
 		}
 		if (!Number.class.isAssignableFrom(type) 

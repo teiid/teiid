@@ -655,6 +655,15 @@ public final class PropertiesUtils {
 		}
     	return sb.toString();
     }
+    
+    public static void toHex(StringBuilder sb, InputStream is) throws IOException {
+    	int i = 0;
+    	while ((i = is.read()) != -1) {
+    		byte b = (byte)i;
+			sb.append(toHex(b >>> 4));
+			sb.append(toHex(b));
+		}
+    }
 
     public static final void copyProperty(Properties srcProperties, String srcPropName, Properties tgtProperties, String tgtPropName) {
         if(srcProperties == null || srcPropName == null || tgtProperties == null || tgtPropName == null) {
