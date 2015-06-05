@@ -39,12 +39,12 @@
           <scope>provided</scope>
         </dependency>              
         <dependency>
-            <groupId>org.jboss.oreva</groupId>
-            <artifactId>odata-core</artifactId>
+            <groupId>org.odata4j</groupId>
+            <artifactId>odata4j-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.oreva</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>core4j</artifactId>
+            <groupId>org.core4j</groupId>
         </dependency>    
         <dependency>
             <groupId>org.jboss.resteasy</groupId>

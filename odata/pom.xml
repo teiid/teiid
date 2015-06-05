@@ -78,8 +78,8 @@
     </dependency>
     
     <dependency>
-        <groupId>org.jboss.oreva</groupId>
-        <artifactId>odata-core</artifactId>
+        <groupId>org.odata4j</groupId>
+        <artifactId>odata4j-core</artifactId>
         <scope>provided</scope>
     </dependency>
     
@@ -91,8 +91,8 @@
     </dependency>
     
     <dependency>
-        <artifactId>common</artifactId>
-        <groupId>org.jboss.oreva</groupId>
+        <artifactId>core4j</artifactId>
+        <groupId>org.core4j</groupId>
         <scope>provided</scope>
     </dependency>
 

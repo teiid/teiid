@@ -6,7 +6,7 @@
     </resources>
 
     <dependencies>
-        <module name="org.jboss.oreva"/>
+        <module name="org.odata4j.core"/>
         <module name="org.jboss.resteasy.resteasy-jaxrs"/>
         <module name="javax.xml.ws.api"/>
         <module name="javax.api"/>
