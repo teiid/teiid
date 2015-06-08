@@ -48,6 +48,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.GeneratedKeys;
 import org.teiid.adminapi.Admin.SchemaObjectType;
@@ -66,7 +67,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.olingo.api.Client;
+import org.teiid.odata.api.Client;
 import org.teiid.olingo.service.LocalClient;
 import org.teiid.olingo.web.ODataFilter;
 import org.teiid.olingo.web.ODataServlet;
@@ -677,6 +678,46 @@ public class TestODataIntegration {
         }
     }
     
+    @Test 
+    public void testCrossJoin() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        hc.addUpdate("UPDATE y SET b = 'a' WHERE y.a = 'a'", new int[] {1});
+        teiid.addTranslator("x9", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a)"
+                    + ") options (updatable true);"
+                    + "create foreign table y ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a)"
+                    + ") options (updatable true);");
+            mmd.addSourceMapping("x9", "x9", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/$crossjoin(x,y)")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x@odata.navigationLink\":\"x('ABCDEFG')\",\"y@odata.navigationLink\":\"y('ABCDEFG')\"}]}", response.getContentAsString());
+
+            response = http.newRequest(baseURL + "/northwind/m/$crossjoin(x,y)?$expand=x")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"},\"y@odata.navigationLink\":\"y('ABCDEFG')\"}]}", response.getContentAsString());            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }     
     
     @Test 
     public void testNavigationLinks() throws Exception {
@@ -707,7 +748,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Collection($ref)\",\"value\":[{\"@odata.id\":\"/y('ABCDEFG')\"}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#Collection($ref)\",\"value\":[{\"@odata.id\":\"y('ABCDEFG')\"}]}", response.getContentAsString());
             
             // update to collection based reference
             String payload = "{\n" +
@@ -761,6 +802,7 @@ public class TestODataIntegration {
             localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
 
             ContentResponse response = null;
+            
             response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX")
                     .method("GET")
                     .send();
@@ -779,18 +821,27 @@ public class TestODataIntegration {
                     .send();
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
-            /*
-            response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX/a&$select=a")
-                    .method("GET")
-                    .send();
-            assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z(a,FKX/a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
-            */
+
             response = http.newRequest(baseURL + "/northwind/m/x?$expand="+Encoder.encode("y_FKX($filter=b eq 'xa1')"))
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xa1\",\"b\":\"xb\",\"y_FKX\":[{\"a\":\"ya1\",\"b\":\"xa1\"},{\"a\":\"ya2\",\"b\":\"xa1\"}]}]}", response.getContentAsString());
+            
+
+            response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#z\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            
+            /* OLINGO-650
+            response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX/a&$select=a")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#z(a,FKX/a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            */            
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

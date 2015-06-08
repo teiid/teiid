@@ -78,6 +78,7 @@ import org.apache.olingo.server.api.uri.queryoption.SkipOption;
 import org.apache.olingo.server.api.uri.queryoption.SkipTokenOption;
 import org.apache.olingo.server.api.uri.queryoption.TopOption;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
+import org.apache.olingo.server.core.uri.UriResourceEntitySetImpl;
 import org.apache.olingo.server.core.uri.parser.Parser;
 import org.apache.olingo.server.core.uri.parser.UriParserException;
 import org.teiid.core.TeiidException;
@@ -93,10 +94,10 @@ import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.api.ODataTypeManager;
-import org.teiid.olingo.api.ProjectedColumn;
-import org.teiid.olingo.api.SQLParameter;
+import org.teiid.olingo.ODataTypeManager;
+import org.teiid.olingo.ProjectedColumn;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.AbstractCompareCriteria;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -365,12 +366,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 Expression expr = visitor.getExpression(obitem.getExpression());
                 if (expr instanceof ElementSymbol) {
                     orderBy.addVariable(expr, !obitem.isDescending());
-                    resource.addProjectedColumn(((ElementSymbol)expr).getShortName(), expr, false);
+                    visitor.getExpresionEntityResource().addProjectedColumn(((ElementSymbol)expr).getShortName(), expr, false);
                 }
                 else {
                     AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
                     orderBy.addVariable(alias, !obitem.isDescending());
-                    resource.addProjectedColumn(alias, false, EdmInt32.getInstance(), false);
+                    visitor.getExpresionEntityResource().addProjectedColumn(alias, false, EdmInt32.getInstance(), false);
                 }
             } catch (TeiidException e) {
                 this.exceptions.add(e);
@@ -393,7 +394,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
         
         // Here Lambda operation may have joined a table and changed the context.
-        this.context = visitor.getEntityResouce();
+        this.context = visitor.getEntityResource();
         this.context.addCriteria(filterCriteria);
     }
     
@@ -670,10 +671,47 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         for (String name:info.getEntitySetNames()) {
             EdmEntitySet entitySet = this.serviceMetadata.getEdm().getEntityContainer().getEntitySet(name);
             EdmEntityType entityType = entitySet.getEntityType();
-            Table table = EntityResource.findTable(entitySet, this.metadata);
-            GroupSymbol gs = new GroupSymbol(this.nameGenerator.getNextGroup(), table.getFullName()); //$NON-NLS-1$
-
+            CrossJoinResource resource = null;
+            try {
+                boolean hasExpand = hasExpand(entitySet.getName(), info.getExpandOption());
+                resource = CrossJoinResource.buildCrossJoin(entityType, null,
+                        this.metadata, this.nameGenerator, this.aliasedGroups,
+                        getUriInfo(), this.parseService, hasExpand);
+                resource.addAllColumns(!hasExpand);
+                
+                if (this.context == null) {
+                    this.context = resource;                    
+                    this.orderBy = this.context.addDefaultOrderBy();                    
+                }
+                else {
+                    this.context.addSibiling(resource);
+                    OrderBy orderby = resource.addDefaultOrderBy();
+                    int index = orderby.getVariableCount();
+                    for (int i = 0; i < index; i++) {
+                        this.orderBy.addVariable(orderby.getVariable(i));
+                    }
+                }
+            } catch (TeiidException e) {
+                this.exceptions.add(e);
+            }
         }
+        super.visit(info);
+
+        // the expand behavior is handled above with selection of the columns 
+        this.expandOption = null;
+    }
+    
+    private boolean hasExpand(String name, ExpandOption expandOption) {
+        if (expandOption == null) {
+            return false;
+        }
+        for (ExpandItem ei:expandOption.getExpandItems()) {
+            String expand = ((UriResourceEntitySetImpl)ei.getResourcePath().getUriResourceParts().get(0)).getEntitySet().getName();
+            if (expand.equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

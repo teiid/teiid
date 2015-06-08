@@ -40,7 +40,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.api.ProjectedColumn;
+import org.teiid.olingo.ProjectedColumn;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -360,7 +360,7 @@ public class EntityResource {
             fk = joinFK(getTable(), joinResource.getTable());
         }
         
-        if (fk == null) {
+        if (fk == null && !joinType.equals(JoinType.JOIN_CROSS)) {
             throw new TeiidException("Fk not found");
         }
         
@@ -389,10 +389,13 @@ public class EntityResource {
     }    
 
     private static FromClause addJoinTable(final JoinType joinType, EntityResource from, EntityResource to) {
-        Criteria crit = buildJoinCriteria(from, to);
-        if (crit == null) {
-            crit = buildJoinCriteria(to, from);
-        }        
+        Criteria crit = null;
+        if (!joinType.equals(JoinType.JOIN_CROSS)) {
+            crit = buildJoinCriteria(from, to);
+            if (crit == null) {
+                crit = buildJoinCriteria(to, from);
+            }
+        }
         return new JoinPredicate(to.getFromClause(), new UnaryFromClause(from.getGroupSymbol()), joinType, crit);
     }
 

@@ -19,47 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo.api;
+package org.teiid.odata.api;
 
-import org.apache.olingo.commons.api.edm.EdmType;
-import org.teiid.query.sql.symbol.Expression;
+public interface OperationResponse extends QueryResponse {
 
-public class ProjectedColumn {
-    private Expression expr;
-    private boolean visible;
-    private EdmType edmType;
-    private boolean collection;
-    private int ordinal;
+    Object getResult();
     
-    public ProjectedColumn(Expression expr, boolean visible, EdmType edmType, boolean collection) {
-        this.expr = expr; 
-        this.visible = visible;
-        this.edmType = edmType;
-        this.collection = collection;
-    }
-    
-    public Expression getExpression() {
-        return this.expr;
-    }
-    
-    public boolean isVisible() {
-        return this.visible;
-    }
-    
-    public EdmType getEdmType() {
-        return this.edmType;
-    }
-    
-    public boolean isCollection() {
-        return collection;
-    }
-
-    public int getOrdinal() {
-        return ordinal;
-    }
-
-    public void setOrdinal(int ordinal) {
-        this.ordinal = ordinal;
-    }
-    
+    void addPrimitive(Object value);
 }

@@ -35,8 +35,8 @@ import org.apache.olingo.server.core.OData4Impl;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.odata.api.Client;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.api.Client;
 
 public class OlingoBridge {
     

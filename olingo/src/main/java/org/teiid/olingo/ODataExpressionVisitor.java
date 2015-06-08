@@ -19,8 +19,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo.api;
+package org.teiid.olingo;
 
-public interface CountResponse extends BaseResponse {
-    int getCount();
+import org.apache.olingo.server.api.uri.queryoption.expression.Alias;
+import org.apache.olingo.server.api.uri.queryoption.expression.Binary;
+import org.apache.olingo.server.api.uri.queryoption.expression.Enumeration;
+import org.apache.olingo.server.api.uri.queryoption.expression.LambdaRef;
+import org.apache.olingo.server.api.uri.queryoption.expression.Literal;
+import org.apache.olingo.server.api.uri.queryoption.expression.Member;
+import org.apache.olingo.server.api.uri.queryoption.expression.Method;
+import org.apache.olingo.server.api.uri.queryoption.expression.TypeLiteral;
+import org.apache.olingo.server.api.uri.queryoption.expression.Unary;
+
+public interface ODataExpressionVisitor {
+    void visit(Alias expr);
+    void visit(Binary expr);
+    void visit(Enumeration expr);
+    void visit(LambdaRef expr);
+    void visit(Literal expr);
+    void visit(Member expr);
+    void visit(Method expr);
+    void visit(TypeLiteral expr);
+    void visit(Unary expr);
 }
