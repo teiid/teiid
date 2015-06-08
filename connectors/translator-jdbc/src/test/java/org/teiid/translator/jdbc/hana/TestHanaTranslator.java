@@ -22,9 +22,7 @@
 
 package org.teiid.translator.jdbc.hana;
 
-import org.hibernate.annotations.NotFound;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -54,16 +52,16 @@ public class TestHanaTranslator {
         TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, TRANSLATOR);
     }
 
-    @Ignore public void testConversion1() throws Exception {
+    @Test public void testConversion1() throws Exception {
         String input = "SELECT char(convert(PART_WEIGHT, integer) + 100) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT varchar((cast(PARTS.PART_WEIGHT AS integer) + 100)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT to_nvarchar((cast(PARTS.PART_WEIGHT AS integer) + 100)) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
           
-    @Ignore public void testConversion2() throws Exception {
+    @Test public void testConversion2() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, long) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT cast(PARTS.PART_WEIGHT AS bigint) FROM PARTS";  //$NON-NLS-1$
 
@@ -72,7 +70,7 @@ public class TestHanaTranslator {
             output);
     }
           
-    @Ignore public void testConversion3() throws Exception {
+    @Test public void testConversion3() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, short) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT cast(PARTS.PART_WEIGHT AS smallint) FROM PARTS";  //$NON-NLS-1$
 
@@ -81,31 +79,31 @@ public class TestHanaTranslator {
             output);
     }
           
-    @Ignore public void testConversion4() throws Exception {
+    @Test public void testConversion4() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, float) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS real) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(PARTS.PART_WEIGHT AS float) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion5() throws Exception {
+    @Test public void testConversion5() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, double) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS float8) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(PARTS.PART_WEIGHT AS double) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion6() throws Exception {
+    @Test public void testConversion6() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, biginteger) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS numeric(38)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(PARTS.PART_WEIGHT AS bigint) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion7() throws Exception {
+    @Test public void testConversion7() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, bigdecimal) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT cast(PARTS.PART_WEIGHT AS decimal) FROM PARTS";  //$NON-NLS-1$
 
@@ -113,120 +111,116 @@ public class TestHanaTranslator {
             input, 
             output);
     }
-    @Ignore public void testConversion8() throws Exception {
+    @Test public void testConversion8() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, boolean) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS boolean) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(PARTS.PART_WEIGHT AS tinyint) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion8a() throws Exception {
+    @Test public void testConversion8a() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, boolean), long) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS boolean) AS integer) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS tinyint) AS bigint) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion9() throws Exception {
+    @Test public void testConversion9() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, date) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS date) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD') FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion10() throws Exception {
+    @Test public void testConversion10() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, time) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS time) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT to_time(PARTS.PART_WEIGHT, 'HH24:MI:SS') FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion11() throws Exception {
+    @Test public void testConversion11() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, timestamp) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS timestamp) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS') FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion12() throws Exception {
+    @Test public void testConversion12() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, time), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_char(cast(PARTS.PART_WEIGHT AS time), 'HH24:MI:SS') FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(to_time(PARTS.PART_WEIGHT, 'HH24:MI:SS') AS nvarchar) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion13() throws Exception {
+    @Test public void testConversion13() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, timestamp), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_char(cast(PARTS.PART_WEIGHT AS timestamp), 'YYYY-MM-DD HH24:MI:SS.US') FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS') AS nvarchar) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testConversion14() throws Exception {
+    @Test public void testConversion14() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, date), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_char(cast(PARTS.PART_WEIGHT AS date), 'YYYY-MM-DD') FROM PARTS";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
-    }
-    @Ignore public void testConversion15() throws Exception {
-        String input = "SELECT convert(convert(PART_WEIGHT, timestamp), date) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS timestamp) AS date) FROM PARTS";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
-    }
-    @Ignore public void testConversion16() throws Exception {
-        String input = "SELECT convert(convert(PART_WEIGHT, timestamp), time) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(date_trunc('second', cast(PARTS.PART_WEIGHT AS timestamp)) AS time) FROM PARTS";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
-    }
-    @Ignore public void testConversion17() throws Exception {
-        String input = "SELECT convert(convert(PART_WEIGHT, time), timestamp) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS time) + TIMESTAMP '1970-01-01' FROM PARTS";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
-    }
-    @Ignore public void testConversion18() throws Exception {
-        String input = "SELECT convert(convert(PART_WEIGHT, date), timestamp) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS date) AS timestamp) FROM PARTS";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
-    }
-    @Ignore public void testConversion19() throws Exception {
-        String input = "SELECT convert(convert(PART_WEIGHT, boolean), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CASE WHEN cast(PARTS.PART_WEIGHT AS boolean) THEN 'true' WHEN not(cast(PARTS.PART_WEIGHT AS boolean)) THEN 'false' END FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD') AS nvarchar) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
     
-    @Ignore public void testLog() throws Exception {
+    @Test public void testConversion15() throws Exception {
+        String input = "SELECT convert(convert(PART_WEIGHT, timestamp), date) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT cast(to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS') AS date) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
+    @Test public void testConversion16() throws Exception {
+        String input = "SELECT convert(convert(PART_WEIGHT, timestamp), time) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT cast(to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS') AS time) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
+    @Test public void testConversion17() throws Exception {
+        String input = "SELECT convert(convert(PART_WEIGHT, time), timestamp) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT cast(to_time(PARTS.PART_WEIGHT, 'HH24:MI:SS') AS timestamp) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+
+    @Test public void testConversion18() throws Exception {
+        String input = "SELECT convert(convert(PART_WEIGHT, date), timestamp) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT cast(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD') AS timestamp) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
+    @Test public void testLog() throws Exception {
         String input = "SELECT log(convert(PART_WEIGHT, double)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT ln(cast(PARTS.PART_WEIGHT AS float8)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT log(10, cast(PARTS.PART_WEIGHT AS double)) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
         input = "SELECT log10(convert(PART_WEIGHT, double)) FROM PARTS"; //$NON-NLS-1$
-        output = "SELECT log(cast(PARTS.PART_WEIGHT AS float8)) FROM PARTS";  //$NON-NLS-1$
+        output = "SELECT log(10, cast(PARTS.PART_WEIGHT AS double)) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -235,112 +229,121 @@ public class TestHanaTranslator {
     
     @Test public void testLeft() throws Exception {
         String input = "SELECT left(PART_WEIGHT, 2) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT SUBSTR(PARTS.PART_WEIGHT, 1, 2) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT left(PARTS.PART_WEIGHT, 2) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
     
-    @Ignore public void testDayOfWeek() throws Exception {
-        String input = "SELECT dayofweek(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST((EXTRACT(DOW FROM cast(PARTS.PART_WEIGHT AS timestamp)) + 1) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testRight() throws Exception {
+        String input = "SELECT right(PART_WEIGHT, 2) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT right(PARTS.PART_WEIGHT, 2) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testDayOfMonth() throws Exception {
-        String input = "SELECT dayofmonth(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(DAY FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    
+    @Test public void testDayOfWeek() throws Exception {
+        String input = "SELECT dayofweek(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT dayname(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testDayOfYear() throws Exception {
-        String input = "SELECT dayofyear(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(DOY FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testDayOfMonth() throws Exception {
+        String input = "SELECT dayofmonth(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT dayofmonth(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testHour() throws Exception {
-        String input = "SELECT hour(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(HOUR FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testDayOfYear() throws Exception {
+        String input = "SELECT dayofyear(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT dayofyear(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testMinute() throws Exception {
-        String input = "SELECT minute(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(MINUTE FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testHour() throws Exception {
+        String input = "SELECT hour(convert(PART_WEIGHT, time)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT hour(to_time(PARTS.PART_WEIGHT, 'HH24:MI:SS')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testMonth() throws Exception {
-        String input = "SELECT month(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(MONTH FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testMinute() throws Exception {
+        String input = "SELECT minute(convert(PART_WEIGHT, time)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT minute(to_time(PARTS.PART_WEIGHT, 'HH24:MI:SS')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testQuarter() throws Exception {
-        String input = "SELECT quarter(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(QUARTER FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testMonth() throws Exception {
+        String input = "SELECT month(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT month(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testSecond() throws Exception {
-        String input = "SELECT second(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(SECOND FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testQuarter() throws Exception {
+        String input = "SELECT quarter(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT quarter(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testWeek() throws Exception {
-        String input = "SELECT week(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(WEEK FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testSecond() throws Exception {
+        String input = "SELECT second(convert(PART_WEIGHT, time)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT second(to_time(PARTS.PART_WEIGHT, 'HH24:MI:SS')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testYear() throws Exception {
-        String input = "SELECT year(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT CAST(EXTRACT(YEAR FROM cast(PARTS.PART_WEIGHT AS timestamp)) AS integer) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testWeek() throws Exception {
+        String input = "SELECT week(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT week(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testDayName() throws Exception {
-        String input = "SELECT dayname(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT rtrim(TO_CHAR(cast(PARTS.PART_WEIGHT AS timestamp), 'Day')) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testYear() throws Exception {
+        String input = "SELECT year(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT year(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testMonthName() throws Exception {
-        String input = "SELECT monthname(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT rtrim(TO_CHAR(cast(PARTS.PART_WEIGHT AS timestamp), 'Month')) FROM PARTS";  //$NON-NLS-1$
+    @Test public void testDayName() throws Exception {
+        String input = "SELECT dayname(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT dayname(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testIfnull() throws Exception {
+    @Test public void testMonthName() throws Exception {
+        String input = "SELECT monthname(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT monthname(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    @Test public void testIfnull() throws Exception {
         String input = "SELECT ifnull(PART_WEIGHT, 'otherString') FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT coalesce(PARTS.PART_WEIGHT, 'otherString') FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT ifnull(PARTS.PART_WEIGHT, 'otherString') FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -348,7 +351,7 @@ public class TestHanaTranslator {
     }
     @Test public void testSubstring1() throws Exception {
         String input = "SELECT substring(PART_WEIGHT, 1) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substr(PARTS.PART_WEIGHT, 1) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT, 1) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -356,13 +359,13 @@ public class TestHanaTranslator {
     }
     @Test public void testSubstring2() throws Exception {
         String input = "SELECT substring(PART_WEIGHT, 1, 5) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substr(PARTS.PART_WEIGHT, 1, 5) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT, 1, 5) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
             output);
     }
-    @Ignore public void testRowLimit2() throws Exception {
+    @Test public void testRowLimit2() throws Exception {
         String input = "select intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA LIMIT 100"; //$NON-NLS-1$
                
@@ -370,7 +373,7 @@ public class TestHanaTranslator {
             input, 
             output);        
     }
-    @Ignore public void testRowLimit3() throws Exception {
+    @Test public void testRowLimit3() throws Exception {
         String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA LIMIT 100 OFFSET 50"; //$NON-NLS-1$
                
@@ -379,9 +382,9 @@ public class TestHanaTranslator {
             output);        
     }    
     
-    @Ignore public void testBitFunctions() throws Exception {
+    @Test public void testBitFunctions() throws Exception {
         String input = "select bitand(intkey, intnum), bitnot(intkey), bitor(intnum, intkey), bitxor(intnum, intkey) from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT (SmallA.IntKey & SmallA.IntNum), ~(SmallA.IntKey), (SmallA.IntNum | SmallA.IntKey), (SmallA.IntNum # SmallA.IntKey) FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT bitand(SmallA.IntKey, SmallA.IntNum), bitnot(SmallA.IntKey), bitor(SmallA.IntNum, SmallA.IntKey), bitxor(SmallA.IntNum, SmallA.IntKey) FROM SmallA"; //$NON-NLS-1$
                
         helpTestVisitor(getTestBQTVDB(),
             input, 
@@ -396,9 +399,9 @@ public class TestHanaTranslator {
      *  
      * @throws Exception
      */
-    @Ignore public void testLocate() throws Exception {
+    @Test public void testLocate() throws Exception {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in 'chimp') FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT locate(substring('chimp', 1), cast(SmallA.IntNum AS nvarchar)) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -413,9 +416,9 @@ public class TestHanaTranslator {
      *  
      * @throws Exception
      */
-    @Ignore public void testLocate2() throws Exception {
+    @Test public void testLocate2() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT position(SmallA.StringNum in 'chimp') FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT locate('chimp', SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -430,9 +433,9 @@ public class TestHanaTranslator {
      *  
      * @throws Exception
      */
-    @Ignore public void testLocate3() throws Exception {
+    @Test public void testLocate3() throws Exception {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
-        String output = "SELECT position(cast(SmallA.IntNum AS varchar(4000)) in '234567890') FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
+        String output = "SELECT locate(substring('234567890', 1), cast(SmallA.IntNum AS nvarchar)) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -447,9 +450,9 @@ public class TestHanaTranslator {
      *  
      * @throws Exception
      */
-    @Ignore public void testLocate4() throws Exception {
-        String input = "SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT 1 FROM SmallA";  //$NON-NLS-1$
+    @Test public void testLocate4() throws Exception {
+        String input = "SELECT locate('h', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT 2 FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -464,18 +467,18 @@ public class TestHanaTranslator {
      *  
      * @throws Exception
      */
-    @Ignore public void testLocate5() throws Exception {
+    @Test public void testLocate5() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT position(SmallA.StringNum in 'chimp') FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT locate(substring('chimp', 1), SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
     
-    @Ignore public void testLocate5a() throws Exception {
+    @Test public void testLocate5a() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', 2) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT (position(SmallA.StringNum in substr('chimp', 2)) + 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT locate(substring('chimp', 2), SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -490,9 +493,9 @@ public class TestHanaTranslator {
      *  
      * @throws Exception
      */
-    @Ignore public void testLocate6() throws Exception {
+    @Test public void testLocate6() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT (position(SmallA.StringNum in substr('chimp', CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END)) + CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END - 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT locate(substring('chimp', CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END), SmallA.StringNum) FROM SmallA"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -507,67 +510,22 @@ public class TestHanaTranslator {
      *  
      * @throws Exception
      */
-    @Ignore public void testLocate7() throws Exception {
+    @Test public void testLocate7() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT (position(SmallA.StringNum in substr('chimp', CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END)) + CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END - 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT locate(substring('chimp', CASE WHEN (locate('chimp', SmallA.StringNum) + 1) < 1 THEN 1 ELSE (locate('chimp', SmallA.StringNum) + 1) END), SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
     
-    @Ignore public void testAggregate() throws Exception {
-        String input = "SELECT count(*), max(booleanvalue), max(intnum) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT COUNT(*), bool_or(SmallA.BooleanValue), MAX(SmallA.IntNum) FROM SmallA";  //$NON-NLS-1$
+    @Test public void testAggregate() throws Exception {
+        String input = "SELECT count(*), min(intnum), max(intnum) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT COUNT(*), MIN(SmallA.IntNum), MAX(SmallA.IntNum) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
-    }
-    
-    @Ignore public void testArrayFunctions() throws Exception {
-        String input = "SELECT array_get(objectvalue, 3), array_length(objectvalue) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT SmallA.ObjectValue[3], array_length(SmallA.ObjectValue, 1) FROM SmallA";  //$NON-NLS-1$
-
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
-                input, output, 
-                TRANSLATOR);
-    }
-    
-    @Ignore public void testLikeRegex() throws Exception {
-        String input = "SELECT intkey FROM BQT1.SMALLA where stringkey like_regex 'ab.*c+' and stringkey not like_regex 'ab{3,5}c'"; //$NON-NLS-1$
-        String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.StringKey ~ 'ab.*c+' AND SmallA.StringKey !~ 'ab{3,5}c'";  //$NON-NLS-1$
-
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
-                input, output, 
-                TRANSLATOR);
-    }
-    
-    @Ignore public void testFormatTimestampFrac() throws Exception {
-        String input = "SELECT formattimestamp(now(), 'SSS'), formattimestamp(now(), 'SSSSSSS') FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT TO_CHAR(now(), 'MS'), TO_CHAR(now(), 'US') FROM PARTS";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
-    }
-    
-    @Ignore public void testRecursiveCTE() throws Exception {
-        String input = "WITH p(n) as (select part_name as n from parts union select n from p) SELECT * FROM P"; //$NON-NLS-1$
-        String output = "WITH RECURSIVE p (n) AS (SELECT PARTS.PART_NAME AS n FROM PARTS UNION SELECT p.n FROM p) SELECT P.n FROM P";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
-    }
-    
-    @Ignore public void testSelectStringLiteral() throws Exception {
-        String input = "SELECT 'a' FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast('a' AS bpchar) FROM PARTS";  //$NON-NLS-1$
-
-        helpTestVisitor(getTestVDB(),
-            input, 
-            output);
     }
     
 }
