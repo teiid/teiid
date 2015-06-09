@@ -159,20 +159,21 @@ public class TestODataIntegration {
 
     @Test
     public void testServiceMetadata() throws Exception {
+        String ls = System.getProperty("line.separator");
         ContentResponse response = http.GET(baseURL + "/loopy/VM1");
         assertEquals(200, response.getStatus());
-        String expected = "{\n" + 
-                "  \"@odata.context\" : \""+baseURL+"/loopy/VM1/$metadata\",\n" + 
-                "  \"value\" : [ {\n" + 
-                "    \"name\" : \"G1\",\n" + 
-                "    \"url\" : \"G1\"\n" + 
-                "  }, {\n" + 
-                "    \"name\" : \"G2\",\n" + 
-                "    \"url\" : \"G2\"\n" + 
-                "  }, {\n" + 
-                "    \"name\" : \"G4\",\n" + 
-                "    \"url\" : \"G4\"\n" + 
-                "  } ]\n" + 
+        String expected = "{" +  ls +
+                "  \"@odata.context\" : \""+baseURL+"/loopy/VM1/$metadata\"," +ls+ 
+                "  \"value\" : [ {" + ls +
+                "    \"name\" : \"G1\"," + ls + 
+                "    \"url\" : \"G1\"" + ls +
+                "  }, {" + ls +
+                "    \"name\" : \"G2\"," + ls + 
+                "    \"url\" : \"G2\"" + ls + 
+                "  }, {" + ls + 
+                "    \"name\" : \"G4\"," + ls + 
+                "    \"url\" : \"G4\"" + ls + 
+                "  } ]" + ls + 
                 "}";
         assertEquals(expected, response.getContentAsString());
     }
