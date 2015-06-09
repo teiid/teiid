@@ -36,18 +36,11 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.language.Update;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 
@@ -297,7 +290,7 @@ public class TestIQueryToLdapSearchParser {
         		expectedCountLimit, expectedSearchScope, expectedSortKeys);
     }
     
-	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws TranslatorException {
+	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws Exception {
     	QueryMetadataInterface metadata = exampleLdap();
     	
     	Select query = (Select)getCommand(queryString, metadata);
@@ -310,42 +303,10 @@ public class TestIQueryToLdapSearchParser {
 		return searchDetails;
 	}
     
-    public static QueryMetadataInterface exampleLdap() {
-    	MetadataStore metadataStore = new MetadataStore();
-
-        // Create models
-        Schema ldapModel = RealMetadataFactory.createPhysicalModel("LdapModel", metadataStore); //$NON-NLS-1$
-        
-        // Create physical groups
-        Table table = RealMetadataFactory.createPhysicalGroup("People", ldapModel); //$NON-NLS-1$
-        table.setNameInSource("ou=people,dc=metamatrix,dc=com"); //$NON-NLS-1$
-                
-        // Create physical elements
-        String[] elemNames = new String[] {
-            "UserID", "Name", "dn", "vals"  //$NON-NLS-1$ //$NON-NLS-2$
-        };
-        String[] elemTypes = new String[] {  
-            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, "string[]"
-        };
-        
-        List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
-        
-        // Set name in source on each column
-        String[] nameInSource = new String[] {
-           "uid", "cn", "dn"             //$NON-NLS-1$ //$NON-NLS-2$  
-        };
-        for(int i=0; i<2; i++) {
-            Column obj = cols.get(i);
-            obj.setNameInSource(nameInSource[i]);
-        }
-        
-        // Set column-specific properties
-        for(int i=1; i<2; i++) {
-            cols.get(i).setSearchType(SearchType.Unsearchable);
-        }
-        
-        // Create the facade from the store
-        return new TransformationMetadata(null, new CompositeMetadataStore(metadataStore), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
+    public static QueryMetadataInterface exampleLdap() throws Exception {
+    	String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com')"
+    			+ "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), group_dn string options (nameinsource 'memberOf')) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
+    	return RealMetadataFactory.fromDDL(ddl, "x", "LdapModel");
     }    
     
     @Test public void testLike() throws Exception {
@@ -377,7 +338,7 @@ public class TestIQueryToLdapSearchParser {
     }
 
 	private void helpTestLike(String query, String expectedContextFilter)
-			throws TranslatorException {
+			throws Exception {
 		LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID FROM LdapModel.People WHERE " + query); //$NON-NLS-1$
         
         // Set Expected SearchDetails Values
@@ -395,5 +356,28 @@ public class TestIQueryToLdapSearchParser {
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
         		expectedCountLimit, expectedSearchScope, expectedSortKeys);
 	}
+	
+	@Test public void testJoin() throws Exception {
+    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name, people_groups.group_dn FROM LdapModel.People inner join people_groups on people.dn = people_groups.user_dn where Name = 'R%'"); //$NON-NLS-1$
+        
+        //-----------------------------------
+        // Set Expected SearchDetails Values
+        //-----------------------------------
+        String expectedContextName = "ou=people,dc=metamatrix,dc=com"; //$NON-NLS-1$
+        String expectedContextFilter = "(cn=R%)"; //$NON-NLS-1$
+        
+        List<String> expectedAttrNameList = new ArrayList<String>();
+        expectedAttrNameList.add("uid"); //$NON-NLS-1$
+        expectedAttrNameList.add("cn"); //$NON-NLS-1$
+        expectedAttrNameList.add("memberOf");
+        
+        long expectedCountLimit = -1;
+        int expectedSearchScope = SearchControls.ONELEVEL_SCOPE;
+        SortKey[] expectedSortKeys = null;
+        
+        helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
+        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+        
+    }
 }
 

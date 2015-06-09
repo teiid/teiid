@@ -342,7 +342,8 @@ public interface SourceCapabilities {
         INVALID_EXCEPTION, //property saying why the capabilities are invalid
         COLLATION_LOCALE, 
         RECURSIVE_COMMON_TABLE_EXPRESSIONS, 
-        CRITERIA_COMPARE_ORDERED_EXCLUSIVE;
+        CRITERIA_COMPARE_ORDERED_EXCLUSIVE,
+        PARTIAL_FILTERS;
         
         private final String toString;
         
