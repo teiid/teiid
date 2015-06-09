@@ -21,7 +21,8 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.DispatcherType;
+import javax.transaction.TransactionManager;
 
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.core.Encoder;
@@ -48,8 +50,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.GeneratedKeys;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model;
@@ -101,7 +103,9 @@ public class TestODataIntegration {
     @Before
     public void before() throws Exception {
         teiid = new EmbeddedServer();
-        teiid.start(new EmbeddedConfiguration());
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        config.setTransactionManager(Mockito.mock(TransactionManager.class));
+        teiid.start(config);
         teiid.addTranslator(LoopbackExecutionFactory.class);
 
         ServerConnector connector = new ServerConnector(server);
@@ -228,20 +232,99 @@ public class TestODataIntegration {
     
     @Test
     public void testInsert() throws Exception {
-        String payload = "{\n" +
-                "  \"e1\":\"teiid\",\n" +
-                "  \"e2\":1,\n" +
-                "  \"e3\":2.0" +
-                "}";
-        ContentResponse response = http.newRequest(baseURL + "/loopy/vm1/G1")
-            .method("POST")
-            .content(new StringContentProvider(payload))
-            .header("Content-Type", "application/json")
-            .send();
-        // 304 due to loop back translator
-        assertEquals(304, response.getStatus());
-        //assertEquals("ABCDEFGHIJ",response.getContentAsString());        
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        hc.addUpdate("INSERT INTO x (a, b) VALUES ('teiid', 'dv')", new int[] {1});
+        teiid.addTranslator("x10", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a)"
+                    + ") options (updatable true);");
+            mmd.addSourceMapping("x10", "x10", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            
+            String payload = "{\n" +
+                    "  \"a\":\"teiid\",\n" +
+                    "  \"b\":\"dv\"\n" +
+                    "}";
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
+                .method("POST")
+                .content(new StringContentProvider(payload))
+                .header("Content-Type", "application/json")
+                .send();
+            assertEquals(204, response.getStatus());
+            assertTrue(response.getHeaders().get("OData-EntityId").endsWith("northwind/m/x('ABCDEFG')"));
+            //assertEquals("ABCDEFGHIJ",response.getContentAsString()); 
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+        
     }    
+    
+    @Test 
+    public void testDeepInsert() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        hc.addUpdate("INSERT INTO x (a, b) VALUES ('teiid', 'dv')", new int[] {1});
+        hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata', 'olingo')", new int[] {1});
+        hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata4', 'olingo4')", new int[] {1});
+        teiid.addTranslator("x10", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a)"
+                    + ") options (updatable true);"
+                    + "create foreign table y ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (b) REFERENCES x(a)"                    
+                    + ") options (updatable true);");
+            mmd.addSourceMapping("x10", "x10", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            
+            // update to collection based reference
+            String payload = "{\n" +
+                    "  \"a\":\"teiid\",\n" +
+                    "  \"b\":\"dv\",\n" +
+                    "     \"y_FKX\": [\n"+
+                    "        {"+
+                    "          \"a\":\"odata\",\n" +
+                    "          \"b\":\"olingo\"\n" +                    
+                    "        },\n"+
+                    "        {\n"+
+                    "          \"a\":\"odata4\",\n" +
+                    "          \"b\":\"olingo4\"\n" +                    
+                    "        }\n"+                    
+                    "     ]\n"+
+                    "}";
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
+                    .method("POST")
+                    .content(new StringContentProvider(payload), ContentType.APPLICATION_JSON.toString())
+                    // when this header is defined the return should be expanded, but due to way olingo 
+                    // designed it is going to be a big refactoring.
+                    .header("Prefer", "return=representation")
+                    .send();
+            assertEquals(201, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}", response.getContentAsString());
+
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }     
 
     @Test
     public void testFunction() throws Exception {

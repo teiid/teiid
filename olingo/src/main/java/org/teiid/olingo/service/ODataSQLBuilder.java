@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
@@ -105,6 +106,7 @@ import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
@@ -402,16 +404,16 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     public void visit(UriResourceNavigation info) {
         EdmNavigationProperty property = info.getProperty();
         try {
-            EntityResource joinResouce = EntityResource.build(property.getType(),
+            EntityResource joinResource = EntityResource.build(property.getType(),
                     info.getKeyPredicates(), this.metadata, this.nameGenerator,
                     true, getUriInfo(), parseService);
 
-            this.context.joinTable(joinResouce, property.isCollection(), JoinType.JOIN_INNER);
+            this.context.joinTable(joinResource, property.isCollection(), JoinType.JOIN_INNER);
             // In the context of canonical queries if key predicates are available then do not set the criteria 
-            if (joinResouce.getCriteria() == null) {
-                joinResouce.addCriteria(this.context.getCriteria());
+            if (joinResource.getCriteria() == null) {
+                joinResource.addCriteria(this.context.getCriteria());
             }
-            this.context = joinResouce;
+            this.context = joinResource;
         } catch (TeiidException e) {
             this.exceptions.add(e);
         }
@@ -503,28 +505,38 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         return null;
     }
     //TODO: allow the generated key building.
-    public Query  selectWithEntityKey(EdmEntityType entityType, Entity entity, Map<String, Object> generatedKeys) {
+    public Query selectWithEntityKey(EdmEntityType entityType, Entity entity,
+            Map<String, Object> generatedKeys, Set<EdmNavigationProperty> expand) throws TeiidException {
         Table table = findTable(entityType.getName(), this.metadata);
-        
+
         EntityResource resource = new EntityResource(table, new GroupSymbol(table.getFullName()), entityType);
-        resource.setFromClause(new UnaryFromClause(resource.getGroupSymbol()));
+        resource.setFromClause(new UnaryFromClause(new GroupSymbol(table.getFullName())));
         resource.addAllColumns(false);
         this.context = resource;
         
-        Select select = new Select();
-        int ordinal = 1;
-        for (ProjectedColumn pc : resource.getProjectedColumns()) {
-            select.addSymbol(pc.getExpression());
-            pc.setOrdinal(ordinal++);
-        }
-
-        Query query = new Query();
-        From from = new From();
-        from.addClause(resource.getFromClause());
-        query.setSelect(select);
-        query.setFrom(from);
-    
+        FromClause from = resource.getFromClause();
         Criteria criteria = null;
+        
+        for (EdmNavigationProperty navProperty: expand) {
+            EntityResource joinResource = ExpandResource.buildExpand(
+                    navProperty, this.metadata, this.nameGenerator,
+                    this.aliasedGroups, getUriInfo(), this.parseService);
+                    
+            resource.joinTable(joinResource, navProperty.isCollection(), JoinType.JOIN_INNER);
+            // In the context of canonical queries if key predicates are available then do not set the criteria 
+            if (joinResource.getCriteria() == null) {
+                joinResource.addCriteria(resource.getCriteria());
+            }
+            joinResource.addAllColumns(false);
+            resource = joinResource;
+            this.context.addExpand(joinResource);
+            from = resource.getFromClause();
+            criteria = resource.getCriteria();
+        }
+        
+        this.context.setFromClause(from);
+        Query query = this.context.buildQuery();
+
         KeyRecord pk = table.getPrimaryKey();
         for (Column c:pk.getColumns()) {
             Property prop = entity.getProperty(c.getName());
@@ -546,7 +558,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 }
                 right = new Constant(value);
             }
-            ElementSymbol left = new ElementSymbol(c.getName(), resource.getGroupSymbol());
+            ElementSymbol left = new ElementSymbol(c.getName(), this.context.getGroupSymbol());
             if (criteria == null) {
                 criteria = new CompareCriteria(left,AbstractCompareCriteria.EQ, right);
             }

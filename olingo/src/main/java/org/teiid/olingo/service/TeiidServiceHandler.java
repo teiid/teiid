@@ -30,15 +30,19 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpMethod;
@@ -50,6 +54,7 @@ import org.apache.olingo.server.api.ODataRequest;
 import org.apache.olingo.server.api.ODataResponse;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.serializer.SerializerException;
+import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.ServiceHandler;
@@ -331,29 +336,83 @@ public class TeiidServiceHandler implements ServiceHandler {
         }
     }
     
+    private UpdateResponse performInsert(String rawURI, UriInfo uriInfo,
+            EdmEntityType entityType, Entity entity) throws SQLException {
+        ODataSQLBuilder visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
+                rawURI, this.serviceMetadata, this.nameGenerator);
+        visitor.visit(uriInfo);
+        Insert command = visitor.insert(entityType, entity, this.prepared);
+        return getClient().executeUpdate(command, visitor.getParameters());
+    }
+    
+    private UpdateResponse performDeepInsert(String rawURI, UriInfo uriInfo,
+            EdmEntityType entityType, Entity entity) throws SQLException {
+        String txn = getClient().startTransaction();
+        try {
+            UpdateResponse response = performInsert(rawURI, uriInfo, entityType, entity);
+            for (String navigationName:entityType.getNavigationPropertyNames()) {
+                EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
+                Link navLink = entity.getNavigationLink(navigationName);
+                if (navLink != null && navLink.getInlineEntity() != null) {
+                    performInsert(rawURI, uriInfo, navProperty.getType(), navLink.getInlineEntity());
+                }
+                if (navLink != null && navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
+                    for (Entity inlineEntity:navLink.getInlineEntitySet().getEntities()) {
+                        performInsert(rawURI, uriInfo, navProperty.getType(), inlineEntity);
+                    }
+                }
+            }
+            getClient().commit(txn);
+            return response;
+        } catch (SQLException e) {
+            try {
+                getClient().rollback(txn);
+            } catch (SQLException e1) {
+                // ignore
+            }
+            throw e;
+        }
+    }
+
+    private Set<EdmNavigationProperty> deepInsertNames(EdmEntityType entityType, Entity entity) {
+        Set<EdmNavigationProperty> expand = new HashSet<EdmNavigationProperty>();
+        
+        for (String navigationName:entityType.getNavigationPropertyNames()) {
+            EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
+            Link navLink = entity.getNavigationLink(navigationName);
+            if (navLink.getInlineEntity() != null) {
+               expand.add(navProperty);
+            }
+            if (navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
+                expand.add(navProperty);
+            }
+        }
+        return expand;
+    }
+    
     @Override
     public void createEntity(DataRequest request, Entity entity,
             EntityResponse response) throws ODataLibraryException,
             ODataApplicationException {
         
-        ODataSQLBuilder visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
-                request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
-        visitor.visit(request.getUriInfo());
-        
-        EdmEntityType entityType = request.getEntitySet().getEntityType();
-        Insert command = visitor.insert(entityType, entity, this.prepared);
         try {
-            UpdateResponse updateResponse = getClient().executeUpdate(command, visitor.getParameters());
+            EdmEntityType entityType = request.getEntitySet().getEntityType();
+            UpdateResponse updateResponse = performDeepInsert(request
+                    .getODataRequest().getRawBaseUri(), request.getUriInfo(),
+                    entityType, entity);
+            
             if (updateResponse.getUpdateCount()  == 1) {
-                visitor = new ODataSQLBuilder(getClient().getMetadataStore(), true, false, 
+                ODataSQLBuilder visitor = new ODataSQLBuilder(getClient().getMetadataStore(), true, false, 
                         request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                
                 Query query = visitor.selectWithEntityKey(entityType,
-                                entity, updateResponse.getGeneratedKeys());
+                                entity, updateResponse.getGeneratedKeys(), deepInsertNames(entityType, entity));
                 LogManager.logDetail(LogConstants.CTX_ODATA, null, "created entity = ", entityType.getName(), " with key=", query.getCriteria().toString()); //$NON-NLS-1$ //$NON-NLS-2$
                 
                 EntityList result = new EntityList(getClient().getProperty(
                         Client.INVALID_CHARACTER_REPLACEMENT),
                         visitor.getContext());
+                
                 getClient().executeSQL(query, visitor.getParameters(), false, null, null, null, 1, result);
                 
                 if (!result.getEntities().isEmpty()) {
@@ -374,6 +433,10 @@ public class TeiidServiceHandler implements ServiceHandler {
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
         } catch (URISyntaxException e) {
+            throw new ODataApplicationException(e.getMessage(),
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    Locale.getDefault(), e);
+        } catch (TeiidException e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);

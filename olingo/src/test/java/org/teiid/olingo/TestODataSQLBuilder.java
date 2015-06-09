@@ -42,7 +42,6 @@ import org.apache.olingo.server.api.edmx.EdmxReference;
 import org.apache.olingo.server.core.OData4Impl;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -297,7 +296,6 @@ public class TestODataSQLBuilder {
         Assert.assertEquals(expected, state.arg1.getValue().toString());
     }
     
-    //@Ignore // OLINGO-679
     @Test
     public void test$CountAnd$Filter() throws Exception {
         String expected = "SELECT COUNT(*) FROM PM1.G1 AS g0 WHERE g0.e3 < 10";
@@ -315,18 +313,23 @@ public class TestODataSQLBuilder {
         Mockito.verify(state.client).executeCount(state.arg1.capture(), Mockito.eq(state.parameters));
         Assert.assertEquals(expected, state.arg1.getValue().toString());
     }
-
+    
     @Test
     public void test$CountIn$FilterWithCount() throws Exception {
         String expected = "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) = 2 ORDER BY g0.e2";
         helpTest("/odata4/vdb/PM1/G1?$filter=G4_FKX/$count eq 2&$select=e1", expected);
     }
     
-    @Ignore // OLINGO-635
     @Test
     public void test$CountIn$FilterOnExpression() throws Exception {
-        String expected = "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1) = 2 ORDER BY g0.e2";
-        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/e2 eq 2&$select=e1"), expected);
+        String expected = "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) = 2 ORDER BY g0.e2";
+        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/$count eq 2"), expected);
+    }
+    
+    @Test
+    public void test$CountIn$orderby() throws Exception {
+        String expected = "SELECT (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) AS \"_orderByAlias\", g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 ORDER BY \"_orderByAlias\"";
+        helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", expected);
     }    
         
     @Test
@@ -649,21 +652,6 @@ public class TestODataSQLBuilder {
         helpTest("/odata4/vdb/PM1/G1(0)/G4_FKX", "SELECT g1.e1, g1.e2 FROM PM1.G1 AS g0 "
                 + "INNER JOIN PM1.G4 AS g1 ON g0.e2 = g1.e2 WHERE g0.e2 = 0 ORDER BY g1.e1");
     }
-
-    @Ignore // (Olingo parsing error OLINGO-635)
-    @Test
-    public void testFilterBasedAssosiation() throws Exception {
-        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/e1 eq '1'"), "SELECT g1.e1, g1.e2 FROM PM1.G1 AS g0 "
-                + "INNER JOIN PM1.G4 AS g1 ON g0.e2 = g1.e2 WHERE g0.e2 = 0 ORDER BY g1.e1");
-
-    }
-    
-    @Ignore // (Olingo parsing error OLINGO-635)
-    @Test
-    public void test$it_OverPath() throws Exception {
-        helpTest("/odata4/vdb/PM1/G1?$filter=$it/G4_FKX/e1 eq e1",
-                "");
-    }    
     
     @Test
     public void test$RootOverPath() throws Exception {
