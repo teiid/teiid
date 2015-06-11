@@ -109,7 +109,7 @@ import org.teiid.translator.TypeFacility;
 
 /** 
  * LDAPSyncQueryExecution is responsible for executing an LDAP search 
- * corresponding to a read-only "select" query.
+ * corresponding to a read-only "select" query from MetaMatrix.
  */
 public class LDAPQueryExecution implements ResultSetExecution {
 
@@ -123,7 +123,6 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	private ExecutionContext executionContext;
 	private SearchControls ctrls;
 	private int resultCount;
-	private Iterator<List<Object>> unwrapIterator;
 
 	/** 
 	 * Constructor
@@ -245,12 +244,6 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	// NamingException
 	public List<?> next() throws TranslatorException {
 		try {
-			if (unwrapIterator != null) {
-				if (unwrapIterator.hasNext()) {
-					return unwrapIterator.next();
-				}
-				unwrapIterator = null;
-			}
 			// The search has been executed, so process up to one batch of
 			// results.
 			List<?> result = null;
@@ -310,45 +303,12 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	// do not include it as an attribute
 	private List<?> getRow(SearchResult result) throws TranslatorException {
 		Attributes attrs = result.getAttributes();
+		String resultDN = result.getNameInNamespace(); // added GHH 20080326 
 		ArrayList<Column> attributeList = searchDetails.getElementList();
-		final List<Object> row = new ArrayList<Object>(attributeList.size());
+		List<Object> row = new ArrayList<Object>(attributeList.size());
 		
-		int unwrapPos = -1;
-		for (int i = 0; i < attributeList.size(); i++) {
-			Column col = attributeList.get(i);
-			Object val = getValue(col, result, attrs);  // GHH 20080326 - added resultDN parameter to call
-			row.add(val);
-			if (executionFactory.isUnwrapMultiValued() && !col.getJavaType().isArray() && val != null && val.getClass() == ArrayImpl.class) {
-				if (unwrapPos > -1) {
-					throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12014, col, attributeList.get(unwrapPos)));
-				}
-				unwrapPos = i;
-			}
-		}
-		
-		if (unwrapPos > -1) {
-			final Object[] val = ((ArrayImpl) row.get(unwrapPos)).getValues();
-			final int pos = unwrapPos;
-			unwrapIterator = new Iterator<List<Object>>() {
-				int i = 0;
-				@Override
-				public boolean hasNext() {
-					return i < val.length;
-				}
-				@Override
-				public List<Object> next() {
-					List<Object> newRow = new ArrayList<Object>(row);
-					newRow.set(pos, val[i++]);
-					return newRow;
-				}
-				@Override
-				public void remove() {
-					
-				}
-			};
-			if (unwrapIterator.hasNext()) {
-				return unwrapIterator.next();
-			}
+		for (Column col : attributeList) {
+			addResultToRow(col, resultDN, attrs, row);  // GHH 20080326 - added resultDN parameter to call
 		}
 		return row;
 	}
@@ -365,7 +325,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	// value for that column in the result
 	// GHH 20080326 - added handling of ClassCastException when non-string
 	// attribute is returned
-	private Object getValue(Column modelElement, SearchResult result, Attributes attrs) throws TranslatorException {
+	private void addResultToRow(Column modelElement, String resultDistinguishedName, Attributes attrs, List<Object> row) throws TranslatorException {
 
 		String strResult = null;
 		String modelAttrName = modelElement.getSourceName();
@@ -382,12 +342,18 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		
 		// If the attribute is not present, we return NULL.
 		if(resultAttr == null) {
+			// MPW - 2-20-07 - Changed from returning empty string to returning null.
+			//row.add("");
+			//logger.logTrace("Did not find a match for attribute named: " + modelAttrName);
 			// GHH 20080326 - return DN from input parameter
 			// if DN attribute is not present in search result
 			if (modelAttrName.toUpperCase().equals("DN")) {  //$NON-NLS-1$
-				return result.getNameInNamespace();
+				row.add(resultDistinguishedName);
 			}
-			return null;
+			else {
+				row.add(null);
+			}
+			return;
 		}
 		Object objResult = null;
 		try {
@@ -413,13 +379,21 @@ public class LDAPQueryExecution implements ResultSetExecution {
 						multivalSB.append(delimiter);
 					}
 				}
-				return multivalSB.toString();
+				row.add(multivalSB.toString());
+				return;
 			}
 			if (modelAttrClass.isArray()) {
-				return getArray(modelAttrClass.getComponentType(), resultAttr);
-			}
-			if (executionFactory.isUnwrapMultiValued() && resultAttr.size() > 1) {
-				return getArray(modelAttrClass, resultAttr);
+				ArrayList<Object> multivalList = new ArrayList<Object>();
+				NamingEnumeration<?> attrNE = resultAttr.getAll();
+				int length = 0;
+				while(attrNE.hasMore()) {
+					multivalList.add(attrNE.next());
+					length++;
+				}
+				Object[] values = (Object[]) Array.newInstance(modelAttrClass.getComponentType(), length);
+				ArrayImpl value = new ArrayImpl(multivalList.toArray(values));
+				row.add(value);
+				return;
 			}
 			
 			//just a single value
@@ -456,9 +430,10 @@ public class LDAPQueryExecution implements ResultSetExecution {
 				if(strResult != null) {
 					Date dateResult = dateFormat.parse(strResult);
 					Timestamp tsResult = new Timestamp(dateResult.getTime());
-					return tsResult;
+					row.add(tsResult);
+				} else {
+					row.add(null);
 				}
-				return null;
 			} catch(ParseException pe) {
 				throw new TranslatorException(pe, LDAPPlugin.Util.getString("LDAPSyncQueryExecution.timestampParseFailed", modelAttrName)); //$NON-NLS-1$
 			}		
@@ -466,22 +441,9 @@ public class LDAPQueryExecution implements ResultSetExecution {
 			//	TODO: Extend support for more types in the future.
 			// Specifically, add support for byte arrays, since that's actually supported
 			// in the underlying data source.
+		} else {
+			row.add(strResult); //the Teiid type conversion logic will handle refine from here if necessary
 		}
-		return strResult; //the Teiid type conversion logic will handle refine from here if necessary
-	}
-
-	private ArrayImpl getArray(Class<?> componentType, Attribute resultAttr)
-			throws NamingException {
-		ArrayList<Object> multivalList = new ArrayList<Object>();
-		NamingEnumeration<?> attrNE = resultAttr.getAll();
-		int length = 0;
-		while(attrNE.hasMore()) {
-			multivalList.add(attrNE.next());
-			length++;
-		}
-		Object[] values = (Object[]) Array.newInstance(componentType, length);
-		ArrayImpl value = new ArrayImpl(multivalList.toArray(values));
-		return value;
 	}
 	
 	// for testing.

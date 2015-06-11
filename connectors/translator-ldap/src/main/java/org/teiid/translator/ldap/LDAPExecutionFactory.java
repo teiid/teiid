@@ -61,7 +61,6 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	private SearchDefaultScope searchDefaultScope = SearchDefaultScope.ONELEVEL_SCOPE;
 	private boolean usePagination;
 	private boolean exceptionOnSizeLimitExceeded;
-	private boolean unwrapMultiValued;
 	
 	public LDAPExecutionFactory() {
 		this.setMaxInCriteriaSize(1000);
@@ -203,15 +202,6 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	@Override
 	public boolean supportsLikeCriteriaEscapeCharacter() {
 		return true;
-	}
-
-	@TranslatorProperty(display="Unwrap Multi-valued", description="Set to true to unwrap multi-valued attributes to rows rather than binding as an array or concatenation.")
-	public boolean isUnwrapMultiValued() {
-		return this.unwrapMultiValued;
-	}
-	
-	public void setUnwrapMultiValued(boolean unwrapMultiValued) {
-		this.unwrapMultiValued = unwrapMultiValued;
 	}
 	
 }
