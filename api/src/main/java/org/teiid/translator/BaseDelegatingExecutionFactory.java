@@ -512,8 +512,4 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean returnsSingleUpdateCount() {
 		return delegate.returnsSingleUpdateCount();
 	}
-	@Override
-	public boolean supportsPartialFiltering() {
-		return delegate.supportsPartialFiltering();
-	}
 }

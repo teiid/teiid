@@ -97,10 +97,10 @@ public class Select implements LanguageObject {
     }
     
     /**
-     * Sets an ordered list of the symbols in the select.  Reuses the current symbol list.
+     * Sets an ordered list of the symbols in the select.
      * @param symbols list of SelectSymbol in SELECT
      */
-    public void setSymbols(Collection<? extends Expression> symbols) {
+    public void setSymbols(List<? extends Expression> symbols) {
     	this.symbols.clear();
     	this.addSymbols(symbols);
     }    
