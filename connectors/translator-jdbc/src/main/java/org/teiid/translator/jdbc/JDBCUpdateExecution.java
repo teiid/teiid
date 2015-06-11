@@ -86,7 +86,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 
         boolean commitType = getAutoCommit(null);
         Command[] commands = batchedCommand.getUpdateCommands().toArray(new Command[batchedCommand.getUpdateCommands().size()]);
-        int[] results = new int[commands.length];
+        result = new int[commands.length];
 
         TranslatedCommand tCommand = null;
         
@@ -109,7 +109,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                         pstmt = (PreparedStatement)statement;
                     } else {
                         if (!executedCmds.isEmpty()) {
-                            executeBatch(i, results, executedCmds);
+                            executeBatch(i, result, executedCmds);
                         }
                         pstmt = getPreparedStatement(tCommand.getSql());
                     }
@@ -117,7 +117,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                     pstmt.addBatch();
                 } else {
                     if (previousCommand != null && previousCommand.isPrepared()) {
-                        executeBatch(i, results, executedCmds);
+                        executeBatch(i, result, executedCmds);
                         getStatement();
                     }
                     if (statement == null) {
@@ -129,7 +129,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                 previousCommand = tCommand;
             }
             if (!executedCmds.isEmpty()) {
-                executeBatch(commands.length, results, executedCmds);
+                executeBatch(commands.length, result, executedCmds);
             }
             succeeded = true;
         } catch (SQLException e) {
@@ -140,7 +140,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             }
         }
 
-        return results;
+        return result;
     }
 
     private void executeBatch(int commandCount,
