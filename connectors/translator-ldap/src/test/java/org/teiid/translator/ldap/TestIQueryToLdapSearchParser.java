@@ -305,7 +305,7 @@ public class TestIQueryToLdapSearchParser {
     
     public static QueryMetadataInterface exampleLdap() throws Exception {
     	String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com')"
-    			+ "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), group_dn string options (nameinsource 'memberOf')) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
+    			+ "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), groupname string options (nameinsource 'memberOf', \"teiid_ldap:dn_prefix\" 'ou=groups,dc=metamatrix,dc=com', \"teiid_ldap:rdn_type\" 'cn')) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
     	return RealMetadataFactory.fromDDL(ddl, "x", "LdapModel");
     }    
     
@@ -358,7 +358,7 @@ public class TestIQueryToLdapSearchParser {
 	}
 	
 	@Test public void testJoin() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name, people_groups.group_dn FROM LdapModel.People inner join people_groups on people.dn = people_groups.user_dn where Name = 'R%'"); //$NON-NLS-1$
+    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name, people_groups.groupname FROM LdapModel.People inner join people_groups on people.dn = people_groups.user_dn where Name = 'R%'"); //$NON-NLS-1$
         
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -379,5 +379,27 @@ public class TestIQueryToLdapSearchParser {
         		expectedCountLimit, expectedSearchScope, expectedSortKeys);
         
     }
+	
+	@Test public void testRdnTypePredicates() throws Exception {
+    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT people_groups.groupname FROM people_groups where groupname like 'R%' and groupname < 'q'"); //$NON-NLS-1$
+        
+        //-----------------------------------
+        // Set Expected SearchDetails Values
+        //-----------------------------------
+        String expectedContextName = "ou=people,dc=metamatrix,dc=com"; //$NON-NLS-1$
+        String expectedContextFilter = "(&(memberOf=cn=R*,ou=groups,dc=metamatrix,dc=com)(!(memberOf>=cn=q,ou=groups,dc=metamatrix,dc=com)))"; //$NON-NLS-1$
+        
+        List<String> expectedAttrNameList = new ArrayList<String>();
+        expectedAttrNameList.add("memberOf");
+        
+        long expectedCountLimit = -1;
+        int expectedSearchScope = SearchControls.ONELEVEL_SCOPE;
+        SortKey[] expectedSortKeys = null;
+        
+        helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
+        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+        
+    }
+	
 }
 

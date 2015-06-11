@@ -86,7 +86,7 @@ public class TestQueryExecution {
 	}
 
 	@Test public void testUnwrap() throws Exception {
-        TranslationUtility util = new TranslationUtility(RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE GROUP_PEOPLE (objectClass string) OPTIONS(nameinsource 'ou=Infrastructure,ou=Support,o=DEMOCORP,c=AU', updatable true);", "x", "y"));
+        TranslationUtility util = new TranslationUtility(RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE GROUP_PEOPLE (objectClass string options (\"teiid_ldap:unwrap\" true)) OPTIONS(nameinsource 'ou=Infrastructure,ou=Support,o=DEMOCORP,c=AU', updatable true);", "x", "y"));
         Command command = util.parseCommand("select * from group_people");
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
@@ -106,7 +106,6 @@ public class TestQueryExecution {
         Mockito.stub(ctx.search((String)Mockito.any(), (String)Mockito.any(), (SearchControls)Mockito.any())).toReturn(enumeration);
         
         LDAPExecutionFactory lef = new LDAPExecutionFactory();
-        lef.setUnwrapMultiValued(true);
         lef.start();
         
         LDAPSyncQueryExecution execution = (LDAPSyncQueryExecution)lef.createExecution(command, ec, rm, connection);
@@ -115,6 +114,37 @@ public class TestQueryExecution {
         assertEquals(Arrays.asList("foo"), result);
         result = execution.next();
         assertEquals(Arrays.asList("bar"), result);
+        assertNull(execution.next());
+	}
+	
+	@Test public void testUnwrapExtract() throws Exception {
+        TranslationUtility util = new TranslationUtility(RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE GROUP_PEOPLE (\"member\" string options (\"teiid_ldap:unwrap\" true, \"teiid_ldap:rdn_type\" 'uid', \"teiid_ldap:dn_prefix\" 'ou=users')) OPTIONS(nameinsource 'ou=Infrastructure,ou=Support,o=DEMOCORP,c=AU', updatable true);", "x", "y"));
+        Command command = util.parseCommand("select * from group_people");
+        ExecutionContext ec = Mockito.mock(ExecutionContext.class);
+        RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
+        LdapContext connection = Mockito.mock(LdapContext.class);
+        LdapContext ctx = Mockito.mock(LdapContext.class);
+        Mockito.stub(connection.lookup("ou=Infrastructure,ou=Support,o=DEMOCORP,c=AU")).toReturn(ctx);
+        BasicAttributes attributes = new BasicAttributes(true);
+        BasicAttribute attrib = new BasicAttribute("member");
+        attributes.put(attrib);
+        attrib.add("uid=foo,ou=users");
+        attrib.add("user=bar,ou=users"); //does not match rdn type
+        attrib.add("uid=bar"); //does not dn prefix
+        
+        final SearchResult sr = new SearchResult("x", null, attributes);
+        
+        NamingEnumeration<SearchResult> enumeration = new SimpleNamingEnumeration(Arrays.asList(sr).iterator());
+        
+        Mockito.stub(ctx.search((String)Mockito.any(), (String)Mockito.any(), (SearchControls)Mockito.any())).toReturn(enumeration);
+        
+        LDAPExecutionFactory lef = new LDAPExecutionFactory();
+        lef.start();
+        
+        LDAPSyncQueryExecution execution = (LDAPSyncQueryExecution)lef.createExecution(command, ec, rm, connection);
+        execution.execute();
+        List<?> result = execution.next();
+        assertEquals(Arrays.asList("foo"), result);
         assertNull(execution.next());
 	}
 	

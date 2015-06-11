@@ -209,8 +209,8 @@ public class IQueryToLdapSearchParser {
 			int i = 0;
 			while(orderItr.hasNext()) {
 				SortSpecification item = orderItr.next();
-				String itemName = getExpressionString(item.getExpression());
-				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Adding sort key for item: " + itemName); //$NON-NLS-1$
+				String itemName = getExpressionQueryString(item.getExpression());
+				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Adding sort key for item:", itemName); //$NON-NLS-1$
 				if(item.getOrdering() == Ordering.ASC) {
 					LogManager.logTrace(LogConstants.CTX_CONNECTOR, "with ASC ordering."); //$NON-NLS-1$
 					sortKey = new SortKey(itemName, true, null);
@@ -367,7 +367,7 @@ public class IQueryToLdapSearchParser {
 	// GHH 20080326 - found that code to fall back on Name if NameInSource
 	// was null wasn't working properly, so replaced with tried and true
 	// code from another custom connector.
-	private String getExpressionString(Expression e) throws TranslatorException {
+	private String getExpressionQueryString(Expression e) throws TranslatorException {
 		String expressionName = null;
 		// GHH 20080326 - changed around the IElement handling here
 		// - the rest of this method is unchanged
@@ -378,7 +378,7 @@ public class IQueryToLdapSearchParser {
 				expressionName = mdIDElement.getName();
 			}
 		} else if(e instanceof Literal) {
-			expressionName = getExpressionString((Literal)e);
+			expressionName = getLiteralString((Literal)e);
 		} else {
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.unsupportedElementError", e.getClass().getSimpleName()); //$NON-NLS-1$
 			throw new TranslatorException(msg + e.toString()); 
@@ -386,16 +386,34 @@ public class IQueryToLdapSearchParser {
 		expressionName = escapeReservedChars(expressionName);
 		return expressionName;
 	}
+	
+	static String getLiteralQueryString(Expression lhs, Expression rhs) {
+		Column mdIDElement = ((ColumnReference)lhs).getMetadataObject();
+		String expressionName = getLiteralString(mdIDElement, (Literal)rhs);
+		expressionName = escapeReservedChars(expressionName);
+		return expressionName;
+	}
 
-	static String getExpressionString(Literal l) {
+	static String getLiteralString(Column mdIDElement, Literal l) {
+		String type = mdIDElement.getProperty(LDAPExecutionFactory.RDN_TYPE, false);
+		String  expressionName = getLiteralString(l);
+		if (l.getValue() != null && type != null) {
+			String prefix = mdIDElement.getProperty(LDAPExecutionFactory.DN_PREFIX, false);
+			expressionName = type + "=" + expressionName; //$NON-NLS-1$
+			if (prefix != null) {
+				expressionName = expressionName + "," + prefix; //$NON-NLS-1$
+			}
+		}
+		return expressionName;
+	}
+	
+	static String getLiteralString(Literal l) {
 		if(l.getValue() instanceof Timestamp) {
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Found an expression that uses timestamp; converting to LDAP string format."); //$NON-NLS-1$
 			Timestamp ts = (Timestamp)l.getValue();
 			Date dt = new Date(ts.getTime());
 			//TODO: Fetch format if provided.
 			SimpleDateFormat sdf = new SimpleDateFormat(LDAPConnectorConstants.ldapTimestampFormat);
 			String expressionName = sdf.format(dt);
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Timestamp to string is: " + expressionName); //$NON-NLS-1$
 			return expressionName;
 		}
 		if (l.getValue() != null) {
@@ -471,19 +489,10 @@ public class IQueryToLdapSearchParser {
 			Expression lhs = ((Comparison) criteria).getLeftExpression();
 			Expression rhs = ((Comparison) criteria).getRightExpression();
 		
-			String lhsString = getExpressionString(lhs);
-			String rhsString = getExpressionString(rhs);
-			if(lhsString == null || rhsString == null) {
-	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.missingNISError"); //$NON-NLS-1$
-				throw new TranslatorException(msg); 
-			}
+			String lhsString = getExpressionQueryString(lhs);
+			String rhsString = getLiteralQueryString(lhs, rhs);
 			
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
-		// Base case
-		} else if(criteria instanceof Exists) {
-			throw new AssertionError("Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
-			// TODO Exists should be supported in a future release.
-		// Base case
 		} else if(criteria instanceof Like) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing LIKE criteria."); //$NON-NLS-1$
 			Like like = (Like) criteria;
@@ -493,8 +502,8 @@ public class IQueryToLdapSearchParser {
 			Expression lhs = like.getLeftExpression();
 			Expression rhs = like.getRightExpression();
 		
-			String lhsString = getExpressionString(lhs);
-			String rhsString = getExpressionString((Literal)rhs);
+			String lhsString = getExpressionQueryString(lhs);
+			String rhsString = getLiteralString(((ColumnReference)lhs).getMetadataObject(), (Literal)rhs);
 			if (like.getEscapeCharacter() != null) {
 				char escape = like.getEscapeCharacter();
 				boolean escaped = false;
@@ -568,8 +577,8 @@ public class IQueryToLdapSearchParser {
 		filterList.add(parseCompoundCriteriaOp(org.teiid.language.AndOr.Operator.OR));
 		Iterator<Expression> rhsItr = rhsList.iterator();
 		while(rhsItr.hasNext()) {
-			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionString(lhs), 
-					getExpressionString(rhsItr.next()));
+			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionQueryString(lhs), 
+					getLiteralQueryString(lhs, rhsItr.next()));
 		}
 		filterList.add(")"); //$NON-NLS-1$
 	}

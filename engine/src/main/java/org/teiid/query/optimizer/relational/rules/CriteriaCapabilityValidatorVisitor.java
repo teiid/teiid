@@ -289,8 +289,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         
         // Check capabilities of the elements
         try {
-            checkElementsAreSearchable(obj.getLeftExpression(), SupportConstants.Element.SEARCHABLE_COMPARE);                                
-            checkElementsAreSearchable(obj.getRightExpression(), SupportConstants.Element.SEARCHABLE_COMPARE);
+        	int support = SupportConstants.Element.SEARCHABLE_COMPARE;
+        	if (!negated && obj.getOperator() == CompareCriteria.EQ) {
+        		support = SupportConstants.Element.SEARCHABLE_EQUALITY;
+        	}
+            checkElementsAreSearchable(obj.getLeftExpression(), support);                                
+            checkElementsAreSearchable(obj.getRightExpression(), support);
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {

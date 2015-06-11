@@ -166,7 +166,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 					Argument argument = arguments.get(attrCount++);
 					Object  anObj = null;
 					if (argument.getArgumentValue().getValue() != null) {
-						anObj = IQueryToLdapSearchParser.getExpressionString(argument.getArgumentValue());
+						anObj = IQueryToLdapSearchParser.getLiteralString(argument.getArgumentValue());
 					}
 					
 					attributes.add(new BasicAttribute(name, anObj));
