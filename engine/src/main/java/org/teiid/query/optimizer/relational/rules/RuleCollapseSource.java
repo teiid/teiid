@@ -40,6 +40,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
@@ -50,6 +51,7 @@ import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
@@ -67,6 +69,7 @@ import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -76,6 +79,8 @@ import org.teiid.translator.ExecutionFactory.NullOrder;
 
 
 public final class RuleCollapseSource implements OptimizerRule {
+	
+	static final String PARTIAL_PROPERTY = AbstractMetadataRecord.RELATIONAL_URI + "partial_filter"; //$NON-NLS-1$
 
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
@@ -102,6 +107,44 @@ public final class RuleCollapseSource implements OptimizerRule {
             	}
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
                 Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+                
+                if (queryCommand instanceof Query 
+                		&& CapabilitiesUtil.supports(Capability.PARTIAL_FILTERS, modelId, metadata, capFinder)) {
+                	//this logic relies on the capability restrictions made in capabilities converter
+                	Query query = (Query)queryCommand;
+                	if (query.getCriteria() != null) {
+                		List<Criteria> toFilter = new ArrayList<Criteria>();
+                		
+                		HashSet<ElementSymbol> select = new LinkedHashSet(query.getSelect().getProjectedSymbols());
+                		
+                		outer: for (Criteria crit : Criteria.separateCriteriaByAnd(query.getCriteria())) {
+	                    	for (ElementSymbol es :ElementCollectorVisitor.getElements(crit, true)) {
+	                			if (Boolean.valueOf(metadata.getExtensionProperty(es.getMetadataID(), PARTIAL_PROPERTY, false)) 
+	                					&& select.contains(es)) {
+	                				 toFilter.add((Criteria) crit.clone());
+	                				 continue outer;
+	                			}
+	                		}
+                		}
+                		if (!toFilter.isEmpty()) {
+                			PlanNode postFilter = RelationalPlanner.createSelectNode(CompoundCriteria.combineCriteria(toFilter), false);
+                			ElementCollectorVisitor.getElements(toFilter, select);
+                			postFilter.setProperty(Info.OUTPUT_COLS, new ArrayList<Expression>(query.getSelect().getProjectedSymbols()));
+                			if (accessNode.getParent() != null) {
+                				accessNode.addAsParent(postFilter);
+                			} else {
+                				plan = postFilter;
+                				postFilter.addFirstChild(accessNode);
+                			}
+                			if (select.size() != query.getSelect().getProjectedSymbols().size()) {
+                				//correct projection
+                				query.getSelect().setSymbols(select);
+                				accessNode.setProperty(Info.OUTPUT_COLS, new ArrayList<Expression>(select));
+                			}
+                		}
+                	}
+                }
+                
                 //find all pushdown functions and mark them to be evaluated by the source
                 for (Function f : FunctionCollectorVisitor.getFunctions(queryCommand, false)) {
                 	FunctionDescriptor fd = f.getFunctionDescriptor();

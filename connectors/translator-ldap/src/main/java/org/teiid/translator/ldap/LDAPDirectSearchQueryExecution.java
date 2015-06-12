@@ -47,7 +47,7 @@ public class LDAPDirectSearchQueryExecution extends LDAPSyncQueryExecution imple
 			
 			@Override
 			public void substitute(Argument arg, StringBuilder builder, int index) {
-				builder.append(IQueryToLdapSearchParser.escapeReservedChars(IQueryToLdapSearchParser.getExpressionString(arg.getArgumentValue())));
+				builder.append(IQueryToLdapSearchParser.escapeReservedChars(IQueryToLdapSearchParser.getLiteralString(arg.getArgumentValue())));
 			}
 		});
 		this.query = sb.toString();

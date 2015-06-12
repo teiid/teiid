@@ -45,6 +45,7 @@ import java.util.StringTokenizer;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
@@ -118,11 +119,40 @@ public class IQueryToLdapSearchParser {
 		}
 		
 		LDAPSearchDetails sd = null;
-		String contextName = getContextNameFromFromItem(fItm);
-		int searchScope = getSearchScopeFromFromItem(fItm);
+		
+		NamedTable tbl = null;
+		NamedTable tblRight = null;
+		
+		if (fItm instanceof NamedTable) {
+			tbl = (NamedTable)fItm;
+		} else if (fItm instanceof Join) {
+			Join join = (Join)fItm;
+			if (!(join.getLeftItem() instanceof NamedTable) || !(join.getRightItem() instanceof NamedTable)) {
+				//should not happen
+	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.groupCountExceededError"); //$NON-NLS-1$
+				throw new TranslatorException(msg);
+			}
+			tbl = (NamedTable)join.getLeftItem();
+			tblRight = (NamedTable)join.getRightItem();
+		} else {
+			throw new AssertionError("Unsupported construct"); //$NON-NLS-1$
+		}
+		
+		String contextName = getContextNameFromFromItem(tbl);
+		int searchScope = getSearchScopeFromFromItem(tbl);
 		// GHH 20080326 - added check for RESTRICT parameter in
 		// NameInSource of from item
-		String classRestriction = getRestrictToNamedClass(fItm);
+		String classRestriction = getRestrictToNamedClass(tbl);
+		if (tblRight != null) {
+			String contextName1 = getContextNameFromFromItem(tblRight);
+			int searchScope1 = getSearchScopeFromFromItem(tblRight);
+			String classRestriction1 = getRestrictToNamedClass(tblRight);
+			if (!EquivalenceUtil.areEqual(contextName, contextName1) || searchScope != searchScope1 
+					|| !EquivalenceUtil.areEqual(classRestriction, classRestriction1)) {
+				final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.not_same", tbl.getMetadataObject().getFullName(), tblRight.getMetadataObject().getFullName()); //$NON-NLS-1$
+				throw new TranslatorException(msg);
+			}
+		}
 				
 		// Parse the WHERE clause.
 		// Create an equivalent LDAP search filter.
@@ -179,8 +209,8 @@ public class IQueryToLdapSearchParser {
 			int i = 0;
 			while(orderItr.hasNext()) {
 				SortSpecification item = orderItr.next();
-				String itemName = getExpressionString(item.getExpression());
-				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Adding sort key for item: " + itemName); //$NON-NLS-1$
+				String itemName = getExpressionQueryString(item.getExpression());
+				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Adding sort key for item:", itemName); //$NON-NLS-1$
 				if(item.getOrdering() == Ordering.ASC) {
 					LogManager.logTrace(LogConstants.CTX_CONNECTOR, "with ASC ordering."); //$NON-NLS-1$
 					sortKey = new SortKey(itemName, true, null);
@@ -205,31 +235,26 @@ public class IQueryToLdapSearchParser {
 	 */
 	// GHH 20080409 - changed to fall back on new connector property
 	// for default base DN if available
-	private String getContextNameFromFromItem(TableReference fromItem) throws TranslatorException {
+	private String getContextNameFromFromItem(NamedTable fromItem) throws TranslatorException {
 		String nameInSource;
 		String contextName;
 
 		// TODO: Re-use the getExpressionString method if possible, rather than 
 		// rewriting the same code twice.
-		if(fromItem instanceof NamedTable) {
-			Table group = ((NamedTable)fromItem).getMetadataObject();
-			nameInSource = group.getNameInSource();
-			// if NameInSource is null set it to an empty
-			// string instead so we can safely call split on it
-			if(nameInSource == null) {
-				nameInSource = "";  //$NON-NLS-1$
-			}
-			// now split it on ? to find the part of it that specifies context name
-			String nameInSourceArray[] = nameInSource.split("\\?");  //$NON-NLS-1$
-			contextName = nameInSourceArray[0];
-			// if there is no context name specified
-			// try the default in the connector properties
-			if(contextName.equals("")) {  //$NON-NLS-1$
-				contextName = this.executionFactory.getSearchDefaultBaseDN();
-			}
-		} else {
-            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.groupCountExceededError"); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+		Table group = fromItem.getMetadataObject();
+		nameInSource = group.getNameInSource();
+		// if NameInSource is null set it to an empty
+		// string instead so we can safely call split on it
+		if(nameInSource == null) {
+			nameInSource = "";  //$NON-NLS-1$
+		}
+		// now split it on ? to find the part of it that specifies context name
+		String nameInSourceArray[] = nameInSource.split("\\?");  //$NON-NLS-1$
+		contextName = nameInSourceArray[0];
+		// if there is no context name specified
+		// try the default in the connector properties
+		if(contextName.equals("")) {  //$NON-NLS-1$
+			contextName = this.executionFactory.getSearchDefaultBaseDN();
 		}
 		// if the context name is not specified either in Name in Source
 		// or in the default connector properties it'll be either
@@ -246,83 +271,73 @@ public class IQueryToLdapSearchParser {
 	// from item's NameInSource, and if true return name (not NameInSource)
 	// of from item as the objectClass name on to which the query should
 	// be restricted
-	private String getRestrictToNamedClass(TableReference fromItem) throws TranslatorException {
+	private String getRestrictToNamedClass(NamedTable fromItem) {
 		String nameInSource;
 		String namedClass = null;
-		if(fromItem instanceof NamedTable) {
-			// Here we use slightly different logic than in
-			// getContextNameFromFromItem so it is easier to get
-			// the group name later if needed
-			Table mdIDGroup = ((NamedTable)fromItem).getMetadataObject();
-			nameInSource = mdIDGroup.getNameInSource();
-			// groupName = mdIDGroup.getName();
-			// if NameInSource is null set it to an empty
-			// string instead so we can safely call split on it
-			if(nameInSource == null) {
-				nameInSource = "";  //$NON-NLS-1$
+		// Here we use slightly different logic than in
+		// getContextNameFromFromItem so it is easier to get
+		// the group name later if needed
+		Table mdIDGroup = fromItem.getMetadataObject();
+		nameInSource = mdIDGroup.getNameInSource();
+		// groupName = mdIDGroup.getName();
+		// if NameInSource is null set it to an empty
+		// string instead so we can safely call split on it
+		if(nameInSource == null) {
+			nameInSource = "";  //$NON-NLS-1$
+		}
+		// now split it on ? to find the part of it that specifies the objectClass we should restrict on
+		String nameInSourceArray[] = nameInSource.split("\\?");  //$NON-NLS-1$
+		if(nameInSourceArray.length >= 3) {
+			namedClass = nameInSourceArray[2];
+		}
+		// if there is no specification in the Name In Source,
+		// see if the connector property is set to true.  If
+		// it is, use the Name of the class for the restriction.
+		if(namedClass == null || namedClass.equals("")) {  //$NON-NLS-1$
+			if (!this.executionFactory.isRestrictToObjectClass()) { 
+				namedClass = "";  //$NON-NLS-1$
+			} else {
+				namedClass = mdIDGroup.getName();
 			}
-			// now split it on ? to find the part of it that specifies the objectClass we should restrict on
-			String nameInSourceArray[] = nameInSource.split("\\?");  //$NON-NLS-1$
-			if(nameInSourceArray.length >= 3) {
-				namedClass = nameInSourceArray[2];
-			}
-			// if there is no specification in the Name In Source,
-			// see if the connector property is set to true.  If
-			// it is, use the Name of the class for the restriction.
-			if(namedClass == null || namedClass.equals("")) {  //$NON-NLS-1$
-				if (!this.executionFactory.isRestrictToObjectClass()) { 
-					namedClass = "";  //$NON-NLS-1$
-				} else {
-					namedClass = mdIDGroup.getName();
-				}
-			}
-		} else {
-            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.groupCountExceededError"); //$NON-NLS-1$
-			throw new TranslatorException(msg);
 		}
 		return namedClass;
 	}
 
-	private int getSearchScopeFromFromItem(TableReference fromItem) throws TranslatorException {
+	private int getSearchScopeFromFromItem(NamedTable fromItem) {
 		String searchScopeString = "";  //$NON-NLS-1$
 		int searchScope = LDAPConnectorConstants.ldapDefaultSearchScope;
 		// TODO: Re-use the getExpressionString method if possible, rather than 
 		// rewriting the same code twice.
-		if(fromItem instanceof NamedTable) {
-			Table group = ((NamedTable)fromItem).getMetadataObject();
-			String nameInSource = group.getNameInSource();
-			// if NameInSource is null set it to an empty
-			// string instead so we can safely call split on it
-			if(nameInSource == null) {
-				nameInSource = "";  //$NON-NLS-1$
+		Table group = fromItem.getMetadataObject();
+		String nameInSource = group.getNameInSource();
+		// if NameInSource is null set it to an empty
+		// string instead so we can safely call split on it
+		if(nameInSource == null) {
+			nameInSource = "";  //$NON-NLS-1$
+		}
+		// now split it on ? to find the part of it that specifies search scope
+		String nameInSourceArray[] = nameInSource.split("\\?");  //$NON-NLS-1$
+		if(nameInSourceArray.length >= 2) {
+			searchScopeString = nameInSourceArray[1];
+		}
+		// if there is no search scope specified
+		// try the default in the connector properties
+		if(searchScopeString.equals("")) {  //$NON-NLS-1$
+			SearchDefaultScope searchDefaultScope = this.executionFactory.getSearchDefaultScope();
+			if (searchDefaultScope != null) {
+				searchScopeString = searchDefaultScope.name();
 			}
-			// now split it on ? to find the part of it that specifies search scope
-			String nameInSourceArray[] = nameInSource.split("\\?");  //$NON-NLS-1$
-			if(nameInSourceArray.length >= 2) {
-				searchScopeString = nameInSourceArray[1];
+			// protect against getting null back from the property
+			if(searchScopeString == null) {
+				searchScopeString = "";  //$NON-NLS-1$
 			}
-			// if there is no search scope specified
-			// try the default in the connector properties
-			if(searchScopeString.equals("")) {  //$NON-NLS-1$
-				SearchDefaultScope searchDefaultScope = this.executionFactory.getSearchDefaultScope();
-				if (searchDefaultScope != null) {
-					searchScopeString = searchDefaultScope.name();
-				}
-				// protect against getting null back from the property
-				if(searchScopeString == null) {
-					searchScopeString = "";  //$NON-NLS-1$
-				}
-			}
-			if(searchScopeString.equals("SUBTREE_SCOPE")) {  //$NON-NLS-1$
-				searchScope = SearchControls.SUBTREE_SCOPE;
-			} else if(searchScopeString.equals("ONELEVEL_SCOPE")) {  //$NON-NLS-1$
-				searchScope = SearchControls.ONELEVEL_SCOPE;
-			} else if(searchScopeString.equals("OBJECT_SCOPE")) {  //$NON-NLS-1$
-				searchScope = SearchControls.OBJECT_SCOPE;
-			}
-		} else {
-            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.groupCountExceededError"); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+		}
+		if(searchScopeString.equals("SUBTREE_SCOPE")) {  //$NON-NLS-1$
+			searchScope = SearchControls.SUBTREE_SCOPE;
+		} else if(searchScopeString.equals("ONELEVEL_SCOPE")) {  //$NON-NLS-1$
+			searchScope = SearchControls.ONELEVEL_SCOPE;
+		} else if(searchScopeString.equals("OBJECT_SCOPE")) {  //$NON-NLS-1$
+			searchScope = SearchControls.OBJECT_SCOPE;
 		}
 		return searchScope;
 	}
@@ -352,7 +367,7 @@ public class IQueryToLdapSearchParser {
 	// GHH 20080326 - found that code to fall back on Name if NameInSource
 	// was null wasn't working properly, so replaced with tried and true
 	// code from another custom connector.
-	private String getExpressionString(Expression e) throws TranslatorException {
+	private String getExpressionQueryString(Expression e) throws TranslatorException {
 		String expressionName = null;
 		// GHH 20080326 - changed around the IElement handling here
 		// - the rest of this method is unchanged
@@ -363,7 +378,7 @@ public class IQueryToLdapSearchParser {
 				expressionName = mdIDElement.getName();
 			}
 		} else if(e instanceof Literal) {
-			expressionName = getExpressionString((Literal)e);
+			expressionName = getLiteralString((Literal)e);
 		} else {
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.unsupportedElementError", e.getClass().getSimpleName()); //$NON-NLS-1$
 			throw new TranslatorException(msg + e.toString()); 
@@ -371,16 +386,34 @@ public class IQueryToLdapSearchParser {
 		expressionName = escapeReservedChars(expressionName);
 		return expressionName;
 	}
+	
+	static String getLiteralQueryString(Expression lhs, Expression rhs) {
+		Column mdIDElement = ((ColumnReference)lhs).getMetadataObject();
+		String expressionName = getLiteralString(mdIDElement, (Literal)rhs);
+		expressionName = escapeReservedChars(expressionName);
+		return expressionName;
+	}
 
-	static String getExpressionString(Literal l) {
+	static String getLiteralString(Column mdIDElement, Literal l) {
+		String type = mdIDElement.getProperty(LDAPExecutionFactory.RDN_TYPE, false);
+		String  expressionName = getLiteralString(l);
+		if (l.getValue() != null && type != null) {
+			String prefix = mdIDElement.getProperty(LDAPExecutionFactory.DN_PREFIX, false);
+			expressionName = type + "=" + expressionName; //$NON-NLS-1$
+			if (prefix != null) {
+				expressionName = expressionName + "," + prefix; //$NON-NLS-1$
+			}
+		}
+		return expressionName;
+	}
+	
+	static String getLiteralString(Literal l) {
 		if(l.getValue() instanceof Timestamp) {
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Found an expression that uses timestamp; converting to LDAP string format."); //$NON-NLS-1$
 			Timestamp ts = (Timestamp)l.getValue();
 			Date dt = new Date(ts.getTime());
 			//TODO: Fetch format if provided.
 			SimpleDateFormat sdf = new SimpleDateFormat(LDAPConnectorConstants.ldapTimestampFormat);
 			String expressionName = sdf.format(dt);
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Timestamp to string is: " + expressionName); //$NON-NLS-1$
 			return expressionName;
 		}
 		if (l.getValue() != null) {
@@ -431,6 +464,7 @@ public class IQueryToLdapSearchParser {
 	private List<String> getSearchFilterFromWhereClause(Condition criteria, List<String> filterList) throws TranslatorException {
 		if(criteria == null) {
 			filterList.add("(objectClass=*)"); //$NON-NLS-1$
+			return filterList;
 		}
 		boolean isNegated = false;
 		// Recursive case: compound criteria
@@ -455,19 +489,10 @@ public class IQueryToLdapSearchParser {
 			Expression lhs = ((Comparison) criteria).getLeftExpression();
 			Expression rhs = ((Comparison) criteria).getRightExpression();
 		
-			String lhsString = getExpressionString(lhs);
-			String rhsString = getExpressionString(rhs);
-			if(lhsString == null || rhsString == null) {
-	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.missingNISError"); //$NON-NLS-1$
-				throw new TranslatorException(msg); 
-			}
+			String lhsString = getExpressionQueryString(lhs);
+			String rhsString = getLiteralQueryString(lhs, rhs);
 			
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
-		// Base case
-		} else if(criteria instanceof Exists) {
-			throw new AssertionError("Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
-			// TODO Exists should be supported in a future release.
-		// Base case
 		} else if(criteria instanceof Like) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing LIKE criteria."); //$NON-NLS-1$
 			Like like = (Like) criteria;
@@ -477,8 +502,8 @@ public class IQueryToLdapSearchParser {
 			Expression lhs = like.getLeftExpression();
 			Expression rhs = like.getRightExpression();
 		
-			String lhsString = getExpressionString(lhs);
-			String rhsString = getExpressionString((Literal)rhs);
+			String lhsString = getExpressionQueryString(lhs);
+			String rhsString = getLiteralString(((ColumnReference)lhs).getMetadataObject(), (Literal)rhs);
 			if (like.getEscapeCharacter() != null) {
 				char escape = like.getEscapeCharacter();
 				boolean escaped = false;
@@ -528,11 +553,12 @@ public class IQueryToLdapSearchParser {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing NOT criteria."); //$NON-NLS-1$
 			isNegated = true;
 			filterList.addAll(getSearchFilterFromWhereClause(((Not)criteria).getCriteria(), new LinkedList<String>()));
+		} else {
+			throw new AssertionError("unknown predicate type"); //$NON-NLS-1$
 		}
 		
 		if (isNegated) {
-			filterList.add(0, "("); //$NON-NLS-1$
-			filterList.add(1, "!"); //$NON-NLS-1$
+			filterList.add(0, "(!"); //$NON-NLS-1$
 			filterList.add(")"); //$NON-NLS-1$
 		}
 		
@@ -551,8 +577,8 @@ public class IQueryToLdapSearchParser {
 		filterList.add(parseCompoundCriteriaOp(org.teiid.language.AndOr.Operator.OR));
 		Iterator<Expression> rhsItr = rhsList.iterator();
 		while(rhsItr.hasNext()) {
-			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionString(lhs), 
-					getExpressionString(rhsItr.next()));
+			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionQueryString(lhs), 
+					getLiteralQueryString(lhs, rhsItr.next()));
 		}
 		filterList.add(")"); //$NON-NLS-1$
 	}

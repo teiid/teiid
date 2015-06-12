@@ -45,7 +45,13 @@ public class Column extends BaseColumn implements Comparable<Column> {
 				return "All Except Like"; //$NON-NLS-1$
 			}
 		},
-		Searchable
+		Searchable,
+		Equality_Only {
+			@Override
+			public String toString() {
+				return "Equality Only"; //$NON-NLS-1$
+			}
+		}
 	}
 	
     private boolean selectable = true;

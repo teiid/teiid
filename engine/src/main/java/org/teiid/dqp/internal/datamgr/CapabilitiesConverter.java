@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
@@ -122,6 +123,19 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY_ROLLUP, srcCaps.supportsGroupByRollup());
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, srcCaps.supportsOrderByWithExtendedGrouping());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, srcCaps.supportsCompareCriteriaOrderedExclusive());
+        if (srcCaps.supportsPartialFiltering()) {
+        	//disable supports that could end up being not filterable
+        	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
+        	Assertion.assertTrue(!srcCaps.supportsOuterJoins());
+        	Assertion.assertTrue(!srcCaps.supportsFullOuterJoins());
+        	Assertion.assertTrue(!srcCaps.supportsInlineViews());
+        	Assertion.assertTrue(!srcCaps.supportsIntersect());
+        	Assertion.assertTrue(!srcCaps.supportsExcept());
+        	Assertion.assertTrue(!srcCaps.supportsSelectExpression());
+        	Assertion.assertTrue(!srcCaps.supportsUnions());
+        	Assertion.assertTrue(!srcCaps.supportsSelectDistinct());
+        	Assertion.assertTrue(!srcCaps.supportsGroupBy());
+        }
         
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

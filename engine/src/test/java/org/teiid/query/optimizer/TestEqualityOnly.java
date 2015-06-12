@@ -20,36 +20,22 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.metadata;
+package org.teiid.query.optimizer;
 
-public class SupportConstants {
+import org.junit.Test;
+import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.RealMetadataFactory;
 
-	private SupportConstants() {}
+@SuppressWarnings("nls")
+public class TestEqualityOnly {
+
+	@Test public void testPushdown() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string options (searchable 'equality_only'))", "x", "y");
+		//should push
+		TestOptimizer.helpPlan("select x from t where x = 'a'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0 WHERE g_0.x = 'a'"});
+		//should not push
+		TestOptimizer.helpPlan("select x from t where x > 'b'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
+		TestOptimizer.helpPlan("select x from t where x like 'c%'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
+	}
 	
-	public static class Model {
-		private Model() {}
-	}
-
-	public static class Group {
-		private Group() {}
-
-		public static final int UPDATE = 0;                 
-	}
-
-	public static class Element {
-		private Element() {}
-		
-		public static final int SELECT = 0;
-		public static final int SEARCHABLE_LIKE = 1;
-		public static final int SEARCHABLE_COMPARE = 2;
-		public static final int SEARCHABLE_EQUALITY = 3;
-		public static final int NULL = 4;
-		public static final int UPDATE = 5;
-        public static final int DEFAULT_VALUE = 7;
-        public static final int AUTO_INCREMENT = 8;
-        public static final int CASE_SENSITIVE = 9;
-        public static final int NULL_UNKNOWN = 10;
-        public static final int SIGNED = 11;
-	}
-
 }
