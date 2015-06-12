@@ -372,11 +372,11 @@ public final class RuleCollapseSource implements OptimizerRule {
         query.setSelect(select);
 		query.setFrom(new From());
 		buildQuery(accessRoot, node, query, context, capFinder);
-		if (query.getCriteria() instanceof CompoundCriteria) {
-            query.setCriteria(QueryRewriter.optimizeCriteria((CompoundCriteria)query.getCriteria(), metadata));
-        }
 		if (!CapabilitiesUtil.useAnsiJoin(modelID, metadata, capFinder)) {
 			simplifyFromClause(query);
+        }
+		if (query.getCriteria() instanceof CompoundCriteria) {
+            query.setCriteria(QueryRewriter.optimizeCriteria((CompoundCriteria)query.getCriteria(), metadata));
         }
 		if (columns.isEmpty()) {
         	if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)) {

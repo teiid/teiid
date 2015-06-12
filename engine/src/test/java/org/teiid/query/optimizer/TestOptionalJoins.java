@@ -584,7 +584,8 @@ public class TestOptionalJoins {
     
     @Test public void testOptionalJoinNodeBridgeNonAnsi() throws Exception { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT g3.e1 FROM /* optional */ pm1.g1 as g1 makedep, pm2.g2, /* optional */ pm2.g3 WHERE g1.e1 = pm2.g2.e1 AND g1.e1 = pm2.g3.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT g_1.e1 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0, pm2.g3 AS g_1 WHERE g_1.e1 = g_0.e1 ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE (g_0.e1 IN (<dependent values>)) AND (g_0.e1 IN (<dependent values>)) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+            new String[] {"SELECT g_1.e1 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0, pm2.g3 AS g_1 WHERE g_1.e1 = g_0.e1 ORDER BY c_0", 
+        	"SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
 
 		TestOptimizer.checkNodeTypes(plan, new int[] { 
 				1, // Access

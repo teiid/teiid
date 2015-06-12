@@ -25,6 +25,7 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil.DependentCostAnalysis;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
 import org.teiid.query.sql.lang.JoinType;
@@ -359,6 +361,14 @@ public final class RuleChooseDependent implements OptimizerRule {
     	String id = nextId();
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
+        
+        PlanNode depNode = isLeft?joinNode.getFirstChild():joinNode.getLastChild();
+        depNode = FrameUtil.findJoinSourceNode(depNode);
+        if (!depNode.hasCollectionProperty(Info.ACCESS_PATTERNS)) {
+            //in some situations a federated join will span multiple tables using the same key
+	        handleDuplicate(joinNode, isLeft, independentExpressions, dependentExpressions);
+	        handleDuplicate(joinNode, !isLeft, dependentExpressions, independentExpressions);
+        }
 
         PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, indNode, metadata, dca, bound, makeDep);
         
@@ -370,6 +380,31 @@ public final class RuleChooseDependent implements OptimizerRule {
     	
         return true;
     }
+
+	private void handleDuplicate(PlanNode joinNode, boolean isLeft,
+			List independentExpressions, List dependentExpressions) {
+		Map<Expression, Integer> seen = new HashMap<Expression, Integer>();
+        for (int i = 0; i < dependentExpressions.size(); i++) {
+        	Expression ex = (Expression) dependentExpressions.get(i);
+        	Integer index = seen.get(ex);
+        	if (index == null) {
+        		seen.put(ex, i);
+        	} else {
+        		Expression e1 = (Expression)independentExpressions.get(i);
+        		Expression e2 = (Expression)independentExpressions.get(index);
+        		CompareCriteria cc = new CompareCriteria(e1, CompareCriteria.EQ, e2);
+        		PlanNode impliedCriteria = RelationalPlanner.createSelectNode(cc, false);
+        		if (isLeft) {
+        			joinNode.getLastChild().addAsParent(impliedCriteria);
+        		} else {
+        			joinNode.getFirstChild().addAsParent(impliedCriteria);
+        		}
+        		independentExpressions.remove(i);
+        		dependentExpressions.remove(i);
+        		i--;
+        	}
+        }
+	}
 
 	public static String nextId() {
 		return "$dsc/id" + ID.getAndIncrement(); //$NON-NLS-1$
