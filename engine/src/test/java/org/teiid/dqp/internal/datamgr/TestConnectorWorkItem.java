@@ -134,11 +134,11 @@ public class TestConnectorWorkItem {
 	}
 
     @Test public void testUpdateExecution() throws Throwable {
-		AtomicResultsMessage results = helpExecuteUpdate(false);
+		AtomicResultsMessage results = helpExecuteUpdate(false, true);
 		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
 	}
 
-	private AtomicResultsMessage helpExecuteUpdate(boolean batch) throws Exception,
+	private AtomicResultsMessage helpExecuteUpdate(boolean batch, boolean single) throws Exception,
 			Throwable {
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		if (batch) {
@@ -146,20 +146,29 @@ public class TestConnectorWorkItem {
 		}
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
-		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager());
+		ConnectorManager connectorManager = TestConnectorManager.getConnectorManager();
+		((FakeConnector)connectorManager.getExecutionFactory()).setReturnSingleUpdate(single);
+		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, connectorManager);
 		synchConnectorWorkItem.execute();
 		return synchConnectorWorkItem.more();
 	}
 	
 	@Test public void testBatchUpdateExecution() throws Throwable {
-		AtomicResultsMessage results = helpExecuteUpdate(true);
+		AtomicResultsMessage results = helpExecuteUpdate(true, false);
+		assertEquals(2, results.getResults().length);
+		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
+		assertEquals(1, results.getResults()[1].get(0));
+	}
+	
+	@Test public void testBatchUpdateExecutionSingleResult() throws Throwable {
+		AtomicResultsMessage results = helpExecuteUpdate(true, true);
 		assertEquals(2, results.getResults().length);
 		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
 		assertEquals(1, results.getResults()[1].get(0));
 	}
 	
 	@Test public void testExecutionWarning() throws Throwable {
-		AtomicResultsMessage results = helpExecuteUpdate(false);
+		AtomicResultsMessage results = helpExecuteUpdate(false, false);
 		assertEquals(1, results.getWarnings().size());
 	}
 	
