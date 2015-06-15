@@ -60,7 +60,14 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.transport.*;
+import org.teiid.transport.ClientServiceRegistry;
+import org.teiid.transport.ClientServiceRegistryImpl;
+import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCSocketListener;
+import org.teiid.transport.SocketConfiguration;
+import org.teiid.transport.SocketListener;
+import org.teiid.transport.WireProtocol;
 
 public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
 	private transient LogonImpl logon;
@@ -196,7 +203,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50039, this.transportName, this.address.getHostName(), String.valueOf(this.address.getPort()))); 
     		}
     		else if (socketConfig.getProtocol() == WireProtocol.pg) {
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50040, this.address.getHostName(), String.valueOf(this.address.getPort())));
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50040, this.transportName, this.address.getHostName(), String.valueOf(this.address.getPort())));
     		}
     	}
     	else {
