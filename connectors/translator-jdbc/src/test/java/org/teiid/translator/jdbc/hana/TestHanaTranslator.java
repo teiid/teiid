@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc.hana;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.translator.jdbc.Version;
@@ -526,6 +527,248 @@ public class TestHanaTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
+    }
+    
+    /*
+     * Geospatial tests
+     */
+    @Test
+    public void testSTDistance() throws Exception {
+        String input = "select ST_Distance(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.SHAPE.st_distance(COLA_MARKETS.SHAPE) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test
+    public void testSTDisjoint() throws Exception {
+        String input = "select ST_Disjoint(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.SHAPE.st_disjoint(COLA_MARKETS.SHAPE) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test
+    public void testSTIntersects() throws Exception {
+        String input = "select ST_Intersects(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.SHAPE.st_intersects(COLA_MARKETS.SHAPE) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTInsert() throws Exception {
+        String input = "insert into cola_markets(name,shape) values('foo124', ST_GeomFromText('POINT (300 100)', 8307))"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', st_geomfromwkb(?, 8307))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTInsertNull() throws Exception {
+        String input = "insert into cola_markets(name,shape) values('foo124', null)"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', ?)"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTSrid() throws Exception {
+        String input = "select st_srid(shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_srid() FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTAsBinary() throws Exception {
+        String input = "select st_asbinary(shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_asbinary() FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTAsWKT() throws Exception {
+        String input = "select st_asewkt(shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_asewkt() FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTAsText() throws Exception {
+        String input = "select st_astext(shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_astext() FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTAsGeoJSON() throws Exception {
+        String input = "select st_asgeojson(shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_asgeojson() FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTContains() throws Exception {
+        String input = "select st_contains(shape, shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_contains(c.SHAPE) FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTCrosses() throws Exception {
+        String input = "select st_crosses(shape, shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_crosses(c.SHAPE) FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTEquals() throws Exception {
+        String input = "select st_equals(shape, shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_equals(c.SHAPE) FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSTTouches() throws Exception {
+        String input = "select st_touches(shape, shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT c.SHAPE.st_touches(c.SHAPE) FROM COLA_MARKETS AS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testVarbinaryComparison() throws Exception {
+        String input = "select bin_col from binary_test where bin_col = x'ab'"; //$NON-NLS-1$
+        String output = "SELECT binary_test.BIN_COL FROM binary_test WHERE binary_test.BIN_COL = to_binary('AB')"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testVarbinaryInsert() throws Exception {
+        String input = "insert into binary_test (bin_col) values (x'bc')"; //$NON-NLS-1$
+        String output = "INSERT INTO binary_test (BIN_COL) VALUES (to_binary('BC'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }    		
+    
+    /*
+     * Pushdown function tests
+     */
+    @Test public void testPushDownAddDays() throws Exception {
+        String input = "SELECT add_days(convert(PART_WEIGHT, date), 30) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT add_days(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD'), 30) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownAddMonths() throws Exception {
+        String input = "SELECT add_months(convert(PART_WEIGHT, date), 10) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT add_months(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD'), 10) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownAddSeconds() throws Exception {
+        String input = "SELECT add_seconds(convert(PART_WEIGHT, timestamp), 10) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT add_seconds(to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS'), 10) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownAddYears() throws Exception {
+        String input = "SELECT add_years(convert(PART_WEIGHT, date), 10) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT add_years(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD'), 10) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownCurrentUTCTime() throws Exception {
+        String input = "SELECT current_utctime()"; //$NON-NLS-1$
+        String output = "SELECT current_utctime()";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownCurrentUTCTimeStamp() throws Exception {
+        String input = "SELECT current_utctimestamp()"; //$NON-NLS-1$
+        String output = "SELECT current_utctimestamp()";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownDaysBetween() throws Exception {
+        String input = "SELECT days_between(convert(PART_WEIGHT, date), convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT days_between(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD'), to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownIsoWeek() throws Exception {
+        String input = "SELECT isoweek(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT isoweek(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownLastDay() throws Exception {
+        String input = "SELECT last_day(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT last_day(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownLocalToUtc() throws Exception {
+        String input = "SELECT localtoutc(convert(PART_WEIGHT, timestamp), 'EST') FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT localtoutc(to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS'), 'EST') FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownNano100Between() throws Exception {
+        String input = "SELECT nano100_between(convert(PART_WEIGHT, date), convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT nano100_between(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD'), to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownNextDay() throws Exception {
+        String input = "SELECT next_day(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT next_day(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownCosh() throws Exception {
+        String input = "SELECT cosh(0.5) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT cosh(0.5) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testPushDownBitset() throws Exception {
+        String input = "SELECT bitset(convert(bin_col, varbinary), 1, 3) FROM binary_test"; //$NON-NLS-1$
+        String output = "SELECT bitset(binary_test.BIN_COL, 1, 3) FROM binary_test";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestBQTVDB(),
+                input, 
+                output);
     }
     
 }
