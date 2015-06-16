@@ -251,7 +251,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
                     || type.equals(DataTypeManager.DefaultDataClasses.TIME) 
                     || type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
             	synchronized (sdf) {
-                	this.onGoingExpression.push(sdf.format(val));
+                	this.onGoingExpression.push(escapeString(sdf.format(val)));
 				}
             } 
             else {
