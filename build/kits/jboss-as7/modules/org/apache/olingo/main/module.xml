@@ -9,6 +9,7 @@
         <resource-root path="odata-commons-core-${version.org.apache.olingo}.jar" />
         <resource-root path="odata-server-api-${version.org.apache.olingo}.jar" />
         <resource-root path="odata-server-core-${version.org.apache.olingo}.jar" />
+        <resource-root path="odata-server-core-ext-${version.org.apache.olingo}.jar" />
     </resources>
 
     <dependencies>

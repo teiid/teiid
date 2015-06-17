@@ -265,21 +265,21 @@ public class TestTeiidLanguageToSolr {
 	@Test
 	public void testTimestampField() throws Exception {
 	    Date d = getTestDate();
-		assertEquals("fl=name,purchasedate&q=purchasets:2014-02-06T19:52:07:000Z",
+		assertEquals("fl=name,purchasedate&q=purchasets:2014\\-02\\-06T19\\:52\\:07\\:000Z",
 		        getSolrTranslation("select name,purchasedate from example where purchasets = {ts '"+new Timestamp(d.getTime())+"'}"));
 	}
 
 	@Test
     public void testDateField() throws Exception {
         Date d = getTestDate();
-        assertEquals("fl=name,purchasedate&q=purchasedate:2014-02-06T08:00:00:000Z",
+        assertEquals("fl=name,purchasedate&q=purchasedate:2014\\-02\\-06T08\\:00\\:00\\:000Z",
                 getSolrTranslation("select name,purchasedate from example where purchasedate = {d '"+new java.sql.Date(d.getTime())+"'}"));
     }
 	
     @Test
     public void testTimeField() throws Exception {
         Date d = getTestDate();
-        assertEquals("fl=name,purchasedate&q=purchasetime:1970-01-01T19:52:07:000Z",
+        assertEquals("fl=name,purchasedate&q=purchasetime:1970\\-01\\-01T19\\:52\\:07\\:000Z",
                 getSolrTranslation("select name,purchasedate from example where purchasetime = {t '"+new Time(d.getTime())+"'}"));
     }
 
