@@ -96,7 +96,7 @@ public class ODataTypeManager {
 	
 	public static EdmType odataType(String teiidType) {
 		if (DataTypeManager.isArrayType(teiidType)) {
-			return new EdmCollectionType(CollectionKind.List, odataType(DataTypeManager.getComponentType(teiidType)));
+			return new EdmCollectionType(CollectionKind.Collection, odataType(DataTypeManager.getComponentType(teiidType)));
 		}
 		return teiidkeyed.get(teiidType);
 	}

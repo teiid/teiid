@@ -502,17 +502,17 @@ public class LocalClient implements Client {
             List<EdmSchema.Builder> edmSchemas = new ArrayList<EdmSchema.Builder>();
             for (Schema schema:metadataStore.getSchemaList()) {
                 if (isVisible(vdb, schema)) {
-                    ODataEntitySchemaBuilder.buildEntityTypes(schema, edmSchemas);
+                    ODataEntitySchemaBuilder.buildEntityTypes(schema, edmSchemas, false);
                 }
             }
             for (Schema schema:metadataStore.getSchemaList()) {
                 if (isVisible(vdb, schema)) {
-                    ODataEntitySchemaBuilder.buildFunctionImports(schema, edmSchemas);
+                    ODataEntitySchemaBuilder.buildFunctionImports(schema, edmSchemas, false);
                 }
             }
             for (Schema schema:metadataStore.getSchemaList()) {
                 if (isVisible(vdb, schema)) {
-                    ODataEntitySchemaBuilder.buildAssosiationSets(schema, edmSchemas);
+                    ODataEntitySchemaBuilder.buildAssosiationSets(schema, edmSchemas, false);
                 }
             }
             return EdmDataServices.newBuilder().addSchemas(edmSchemas).build();
