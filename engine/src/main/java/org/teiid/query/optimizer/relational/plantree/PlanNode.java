@@ -443,5 +443,16 @@ public class PlanNode {
 			this.modified = current;
 		}
 	}
+	
+	@Override
+	public PlanNode clone() {
+		PlanNode node = new PlanNode();
+		node.type = this.type;
+		node.groups = new HashSet<GroupSymbol>(this.groups);
+		if (this.nodeProperties != null) {
+			node.nodeProperties = new LinkedHashMap<NodeConstants.Info, Object>(this.nodeProperties);
+		}
+		return node;
+	}
         
 }

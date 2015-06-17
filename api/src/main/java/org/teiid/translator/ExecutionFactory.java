@@ -1278,4 +1278,11 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsPartialFiltering() {
 		return false;
 	}
+	
+	/**
+	 * If dependent join predicates should use literals that are marked as bind eligible.
+	 */
+	public boolean useBindingsForDependentJoin() {
+		return true;
+	}
 }

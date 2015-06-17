@@ -54,6 +54,8 @@ public class DependentAccessNode extends AccessNode {
      * Cached rewritten command to be used as the base for all dependent queries.
      */
     private Command rewrittenCommand;
+	private boolean useBindings;
+	private boolean complexQuery;
     
     public DependentAccessNode(int nodeID) {
         super(nodeID);
@@ -97,6 +99,8 @@ public class DependentAccessNode extends AccessNode {
         clonedNode.maxSetSize = this.maxSetSize;
         clonedNode.maxPredicates = this.maxPredicates;
         clonedNode.pushdown = this.pushdown;
+        clonedNode.useBindings = this.useBindings;
+        clonedNode.complexQuery = this.complexQuery;
         super.copyTo(clonedNode);
         return clonedNode;
     }
@@ -136,6 +140,8 @@ public class DependentAccessNode extends AccessNode {
         if (this.criteriaProcessor == null) {
             this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
             this.criteriaProcessor.setPushdown(pushdown);
+            this.criteriaProcessor.setUseBindings(useBindings);
+            this.criteriaProcessor.setComplexQuery(complexQuery);
         }
         
         if (this.dependentCrit == null) {
@@ -188,6 +194,18 @@ public class DependentAccessNode extends AccessNode {
 			return true;
 		}
 		return null;
+	}
+	
+	public boolean isUseBindings() {
+		return useBindings;
+	}
+	
+	public void setUseBindings(boolean useBindings) {
+		this.useBindings = useBindings;
+	}
+	
+	public void setComplexQuery(boolean complexQuery) {
+		this.complexQuery = complexQuery;
 	}
 
 }

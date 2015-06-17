@@ -119,6 +119,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	private OracleFormatFunctionModifier formatModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP("); //$NON-NLS-1$
 	
 	public OracleExecutionFactory() {
+		//older oracle instances seem to have issues with large numbers of bindings
+		setUseBindingsForDependentJoin(false);
 	}
 
     

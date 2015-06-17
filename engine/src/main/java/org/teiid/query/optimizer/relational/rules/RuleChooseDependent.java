@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,6 +53,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil.DependentCostAnalysis;
+import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
@@ -163,12 +165,9 @@ public final class RuleChooseDependent implements OptimizerRule {
             rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
         }
         
-        if (!matches.isEmpty() && plan.getFirstChild() != null && plan.getFirstChild().getType() == NodeConstants.Types.ACCESS) {
+        if (!matches.isEmpty() && plan.getParent() != null) {
         	//this can happen if we create a fully pushable plan from full dependent join pushdown
-        	PlanNode newRoot = RuleRaiseAccess.raiseAccessNode(plan, plan.getFirstChild(), metadata, capFinder, true, null, context);
-        	if (newRoot != null) {
-        		return newRoot;
-        	}
+        	return plan.getParent();
         }
         
         return plan;
@@ -347,7 +346,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         	}
         }
         MakeDep makeDep = (MakeDep)sourceNode.getProperty(Info.MAKE_DEP);
-    	if (fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions, isLeft) || fullPushOnly) {
+    	if (fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions) || fullPushOnly) {
     		return false;
     	}
 
@@ -420,7 +419,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 			QueryMetadataInterface metadata,
 			CapabilitiesFinder capabilitiesFinder, CommandContext context,
 			PlanNode indNode,
-			RuleStack rules, MakeDep makeDep, AnalysisRecord analysisRecord, List independentExpressions, boolean isLeft) throws QueryMetadataException,
+			RuleStack rules, MakeDep makeDep, AnalysisRecord analysisRecord, List independentExpressions) throws QueryMetadataException,
 			TeiidComponentException, QueryPlannerException {
 		if (sourceNode.getType() != NodeConstants.Types.ACCESS) {
     		return false; //don't remove as we may raise an access node to make this possible
@@ -451,11 +450,6 @@ public final class RuleChooseDependent implements OptimizerRule {
 		}
 		
 		if (!hasHint) {
-			//cost based decision
-			if (context.getOptions().getDependentJoinPushdownThreshold() < 1) {
-				return false;
-			}
-			
 			//require no lobs
 			for (Expression ex : projected) {
 				if (DataTypeManager.isLOB(ex.getClass())) {
@@ -471,16 +465,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 			if (makeDep != null && makeDep.getMax() != null) {
 				//if the user specifies a max, it's best to just use a regular dependent join
 				return false;
-			}
-	
-			//consider the size of the columns beyond the equi-join
-			int totalWidth = context.getBufferManager().getSchemaSize(projected);
-			float equiWidth = context.getBufferManager().getSchemaSize(independentExpressions);
-			
-			if (totalWidth / equiWidth > context.getOptions().getDependentJoinPushdownThreshold()) {
-				//above the data threshold
-				return false;
-			}
+			}	
 		}
     	
     	/*
@@ -492,14 +477,58 @@ public final class RuleChooseDependent implements OptimizerRule {
     	tempAccess.addGroup(gs);
     	tempAccess.setProperty(Info.MODEL_ID, modelID);
     	indNode.addAsParent(tempAccess);
+    	
+    	PlanNode originalSource = sourceNode;
+    	sourceNode = originalSource.clone();
+    	//more deeply clone
+    	if (sourceNode.hasCollectionProperty(Info.ACCESS_PATTERNS)) {
+    		sourceNode.setProperty(Info.ACCESS_PATTERNS, new ArrayList<AccessPattern>((List)sourceNode.getProperty(Info.ACCESS_PATTERNS)));
+    	}
+    	if (sourceNode.hasCollectionProperty(Info.CONFORMED_SOURCES)) {
+    		sourceNode.setProperty(Info.CONFORMED_SOURCES, new LinkedHashSet<Object>((Set)sourceNode.getProperty(Info.CONFORMED_SOURCES)));
+    	}
+    	originalSource.addAsParent(sourceNode);
     	boolean raised = false;
-    	while (sourceNode.getParent() != null && sourceNode.getParent().getParent() != null && RuleRaiseAccess.raiseAccessNode(sourceNode, sourceNode, metadata, capabilitiesFinder, true, null, context) != null) {
+    	boolean moreProcessing = false;
+    	boolean first = true;
+    	while (sourceNode.getParent() != null && RuleRaiseAccess.raiseAccessNode(sourceNode, sourceNode, metadata, capabilitiesFinder, true, null, context) != null) {
     		raised = true;
+    		if (first) { //raising over join required
+    			first = false;
+    			continue; 
+    		}
+			switch (sourceNode.getFirstChild().getType()) {
+			case NodeConstants.Types.PROJECT:
+				//TODO: check for correlated subqueries
+				if (sourceNode.getFirstChild().hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+					moreProcessing = true;
+				}
+				break;
+			case NodeConstants.Types.SORT:
+			case NodeConstants.Types.DUP_REMOVE:
+			case NodeConstants.Types.GROUP:
+			case NodeConstants.Types.SELECT:
+			case NodeConstants.Types.TUPLE_LIMIT:
+			case NodeConstants.Types.JOIN:
+				moreProcessing = true;
+				break;
+			}
 		}
     	if (!raised) {
     		tempAccess.getParent().replaceChild(tempAccess, tempAccess.getFirstChild());
+    		sourceNode.getParent().replaceChild(sourceNode, sourceNode.getFirstChild());
     		return false;
     	}
+    	if (!moreProcessing && !hasHint) {
+			//restore the plan
+			if (sourceNode.getParent() != null) {
+				sourceNode.getParent().replaceChild(sourceNode, sourceNode.getFirstChild());	
+			} else {
+				sourceNode.removeAllChildren();
+			}
+			return false;
+    	}
+    	originalSource.getParent().replaceChild(originalSource, originalSource.getFirstChild());
 		//all the references to any groups from this join have to changed over to the new group
 		//and we need to insert a source/project node to turn this into a proper plan
 		PlanNode project = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);

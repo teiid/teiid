@@ -315,7 +315,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 		Insert insert = new Insert(table, cols, evs);
 		insert.setParameterValues(vals.iterator());
 		JDBCUpdateExecution ex = this.executionFactory.createUpdateExecution(insert, context, context.getRuntimeMetadata(), getConnection());
-		int size = this.executionFactory.getMaxDependentInPredicates() * this.executionFactory.getMaxInCriteriaSize();
+		int size = this.executionFactory.getMaxDependentInPredicates() * this.executionFactory.getMaxInCriteriaSize() / cols.size();
 		ex.setMaxPreparedInsertBatchSize(Math.max(size, this.executionFactory.getMaxPreparedInsertBatchSize()));
 		ex.setAtomic(false);
 		ex.execute();

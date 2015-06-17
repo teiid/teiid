@@ -36,6 +36,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.Array;
 import org.teiid.language.Comparison;
+import org.teiid.language.Literal;
 import org.teiid.language.Parameter;
 import org.teiid.language.Select;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -1246,6 +1247,24 @@ public class TestDependentJoins {
 		assertEquals(1, vals.size());
     }
     
+    @Test public void testBindings() throws Exception {
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.DEPENDENT_JOIN_BINDINGS, true);
+		ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, /*+ makedep */ pm2.g1 where (pm1.g1.e1 = pm2.g1.e1)", TestOptimizer.example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		List<?>[] expected = new List<?>[] { 
+            Arrays.asList(new Object[] { "a", 1, 2 }), //$NON-NLS-1$
+        };  
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+		dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 1)});
+		dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE g_0.e1 = 'a' ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2)});
+		TestProcessor.helpProcess(plan, dataManager, expected);
+		Select select = (Select)dataManager.getPushdownCommands().get(1);
+		assertTrue(((Literal)((Comparison)select.getWhere()).getRightExpression()).isBindEligible());
+    }
+    
     /**
      * Test if the join cannot be pushed due to other capabilities
      * @throws Exception
@@ -1275,16 +1294,16 @@ public class TestDependentJoins {
     @Test public void testFullDepJoinOptimizer() throws Exception {
     	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
     	caps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, true);
-    	String sql = "select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 where (pm1.g1.e1 = pm2.g1.e1)";
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	String sql = "select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 where (pm1.g1.e1 = pm2.g1.e1) limit 10";
     	TransformationMetadata metadata = TestOptimizer.example1();
     	RealMetadataFactory.setCardinality("pm1.g1", 100, metadata);
     	metadata.getElementID("pm2.g1.e1").setDistinctValues(1000);
     	RealMetadataFactory.setCardinality("pm2.g1", 1000, metadata);
     	CommandContext cc = new CommandContext();
-    	cc.getOptions().setDependentJoinPushdownThreshold(3);
     	cc.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
 		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
-		TestOptimizer.checkAtomicQueries(new String[] {"WITH TEIID_TEMP__1 (col1, col2) AS (<dependent values>) SELECT g_0.col1, g_0.col2, g_1.e2 FROM TEIID_TEMP__1 AS g_0, pm2.g1 AS g_1 WHERE g_0.col1 = g_1.e1" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
+		TestOptimizer.checkAtomicQueries(new String[] {"WITH TEIID_TEMP__1 (col1, col2) AS (<dependent values>) SELECT g_0.col1 AS c_0, g_0.col2 AS c_1, g_1.e2 AS c_2 FROM TEIID_TEMP__1 AS g_0, pm2.g1 AS g_1 WHERE g_0.col1 = g_1.e1 LIMIT 10" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		List<?>[] expected = new List<?>[] { 
             Arrays.asList(new Object[] { "a", 2, 1 }), //$NON-NLS-1$
@@ -1292,10 +1311,10 @@ public class TestDependentJoins {
 		
 		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
 		dataManager.addData("SELECT g_0.e1, g_0.e2 FROM g1 AS g_0", new List<?>[] {Arrays.asList("a", 1)});
-		dataManager.addData("WITH TEIID_TEMP__1 (e1, e2) AS (?) SELECT g_0.col1, g_0.col2, g_1.e2 FROM TEIID_TEMP__1 AS g_0, g1 AS g_1 WHERE g_0.col1 = g_1.e1", new List<?>[] {Arrays.asList("a", 2, 1)});
+		dataManager.addData("WITH TEIID_TEMP__1 (e1, e2) AS (?) SELECT g_0.col1 AS c_0, g_0.col2 AS c_1, g_1.e2 AS c_2 FROM TEIID_TEMP__1 AS g_0, g1 AS g_1 WHERE g_0.col1 = g_1.e1 LIMIT 10", new List<?>[] {Arrays.asList("a", 2, 1)});
 		TestProcessor.helpProcess(plan, dataManager, expected);
 		
-		cc.getOptions().setDependentJoinPushdownThreshold(1.01f);
+		caps.setCapabilitySupport(Capability.ROW_LIMIT, false);
 		plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
 		TestOptimizer.checkAtomicQueries(new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
     }

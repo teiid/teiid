@@ -161,6 +161,8 @@ public class DependentCriteriaProcessor {
     private int maxPredicates;
     private RelationalNode dependentNode;
     private boolean pushdown;
+    private boolean useBindings;
+    private boolean complexQuery;
 
     //initialization state
     private List<Criteria> queryCriteria;
@@ -254,25 +256,27 @@ public class DependentCriteriaProcessor {
         		//TODO: better handling for the correlated composite case
         		totalPredicates = Math.max(totalPredicates, this.maxPredicates);
         	}
+        	long maxParams = this.maxPredicates * this.maxSetSize;
         	maxSize = Integer.MAX_VALUE;
         	if (this.maxSetSize > 0) {
         		maxSize = this.maxSetSize;
         		if (this.maxPredicates > 0 && totalPredicates > this.maxPredicates) {
         			//scale the max based upon the number of predicates - this is not perfect, but sufficient for most situations
-        			long maxParams = this.maxPredicates * this.maxSetSize;
         			maxSize = Math.max(1, maxParams/totalPredicates);
         		}
         	}
         	
         	//determine push down handling
 			if (pushdown) {
-	        	boolean pushed = false;
 				List<Criteria> newCriteria = new ArrayList<Criteria>();
+				long params = 0;
+				int sets = 0;
 				for (Criteria criteria : queryCriteria) {
 					if (!(criteria instanceof DependentSetCriteria)) {
 						newCriteria.add(criteria);
 						continue;
 					}
+					sets++;
 					DependentSetCriteria dsc = (DependentSetCriteria) criteria;
 					TupleState ts = dependentState.get(dsc.getContextSymbol());
 					DependentValueSource dvs = ts.dvs;
@@ -283,19 +287,24 @@ public class DependentCriteriaProcessor {
 									&& dvs.getTupleBuffer().getRowCount() > dsc.getMakeDepOptions().getMax())) {
 						continue; // don't try to pushdown
 					}
-					dsc = dsc.clone();
-					if (!pushed) {
-						//determine if this will be more than 1 source query
-						if (dvs.getTupleBuffer().getRowCount() > maxSize) {
-							pushed = true;
-						}
-						// TODO: this assumes that if any one of the dependent
-						// joins are pushed, then they all are
+					int cols = 1;
+					if (dsc.getExpression() instanceof Array) {
+						cols = ((Array)dsc.getExpression()).getExpressions().size();
 					}
+					dsc = dsc.clone();
+					//determine if this will be more than 1 source query
+					params += cols * dvs.getTupleBuffer().getRowCount();
+					// TODO: this assumes that if any one of the dependent
+					// joins are pushed, then they all are
 					dsc.setDependentValueSource(dvs);
 					newCriteria.add(dsc);
 				}
-				if (pushed) {
+				int maxParamThreshold = 3; //TODO: see if this should be a source tunable parameter
+				                           //generally this value accounts for the additional overhead of temp table creation
+				if (params > maxParams && (sets > 1 || complexQuery || params > maxParams * maxParamThreshold)) {
+					//use the pushdown only in limited scenarios
+					//only if we will produce more than two source queries
+					//and only if the we could produce a cross set or have a complex query
 					return Criteria.combineCriteria(newCriteria);
 				}
 			}
@@ -459,21 +468,21 @@ public class DependentCriteriaProcessor {
             return QueryRewriter.FALSE_CRITERIA;
     	}
     	int numberOfSets = 1;
-    	int maxSize = Integer.MAX_VALUE;
+    	int setSize = Integer.MAX_VALUE;
     	if (this.maxSetSize > 0) {
-    		maxSize = (int) Math.max(1, this.maxSetSize/state.valueCount);
-    		numberOfSets = state.replacement.size()/maxSize + (state.replacement.size()%maxSize!=0?1:0);
+    		setSize = (int) Math.max(1, this.maxSetSize/state.valueCount);
+    		numberOfSets = state.replacement.size()/setSize + (state.replacement.size()%setSize!=0?1:0);
     	}
     	Iterator<Object> iter = state.replacement.iterator();
     	ArrayList<Criteria> orCrits = new ArrayList<Criteria>(numberOfSets);
     	
     	for (int i = 0; i < numberOfSets; i++) {
-    		if (maxSize == 1 || i + 1 == state.replacement.size()) {
+    		if (setSize == 1 || i + 1 == state.replacement.size()) {
 				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, newConstant(iter.next())));    				
 			} else {
-	    		List<Constant> vals = new ArrayList<Constant>(Math.min(state.replacement.size(), maxSize));
+	    		List<Constant> vals = new ArrayList<Constant>(Math.min(state.replacement.size(), setSize));
 				
-	    		for (int j = 0; j < maxSize && iter.hasNext(); j++) {
+	    		for (int j = 0; j < setSize && iter.hasNext(); j++) {
 	    			Object val = iter.next();
 	                vals.add(newConstant(val));
 	            }
@@ -492,15 +501,25 @@ public class DependentCriteriaProcessor {
     
     private Constant newConstant(Object val) {
     	Constant c = new Constant(val);
-    	//TODO: validate that this is a reasonable approach
-    	//we are using bind variables since that helps limit the size of the source sql
-    	//but a prepared plan is really of no use in this scenario
-    	c.setBindEligible(true);
+    	if (useBindings) {
+	    	//TODO: validate that this is a reasonable approach
+	    	//we are using bind variables since that helps limit the size of the source sql
+	    	//but a prepared plan is really of no use in this scenario
+	    	c.setBindEligible(true);
+    	}
     	return c;
     }
 
 	public void setPushdown(boolean pushdown) {
 		this.pushdown = pushdown;
 	}
-
+	
+	public void setUseBindings(boolean useBindings) {
+		this.useBindings = useBindings;
+	}
+	
+	public void setComplexQuery(boolean complexQuery) {
+		this.complexQuery = complexQuery;
+	}
+	
 }

@@ -516,4 +516,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsPartialFiltering() {
 		return delegate.supportsPartialFiltering();
 	}
+	@Override
+	public boolean useBindingsForDependentJoin() {
+		return delegate.useBindingsForDependentJoin();
+	}
 }
