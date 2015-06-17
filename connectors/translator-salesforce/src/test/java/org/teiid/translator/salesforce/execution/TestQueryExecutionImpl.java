@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -59,7 +60,6 @@ public class TestQueryExecutionImpl {
 		qr.setRecords(new SObject[] {so});
 		qr.setDone(false);
 		QueryResult finalQr = new QueryResult();
-		so.addField("Name",  null);
 		finalQr.setRecords(new SObject[] {so});
 		finalQr.setDone(true);
 		Mockito.stub(sfc.query("SELECT Account.Name FROM Account", 0, false)).toReturn(qr);
@@ -68,6 +68,26 @@ public class TestQueryExecutionImpl {
 		qei.execute();
 		assertNotNull(qei.next());
 		assertNotNull(qei.next());
+		assertNull(qei.next());
+	}
+	
+	@Test public void testJoin() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
+		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+		QueryResult qr = new QueryResult();
+		SObject so = new SObject();
+		so.setType("Account");
+		so.addField("Name", "account name");
+		SObject so1 = new SObject();
+		so1.setType("Contact");
+		so1.addField("Id", "contact id");
+		so.addField("Contacts", so1);
+		qr.setRecords(new SObject[] {so});
+		qr.setDone(true);
+		Mockito.stub(sfc.query("SELECT Account.Name, Contact.Id FROM Contact WHERE Contact.AccountId != NULL", 0, false)).toReturn(qr);
+		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
+		qei.execute();
+		assertEquals(Arrays.asList("account name", "contact id"), qei.next());
 		assertNull(qei.next());
 	}
 	
