@@ -21,6 +21,8 @@
  */
 package org.teiid.olingo.service;
 
+import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -110,7 +112,7 @@ public class OData4EntitySchemaBuilder {
             // adding properties
             List<CsdlProperty> properties = new ArrayList<CsdlProperty>();
             for (Column c : table.getColumns()) {
-                properties.add(buildProperty(c));
+                properties.add(buildProperty(c, isPartOfPrimaryKey(table, c.getName())?false:(c.getNullType() == NullType.Nullable)));
             }
             entityType.setProperties(properties);
             if (hasStream(properties)) {
@@ -161,11 +163,11 @@ public class OData4EntitySchemaBuilder {
         return false;
     }
 
-    private static CsdlProperty buildProperty(Column c) {
+    private static CsdlProperty buildProperty(Column c, boolean nullable) {
         CsdlProperty property = new CsdlProperty()
                 .setName(c.getName())
                 .setType(ODataTypeManager.odataType(c.getRuntimeType()).getFullQualifiedName())
-                .setNullable(c.getNullType() == NullType.Nullable);
+                .setNullable(nullable);
 
         if (DataTypeManager.isArrayType(c.getRuntimeType())) {
             property.setCollection(true);
@@ -185,6 +187,30 @@ public class OData4EntitySchemaBuilder {
             }
         }
         return property;
+    }
+    
+    static boolean isPartOfPrimaryKey(Table table, String columnName) {
+        KeyRecord pk = table.getPrimaryKey();
+        if (hasColumn(pk, columnName)) {
+            return true;
+        }
+        for (KeyRecord key:table.getUniqueKeys()) {
+            if (hasColumn(key, columnName)) {
+                return true;
+            }            
+        }
+        return false;
+    }
+    
+    static boolean hasColumn(KeyRecord pk, String columnName) {
+        if (pk != null) {
+            for (Column column : pk.getColumns()) {
+                if (getRecordName(column).equals(columnName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     
     private static KeyRecord getIdentifier(Table table) {
@@ -510,7 +536,7 @@ public class OData4EntitySchemaBuilder {
 
         ArrayList<CsdlProperty> props = new ArrayList<CsdlProperty>();
         for (Column c : returnColumns.getColumns()) {
-            props.add(buildProperty(c));
+            props.add(buildProperty(c, (c.getNullType() == NullType.Nullable)));
         }
         complexType.setProperties(props);
         return complexType;
