@@ -32,7 +32,7 @@ import java.util.Stack;
 public class SimpleContentHandler implements ContentHandler {
 	
 	private Stack<Object> stack = new Stack<Object>();
-	private String name;
+	private Stack<String> nameStack = new Stack<String>();
 	private Object result;
 
 	@Override
@@ -69,21 +69,20 @@ public class SimpleContentHandler implements ContentHandler {
 	@Override
 	public boolean startObjectEntry(String key) throws ParseException,
 			IOException {
-		name = key;
+		nameStack.push(key);
 		return true;
 	}
 
 	@Override
 	public boolean endObjectEntry() throws ParseException, IOException {
 		Object parent = stack.lastElement();
-		((Map<String, Object>)parent).put(name, result);
-		name = null;
+		((Map<String, Object>)parent).put(nameStack.pop(), result);
 		return true;
 	}
 
 	@Override
 	public boolean startArray() throws ParseException, IOException {
-		List<String> current = new ArrayList<String>();
+		List<Object> current = new ArrayList<Object>();
 		stack.add(current);
 		return true;
 	}
