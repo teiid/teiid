@@ -366,6 +366,7 @@
             <translator name="derby" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="h2" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="hsql" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="hana" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="informix" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="metamatrix" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="mysql" module="org.jboss.teiid.translator.jdbc"/>

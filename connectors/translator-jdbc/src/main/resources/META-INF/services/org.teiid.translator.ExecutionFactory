@@ -3,6 +3,7 @@ org.teiid.translator.jdbc.SimpleJDBCExecutionFactory #jdbc-simple
 org.teiid.translator.jdbc.access.AccessExecutionFactory # Access
 org.teiid.translator.jdbc.db2.DB2ExecutionFactory #db2
 org.teiid.translator.jdbc.derby.DerbyExecutionFactory #Derby
+org.teiid.translator.jdbc.hana.HanaExecutionFactory #hana
 org.teiid.translator.jdbc.h2.H2ExecutionFactory #h2
 org.teiid.translator.jdbc.hsql.HsqlExecutionFactory #hsql
 org.teiid.translator.jdbc.informix.InformixExecutionFactory #informix
@@ -22,3 +23,4 @@ org.teiid.translator.jdbc.teiid.TeiidExecutionFactory #teiid
 org.teiid.translator.jdbc.teradata.TeradataExecutionFactory #teradata
 org.teiid.translator.jdbc.excel.ExcelExecutionFactory #excel-odbc
 org.teiid.translator.jdbc.postgresql.GreenplumExecutionFactory #greenplum
+org.teiid.translator.jdbc.ucanaccess.UCanAccessExecutionFactory #ucanaccess
