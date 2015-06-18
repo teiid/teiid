@@ -27,9 +27,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.Properties;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -46,11 +43,11 @@ import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
-import org.teiid.jdbc.TeiidDriver;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
+import org.teiid.jdbc.TeiidDriver;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
@@ -97,7 +94,6 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		assertTrue(statusCode == HttpStatus.SC_OK);
 		String stringResults = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata-results.txt"));
 		String response=method.getResponseBodyAsString();
-		System.out.println(response);
 //		if (response.indexOf("Edm.Int64") >  -1 ) {
 //		  stringResults = stringResults.replace("Edm.Int32", "Edm.Int64");    
 //		}

@@ -219,7 +219,26 @@
                                         </resource>
                                     </resources>
                                 </configuration>
-                            </execution>                                                           
+                            </execution>
+                            <execution>
+                                <id>copy-resources4</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/${jbossas-test-version}/standalone/deployments</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>../../odata/target/</directory>
+                                            <includes>
+                                            <include>teiid-odata-${project.version}.war</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>                                                                                        
                         </executions>
                     </plugin>                    
                     <plugin>
