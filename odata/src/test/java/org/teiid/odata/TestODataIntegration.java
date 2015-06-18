@@ -82,7 +82,6 @@ import org.teiid.jdbc.TeiidDriver;
 import org.teiid.json.simple.ContentHandler;
 import org.teiid.json.simple.JSONParser;
 import org.teiid.json.simple.ParseException;
-import org.teiid.json.simple.SimpleContentHandler;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
@@ -437,8 +436,9 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("vw");
-			mmd.addSourceMetadata("ddl", "create view x (a string primary key, b char, c string[], d integer) as select 'ab\u0000cd\u0001', char(22), ('a\u00021','b1'), 1;");
+			mmd.setSchemaSourceType("ddl");
 			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b char, c string[], d integer) as select 'ab\u0000cd\u0001', char(22), ('a\u00021','b1'), 1;");
 			es.deployVDB("northwind", mmd);
 			
 			TeiidDriver td = es.getDriver();
@@ -464,8 +464,9 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("vw");
-			mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer[], c string[][]) as select 'x', (1, 2, 3), (('a','b'),('c','d'));");
+			mmd.setSchemaSourceType("ddl");
 			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b integer[], c string[][]) as select 'x', (1, 2, 3), (('a','b'),('c','d'));");
 			es.deployVDB("northwind", mmd);
 			
 			TeiidDriver td = es.getDriver();
@@ -493,8 +494,9 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("vw");
-			mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+			mmd.setSchemaSourceType("ddl");
 			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
 			es.deployVDB("northwind", mmd);
 			
 			TeiidDriver td = es.getDriver();
@@ -558,8 +560,9 @@ public class TestODataIntegration extends BaseResourceTest {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
-            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setSchemaSourceType("ddl");
             mmd.setModelType(Type.VIRTUAL);
+            mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
             es.deployVDB("northwind", mmd);
             
             TeiidDriver td = es.getDriver();
@@ -591,8 +594,9 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("vw");
-			mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+			mmd.setSchemaSourceType("ddl");
 			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
 			es.deployVDB("northwind", mmd);
 			
 			TeiidDriver td = es.getDriver();
@@ -656,7 +660,8 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("m");
-			mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
 			mmd.addSourceMapping("x", "x", null);
 			es.deployVDB("northwind", mmd);
 			
@@ -708,7 +713,8 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("m");
-			mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
 			mmd.addSourceMapping("x", "x", null);
 			es.deployVDB("northwind", mmd);
 			
@@ -743,7 +749,8 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("m");
-			mmd.addSourceMetadata("ddl", "create foreign procedure x () returns table(y string);");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create foreign procedure x () returns table(y string);");
 			mmd.addSourceMapping("x", "x", null);
 			es.deployVDB("northwind", mmd);
 			
@@ -818,7 +825,8 @@ public class TestODataIntegration extends BaseResourceTest {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("m");
 			mmd.setModelType(Type.VIRTUAL);
-			mmd.addSourceMetadata("ddl", "create view v as select 1");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create view v as select 1");
 			
 			Properties props = new Properties();
 			props.setProperty(ODBCServerRemoteImpl.CONNECTION_PROPERTY_PREFIX + ExecutionProperties.RESULT_SET_CACHE_MODE, "true");
@@ -832,44 +840,6 @@ public class TestODataIntegration extends BaseResourceTest {
 			ConnectionImpl impl = lc.getConnection();
 			
 			assertEquals("true", impl.getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE));
-		} finally {
-			es.stop();
-		}
-	}
-	
-	@Test public void testEmbeddedComplexType() throws Exception {
-		EmbeddedServer es = new EmbeddedServer();
-		es.start(new EmbeddedConfiguration());
-		try {
-			ModelMetaData mmd = new ModelMetaData();
-			mmd.setName("m");
-			mmd.setModelType(Type.VIRTUAL);
-			mmd.addSourceMetadata("ddl", "CREATE VIEW Employees ( EmployeeID integer primary key, "
-					+ "LastName varchar(20), FirstName varchar(10), "
-					+ "Address varchar(60) options (\"teiid_odata:columngroup\" 'Address', \"teiid_odata:complextype\" 'NorthwindModel.Address'),"
-					+ "City varchar(15) options (\"teiid_odata:columngroup\" 'Address', \"teiid_odata:complextype\" 'NorthwindModel.Address')) as "
-					+ "select 1, 'wayne', 'john', '123 place', 'hollywood'");
-			
-			es.deployVDB("northwind", mmd);
-			
-			TeiidDriver td = es.getDriver();
-			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
-			lc.setDriver(td);
-			MockProvider.CLIENT = lc;
-			
-	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Employees?$format=json&$select=Address"));
-	        ClientResponse<String> response = request.get(String.class);
-	        assertEquals(200, response.getStatus());
-	        JSONParser parser = new JSONParser();
-	        SimpleContentHandler sch = new SimpleContentHandler();
-	        parser.parse(response.getEntity(), sch);
-	        Map<String, ?> result = (Map<String, ?>)sch.getResult();
-	        List<Object> results = (List<Object>)((Map<String, ?>)result.get("d")).get("results");
-	        result = (Map<String, ?>)results.get(0);
-	        result = (Map<String, ?>)result.get("Address");
-	        assertEquals("123 place", result.get("Address"));
-	        assertEquals("hollywood", result.get("City"));
 		} finally {
 			es.stop();
 		}

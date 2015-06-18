@@ -59,7 +59,7 @@ public class ODataEntitySchemaBuilder {
 		}
 	}
 	
-	public static EdmDataServices buildMetadata(Schema schema) {
+	static EdmDataServices buildMetadata(Schema schema) {
 		try {
 			List<EdmSchema.Builder> edmSchemas = new ArrayList<EdmSchema.Builder>();
 			buildEntityTypes(schema, edmSchemas, true);

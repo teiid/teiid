@@ -54,7 +54,6 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 
 @SuppressWarnings("nls")
 public class TestODataSQLStringVisitor {
@@ -192,20 +191,16 @@ public class TestODataSQLStringVisitor {
 	private void testSelect(String expected, String tableName, String filter, String select, String orderby, int top, String navProp, OEntityKey entityKey) throws Exception {
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind", "nw");		
 		ODataSQLBuilder visitor = new ODataSQLBuilder(metadata.getMetadataStore(), false);
-		EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore().getSchema("nw"));
-		EdmEntitySet entitySet = edm.findEdmEntitySet(tableName);
 		QueryInfo qi = buildQueryInfo(filter, select, orderby, top);
-		Query query = visitor.selectString(tableName, entitySet, edm, qi, entityKey, navProp, false);
+		Query query = visitor.selectString(tableName, qi, entityKey, navProp, false);
 		assertEquals(expected, query.toString()); // comma inserted by visitor
 	}
 	
 	private void testSelectCountStar(String expected, String tableName, String filter, String select, String orderby, int top) throws Exception {
 		TransformationMetadata metadata = RealMetadataFactory.example1();
 		ODataSQLBuilder visitor = new ODataSQLBuilder(metadata.getMetadataStore(), false);
-		EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore().getSchema("pm1"));
-		EdmEntitySet entitySet = edm.findEdmEntitySet(tableName);
 		QueryInfo qi = buildQueryInfo(filter, select, orderby, top);
-		Query query = visitor.selectString(tableName, entitySet, edm, qi, null, null, true);
+		Query query = visitor.selectString(tableName, qi, null, null, true);
 		assertEquals(expected, query.toString()); // comma inserted by visitor
 	}	
 
