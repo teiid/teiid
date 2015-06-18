@@ -178,7 +178,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 					        || (property.getType() instanceof EdmCollectionType 
 		                    && ((EdmCollectionType)property.getType()).getItemType().isSimple())) {
 						Column column = addPropertyAsColumn(mf, table, property, entitySet, ep.getName());
-						column.setProperty(COMPLEX_TYPE, embedded.getName()); // complex type
+						column.setProperty(COMPLEX_TYPE, embedded.getFullyQualifiedTypeName()); // complex type
 						column.setProperty(COLUMN_GROUP, ep.getName()); // name of parent column
 					}
 					else {

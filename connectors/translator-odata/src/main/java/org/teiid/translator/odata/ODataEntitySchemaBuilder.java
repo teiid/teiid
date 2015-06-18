@@ -21,9 +21,11 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.odata4j.edm.*;
@@ -120,7 +122,46 @@ public class ODataEntitySchemaBuilder {
 	public static void buildEntityTypes(Schema schema, List<EdmSchema.Builder> edmSchemas, boolean preserveEntityTypeName) {
 		List<EdmEntitySet.Builder> entitySets = new ArrayList<EdmEntitySet.Builder>();
 		List<EdmEntityType.Builder> entityTypes = new ArrayList<EdmEntityType.Builder>();
+		LinkedHashMap<String, EdmComplexType.Builder> complexTypes = new LinkedHashMap<String, EdmComplexType.Builder>();
 	    
+		//first pass, build complex types
+		for (Table table: schema.getTables().values()) {
+			// skip if the table does not have the PK or unique
+			KeyRecord primaryKey = table.getPrimaryKey();
+			List<KeyRecord> uniques = table.getUniqueKeys();
+			if (primaryKey == null && uniques.isEmpty()) {
+				LogManager.logDetail(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17017, table.getFullName()));
+				continue;
+			}
+			
+			for (Column c : table.getColumns()) {
+				String name = c.getSourceName();
+				String complexType = c.getProperty(ODataMetadataProcessor.COMPLEX_TYPE, false);
+				if (complexType == null) {
+					continue;
+				}
+				EdmComplexType.Builder complexTypeBuilder = complexTypes.get(complexType);
+				if (complexTypeBuilder == null) {
+					complexTypeBuilder = EdmComplexType.newBuilder();
+					complexTypes.put(complexType, complexTypeBuilder); 
+					complexTypeBuilder.setName(complexType);
+					complexTypeBuilder.setNamespace(schema.getName());
+				} else if (complexTypeBuilder.findProperty(name) != null) {
+					continue; //already added
+				}
+				EdmProperty.Builder property = EdmProperty.newBuilder(c.getSourceName())
+						.setType(ODataTypeManager.odataType(c.getRuntimeType()))
+						.setNullable(isPartOfPrimaryKey(table, c.getName())?false:c.getNullType() == NullType.Nullable);
+				if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
+					property.setFixedLength(c.isFixedLength())
+						.setMaxLength(c.getLength())
+						.setUnicode(true);
+				}
+				complexTypeBuilder.addProperties(property);
+			}
+		}
+		
+		//second pass, add all columns
 		for (Table table: schema.getTables().values()) {
 			
 			// skip if the table does not have the PK or unique
@@ -150,10 +191,22 @@ public class ODataEntitySchemaBuilder {
 					entityType.addKeys(c.getName());
 				}
 	    	}
-			
+	    	
+	    	HashSet<String> columnGroups = new HashSet<String>();
 			// adding properties
 			for (Column c : table.getColumns()) {
-				EdmProperty.Builder property = EdmProperty.newBuilder(c.getName())
+				String complexType = c.getProperty(ODataMetadataProcessor.COMPLEX_TYPE, false);
+				if (complexType != null) {
+					String columnGroup = c.getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
+					if (!columnGroups.add(columnGroup)) {
+						continue;
+					}
+					EdmProperty.Builder property = EdmProperty.newBuilder(columnGroup)
+							.setType(complexTypes.get(complexType).build());
+					entityType.addProperties(property);
+					continue;
+				}
+				EdmProperty.Builder property = EdmProperty.newBuilder(c.getSourceName())
 						.setType(ODataTypeManager.odataType(c.getRuntimeType()))
 						.setNullable(isPartOfPrimaryKey(table, c.getName())?false:c.getNullType() == NullType.Nullable);
 				if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
@@ -186,7 +239,8 @@ public class ODataEntitySchemaBuilder {
 		EdmSchema.Builder modelSchema = EdmSchema.newBuilder()
 				.setNamespace(schema.getName())
 				.addEntityTypes(entityTypes)
-				.addEntityContainers(entityContainer);
+				.addEntityContainers(entityContainer)
+				.addComplexTypes(complexTypes.values());
 		
 		edmSchemas.add(modelSchema);
 	}	

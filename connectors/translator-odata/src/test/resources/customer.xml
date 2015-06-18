@@ -12,18 +12,28 @@
     </author>
     <content type="application/xml">
         <m:properties>
+           <d:Shipping m:type="NorthwindModel.Address">
+                <d:Address>Obere Str. 57</d:Address>
+                <d:City>Berlin</d:City>
+                <d:Region m:null="true" />
+                <d:PostalCode>12209</d:PostalCode>
+                <d:Country>Germany</d:Country>
+                <d:Phone>030-0074321</d:Phone>
+                <d:Fax>030-0076545</d:Fax>
+            </d:Shipping>
+            <d:Mailing m:type="NorthwindModel.Address">
+                <d:Address>Obere Str. 57</d:Address>
+                <d:City>Berlin</d:City>
+                <d:Region m:null="true" />
+                <d:PostalCode>12209</d:PostalCode>
+                <d:Country>Germany</d:Country>
+                <d:Phone>030-0074321</d:Phone>
+                <d:Fax>030-0076545</d:Fax>
+            </d:Mailing>
             <d:CustomerID>ALFKI</d:CustomerID>
             <d:CompanyName>Alfreds Futterkiste</d:CompanyName>
             <d:ContactName>Maria Anders</d:ContactName>
             <d:ContactTitle>Sales Representative</d:ContactTitle>
-            <d:Address>Obere Str. 57</d:Address>
-            <d:City>Berlin</d:City>
-            <d:Region m:null="true" />
-            <d:PostalCode>12209</d:PostalCode>
-            <d:Country>Germany</d:Country>
-            <d:Phone>030-0074321</d:Phone>
-            <d:Fax>030-0076545</d:Fax>
         </m:properties>
     </content>
 </entry>
-F

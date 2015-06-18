@@ -151,9 +151,10 @@ public class TestODataQueryExecution {
 		String query = "SELECT * FROM Customers";
 		String expectedURL = "Customers?$select=CustomerID,CompanyName,ContactName,ContactTitle,Mailing,Shipping";
 		
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("customer.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
 		reader.close();
+		assertEquals(18, excution.next().size());
 	}	
 	
 	@Test
