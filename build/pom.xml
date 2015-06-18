@@ -158,7 +158,6 @@
                         <descriptor>assembly/console-jar.xml</descriptor>    
                         <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                         <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
-                        <descriptor>assembly/embedded-dist.xml</descriptor>
                         <descriptor>assembly/server.xml</descriptor>
                         <descriptor>assembly/docker.xml</descriptor>            
                     </descriptors>
@@ -274,7 +273,6 @@
                                 <descriptor>assembly/console-jar.xml</descriptor>
                                 <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                                 <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
-                                <descriptor>assembly/embedded-dist.xml</descriptor>
                                 <descriptor>assembly/server.xml</descriptor>
                                 <descriptor>assembly/docker.xml</descriptor>
                             </descriptors>
