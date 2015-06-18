@@ -22,15 +22,44 @@
 
 package org.teiid.translator.jdbc.hana;
 
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BLOB;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIME;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.VARBINARY;
+
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.GeometryType;
+import org.teiid.language.Argument;
+import org.teiid.language.Array;
+import org.teiid.language.Call;
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.Like;
+import org.teiid.language.Limit;
 import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Parameter;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.Select;
+import org.teiid.language.TableReference;
+import org.teiid.language.WithItem;
+import org.teiid.language.Argument.Direction;
+import org.teiid.language.Like.MatchMode;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -38,34 +67,56 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
-import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.oracle.DayWeekQuarterFunctionModifier;
-import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
-import org.teiid.translator.jdbc.oracle.Log10FunctionModifier;
-import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
+import org.teiid.translator.jdbc.LocateFunctionModifier;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.Version;
 
 @Translator(name = "hana", description = "SAP HANA translator")
 public class HanaExecutionFactory extends JDBCExecutionFactory {
 	
+	public static final Version SPS8 = Version.getVersion("SPS8"); //$NON-NLS-1$
+	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
-	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF7";  //$NON-NLS-1$
+//	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF7";  //$NON-NLS-1$
 	
-	private final class DateAwareExtract extends ExtractFunctionModifier {
-		@Override
-		public List<?> translate(Function function) {
-			Expression ex = function.getParameters().get(0);
-			if ((ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$ 
-					|| (!(ex instanceof ColumnReference) && !(ex instanceof Literal) && !(ex instanceof Function))) {
-				ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
-				function.getParameters().set(0, ex);
-			}
-			return super.translate(function);
-		}
-	}
+	/*
+	 * Date/Time Pushdown Functions 
+	 */
+	public static final String HANA = "hana"; //$NON-NLS-1$
+	public static final String ADD_DAYS = "add_days"; //$NON-NLS-1$
+	public static final String ADD_SECONDS = "add_seconds"; //$NON-NLS-1$
+	public static final String ADD_WORKDAYS = "add_workdays"; //$NON-NLS-1$
+	public static final String ADD_MONTHS = "add_months"; //$NON-NLS-1$
+	public static final String ADD_YEARS = "add_years"; //$NON-NLS-1$
+	public static final String CURRENT_UTCDATE = "current_utcdate"; //$NON-NLS-1$
+	public static final String CURRENT_UTCTIME = "current_utctime"; //$NON-NLS-1$
+	public static final String CURRENT_UTCTIMESTAMP = "current_utctimestamp"; //$NON-NLS-1$
+	public static final String DAYS_BETWEEN = "days_between"; //$NON-NLS-1$
+	public static final String EXTRACT = "extract"; //$NON-NLS-1$
+	public static final String ISOWEEK = "isoweek"; //$NON-NLS-1$
+	public static final String LAST_DAY = "last_day"; //$NON-NLS-1$
+	public static final String LOCALTOUTC = "localtoutc"; //$NON-NLS-1$
+	public static final String NANO100_BETWEEN = "nano100_between"; //$NON-NLS-1$
+	public static final String NEXT_DAY = "next_day"; //$NON-NLS-1$
+	public static final String SECONDS_BETWEEN = "seconds_between"; //$NON-NLS-1$
+	public static final String WEEKDAY = "weekday"; //$NON-NLS-1$
+	public static final String WORKDAYS_BETWEEN = "weekdays_between"; //$NON-NLS-1$
+	
+	/*
+	 * Numeric Pushdown Functions 
+	 */
+	public static final String COSH = "cosh"; //$NON-NLS-1$
+	public static final String BITSET = "bitset"; //$NON-NLS-1$
+	public static final String BITUNSET = "bitunset"; //$NON-NLS-1$
+	public static final String HEXTOBIN = "hextobin"; //$NON-NLS-1$
+	public static final String RAND = "rand"; //$NON-NLS-1$
+	public static final String SINH = "sinh"; //$NON-NLS-1$
+	public static final String TANH = "tanh"; //$NON-NLS-1$
+	public static final String UMINUS = "uminus"; //$NON-NLS-1$
 	
 	public HanaExecutionFactory() {
 	}
@@ -77,67 +128,126 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
 		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("to_nvarchar")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LOG, new Log10FunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new DateAwareExtract());
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DateAwareExtract()); 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new DateAwareExtract()); 
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier("IW"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier("Q"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier("D"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier("DDD"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "locate", true) {
+
 			@Override
-			public List<?> translate(Function function) {
-				function.setName(SourceSystemFunctions.TAN);
-				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
+			public void modify(Function function) {
+				super.modify(function);
+				//If a start index was passed in, we convert to a substring on the search string since
+				//HANA does not support the start index parameter in LOCATE().
+				List<Expression> args = function.getParameters();
+				if (args.size() > 2) {
+		        	List<Expression> substringArgs = new ArrayList<Expression>();
+		            substringArgs.add(args.get(0));
+		            substringArgs.add(args.get(2));
+		            args.set(0, getLanguageFactory().createFunction(SourceSystemFunctions.SUBSTRING, substringArgs, null));
+		            args.remove(2);
+		        }
+				
 			}
-		});
-	      
+        	
+    	});
+        registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("dayname")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.NOW, new AliasModifier("current_timestamp")); //$NON-NLS-1$ 
+        
+        //spatial functions
+        registerFunctionModifier(SourceSystemFunctions.ST_ASEWKT, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_ASGEOJSON, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_SRID, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new HanaSpatialFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new HanaSpatialFunctionModifier());
+        
+          
 		//////////////////////////////////////////////////////////
 		//TYPE CONVERION MODIFIERS////////////////////////////////
 		//////////////////////////////////////////////////////////
         ConvertModifier convertModifier = new ConvertModifier();
-        //TODO Add type mappings
-    	//convertModifier.addTypeMapping(nativeType, targetType);
-    	convertModifier.addTypeMapping("nvarchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("date", FunctionModifier.DATE, FunctionModifier.TIME); //$NON-NLS-1$
+        convertModifier.addTypeMapping("tinyint", FunctionModifier.BOOLEAN, FunctionModifier.BYTE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("bigint", FunctionModifier.LONG, FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+        //convertModifier.addTypeMapping("smalldecimal", FunctionModifier.FLOAT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        convertModifier.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
+        //convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
     	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_varchar", DATE_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_varchar", TIME_FORMAT)); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				//if column and type is date, just use date format
-				Expression ex = function.getParameters().get(0);
-				String format = TIMESTAMP_FORMAT; 
-				if (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
-					format = DATETIME_FORMAT; 
-				} else if (!(ex instanceof Literal) && !(ex instanceof Function)) {
-					//this isn't needed in every case, but it's simpler than inspecting the expression more
-					ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
-				}
-				return Arrays.asList("to_char(", ex, ", '", format, "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		});
+    	//convertModifier.addTypeMapping("seconddate", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("nvarchar", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("nvarchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+    	//convertModifier.addTypeMapping("alphanum", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("varbinary", FunctionModifier.VARBINARY); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("blob", FunctionModifier.BLOB); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("nclob", FunctionModifier.CLOB); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("text", FunctionModifier.XML); //$NON-NLS-1$
+    	//convertModifier.addTypeMapping("shorttext", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("bintext", FunctionModifier.OBJECT); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("st_geometry", FunctionModifier.GEOMETRY); //$NON-NLS-1$
+
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_varchar"), FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_time", TIME_FORMAT)); //$NON-NLS-1$ 
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", DATETIME_FORMAT));  //$NON-NLS-1$ 
+        
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-		
+    	
+    	/*
+    	 * Date/Time Pushdown functions
+    	 */
+    	addPushDownFunction(HANA, ADD_DAYS, DATE, DATE, INTEGER);
+    	addPushDownFunction(HANA, ADD_MONTHS, DATE, DATE, INTEGER);
+    	addPushDownFunction(HANA, ADD_SECONDS, TIMESTAMP, TIMESTAMP, INTEGER);
+    	addPushDownFunction(HANA, ADD_WORKDAYS, DATE, DATE, INTEGER);
+    	addPushDownFunction(HANA, ADD_YEARS, DATE, DATE, INTEGER);
+    	addPushDownFunction(HANA, CURRENT_UTCDATE, DATE);
+    	addPushDownFunction(HANA, CURRENT_UTCTIME, TIME);
+    	addPushDownFunction(HANA, CURRENT_UTCTIMESTAMP, TIMESTAMP);
+    	addPushDownFunction(HANA, DAYS_BETWEEN, INTEGER, DATE, DATE);
+    	addPushDownFunction(HANA, ISOWEEK, STRING, DATE);
+    	addPushDownFunction(HANA, LAST_DAY, DATE, DATE);
+    	addPushDownFunction(HANA, LOCALTOUTC, TIMESTAMP, TIMESTAMP, STRING);
+    	addPushDownFunction(HANA, NANO100_BETWEEN, INTEGER, DATE, DATE);
+    	addPushDownFunction(HANA, NEXT_DAY, DATE, DATE);
+    	addPushDownFunction(HANA, SECONDS_BETWEEN, INTEGER, DATE, DATE);
+    	addPushDownFunction(HANA, WEEKDAY, INTEGER, DATE);
+    	addPushDownFunction(HANA, WORKDAYS_BETWEEN, DATE, INTEGER);
+    	
+    	/*
+    	 * Numeric Pushdown functions
+    	 */
+    	addPushDownFunction(HANA, COSH, INTEGER, FLOAT);
+    	addPushDownFunction(HANA, BITSET, STRING, VARBINARY, INTEGER, INTEGER);
+    	addPushDownFunction(HANA, BITUNSET, STRING, VARBINARY, INTEGER, INTEGER);
+    	addPushDownFunction(HANA, COSH, FLOAT, FLOAT);
+    	addPushDownFunction(HANA, HEXTOBIN, BLOB, STRING);
+    	addPushDownFunction(HANA, RAND, BLOB);
+    	addPushDownFunction(HANA, SINH, FLOAT, FLOAT);
+    	addPushDownFunction(HANA, TANH, FLOAT, FLOAT);
+    	addPushDownFunction(HANA, UMINUS, INTEGER, INTEGER);
+    	
+	}
+	
+	@Override
+	public String getHibernateDialectClassName() {
+		return "org.hibernate.dialect.HANARowStoreDialect";
 	}
 	
 	@Override
@@ -157,6 +267,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.LOCATE); 
 		supportedFunctions.add(SourceSystemFunctions.LTRIM);
 		supportedFunctions.add(SourceSystemFunctions.REPLACE);
+		supportedFunctions.add(SourceSystemFunctions.LEFT);
 		supportedFunctions.add(SourceSystemFunctions.RIGHT);
 		supportedFunctions.add(SourceSystemFunctions.RPAD);
 		supportedFunctions.add(SourceSystemFunctions.RTRIM);
@@ -200,37 +311,49 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		/////////////////////////////////////////////////////////////////////
 		supportedFunctions.add(SourceSystemFunctions.CURDATE); 
 		supportedFunctions.add(SourceSystemFunctions.CURTIME); 
+		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
 		supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
 		supportedFunctions.add(SourceSystemFunctions.HOUR); 
 		supportedFunctions.add(SourceSystemFunctions.MINUTE); 
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
+		supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
 		supportedFunctions.add(SourceSystemFunctions.QUARTER);
 		supportedFunctions.add(SourceSystemFunctions.SECOND);
 		supportedFunctions.add(SourceSystemFunctions.WEEK);
 		supportedFunctions.add(SourceSystemFunctions.YEAR);
-		//		FUNCTION DAYNAME = "dayname"; 
-		//		FUNCTION FORMATTIMESTAMP = "formattimestamp"; 
-		//		FUNCTION MODIFYTIMEZONE = "modifytimezone"; 
-		//		FUNCTION MONTHNAME = "monthname"; 
-		//		FUNCTION NOW = "now"; 
-		//		FUNCTION PARSETIMESTAMP = "parsetimestamp"; 
-		//		FUNCTION TIMESTAMPADD = "timestampadd"; 
-		//		FUNCTION TIMESTAMPCREATE = "timestampcreate"; 
-		//		FUNCTION TIMESTAMPDIFF = "timestampdiff"; 
 
         /////////////////////////////////////////////////////////////////////
 		//SYSTEM FUNCTIONS///////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////
-		supportedFunctions.add(SourceSystemFunctions.IFNULL); //ALIAS-NVL
-		supportedFunctions.add(SourceSystemFunctions.COALESCE);
+		supportedFunctions.add(SourceSystemFunctions.IFNULL); 
 		supportedFunctions.add(SourceSystemFunctions.NULLIF);
 		
 		/////////////////////////////////////////////////////////////////////
 		//CONVERSION functions///////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////
 		supportedFunctions.add(SourceSystemFunctions.CONVERT);
+		
+		/////////////////////////////////////////////////////////////////////
+		//GEO Spatial functions//////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+		supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+		supportedFunctions.add(SourceSystemFunctions.ST_ASEWKT);
+		supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+		supportedFunctions.add(SourceSystemFunctions.ST_ASGEOJSON);
+		supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+		supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+		supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+		supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+		supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
+		supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+		supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+		supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+		supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+		supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+		
 		
 		return supportedFunctions;
 	}
@@ -244,6 +367,30 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 	}
 
 	@Override
+	public boolean isSourceRequired() {
+		return false;
+	}
+	
+	@Override
+	public List<?> translateGeometryLiteral(Literal l) {
+      return  super.translateGeometryLiteral(l);
+   }
+	
+	
+	@Override
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
+    	if (limit.getRowOffset() > 0) {
+    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	}
+        return null;
+    }
+
+	public void getMetadata(MetadataFactory metadataFactory,
+			Connection connection) throws TranslatorException {
+		super.getMetadata(metadataFactory, connection);
+	}
+
+	@Override
 	public MetadataProcessor<Connection> getMetadataProcessor() {
 		return new HanaMetadataProcessor();
 	}
@@ -252,5 +399,24 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
+	
+	@Override
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	return new SQLConversionVisitor(this) {
+    		
+    		@Override
+    		protected void translateSQLType(Class<?> type, Object obj,
+    				StringBuilder valuesbuffer) {
+    			if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+    				valuesbuffer.append("to_binary("); //$NON-NLS-1$
+    				super.translateSQLType(TypeFacility.RUNTIME_TYPES.STRING, obj, valuesbuffer);
+    				valuesbuffer.append(")"); //$NON-NLS-1$
+    			} else {
+    				super.translateSQLType(type, obj, valuesbuffer);
+    			}
+    		}
+    		
+    	};
+    }
 	
 }

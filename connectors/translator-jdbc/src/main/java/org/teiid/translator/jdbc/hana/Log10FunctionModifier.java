@@ -20,36 +20,33 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.metadata;
+package org.teiid.translator.jdbc.hana;
 
-public class SupportConstants {
+import java.util.List;
 
-	private SupportConstants() {}
-	
-	public static class Model {
-		private Model() {}
-	}
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.LanguageFactory;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 
-	public static class Group {
-		private Group() {}
 
-		public static final int UPDATE = 0;                 
-	}
+public class Log10FunctionModifier extends FunctionModifier {
+    
+    private LanguageFactory languageFactory;
 
-	public static class Element {
-		private Element() {}
-		
-		public static final int SELECT = 0;
-		public static final int SEARCHABLE_LIKE = 1;
-		public static final int SEARCHABLE_COMPARE = 2;
-		public static final int SEARCHABLE_EQUALITY = 3;
-		public static final int NULL = 4;
-		public static final int UPDATE = 5;
-        public static final int DEFAULT_VALUE = 7;
-        public static final int AUTO_INCREMENT = 8;
-        public static final int CASE_SENSITIVE = 9;
-        public static final int NULL_UNKNOWN = 10;
-        public static final int SIGNED = 11;
-	}
+    public Log10FunctionModifier(LanguageFactory languageFactory) {
+        this.languageFactory = languageFactory;
+    }
+
+    @Override
+    public List<?> translate(Function function) {
+        function.setName("log"); //$NON-NLS-1$
+        
+        List<Expression> args = function.getParameters();
+        args.add(args.get(0));
+        args.set(0, languageFactory.createLiteral(new Integer(10), TypeFacility.RUNTIME_TYPES.INTEGER));
+        return null;
+    }
 
 }

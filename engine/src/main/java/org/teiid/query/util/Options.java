@@ -45,7 +45,6 @@ public class Options {
 	private boolean implicitMultiSourceJoin = true;
 	private int joinPrefetchBatches = 10;
 	private boolean sanitizeMessages;
-	private float dependentJoinPushdownThreshold = 0;
 	private boolean requireTeiidCollation;
 	private NullOrder defaultNullOrder = NullOrder.LOW;
 	
@@ -119,21 +118,6 @@ public class Options {
 	
 	public Options sanitizeMessages(boolean b) {
 		this.sanitizeMessages = b;
-		return this;
-	}
-	
-	public float getDependentJoinPushdownThreshold() {
-		return dependentJoinPushdownThreshold;
-	}
-	
-	public void setDependentJoinPushdownThreshold(
-			float dependentJoinPushdownThreshold) {
-		this.dependentJoinPushdownThreshold = dependentJoinPushdownThreshold;
-	}
-	
-	public Options dependentJoinPushdownThreshold(
-			float f) {
-		this.dependentJoinPushdownThreshold = f;
 		return this;
 	}
 	

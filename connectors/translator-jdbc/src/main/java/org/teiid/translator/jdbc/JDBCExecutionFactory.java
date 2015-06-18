@@ -114,6 +114,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
 	protected SQLDialect dialect; 
 	private boolean enableDependentJoins;
+	private boolean useBindingsForDependentJoin = true;
 	private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
 	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
@@ -1365,6 +1366,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     			length = col.getMetadataObject().getLength();
     		}
     		sb.append(d.getTypeName(TypeFacility.getSQLTypeFromRuntimeType(col.getType()), length, precision, scale));
+    		//sb.append(" NOT NULL"); -- needed if we will add an index
     		if (iter.hasNext()) {
     			sb.append(", "); //$NON-NLS-1$
     		}
@@ -1496,6 +1498,17 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @throws SQLException 
 	 */
 	public void intializeConnectionAfterCancel(Connection c) throws SQLException {
+	}
+
+	@Override
+	@TranslatorProperty(display="Use Bindings For Dependent Join", description= "If PreparedStatement bindings should be used for dependent join values.")
+	public boolean useBindingsForDependentJoin() {
+		return useBindingsForDependentJoin;
+	}
+	
+	public void setUseBindingsForDependentJoin(
+			boolean useBindingsForDependentJoin) {
+		this.useBindingsForDependentJoin = useBindingsForDependentJoin;
 	}
 	
 }

@@ -212,7 +212,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			for (Expression val : exprs) {
 				Literal l = (Literal)val;
 				if (l.getValue() != null) {
-					attr.add(IQueryToLdapSearchParser.getExpressionString(l));
+					attr.add(IQueryToLdapSearchParser.getLiteralString(l));
 				}
 			}
 		} else {
@@ -226,7 +226,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 					}
 					return attr;
 				}
-				insertValue = IQueryToLdapSearchParser.getExpressionString(l);
+				insertValue = IQueryToLdapSearchParser.getLiteralString(l);
 			}
 			attr.add(insertValue);
 		}

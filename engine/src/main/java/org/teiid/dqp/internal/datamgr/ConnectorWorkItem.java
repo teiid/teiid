@@ -383,7 +383,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 						results = ((UpdateExecution)exec).getUpdateCounts();
 					}
 					if (singleUpdateCount) {
-						if (index < results[0]) {
+						if (index++ < results[0]) {
 							return CollectionTupleSource.UPDATE_ROW;
 						}
 						return null;

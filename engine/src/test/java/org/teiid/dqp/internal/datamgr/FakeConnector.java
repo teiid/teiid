@@ -43,6 +43,7 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     private int connectionCount;
     private int executionCount;
     private int closeCount;
+    private boolean returnSingleUpdate;
 
     public int getConnectionCount() {
 		return connectionCount;
@@ -101,6 +102,9 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
 		public int[] getUpdateCounts() throws DataNotAvailableException,
 				TranslatorException {
 			if (batchOrBulk) {
+				if (returnSingleUpdate) {
+					return new int[] {2};
+				}
 				return new int[] {1, 1};
 			}
 			return new int[] {1};
@@ -113,6 +117,15 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
 		@Override
 		public void cancel() throws TranslatorException {
 		}
+    }
+    
+    public void setReturnSingleUpdate(boolean returnSingleUpdate) {
+		this.returnSingleUpdate = returnSingleUpdate;
+	}
+    
+    @Override
+    public boolean returnsSingleUpdateCount() {
+    	return returnSingleUpdate;
     }
 
 	

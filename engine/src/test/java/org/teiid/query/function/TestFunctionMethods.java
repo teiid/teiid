@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings("nls")
@@ -213,6 +214,10 @@ public class TestFunctionMethods {
     
     @Test(expected=FunctionExecutionException.class) public void testMultIntBounds2() throws FunctionExecutionException {
     	FunctionMethods.multiply(Integer.MIN_VALUE, -2);
+    }
+    
+    @Test public void testSomething() throws FunctionExecutionException {
+    	System.out.println(FunctionMethods.regexpReplace(TestProcessor.createCommandContext(), "Goodbye World", "[g-o].", "x", "gi"));
     }
     
 }

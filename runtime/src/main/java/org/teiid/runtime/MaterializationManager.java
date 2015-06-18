@@ -166,6 +166,9 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 					}
 					
 					String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
+					if (ttlStr == null) {
+					    ttlStr = String.valueOf(Long.MAX_VALUE);
+					}
 					if (ttlStr != null) {
 						long ttl = Long.parseLong(ttlStr);
 						if (ttl > 0) {

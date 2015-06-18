@@ -239,7 +239,6 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				if(table.getSourceName().equals(sObjectName)) {
 					XmlObject child = sObject.getChild(element.getSourceName());
 					Object cell = getCellDatum(element.getSourceName(), element.getJavaType(), child);
-					setValueInColumn(j, cell, result);
 					setElementValueInColumn(j, cell, row);
 				}
 			}

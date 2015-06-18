@@ -68,6 +68,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     private JDBCExecutionFactory executionFactory;
 
     private boolean prepared;
+    private boolean usingBinding;
     
     private List preparedValues = new ArrayList();
     
@@ -204,6 +205,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Call)
      */
     public void visit(Call obj) {
+    	usingBinding = true;
     	Procedure p = obj.getMetadataObject();
     	if (p != null) {
 	    	String nativeQuery = p.getProperty(TEIID_NATIVE_QUERY, false);
@@ -244,6 +246,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	public void visit(Parameter obj) {
         buffer.append(UNDEFINED_PARAM);
         preparedValues.add(obj);
+        usingBinding = true;
 	}
     
     /**
@@ -253,6 +256,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         if (this.prepared && ((replaceWithBinding && obj.isBindEligible()) || TranslatedCommand.isBindEligible(obj))) {
             buffer.append(UNDEFINED_PARAM);
             preparedValues.add(obj);
+            usingBinding = true;
         } else {
             translateSQLType(obj.getType(), obj.getValue(), buffer);
         }
@@ -375,6 +379,10 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     
     public void setPrepared(boolean prepared) {
 		this.prepared = prepared;
+	}
+    
+    public boolean isUsingBinding() {
+		return usingBinding;
 	}
     
     @Override

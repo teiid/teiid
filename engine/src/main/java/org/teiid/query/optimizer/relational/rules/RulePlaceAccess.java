@@ -25,6 +25,7 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -170,7 +171,7 @@ public final class RulePlaceAccess implements
             	Object gid = group.getMetadataID();
             	String sources = metadata.getExtensionProperty(gid, CONFORMED_SOURCES, false); 
             	if (sources != null) {
-            		Set<Object> conformed = new HashSet<Object>();
+            		Set<Object> conformed = new LinkedHashSet<Object>();
             		conformed.add(modelId);
             		for (String source : StringUtil.split(sources, ",")) { //$NON-NLS-1$
             			Object mid = metadata.getModelID(source.trim());

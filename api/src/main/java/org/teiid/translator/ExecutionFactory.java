@@ -1255,4 +1255,34 @@ public class ExecutionFactory<F, C> {
 	public boolean returnsSingleUpdateCount() {
 		return false;
 	}
+	
+	/**
+	 * Return true if the source has columns marked with the teiid_rel:partial that
+	 * can return more rows than specified by a filter if the column is also projected.
+	 * This most closely matches the semantics of ldap queries with multi-valued 
+	 * attributes marked as partial.
+	 * <br>When true, the following supports cannot also be true:
+	 * <ul>
+	 *   <li>supportsOuterJoins()
+	 *   <li>supportsFullOuterJoins()
+	 *   <li>supportsInlineViews()
+	 *   <li>supportsIntersect()
+	 *   <li>supportsExcept()
+	 *   <li>supportsSelectExpression()
+	 *   <li>supportsUnions()
+	 *   <li>supportsSelectDistinct()
+	 *   <li>supportsGroupBy()
+	 * </ul>
+	 * @return
+	 */
+	public boolean supportsPartialFiltering() {
+		return false;
+	}
+	
+	/**
+	 * If dependent join predicates should use literals that are marked as bind eligible.
+	 */
+	public boolean useBindingsForDependentJoin() {
+		return true;
+	}
 }

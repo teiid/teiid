@@ -49,6 +49,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.processor.ProcessorPlan;
@@ -70,6 +71,7 @@ import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -339,6 +341,32 @@ public class PlanToProcessConverter {
                             	depAccessNode.setPushdown(CapabilitiesUtil.supports(Capability.DEPENDENT_JOIN, modelID, metadata, capFinder));
                                 depAccessNode.setMaxSetSize(CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder));
                                 depAccessNode.setMaxPredicates(CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder));   
+                                depAccessNode.setUseBindings(CapabilitiesUtil.supports(Capability.DEPENDENT_JOIN_BINDINGS, modelID, metadata, capFinder));
+                                //TODO: allow the translator to drive this property
+                                //simplistic check of whether this query is complex to re-execute
+                                Query query = (Query)command;
+                                if (query.getGroupBy() != null 
+                                		|| query.getFrom().getClauses().size() > 1 
+                                		|| !(query.getFrom().getClauses().get(0) instanceof UnaryFromClause) 
+                                		|| query.getWith() != null) {
+                                    depAccessNode.setComplexQuery(true);
+                                } else {
+                                	//check to see if there in an index on at least one of the dependent sets
+                                	Set<GroupSymbol> groups = new HashSet<GroupSymbol>(query.getFrom().getGroups());
+                                	boolean found = false;
+                                	for (Criteria crit : Criteria.separateCriteriaByAnd(query.getCriteria())) {
+                                		if (crit instanceof DependentSetCriteria) {
+                                			DependentSetCriteria dsc = (DependentSetCriteria)crit;
+                                			if (NewCalculateCostUtil.getKeyUsed(ElementCollectorVisitor.getElements(dsc.getExpression(), true), groups, metadata, null) != null) {
+                                				found = true;
+                                				break;
+                                			}
+                                		}
+                                	}
+                                	if (!found) {
+                        				depAccessNode.setComplexQuery(true);
+                                	}
+                                }
                             }
                             processNode = depAccessNode;
                             aNode = depAccessNode;

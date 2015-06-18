@@ -563,6 +563,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     return (columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.All_Except_Like);
                 case SupportConstants.Element.SEARCHABLE_LIKE:
                 	return (columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.Like_Only);
+                case SupportConstants.Element.SEARCHABLE_EQUALITY:
+                    return (columnRecord.getSearchType() == SearchType.Equality_Only || columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.All_Except_Like);
                 case SupportConstants.Element.SELECT:
                     return columnRecord.isSelectable();
                 case SupportConstants.Element.UPDATE:
