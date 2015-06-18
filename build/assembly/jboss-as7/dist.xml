@@ -134,7 +134,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+        <outputDirectory>${vdb.loc}</outputDirectory>
       </binaries>
     </moduleSet>    
 

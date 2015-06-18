@@ -86,3 +86,5 @@
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
+
+/deployment=teiid-odata-${project.version}.war:add(runtime-name=teiid-odata-${project.version}.war,content=[{path=dataVirtualization/vdb/teiid-odata-${project.version}.war/,archive=false,relative-to=jboss.home.dir}],enabled=true)
