@@ -41,6 +41,8 @@ import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
+import org.odata4j.edm.EdmComplexType;
+import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmProperty;
 import org.odata4j.exceptions.NotFoundException;
@@ -78,35 +80,30 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private Table resultEntityTable; // this is the original entity table for results
 	private FromClause fromCluse = null;
 	private HashMap<String, GroupSymbol> assosiatedTables = new HashMap<String, GroupSymbol>();
-	private LinkedHashMap<String, Boolean> projectedColumns = new LinkedHashMap<String, Boolean>();
+	private LinkedHashMap<String, Boolean> projectedProperties = new LinkedHashMap<String, Boolean>();
 	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
 	private AtomicInteger groupCount = new AtomicInteger(1);
 	private boolean distinct = false;
-	private boolean useLimit = true;
 
 	public ODataSQLBuilder(MetadataStore metadata, boolean prepared) {
 		this.metadata = metadata;
 		this.prepared = prepared;
 	}
 	
-	public void setUseLimit(boolean useLimit) {
-		this.useLimit = useLimit;
-	}
-
-	public Query selectString(String entityName, QueryInfo info, OEntityKey key, String navProperty, boolean countStar) {
+	public Query selectString(String entityName, EdmEntitySet entitySet, EdmDataServices edmDataServices, QueryInfo info, OEntityKey key, String navProperty, boolean countStar) {
 		Select select = new Select();
 
 		if (info.select != null) {
 			for (EntitySimpleProperty property:info.select) {
-				this.projectedColumns.put(property.getPropertyName(), Boolean.TRUE);
+				this.projectedProperties.put(property.getPropertyName(), Boolean.TRUE);
 			}
 		}
 		
 		Table entityTable = findTable(entityName, metadata);
 		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol("g0", entityTable.getFullName());
+		this.resultEntityGroup = new GroupSymbol("g0", entityTable.getFullName()); //$NON-NLS-1$
 		this.assosiatedTables.put(entityTable.getFullName(), this.resultEntityGroup);
-		this.aliasTableNames.put("g0", entityTable.getFullName());
+		this.aliasTableNames.put("g0", entityTable.getFullName()); //$NON-NLS-1$
 		
 		if (key != null) {
 			this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
@@ -127,8 +124,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 		        Column column = findColumn(entityTable, prop);
 		        if (column != null) {
-		        	this.projectedColumns.clear();
-		        	this.projectedColumns.put(column.getName(), Boolean.TRUE);
+		        	this.projectedProperties.clear();
+		        	this.projectedProperties.put(column.getName(), Boolean.TRUE);
 		        	continue;
 		        }
 		        
@@ -180,6 +177,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     			entityTable = joinTable;
     			this.resultEntityGroup = this.assosiatedTables.get(joinTable.getFullName());
     			this.resultEntityTable = entityTable;	        	
+	        	entitySet = edmDataServices.findEdmEntitySet(entityTable.getFullName());
 	        	
 	            if (propSplit.length > 1) {
 	                key = OEntityKey.parse("("+ propSplit[1]);
@@ -198,7 +196,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			select = new Select(Arrays.asList(aggregateSymbol));
 		}
 		else {
-			select = buildSelectColumns(this.projectedColumns, entityTable, this.resultEntityGroup);		
+			select = buildSelectColumns(this.projectedProperties, entitySet, entityTable, this.resultEntityGroup);		
 		}
 		
 		if (info.filter != null) {
@@ -339,32 +337,48 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		return new CompoundCriteria(CompoundCriteria.AND, critList);
 	}
 
-	private Select buildSelectColumns(HashMap<String, Boolean> selectColumns, Table table, GroupSymbol group) {
+	private Select buildSelectColumns(LinkedHashMap<String, Boolean> selectProperties, EdmEntitySet entitySet, Table table, GroupSymbol group) {
 		Select select = new Select();
-		if (!selectColumns.isEmpty()) {
+		if (!selectProperties.isEmpty()) {
 			// also add pk, fks for building the link keys
 			for (Column column:table.getPrimaryKey().getColumns()) {
-				selectColumns.put(column.getName(), (selectColumns.get(column.getName()) != null));
+				selectProperties.put(column.getName(), (selectProperties.get(column.getName()) != null));
 			}
 			
 			for (ForeignKey fk:table.getForeignKeys()) {
 				for (Column column:fk.getColumns()) {
-					selectColumns.put(column.getName(), (selectColumns.get(column.getName()) != null));
+					selectProperties.put(column.getName(), (selectProperties.get(column.getName()) != null));
 				}
 			}
 			
 			// project all these.
-			for (String property:selectColumns.keySet()) {
-				Column column = findColumn(table, property);
-				if (column == null) {
+			for (String property:selectProperties.keySet()) {
+				EdmProperty p = entitySet.getType().findProperty(property);
+				if (p == null) {
 					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16005, property, table.getFullName()));
 				}
-				select.addSymbol(new ElementSymbol(column.getName(), group));
+				if (p.getType() instanceof EdmComplexType) {
+					for (EdmProperty prop : ((EdmComplexType)p.getType()).getProperties()) {
+						Column column = findColumn(table, prop.getName());
+						if (column == null) {
+							throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16005, property, table.getFullName()));
+						}
+						select.addSymbol(new ElementSymbol(column.getName(), group));
+					}		
+				} else {
+					Column column = findColumn(table, property);
+					if (column == null) {
+						throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16005, property, table.getFullName()));
+					}
+					select.addSymbol(new ElementSymbol(column.getName(), group));
+				}
 			}
 		} else {
 			for (Column c:table.getColumns()) {
 				select.addSymbol(new ElementSymbol(c.getName(), group));
-				selectColumns.put(c.getName(), Boolean.TRUE);
+			}
+			for (EdmProperty prop : entitySet.getType().getProperties()) {
+				selectProperties.put(prop.getName(), Boolean.TRUE);
 			}
 		}
 		return select;
@@ -970,8 +984,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		return this.orderBy;
 	}
 	
-	LinkedHashMap<String, Boolean> getProjectedColumns(){
-		return this.projectedColumns;
+	LinkedHashMap<String, Boolean> getProjectedProperties(){
+		return this.projectedProperties;
 	}
 	
 	public Insert insert(EdmEntitySet entitySet, OEntity entity) {

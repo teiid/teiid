@@ -103,6 +103,19 @@ public class LocalClient implements Client {
 	static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
 	static final String DELIMITER = "--" ; //$NON-NLS-1$
 	
+	static class TypeInfo {
+		EdmComplexType complexType;
+		String columnGroup;
+		EdmType fieldType;
+		
+		public TypeInfo(EdmType fieldType, EdmComplexType complexType, String columnGroup) {
+			this.complexType = complexType;
+			this.columnGroup=columnGroup;
+			this.fieldType = fieldType;
+		}
+	
+	}
+	
 	private volatile VDBMetaData vdb;
 	private String vdbName;
 	private int vdbVersion;
@@ -295,14 +308,10 @@ public class LocalClient implements Client {
 			
 			EntityList result = new EntityList(invalidCharacterReplacement);
 			
-			HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
-			
+			HashMap<String, TypeInfo> propertyTypes = new HashMap<String, TypeInfo>();
 			EdmEntityType entityType = entitySet.getType();
 			Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
-			while(propIter.hasNext()) {
-				EdmProperty prop = propIter.next();
-				propertyTypes.put(prop.getName(), prop);
-			}
+			getProperties(propertyTypes, null, null, propIter);
 			
 			//skip to the initial position
 			int count = 0;
@@ -376,6 +385,19 @@ public class LocalClient implements Client {
 					connection.close();
 				} catch (SQLException e) {
 				}
+			}
+		}
+	}
+
+	private void getProperties(HashMap<String, TypeInfo> propertyTypes, String columnGroup, EdmComplexType complexType,
+			Iterator<EdmProperty> propIter) {
+		while(propIter.hasNext()) {
+			EdmProperty prop = propIter.next();
+			if (prop.getType().isSimple() || prop.getType() instanceof EdmCollectionType) {
+				propertyTypes.put(prop.getName(), new TypeInfo(prop.getType(), complexType, columnGroup));
+			} else if (prop.getType() instanceof EdmComplexType) {
+				EdmComplexType newComplexType = (EdmComplexType)prop.getType();
+				getProperties(propertyTypes, prop.getName(), newComplexType, newComplexType.getProperties().iterator());
 			}
 		}
 	}

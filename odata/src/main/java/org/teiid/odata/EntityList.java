@@ -25,15 +25,22 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.odata4j.core.*;
+import org.odata4j.core.OEntities;
+import org.odata4j.core.OEntity;
+import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OLink;
+import org.odata4j.core.OLinks;
+import org.odata4j.core.OProperties;
+import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmNavigationProperty;
-import org.odata4j.edm.EdmProperty;
 import org.odata4j.edm.EdmType;
 import org.teiid.core.types.TransformationException;
+import org.teiid.odata.LocalClient.TypeInfo;
 
 class EntityList extends ArrayList<OEntity>{
 	private int count = 0;
@@ -44,20 +51,29 @@ class EntityList extends ArrayList<OEntity>{
 	    this.invalidCharacterReplacement = invalidCharacterReplacement;
 	}
 	
-	void addEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
-		this.add(getEntity(rs, propertyTypes, columns, entitySet));
-	}
-
-	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
-		HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
+	void addEntity(ResultSet rs, Map<String, TypeInfo> propertyTypes, Map<String, Boolean> projectedProperties, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
+		LinkedHashMap<String, OProperty<?>> properties = new LinkedHashMap<String, OProperty<?>>();
+		LinkedHashMap<String, List<OProperty<?>>> complexProperties = new LinkedHashMap<String, List<OProperty<?>>>();
 		for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 			Object value = rs.getObject(i+1);
 			String propName = rs.getMetaData().getColumnLabel(i+1);
-			EdmType type = propertyTypes.get(propName).getType();
+			TypeInfo typeInfo = propertyTypes.get(propName);
+			EdmType type = typeInfo.fieldType;
 			OProperty<?> property = LocalClient.buildPropery(propName, type, value, invalidCharacterReplacement);
-			properties.put(rs.getMetaData().getColumnLabel(i+1), property);	
+			if (typeInfo.complexType != null) {
+				List<OProperty<?>> props = complexProperties.get(typeInfo.columnGroup);
+				if (props == null) {
+					props = new ArrayList<OProperty<?>>();
+					complexProperties.put(typeInfo.columnGroup, props);
+				}
+				props.add(property);
+			} else {
+				properties.put(rs.getMetaData().getColumnLabel(i+1), property);
+			}
 		}			
-		
+		for (Map.Entry<String, List<OProperty<?>>> entry : complexProperties.entrySet()) {
+			properties.put(entry.getKey(), OProperties.complex(entry.getKey(), propertyTypes.get(entry.getValue().get(0).getName()).complexType, entry.getValue()));
+		}
 		OEntityKey key = OEntityKey.infer(entitySet, new ArrayList<OProperty<?>>(properties.values()));
 		
 		ArrayList<OLink> links = new ArrayList<OLink>();
@@ -69,12 +85,12 @@ class EntityList extends ArrayList<OEntity>{
 		// properties can contain more than what is requested in project to build links
 		// filter those columns out.
 		ArrayList<OProperty<?>> projected = new ArrayList<OProperty<?>>();
-		for (Map.Entry<String,Boolean> entry:columns.entrySet()) {
+		for (Map.Entry<String,Boolean> entry:projectedProperties.entrySet()) {
 			if (entry.getValue() != null && entry.getValue()) {
 				projected.add(properties.get(entry.getKey()));
 			}
 		}
-		return OEntities.create(entitySet, key, projected, links);
+		this.add(OEntities.create(entitySet, key, projected, links));
 	}
 	
 	public int getCount() {

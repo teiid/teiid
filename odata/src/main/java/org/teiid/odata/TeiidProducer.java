@@ -82,12 +82,11 @@ public class TeiidProducer implements ODataProducer {
 	@Override
 	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, final QueryInfo queryInfo) {
 		checkExpand(queryInfo);
-		getEntitySet(entitySetName); // validate entity
+		final EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
-		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
+		Query query = visitor.selectString(entitySetName, entitySet, getMetadata(), queryInfo, entityKey, navProp, false);
 		List<SQLParam> parameters = visitor.getParameters();
-		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), queryInfo);
+		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedProperties(), queryInfo);
 		return new EntitiesResponse() {
 			@Override
 			public List<OEntity> getEntities() {
@@ -128,9 +127,9 @@ public class TeiidProducer implements ODataProducer {
 
 	@Override
 	public CountResponse getEntitiesCount(ODataContext context, String entitySetName, QueryInfo queryInfo) {
-		getEntitySet(entitySetName); // validate entity
+		EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, null, null, true);
+		Query query = visitor.selectString(entitySetName, entitySet, getMetadata(), queryInfo, null, null, true);
 		List<SQLParam> parameters = visitor.getParameters();
 		return this.client.executeCount(query, parameters);
 	}
@@ -139,10 +138,10 @@ public class TeiidProducer implements ODataProducer {
 	public EntityResponse getEntity(ODataContext context, String entitySetName, OEntityKey entityKey, EntityQueryInfo queryInfo) {
 		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, null, false);
-		EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
+		EdmEntitySet entitySet = getEntitySet(entitySetName);
+		Query query = visitor.selectString(entitySetName, entitySet, getMetadata(), queryInfo, entityKey, null, false);
 		List<SQLParam> parameters = visitor.getParameters();
-		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), null);
+		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedProperties(), null);
 		if (entityList.isEmpty()) {
 			return null;
 		}
@@ -153,9 +152,9 @@ public class TeiidProducer implements ODataProducer {
 	public CountResponse getNavPropertyCount(ODataContext context,
 			String entitySetName, OEntityKey entityKey, String navProp,
 			QueryInfo queryInfo) {
-		getEntitySet(entitySetName); // validate entity
+		EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, true);
+		Query query = visitor.selectString(entitySetName, entitySet, getMetadata(), queryInfo, entityKey, navProp, true);
 		List<SQLParam> parameters = visitor.getParameters();
 		return this.client.executeCount(query, parameters);
 	}
