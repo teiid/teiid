@@ -46,11 +46,7 @@ public class ODataEntitySchemaBuilder {
 			List<EdmSchema.Builder> edmSchemas = new ArrayList<EdmSchema.Builder>();
 			for (Schema schema:metadataStore.getSchemaList()) {
 				buildEntityTypes(schema, edmSchemas, true);
-			}
-			for (Schema schema:metadataStore.getSchemaList()) {
 				buildFunctionImports(schema, edmSchemas, true);
-			}
-			for (Schema schema:metadataStore.getSchemaList()) {
 				buildAssosiationSets(schema, edmSchemas, true);
 			}
 			return EdmDataServices.newBuilder().addSchemas(edmSchemas).build();
@@ -124,40 +120,42 @@ public class ODataEntitySchemaBuilder {
 		List<EdmEntityType.Builder> entityTypes = new ArrayList<EdmEntityType.Builder>();
 		LinkedHashMap<String, EdmComplexType.Builder> complexTypes = new LinkedHashMap<String, EdmComplexType.Builder>();
 	    
-		//first pass, build complex types
-		for (Table table: schema.getTables().values()) {
-			// skip if the table does not have the PK or unique
-			KeyRecord primaryKey = table.getPrimaryKey();
-			List<KeyRecord> uniques = table.getUniqueKeys();
-			if (primaryKey == null && uniques.isEmpty()) {
-				LogManager.logDetail(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17017, table.getFullName()));
-				continue;
-			}
-			
-			for (Column c : table.getColumns()) {
-				String name = c.getSourceName();
-				String complexType = c.getProperty(ODataMetadataProcessor.COMPLEX_TYPE, false);
-				if (complexType == null) {
+		if (preserveEntityTypeName) {
+			//first pass, build complex types
+			for (Table table: schema.getTables().values()) {
+				// skip if the table does not have the PK or unique
+				KeyRecord primaryKey = table.getPrimaryKey();
+				List<KeyRecord> uniques = table.getUniqueKeys();
+				if (primaryKey == null && uniques.isEmpty()) {
+					LogManager.logDetail(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17017, table.getFullName()));
 					continue;
 				}
-				EdmComplexType.Builder complexTypeBuilder = complexTypes.get(complexType);
-				if (complexTypeBuilder == null) {
-					complexTypeBuilder = EdmComplexType.newBuilder();
-					complexTypes.put(complexType, complexTypeBuilder); 
-					complexTypeBuilder.setName(complexType);
-					complexTypeBuilder.setNamespace(schema.getName());
-				} else if (complexTypeBuilder.findProperty(name) != null) {
-					continue; //already added
+				
+				for (Column c : table.getColumns()) {
+					String name = c.getSourceName();
+					String complexType = c.getProperty(ODataMetadataProcessor.COMPLEX_TYPE, false);
+					if (complexType == null) {
+						continue;
+					}
+					EdmComplexType.Builder complexTypeBuilder = complexTypes.get(complexType);
+					if (complexTypeBuilder == null) {
+						complexTypeBuilder = EdmComplexType.newBuilder();
+						complexTypes.put(complexType, complexTypeBuilder); 
+						complexTypeBuilder.setName(complexType);
+						complexTypeBuilder.setNamespace(schema.getName());
+					} else if (complexTypeBuilder.findProperty(name) != null) {
+						continue; //already added
+					}
+					EdmProperty.Builder property = EdmProperty.newBuilder(c.getSourceName())
+							.setType(ODataTypeManager.odataType(c.getRuntimeType()))
+							.setNullable(isPartOfPrimaryKey(table, c.getName())?false:c.getNullType() == NullType.Nullable);
+					if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
+						property.setFixedLength(c.isFixedLength())
+							.setMaxLength(c.getLength())
+							.setUnicode(true);
+					}
+					complexTypeBuilder.addProperties(property);
 				}
-				EdmProperty.Builder property = EdmProperty.newBuilder(c.getSourceName())
-						.setType(ODataTypeManager.odataType(c.getRuntimeType()))
-						.setNullable(isPartOfPrimaryKey(table, c.getName())?false:c.getNullType() == NullType.Nullable);
-				if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
-					property.setFixedLength(c.isFixedLength())
-						.setMaxLength(c.getLength())
-						.setUnicode(true);
-				}
-				complexTypeBuilder.addProperties(property);
 			}
 		}
 		
@@ -196,7 +194,7 @@ public class ODataEntitySchemaBuilder {
 			// adding properties
 			for (Column c : table.getColumns()) {
 				String complexType = c.getProperty(ODataMetadataProcessor.COMPLEX_TYPE, false);
-				if (complexType != null) {
+				if (complexType != null && preserveEntityTypeName) {
 					String columnGroup = c.getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
 					if (!columnGroups.add(columnGroup)) {
 						continue;
