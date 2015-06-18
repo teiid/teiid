@@ -99,7 +99,7 @@
         <version.connector-api>1.5</version.connector-api>
         <arquillian-container-version>7.2.2.Final-redhat-4</arquillian-container-version>
         <jbossas-test-version>jboss-eap-6.4</jbossas-test-version>
-        <version.org.jboss.oreva>0.8.4</version.org.jboss.oreva>
+        <version.org.jboss.oreva>0.8.7</version.org.jboss.oreva>
         <version.com.force.api>26.0.0</version.com.force.api>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
