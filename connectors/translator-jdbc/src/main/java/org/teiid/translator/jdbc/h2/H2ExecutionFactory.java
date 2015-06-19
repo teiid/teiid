@@ -255,4 +255,9 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public boolean tempTableRequiresTransaction() {
     	return true;
     }
+    
+    @Override
+    public boolean useParensForJoins() {
+    	return true;
+    }
 }

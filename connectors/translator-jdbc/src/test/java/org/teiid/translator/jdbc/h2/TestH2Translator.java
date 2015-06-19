@@ -71,5 +71,12 @@ public class TestH2Translator {
     @Test public void testTempTable() throws Exception {
     	assertEquals("create cached local temporary table if not exists foo (COL1 integer, COL2 varchar(100)) on commit drop transactional", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     }
+    
+    @Test public void testJoinNesting() throws Exception {
+		String input = "select a.intkey from (BQT1.Smalla a left outer join bqt1.smallb b on a.intkey = b.intkey) inner join (bqt1.mediuma ma inner join bqt1.mediumb mb on mb.intkey = ma.intkey) on a.intkey = mb.intkey"; //$NON-NLS-1$       
+        String output = "SELECT a.IntKey FROM (SmallA AS a LEFT OUTER JOIN SmallB AS b ON a.IntKey = b.IntKey) INNER JOIN (MediumA AS ma INNER JOIN MediumB AS mb ON mb.IntKey = ma.IntKey) ON a.IntKey = mb.IntKey";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 
 }
