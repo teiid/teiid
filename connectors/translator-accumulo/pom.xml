@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jboss.teiid</groupId>
     <artifactId>connectors</artifactId>
-        <version>8.11.0.CR2-SNAPSHOT</version>
+        <version>8.11.0.Final</version>
   </parent>
   <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>translator-accumulo</artifactId>
