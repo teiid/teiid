@@ -68,7 +68,14 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
+import org.teiid.adminapi.impl.EngineStatisticsMetadata;
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.TransactionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.VDBMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
@@ -116,7 +123,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 		}
 		Status status = vdb.getStatus();
 		if (status != VDB.Status.ACTIVE) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion, status)));
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));
 		}
 		return vdb;
 	}
