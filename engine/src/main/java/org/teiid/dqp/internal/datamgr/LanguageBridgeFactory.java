@@ -954,12 +954,12 @@ public class LanguageBridgeFactory {
             if (direction != Direction.OUT) {
             	if (param.isVarArg()) {
             		ArrayImpl av = (ArrayImpl) ((Constant)param.getExpression()).getValue();
-	            	//if (av != null) {
+	            	if (av != null) {
 	            		for (Object obj : av.getValues()) {
 	                        Argument arg = new Argument(direction, new Literal(obj, param.getClassType().getComponentType()), param.getClassType().getComponentType(), metadataParam);
 	                        translatedParameters.add(arg);
 	            		}
-            		//}
+            		}
             		break;
             	}
             	value = (Literal)translate(param.getExpression());

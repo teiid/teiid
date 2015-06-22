@@ -239,16 +239,17 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		if (metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
 			return;
 		}
-		if (value == null) {
-		     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
-		}
-		if (value instanceof ArrayImpl && metadata.isVariadic(param.getMetadataID())) {
-			ArrayImpl av = (ArrayImpl)value;
-			for (Object o : av.getValues()) {
-				if (o == null) {
-				     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
+		if (metadata.isVariadic(param.getMetadataID())) {
+			if (value instanceof ArrayImpl) {
+				ArrayImpl av = (ArrayImpl)value;
+				for (Object o : av.getValues()) {
+					if (o == null) {
+					     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
+					}
 				}
 			}
+		} else if (value == null) {
+			throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
 		}
 	}
 

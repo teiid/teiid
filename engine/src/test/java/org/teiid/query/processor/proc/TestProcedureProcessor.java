@@ -27,6 +27,7 @@ import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -2130,6 +2131,38 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] { Arrays.asList(5) }; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
+    @Test public void testVarArgsNull() throws Exception {
+    	String ddl = "create foreign procedure proc (x integer, VARIADIC z integer not null); create virtual procedure vproc (x integer, VARIADIC z integer) returns integer as begin \"return\" = z[2] + array_length(z); call proc(x, z); end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+        String sql = "call vproc(1, cast(null as integer[]))"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("EXEC proc(1)", new List<?>[0]);
+        // Create expected results
+        List[] expected = new List[] { Collections.singletonList(null) }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+        
+        sql = "call vproc(x=>1, z=>null)"; //$NON-NLS-1$
+
+        plan = getProcedurePlan(sql, tm);
+        
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
+    @Test public void testVarArgsVirtNull() throws Exception {
+    	String ddl = "create virtual procedure vproc (x integer, VARIADIC z integer not null) returns (y integer) as begin select array_length(z); end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);
+    	
+    	String sql = "call vproc(1, (select cast(null as integer[])))"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+    	helpTestProcess(plan, new List[] {Collections.singletonList(null)}, dataManager, tm);
     }
     
     @Test public void testVarArgsVirtNotNull() throws Exception {
