@@ -604,7 +604,20 @@ public class TestDDLParser {
 		assertTrue("Table not found", tableMap.containsKey("G1"));
 		assertTrue("Table not found", tableMap.containsKey("G2"));
 		assertEquals("FOR EACH ROW\nBEGIN ATOMIC\nINSERT INTO g1 (e1, e2) VALUES (1, 'trig');\nEND", s.getTable("G1").getInsertPlan());
+	}
+	
+	@Test(expected=MetadataException.class)
+	public void testInsteadOfTriggerNoView() throws Exception {
+		String ddl = 	"CREATE TRIGGER ON G1 INSTEAD OF INSERT AS " +
+						"FOR EACH ROW \n" +
+						"BEGIN ATOMIC \n" +
+						"insert into g1 (e1, e2) values (1, 'trig');\n" +
+						"END;" +
+						"CREATE View G2( e1 integer, e2 varchar) AS select * from foo;";
+
+		helpParse(ddl, "model");
 	}	
+
 	
 	@Test
 	public void testSourceProcedure() throws Exception {

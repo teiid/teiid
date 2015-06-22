@@ -753,6 +753,9 @@ public class SQLParserUtil {
 		GroupSymbol group = trigger.getTarget();
 		
 		Table table = schema.getSchema().getTable(group.getName());
+		if (table == null || !table.isVirtual()) {
+			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_doesnot_exist", group.getName())); //$NON-NLS-1$
+		}
 		if (trigger.getEvent().equals(Table.TriggerEvent.INSERT)) {
 			table.setInsertPlan(trigger.getDefinition().toString());
 		}
