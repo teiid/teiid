@@ -28,6 +28,7 @@ import java.util.*;
 
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -1352,9 +1353,21 @@ public class SQLStringVisitor extends LanguageVisitor {
 		    	if (DataTypeManager.isLOB(type)) {
 		    		constantParts = new String[] {"?"}; //$NON-NLS-1$
 		    	} else {
-		            String strValue = value.toString();
-		            strValue = escapeStringValue(strValue, "'"); //$NON-NLS-1$
-		            constantParts = new String[] {"'", strValue, "'"}; //$NON-NLS-1$ //$NON-NLS-2$
+    				append('\'');
+    				String strValue = value.toString();
+		            for (int i = 0; i < strValue.length(); i++) {
+		    			char c = strValue.charAt(i);
+		    			if (c == '\'') {
+		    				parts.append('\'');
+		    			} else if (Character.isISOControl(c)) {
+		    				parts.append("\\u" + PropertiesUtils.toHex((c >> 12) & 0xF) + PropertiesUtils.toHex((c >>  8) & 0xF) //$NON-NLS-1$ 
+		    						+ PropertiesUtils.toHex((c >>  4) & 0xF) + PropertiesUtils.toHex(c & 0xF));
+		    				continue;
+		    			}
+		    			parts.append(c);
+		    		}
+    				parts.append('\'');
+		            return;
 		    	}
 		    }
 		}

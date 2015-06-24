@@ -558,6 +558,7 @@ public class TestTextTable {
         };    
 
         helpProcess(plan, hdm, expected);    	
+
     }
 	
 }

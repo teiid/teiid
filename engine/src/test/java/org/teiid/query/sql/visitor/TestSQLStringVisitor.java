@@ -1748,4 +1748,10 @@ public class TestSQLStringVisitor {
     	helpTest(new SubqueryFromClause("user", QueryParser.getQueryParser() .parseCommand("select 1")), "(SELECT 1) AS \"user\"");
 	}
     
+    @Test public void testEscaping() throws Exception {
+    	String sql = "select 'a\\u0000\u0001b''c''d\u0002e\u0003f''' from TEXTTABLE(x COLUMNS y string ESCAPE '\u0000' HEADER) AS A";
+    	
+    	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT 'a\\u0000\\u0001b''c''d\\u0002e\\u0003f''' FROM TEXTTABLE(x COLUMNS y string ESCAPE '\\u0000' HEADER) AS A"); //$NON-NLS-1$
+    }
+    
 }
