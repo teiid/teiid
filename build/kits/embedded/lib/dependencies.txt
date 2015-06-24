@@ -1,8 +1,0 @@
-If you are not using XQuery, XPath, nor SQL/XML, there is no need to include 
-xom, nux, and jaxen jars in the class path. All other files need to be
-included in your applications's classpath. 
-
-Depending upon which sources you use with Teiid embedded, you also need
-to add sets of jar files from the optional directory, which are grouped by source.
-
-netty is required to enable a JDBC/ODBC socket transport and by cassandra.

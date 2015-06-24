@@ -172,7 +172,6 @@
 				<configuration>
 					<descriptors>
 						<descriptor>kits/jboss-as7-dist.xml</descriptor>
-						<descriptor>kits/embedded-dist.xml</descriptor>
 					</descriptors>
 				</configuration>
 				<executions>
