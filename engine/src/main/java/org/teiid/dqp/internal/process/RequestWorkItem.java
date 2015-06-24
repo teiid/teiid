@@ -491,6 +491,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	protected void close() {
 		int rowcount = -1;
 		try {
+		    CommandContext.pushThreadLocalContext(this.processor.getContext());
 			cancelCancelTask();
 			if (moreWorkTask != null) {
 				moreWorkTask.cancel(false);
@@ -552,7 +553,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			handleThrowable(t);
 		} finally {
 			isClosed = true;
-			
+			CommandContext.popThreadLocalContext();	
 			dqpCore.removeRequest(this);
 		    
 			if (this.processingException != null) {
