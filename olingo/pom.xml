@@ -120,12 +120,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-runtime</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-commons-api</artifactId>
         </dependency>
@@ -185,13 +179,6 @@
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-runtime</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-engine</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -239,6 +226,18 @@
             <artifactId>teiid-metadata</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-runtime</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-runtime</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

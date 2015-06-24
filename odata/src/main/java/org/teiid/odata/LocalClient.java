@@ -47,17 +47,10 @@ import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
 import org.odata4j.core.OSimpleObjects;
-import org.odata4j.edm.EdmCollectionType;
-import org.odata4j.edm.EdmComplexType;
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.edm.EdmEntityType;
-import org.odata4j.edm.EdmProperty;
-import org.odata4j.edm.EdmSchema;
-import org.odata4j.edm.EdmSimpleType;
-import org.odata4j.edm.EdmType;
+import org.odata4j.edm.*;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.ServerErrorException;
+import org.odata4j.internal.EdmDataServicesDecorator;
 import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.CountResponse;
 import org.odata4j.producer.InlineCount;
@@ -515,7 +508,65 @@ public class LocalClient implements Client {
                     ODataEntitySchemaBuilder.buildAssosiationSets(schema, edmSchemas, false);
                 }
             }
-            return EdmDataServices.newBuilder().addSchemas(edmSchemas).build();
+            final EdmDataServices edmDataServices = EdmDataServices.newBuilder().addSchemas(edmSchemas).build();
+            
+            EdmDataServicesDecorator decorator = new EdmDataServicesDecorator() {
+				
+				@Override
+				protected EdmDataServices getDelegate() {
+					return edmDataServices;
+				}
+				
+				public EdmEntitySet findEdmEntitySet(String entitySetName) {
+					int idx = entitySetName.indexOf('.');
+				    if (idx != -1) {
+				      EdmEntitySet ees = super.findEdmEntitySet(entitySetName);
+				      if (ees != null) {
+				    	  return ees;
+				      }
+				    }
+				    EdmEntitySet result = null;
+				    for (EdmSchema schema : this.getSchemas()) {
+				      for (EdmEntityContainer eec : schema.getEntityContainers()) {
+				        for (EdmEntitySet ees : eec.getEntitySets()) {
+				          if (ees.getName().equals(entitySetName)) {
+				        	  if (result != null) {
+				        		  throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017, entitySetName));
+				        	  }
+				        	  result = ees;
+				          }
+				        }
+				      }
+				    }
+				    return result;
+				}
+				
+				public EdmFunctionImport findEdmFunctionImport(String functionImportName) {
+					int idx = functionImportName.indexOf('.');
+				    if (idx != -1) {
+				      EdmFunctionImport efi = super.findEdmFunctionImport(functionImportName);
+				      if (efi != null) {
+				        return efi;
+				      }
+				    }    
+				    EdmFunctionImport result = null;
+				    for (EdmSchema schema : this.getSchemas()) {
+				      for (EdmEntityContainer eec : schema.getEntityContainers()) {
+				        for (EdmFunctionImport efi : eec.getFunctionImports()) {
+				          if (efi.getName().equals(functionImportName)) {
+				        	  if (result != null) {
+				        		  throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017, functionImportName));
+				        	  }
+				              result = efi;
+				          }
+				        }
+				      }
+				    }
+				    return result;
+				}
+			};
+
+            return decorator;
         } catch (Exception e) {
             throw new TeiidRuntimeException(e);
         }
