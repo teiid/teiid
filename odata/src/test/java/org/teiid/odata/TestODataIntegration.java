@@ -691,6 +691,42 @@ public class TestODataIntegration extends BaseResourceTest {
 			es.stop();
 		}
 	}
+		
+	@Test
+	public void testAmbiguities() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create view x (a string primary key) as select 'a'; create virtual procedure y () returns table(y string) as select 'a';");
+			mmd.setModelType(Type.VIRTUAL);
+			
+			ModelMetaData mmd1 = new ModelMetaData();
+			mmd1.setName("vw1");
+			mmd1.setSchemaSourceType("ddl");
+			mmd1.setSchemaText("create view x (a string primary key) as select 'a'; create virtual procedure y () returns table(y string) as select 'a';");
+			mmd1.setModelType(Type.VIRTUAL);
+			es.deployVDB("northwind", mmd, mmd1);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')"));
+	        ClientResponse<String> response = request.get(String.class);
+	        Assert.assertEquals(404, response.getStatus());
+	        
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/y"));
+	        response = request.get(String.class);
+	        Assert.assertEquals(404, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
 	
 	@Test public void testConnectionProperties() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
