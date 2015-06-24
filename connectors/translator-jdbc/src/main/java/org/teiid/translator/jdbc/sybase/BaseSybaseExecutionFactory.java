@@ -30,12 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.Command;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
-import org.teiid.language.OrderBy;
-import org.teiid.language.SetQuery;
-import org.teiid.language.With;
+import org.teiid.language.*;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
@@ -96,6 +91,15 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (!supportsCrossJoin()) {
     		DB2ExecutionFactory.convertCrossJoinToInner(obj, getLanguageFactory());
+    	}
+    	if (obj instanceof DerivedColumn) {
+    		DerivedColumn dc = (DerivedColumn)obj;
+    		Expression expression = dc.getExpression();
+			if (expression.getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN && expression instanceof Condition) {
+    			dc.setExpression(new SearchedCase(Arrays.asList(
+    					new SearchedWhenClause((Condition)expression, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),
+    					new SearchedWhenClause(new Not((Condition)expression), new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER))), null, TypeFacility.RUNTIME_TYPES.BOOLEAN));
+    		}
     	}
     	return super.translate(obj, context);
     }

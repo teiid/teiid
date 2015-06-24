@@ -89,7 +89,17 @@ public class TestSybaseSQLConversionVisitor {
         helpTestVisitor(getTestVDB(),
             input, 
             output);
-    }    
+    }   
+    
+    @Test
+    public void testProjectedCriteria() {
+        String input = "SELECT part_name like '%b' FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN PARTS.PART_NAME LIKE '%b' THEN 1 WHEN NOT (PARTS.PART_NAME LIKE '%b') THEN 0 END FROM PARTS"; //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }   
 
     @Test
     public void testLcaseFunction() {
