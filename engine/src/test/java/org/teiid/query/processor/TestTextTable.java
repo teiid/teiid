@@ -536,7 +536,7 @@ public class TestTextTable {
     }
 	
 	@Test public void testNoTrimDelimited() throws Exception {
-    	String sql = "select x.* from texttable('x, y\n a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) x"; //$NON-NLS-1$
+    	String sql = "select x.* from texttable('x, y a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) x"; //$NON-NLS-1$
     	
         List<?>[] expected = new List[] {
         		Arrays.asList(" a ", "b"),
@@ -544,7 +544,7 @@ public class TestTextTable {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         Command cmd = helpParse(sql);
-        assertEquals("SELECT x.* FROM TEXTTABLE('x, y\n a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) AS x", cmd.toString());
+        assertEquals("SELECT x.* FROM TEXTTABLE('x, y\\u000A a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) AS x", cmd.toString());
 		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
 		helpProcess(plan, dataManager, expected);
     }
@@ -559,7 +559,7 @@ public class TestTextTable {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         Command cmd = helpParse(sql);
-        assertEquals("SELECT x.* FROM TEXTTABLE('x-1, y\n a -2, \"b\"-3' COLUMNS x string, \"1\" string ROW DELIMITER ',' DELIMITER '-' HEADER) AS x", cmd.toString());
+        assertEquals("SELECT x.* FROM TEXTTABLE('x-1, y\\u000A a -2, \"b\"-3' COLUMNS x string, \"1\" string ROW DELIMITER ',' DELIMITER '-' HEADER) AS x", cmd.toString());
 		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
 		helpProcess(plan, dataManager, expected);
     }
@@ -579,7 +579,7 @@ public class TestTextTable {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         Command cmd = helpParse(sql);
-        assertEquals("SELECT x.x FROM TEXTTABLE('h.1\na' COLUMNS x 'h.1' string HEADER) AS x", cmd.toString());
+        assertEquals("SELECT x.x FROM TEXTTABLE('h.1\\u000Aa' COLUMNS x 'h.1' string HEADER) AS x", cmd.toString());
 		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
 		helpProcess(plan, dataManager, expected);
     }
