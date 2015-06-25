@@ -1,0 +1,5 @@
+# phoenix should depend on sun.jdk and org.apache.log4j
+
+module add --name=com.vertica.jdbc --resources=vertica-jdbc-[version].jar --dependencies=javax.api,javax.transaction.api
+
+/subsystem=datasources/jdbc-driver=vertica:add(driver-name=vertica,driver-module-name=com.vertica.jdbc,driver-class-name=com.vertica.jdbc.Driver)
