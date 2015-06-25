@@ -44,48 +44,48 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="vertica", description="A translator for read/write HP Vertica Analytic Database Server")
 public class VerticaExecutionFactory extends JDBCExecutionFactory{
     
-    public static final String VERTICA = "vertica";
+    public static final String VERTICA = "vertica"; //$NON-NLS-1$
     
-    public static final String BIT_LENGTH = "BIT_LENGTH";
-    public static final String BITCOUNT = "BITCOUNT";
-    public static final String BITSTRING_TO_BINARY = "BITSTRING_TO_BINARY";
-    public static final String BTRIM = "BTRIM";
-    public static final String CHR = "CHR";
-    public static final String GREATEST = "GREATEST";
-    public static final String GREATESTB = "GREATESTB";
-    public static final String HEX_TO_BINARY = "HEX_TO_BINARY";
-    public static final String HEX_TO_INTEGER = "HEX_TO_INTEGER";
-    public static final String INITCAP = "INITCAP";
-    public static final String INSERT = "INSERT";
-    public static final String ISUTF8 = "ISUTF8";
-    public static final String LOWER = "LOWER";
-    public static final String MD5 = "MD5";
-    public static final String SPACE = "SPACE";
-    public static final String TO_HEX = "TO_HEX";
-    public static final String UPPER = "UPPER";
+    public static final String BIT_LENGTH = "BIT_LENGTH"; //$NON-NLS-1$
+    public static final String BITCOUNT = "BITCOUNT"; //$NON-NLS-1$
+    public static final String BITSTRING_TO_BINARY = "BITSTRING_TO_BINARY"; //$NON-NLS-1$
+    public static final String BTRIM = "BTRIM"; //$NON-NLS-1$
+    public static final String CHR = "CHR"; //$NON-NLS-1$
+    public static final String GREATEST = "GREATEST"; //$NON-NLS-1$
+    public static final String GREATESTB = "GREATESTB"; //$NON-NLS-1$
+    public static final String HEX_TO_BINARY = "HEX_TO_BINARY"; //$NON-NLS-1$
+    public static final String HEX_TO_INTEGER = "HEX_TO_INTEGER"; //$NON-NLS-1$
+    public static final String INITCAP = "INITCAP"; //$NON-NLS-1$
+    public static final String INSERT = "INSERT"; //$NON-NLS-1$
+    public static final String ISUTF8 = "ISUTF8"; //$NON-NLS-1$
+    public static final String LOWER = "LOWER"; //$NON-NLS-1$
+    public static final String MD5 = "MD5"; //$NON-NLS-1$
+    public static final String SPACE = "SPACE"; //$NON-NLS-1$
+    public static final String TO_HEX = "TO_HEX"; //$NON-NLS-1$
+    public static final String UPPER = "UPPER"; //$NON-NLS-1$
     
-    public static final String CBRT = "CBRT";
-    public static final String LN = "LN";
-    public static final String PI = "PI";
-    public static final String RANDOM = "RANDOM";
-    public static final String TRUNC = "TRUNC";
+    public static final String CBRT = "CBRT"; //$NON-NLS-1$
+    public static final String LN = "LN"; //$NON-NLS-1$
+    public static final String PI = "PI"; //$NON-NLS-1$
+    public static final String RANDOM = "RANDOM"; //$NON-NLS-1$
+    public static final String TRUNC = "TRUNC"; //$NON-NLS-1$
     
-    public static final String ADD_MONTHS = "ADD_MONTHS";
-    public static final String AGE_IN_MONTHS = "AGE_IN_MONTHS";
-    public static final String AGE_IN_YEARS = "AGE_IN_YEARS";
-    public static final String CURRENT_DATE = "CURRENT_DATE";
-    public static final String CURRENT_TIME = "CURRENT_TIME";
-    public static final String DATE_NAME = "DATE";
-    public static final String DATEDIFF = "DATEDIFF";
-    public static final String DAY = "DAY";
-    public static final String GETDATE = "GETDATE";
-    public static final String GETUTCDATE = "GETUTCDATE";
-    public static final String ISFINITE = "ISFINITE";
-    public static final String LOCALTIME = "LOCALTIME";
-    public static final String LOCALTIMESTAMP = "LOCALTIMESTAMP";
-    public static final String MONTHS_BETWEEN = "MONTHS_BETWEEN";
-    public static final String OVERLAPS = "OVERLAPS";
-    public static final String TIMESTAMPDIFF = "TIMESTAMPDIFF";
+    public static final String ADD_MONTHS = "ADD_MONTHS"; //$NON-NLS-1$
+    public static final String AGE_IN_MONTHS = "AGE_IN_MONTHS"; //$NON-NLS-1$
+    public static final String AGE_IN_YEARS = "AGE_IN_YEARS"; //$NON-NLS-1$
+    public static final String CURRENT_DATE = "CURRENT_DATE"; //$NON-NLS-1$
+    public static final String CURRENT_TIME = "CURRENT_TIME"; //$NON-NLS-1$
+    public static final String DATE_NAME = "DATE"; //$NON-NLS-1$
+    public static final String DATEDIFF = "DATEDIFF"; //$NON-NLS-1$
+    public static final String DAY = "DAY"; //$NON-NLS-1$
+    public static final String GETDATE = "GETDATE"; //$NON-NLS-1$
+    public static final String GETUTCDATE = "GETUTCDATE"; //$NON-NLS-1$
+    public static final String ISFINITE = "ISFINITE"; //$NON-NLS-1$
+    public static final String LOCALTIME = "LOCALTIME"; //$NON-NLS-1$
+    public static final String LOCALTIMESTAMP = "LOCALTIMESTAMP"; //$NON-NLS-1$
+    public static final String MONTHS_BETWEEN = "MONTHS_BETWEEN"; //$NON-NLS-1$
+    public static final String OVERLAPS = "OVERLAPS"; //$NON-NLS-1$
+    public static final String TIMESTAMPDIFF = "TIMESTAMPDIFF"; //$NON-NLS-1$
 
     @Override
     public void start() throws TranslatorException {
