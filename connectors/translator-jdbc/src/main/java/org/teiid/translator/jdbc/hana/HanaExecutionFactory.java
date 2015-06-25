@@ -22,43 +22,18 @@
 
 package org.teiid.translator.jdbc.hana;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BLOB;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIME;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.VARBINARY;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.types.GeometryType;
-import org.teiid.language.Argument;
-import org.teiid.language.Array;
-import org.teiid.language.Call;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.Like;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Parameter;
-import org.teiid.language.SQLConstants;
-import org.teiid.language.Select;
-import org.teiid.language.TableReference;
-import org.teiid.language.WithItem;
-import org.teiid.language.Argument.Direction;
-import org.teiid.language.Like.MatchMode;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.ProcedureParameter;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
@@ -133,7 +108,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOG, new Log10FunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "locate", true) {
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "locate", true) { //$NON-NLS-1$
 
 			@Override
 			public void modify(Function function) {
@@ -247,7 +222,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 	
 	@Override
 	public String getHibernateDialectClassName() {
-		return "org.hibernate.dialect.HANARowStoreDialect";
+		return "org.hibernate.dialect.HANARowStoreDialect"; //$NON-NLS-1$
 	}
 	
 	@Override
@@ -377,6 +352,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
    }
 	
 	
+	@SuppressWarnings("unchecked")
 	@Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	if (limit.getRowOffset() > 0) {
