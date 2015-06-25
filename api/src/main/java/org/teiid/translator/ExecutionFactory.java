@@ -245,7 +245,7 @@ public class ExecutionFactory<F, C> {
 	
 	/**
 	 * If true, the {@link #initCapabilities(Object)} method will be consulted prior
-	 * to deteremining the capabilites
+	 * to determining the capabilities
 	 * @return
 	 */
 	public boolean isSourceRequiredForCapabilities() {
