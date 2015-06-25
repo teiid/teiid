@@ -1,0 +1,16 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:jboss/datasources/verticaDS" enabled="true" use-java-context="true" pool-name="VerticaDS">
+        <connection-url>jdbc:vertica:{IP:5433/DB}</connection-url>
+        <driver>vertica</driver>
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+        </security>
+    </datasource> 
+    <drivers>
+	<driver name="vertica" module="com.vertica.jdbc">
+	    <driver-class>com.vertica.jdbc.Driver</driver-class>
+	</driver>
+    </drivers>                              
+</datasources>
