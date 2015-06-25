@@ -158,6 +158,7 @@ public class STree implements Cloneable {
 			if (page.next == null) {
 				break;
 			}
+			page = page.next;
 		}
 	}
 	
