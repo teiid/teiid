@@ -536,7 +536,7 @@ public class TestTextTable {
     }
 	
 	@Test public void testNoTrimDelimited() throws Exception {
-    	String sql = "select x.* from texttable('x, y a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) x"; //$NON-NLS-1$
+    	String sql = "select x.* from texttable('x, y\\u000A a , \"b\"' COLUMNS x string, \" y\" string HEADER NO TRIM) x"; //$NON-NLS-1$
     	
         List<?>[] expected = new List[] {
         		Arrays.asList(" a ", "b"),
