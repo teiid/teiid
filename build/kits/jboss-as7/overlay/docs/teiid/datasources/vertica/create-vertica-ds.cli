@@ -1,0 +1,5 @@
+# note that driver-name could be driver's module name if you went module approach.
+
+/subsystem=datasources/data-source=verticaDS:add(jndi-name=java:/verticaDS, driver-name=vertica-jdbc-[version].jar, driver-class=com.vertica.jdbc.Driver, enabled=true,use-java-context=true, connection-url=jdbc:vertica:{IP:5433/DB},user-name={user}, password={password})
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
