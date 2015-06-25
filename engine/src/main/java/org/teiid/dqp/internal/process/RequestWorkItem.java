@@ -491,7 +491,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	protected void close() {
 		int rowcount = -1;
 		try {
-		    CommandContext.pushThreadLocalContext(this.processor.getContext());
 			cancelCancelTask();
 			if (moreWorkTask != null) {
 				moreWorkTask.cancel(false);
@@ -499,22 +498,27 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 			if (this.resultsBuffer != null) {
 				if (this.processor != null) {
-					this.processor.closeProcessing();
-				
-					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
-				    }
-					rowcount = resultsBuffer.getRowCount();
-					if (this.cid == null || !this.doneProducingBatches) {
-						resultsBuffer.remove();
+					try {
+					    CommandContext.pushThreadLocalContext(this.processor.getContext());
+						this.processor.closeProcessing();
+					
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
+					    }
+						rowcount = resultsBuffer.getRowCount();
+						if (this.cid == null || !this.doneProducingBatches) {
+							resultsBuffer.remove();
+						}
+						
+						for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+							connectorRequest.fullyCloseSource();
+					    }
+						
+						CommandContext cc = this.processor.getContext();
+						cc.close();
+					} finally {
+						CommandContext.popThreadLocalContext();
 					}
-					
-					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-						connectorRequest.fullyCloseSource();
-				    }
-					
-					CommandContext cc = this.processor.getContext();
-					cc.close();
 				}
 	
 				this.resultsBuffer = null;
@@ -553,7 +557,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			handleThrowable(t);
 		} finally {
 			isClosed = true;
-			CommandContext.popThreadLocalContext();	
 			dqpCore.removeRequest(this);
 		    
 			if (this.processingException != null) {
