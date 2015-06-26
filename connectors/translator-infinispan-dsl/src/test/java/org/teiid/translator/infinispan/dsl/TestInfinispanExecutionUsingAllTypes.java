@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
+import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -36,6 +37,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.dsl.util.AllTypesSchemaVDBUtility;
 import org.teiid.translator.infinispan.dsl.util.PersonSchemaVDBUtility;
 
 /**
@@ -49,27 +51,27 @@ import org.teiid.translator.infinispan.dsl.util.PersonSchemaVDBUtility;
  *
  */
 @SuppressWarnings("nls")
-public class TestInfinispanExecution {
+public class TestInfinispanExecutionUsingAllTypes {
 	
 	private static InfinispanConnection CONNECTION;
 	
-	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
+	private static TranslationUtility translationUtility = AllTypesSchemaVDBUtility.TRANSLATION_UTILITY;
 	
-	static Map<?, ?> DATA = PersonCacheSource.loadCache();
+	static Map<?, ?> DATA = AllTypesCacheSource.loadCache();
 	
 	
     @BeforeClass
     public static void setUp()  {
         
-		CONNECTION = PersonCacheSource.createConnection();
+		CONNECTION = AllTypesCacheSource.createConnection();
 
     }	
 
 
 	@Test public void testExecution() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select name, id, email From Person as T"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select intKey, intNum, stringNum, stringKey, floatNum, bigIntegerValue, shortValue, doubleNum, objectValue, bigDecimalValue, longNum, booleanValue, timeStampValue, timeValue, dateValue, charValue  From AllTypes as T"); //$NON-NLS-1$
 		
-		performTest(10, 3, command);
+		performTest(10, 16, command);
 
 	}
 	
@@ -78,37 +80,13 @@ public class TestInfinispanExecution {
 	 * @throws Exception
 	 */
 	@Test public void testReturningObject() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select PersonObject From Person as T"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select AllTypesObject From AllTypes as T"); //$NON-NLS-1$
 
 		
 		performTest(10, 1, command);
 
 	}
-	
-	@Test public void test1toManyOnlyChild() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select number From PhoneNumber as T"); //$NON-NLS-1$
 
-		
-		performTest(20, 1, command);
-
-	}
-	
-	@Test public void test1toManyA() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number From Person as A, PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
-
-		
-		performTest(20, 4, command);
-
-	}
-	
-	@Test public void test1toManyB() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number, b.type From Person as A, PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
-
-		
-		performTest(20, 5, command);
-
-	}	
-	
 
 	protected List<Object> performTest(int rowcnt, int colCount, Select command)
 			throws TranslatorException {

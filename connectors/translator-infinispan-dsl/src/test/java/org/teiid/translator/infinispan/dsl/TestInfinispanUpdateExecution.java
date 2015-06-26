@@ -26,11 +26,11 @@ import org.teiid.language.Delete;
 import org.teiid.language.Update;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.util.VDBUtility;
+import org.teiid.translator.infinispan.dsl.util.PersonSchemaVDBUtility;
 
 public class TestInfinispanUpdateExecution {
 	private static InfinispanConnection CONNECTION;
-	private static TranslationUtility translationUtility = VDBUtility.TRANSLATION_UTILITY;
+	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
 
 	private static Map<Object, Object> DATA = PersonCacheSource.loadCache();
 	private static InfinispanExecutionFactory TRANSLATOR;
@@ -237,6 +237,6 @@ public class TestInfinispanUpdateExecution {
 		return (InfinispanUpdateExecution) TRANSLATOR.createUpdateExecution(
 				command,
 				context,
-				VDBUtility.RUNTIME_METADATA, CONNECTION);
+				PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
 	}
 }

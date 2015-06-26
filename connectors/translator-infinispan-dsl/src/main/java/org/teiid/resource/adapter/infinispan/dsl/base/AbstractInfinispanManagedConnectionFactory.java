@@ -465,6 +465,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		
 			ClassLoader classLoader = loadClasses();
 
+
 			switch (cacheType) {
 			case USE_JNDI:
 				cc = createRemoteCacheWrapperFromJNDI(this.getCacheJndiName(), classLoader);
@@ -481,6 +482,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			}
 
 			setCacheContainer(cc);
+
 			registerMarshallers(getContext(), classLoader);
 
 		
@@ -539,13 +541,15 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	}
 	
+	private static final String PROTOBUF_DEFINITION_RESOURCE = "/quickstart/addressbook.proto";
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void registerMarshallers(SerializationContext ctx, ClassLoader cl) throws ResourceException {
 
 		try {
 			FileDescriptorSource fds = new FileDescriptorSource();
 			fds.addProtoFile("protofile", cl.getResourceAsStream(getProtobufDefinitionFile() ) );
-			
+						
 			ctx.registerProtoFiles( fds );
 
 			List<Class<?>> registeredClasses = methodUtil.getRegisteredClasses();
