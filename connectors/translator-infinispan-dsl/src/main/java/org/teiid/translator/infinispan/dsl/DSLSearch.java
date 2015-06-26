@@ -21,8 +21,6 @@
  */
 package org.teiid.translator.infinispan.dsl;
 
-import static org.teiid.language.visitor.SQLStringVisitor.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +32,21 @@ import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.SortOrder;
-import org.teiid.language.*;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.Delete;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.Not;
+import org.teiid.language.OrderBy;
+import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
+import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;

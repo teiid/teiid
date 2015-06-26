@@ -21,14 +21,23 @@
  */
 package org.teiid.translator.infinispan.dsl;
 
+import java.beans.BeanInfo;
+import java.beans.IndexedPropertyDescriptor;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.MethodDescriptor;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptException;
 
+import org.teiid.core.util.LRUCache;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.TranslatorException;
 
@@ -47,31 +56,31 @@ public class ClassRegistry {
 
 	private TeiidScriptEngine readEngine = new TeiidScriptEngine();
 	
-	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>();
-	private Map<String, Class<?>> classTableMap = new HashMap<String, Class<?>>();
-	
+	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>(); // fullClassName, Class
+	private Map<String, Class<?>> tableNameClassMap = new HashMap<String, Class<?>>(); // simpleClassName(i.e., tableName), Class 
+	private Map<String, Map<String, Method>> classReadMethodMap = new HashMap<String, Map<String, Method>>();
+	private Map<String, Map<String, Method>> classWriteMethodMap = Collections.synchronizedMap(new LRUCache<String, Map<String,Method>>(100));;
+
 	public synchronized void registerClass(Class<?> clz) throws TranslatorException {
-		try {
 			// preload methods
-			readEngine.getMethodMap(clz);
-			
+	
 			registeredClasses.put(clz.getName(), clz);	
-			classTableMap.put(clz.getSimpleName(), clz);	
-		} catch (ScriptException e) {
-			throw new TranslatorException(e);
-		}	
+			tableNameClassMap.put(clz.getSimpleName(), clz);
+			
+			try {
+				classReadMethodMap.put(clz.getName(),  readEngine.getMethodMap(registeredClasses.get(clz.getName())));
+			} catch (ScriptException e) {
+				throw new TranslatorException(e);
+			}
+
+			classWriteMethodMap.put(clz.getSimpleName(),getWriteMethodMap(clz));
+
 	}
 	
 	public synchronized void unregisterClass(Class<?> clz) throws TranslatorException {
-		try {
-			// preload methods
-			readEngine.getMethodMap(clz);
-			
-			registeredClasses.put(clz.getName(), clz);	
-			classTableMap.put(clz.getSimpleName(), clz);	
-		} catch (ScriptException e) {
-			throw new TranslatorException(e);
-		}	
+			registeredClasses.remove(clz.getName());	
+			tableNameClassMap.remove(clz.getSimpleName());	
+			classReadMethodMap.remove(clz.getName());
 	}
 
 	
@@ -79,14 +88,28 @@ public class ClassRegistry {
 		return readEngine;
 	}
 	
-	public Map<String, Method> getReadClassMethods(String className) throws TranslatorException {	
-		try {
-			return readEngine.getMethodMap(registeredClasses.get(className));
-		} catch (ScriptException e) {
-			throw new TranslatorException(e);
-		}
+	public synchronized Map<String, Method> getReadClassMethods(String className) throws TranslatorException {	
+		Map<String, Method> methodMap = null; 
+		methodMap = classReadMethodMap.get(className);
+		if (methodMap != null) {
+			return methodMap;
+		}		
+		
+		throw new TranslatorException("Class Registration Error:  no class read methods have been generated for class " + className);
 
 	}	
+	
+	public synchronized Map<String, Method> getWriteClassMethods(String tableName) throws TranslatorException {	
+
+		Map<String, Method> methodMap = null; 
+		methodMap = classWriteMethodMap.get(tableName);
+		if (methodMap != null) {
+			return methodMap;
+		}
+		
+		throw new TranslatorException("Class Registration Error:  no class write methods have been generated for class/table " + tableName);
+
+	}		
 
 	public Class<?> getRegisteredClass(String className) {
 		return registeredClasses.get(className);
@@ -96,8 +119,65 @@ public class ClassRegistry {
 		return new ArrayList<Class<?>>(registeredClasses.values());
 	}
 	
-	public Class<?> getRegisteredClassToTable(String tableName) {
-		return classTableMap.get(tableName);
+	public Class<?> getRegisteredClassUsingTableName(String tableName) {
+		return tableNameClassMap.get(tableName);
 	}	
+	
+    /**
+     * Call to execute the set method 
+     * @param m is the method to execute
+     * @param api is the object to execute the method on 
+     * @param arg is the argument to be passed to the set method
+     * @return Object return value
+     * @throws Exception
+     */
+	public static Object executeSetMethod(Method m, Object api, Object arg) throws Exception {
+        
+    	List<Object> args = new ArrayList<Object>(1);
+    	args.add(arg);
+        return m.invoke(api, args.toArray());
+    } 
+    
+    private static Map<String, Method> getWriteMethodMap(Class<?> clazz) throws TranslatorException {
+    	LinkedHashMap<String, Method> methodMap = new LinkedHashMap<String, Method>();
+    	
+		try {
+			BeanInfo info = Introspector.getBeanInfo(clazz);
+			PropertyDescriptor[] pds = info.getPropertyDescriptors();
+			
+			if (pds != null) {
+				for (int j = 0; j < pds.length; j++) {
+					PropertyDescriptor pd = pds[j];
+					if (pd.getWriteMethod() == null || pd instanceof IndexedPropertyDescriptor) {
+						continue;
+					}
+					String name = pd.getName();
+					Method m = pd.getWriteMethod();
+					methodMap.put(name, m);
+				}
+			}
+			MethodDescriptor[] mds = info.getMethodDescriptors();
+			if (pds != null) {
+				for (int j = 0; j < mds.length; j++) {
+					MethodDescriptor md = mds[j];
+					if (md.getMethod() == null || md.getMethod().getParameterTypes().length !=1 || (md.getMethod().getReturnType() != Void.class && md.getMethod().getReturnType() != void.class)) {
+						continue;
+					}
+					String name = md.getName();
+					Method m = md.getMethod();
+					methodMap.put(name, m);
+				}
+			}
+//			if (clazzMaps == null) {
+//				clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String,Method>>(100));
+//				classWriteMethodMap = new SoftReference<Map<Class<?>,Map<String,Method>>>(clazzMaps);
+//			}
+//			clazzMaps.put(clazz, methodMap);
+		} catch (IntrospectionException e) {
+			throw new TranslatorException(e);
+		}
+		return methodMap;
+	}
+
 
 }

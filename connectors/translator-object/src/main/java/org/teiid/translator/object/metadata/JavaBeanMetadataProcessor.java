@@ -34,10 +34,10 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectPlugin;
 
@@ -56,7 +56,6 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
 	
 	protected boolean isUpdatable = false;
-	private TeiidScriptEngine engine = new TeiidScriptEngine();
 
 	@Override
 	public void process(MetadataFactory mf, ObjectConnection conn) throws TranslatorException {
@@ -64,11 +63,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		for (String cacheName : cacheTypes.keySet()) {
 			Class<?> type = cacheTypes.get(cacheName);
 			String pkField = conn.getPkField(cacheName);
-			createSourceTable(mf, type, cacheName, pkField);
+			createSourceTable(mf, type, cacheName, pkField, conn.getClassRegistry());
 		}
 	}
 	
-	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, String pkField) {
+	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, String pkField, ClassRegistry registry) {
 		String tableName = getTableName(entity);
 		Table table = mf.getSchema().getTable(tableName);
 		if (table != null) {
@@ -85,7 +84,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, true); //$NON-NLS-1$
 		Map<String, Method> methods;
 		try {
-			methods = engine.getMethodMap(entity);
+			methods = registry.getReadScriptEngine().getMethodMap(entity);
 		} catch (ScriptException e) {
 			throw new MetadataException(e);
 		}
@@ -171,9 +170,19 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		if (nis != null) {
 			c.setNameInSource(nis);
 		}
+		
+		
+		if (type.isArray()) {
+			c.setNativeType(type.getSimpleName());
+		} else if (type.isEnum()) {
+			c.setNativeType(Enum.class.getName());
+		} else {
+			c.setNativeType(type.getName());
+		}
+		
 		c.setUpdatable(isUpdateable(entity, attributeName));
 		c.setSearchType(searchType);
-		c.setNativeType(type.getName());
+//		c.setNativeType(type.getName());
 		c.setSelectable(selectable);
 		if (type.isPrimitive()) {
 			c.setNullType(NullType.No_Nulls);
