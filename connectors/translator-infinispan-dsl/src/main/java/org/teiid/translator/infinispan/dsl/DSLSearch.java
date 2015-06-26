@@ -21,8 +21,6 @@
  */
 package org.teiid.translator.infinispan.dsl;
 
-import static org.teiid.language.visitor.SQLStringVisitor.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -255,40 +253,40 @@ public final class DSLSearch   {
 		switch (op) {
 		case NE:
 			if (fcbc == null) {
-				return queryBuilder.not().having(getRecordName(mdIDElement)).eq(value);
+				return queryBuilder.not().having(mdIDElement.getSourceName()).eq(value);
 			} 
-			return fcbc.not().having(getRecordName(mdIDElement)).eq(value);
+			return fcbc.not().having(mdIDElement.getSourceName()).eq(value);
 			
 
 		case EQ:
 			if (fcbc == null ) {
-				return queryBuilder.having(getRecordName(mdIDElement)).eq(value);
+				return queryBuilder.having(mdIDElement.getSourceName()).eq(value);
 			}
-			return fcbc.having(getRecordName(mdIDElement)).eq(value);
+			return fcbc.having(mdIDElement.getSourceName()).eq(value);
 
 		case GT:
 			if (fcbc == null) {
-				return queryBuilder.having(getRecordName(mdIDElement)).gt(value);
+				return queryBuilder.having(mdIDElement.getSourceName()).gt(value);
 			}
-			return fcbc.having(getRecordName(mdIDElement)).gt(value);
+			return fcbc.having(mdIDElement.getSourceName()).gt(value);
 
 		case GE:
 			if (fcbc == null) {
-				return queryBuilder.having(getRecordName(mdIDElement)).gte(value);
+				return queryBuilder.having(mdIDElement.getSourceName()).gte(value);
 			}
-			return fcbc.having(getRecordName(mdIDElement)).gte(value);
+			return fcbc.having(mdIDElement.getSourceName()).gte(value);
 
 		case LT:
 			if (fcbc == null) {
-				return queryBuilder.having(getRecordName(mdIDElement)).lt(value);
+				return queryBuilder.having(mdIDElement.getSourceName()).lt(value);
 			}
-			return fcbc.having(getRecordName(mdIDElement)).lt(value);
+			return fcbc.having(mdIDElement.getSourceName()).lt(value);
 			
 		case LE:
 			if (fcbc == null) {
-				return queryBuilder.having(getRecordName(mdIDElement)).lte(value);
+				return queryBuilder.having(mdIDElement.getSourceName()).lte(value);
 			}
-			return fcbc.having(getRecordName(mdIDElement)).lte(value);
+			return fcbc.having(mdIDElement.getSourceName()).lte(value);
 
 		default:
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25050, new Object[] { op, "NE, EQ, GT, GE, LT, LE" }));
@@ -325,14 +323,14 @@ public final class DSLSearch   {
 
 			if (fcbc == null) {
 				if (obj.isNegated()) {
-					return  queryBuilder.not().having(getRecordName(col)).in(v);
+					return  queryBuilder.not().having(col.getSourceName()).in(v);
 				}
-				return  queryBuilder.having(getRecordName(col)).in(v);
+				return  queryBuilder.having(col.getSourceName()).in(v);
 			}
 			if (obj.isNegated()) {
-				return fcbc.not().having(getRecordName(col)).in(v);
+				return fcbc.not().having(col.getSourceName()).in(v);
 			}
-			return fcbc.having(getRecordName(col)).in(v);
+			return fcbc.having(col.getSourceName()).in(v);
 		}
 		return null;
 	}
@@ -363,15 +361,15 @@ public final class DSLSearch   {
 
 			if (fcbc == null) {
 				if (obj.isNegated()) {
-					return queryBuilder.not().having(getRecordName(c)).like(value);
+					return queryBuilder.not().having(c.getSourceName()).like(value);
 				}
-				return queryBuilder.having(getRecordName(c)).like(value);
+				return queryBuilder.having(c.getSourceName()).like(value);
 			}
 			if (obj.isNegated()) {
-				return fcbc.not().having(getRecordName(c)).like(value);
+				return fcbc.not().having(c.getSourceName()).like(value);
 			}
 
-			return fcbc.having(getRecordName(c)).like(value);
+			return fcbc.having(c.getSourceName()).like(value);
 		} 
 		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25052, new Object[] { literalExp.toString(), "LIKE" }));
 
@@ -387,15 +385,15 @@ public final class DSLSearch   {
 
 		if (fcbc == null) {
 			if (obj.isNegated()) {
-				return queryBuilder.not().having(getRecordName(c)).isNull();
+				return queryBuilder.not().having(c.getSourceName()).isNull();
 			}
-			return queryBuilder.having(getRecordName(c)).isNull();
+			return queryBuilder.having(c.getSourceName()).isNull();
 		}
 		if (obj.isNegated()) {
-			return fcbc.not().having(getRecordName(c)).isNull();
+			return fcbc.not().having(c.getSourceName()).isNull();
 		}
 
-		return fcbc.having(getRecordName(c)).isNull();
+		return fcbc.having(c.getSourceName()).isNull();
 
 	}	
 

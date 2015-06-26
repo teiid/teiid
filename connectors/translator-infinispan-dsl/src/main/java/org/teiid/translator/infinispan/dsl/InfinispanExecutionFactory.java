@@ -92,7 +92,8 @@ public class InfinispanExecutionFactory extends
     	return new InfinispanUpdateExecution(command, connection, executionContext, this);
 	}
     
-    @Override
+
+	@Override
     public boolean supportsAliasedTable() {
         return true;
     }

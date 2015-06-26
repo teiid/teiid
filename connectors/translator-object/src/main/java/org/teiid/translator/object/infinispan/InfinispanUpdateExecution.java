@@ -125,6 +125,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 
 			String cacheName = insert.getTable().getMetadataObject().getNameInSource();
 
+			//if the foreign key exist, this is considered a child relationship
 			ForeignKey fk = getForeignKeyColumn(insert.getTable());
 			String fkeyColNIS = null;
 			if (fk != null) {
@@ -132,11 +133,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			}
 			Column keyCol = null;
 			if (fkeyColNIS == null) {
-				KeyRecord pk = insert.getTable().getMetadataObject().getPrimaryKey() ;
-				if (pk == null) {
-					throw new TranslatorException(InfinispanPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, new Object[] {insert.getTable().getName()}));
-				}
-				keyCol = pk.getColumns().get(0);
+				keyCol = getPrimaryKeyColumn(insert.getTable());
 			} 
 			
 			if (fkeyColNIS == null && keyCol == null) {
@@ -260,13 +257,13 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		// if fk exist, its assumed its a container class
 		// don't want to use PK, cause it can exist on any table
 		ForeignKey fk = getForeignKeyColumn(delete.getTable());
-		if (fk == null) {
-			keyCol = delete.getTable().getMetadataObject().getPrimaryKey().getColumns().get(0);
+		if (fk == null) {			
+			keyCol = getPrimaryKeyColumn(delete.getTable());
 
 		} else {
 			fkeyColNIS = getForeignKeyNIS(delete.getTable(), fk);			
 		}		
-			
+		
 		String cacheName = delete.getTable().getMetadataObject().getNameInSource();
 
 		if (fkeyColNIS == null && keyCol == null) {
@@ -407,7 +404,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		// don't want to use PK, cause it can exist on any table
 		ForeignKey fk = getForeignKeyColumn(update.getTable());
 		if (fk == null) {
-			keyCol = update.getTable().getMetadataObject().getPrimaryKey().getColumns().get(0);
+			keyCol = getPrimaryKeyColumn(update.getTable());
 
 		} else {
 			fkeyColNIS = getForeignKeyNIS(update.getTable(), fk);			
@@ -476,6 +473,14 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		this.context = null;
 		this.executionFactory = null;
 		sc = null;
+	}
+	
+	private Column getPrimaryKeyColumn(NamedTable table) {
+		if (table.getMetadataObject().getPrimaryKey() != null) {
+			return table.getMetadataObject().getPrimaryKey()
+					.getColumns().get(0);					
+		}
+		return null;
 	}
 
 	private ForeignKey getForeignKeyColumn(NamedTable table) {

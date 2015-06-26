@@ -81,10 +81,7 @@ import org.infinispan.protostream.descriptors.FieldDescriptor;
  * 
  */
 public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanConnection>{
-		
-	public static final String GET = "get"; //$NON-NLS-1$
-	public static final String IS = "is"; //$NON-NLS-1$
-		
+				
 	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
 
@@ -123,13 +120,14 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		addRootColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, rootTable.getName(), rootTable, true, true);
 		
 		boolean repeats = false;
+		// the descriptor is needed to determine which fields are defined as searchable.
 		for (FieldDescriptor fd:descriptor.getFields()) {	
 			if (fd.isRepeated() ) {
 				repeats = true;
 			} else {
 				SearchType st = isSearchable(fd);
-
-				addRootColumn(mf, getJavaType(fd), fd, st, rootTable.getName(), rootTable, true, true);	
+				Class<?> returnType = getJavaType( fd,entity, conn);
+				addRootColumn(mf, returnType, fd.getFullName(), fd.getName(), st, rootTable.getName(), rootTable, true, true);	
 			}
 		}	
 		
@@ -166,28 +164,25 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		
 	}
 	
-    private  String findRepeatedMethodName(String className, String methodName, InfinispanConnection conn) throws TranslatorException {
-        if (methodName == null || methodName.length() == 0) {
-            return null;
-        }
-        
+    private static Method findMethod(String className, String methodName, InfinispanConnection conn) throws TranslatorException {
         Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
+
+        Method m = mapMethods.get(methodName);
+        if (m!= null) return m;
         
         // because the class 'methods' contains 2 different references
         //  get'Name'  and 'Name', this will look for the 'Name' version
-        for (Iterator it=mapMethods.keySet().iterator(); it.hasNext();) {
+        for (Iterator<String> it=mapMethods.keySet().iterator(); it.hasNext();) {
         	String mName = (String) it.next();
         	if (mName.toLowerCase().startsWith(methodName.toLowerCase()) ) {
-        		Method m = mapMethods.get(mName);
-        		Class<?> c = m.getReturnType();
-        		if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
-        			return mName;
-        		}
+        		m = mapMethods.get(mName);
+        		return m;
         	} 
         }
-        return null;
-    }	
-	
+		throw new TranslatorException("Program Error: unable to find method " + methodName + " on class " + className);
+
+    }
+    
 	private void processRepeatedType(MetadataFactory mf, FieldDescriptor fd, Table rootTable, Method pkMethod, InfinispanConnection conn) throws TranslatorException  {
 		
 		Descriptor d = fd.getMessageType();
@@ -199,7 +194,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		Class<?> pc = getRegisteredClass(parent.getName(), conn);
 		Class<?> c = getRegisteredClass(fd.getMessageType().getName(), conn);
 
-		String mName = findRepeatedMethodName(pc.getName(), fd.getName(), conn);
+		String mName =  findMethodName(pc.getName(), fd.getName(), conn);
 		
 		if (mName == null) {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25060, new Object[] { fd.getName() }));
@@ -214,8 +209,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		for (FieldDescriptor f:fields) {
 
 			final SearchType st = isSearchable(f);
- 			// need to use the repeated descriptor, fd, as the prefix to the NIS in order to perform query
-			addSubColumn(mf, getJavaType(f), f, st, fd.getName(), t, true, true);	
+			// need to use the repeated descriptor, fd, as the prefix to the NIS in order to perform query
+			addSubColumn(mf, getJavaType(f, c, conn), f, st, fd.getName(), t, true, true);	
 		}
 		
 		if (pkMethod != null) {
@@ -228,28 +223,55 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			String fkName = "FK_" + rootTable.getName().toUpperCase();
     		addRootColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false, false);
 			ForeignKey fk = mf.addForiegnKey(fkName, keyColumns, referencedKeyColumns, rootTable.getName(), t);
+			
 			fk.setNameInSource(mName);
 
 		}
 	}	
 	
+    private  String findMethodName(String className, String methodName, InfinispanConnection conn) throws TranslatorException {
+        if (methodName == null || methodName.length() == 0) {
+            return null;
+        }
+               
+        Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
+        if (mapMethods.get(methodName.toLowerCase()) != null) {
+        	Method m = mapMethods.get(methodName.toLowerCase());
+    		if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
+    			return methodName;
+    		} else {
+    			return null;
+    		}
+        } else   if (mapMethods.get(methodName) != null) {
+        	Method m = mapMethods.get(methodName);
+    		if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
+    			return methodName;
+    		} else {
+    			return null;
+    		}
+        }
+        
+        // because the class 'methods' contains 2 different references
+        //  get'Name'  and 'Name', this will look for the 'Name' version
+        for (Iterator it=mapMethods.keySet().iterator(); it.hasNext();) {
+        	String mName = (String) it.next();
+        	if (mName.toLowerCase().startsWith(methodName.toLowerCase()) ) {
+        		Method m = mapMethods.get(mName);
+         		if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
+        			return mName;
+        		}
+        	} 
+        }
+        return null;
+    }	
+	
 	private Class<?> getRegisteredClass(String name, InfinispanConnection conn) throws TranslatorException {
-		List<Class<?>> registeredClasses = conn.getClassRegistry().getRegisteredClasses();
-		for (Class<?> c:registeredClasses) {
-			if (c.getName().endsWith(name)) {
-				return c;
-			}
-		}
+		Class<?> c = conn.getClassRegistry().getRegisteredClassUsingTableName(name);
+		if (c != null) return c;
 		
 		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, new Object[] { name }));
 	}	
 
-	private Column addRootColumn(MetadataFactory mf, Class<?> type, FieldDescriptor fd,
-			 SearchType searchType, String entityName, Table rootTable, boolean selectable, boolean updateable) {
-		
-		return addRootColumn(mf, type, fd.getFullName(), fd.getName(), searchType, entityName, rootTable, selectable, updateable);
-
-	}
 	private Column addRootColumn(MetadataFactory mf, Class<?> type, String columnFullName, String columnName,
 			 SearchType searchType, String entityName, Table rootTable, boolean selectable, boolean updateable) {
 		String attributeName;
@@ -306,9 +328,16 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		
 		c.setUpdatable(updateable);
 		c.setSearchType(searchType);
-		c.setNativeType(type.getName());
+		
+		if (type.isArray()) {
+			c.setNativeType(type.getSimpleName());
+		} else if (type.isEnum()) {
+			c.setNativeType(type.getName());
+		} else {
+			c.setNativeType(type.getName());
+		}
+		
 		c.setSelectable(selectable);
-
 
 		if (type.isPrimitive()) {
 			c.setNullType(NullType.No_Nulls);
@@ -330,22 +359,11 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
 	}
 	
-	private static Class<?> getJavaType(FieldDescriptor fd) {
-		
-		   switch (fd.getJavaType()) {
-		      case INT:         return Integer.class   ; 
-		      case LONG:        return Long.class      ; 
-		      case FLOAT:       return Float.class     ; 
-		      case DOUBLE:      return Double.class    ; 
-		      case BOOLEAN:     return Boolean.class   ; 
-		      case STRING:      return String.class    ; 
-		      case BYTE_STRING: return byte[].class    ; 
-		      case ENUM:  		return String.class 	;
-		      case MESSAGE:  	return String.class 	;
-		      default:
-		      	
-		        return String.class;
-		   }
+	private static Class<?> getJavaType(FieldDescriptor fd, Class<?> c, InfinispanConnection conn) throws TranslatorException {
+
+			Method m = findMethod(c.getName(), fd.getName(), conn);
+			
+			Class<?> t = TypeFacility.convertPrimitiveToObject(m.getReturnType());
+			return t ;
 	}
-	
 }

@@ -129,7 +129,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		return d;
 	}
 	
-	@SuppressWarnings({ "unused", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	@Override
 	public QueryFactory getQueryFactory(String cacheName) throws TranslatorException {
 		

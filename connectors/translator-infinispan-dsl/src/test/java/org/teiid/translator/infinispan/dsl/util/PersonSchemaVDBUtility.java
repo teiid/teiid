@@ -55,7 +55,7 @@ import org.teiid.translator.infinispan.dsl.InfinispanExecutionFactory;
  */
 
 @SuppressWarnings("nls")
-public class VDBUtility {
+public class PersonSchemaVDBUtility {
 
 	private static MetadataFactory createSchema() {
 		InfinispanExecutionFactory translator;
