@@ -24,6 +24,7 @@ package org.teiid.translator.ldap;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -119,6 +120,31 @@ public class TestQueryExecution {
         assertEquals(Arrays.asList("foo"), result);
         result = execution.next();
         assertEquals(Arrays.asList("bar"), result);
+        assertNull(execution.next());
+        
+        //missing attribute handling
+        Mockito.stub(attribs.get("objectClass")).toReturn(null);
+        enumeration = new SimpleNamingEnumeration(Arrays.asList(sr).iterator());
+        Mockito.stub(ctx.search((String)Mockito.any(), (String)Mockito.any(), (SearchControls)Mockito.any())).toReturn(enumeration);
+
+        execution = (LDAPSyncQueryExecution)lef.createExecution(command, ec, rm, connection);
+        execution.execute();
+        result = execution.next();
+        assertEquals(Collections.singletonList(null), result);
+        assertNull(execution.next());
+        
+        //empty attribute handling
+        attribValues = new SimpleNamingEnumeration(new ArrayList<Object>().iterator());
+        Mockito.stub(attrib.size()).toReturn(0);
+        Mockito.stub(attrib.getAll()).toReturn(attribValues);
+        Mockito.stub(attribs.get("objectClass")).toReturn(attrib);
+        enumeration = new SimpleNamingEnumeration(Arrays.asList(sr).iterator());
+        Mockito.stub(ctx.search((String)Mockito.any(), (String)Mockito.any(), (SearchControls)Mockito.any())).toReturn(enumeration);
+
+        execution = (LDAPSyncQueryExecution)lef.createExecution(command, ec, rm, connection);
+        execution.execute();
+        result = execution.next();
+        assertEquals(Collections.singletonList(null), result);
         assertNull(execution.next());
 	}
 	

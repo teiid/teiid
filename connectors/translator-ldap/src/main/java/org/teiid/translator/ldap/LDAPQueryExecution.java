@@ -344,28 +344,34 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		
 		if (unwrapPos > -1) {
 			Object toUnwrap = row.get(unwrapPos);
+			if (toUnwrap == null) {
+				return row; //missing value
+			}
 			if (toUnwrap instanceof ArrayImpl) {
 				final Object[] val = ((ArrayImpl) toUnwrap).getValues();
-				final int pos = unwrapPos;
-				unwrapIterator = new Iterator<List<Object>>() {
-					int i = 0;
-					@Override
-					public boolean hasNext() {
-						return i < val.length;
+				if (val.length == 0) {
+					row.set(unwrapPos, null); //empty value
+				} else {
+					unwrapIterator = new Iterator<List<Object>>() {
+						int i = 0;
+						@Override
+						public boolean hasNext() {
+							return i < val.length;
+						}
+						@Override
+						public List<Object> next() {
+							List<Object> newRow = new ArrayList<Object>(row);
+							newRow.set(unwrapPos, val[i++]);
+							return newRow;
+						}
+						@Override
+						public void remove() {
+							
+						}
+					};
+					if (unwrapIterator.hasNext()) {
+						return unwrapIterator.next();
 					}
-					@Override
-					public List<Object> next() {
-						List<Object> newRow = new ArrayList<Object>(row);
-						newRow.set(pos, val[i++]);
-						return newRow;
-					}
-					@Override
-					public void remove() {
-						
-					}
-				};
-				if (unwrapIterator.hasNext()) {
-					return unwrapIterator.next();
 				}
 			}
 		}
