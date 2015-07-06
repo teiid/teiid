@@ -166,7 +166,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger' OR t1.DataType = 'float' OR t1.DataType='double') THEN (4+(65536*t1.Precision)+t1.Scale) " + //$NON-NLS-1$
+				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger' OR t1.DataType = 'float' OR t1.DataType='double') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
 				"ELSE (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) END) as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
@@ -180,7 +180,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(kc.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger' OR t1.DataType = 'float' OR t1.DataType='double') THEN (4+(65536*t1.Precision)+t1.Scale) " + //$NON-NLS-1$
+				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger' OR t1.DataType = 'float' OR t1.DataType='double') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
 				"ELSE (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) END) as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
