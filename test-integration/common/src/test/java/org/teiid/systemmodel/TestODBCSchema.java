@@ -61,6 +61,17 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		execute("select * FROM pg_attribute"); //$NON-NLS-1$
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
+	
+	@Test public void test_PG_ATTRIBUTE_overflow()  throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create view t (c bigdecimal(2147483647,2147483647)) as select 1.0;");
+		server.deployVDB("overflow", mmd);
+		this.internalConnection = server.createConnection("jdbc:teiid:overflow"); //$NON-NLS-1$ //$NON-NLS-2$
+		execute("select * FROM pg_attribute"); //$NON-NLS-1$
+		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
+	}
 
 	@Test public void test_PG_CLASS()  throws Exception {
 		execute("select * FROM pg_class"); //$NON-NLS-1$
