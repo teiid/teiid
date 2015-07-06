@@ -969,6 +969,14 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * @return true if the WITH clause can appear in subqueries
+     * @since 8.12
+     */
+    public boolean supportsSubqueryCommonTableExpressions() {
+    	return supportsCommonTableExpressions();
+    }
+    
+    /**
      * @return true if Advanced OLAP operations are supported
      *  including the aggregate function filter clause.
      * @since 7.5

@@ -425,6 +425,9 @@ public class RelationalPlanner {
             	}
             }
             Command command = accessNode.getCommand();
+            if (command instanceof Insert && ((Insert)command).getQueryExpression() != null) {
+            	command = ((Insert)command).getQueryExpression();
+            }
             if (command instanceof QueryCommand) {
             	if (this.withGroups == null) {
             		this.withGroups = new TreeSet<GroupSymbol>(nonCorrelatedComparator);

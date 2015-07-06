@@ -282,5 +282,14 @@ public class TestSqlServerConversionVisitor {
     	assertFalse(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.CLOB));
     	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.TIMESTAMP, TypeFacility.RUNTIME_CODES.TIME));
     }
+    
+    @Test public void testWithInsert() throws Exception {
+        String input = "insert into bqt1.smalla (intkey) with a (x) as (select intnum from bqt1.smallb) select x from a"; //$NON-NLS-1$
+        String output = "WITH a (x) AS (SELECT SmallB.IntNum FROM SmallB) INSERT INTO SmallA (IntKey) SELECT a.x FROM a"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
        
 }

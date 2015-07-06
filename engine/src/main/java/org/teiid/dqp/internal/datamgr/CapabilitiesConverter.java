@@ -123,6 +123,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY_ROLLUP, srcCaps.supportsGroupByRollup());
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, srcCaps.supportsOrderByWithExtendedGrouping());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, srcCaps.supportsCompareCriteriaOrderedExclusive());
+        tgtCaps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsSubqueryCommonTableExpressions());
         if (srcCaps.supportsPartialFiltering()) {
         	//disable supports that could end up being not filterable
         	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);

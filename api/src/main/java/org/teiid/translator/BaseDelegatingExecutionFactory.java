@@ -520,4 +520,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean useBindingsForDependentJoin() {
 		return delegate.useBindingsForDependentJoin();
 	}
+	@Override
+	public boolean supportsSubqueryCommonTableExpressions() {
+		return delegate.supportsSubqueryCommonTableExpressions();
+	}
 }

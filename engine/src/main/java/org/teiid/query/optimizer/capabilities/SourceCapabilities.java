@@ -344,7 +344,8 @@ public interface SourceCapabilities {
         RECURSIVE_COMMON_TABLE_EXPRESSIONS, 
         CRITERIA_COMPARE_ORDERED_EXCLUSIVE,
         PARTIAL_FILTERS, 
-        DEPENDENT_JOIN_BINDINGS;
+        DEPENDENT_JOIN_BINDINGS,
+        SUBQUERY_COMMON_TABLE_EXPRESSIONS;
         
         private final String toString;
         

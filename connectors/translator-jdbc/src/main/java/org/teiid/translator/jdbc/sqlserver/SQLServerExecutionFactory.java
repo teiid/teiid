@@ -39,8 +39,12 @@ import java.util.Map;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
 import org.teiid.language.Function;
+import org.teiid.language.Insert;
 import org.teiid.language.LanguageObject;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.With;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -318,6 +322,11 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
+    public boolean supportsSubqueryCommonTableExpressions() {
+    	return false;
+    }
+    
+    @Override
     public boolean supportsRecursiveCommonTableExpressions() {
     	return getVersion().compareTo(TEN_0) >= 0;
     }
@@ -432,6 +441,22 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean supportsLiteralOnlyWithGrouping() {
     	return true;
+    }
+    
+    @Override
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (command instanceof Insert) {
+    		Insert insert = (Insert)command;
+    		if (insert.getValueSource() instanceof QueryExpression) {
+    			QueryExpression qe = (QueryExpression)insert.getValueSource();
+    			if (qe.getWith() != null) {
+    				With with = qe.getWith();
+    				qe.setWith(null);
+    				return Arrays.asList(with, insert);
+    			}
+    		}
+    	}
+    	return super.translateCommand(command, context);
     }
     
 }

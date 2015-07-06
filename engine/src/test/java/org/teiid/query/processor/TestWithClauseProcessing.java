@@ -25,6 +25,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestWithClauseProcessing {
@@ -490,5 +491,84 @@ public class TestWithClauseProcessing {
 	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
+	@Test public void testWithPushdownNested() throws TeiidException {
+		 FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+        caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+       
+	    String sql = "SELECT (with b (x) as (select e1 from pm1.g1) select b.x || c.x from b,b b1), x from (with a (x, b, c) as (select e1, e2, e3 from pm1.g1) select * from a limit 1) as c"; //$NON-NLS-1$
+	    
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT (WITH b__1 (x) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT concat(g_1.x, v_0.c_0) FROM b__1 AS g_1, b__1 AS g_2), v_0.c_0 FROM (SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, false);
+	    
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
+	@Test public void testWithPushdownNestedInsert() throws Exception {
+	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+      
+	    String sql = "insert into pm1.g1 (e1) with a (x) as (select e1 from pm1.g1) select a.x from a, a y"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+		        Arrays.asList(1),
+		    };
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    dataManager.addData("INSERT INTO g1 (e1) WITH a (x) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1", Arrays.asList(1));
+		CommandContext cc = TestProcessor.createCommandContext();
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc);
+	    
+	    helpProcess(plan, cc, dataManager, expected);
+	    
+	    //should be the same either way.  up to the translator to deal with the with clause
+	    caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, false);
+	    cc = TestProcessor.createCommandContext();
+	    plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc);
+	    helpProcess(plan, cc, dataManager, expected);
+	}
+	
+	@Test public void testWithPushdownNestedUpdate() throws Exception {
+	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+      
+	    String sql = "update pm1.g1 set e1 = (with a (x) as (select e1 from pm1.g2 limit 1) select a.x || pm1.g1.e1 from a)"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+		        Arrays.asList(1),
+		    };
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    dataManager.addData("UPDATE g1 SET e1 = (WITH a (x) AS (SELECT g_0.e1 AS c_0 FROM g2 AS g_0 LIMIT 1) SELECT concat(g_0.x, g1.e1) AS c_0 FROM a AS g_0)", Arrays.asList(1));
+		CommandContext cc = TestProcessor.createCommandContext();
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc);
+	    
+	    helpProcess(plan, cc, dataManager, expected);
+	}
 }
 

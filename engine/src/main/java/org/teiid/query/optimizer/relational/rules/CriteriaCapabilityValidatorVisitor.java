@@ -629,6 +629,14 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         } catch(QueryMetadataException e) {
              throw new TeiidComponentException(QueryPlugin.Event.TEIID30271, e);
         }
+        
+        if (!CapabilitiesUtil.supports(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, critNodeModelID, metadata, capFinder) 
+        		&& subqueryContainer.getCommand() instanceof QueryCommand) {
+        	QueryCommand command = (QueryCommand)subqueryContainer.getCommand();
+        	if (command.getWith() != null) {
+        		return null;
+        	}
+        }
 
         // Found no reason why this node is not eligible
         return critNodeModelID;
