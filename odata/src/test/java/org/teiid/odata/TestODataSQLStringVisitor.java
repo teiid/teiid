@@ -188,7 +188,7 @@ public class TestODataSQLStringVisitor {
 	}
 	
 	private void testSelect(String expected, String tableName, String filter, String select, String orderby, int top, String navProp, OEntityKey entityKey) throws Exception {
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind", "nw");		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("northwind", new RealMetadataFactory.DDLHolder("nw", ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl"))), new RealMetadataFactory.DDLHolder("nw1", ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl"))));		
 		ODataSQLBuilder visitor = new ODataSQLBuilder(metadata.getMetadataStore(), false);
 		QueryInfo qi = buildQueryInfo(filter, select, orderby, top);
 		Query query = visitor.selectString(tableName, qi, entityKey, navProp, false);
@@ -276,6 +276,13 @@ public class TestODataSQLStringVisitor {
 				"nw.Orders(12)/nw.OrderDetails", OEntityKey.create(33));
 	}
 	
+	@Test(expected=NotFoundException.class)
+	public void testNavigationalQueryAmbiguous() throws Exception {
+		testSelect(
+				"SELECT g1.EmployeeID, g1.OrderID, g1.CustomerID, g1.ShipVia FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID ORDER BY g1.OrderID",
+				"nw.Customers", null, "EmployeeID", null, -1, "Orders", null);
+	}
+	
 	
 	@Test
 	public void testEntityKeyQuery() throws Exception {
@@ -286,12 +293,12 @@ public class TestODataSQLStringVisitor {
 	public void testFilterBasedAssosiation() throws Exception {
 		testSelect(
 				"SELECT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 INNER JOIN nw.Customers AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.ContactName = 'Fred' ORDER BY g0.OrderID",
-				"nw.Orders", "Customers/ContactName eq 'Fred'", "OrderID",
+				"nw.Orders", "nw.Customers/ContactName eq 'Fred'", "OrderID",
 				null, -1, null, null);
 		
 		testSelect(
 				"SELECT g0.ContactName, g0.CustomerID FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1 ORDER BY g0.CustomerID",
-				"nw.Customers", "Orders/OrderID eq 1", "ContactName",
+				"nw.Customers", "nw.Orders/OrderID eq 1", "ContactName",
 				null, -1, null, null);
 		
 	}	
@@ -308,15 +315,15 @@ public class TestODataSQLStringVisitor {
 	public void testAny() throws Exception {	
 		testSelect(
 				"SELECT DISTINCT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 INNER JOIN nw.OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10 ORDER BY g0.OrderID",
-				"nw.Orders", "OrderDetails/any(ol: ol/Quantity gt 10)",
+				"nw.Orders", "nw.OrderDetails/any(ol: ol/Quantity gt 10)",
 				"OrderID", null, -1, null, null);
 	}	
 		
 	@Test
 	public void testAll() throws Exception {		
 		testSelect(
-				"SELECT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 WHERE 10 < ALL (SELECT ol.Quantity FROM OrderDetails AS ol WHERE g0.OrderID = ol.OrderID) ORDER BY g0.OrderID",
-				"nw.Orders", "OrderDetails/all(ol: ol/Quantity gt 10)",
+				"SELECT g0.OrderID, g0.CustomerID, g0.EmployeeID, g0.ShipVia FROM nw.Orders AS g0 WHERE 10 < ALL (SELECT ol.Quantity FROM nw.OrderDetails AS ol WHERE g0.OrderID = ol.OrderID) ORDER BY g0.OrderID",
+				"nw.Orders", "nw.OrderDetails/all(ol: ol/Quantity gt 10)",
 				"OrderID", null, -1, null, null);
 	}		
 	

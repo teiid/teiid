@@ -910,11 +910,10 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		
 		String tblName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
 		Table joinTable = findTable(tblName, this.metadata);
-		GroupSymbol joinGroup = new GroupSymbol(expr.getVariable(),tblName);
-		
 		if (joinTable == null) {
 			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16009, tblName));
 		}
+		GroupSymbol joinGroup = new GroupSymbol(expr.getVariable(),joinTable.getFullName());
 		
 		ODataAggregateAnyBuilder builder = new ODataAggregateAnyBuilder(expr,
 				this.resultEntityTable, this.resultEntityGroup, joinTable, joinGroup);
@@ -937,13 +936,17 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 				}
 			}
 		}
+		Table result = null;
 		for (Schema s : store.getSchemaList()) {
 			Table t = s.getTables().get(tableName);
 			if (t != null) {
-				return t;
+				if (result != null) {
+					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017, tableName));
+				}
+				result = t;
 			}
 		}		
-		return null;
+		return result;
 	}
 
 	private Column findColumn(Table table, String propertyName) {
