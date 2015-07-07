@@ -219,6 +219,19 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
+    	try {
+			DatabaseMetaData metadata = connection.getMetaData();
+    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+    		if (this.version == null) {
+    			String fullVersion = metadata.getDatabaseProductVersion();
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
+    			setDatabaseVersion(fullVersion);
+    		}
+		} catch (SQLException e) {
+			if (this.version == null) {
+				throw new TranslatorException(e);
+			}
+		}
 	}
 
     @Override
@@ -1169,7 +1182,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             sb.append(";DriverName=").append(dbmd.getDriverName()); //$NON-NLS-1$
             sb.append(";DriverVersion=").append(dbmd.getDriverVersion()); //$NON-NLS-1$
             sb.append(";IsolationLevel=").append(dbmd.getDefaultTransactionIsolation()); //$NON-NLS-1$
-            supportsGeneratedKeys = dbmd.supportsGetGeneratedKeys();
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, sb.toString());
         } catch (SQLException e) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11002)); 
@@ -1184,19 +1196,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public void obtainedConnection(Connection connection) {
         if (initialConnection.compareAndSet(true, false)) {
-        	try {
-    			DatabaseMetaData metadata = connection.getMetaData();
-    			String fullVersion = metadata.getDatabaseProductVersion();
-    			setDatabaseVersion(fullVersion);
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
-    		} catch (SQLException e) {
-    			LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11002));
-    		}
             afterInitialConnectionObtained(connection);
         }
     }
-    
-
     
     /**
      * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
