@@ -133,9 +133,6 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
-        if (getVersion().compareTo(NINE_0) <= 0) {
-	        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        }
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
         
@@ -234,6 +231,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public void initCapabilities(Connection connection)
     		throws TranslatorException {
     	super.initCapabilities(connection);
+    	if (getVersion().compareTo(NINE_0) <= 0) {
+	        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        }
     	if (this.postGisVersion.compareTo(Version.DEFAULT_VERSION) != 0) {
     		return;
     	}
