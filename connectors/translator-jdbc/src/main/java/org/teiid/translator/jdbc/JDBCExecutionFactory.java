@@ -242,11 +242,16 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			throws TranslatorException {
 		try {
 			DatabaseMetaData metadata = connection.getMetaData();
-			String fullVersion = metadata.getDatabaseProductVersion();
-			setDatabaseVersion(fullVersion);
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
+    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+    		if (this.version == null) {
+    			String fullVersion = metadata.getDatabaseProductVersion();
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
+    			setDatabaseVersion(fullVersion);
+    		}
 		} catch (SQLException e) {
-			throw new TranslatorException(e);
+			if (this.version == null) {
+				throw new TranslatorException(e);
+			}
 		}
 	}
 
@@ -1128,7 +1133,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             sb.append(";DriverName=").append(dbmd.getDriverName()); //$NON-NLS-1$
             sb.append(";DriverVersion=").append(dbmd.getDriverVersion()); //$NON-NLS-1$
             sb.append(";IsolationLevel=").append(dbmd.getDefaultTransactionIsolation()); //$NON-NLS-1$
-            supportsGeneratedKeys = dbmd.supportsGetGeneratedKeys();
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, sb.toString());
         } catch (SQLException e) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11002)); 

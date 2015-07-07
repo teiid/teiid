@@ -24,10 +24,14 @@ package org.teiid.translator.jdbc.postgresql;
 
 import static org.junit.Assert.*;
 
+import java.sql.Connection;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.util.SimpleMock;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 @SuppressWarnings("nls")
 public class TestPostgreSQLTranslator {
@@ -37,7 +41,9 @@ public class TestPostgreSQLTranslator {
     @BeforeClass public static void setupOnce() throws Exception {
         TRANSLATOR = new PostgreSQLExecutionFactory(); 
         TRANSLATOR.setUseBindVariables(false);
+        TRANSLATOR.setDatabaseVersion(Version.DEFAULT_VERSION);
         TRANSLATOR.start();
+        TRANSLATOR.initCapabilities(SimpleMock.createSimpleMock(Connection.class));
     }
     
     public String getTestVDB() {
@@ -50,6 +56,10 @@ public class TestPostgreSQLTranslator {
         
     public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
         TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, TRANSLATOR);
+    }
+    
+    @Test public void testStartWithoutVersion() throws TranslatorException {
+    	new PostgreSQLExecutionFactory().start();
     }
 
     @Test public void testConversion1() throws Exception {
