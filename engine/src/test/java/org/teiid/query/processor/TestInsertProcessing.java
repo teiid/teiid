@@ -582,5 +582,35 @@ public class TestInsertProcessing {
 
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testInsertSubquery() throws Exception {
+    	String sql = "Insert into pm1.g1 (e1) values ((select current_database()))"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1)
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO pm1.g1 (e1) VALUES ('myvdb')", Arrays.asList(1));
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertSubquery1() throws Exception {
+    	String sql = "Insert into pm1.g1 (e3) values ('a' < all (select current_database()))"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1)
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO pm1.g1 (e3) VALUES (TRUE)", Arrays.asList(1));
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
 
 }

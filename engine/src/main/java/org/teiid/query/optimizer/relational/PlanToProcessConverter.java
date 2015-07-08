@@ -48,6 +48,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
@@ -387,17 +388,27 @@ public class PlanToProcessConverter {
                     } catch (QueryMetadataException err) {
                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
                     }
-                    ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
-                    aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     setRoutingName(aNode, node, command);
+                    boolean shouldEval = false;
                     if (command instanceof Insert) {
                     	Insert insert = (Insert)command;
                     	if (insert.getQueryExpression() != null) {
                     		insert.setQueryExpression((QueryCommand)aliasCommand(aNode, insert.getQueryExpression(), modelID));
+                    	} else {
+                    		for (int i = 0; i < insert.getValues().size(); i++) {
+                    			Expression ex = (Expression)insert.getValues().get(i);
+                    			if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(ex, modelID, metadata, capFinder, analysisRecord)) {
+                    				//replace with an expression symbol to let the rewriter know that it should be replaced
+                    				insert.getValues().set(i, new ExpressionSymbol("x", ex));
+                    				shouldEval = true;
+                    			}
+                    		}
                     	}
                     } else if (command instanceof QueryCommand) {
 	                    command = aliasCommand(aNode, command, modelID);
                     }
+                    ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
+                    aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING) || shouldEval);
                     aNode.setCommand(command);
                     Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);
                     

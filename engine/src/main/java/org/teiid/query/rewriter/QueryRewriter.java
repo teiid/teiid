@@ -2687,7 +2687,12 @@ public class QueryRewriter {
         Iterator expIter = expressions.iterator();
         while(expIter.hasNext()) {
             Expression exp = (Expression) expIter.next();
-            evalExpressions.add( rewriteExpressionDirect( exp ));
+            if (processing && exp instanceof ExpressionSymbol) {
+            	//expression symbols that were created in the PlanToProcessesConverter
+            	evalExpressions.add( evaluate(exp, true));
+            } else {
+            	evalExpressions.add( rewriteExpressionDirect( exp ));
+            }
         }
 
         insert.setValues(evalExpressions);        
