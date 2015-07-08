@@ -2398,6 +2398,29 @@ public class TestProcedureProcessor {
         helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a", 1, null), Arrays.asList("b", 2, "a")});
     }
     
+    @Test public void testDefaultExpression() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string default 'current_database()' options (\"teiid_rel:default_handling\" 'expression')) RETURNS string", "x", "y");
+        
+        ProcessorPlan plan = helpGetPlan("exec f1()", metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("EXEC f1('myvdb')", Arrays.asList("a"));
+        hdm.setBlockOnce(true);
+        helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a")});
+    }
+    
+    @Test public void testOmitDefault() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign procedure f1(x string options (\"teiid_rel:default_handling\" 'omit')) RETURNS string", "x", "y");
+        
+        ProcessorPlan plan = helpGetPlan("exec f1()", metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("EXEC f1()", Arrays.asList("a"));
+        helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a")});
+    }
+    
     private static final boolean DEBUG = false;
     
 }

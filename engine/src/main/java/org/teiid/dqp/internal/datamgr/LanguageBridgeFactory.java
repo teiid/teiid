@@ -42,6 +42,8 @@ import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Select;
 import org.teiid.language.WindowSpecification;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -946,6 +948,10 @@ public class LanguageBridgeFactory {
                 case ParameterInfo.RETURN_VALUE: 
                 	returnType = param.getClassType();
                 	continue;
+            }
+            
+            if (param.isUsingDefault() && "omit".equalsIgnoreCase(metadataFactory.getMetadata().getExtensionProperty(param.getMetadataID(), BaseColumn.DEFAULT_HANDLING, false))) { 
+            	continue;
             }
             
             ProcedureParameter metadataParam = metadataFactory.getParameter(param);

@@ -25,6 +25,7 @@ package org.teiid.query.resolver.util;
 import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.core.TeiidComponentException;
@@ -32,6 +33,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.StringUtil;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
@@ -44,6 +46,7 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
@@ -463,6 +466,7 @@ public class ResolverUtil {
      * default value is defined
      * @throws QueryMetadataException for error retrieving metadata
      * @throws TeiidComponentException
+     * @throws QueryParserException 
      * @since 4.3
      */
 	public static Expression getDefault(ElementSymbol symbol, QueryMetadataInterface metadata) throws TeiidComponentException, QueryMetadataException, QueryResolverException {
@@ -470,10 +474,26 @@ public class ResolverUtil {
 		Object mid = symbol.getMetadataID();
     	Class<?> type = symbol.getType();
 		
-        Object defaultValue = metadata.getDefaultValue(mid);
+        String defaultValue = metadata.getDefaultValue(mid);
         
         if (defaultValue == null && !metadata.elementSupports(mid, SupportConstants.Element.NULL)) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30089, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30089, symbol.getOutputName()));
+        }
+        
+        if ("expression".equalsIgnoreCase(metadata.getExtensionProperty(mid,  BaseColumn.DEFAULT_HANDLING, false))) { //$NON-NLS-1$
+        	Expression ex = null;
+        	try {
+        		ex = QueryParser.getQueryParser().parseExpression(defaultValue);
+        	} catch (QueryParserException e) {
+        		//TODO: also validate this at load time
+        		throw new QueryMetadataException(QueryPlugin.Event.TEIID31170, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31170, symbol));
+        	}
+        	List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex);
+        	ResolverVisitor.resolveLanguageObject(ex, metadata);
+        	for (SubqueryContainer<?> container : subqueries) {
+        		QueryResolver.resolveCommand(container.getCommand(), metadata);
+        	}
+        	return ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(type), metadata);
         }
         
         return getProperlyTypedConstant(defaultValue, type);

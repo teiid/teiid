@@ -165,7 +165,7 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-    Object getDefaultValue(Object elementID)
+    String getDefaultValue(Object elementID)
         throws TeiidComponentException, QueryMetadataException;        
 
     /**

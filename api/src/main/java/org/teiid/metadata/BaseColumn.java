@@ -30,6 +30,8 @@ import org.teiid.translator.TypeFacility;
 
 public abstract class BaseColumn extends AbstractMetadataRecord {
 	
+	public static final String DEFAULT_HANDLING = AbstractMetadataRecord.RELATIONAL_URI + "default_handling"; //$NON-NLS-1$
+	
 	private static final long serialVersionUID = 6382258617714856616L;
 
 	public enum NullType {

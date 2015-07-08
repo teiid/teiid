@@ -612,5 +612,24 @@ public class TestInsertProcessing {
 
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testInsertDefaultSubquery() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table p (e1 string) options (updatable 'true'); "
+    			+ "create view t (col string, col1 string default '(select current_database())' options (\"teiid_rel:default_handling\" 'expression')) options (updatable 'true') as select e1, e1 from p; "
+    			+ "create trigger on t instead of insert as for each row begin insert into p (e1) values (new.col1); end;", "x", "y");
+        
+    	String sql = "Insert into t (col) values ('a')"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1)
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO p (e1) VALUES ('myvdb')", Arrays.asList(1));
+
+        ProcessorPlan plan = helpGetPlan(sql, tm);
+
+        helpProcess(plan, dataManager, expected);
+    }
 
 }

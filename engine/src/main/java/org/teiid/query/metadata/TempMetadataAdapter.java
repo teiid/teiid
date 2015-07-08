@@ -260,7 +260,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 		return this.actualMetadata.getElementType(elementID);
 	}
 
-    public Object getDefaultValue(Object elementID)
+    public String getDefaultValue(Object elementID)
         throws TeiidComponentException, QueryMetadataException {
             
         if(elementID instanceof TempMetadataID) {

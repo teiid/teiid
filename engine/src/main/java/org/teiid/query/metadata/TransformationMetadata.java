@@ -432,7 +432,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public Object getDefaultValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public String getDefaultValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getDefaultValue();            
         } else if(elementID instanceof ProcedureParameter){

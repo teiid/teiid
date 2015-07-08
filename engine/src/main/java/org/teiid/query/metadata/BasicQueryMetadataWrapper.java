@@ -74,7 +74,7 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getCharacterVDBResource(resourcePath);
 	}
 
-	public Object getDefaultValue(Object elementID)
+	public String getDefaultValue(Object elementID)
 			throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.getDefaultValue(elementID);
 	}
