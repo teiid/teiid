@@ -47,6 +47,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -1245,6 +1246,15 @@ public class TestDependentJoins {
 		Select select = (Select)dataManager.getPushdownCommands().get(1);
 		List<? extends List<?>> vals = select.getWith().getItems().get(0).getDependentValues();
 		assertEquals(1, vals.size());
+    }
+    
+    @Test public void testNoFullDepJoin() throws Exception {
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, true);
+    	String sql = "select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 where (pm1.g1.e1 = pm2.g1.e1) option makedep pm1.g1(no join)";
+		assertEquals("SELECT pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 OPTION MAKEDEP pm1.g1(NO JOIN)", QueryParser.getQueryParser().parseCommand(sql).toString());
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, TestOptimizer.example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testBindings() throws Exception {

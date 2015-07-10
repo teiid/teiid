@@ -46,7 +46,7 @@ public class Option implements LanguageObject {
 
     public static class MakeDep {
     	private Integer max;
-    	private boolean join;
+    	private Boolean join;
     	
     	@Override
 		public int hashCode() {
@@ -86,16 +86,16 @@ public class Option implements LanguageObject {
 			this.max = max;
 		}
 		
-		public boolean isJoin() {
+		public Boolean getJoin() {
 			return join;
 		}
 		
-		public void setJoin(boolean join) {
+		public void setJoin(Boolean join) {
 			this.join = join;
 		}
 		
 		public boolean isSimple() {
-			return max == null && !join;
+			return max == null && join == null;
 		}
     }
     

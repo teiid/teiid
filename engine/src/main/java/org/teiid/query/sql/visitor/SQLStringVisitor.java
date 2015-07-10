@@ -677,7 +677,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
 	public SQLStringVisitor appendMakeDepOptions(MakeDep makedep) {
 		boolean parens = false;
-		if (makedep.getMax() != null || makedep.isJoin()) {
+		if (makedep.getMax() != null || makedep.getJoin() != null) {
 			append(Tokens.LPAREN);
 			parens = true;
 		}
@@ -692,11 +692,15 @@ public class SQLStringVisitor extends LanguageVisitor {
 			append(Tokens.COLON);
 			append(makedep.getMax());
 		}
-		if (makedep.isJoin()) {
+		if (makedep.getJoin() != null) {
 			if (space) {
 				append(SPACE);
 			} else {
 				space = true;
+			}
+			if (!makedep.getJoin()) {
+				append(NO);
+				append(SPACE);
 			}
 			append(JOIN);
 		}

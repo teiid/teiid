@@ -427,8 +427,12 @@ public final class RuleChooseDependent implements OptimizerRule {
 		Object modelID = RuleRaiseAccess.getModelIDFromAccess(sourceNode, metadata);
 
 		boolean hasHint = false;
-
-		if (makeDep != null && makeDep.isJoin()) {
+		
+		if (makeDep != null && makeDep.getJoin() != null) {
+			if (!makeDep.getJoin()) {
+				sourceNode.recordDebugAnnotation("cannot pushdown dependent join", modelID, "honoring hint", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
+				return false;
+			}
     		hasHint = true;
     	}
 		

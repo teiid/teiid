@@ -2428,17 +2428,18 @@ example={code:sql}(min:10000){code}
 Option.MakeDep makedepOptions() :
 {
 	Integer max = null;
-	boolean join = false;
+	Boolean join = null;
+	boolean no = false;
 }
 {
  [<LPAREN>
 	[<MAX><COLON> max = intVal()]
-	[<JOIN> {join = true;}]
+	[[<NO> {no = true;}] <JOIN> {join = true;}]
   <RPAREN>]
  {
  	Option.MakeDep result = new Option.MakeDep();
  	result.setMax(max);
- 	result.setJoin(join);
+ 	result.setJoin(no?Boolean.FALSE:join);
  	return result;
  }
 }
