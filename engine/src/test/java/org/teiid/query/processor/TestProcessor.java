@@ -7767,5 +7767,16 @@ public class TestProcessor {
         helpProcess(plan, fdm, new List[] {Arrays.asList(11)});
     }
     
+    
+    @Test public void testNonDeterministicBlockingSubquery() {
+        String sql = "select count(distinct x) from (select (select rand() from pm1.g1 limit 1) as x from pm1.g1) as y"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        fdm.setBlockOnce();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[] {Arrays.asList(6)});
+    }
+    
     private static final boolean DEBUG = false;
 }

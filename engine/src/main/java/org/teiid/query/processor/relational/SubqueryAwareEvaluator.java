@@ -97,11 +97,13 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		ProcessorPlan plan;
 		List<Object> refValues;
 		boolean comparable = true;
+		public boolean blocked;
 		
 		void close(boolean removeBuffer) {
 			if (processor == null) {
 				return;
 			}
+			processor.requestCanceled();
 			processor.closeProcessing();
 			if (removeBuffer) {
 				collector.getTupleBuffer().remove();
@@ -185,9 +187,6 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		if (state.processor != null) {
 			Determinism determinism = state.processor.getContext().getDeterminismLevel();
 			deterministic = Determinism.COMMAND_DETERMINISTIC.compareTo(determinism) <= 0;
-			if (!deterministic) {
-				shouldClose = true;
-			}
 		}
 		boolean removeBuffer = true;
 		if (correlatedRefs != null) {
@@ -242,9 +241,10 @@ public class SubqueryAwareEvaluator extends Evaluator {
             	shouldClose = true;
             }
 		}
-		if (shouldClose) {
+		if (shouldClose || (!deterministic && !state.blocked)) {
 			state.close(removeBuffer);
 		}
+		state.blocked = true;
 		if (state.processor == null) {
 			CommandContext subContext = context.clone();
 			state.plan.reset();
@@ -254,7 +254,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	        }
 	        state.collector = state.processor.createBatchCollector();
 		}
-		return new TupleSourceValueIterator(state.collector.collectTuples().createIndexedTupleSource(), 0);
+		TupleSourceValueIterator iter = new TupleSourceValueIterator(state.collector.collectTuples().createIndexedTupleSource(), 0);
+		state.blocked = false;
+		return iter;
 	}
 	
 }

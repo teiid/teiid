@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -52,6 +53,7 @@ import java.util.UUID;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
@@ -67,8 +69,10 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -1482,4 +1486,23 @@ public final class FunctionMethods {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
+	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException {
+		if (!validity) {
+			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
+				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
+			}
+			if (MaterializationMetadataRepository.ErrorAction.WAIT.name().equalsIgnoreCase(action)){
+				context.getWorkItem().scheduleWork(30000);
+				throw BlockedException.INSTANCE;
+			}
+		}
+		return 1;
+	}	
+	
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM)
+	public static String[] tokenize(String str, char delimiter) {
+		List<String> tokens = StringUtil.tokenize(str, delimiter);
+		return tokens.toArray(new String[tokens.size()]);
+	}
 }

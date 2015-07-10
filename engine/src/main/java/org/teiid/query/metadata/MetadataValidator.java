@@ -50,6 +50,7 @@ import org.teiid.query.report.ReportItem;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
@@ -276,7 +277,7 @@ public class MetadataValidator {
     					}
     				}
     			}
-    			
+    			boolean addCacheHint = false;
     			if (t.isMaterialized() && t.getMaterializedTable() == null) {
 	    			List<KeyRecord> fbis = t.getFunctionBasedIndexes();
 	    			List<GroupSymbol> groups = Arrays.asList(symbol);
@@ -308,7 +309,13 @@ public class MetadataValidator {
     			}
     			
     			// this seems to parse, resolve and validate.
-    			QueryResolver.resolveView(symbol, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
+    			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
+    			CacheHint cacheHint = node.getCommand().getCacheHint();
+				Long ttl = -1L;
+				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint) {
+					ttl = cacheHint.getTtl();
+					t.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, String.valueOf(ttl));
+				}
     		}
 			if(resolverReport != null && resolverReport.hasItems()) {
 				for (ValidatorFailure v:resolverReport.getItems()) {
