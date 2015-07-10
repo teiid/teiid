@@ -1114,5 +1114,10 @@ public class TestOptionsAndHints {
         String sql = "Select a From db.g1 JOIN db.g2 MAKEDEP(max:300) ON a = b"; //$NON-NLS-1$
         assertEquals("SELECT a FROM db.g1 INNER JOIN db.g2 MAKEDEP(MAX:300) ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
     }
+    
+    @Test public void testMakeindOptions() throws QueryParserException {
+        String sql = "Select a From db.g1 JOIN db.g2 MAKEIND(max:300 no join) ON a = b"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM db.g1 INNER JOIN db.g2 MAKEIND(MAX:300 NO JOIN) ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+    }
 
 }

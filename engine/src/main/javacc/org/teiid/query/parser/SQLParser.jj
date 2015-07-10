@@ -250,6 +250,7 @@ TOKEN : /* Reserved words */
 |   <LOCAL: "local">
 |   <LOOP: "loop">
 |   <MAKEDEP: "makedep">
+|   <MAKEIND: "makeind">
 |   <MAKENOTDEP: "makenotdep">
 |   <MATCH: "match">
 |   <MERGE: "merge">
@@ -2415,6 +2416,7 @@ FromClause tablePrimary(ParseInfo info) :
 	[	(<MAKEDEP> makedep = makedepOptions() { clause.setMakeDep(makedep); })
 	 	| (<MAKENOTDEP> {  clause.setMakeNotDep(true); } )
 	]
+	[ (<MAKEIND> makedep = makedepOptions() { clause.setMakeInd(makedep); }) ]
 	{
 		return clause;
 	}
@@ -3697,6 +3699,17 @@ Option option(ParseInfo info) :
 			id=id(null) makedep = makedepOptions()
 			{
     	        option.addDependentGroup(id, makedep);
+	        }
+		)* |
+		<MAKEIND>		
+		id=id(null) makedep = makedepOptions()
+		{
+            option.addIndependentGroup(id, makedep);
+		}
+		(<COMMA>
+			id=id(null) makedep = makedepOptions()
+			{
+    	        option.addIndependentGroup(id, makedep);
 	        }
 		)* |
 		<MAKENOTDEP>		

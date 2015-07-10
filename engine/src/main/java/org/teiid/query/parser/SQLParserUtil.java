@@ -188,7 +188,7 @@ public class SQLParserUtil {
             } else if (parts[i].equalsIgnoreCase(Option.MAKENOTDEP)) {
                 fromClause.setMakeNotDep(true);
             } else if (parts[i].equalsIgnoreCase(FromClause.MAKEIND)) {
-                fromClause.setMakeInd(true);
+                fromClause.setMakeInd(new Option.MakeDep());
             } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
             	fromClause.setNoUnnest(true);
             } else if (parts[i].equalsIgnoreCase(FromClause.PRESERVE)) {

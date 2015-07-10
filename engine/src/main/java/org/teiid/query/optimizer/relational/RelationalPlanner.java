@@ -1385,8 +1385,8 @@ public class RelationalPlanner {
         } else if (clause.isMakeNotDep()) {
             node.setProperty(NodeConstants.Info.MAKE_NOT_DEP, Boolean.TRUE);
         }
-        if (clause.isMakeInd()) {
-        	node.setProperty(NodeConstants.Info.MAKE_IND, Boolean.TRUE);
+        if (clause.getMakeInd() != null) {
+        	node.setProperty(NodeConstants.Info.MAKE_IND, clause.getMakeInd());
         }
     }
 

@@ -152,6 +152,7 @@ public class SQLConstants {
 	    public static final String LONG = "LONG"; //$NON-NLS-1$
 	    public static final String LOOP = "LOOP"; //$NON-NLS-1$
 	    public static final String MAKEDEP = "MAKEDEP"; //$NON-NLS-1$
+	    public static final String MAKEIND = "MAKEIND"; //$NON-NLS-1$
 	    public static final String MAKENOTDEP = "MAKENOTDEP"; //$NON-NLS-1$
 		public static final String NOCACHE = "NOCACHE"; //$NON-NLS-1$
 		public static final String STRING = "STRING"; //$NON-NLS-1$

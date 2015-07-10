@@ -47,7 +47,7 @@ public abstract class FromClause implements LanguageObject {
     private boolean optional;
     private MakeDep makeDep;
     private boolean makeNotDep;
-    private boolean makeInd;
+    private MakeDep makeInd;
     private boolean noUnnest;
     private boolean preserve;
 
@@ -59,11 +59,11 @@ public abstract class FromClause implements LanguageObject {
         this.optional = optional;
     }
     
-    public boolean isMakeInd() {
+    public MakeDep getMakeInd() {
 		return makeInd;
 	}
     
-    public void setMakeInd(boolean makeInd) {
+    public void setMakeInd(MakeDep makeInd) {
 		this.makeInd = makeInd;
 	}
     
@@ -128,7 +128,7 @@ public abstract class FromClause implements LanguageObject {
 	}
     
     public boolean hasHint() {
-        return optional || (makeDep != null && makeDep.isSimple()) || makeNotDep || makeInd || noUnnest || preserve;
+        return optional || (makeDep != null && makeDep.isSimple()) || makeNotDep || (makeInd != null && makeInd.isSimple()) || noUnnest || preserve;
     }
     
     public boolean equals(Object obj) {
@@ -145,7 +145,7 @@ public abstract class FromClause implements LanguageObject {
         return other.isOptional() == this.isOptional()
                && EquivalenceUtil.areEqual(this.makeDep, other.makeDep)
                && other.isMakeNotDep() == this.isMakeNotDep()
-        	   && other.isMakeInd() == this.isMakeInd()
+        	   && EquivalenceUtil.areEqual(this.makeInd, other.makeInd)
         	   && other.isNoUnnest() == this.isNoUnnest()
 			   && other.isNoUnnest() == this.isNoUnnest();
     }

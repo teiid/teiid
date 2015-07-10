@@ -293,11 +293,13 @@ public final class RuleChooseDependent implements OptimizerRule {
         	sourceNode2.recordDebugAnnotation("MAKE_DEP hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	rootNode2.setProperty(Info.MAKE_DEP, sourceNode2.getProperty(Info.MAKE_DEP));
             return rootNode2;
-        } else if (sourceNode1.hasBooleanProperty(NodeConstants.Info.MAKE_IND) && sourceNode2 != null) {
+        } else if (sourceNode1.hasProperty(NodeConstants.Info.MAKE_IND) && sourceNode2 != null) {
         	sourceNode2.recordDebugAnnotation("MAKE_IND hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
+        	rootNode2.setProperty(Info.MAKE_DEP, sourceNode1.getProperty(Info.MAKE_IND));
         	return rootNode2;
-        } else if (sourceNode2 != null && sourceNode2.hasBooleanProperty(NodeConstants.Info.MAKE_IND)) {
+        } else if (sourceNode2 != null && sourceNode2.hasProperty(NodeConstants.Info.MAKE_IND)) {
         	sourceNode1.recordDebugAnnotation("MAKE_IND hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
+        	rootNode1.setProperty(Info.MAKE_DEP, sourceNode2.getProperty(Info.MAKE_IND));
         	return rootNode1;
         }
         

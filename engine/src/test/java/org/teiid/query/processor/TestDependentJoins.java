@@ -1204,7 +1204,17 @@ public class TestDependentJoins {
 	@Test public void testPushdownMax() {
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 MAKEDEP(max:2) WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
         
-        List<?>[] expected = new List<?>[] { 
+        helpTestMax(sql);
+	}
+	
+	@Test public void testPushdownMaxInd() {
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1 MAKEIND(max:2), pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
+        
+        helpTestMax(sql);
+	}
+
+	private void helpTestMax(String sql) {
+		List<?>[] expected = new List<?>[] { 
             Arrays.asList("a"), //$NON-NLS-1$
             Arrays.asList("b"), //$NON-NLS-1$
             Arrays.asList("c"), //$NON-NLS-1$

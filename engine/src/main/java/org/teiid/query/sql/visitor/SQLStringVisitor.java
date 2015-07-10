@@ -526,7 +526,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(Option.MAKENOTDEP);
                 append(SPACE);
             }
-            if (obj.isMakeInd()) {
+            if (obj.getMakeInd() != null && obj.getMakeInd().isSimple()) {
                 append(FromClause.MAKEIND);
                 append(SPACE);
             }
@@ -2413,8 +2413,14 @@ public class SQLStringVisitor extends LanguageVisitor {
 			append(MAKEDEP);
 			appendMakeDepOptions(makeDep);
 		}
+		makeDep = obj.getMakeInd();
+		if (makeDep != null && !makeDep.isSimple()) {
+			append(SPACE);
+			append(MAKEIND);
+			appendMakeDepOptions(makeDep);
+		}
 	}
-
+    
 	@Override
     public void visit(AlterProcedure alterProcedure) {
     	append(ALTER);

@@ -100,7 +100,9 @@ public class Option implements LanguageObject {
     }
     
     private List<String> makeDependentGroups;
+    private List<String> makeIndependentGroups;
     private List<MakeDep> makeDependentOptions;
+    private List<MakeDep> makeIndependentOptions;
     private List<String> makeNotDependentGroups;
 	private List<String> noCacheGroups;
     private boolean noCache;
@@ -131,6 +133,18 @@ public class Option implements LanguageObject {
         this.makeDependentOptions.add(makedep);
     }
     
+    public void addIndependentGroup(String group, MakeDep makedep) {
+    	if (makedep == null) {
+    		return;
+    	}
+        if(this.makeIndependentGroups == null) {
+            this.makeIndependentGroups = new ArrayList<String>();
+            this.makeIndependentOptions = new ArrayList<MakeDep>();
+        }
+        this.makeIndependentGroups.add(group);    
+        this.makeIndependentOptions.add(makedep);
+    }
+    
     /** 
      * Get all groups to make dependent
      * @return List of String defining groups to be made dependent, may be null if no groups
@@ -142,6 +156,14 @@ public class Option implements LanguageObject {
     public List<MakeDep> getMakeDepOptions() {
     	return this.makeDependentOptions;
     }
+    
+    public List<MakeDep> getMakeIndependentOptions() {
+		return makeIndependentOptions;
+	}
+    
+    public List<String> getMakeIndependentGroups() {
+		return makeIndependentGroups;
+	}
     
     /**
      * Add group to make dependent
@@ -224,6 +246,9 @@ public class Option implements LanguageObject {
         
         return noCache == other.noCache &&
                EquivalenceUtil.areEqual(makeDependentGroups, other.makeDependentGroups) &&
+               EquivalenceUtil.areEqual(makeIndependentGroups, other.makeIndependentGroups) &&
+               EquivalenceUtil.areEqual(makeDependentOptions, other.makeDependentOptions) &&
+               EquivalenceUtil.areEqual(makeIndependentOptions, other.makeIndependentOptions) &&
                EquivalenceUtil.areEqual(getNotDependentGroups(), other.getNotDependentGroups()) &&
                EquivalenceUtil.areEqual(getNoCacheGroups(), other.getNoCacheGroups());
     }
@@ -257,6 +282,11 @@ public class Option implements LanguageObject {
         if(this.makeDependentGroups != null) {
         	newOption.makeDependentGroups = new ArrayList<String>(this.makeDependentGroups);
         	newOption.makeDependentOptions = new ArrayList<MakeDep>(this.makeDependentOptions);
+        }
+        
+        if(this.makeIndependentGroups != null) {
+        	newOption.makeIndependentGroups = new ArrayList<String>(this.makeIndependentGroups);
+        	newOption.makeIndependentOptions = new ArrayList<MakeDep>(this.makeIndependentOptions);
         }
             
         if(getNotDependentGroups() != null) {

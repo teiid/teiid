@@ -542,7 +542,7 @@ public class QueryRewriter {
 			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
 			FromClause clause = q.getFrom().getClauses().get(0);
 			if (plannedResult.makeInd) {
-				clause.setMakeInd(true);
+				clause.setMakeInd(new Option.MakeDep());
 			}
 		    query.getFrom().addClause(clause);
 		    query.getTemporaryMetadata().getData().putAll(q.getTemporaryMetadata().getData());

@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
@@ -80,6 +81,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
@@ -1390,6 +1392,73 @@ public class TestEmbeddedServer {
 		mmd.setModelType(Type.VIRTUAL);
 		mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
 		es.deployVDB("x", mmd);
+	}
+	
+	@Test public void testLargeInsert() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setUseDisk(true);
+		
+		es.start(ec);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("y");
+		mmd.addSourceMetadata("ddl", "create foreign table t (x string);");
+		mmd.addSourceMapping("x", "x", null);
+		
+		final Random r = new Random(0);
+		
+		final AtomicInteger rowCount = new AtomicInteger(10000);
+		
+		es.addTranslator("x", new HardCodedExecutionFactory() {
+			@Override
+			public Execution createExecution(Command command,
+					ExecutionContext executionContext,
+					RuntimeMetadata metadata, Object connection)
+					throws TranslatorException {
+				return new ResultSetExecution() {
+					
+					@Override
+					public void execute() throws TranslatorException {
+					}
+					
+					@Override
+					public void close() {
+					}
+					
+					@Override
+					public void cancel() throws TranslatorException {
+					}
+					
+					@Override
+					public List<?> next() throws TranslatorException, DataNotAvailableException {
+						if (r.nextBoolean()) {
+							try {
+								Thread.sleep(4);
+							} catch (InterruptedException e) {
+							}
+						}
+						if (rowCount.getAndDecrement() > 0) {
+							return Arrays.asList("abcde");
+						}
+						return null;
+					}
+				};
+			}
+		});
+		
+		es.deployVDB("x", mmd);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+
+		s.execute("select teiid_session_set('teiid.maxRecursion', 10000000)"); //$NON-NLS-1$
+		s.execute("create local temporary table x (e1 string, e2 integer)"); //$NON-NLS-1$
+		/*for (int i = 5000; i < 7000; i++) {
+			s.execute("insert into x (e1, e2) WITH cnt(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM cnt WHERE x<"+i+") SELECT uuid(), x FROM cnt"); //$NON-NLS-1$
+			s.execute("delete from x"); //$NON-NLS-1$
+			System.out.println(i);
+		}*/
+		
+		s.execute("insert into x (e1, e2) select x, 1 from t"); //$NON-NLS-1$
 	}
 
 }
