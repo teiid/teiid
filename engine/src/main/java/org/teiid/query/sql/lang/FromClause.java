@@ -41,7 +41,6 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class FromClause implements LanguageObject {
 	
-	public static final String MAKEIND = "MAKEIND"; //$NON-NLS-1$
 	public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 	
     private boolean optional;
@@ -128,7 +127,7 @@ public abstract class FromClause implements LanguageObject {
 	}
     
     public boolean hasHint() {
-        return optional || (makeDep != null && makeDep.isSimple()) || makeNotDep || (makeInd != null && makeInd.isSimple()) || noUnnest || preserve;
+        return optional || makeDep != null || makeNotDep || makeInd != null || noUnnest || preserve;
     }
     
     public boolean equals(Object obj) {

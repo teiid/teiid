@@ -53,7 +53,9 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class SQLParserUtil {
 	
-    static Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
+    static final Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
+    
+    static final Pattern hintPattern = Pattern.compile("\\s*(\\w+(?:\\(\\s*(max:\\d+)?\\s*((?:no)?\\s*join)\\s*\\))?)\\s*", Pattern.DOTALL | Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
 	
@@ -178,24 +180,51 @@ public class SQLParserUtil {
     }
     
     void setFromClauseOptions(Token groupID, FromClause fromClause){
-        String[] parts = getComment(groupID).split("\\s"); //$NON-NLS-1$
-
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].equalsIgnoreCase(Option.OPTIONAL)) {
-                fromClause.setOptional(true);
-            } else if (parts[i].equalsIgnoreCase(Option.MAKEDEP)) {
-                fromClause.setMakeDep(true);
-            } else if (parts[i].equalsIgnoreCase(Option.MAKENOTDEP)) {
-                fromClause.setMakeNotDep(true);
-            } else if (parts[i].equalsIgnoreCase(FromClause.MAKEIND)) {
-                fromClause.setMakeInd(new Option.MakeDep());
-            } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
+    	String comment = getComment(groupID);
+    	if (comment == null || comment.isEmpty()) {
+    		return;
+    	}
+    	Matcher m = hintPattern.matcher(comment);
+    	int start = 0;
+    	boolean makedep = false;
+    	while (m.find(start)) {
+    		String hint = m.group(1);
+    		start = m.end();
+    		if (StringUtil.startsWithIgnoreCase(hint, "make")) { //$NON-NLS-1$
+        		if (hint.equalsIgnoreCase(Option.MAKENOTDEP)) {
+                    fromClause.setMakeNotDep(true);
+        		} else if (StringUtil.startsWithIgnoreCase(hint, Option.MAKEDEP)) {
+        			Option.MakeDep option = new Option.MakeDep();
+                    fromClause.setMakeDep(option);
+                    parseOptions(m, option);
+        		} else if (StringUtil.startsWithIgnoreCase(hint, SQLConstants.Reserved.MAKEIND)) {
+        			Option.MakeDep option = new Option.MakeDep();
+                    fromClause.setMakeInd(option);
+                    parseOptions(m, option);
+                }
+        	} else if (hint.equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
             	fromClause.setNoUnnest(true);
-            } else if (parts[i].equalsIgnoreCase(FromClause.PRESERVE)) {
+            } else if (hint.equalsIgnoreCase(FromClause.PRESERVE)) {
             	fromClause.setPreserve(true);
+            } else if (hint.equalsIgnoreCase(Option.OPTIONAL)) {
+                fromClause.setOptional(true);
             }
-        }
+    	}
     }
+
+	//([max:val] [[no] join])
+	private void parseOptions(Matcher m, Option.MakeDep option) {
+		if (m.group(3) != null) {
+			if (StringUtil.startsWithIgnoreCase(m.group(3), "no")) { //$NON-NLS-1$
+				option.setJoin(false);
+			} else {
+				option.setJoin(true);
+			}
+		}
+		if (m.group(2) != null) {
+			option.setMax(Integer.valueOf(m.group(2).trim().substring(4)));
+		}
+	}
     
     SubqueryHint getSubqueryHint(Token t) {
     	SubqueryHint hint = new SubqueryHint();

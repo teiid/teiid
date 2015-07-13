@@ -931,6 +931,41 @@ public class TestOptionsAndHints {
         TestParser.helpTest(query.toString(), query.toString(), query);
     }
     
+    @Test public void testOptionMakeDepOptionsComment(){
+        GroupSymbol g1 = new GroupSymbol("db.g1"); //$NON-NLS-1$
+        GroupSymbol g2 = new GroupSymbol("db.g2"); //$NON-NLS-1$
+        GroupSymbol g3 = new GroupSymbol("db.g3"); //$NON-NLS-1$
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
+        ElementSymbol c = new ElementSymbol("c");  //$NON-NLS-1$
+        
+        List<Object> crits = new ArrayList<Object>();
+        crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
+        JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
+        Option.MakeDep makeDep = new Option.MakeDep();
+        makeDep.setMax(5);
+        makeDep.setJoin(false);
+        jp.setMakeDep(makeDep);
+        List<Object> crits2 = new ArrayList<Object>();
+        crits2.add(new CompareCriteria(a, CompareCriteria.EQ, c));
+        JoinPredicate jp2 = new JoinPredicate(jp, new UnaryFromClause(g3), JoinType.JOIN_LEFT_OUTER, crits2);
+        From from = new From();
+        from.addClause(jp2);
+
+        Select select = new Select();
+        select.addSymbol(a);
+
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        TestParser.helpTest("Select a From /*+ MAKEDEP(max:5 no join) */ (db.g1 JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 ON a = c",  //$NON-NLS-1$
+                 "SELECT a FROM /*+ MAKEDEP(MAX:5 NO JOIN) */ (db.g1 INNER JOIN db.g2 ON a = b) LEFT OUTER JOIN db.g3 ON a = c",  //$NON-NLS-1$
+                 query);
+        
+        //ensure that the new string form is parsable
+        TestParser.helpTest(query.toString(), query.toString(), query);
+    }
+    
     @Test public void testCache() {
         String sql = "/*+ cache */ SELECT * FROM t1"; //$NON-NLS-1$
         
@@ -1112,12 +1147,12 @@ public class TestOptionsAndHints {
 	
     @Test public void testMakedepOptions() throws QueryParserException {
         String sql = "Select a From db.g1 JOIN db.g2 MAKEDEP(max:300) ON a = b"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM db.g1 INNER JOIN db.g2 MAKEDEP(MAX:300) ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT a FROM db.g1 INNER JOIN /*+ MAKEDEP(MAX:300) */ db.g2 ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
     }
     
     @Test public void testMakeindOptions() throws QueryParserException {
         String sql = "Select a From db.g1 JOIN db.g2 MAKEIND(max:300 no join) ON a = b"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM db.g1 INNER JOIN db.g2 MAKEIND(MAX:300 NO JOIN) ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT a FROM db.g1 INNER JOIN /*+ MAKEIND(MAX:300 NO JOIN) */ db.g2 ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
     }
 
 }
