@@ -42,14 +42,26 @@ public class TestInfinispanUpdateExecution {
 	@Before public void beforeEach() throws Exception{	
 		 
 		MockitoAnnotations.initMocks(this);
-		CONNECTION = PersonCacheSource.createConnection();
     }
 
 	@Test
 	public void testInsertRootClass() throws Exception {
 
+		CONNECTION = PersonCacheSource.createConnection(true);
+		insertRoot();
+	}
+	
+	@Test
+	public void testInsertRootClassNoCacheTypeClassDefined() throws Exception {
+
+		CONNECTION = PersonCacheSource.createConnection(false);
+		insertRoot();
+	}
+
+	
+	private void insertRoot() throws Exception {
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(99);
+		Object o = CONNECTION.getCache().get((new Integer(99).intValue()));
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -61,18 +73,28 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Person p = (Person) CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(99);
+		Person p = (Person) CONNECTION.getCache().get((new Integer(99).intValue()));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("TestName"));
 		assertTrue(p.getEmail().equals("testName@mail.com"));
 		
 	}
-
+	
 	@Test
 	public void testInsertChildClass() throws Exception {
+		CONNECTION = PersonCacheSource.createConnection(true);
+		insertChildClass();
+	}
+
+	@Test
+	public void testInsertChildClassNoClassTypeDefined() throws Exception {
+		CONNECTION = PersonCacheSource.createConnection(false);
+		insertChildClass();
+	}
 		
-		assertNotNull(CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(2));
+	private void insertChildClass() throws Exception {
+		assertNotNull(CONNECTION.getCache().get((new Integer(2).intValue())));
 
 		Command command = translationUtility
 				.parseCommand("Insert into PhoneNumber (id, number, type) VALUES (2, '999-888-7777', 'HOME')");
@@ -83,7 +105,7 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Person p = (Person) CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(2);
+		Person p = (Person) CONNECTION.getCache().get((new Integer(2).intValue()));
 		assertNotNull(p);
 
 		boolean found = false;
@@ -94,12 +116,23 @@ public class TestInfinispanUpdateExecution {
 		}
 		assertTrue(found);
 	}
-	
+
 	@Test
 	public void testUpdateRootClass() throws Exception {
-
+		CONNECTION = PersonCacheSource.createConnection(true);
+		updateRootClass();
+	}
+		
+	@Test
+	public void testUpdateRootClassNoClassTypeDefined() throws Exception {
+		CONNECTION = PersonCacheSource.createConnection(false);
+		updateRootClass();
+	}
+	
+	private void updateRootClass() throws Exception {
+		
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(5);
+		Object o = CONNECTION.getCache().get((new Integer(5).intValue()));
 		assertNotNull(o);
 		
 		Command command = translationUtility
@@ -113,7 +146,7 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Person p = (Person) CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(5);
+		Person p = (Person) CONNECTION.getCache().get((new Integer(5).intValue()));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("Person 5 Changed"));
@@ -121,44 +154,65 @@ public class TestInfinispanUpdateExecution {
 		
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testDeleteRootByKey() throws Exception {
+		CONNECTION = PersonCacheSource.createConnection(true);
+		deleteRootClass();
+	}
+
+	@Test
+	public void testDeleteRootByKeyNoClassTypeDefined() throws Exception {
+		CONNECTION = PersonCacheSource.createConnection(false);
+		deleteRootClass();
+	}
+	
+	private void deleteRootClass() throws Exception {
 		
-		assertNotNull(CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(1));
+		assertNotNull(CONNECTION.getCache().get(new Integer(1).intValue()));
 
 		Command command = translationUtility
 				.parseCommand("Delete From Person Where id = 1");
 
 		@SuppressWarnings("rawtypes")
 		List rows = new ArrayList();
-		rows.add(TestInfinispanUpdateExecution.DATA.get(1));
+		rows.add(TestInfinispanUpdateExecution.DATA.get(new Integer(1).intValue()));
 
 		InfinispanUpdateExecution ie = createExecution(command, rows);
 
 		ie.execute();
-		assertNull(CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME)
+		assertNull(CONNECTION.getCache()
 				.get(new Integer(1).intValue()));
 
 	}
 
 	@Test
 	public void testDeleteRootByValue() throws Exception {
+		CONNECTION = PersonCacheSource.createConnection(true);
+		deleteRootByValue();
+	}
 
-		assertNotNull(CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(2));
+	@Test
+	public void testDeleteRootByValueNoClassTypeDefined() throws Exception {
+		CONNECTION = PersonCacheSource.createConnection(false);
+		deleteRootByValue();
+	}
+	
+	private void deleteRootByValue() throws Exception {
+			
+		assertNotNull(CONNECTION.getCache().get(new Integer(2).intValue()));
 
 		Command command = translationUtility
 				.parseCommand("Delete From Person Where Name = 'Person 2'");
 
 
 		List rows = new ArrayList();
-		rows.add(TestInfinispanUpdateExecution.DATA.get(2));
+		rows.add(TestInfinispanUpdateExecution.DATA.get((new Integer(2).intValue())));
 
 		InfinispanUpdateExecution ie = createExecution(command, rows);
 		
 		ie.execute();
-		assertNull(CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME)
-				.get(2));
+		assertNull(CONNECTION.getCache()
+				.get((new Integer(2).intValue())));
 
 	}
 
@@ -167,7 +221,7 @@ public class TestInfinispanUpdateExecution {
 		String phoneNumber="(111)222-3451";	
 		
 		// check the phone number exists
-		Iterator it=CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).values().iterator();
+		Iterator it=CONNECTION.getCache().values().iterator();
 		boolean found = false;
 		while (it.hasNext()) {
 			Person p = (Person) it.next();
@@ -188,13 +242,13 @@ public class TestInfinispanUpdateExecution {
 
 		InfinispanUpdateExecution ie = createExecution(command, rows);
 
-		assertNotNull(CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).get(2));
+		assertNotNull(CONNECTION.getCache().get(2));
 		
 		ie.execute();
 		int[] cnts = ie.getUpdateCounts();
 		assertTrue(cnts[0] == 10);
 		
-		it=CONNECTION.getCache(PersonCacheSource.PERSON_CACHE_NAME).values().iterator();
+		it=CONNECTION.getCache().values().iterator();
 		// verify phone was completely removed
 		while (it.hasNext()) {
 			Person p = (Person) it.next();

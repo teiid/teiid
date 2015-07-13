@@ -22,8 +22,9 @@
 
 package org.teiid.translator.infinispan.dsl;
 
+import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +35,10 @@ import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
@@ -127,136 +127,132 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 
 	@SuppressWarnings({ "unchecked" })
 	private void handleInsert(Insert insert) throws TranslatorException {
-		try {
 
-			// get the class to instantiate instance
-			Class<?> clz = this.classRegistry.getRegisteredClassUsingTableName(insert.getTable().getName());
-			if (clz == null) {
-				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, new Object[] {insert.getTable().getName()}));
-			}
-			
-			Map<String, Method> writeMethods = this.classRegistry.getWriteClassMethods(clz.getSimpleName());
-
-			Object entity = null;
-			try {
-				// create the new instance from the classLoader the the class
-				// was created from
-				entity = clz.newInstance();
-			} catch (Exception e) {
-				throw new TranslatorException(e);
-			} 
-
-			String cacheName = insert.getTable().getMetadataObject()
-					.getNameInSource();
-
-			// first determine if the table to be inserted into has a foreign key relationship, which
-			// would then be considered a child table, otherwise it must have a primary key
-			ForeignKey fk = getForeignKeyColumn(insert.getTable());
-			String fkeyColNIS = null;
-			if (fk != null) {
-				fkeyColNIS = getForeignKeyNIS(insert.getTable(), fk);
-			}
-			Column keyCol = null;
-			if (fkeyColNIS == null) {
-				keyCol = getPrimaryKeyColumn(insert.getTable());
-			} 
-			
-			if (fkeyColNIS == null && keyCol == null) {
-				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {"insert", insert.getTable().getName()}));
-			}
-
-			List<ColumnReference> columns = insert.getColumns();
-			List<Expression> values = ((ExpressionValueSource) insert
-					.getValueSource()).getValues();
-			if (columns.size() != values.size()) {
-				throw new TranslatorException(
-						"Program error, Column and Value Size's don't match");
-			}
-
-			Object keyValue = null;
-			Object fkeyValue = null;
-//			String keyColumnType = null;
-			
-
-			for (int i = 0; i < columns.size(); i++) {
-				Column column = columns.get(i).getMetadataObject();
-				Object value = values.get(i);
-
-				if ( keyCol != null && keyCol.getName().equals(column.getName()) ) {
-
-					if (value instanceof Literal) {
-						Literal literalValue = (Literal) value;
-						value = literalValue.getValue();
-					}
-						
-					writeColumnData(entity, column, value, writeMethods);
-					
-					keyValue = evaluate(entity, keyCol.getName());
-					
-				} else 	if (fkeyColNIS != null && fkeyColNIS.equals(column.getName()) ) {
-					if (value instanceof Literal) {
-						Literal literalValue = (Literal) value;
-						fkeyValue = literalValue.getValue();
-					} else {
-						fkeyValue = value;
-					}
-
-				} else {
-					
-					if (value instanceof Literal) {
-						Literal literalValue = (Literal) value;
-						value = literalValue.getValue();
-					}
-					
-					writeColumnData(entity, column, value, writeMethods);
-	
-				}
-			}
-			
-			RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>) connection.getCache(cacheName);
-			if (keyCol != null) {
-				Object rootObject = this.executionFactory.performKeySearch(cacheName, keyCol.getNameInSource(), keyValue, connection, context);
-
-				if (rootObject != null) {
-					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25009, new Object[] {insert.getTable().getName(), keyValue}));
-				}
-				
-				cache.put(keyValue, entity);
-			} else {
-				Object rootObject = this.executionFactory.performKeySearch(cacheName, fkeyColNIS, fkeyValue, connection, context);
-				String fk_nis = fk.getNameInSource();
-				
-				Object childrenObjects = this.evaluate(rootObject, fk_nis);
-					
-				if (Collection.class.isAssignableFrom(childrenObjects.getClass())) {
-					@SuppressWarnings("rawtypes")
-					Collection c = (Collection) childrenObjects;
-					c.add(entity);
-
-					PropertiesUtils.setBeanProperty(rootObject, fk_nis, c);
-
-				} else if (Map.class.isAssignableFrom(childrenObjects.getClass())) {
-					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25005, new Object[] {insert.getTable().getName()}));
-
-				} else if (childrenObjects.getClass().isArray()) {
-					Object[] a = (Object[]) childrenObjects;
-					Object[] n = new Object[a.length + 1];
-					int i = 0;
-					for (Object o:a) {
-						n[i] = a[i++];
-					}
-					n[i] = entity;
-					PropertiesUtils.setBeanProperty(rootObject, fk_nis, n);
-				} 
-				
-				cache.put(fkeyValue, rootObject);
-
-			}
-			++updateCnt;
-			
-		} catch (TeiidException e) {
-			throw new TranslatorException(e);
+		// get the class to instantiate instance
+		Class<?> clz = this.classRegistry.getRegisteredClassUsingTableName(insert.getTable().getName());
+		if (clz == null) {
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, new Object[] {insert.getTable().getName()}));
 		}
+		
+		Map<String, Method> writeMethods = this.classRegistry.getWriteClassMethods(clz.getSimpleName());
+
+		Object entity = null;
+		try {
+			// create the new instance from the classLoader the the class
+			// was created from
+			entity = clz.newInstance();
+		} catch (Exception e) {
+			throw new TranslatorException(e);
+		} 
+
+		String cacheName = insert.getTable().getMetadataObject()
+				.getNameInSource();
+
+		// first determine if the table to be inserted into has a foreign key relationship, which
+		// would then be considered a child table, otherwise it must have a primary key
+		ForeignKey fk = getForeignKeyColumn(insert.getTable());
+		String fkeyColNIS = null;
+		if (fk != null) {
+			fkeyColNIS = getForeignKeyNIS(insert.getTable(), fk);
+		}
+		Column keyCol = null;
+		if (fkeyColNIS == null) {
+			keyCol = getPrimaryKeyColumn(insert.getTable());
+		} 
+		
+		if (fkeyColNIS == null && keyCol == null) {
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, new Object[] {"insert", insert.getTable().getName()}));
+		}
+
+		List<ColumnReference> columns = insert.getColumns();
+		List<Expression> values = ((ExpressionValueSource) insert
+				.getValueSource()).getValues();
+		if (columns.size() != values.size()) {
+			throw new TranslatorException(
+					"Program error, Column Metadata Size [" + columns.size() + "] and Value Size [" + values.size() + "] don't match ");
+		}
+
+		Object keyValue = null;
+		Object fkeyValue = null;
+		
+
+		for (int i = 0; i < columns.size(); i++) {
+			Column column = columns.get(i).getMetadataObject();
+			Object value = values.get(i);
+
+			if ( keyCol != null && keyCol.getName().equals(column.getName()) ) {
+
+				if (value instanceof Literal) {
+					Literal literalValue = (Literal) value;
+					value = literalValue.getValue();
+				}
+					
+				writeColumnData(entity, column, value, writeMethods);
+				
+				keyValue = evaluate(entity, getRecordName(keyCol));
+				
+			} else 	if (fkeyColNIS != null && fkeyColNIS.equals(column.getName()) ) {
+				if (value instanceof Literal) {
+					Literal literalValue = (Literal) value;
+					fkeyValue = literalValue.getValue();
+				} else {
+					fkeyValue = value;
+				}
+
+			} else {
+				
+				if (value instanceof Literal) {
+					Literal literalValue = (Literal) value;
+					value = literalValue.getValue();
+				}
+				
+				writeColumnData(entity, column, value, writeMethods);
+
+			}
+		}
+		
+		RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>) connection.getCache();
+		keyValue = convertKeyValue(keyValue);
+		if (keyCol != null) {
+			Object rootObject = this.executionFactory.performKeySearch(cacheName, getRecordName(keyCol), keyValue, connection, context);
+
+			if (rootObject != null) {
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25009, new Object[] {insert.getTable().getName(), keyValue}));
+			}
+			cache.put(keyValue, entity);
+		} else {
+			fkeyValue = convertKeyValue(fkeyValue);
+			Object rootObject = this.executionFactory.performKeySearch(cacheName, fkeyColNIS, fkeyValue, connection, context);
+			String fk_nis = fk.getNameInSource();
+			
+			Object childrenObjects = this.evaluate(rootObject, fk_nis);
+				
+			if (Collection.class.isAssignableFrom(childrenObjects.getClass())) {
+				@SuppressWarnings("rawtypes")
+				Collection c = (Collection) childrenObjects;
+				c.add(entity);
+
+				PropertiesUtils.setBeanProperty(rootObject, fk_nis, c);
+
+			} else if (Map.class.isAssignableFrom(childrenObjects.getClass())) {
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25005, new Object[] {insert.getTable().getName()}));
+
+			} else if (childrenObjects.getClass().isArray()) {
+				Object[] a = (Object[]) childrenObjects;
+				Object[] n = new Object[a.length + 1];
+				int i = 0;
+				for (Object o:a) {
+					n[i] = a[i++];
+				}
+				n[i] = entity;
+				PropertiesUtils.setBeanProperty(rootObject, fk_nis, n);
+			} 
+			
+			cache.replace(fkeyValue, rootObject);
+
+		}
+		++updateCnt;
+
 	}
 
 	// Private method to actually do a delete operation. 
@@ -290,23 +286,22 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			// if this is the root class (no foreign key), then for each object, obtain
 			// the primary key value and use it to be removed from the cache
 			@SuppressWarnings("rawtypes")
-			RemoteCache cache = (RemoteCache) connection.getCache(cacheName);
+			RemoteCache cache = (RemoteCache) connection.getCache();
 			
 			try {
-				
-				
-				cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + keyCol.getName());
+								
+				cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." +  getRecordName(keyCol));
 	
 				for (Object o : toDelete) {
 					sc.setAttribute(ClassRegistry.OBJECT_NAME, o,
 							ScriptContext.ENGINE_SCOPE);
 					Object v = cs.eval(sc);
-					
-					if (cache.containsKey(v) ) {
-						cache.removeAsync(v);
-					//	remove(v);
-						++updateCnt;
+
+					cache.remove(convertKeyValue(v));
+					if (cache.containsKey(v)) {
+						throw new TranslatorException("Program error, object for key: " + v.toString() + " was not removed");
 					}
+					++updateCnt;
 				}
 	
 			} catch (ScriptException e1) {
@@ -426,7 +421,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		}
 	
 		@SuppressWarnings({ "rawtypes", "unchecked" })
-		RemoteCache<Object, Object> cache = (RemoteCache) connection.getCache(cacheName);
+		RemoteCache<Object, Object> cache = (RemoteCache) connection.getCache();
 		
 		Object keyValue = null;
 
@@ -435,7 +430,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		if (keyCol != null) {
 			for (Object entity:toUpdate) {
 				
-				keyValue = evaluate(entity, keyCol.getName());
+				keyValue = evaluate(entity, getRecordName(keyCol));
 				
 				for (SetClause sc:updateList) {
 					Column column = sc.getSymbol().getMetadataObject();
@@ -455,8 +450,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			
 				}
 				
-				cache.replace(keyValue, entity);
-//				put(keyValue, entity);
+				cache.replace( convertKeyValue(keyValue), entity);
 				++updateCnt;
 			
 			}
@@ -532,26 +526,46 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 
 	}
 	
+	private  Object convertKeyValue(Object value )  throws TranslatorException {
+	
+		try {
+			if (connection.getCacheKeyClassType() == null) {
+				return value;
+			}
+			
+			return DataTypeManager.transformValue(value,  connection.getCacheKeyClassType());
+		} catch (TransformationException e) {
+			throw new TranslatorException(e);
+		}
+
+	}
+	
 	private void writeColumnData(Object entity, Column column, Object value, Map<String, Method> writeMethods) throws TranslatorException {
 		
 		try {
+			String nis = getRecordName(column);
+			
+			// if this is a child table, the nis will have the table.columnName formatted
+			if (nis.contains(".")) {
+				nis = StringUtil.getLastToken(nis, ".");
+			}
 
-			Method m = writeMethods.get(column.getName());
+			Method m = writeMethods.get(nis);
 			if (value == null) {
 				ClassRegistry.executeSetMethod(m, entity, value);
 				return;
 			}
-			if (value.getClass().equals(column.getJavaType())) {
+			if (value.getClass().equals(m.getParameterTypes().clone()[0])) {
 				ClassRegistry.executeSetMethod(m, entity, value);
-			} else	if (value.getClass().getName().equals(column.getJavaType().getName())) {
-				ClassRegistry.executeSetMethod(m, entity, value);
+//			} else	if (value.getClass().getName().equals(column.getJavaType().getName())) {
+//				ClassRegistry.executeSetMethod(m, entity, value);
 			} else if (value.getClass().isPrimitive()) {
 				final Object transformedValue = DataTypeManager.transformValue(value,  column.getJavaType());
 				
 				ClassRegistry.executeSetMethod(m, entity, transformedValue);
 				
 			} else {
-				PropertiesUtils.setBeanProperty(entity, column.getName(), value);
+				PropertiesUtils.setBeanProperty(entity, nis, value);
 			}
 
 			

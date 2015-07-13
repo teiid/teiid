@@ -69,10 +69,11 @@ public class InfinispanExecutionFactory extends
 		setSupportsInnerJoins(true);
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(true);
+		
 	
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
-	
+
 	@Override
 	public int getMaxFromGroups() {
 		return 2;
@@ -88,7 +89,11 @@ public class InfinispanExecutionFactory extends
     @Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			InfinispanConnection connection) {
+			InfinispanConnection connection) throws TranslatorException {
+    	// if no primary key defined,then updates are not enabled
+    	if (connection.getPkField() == null) {
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25007, new Object[] {connection.getCacheName()}));
+    	}
     	return new InfinispanUpdateExecution(command, connection, executionContext, this);
 	}
     

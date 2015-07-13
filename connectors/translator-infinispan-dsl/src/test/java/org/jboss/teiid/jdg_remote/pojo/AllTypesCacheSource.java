@@ -30,6 +30,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,8 +70,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	public static final String ALLTYPES_CLASS_NAME = AllTypes.class.getName();
 	
-	public static Map<String, Class<?>> mapOfCaches = new HashMap<String, Class<?>>(1);
-	
 	public static Descriptor DESCRIPTOR;
 	
 	public static Random RANDOM = new Random();
@@ -78,10 +77,9 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
 	
-	private Map cache = new HashMap<Object, Object>();
+	private Map cache = Collections.synchronizedMap(new HashMap<Object, Object>());
 	
 	static {
-		mapOfCaches.put(AllTypesCacheSource.ALLTYPES_CACHE_NAME, AllTypes.class);
 		try {
 			DESCRIPTOR = (Descriptor) createDescriptor();
 
@@ -94,42 +92,58 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	
 	public static InfinispanConnection createConnection() {
+		return createConnection(true);
+		
+	}
+
+		
+	public static InfinispanConnection createConnection(final boolean useKeyClassType) {
+
 		final Map <Object, Object> objects = AllTypesCacheSource.loadCache();
 
 		return new InfinispanConnection() {
 
 			@Override
-			public Class<?> getType(String cacheName)  {
+			public String getPkField() throws TranslatorException {
+				return "intKey";
+			}
+
+			@Override
+			public Class<?> getCacheKeyClassType() throws TranslatorException {
+				if (useKeyClassType) {
+					return Integer.class;
+				} 
+				return null;
+			}
+			@Override
+			public String getCacheName() throws TranslatorException {
+				return AllTypesCacheSource.ALLTYPES_CACHE_NAME;
+			}
+
+
+			@Override
+			public Class<?> getCacheClassType() throws TranslatorException {
 				return AllTypes.class;
 			}
 
 
 			@Override
-			public Map<String, Class<?>> getCacheNameClassTypeMapping() {
-				return mapOfCaches;
-			}
-			
-			@Override
-			public String getPkField(String cacheName) {
-				return "intKey";
-			}
-
-			@Override
-			public Descriptor getDescriptor(String cacheName)
-					throws TranslatorException {
+			public Descriptor getDescriptor() throws TranslatorException {
 				return DESCRIPTOR;
 			}
 
+
 			@Override
-			public Map<Object, Object> getCache(String cacheName) {
+			public Map<Object, Object> getCache() throws TranslatorException {
 				return objects;
 			}
 
 
 			@Override
-			public QueryFactory getQueryFactory(String cacheName) {
+			public QueryFactory getQueryFactory() throws TranslatorException {
 				return null;
 			}
+
 			
 	        public ClassRegistry getClassRegistry() {
 		        return AllTypesCacheSource.CLASS_REGISTRY;
@@ -168,7 +182,7 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 			p.setBigIntegerValue(BigInteger.valueOf(RANDOM.nextLong()));
 			p.setBigDecimalValue(BigDecimal.valueOf(RANDOM.nextLong()));
 				
-			cache.put(i, p);
+			cache.put(p.getIntKey(), p);
 
 
 		}
@@ -225,7 +239,7 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 
 	      FileDescriptor descriptor = files.get("allTypes.proto");
 	      
-	      String descriptorName = "org.jboss.teiid.jdg_remote.protobuf.AllTypes";
+	      String descriptorName = "org.jboss.qe.jdg_remote.protobuf.AllTypes";
 	      Map<String, Descriptor> messages = new HashMap<String, Descriptor>();
 	      for (Descriptor m : descriptor.getMessageTypes()) {
 	         messages.put(m.getFullName(), m);
@@ -329,9 +343,10 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	 *
 	 * @see org.infinispan.commons.api.BasicCache#remove(java.lang.Object)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(Object arg0) {
-		return null;
+		return (V) cache.remove(arg0);
 	}
 
 	/**

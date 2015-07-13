@@ -61,7 +61,7 @@ public class TestInfinispanExecution {
     @BeforeClass
     public static void setUp()  {
         
-		CONNECTION = PersonCacheSource.createConnection();
+		CONNECTION = PersonCacheSource.createConnection(true);
 
     }	
 

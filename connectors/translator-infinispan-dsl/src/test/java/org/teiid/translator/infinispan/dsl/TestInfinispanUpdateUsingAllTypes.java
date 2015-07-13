@@ -42,14 +42,24 @@ public class TestInfinispanUpdateUsingAllTypes {
 	@Before public void beforeEach() throws Exception{	
 		 
 		MockitoAnnotations.initMocks(this);
-		CONNECTION = AllTypesCacheSource.createConnection();
     }
 
 	@Test
 	public void testInsertRootClass() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection();
+		insertRootClass();
+	}
+	
+	@Test
+	public void testInsertRootClassNoClasTypeKeyDefined() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection(false);
+		insertRootClass();
+	}	
+	
+	private void insertRootClass() throws Exception {
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(99);
+		Object o = CONNECTION.getCache().get(99);
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -60,27 +70,14 @@ public class TestInfinispanUpdateUsingAllTypes {
 //		.parseCommand("Insert into AllTypes (intKey, intNum, stringKey, stringNum, booleanValue, longNum, doubleNum, floatNum) " + 
 //				"VALUES (99, 991, 'string key value', '999', true, 1200, 23.45, 12.456  )");
 
-	/**	
-		private Character charValue;
-		private Double doubleNum;
-		private BigInteger bigIntegerValue;
-		private Short shortValue;
-		private Float floatNum;
-		private Object  objectValue;
 
-		private BigDecimal bigDecimalValue;
-		private Timestamp timeStampValue;
-		private Time timeValue;
-		private Date dateValue;
-		private byte[] byteArrayValue;
-		*/
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
 		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 
 		ie.execute();
 
-		AllTypes p = (AllTypes) CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(99);
+		AllTypes p = (AllTypes) CONNECTION.getCache().get(99);
 
 		String stringNum = String.valueOf("999");
 		
@@ -100,9 +97,20 @@ public class TestInfinispanUpdateUsingAllTypes {
 	// TEIID-3534 - cannot insert Boolean attribute with null
 	@Test
 	public void testInsertBooleanOfNull() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection();
+		insertBooleanOfNull();
+	}
+
+	@Test
+	public void testInsertBooleanOfNullNoClassKeyTypeDefined() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection(false);
+		insertBooleanOfNull();
+	}
+
+	private void insertBooleanOfNull() throws Exception {
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(99);
+		Object o = CONNECTION.getCache().get(99);
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -115,7 +123,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 
 		ie.execute();
 
-		AllTypes p = (AllTypes) CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(99);
+		AllTypes p = (AllTypes) CONNECTION.getCache().get(99);
 
 		String stringNum = String.valueOf("999");
 		
@@ -136,9 +144,10 @@ public class TestInfinispanUpdateUsingAllTypes {
 	// TEIID-3539 -  Can't use IS [NOT] NULL operator for non-string columns
 	//@Test
 	public void testInsertIsNotNullOperator() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection();
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(99);
+		Object o = CONNECTION.getCache().get(99);
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -162,7 +171,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 		
 		
 
-		AllTypes p = (AllTypes) CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(99);
+		AllTypes p = (AllTypes) CONNECTION.getCache().get(99);
 
 		String stringNum = String.valueOf("999");
 		
@@ -179,9 +188,21 @@ public class TestInfinispanUpdateUsingAllTypes {
 
 	@Test
 	public void testUpdateRootClass() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection();
+		updateRootClass();
+	}
 
-		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(5);
+	@Test
+	public void testUpdateRootClassNoClassKeyTypeDefined() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection(false);
+		updateRootClass();
+	}
+	
+	private void updateRootClass() throws Exception {
+	
+	
+	// check the object doesn't exist before inserting
+		Object o = CONNECTION.getCache().get(5);
 		assertNotNull(o);
 		
 		Command command = translationUtility
@@ -195,7 +216,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 
 		ie.execute();
 
-		AllTypes p = (AllTypes) CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(5);
+		AllTypes p = (AllTypes) CONNECTION.getCache().get(5);
 
 		String stringNum = String.valueOf("10000");
 		
@@ -204,11 +225,21 @@ public class TestInfinispanUpdateUsingAllTypes {
 		
 	}
 
-//	@SuppressWarnings("unchecked")
 	@Test
 	public void testDeleteRootByKey() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection();
+		deleteRootByKey();
+	}
 		
-		assertNotNull(CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME).get(1));
+	@Test
+	public void testDeleteRootByKeyNoClassKeyTypeDefined() throws Exception {
+		CONNECTION = AllTypesCacheSource.createConnection(false);
+		deleteRootByKey();
+	}
+
+	private void deleteRootByKey() throws Exception {
+	
+		assertNotNull(CONNECTION.getCache().get(1));
 
 		Command command = translationUtility
 				.parseCommand("Delete From AllTypes Where intKey=99");
@@ -220,7 +251,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 		InfinispanUpdateExecution ie = createExecution(command, rows);
 
 		ie.execute();
-		assertNull(CONNECTION.getCache(AllTypesCacheSource.ALLTYPES_CACHE_NAME)
+		assertNull(CONNECTION.getCache()
 				.get(new Integer(1).intValue()));
 
 	}

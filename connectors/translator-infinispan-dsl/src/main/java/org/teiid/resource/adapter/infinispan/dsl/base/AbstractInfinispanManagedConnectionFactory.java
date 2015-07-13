@@ -32,6 +32,7 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
+import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
@@ -63,7 +64,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String remoteServerList = null;
 	private String hotrodClientPropertiesFile = null;
 	private String cacheJndiName = null;
-	private Map<String, Class<?>> typeMap = null; // cacheName ==> ClassType
+	private Class<?> cacheTypeClass = null; // cacheName ==> ClassType
 	private String cacheTypes = null;
 	@SuppressWarnings("rawtypes")
 	private Map<String, BaseMarshaller> messageMarshallerMap = null;
@@ -74,7 +75,9 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String messageDescriptor = null;
 	
 	private RemoteCacheManager cacheContainer = null;
-	private Map<String, String> pkMap; // cacheName ==> pkey name
+	private String cacheName;
+	private String pkKey;
+	private Class<?> pkCacheKeyJavaType = null;
 	private CACHE_TYPE cacheType;
 	private String module;
 	private ClassLoader cl;
@@ -131,11 +134,20 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	}
 
+	public String getCacheName() {
+		return this.cacheName;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public RemoteCache getCache() {
+		return cacheContainer.getCache(this.getCacheName());
+	}
+
 	/**
-	 * Get the <code>cacheName:ClassName[,cacheName:ClassName...]</code> cache
+	 * Get the <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> cache
 	 * type mappings.
 	 * 
-	 * @return <code>cacheName:ClassName[,cacheName:ClassName...]</code> cache
+	 * @return <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> cache
 	 *         type mappings
 	 * @see #setCacheTypeMap(String)
 	 */
@@ -145,12 +157,21 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	/**
 	 * Set the cache type mapping
-	 * <code>cacheName:ClassName[,cacheName:ClassName...]</code> that represent
-	 * the root node class type for 1 or more caches available for access.
+	 * <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> that represent
+	 * the root node class type for an available cache for access.
+	 * The following is how the string parsed:
+	 * <li>cacheNam = is the name used to retrieve the named cache
+	 * <li>className = is the class that is stored in the cache, and will used to create new instances
+	 * <li> [optional] pkFieldName = defined which attribute is defined as the key to the cache, this will be 
+	 * the key used to access the cache for updates.  If not defined, updates will be disabled.
+	 * Also,  pkFieldName is required if the root object contains child objects that will accessible. 
+	 * <li> [optional] cacheJavaType = is defined when the pkFieldName java type defined in class is different
+	 * than how its stored as the key of the cache.  This will enable the correct java type to be used
+	 * when updates are performed and the object can be directly accessed.
 	 * 
 	 * @param cacheTypeMap
 	 *            the cache type mappings passed in the form of
-	 *            <code>cacheName:ClassName[,cacheName:ClassName...]</code>
+	 *            <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code>
 	 * @see #getCacheTypeMap()
 	 */
 	public void setCacheTypeMap(String cacheTypeMap) {
@@ -241,24 +262,31 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		this.messageDescriptor = messageDescriptor;
 	}	
 
-	public String getPkMap(String cacheName) {
-		return pkMap.get(cacheName);
+	public String getPk() {
+		return pkKey;
+	}
+	
+	/**
+	 * This is an optional argument when defining the <code>CacheTypeMap</code>
+	 * on the resouce adapter.
+	 * 
+	 * @return Class<?>
+	 * @see #setCacheNameClassTypeMapping(Map)
+	 */
+	public Class<?> getCacheKeyClassType() {
+		return pkCacheKeyJavaType;
 	}
 
-	public void setPkMap(Map<String, String> mapOfPKs) {
-		pkMap = mapOfPKs;
+	/**
+	 * Return the Class that identifies the cache object 
+	 * @return Class<?>
+	 */
+	public Class<?> getCacheClassType() {
+		return this.cacheTypeClass;
 	}
 
-	public Map<String, Class<?>> getCacheNameClassTypeMapping() {
-		return this.typeMap;
-	}
-
-	public void setCacheNameClassTypeMapping(Map<String, Class<?>> cacheType) {
-		this.typeMap = cacheType;
-	}
-
-	public Class<?> getCacheType(String cacheName) {
-		return this.typeMap.get(cacheName);
+	public void setCacheClassTypeClass(Class<?> classCacheType) {
+		this.cacheTypeClass = classCacheType;
 	}
 
 	public ClassRegistry getClassRegistry() {
@@ -391,25 +419,39 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			cl = this.getClass().getClassLoader();
 		}
 		
-		List<String> types = StringUtil.getTokens(getCacheTypeMap(), ","); //$NON-NLS-1$
-
-		Map<String, String> pkMap = new HashMap<String, String>(types.size());
-		Map<String, Class<?>> tm = new HashMap<String, Class<?>>(types.size());
-
-		for (String type : types) {
-			List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
-			if (mapped.size() != 2) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+			
+		/*
+		 * Parsing based on format:  cacheName:className[;pkFieldName[:cacheKeyJavaType]]
+		 * 
+		 */
+		
+		List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
+		String leftside = parms.get(0);
+		List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
+		
+		if (cacheClassparm.size() != 2) {
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+		}
+		
+		cacheName = cacheClassparm.get(0);
+		String className = cacheClassparm.get(1);
+		cacheTypeClass = loadClass(className);
+		try {
+			methodUtil.registerClass(cacheTypeClass);
+		} catch (TranslatorException e1) {
+			throw new ResourceException(e1);
+		}
+			
+		if (parms.size() == 2) {
+			String rightside = parms.get(1);
+			List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
+			pkKey = pkKeyparm.get(0);
+			if (pkKeyparm.size() == 2) {
+				String pktype = pkKeyparm.get(1);
+				if (pktype != null) {
+					pkCacheKeyJavaType = loadClass(pktype);
+				}
 			}
-			final String cacheName = mapped.get(0);
-			String className = mapped.get(1);
-			mapped = StringUtil.getTokens(className, ";"); //$NON-NLS-1$
-			if (mapped.size() > 1) {
-				className = mapped.get(0);
-				pkMap.put(cacheName, mapped.get(1));
-			}
-			tm.put(cacheName, loadClass(className)); 
-
 		}
 
 		List<String> marshallers = StringUtil.getTokens(this.getMessageMarshallers(), ","); //$NON-NLS-1$
@@ -418,18 +460,18 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		
 		for (String mm : marshallers) {
 			
-			List<String> mapped = StringUtil.getTokens(mm, ":"); //$NON-NLS-1$
-			if (mapped.size() != 2) {
+			List<String> marshallMap = StringUtil.getTokens(mm, ":"); //$NON-NLS-1$
+			if (marshallMap.size() != 2) {
 				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25031, new Object[] {mm}));
 			}
-			final String className = mapped.get(0);
-			final String m = mapped.get(1);
+			final String marshallClassName = marshallMap.get(0);
+			final String m = marshallMap.get(1);
 
 			try {
 				Object bmi = (loadClass(m)).newInstance();
-				Class ci = loadClass(className);
+				Class ci = loadClass(marshallClassName);
 
-				mmp.put(className, (BaseMarshaller) bmi); 	
+				mmp.put(marshallClassName, (BaseMarshaller) bmi); 	
 
 				methodUtil.registerClass(ci);
 		
@@ -442,9 +484,6 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			}
 		
 		}
-		
-		setCacheNameClassTypeMapping(Collections.unmodifiableMap(tm));
-		setPkMap(Collections.unmodifiableMap(pkMap));
 		
 		messageMarshallerMap=Collections.unmodifiableMap(mmp);
 
@@ -540,8 +579,6 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25026, cacheContainer.getClass().getName()));
 
 	}
-	
-	private static final String PROTOBUF_DEFINITION_RESOURCE = "/quickstart/addressbook.proto";
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void registerMarshallers(SerializationContext ctx, ClassLoader cl) throws ResourceException {
@@ -609,10 +646,10 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public void cleanUp() {
 
 		messageMarshallerMap = null;
-		typeMap = null;
+		cacheType = null;
 		cacheContainer = null;
-		pkMap = null;
 		cl = null;
+		methodUtil.cleanUp();
 
 	}
 }
