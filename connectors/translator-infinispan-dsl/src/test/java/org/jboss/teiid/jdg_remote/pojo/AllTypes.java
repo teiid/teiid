@@ -28,7 +28,6 @@ public class AllTypes implements Serializable{
 	private String stringKey;
 	private Time timeValue;
 	private Date dateValue;
-	private byte[] byteArrayValue;
 
 	public String getStringNum() {
 		return stringNum;
@@ -156,13 +155,6 @@ public class AllTypes implements Serializable{
 
 	public void setDateValue(Date dateValue) {
 		this.dateValue = dateValue;
-	}
-	
-	public byte[] getByteArrayValue() {
-		return byteArrayValue;
-	}
-	public void setByteArrayValue(byte[] value) {
-		byteArrayValue = value;
 	}
 	
 

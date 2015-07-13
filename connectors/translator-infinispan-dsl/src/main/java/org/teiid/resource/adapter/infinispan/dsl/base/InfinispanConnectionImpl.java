@@ -22,14 +22,12 @@
 
 package org.teiid.resource.adapter.infinispan.dsl.base;
 
-import java.util.Map;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.Search;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.protostream.descriptors.Descriptor;
+import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -46,14 +44,12 @@ import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 public class InfinispanConnectionImpl extends BasicConnection implements InfinispanConnection { 
 	
 	
-	RemoteCacheManager rcm = null;
 	SerializationContext ctx = null;
 	AbstractInfinispanManagedConnectionFactory config = null;
 
 	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)   {
 		this.config = config;
 		
-		this.rcm = config.getCacheContainer();
 		this.ctx = config.getContext();
 
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
@@ -66,7 +62,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
     public void close() {
 		config = null;
-		rcm = null;
 		ctx = null;
 	}
 
@@ -82,35 +77,28 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	}	
 
 	@Override
-	public Class<?> getType(String cacheName) throws TranslatorException {		
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType for cache :", cacheName,  "==="); //$NON-NLS-1$ //$NON-NLS-2$
+	public Class<?> getCacheClassType() throws TranslatorException {		
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType for cache :", config.getCacheName(),  "==="); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Class<?> type = config.getCacheType(cacheName);
+		Class<?> type = config.getCacheClassType();
 		if (type != null) {
 			return type;
 		}
-		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040, (cacheName != null ? cacheName : "Default")));
+		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040,config.getCacheName()));
 
 	}
 	
 	@Override
-	public String getPkField(String cacheName) {
-		return this.config.getPkMap(cacheName);
+	public Class<?> getCacheKeyClassType() throws TranslatorException {
+		return config.getCacheKeyClassType();
 	}
-
-	@Override
-	public Map<String, Class<?>> getCacheNameClassTypeMapping() {
-		return this.config.getCacheNameClassTypeMapping();
-	}
+	
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public RemoteCache getCache(String cacheName) {
+	public RemoteCache getCache() {
 
-		if (cacheName == null) {
-			return rcm.getCache();
-		}
-		return rcm.getCache(cacheName);
+		return config.getCache();
 
 	}
 
@@ -119,11 +107,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 *
 	 */
 	@Override
-	public Descriptor getDescriptor(String cacheName)
+	public Descriptor getDescriptor()
 			throws TranslatorException {
 		Descriptor d = ctx.getMessageDescriptor(config.getMessageDescriptor());
 		if (d == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), cacheName));			
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), config.getCacheName()));			
 		}
 		
 		return d;
@@ -131,14 +119,24 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	
 	@SuppressWarnings({ "rawtypes" })
 	@Override
-	public QueryFactory getQueryFactory(String cacheName) throws TranslatorException {
+	public QueryFactory getQueryFactory() throws TranslatorException {
 		
-		return Search.getQueryFactory(getCache(cacheName));
+		return Search.getQueryFactory(getCache());
 	}
 	
 	@Override
 	public  ClassRegistry getClassRegistry() {
 		return config.getClassRegistry();
+	}
+
+	@Override
+	public String getPkField() throws TranslatorException {
+		return config.getPk();
+	}
+
+	@Override
+	public String getCacheName() throws TranslatorException {
+		return config.getCacheName();
 	}
 
 

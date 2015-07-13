@@ -37,7 +37,7 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanConnection conn = PersonCacheSource.createConnection();
+		InfinispanConnection conn = PersonCacheSource.createConnection(true);
 
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
@@ -51,14 +51,14 @@ public class TestProtobufMetadataProcessor {
 				+ "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\temail string OPTIONS (NAMEINSOURCE 'email', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\tCONSTRAINT PK_ID PRIMARY KEY(id)\n"
-				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', UPDATABLE TRUE);\n"
+				+ ") OPTIONS (UPDATABLE TRUE);\n"
 				+ "\n"
 				+ "CREATE FOREIGN TABLE PhoneNumber (\n"
 				+ "\tnumber string OPTIONS (NAMEINSOURCE 'phone.number', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\ttype object OPTIONS (NAMEINSOURCE 'phone.type', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneType'),\n"
 				+ "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
 				+ "\tCONSTRAINT FK_PERSON FOREIGN KEY(id) REFERENCES Person (id) OPTIONS (NAMEINSOURCE 'phones')\n"
-				+ ") OPTIONS (NAMEINSOURCE 'PersonsCache', UPDATABLE TRUE);"
+				+ ") OPTIONS (UPDATABLE TRUE);"
 				;
 		assertEquals(expected, metadataDDL);	
 
@@ -98,9 +98,8 @@ public class TestProtobufMetadataProcessor {
 				+ "\ttimeValue time OPTIONS (NAMEINSOURCE 'timeValue', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.sql.Time'),\n"
 				+ "\tdateValue date OPTIONS (NAMEINSOURCE 'dateValue', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.sql.Date'),\n"
 				+ "\tcharValue char OPTIONS (NAMEINSOURCE 'charValue', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.Character'),\n"
-				+ "\tbyteArrayValue varbinary OPTIONS (NAMEINSOURCE 'byteArrayValue', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'byte[]'),\n"
 				+ "\tCONSTRAINT PK_INTKEY PRIMARY KEY(intKey)\n"
-				+ ") OPTIONS (NAMEINSOURCE 'AllTypesCache', UPDATABLE TRUE);"
+				+ ") OPTIONS (UPDATABLE TRUE);"
 				;
 
 		
