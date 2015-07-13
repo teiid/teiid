@@ -72,9 +72,8 @@ import org.teiid.translator.TranslatorException;
 public final class DSLSearch   {
 	
 	public static Object performKeySearch(String cacheName, String columnNameInSource, Object value, InfinispanConnection conn) throws TranslatorException {
-	    @SuppressWarnings("rawtypes")
 	    
-		RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache(cacheName);
+		RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache();
 	    Object v = c.get(value);
 	    return v;
 
@@ -110,7 +109,7 @@ public final class DSLSearch   {
 		    	if (spec.getOrdering().name().equalsIgnoreCase(SortOrder.DESC.name())) {
 		    		so = SortOrder.DESC;
 		    	}
-		    	qb = qb.orderBy(mdIDElement.getNameInSource(), so);
+		    	qb = qb.orderBy(getNameInSource(mdIDElement), so);
 		    }
 	    }
 	    	
@@ -136,7 +135,7 @@ public final class DSLSearch   {
 
 		} else {
 		    results = new ArrayList<Object>();
-			RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache(cacheName);
+			RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache();
 		    for (Object id : c.keySet()) {
 		          results. add(c.get(id));
 		    }
@@ -149,9 +148,9 @@ public final class DSLSearch   {
 	@SuppressWarnings("rawtypes")
 	private static QueryBuilder getQueryBuilder(String cacheName, InfinispanConnection conn) throws TranslatorException {
 		
-		Class<?> type = conn.getType(cacheName);
+		Class<?> type = conn.getCacheClassType();
 		
-		QueryFactory qf = conn.getQueryFactory(cacheName);
+		QueryFactory qf = conn.getQueryFactory();
 	    		  
 	    QueryBuilder qb = qf.from(type);
 
@@ -175,7 +174,7 @@ public final class DSLSearch   {
 			case AND:
 
 				FilterConditionContext f_and = buildQueryFromWhereClause(
-						crit.getLeftCondition(), queryBuilder, null);
+						crit.getLeftCondition(), queryBuilder, fcbc);
 				FilterConditionBeginContext fcbca =  null;
 				if (f_and != null) {
 					fcbca = f_and.and();
@@ -188,7 +187,7 @@ public final class DSLSearch   {
 			case OR:
 				
 				FilterConditionContext f_or = buildQueryFromWhereClause(
-						crit.getLeftCondition(), queryBuilder, null);
+						crit.getLeftCondition(), queryBuilder, fcbc);
 				FilterConditionBeginContext fcbcb = null;
 				if (f_or != null) {
 					fcbcb = f_or.or();

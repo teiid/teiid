@@ -25,6 +25,7 @@ package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import org.infinispan.protostream.descriptors.EnumDescriptor;
 import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.infinispan.query.dsl.QueryFactory;
+import org.infinispan.util.concurrent.SynchronizedRestarter;
 import org.teiid.translator.infinispan.dsl.ClassRegistry;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
 import org.teiid.translator.TranslatorException;
@@ -69,7 +71,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static final String PHONENUMBER_CLASS_NAME = PhoneNumber.class.getName();
 	public static final String PHONETYPE_CLASS_NAME = PhoneType.class.getName();
 	
-	public static Map<String, Class<?>> mapOfCaches = new HashMap<String, Class<?>>(1);
+//	public static Map<String, Class<?>> mapOfCaches = new HashMap<String, Class<?>>(1);
 
 	
 	public static Descriptor DESCRIPTOR;
@@ -79,10 +81,10 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
 	
-	private Map cache = new HashMap<Object, Object>();
+	private Map<Object, Object> cache =  Collections.synchronizedMap(new HashMap<Object, Object>());
 	
 	static {
-		mapOfCaches.put(PersonCacheSource.PERSON_CACHE_NAME, Person.class);
+//		mapOfCaches.put(PersonCacheSource.PERSON_CACHE_NAME, Person.class);
 		try {
 			DESCRIPTOR = (Descriptor) createDescriptor();
 
@@ -96,43 +98,54 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	}
 	
 	
-	public static InfinispanConnection createConnection() {
+	public static InfinispanConnection createConnection(final boolean useKeyClass) {
 		final Map <Object, Object> objects = PersonCacheSource.loadCache();
 
 		return new InfinispanConnection() {
+			
 
 			@Override
-			public Class<?> getType(String cacheName)  {
+			public String getPkField() throws TranslatorException {
+				return "id";
+			}
+
+			@Override
+			public Class<?> getCacheKeyClassType() throws TranslatorException {
+				if (useKeyClass) {
+					return int.class;
+				}
+				return null;
+			}
+			
+			@Override
+			public String getCacheName() throws TranslatorException {
+				return PersonCacheSource.PERSON_CACHE_NAME;
+			}
+
+
+			@Override
+			public Class<?> getCacheClassType() throws TranslatorException {
 				return Person.class;
 			}
 
 
 			@Override
-			public Map<String, Class<?>> getCacheNameClassTypeMapping() {
-				return mapOfCaches;
-			}
-			
-			@Override
-			public String getPkField(String cacheName) {
-				return "id";
-			}
-
-			@Override
-			public Descriptor getDescriptor(String cacheName)
-					throws TranslatorException {
+			public Descriptor getDescriptor() throws TranslatorException {
 				return DESCRIPTOR;
 			}
 
+
 			@Override
-			public Map<Object, Object> getCache(String cacheName) {
+			public Map<Object, Object> getCache() throws TranslatorException {
 				return objects;
 			}
 
 
 			@Override
-			public QueryFactory getQueryFactory(String cacheName) {
+			public QueryFactory getQueryFactory() throws TranslatorException {
 				return null;
 			}
+
 			
 	        public ClassRegistry getClassRegistry() {
 		        return PersonCacheSource.CLASS_REGISTRY;
@@ -291,9 +304,10 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	 *
 	 * @see org.infinispan.commons.api.BasicCache#remove(java.lang.Object)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(Object arg0) {
-		return null;
+		return (V) cache.remove(arg0);
 	}
 
 	/**
@@ -748,7 +762,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	 */
 	@Override
 	public Set<K> keySet() {
-		return cache.keySet();
+		return (Set<K>) cache.keySet();
 	}
 
 	/**
@@ -758,7 +772,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	 */
 	@Override
 	public Collection<V> values() {
-		return cache.values();
+		return (Collection<V>) cache.values();
 	}
 
 	/**
@@ -768,7 +782,8 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	 */
 	@Override
 	public Set<java.util.Map.Entry<K, V>> entrySet() {
-		return cache.entrySet();
+
+		return null;
 	}
 
 	/**

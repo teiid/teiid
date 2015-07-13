@@ -56,10 +56,10 @@ public class ClassRegistry {
 
 	private TeiidScriptEngine readEngine = new TeiidScriptEngine();
 	
-	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>(); // fullClassName, Class
-	private Map<String, Class<?>> tableNameClassMap = new HashMap<String, Class<?>>(); // simpleClassName(i.e., tableName), Class 
-	private Map<String, Map<String, Method>> classReadMethodMap = new HashMap<String, Map<String, Method>>();
-	private Map<String, Map<String, Method>> classWriteMethodMap = Collections.synchronizedMap(new LRUCache<String, Map<String,Method>>(100));;
+	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>(3); // fullClassName, Class
+	private Map<String, Class<?>> tableNameClassMap = new HashMap<String, Class<?>>(3); // simpleClassName(i.e., tableName), Class 
+	private Map<String, Map<String, Method>> classReadMethodMap = new HashMap<String, Map<String, Method>>(100);
+	private Map<String, Map<String, Method>> classWriteMethodMap = Collections.synchronizedMap(new LRUCache<String, Map<String,Method>>(100));
 
 	public synchronized void registerClass(Class<?> clz) throws TranslatorException {
 			// preload methods
@@ -168,16 +168,20 @@ public class ClassRegistry {
 					methodMap.put(name, m);
 				}
 			}
-//			if (clazzMaps == null) {
-//				clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String,Method>>(100));
-//				classWriteMethodMap = new SoftReference<Map<Class<?>,Map<String,Method>>>(clazzMaps);
-//			}
-//			clazzMaps.put(clazz, methodMap);
+
 		} catch (IntrospectionException e) {
 			throw new TranslatorException(e);
 		}
 		return methodMap;
 	}
+    
+    public void cleanUp() {
+    	registeredClasses.clear();
+    	tableNameClassMap.clear();
+    	classReadMethodMap.clear();
+    	classWriteMethodMap.clear();
+
+    }
 
 
 }

@@ -69,7 +69,7 @@ public class PersonSchemaVDBUtility {
 					SystemMetadata.getInstance().getRuntimeTypeMap(),
 					new Properties(), null);
 	
-			InfinispanConnection conn = PersonCacheSource.createConnection();
+			InfinispanConnection conn = PersonCacheSource.createConnection(true);
 	
 			translator.getMetadataProcessor().process(mf, conn);
 		

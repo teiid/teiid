@@ -37,56 +37,65 @@ import org.infinispan.protostream.descriptors.Descriptor;
  */
 public interface InfinispanConnection {
 	
-		
-	/**
-	 * Return the root class type stored in the specified cache
-	 * @param cacheName 
-	 * @return Class
-	 * @throws TranslatorException
-	 */
-	public Class<?> getType(String cacheName) throws TranslatorException;
-	
+			
 	/**
 	 * Returns the name of the primary key to the cache
 	 * @param cacheName
 	 * @return String key name
 	 * @throws TranslatorException 
 	 */
-	public String getPkField(String cacheName) throws TranslatorException;
-		
+	public String getPkField() throws TranslatorException;
+	
 	/**
-	 * Returns a map of all defined caches, and their respective root object class type,
-	 * that are accessible using this connection.
-	 * @return Map<String, Class>  --> CacheName, ClassType
+	 * Returns the class type of the key to the cache.
+	 * If the primary key class type is different from the 
+	 * cache key type, then the value will be converted
+	 * to the cache key class type before performing a get/put on the cache.
+	 * @return
+	 * @throws TranslatorException
+	 * @see {@link #getPkField()}
+	 */
+	public Class<?> getCacheKeyClassType() throws TranslatorException;
+	
+	
+	/**
+	 * Returns the name of the cache
+	 * @return String cacheName
 	 * @throws TranslatorException 
 	 */
-	public Map<String, Class<?>> getCacheNameClassTypeMapping() throws TranslatorException;
+	public String getCacheName() throws TranslatorException;
+	
+		
+	/**
+	 * Returns root object class type
+	 * that is defined for the cache.
+	 * @return Cache ClassType
+	 * @throws TranslatorException 
+	 */
+	public Class<?> getCacheClassType() throws TranslatorException;
 	
 
 	/**
 	 * Returns the descriptor that desribes the messages being serialized
-	 * @param cacheName
 	 * @return Descriptor
 	 * @throws TranslatorException
 	 */
-	public Descriptor getDescriptor(String cacheName) throws TranslatorException;
+	public Descriptor getDescriptor() throws TranslatorException;
 	
 	/**
 	 * Call to obtain the cache object
-	 * @param cacheName
 	 * @return Map cache
 	 * @throws TranslatorException 
 	 */
-	public Map<Object, Object> getCache(String cacheName) throws TranslatorException;
+	public Map<Object, Object> getCache() throws TranslatorException;
 	
 	/**
 	 * Return the QueryFactory used by the cache.
-	 * @param cacheName
 	 * @return QueryFactory
 	 * @throws TranslatorException
 	 */
 	@SuppressWarnings("rawtypes")
-	public QueryFactory getQueryFactory(String cacheName) throws TranslatorException;
+	public QueryFactory getQueryFactory() throws TranslatorException;
 	
 	/**
 	 * Return the ClassRegistry that contains which classes and their methods.

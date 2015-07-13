@@ -37,17 +37,15 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory</managedconnectionfactory-class>
   
             <config-property>
-               <description>{$display:"Cache Type Mapping",$description:"Cache Type Map(cacheName:className[;pkFieldName][,cacheName:className[;pkFieldName]...])",$required="true"}</description>
+               <description>{$display:"Cache Type Mapping",$description:"Cache Type Map(cacheName:className[;pkFieldName[:cacheKeyJavaType]])",$required="true"}</description>
                <config-property-name>CacheTypeMap</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-            </config-property>  
-            
+            </config-property>   
             <config-property>
                <description>{$display:"Module",$description:"Module defining the cache classes (module,[module,..])"}</description>
                <config-property-name>Module</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-            </config-property>
-                
+            </config-property>      
             <config-property>
                <description>{$display:"Server List",$description:"Server List (host:port[;host:port...]) to connect to"}</description>
                <config-property-name>RemoteServerList</config-property-name>

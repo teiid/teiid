@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.infinispan.protostream.descriptors.Descriptor;
+import org.infinispan.protostream.descriptors.FieldDescriptor;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -40,9 +42,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.infinispan.dsl.InfinispanConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
-
-import org.infinispan.protostream.descriptors.Descriptor;
-import org.infinispan.protostream.descriptors.FieldDescriptor;
 
 
 
@@ -81,6 +80,8 @@ import org.infinispan.protostream.descriptors.FieldDescriptor;
  * 
  */
 public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanConnection>{
+//    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
+//    public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class"; //$NON-NLS-1$
 				
 	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
@@ -89,35 +90,35 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 	@Override
 	public void process(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
 			
-		Map<String, Class<?>> cacheTypes = conn.getCacheNameClassTypeMapping();
-		for (String cacheName : cacheTypes.keySet()) {
+			String cacheName = conn.getCacheName();			
 
-			Class<?> type = cacheTypes.get(cacheName);
-			String pkField = conn.getPkField(cacheName);
-			if (pkField == null || pkField.trim().length() == 0) {
-					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25007, new Object[] {cacheName}));
-			}
-			createRootTable(metadataFactory, type, conn.getDescriptor(cacheName), cacheName, pkField, conn);
-		}		
+			Class<?> type = conn.getCacheClassType();
+			createRootTable(metadataFactory, type, conn.getDescriptor(), cacheName,conn);
 	}
 
 
-	private Table createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, String pkField, InfinispanConnection conn) throws TranslatorException {
+	private Table createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, InfinispanConnection conn) throws TranslatorException {
 			
-		Table rootTable = addTable(mf, entity, descriptor);
-		rootTable.setNameInSource(cacheName); 
+		String pkField = conn.getPkField();
+		boolean updatable = (pkField != null ? true : false);
 		
-	    Method pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
-	    if (pkMethod == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));
-	    	
-	    }
-	    	    
+		Table rootTable = addTable(mf, entity, updatable, descriptor);
+		
 	    // add column for cache Object
 		addRootColumn(mf, Object.class, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable,true, false); //$NON-NLS-1$	
 
-		// add a column for primary key
-		addRootColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, rootTable.getName(), rootTable, true, true);
+		Method pkMethod = null;
+		if (updatable) {
+		    pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
+		    if (pkMethod == null) {
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));
+		    	
+		    }
+		    
+			// add a column for primary key
+			addRootColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, rootTable.getName(), rootTable, true, true);
+		    
+		}
 		
 		boolean repeats = false;
 		// the descriptor is needed to determine which fields are defined as searchable.
@@ -131,25 +132,27 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			}
 		}	
 		
-		// add primary key
-		String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
-        ArrayList<String> x = new ArrayList<String>(1) ;
-        x.add(pkField);
-        mf.addPrimaryKey(pkName, x , rootTable);		    
-		
-		if (repeats) {
-			for (FieldDescriptor fd:descriptor.getFields()) {	
-				if (fd.isRepeated() ) {
-					processRepeatedType(mf,fd, rootTable, pkMethod, conn);	
-				} 
-			}	
+		if (updatable) {
+			// add primary key
+			String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
+	        ArrayList<String> x = new ArrayList<String>(1) ;
+	        x.add(pkField);
+	        mf.addPrimaryKey(pkName, x , rootTable);		    
+			
+			if (repeats) {
+				for (FieldDescriptor fd:descriptor.getFields()) {	
+					if (fd.isRepeated() ) {
+						processRepeatedType(mf,fd, rootTable, pkMethod, conn);	
+					} 
+				}	
+			}
 		}
 
 			
 		return rootTable;
 	}
 	
-	private Table addTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor) {
+	private Table addTable(MetadataFactory mf, Class<?> entity, boolean updatable, Descriptor descriptor) {
 		String tName = entity.getSimpleName();
 				//getTableName(descriptor);
 		Table t = mf.getSchema().getTable(tName);
@@ -158,7 +161,9 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			return t;
 		}
 		t = mf.addTable(tName);
-		t.setSupportsUpdate(true);
+		t.setSupportsUpdate(updatable);
+		
+//		t.setProperty(ENTITYCLASS, entity.getName());
 
 		return t;
 		
@@ -200,7 +205,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25060, new Object[] { fd.getName() }));
 		}
 		
-		Table t = addTable(mf, c, d);
+		Table t = addTable(mf, c, true, d);
 		
 		// do not use getSourceName, the NameInSource has to be defined as the cache name
 		t.setNameInSource(rootTable.getNameInSource()); 
