@@ -104,11 +104,16 @@ public class LocalClient implements Client {
         StringBuilder sb = new StringBuilder();
         sb.append("jdbc:teiid:").append(vdbName).append(".").append(version).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         
-        Properties properties = new Properties();
-        properties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-        properties.put(EmbeddedProfile.TRANSPORT_NAME, props.getProperty(EmbeddedProfile.TRANSPORT_NAME, "odata")); //$NON-NLS-1$
-        properties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
-        ConnectionImpl connection = driver.connect(sb.toString(), properties);
+        if (props.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
+            props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
+        }
+        if (props.getProperty(EmbeddedProfile.TRANSPORT_NAME) == null) {
+            props.setProperty(EmbeddedProfile.TRANSPORT_NAME, "odata");    
+        }        
+        if (props.getProperty(EmbeddedProfile.WAIT_FOR_LOAD) == null) {
+            props.setProperty(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+        }        
+        ConnectionImpl connection = driver.connect(sb.toString(), props);
         return connection;
     }    
     
