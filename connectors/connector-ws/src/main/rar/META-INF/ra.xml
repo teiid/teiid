@@ -47,7 +47,7 @@
             </config-property>
             
             <config-property>
-                <description>{$display:"WebService Security Used",$allowed:["None","HTTPBasic","WSSecurity", "Kerberos","OAuth"], $description:"Type of Authentication to used with the web service.", $required:"true", $defaultValue:"None"}</description>
+                <description>{$display:"WebService Security Used",$allowed:["None","HTTPBasic", "Digest", "WSSecurity", "Kerberos","OAuth"], $description:"Type of Authentication to used with the web service.", $required:"true", $defaultValue:"None"}</description>
                 <config-property-name>SecurityType</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
                 <config-property-value>None</config-property-value>

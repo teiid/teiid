@@ -46,7 +46,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(WSManagedConnectionFactory.class);
 
-	public enum SecurityType {None,HTTPBasic,WSSecurity,Kerberos,OAuth}
+	public enum SecurityType {None,HTTPBasic,Digest,WSSecurity,Kerberos,OAuth}
 
 	//ws properties
 	private String endPoint;

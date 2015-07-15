@@ -52,11 +52,13 @@ import javax.xml.ws.http.HTTPBinding;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
+import org.apache.cxf.configuration.security.AuthorizationPolicy;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.jaxws.DispatchImpl;
+import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
@@ -142,11 +144,11 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				for (Map.Entry<String, List<String>> entry : header.entrySet()) {
 					this.client.header(entry.getKey(), entry.getValue().toArray());
 				}
-				String username = (String) this.requestContext.get(Dispatch.USERNAME_PROPERTY);
-				String password = (String) this.requestContext.get(Dispatch.PASSWORD_PROPERTY);
 				
-				if (username != null) {
-					this.client.header(AUTHORIZATION, "Basic " + Base64.encodeBytes((username + ':' + password).getBytes())); //$NON-NLS-1$
+				if (this.requestContext.get(AuthorizationPolicy.class.getName()) != null) {
+				    HTTPConduit conduit = (HTTPConduit)WebClient.getConfig(this.client).getConduit();
+				    AuthorizationPolicy policy = (AuthorizationPolicy)this.requestContext.get(AuthorizationPolicy.class.getName());
+				    conduit.setAuthorization(policy);
 				}
 				else if (this.requestContext.get(GSSCredential.class.getName()) != null) {
 				    WebClient.getConfig(this.client).getRequestContext().put(GSSCredential.class.getName(), this.requestContext.get(GSSCredential.class.getName()));
@@ -375,7 +377,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
     }
 
 	private <T> void setDispatchProperties(Dispatch<T> dispatch, String binding) {
-		if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
+		if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic 
+		        || this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.Digest){
 
 			String userName = this.mcf.getAuthUserName();
 			String password = this.mcf.getAuthPassword();
@@ -387,9 +390,15 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				userName = ConnectionContext.getUserName(subject, this.mcf, userName);
 				password = ConnectionContext.getPassword(subject, this.mcf, userName, password);
 			}
-
-			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, userName);
-			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, password);
+			AuthorizationPolicy policy = new AuthorizationPolicy();
+			policy.setUserName(userName);
+			policy.setPassword(password);
+			if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.Digest) {
+			    policy.setAuthorizationType("Digest");
+			} else {
+			    policy.setAuthorizationType("Basic");
+			}
+			dispatch.getRequestContext().put(AuthorizationPolicy.class.getName(), policy);			
 		}
 		else if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.Kerberos) {
 		    boolean credentialFound = false;
