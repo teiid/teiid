@@ -100,9 +100,8 @@ public class LocalClient implements Client {
 	private int vdbVersion;
 	private int batchSize;
 	private long cacheTime;
-	private String transportName;
 	private String connectionString;
-	private Properties connectionProperties = new Properties();
+	private Properties initProperties;
 	private EdmDataServices edmMetaData;
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
@@ -112,13 +111,19 @@ public class LocalClient implements Client {
 		this.vdbVersion = vdbVersion;
 		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
 		this.cacheTime = PropertiesUtils.getLongProperty(props, SKIPTOKEN_TIME, 300000L);
-		this.transportName = props.getProperty(EmbeddedProfile.TRANSPORT_NAME, "odata"); //$NON-NLS-1$
 		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
 		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		connectionProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-		connectionProperties.put(EmbeddedProfile.TRANSPORT_NAME, transportName); 
-		connectionProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+		this.initProperties = props;
+		if (this.initProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
+		    this.initProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
+		}
+		if (this.initProperties.getProperty(EmbeddedProfile.TRANSPORT_NAME) == null) {
+		    this.initProperties.setProperty(EmbeddedProfile.TRANSPORT_NAME, "odata");    
+		}		 
+		if (this.initProperties.getProperty(EmbeddedProfile.WAIT_FOR_LOAD) == null) {
+		    this.initProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+		}
 		this.connectionString = sb.toString();
 	}
 
@@ -154,7 +159,8 @@ public class LocalClient implements Client {
 	}
 
 	ConnectionImpl getConnection() throws SQLException {
-		return driver.connect(this.connectionString, connectionProperties);
+		ConnectionImpl connection = driver.connect(this.connectionString, this.initProperties);
+		return connection;
 	}
 
 	@Override
