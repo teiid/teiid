@@ -23,12 +23,18 @@
   
   <dependencySets>
     <dependencySet>
+          <outputDirectory>${jbossas-module-root}/com/force/api/22</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>com.force.api:force-wsc</include>
+              <include>com.force.api:force-partner-api</include>
+          </includes>
+    </dependencySet>  
+    <dependencySet>
           <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/salesforce/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
               <include>org.jboss.teiid.connectors:translator-salesforce</include>
-              <include>com.force.api:force-wsc</include>
-              <include>com.force.api:force-partner-api</include>
           </includes>
     </dependencySet>  
   </dependencySets>
