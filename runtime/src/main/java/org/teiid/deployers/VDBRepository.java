@@ -123,13 +123,10 @@ public class VDBRepository implements Serializable{
 	public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
 		CompositeVDB cvdb = null;
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
-		long timeOutNanos = 0;
-		if (timeOutMillis >= 0) {
-			timeOutNanos = TimeUnit.MILLISECONDS.toNanos(DEFAULT_TIMEOUT_MILLIS);
-		} else {
-			//TODO allow a configurable default
-			timeOutNanos = TimeUnit.MINUTES.toNanos(10);
+		if (timeOutMillis < 0) {
+			timeOutMillis = DEFAULT_TIMEOUT_MILLIS;
 		}
+		long timeOutNanos = TimeUnit.MILLISECONDS.toNanos(timeOutMillis);
 		lock.lock();
 		try {
 			while ((cvdb = this.vdbRepo.get(key)) == null) {

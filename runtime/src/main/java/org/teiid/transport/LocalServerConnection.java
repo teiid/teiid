@@ -89,7 +89,12 @@ public class LocalServerConnection implements ServerConnection {
 				vdbName = vdbName.substring(0, firstIndex);
 			}
 			if (vdbVersion != null) {
-				int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, EmbeddedProfile.WAIT_FOR_LOAD, -1);
+				int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, TeiidURL.CONNECTION.LOGIN_TIMEOUT, -1);
+				if (waitForLoad == -1) {
+					waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, EmbeddedProfile.WAIT_FOR_LOAD, -1);
+				} else {
+					waitForLoad *= 1000; //seconds to milliseconds
+				}
 				if (waitForLoad != 0) {
 					this.csr.waitForFinished(vdbName, Integer.valueOf(vdbVersion), waitForLoad);
 				}
