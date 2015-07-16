@@ -597,7 +597,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		if (t instanceof SQLException) {
 			//we are just re-logging an exception raised by the engine
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODBC, MessageLevel.DETAIL)) {
-				LogManager.logWarning(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40020)); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logDetail(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40020)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} else {
 			//should be in the odbc layer

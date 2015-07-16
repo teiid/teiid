@@ -50,6 +50,7 @@ import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
@@ -500,6 +501,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				this.preparedMap.put(prepareName, prepared);
 				this.client.prepareCompleted(prepareName);
 			} catch (SQLException e) {
+				if (e.getCause() instanceof TeiidProcessingException) {
+					LogManager.logWarning(LogConstants.CTX_ODBC, e.getCause(), RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40020)); 
+				}
 				errorOccurred(e);
 			} finally {
 				try {
@@ -617,6 +621,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		                	setEncoding();
 		                	doneExecuting();
 		                }
+                    } catch (ExecutionException e) {
+                    	if (e.getCause() != null) {
+                    		errorOccurred(e.getCause());
+                    	} else {
+                            errorOccurred(e);
+                    	}
                     } catch (Throwable e) {
                         errorOccurred(e);
                     }
