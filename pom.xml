@@ -48,6 +48,7 @@
         <version.org.jboss.oreva>0.8.7</version.org.jboss.oreva>
         <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
         <version.com.force.api>22.0.0</version.com.force.api>
+        <version.com.force.api.custom>34.0.0</version.com.force.api.custom>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>

@@ -58,24 +58,56 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                       <descriptor>kits/jboss-as7-dist.xml</descriptor>
-                       <descriptor>kits/embedded-dist.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                  <execution>
-                    <id>create-assemblies</id>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                  </execution>
-                </executions>
-            </plugin>   
+
+        <!-- This is hack to provide multiple different version of the saleforce libraries without defining 
+            strong dependency on modules
+        -->
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-dependency-plugin</artifactId>
+			<executions>
+				<execution>
+					<id>copy</id>
+					<phase>package</phase>
+					<goals>
+						<goal>copy</goal>
+					</goals>
+					<configuration>
+						<artifactItems>
+							<artifactItem>
+								<groupId>com.force.api</groupId>
+								<artifactId>force-partner-api</artifactId>
+								<version>${version.com.force.api.custom}</version>
+							</artifactItem>
+                            <artifactItem>
+                                <groupId>com.force.api</groupId>
+                                <artifactId>force-wsc</artifactId>
+                                <version>${version.com.force.api.custom}</version>
+                            </artifactItem>							
+						</artifactItems>
+						<outputDirectory>${project.build.directory}/kits/jboss-as7/modules/com/force/api/custom</outputDirectory>
+					</configuration>
+				</execution>
+			</executions>
+		</plugin>        
+        <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+                <descriptors>
+                   <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                   <descriptor>kits/embedded-dist.xml</descriptor>
+                </descriptors>
+            </configuration>
+            <executions>
+              <execution>
+                <id>create-assemblies</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+              </execution>
+            </executions>
+        </plugin>   
         </plugins>         
     </build>    
 </project>
