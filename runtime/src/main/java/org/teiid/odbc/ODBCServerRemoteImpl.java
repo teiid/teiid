@@ -198,6 +198,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} catch (LogonException e) {
 			errorOccurred(e);
 			terminate();
+			return;
 		}
 		
 		if (authType.equals(AuthenticationType.USERPASSWORD)) {
