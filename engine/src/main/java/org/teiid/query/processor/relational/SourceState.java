@@ -260,7 +260,7 @@ class SourceState {
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
     		if (source.hasBuffer(true)) {
-    			this.buffer = source.getBuffer(-1);
+    			this.buffer = getTupleBuffer();
     		} else if (this.buffer == null && this.collector != null) {
     			this.buffer = this.collector.collectTuples();
     		}
