@@ -41,6 +41,7 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
@@ -84,7 +85,9 @@ public class RulePushLimit implements OptimizerRule {
         List<PlanNode> limitNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.ACCESS);
         
         boolean pushRaiseNull = false;
-        
+
+        PlanNode[] rootHolder = new PlanNode[] {plan};
+
         while (!limitNodes.isEmpty()) {
             PlanNode limitNode = limitNodes.get(0);
             
@@ -97,16 +100,17 @@ public class RulePushLimit implements OptimizerRule {
                 	limitNodes.removeAll(NodeEditor.findAllNodes(limitNode.getFirstChild(), NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.ACCESS));
                     FrameUtil.replaceWithNullNode(limitNode.getFirstChild());
                     PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
-                    projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, childProject.getProperty(NodeConstants.Info.PROJECT_COLS));
+                    RelationalPlanner.createProjectNode((List<? extends Expression>) childProject.getProperty(NodeConstants.Info.PROJECT_COLS));
                     limitNode.getFirstChild().addAsParent(projectNode);
+                    projectNode.setProperty(NodeConstants.Info.OUTPUT_COLS, projectNode.getProperty(NodeConstants.Info.PROJECT_COLS));
                     pushRaiseNull = true;
                     limitNodes.remove(limitNode);
                     continue;
                 }
             }
             
-            while (canPushLimit(plan, limitNode, limitNodes, metadata, capabilitiesFinder, analysisRecord, context)) {
-                plan = RuleRaiseAccess.performRaise(plan, limitNode.getFirstChild(), limitNode);
+            while (canPushLimit(rootHolder, limitNode, limitNodes, metadata, capabilitiesFinder, analysisRecord, context)) {
+            	rootHolder[0] = RuleRaiseAccess.performRaise(rootHolder[0], limitNode.getFirstChild(), limitNode);
                 //makes this rule safe to run after the final rule assign output elements
                 limitNode.setProperty(Info.OUTPUT_COLS, limitNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
             }
@@ -122,10 +126,10 @@ public class RulePushLimit implements OptimizerRule {
             rules.push(RuleConstants.RAISE_NULL);
         }
         
-        return plan;
+        return rootHolder[0];
     }
     
-    boolean canPushLimit(PlanNode rootNode, PlanNode limitNode, List<PlanNode> limitNodes, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record, CommandContext context) throws QueryMetadataException, TeiidComponentException {
+    private boolean canPushLimit(PlanNode[] rootNode, PlanNode limitNode, List<PlanNode> limitNodes, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record, CommandContext context) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         PlanNode child = limitNode.getFirstChild();
         if (child == null || child.getChildCount() == 0) {
             return false;
@@ -181,18 +185,20 @@ public class RulePushLimit implements OptimizerRule {
             		PlanNode newLimit = newLimit(limitNode);
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     child.getFirstChild().addAsParent(newLimit);
+                    newLimit.setProperty(NodeConstants.Info.OUTPUT_COLS, newLimit.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
                 	limitNodes.add(newLimit);
             	}
             	if (pushRight) {
             		PlanNode newLimit = newLimit(limitNode);
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     child.getLastChild().addAsParent(newLimit);
+                    newLimit.setProperty(NodeConstants.Info.OUTPUT_COLS, newLimit.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
                 	limitNodes.add(newLimit);
             	}
             	return false;
             case NodeConstants.Types.ACCESS:
             {
-                raiseAccessOverLimit(rootNode, child, metadata, capFinder, limitNode, record);
+                raiseAccessOverLimit(rootNode[0], child, metadata, capFinder, limitNode, record);
                 return false;
             }
             case NodeConstants.Types.PROJECT:
@@ -217,13 +223,44 @@ public class RulePushLimit implements OptimizerRule {
             case NodeConstants.Types.DUP_REMOVE:
             	return limitNode.hasBooleanProperty(Info.IS_NON_STRICT);
             case NodeConstants.Types.SORT:
-            	if (child.getFirstChild().getType() == NodeConstants.Types.SET_OP) {
+            	switch (child.getFirstChild().getType()) {
+            	case NodeConstants.Types.SET_OP:
+            	{
             		PlanNode setOp = child.getFirstChild();
             		if (!canPushToBranches(limitNode, setOp)) {
             			return false;
             		}
             		OrderBy parentOrderBy = (OrderBy) child.getProperty(NodeConstants.Info.SORT_ORDER);
             		distributeLimit(limitNode, setOp, parentOrderBy, metadata, limitNodes, parentLimit, parentOffset, capFinder, context);
+            		break;
+            	}
+            	case NodeConstants.Types.JOIN:
+            	{
+            		PlanNode join = child.getFirstChild();
+            		JoinType jt = (JoinType)join.getProperty(NodeConstants.Info.JOIN_TYPE);
+            		if (!jt.isOuter()) {
+            			return false;
+            		}
+					if ((jt == JoinType.JOIN_FULL_OUTER || jt == JoinType.JOIN_LEFT_OUTER) && join.getFirstChild().getGroups().containsAll(child.getGroups())
+							&& !FrameUtil.findJoinSourceNode(join.getLastChild()).hasProperty(NodeConstants.Info.CORRELATED_REFERENCES)) {
+        				pushOrderByAndLimit(limitNode, limitNodes, metadata,
+								capFinder, context, child, parentLimit,
+								parentOffset, join.getFirstChild());
+            		} else if (jt == JoinType.JOIN_FULL_OUTER && join.getLastChild().getGroups().containsAll(child.getGroups())) {
+            			pushOrderByAndLimit(limitNode, limitNodes, metadata,
+								capFinder, context, child, parentLimit,
+								parentOffset, join.getLastChild());
+            		}
+            		break;
+            	}
+            	case NodeConstants.Types.PROJECT:
+            	{
+            		rootNode[0] = RulePlanSorts.checkForProjectOptimization(child, rootNode[0], metadata, capFinder, record, context);
+            		if (child.getFirstChild().getType() != NodeConstants.Types.PROJECT) {
+            			return canPushLimit(rootNode, limitNode, limitNodes, metadata, capFinder, record, context);
+            		}
+            		break;
+            	}
             	}
             	return false;
             default:
@@ -233,12 +270,35 @@ public class RulePushLimit implements OptimizerRule {
         }
     }
 
+	private void pushOrderByAndLimit(PlanNode limitNode,
+			List<PlanNode> limitNodes, QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, CommandContext context,
+			PlanNode child, Expression parentLimit, Expression parentOffset,
+			PlanNode branch) throws QueryMetadataException,
+			TeiidComponentException {
+		//push both the limit and order by
+		OrderBy parentOrderBy = (OrderBy) child.getProperty(NodeConstants.Info.SORT_ORDER);
+		PlanNode newSort = NodeFactory.getNewNode(NodeConstants.Types.SORT);
+		OrderBy newOrderBy = parentOrderBy.clone();
+		newSort.setProperty(Info.SORT_ORDER, newOrderBy);
+		newSort.addGroups(child.getGroups());
+		newSort.setProperty(NodeConstants.Info.OUTPUT_COLS, branch.getProperty(NodeConstants.Info.OUTPUT_COLS));
+		if (branch.getType() == NodeConstants.Types.ACCESS &&
+				RuleRaiseAccess.canRaiseOverSort(branch, metadata, capFinder, newSort, null, false, context)) {
+			branch.getFirstChild().addAsParent(newSort);
+		} else {
+			branch.addAsParent(newSort);
+		}
+		addBranchLimit(limitNode, limitNodes, metadata, parentLimit, parentOffset, newSort);
+	}
+
 	private void addBranchLimit(PlanNode limitNode, List<PlanNode> limitNodes,
 			QueryMetadataInterface metadata, Expression parentLimit,
 			Expression parentOffset, PlanNode grandChild) {
 		PlanNode newLimit = newLimit(limitNode);
 		newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
 		grandChild.addAsParent(newLimit);
+		newLimit.setProperty(NodeConstants.Info.OUTPUT_COLS, newLimit.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
 		limitNodes.add(newLimit);
 		if (grandChild.getType() == NodeConstants.Types.SET_OP) {
 			newLimit.setProperty(Info.IS_COPIED, true);
@@ -341,6 +401,7 @@ public class RulePushLimit implements OptimizerRule {
 						branch = newSort;
 					}
 				}
+				newSort.setProperty(NodeConstants.Info.OUTPUT_COLS, newSort.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
 				addBranchLimit(limitNode, limitNodes, metadata, parentLimit, parentOffset, branch);
 			}
 		}
@@ -426,6 +487,8 @@ public class RulePushLimit implements OptimizerRule {
                 } else {
                     accessNode.getFirstChild().addAsParent(pushedLimit);
                 }
+                
+                pushedLimit.setProperty(NodeConstants.Info.OUTPUT_COLS, pushedLimit.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
             }
             
             return null;

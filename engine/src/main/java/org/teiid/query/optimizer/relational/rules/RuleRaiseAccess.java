@@ -422,7 +422,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 if (!CapabilitiesUtil.supportsSetQueryOrderBy(modelID, metadata, capFinder)) {
                 	return false;
                 }
-            } else if (accessNode.getLastChild().getType() == NodeConstants.Types.TUPLE_LIMIT) { 
+            } else if (accessNode.getLastChild().getType() == NodeConstants.Types.TUPLE_LIMIT || accessNode.getLastChild().getType() == NodeConstants.Types.SORT) { 
             	//check to see the plan is not in a consistent state to have a sort applied	
                 return false;
             }

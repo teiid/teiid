@@ -217,7 +217,7 @@ public class RulePlanSorts implements OptimizerRule {
 		return root;
 	}
 
-	private PlanNode checkForProjectOptimization(PlanNode node, PlanNode root, 
+	static PlanNode checkForProjectOptimization(PlanNode node, PlanNode root, 
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record, CommandContext context) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
 		PlanNode projectNode = node.getFirstChild();
 		PlanNode parent = node.getParent();

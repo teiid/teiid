@@ -197,6 +197,9 @@ public class SortNode extends RelationalNode {
     
     @Override
     public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	if (this.isClosed()) {
+    		throw new AssertionError("called after close"); //$NON-NLS-1$
+    	}
     	this.rowLimit = maxRows;
     	//TODO: push limiting into the sort logic
     	if (this.output == null) {

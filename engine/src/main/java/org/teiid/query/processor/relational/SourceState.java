@@ -268,7 +268,7 @@ class SourceState {
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
     		if (source.hasBuffer(true)) {
-    			this.buffer = source.getBuffer(-1);
+    			this.buffer = getTupleBuffer();
     		} else if (this.buffer == null && this.collector != null) {
     			if (sortOption == SortOption.NOT_SORTED) {
     				//pass the buffer and the source

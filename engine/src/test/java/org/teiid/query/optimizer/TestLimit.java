@@ -44,6 +44,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.*;
@@ -1033,9 +1034,9 @@ public class TestLimit {
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
          
-        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 limit 5"; //$NON-NLS-1$
+        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 limit 2"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 LIMIT 5"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 LIMIT 2"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
@@ -1054,6 +1055,162 @@ public class TestLimit {
                 0,      // Sort
                 0       // UnionAll
         }, NODE_TYPES);
+    }
+    
+    @Test public void testOrderedOuterJoinLimit() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+         
+        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 order by pm1.g1.e1 limit 3"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                1,      // Limit
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                1,      // Sort
+                0       // UnionAll
+        }, NODE_TYPES);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3", Arrays.asList("a", 1), Arrays.asList("a", 2), Arrays.asList("c", 3));
+        hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList("a"), Arrays.asList("a"), Arrays.asList("c"));
+        TestProcessor.helpProcess(plan, hdm, new List[] {
+        		Arrays.asList("a", 1), //$NON-NLS-1$
+        		Arrays.asList("a", 1), //$NON-NLS-1$
+        		Arrays.asList("a", 2), //$NON-NLS-1$
+        });
+    }
+    
+    @Test public void testOrderedOuterJoinLimit1() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+         
+        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 full outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 order by pm1.g1.e1 limit 3"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                1,      // Limit
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                1,      // Sort
+                0       // UnionAll
+        }, NODE_TYPES);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3", Arrays.asList(null, 1), Arrays.asList("a", 2), Arrays.asList("c", 3));
+        hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList((String)null), Arrays.asList("a"), Arrays.asList("c"));
+        TestProcessor.helpProcess(plan, hdm, new List[] {
+        		Arrays.asList(null, null), //$NON-NLS-1$
+        		Arrays.asList(null, 1), //$NON-NLS-1$
+        		Arrays.asList("a", 2), //$NON-NLS-1$
+        });
+    }
+    
+    /**
+     * limit won't be pushed as the ordering is over both sides
+     * @throws Exception
+     */
+    @Test public void testOrderedOuterJoinLimit2() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+         
+        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 order by pm1.g1.e1, pm2.g1.e1 limit 3"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                1,      // Limit
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                1,      // Sort
+                0       // UnionAll
+        }, NODE_TYPES);
+    }
+
+    /**
+     * ensure we can push through multiple joins and handle an offset
+     * @throws Exception
+     */
+    @Test public void testOrderedOuterJoinLimit3() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+         
+        String sql = "select pm1.g1.e1, pm1.g1.e2, pm1.g2.e3 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 left outer join pm1.g2 on pm1.g1.e2 = pm1.g2.e2 order by pm1.g1.e4 limit 3,3"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1 ORDER BY pm1.g1.e4 LIMIT 6", "SELECT pm1.g2.e2, pm1.g2.e3 FROM pm1.g2 ORDER BY pm1.g2.e2"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                3,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                2,      // Limit
+                0,      // NestedLoopJoinStrategy
+                2,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                2,      // Sort
+                0       // UnionAll
+        }, NODE_TYPES);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1 ORDER BY pm1.g1.e4 LIMIT 6", Arrays.asList(null, 4, null), Arrays.asList("a", 5, false), Arrays.asList("c", 6, false), Arrays.asList(null, 1, true), Arrays.asList("a", 2, true), Arrays.asList("c", 3, true));
+        hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList((String)null), Arrays.asList("a"), Arrays.asList("c"));
+        hdm.addData("SELECT pm1.g2.e2, pm1.g2.e3 FROM pm1.g2 ORDER BY pm1.g2.e2", Arrays.asList(1, 1.0), Arrays.asList(2, 2.0));
+        TestProcessor.helpProcess(plan, hdm, new List[] {
+        		Arrays.asList(null, 1, 1.0), //$NON-NLS-1$
+        		Arrays.asList("a", 2, 2.0), //$NON-NLS-1$
+        		Arrays.asList("c", 3, null), //$NON-NLS-1$
+        });
     }
 
 }

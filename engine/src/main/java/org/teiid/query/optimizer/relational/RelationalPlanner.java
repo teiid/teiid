@@ -703,11 +703,14 @@ public class RelationalPlanner {
         
         rules.push(RuleConstants.CALCULATE_COST);
         
-        rules.push(new RuleAssignOutputElements(true));
+        //rules.push(new RuleAssignOutputElements(true));
         
         if (hints.hasLimit) {
             rules.push(RuleConstants.PUSH_LIMIT);
         }
+        
+        rules.push(new RuleAssignOutputElements(true));
+        
         if (hints.hasRelationalProc) {
             rules.push(RuleConstants.PLAN_PROCEDURES);
         }

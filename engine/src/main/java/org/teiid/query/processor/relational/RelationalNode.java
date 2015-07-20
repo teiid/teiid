@@ -410,7 +410,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      */
     private void recordBatch(TupleBatch batch) {
         if (!LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
-        	return;
+        	//return;
         }
     	// Print summary
         StringBuffer str = new StringBuffer();
@@ -425,6 +425,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         for (int row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
         	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         }
+        System.out.println(str);
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, str.toString());
     }
 
