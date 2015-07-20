@@ -243,7 +243,7 @@ public class RulePushLimit implements OptimizerRule {
             		}
 					if ((jt == JoinType.JOIN_FULL_OUTER || jt == JoinType.JOIN_LEFT_OUTER) && join.getFirstChild().getGroups().containsAll(child.getGroups())
 							&& !FrameUtil.findJoinSourceNode(join.getLastChild()).hasProperty(NodeConstants.Info.CORRELATED_REFERENCES)) {
-        				pushOrderByAndLimit(limitNode, limitNodes, metadata,
+						pushOrderByAndLimit(limitNode, limitNodes, metadata,
 								capFinder, context, child, parentLimit,
 								parentOffset, join.getFirstChild());
             		} else if (jt == JoinType.JOIN_FULL_OUTER && join.getLastChild().getGroups().containsAll(child.getGroups())) {
@@ -290,6 +290,11 @@ public class RulePushLimit implements OptimizerRule {
 			branch.addAsParent(newSort);
 		}
 		addBranchLimit(limitNode, limitNodes, metadata, parentLimit, parentOffset, newSort);
+		if (limitNode.hasBooleanProperty(Info.IS_PUSHED)) {
+			//remove the intermediate ordering/limit
+			NodeEditor.removeChildNode(limitNode, limitNode.getFirstChild());
+			NodeEditor.removeChildNode(limitNode.getParent(), limitNode);
+		}
 	}
 
 	private void addBranchLimit(PlanNode limitNode, List<PlanNode> limitNodes,
@@ -303,6 +308,7 @@ public class RulePushLimit implements OptimizerRule {
 		if (grandChild.getType() == NodeConstants.Types.SET_OP) {
 			newLimit.setProperty(Info.IS_COPIED, true);
 		}
+		newLimit.setProperty(Info.IS_PUSHED, true);
 	}
 
 	/**

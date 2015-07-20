@@ -1191,14 +1191,14 @@ public class TestLimit {
                 0,      // DependentProject
                 0,      // DupRemove
                 0,      // Grouping
-                2,      // Limit
+                1,      // Limit
                 0,      // NestedLoopJoinStrategy
                 2,      // MergeJoinStrategy
                 0,      // Null
                 0,      // PlanExecution
                 1,      // Project
                 0,      // Select
-                2,      // Sort
+                1,      // Sort
                 0       // UnionAll
         }, NODE_TYPES);
         
