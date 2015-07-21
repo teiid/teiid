@@ -112,7 +112,7 @@ public class CommandLogMessage {
                                 String sql,
                                 ExecutionContext context) {
         // dataSourceCommandStart
-    	this(timestamp, requestID, sourceCommandID, transactionID, modelName, translatorName, sessionID, principal, null, Event.NEW, context);
+    	this(timestamp, requestID, sourceCommandID, transactionID, modelName, translatorName, sessionID, principal, null, Event.NEW, context, null);
         this.sql = sql;
     }
     public CommandLogMessage(long timestamp,
@@ -125,7 +125,7 @@ public class CommandLogMessage {
                                 String principal,
                                 Integer finalRowCount,
                                 Event event,
-                                ExecutionContext context) {
+                                ExecutionContext context, Long cpuTime) {
         // dataSourceCommandEnd
     	this.source = true;
         this.event = event;
@@ -139,6 +139,7 @@ public class CommandLogMessage {
         this.principal = principal;
         this.rowCount = finalRowCount;
         this.executionContext = context;
+        this.cpuTime = cpuTime;
     }
     
     public String toString() {
@@ -229,10 +230,6 @@ public class CommandLogMessage {
 	 */
 	public PlanNode getPlan() {
 		return plan;
-	}
-	
-	public void setCpuTime(Long cpuTime) {
-		this.cpuTime = cpuTime;
 	}
 	
 	/**

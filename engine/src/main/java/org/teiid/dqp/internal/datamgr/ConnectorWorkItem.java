@@ -254,9 +254,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 			    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         	}
         	Long time = timer.stop();
-        	if (!error) {
-                manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount, time);
-            }
+            manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount, time);
         } 
     }
     
