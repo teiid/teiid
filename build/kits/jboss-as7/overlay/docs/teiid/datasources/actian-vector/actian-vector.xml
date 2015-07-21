@@ -1,0 +1,20 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.2">
+    <datasources>
+	    <datasource jndi-name="java:jboss/datasources/vectorDS" enabled="true" use-java-context="true" pool-name="VectorDS">
+	        <connection-url>jdbc:ingres://${host}:AH7/${db-name};</connection-url>
+	        <driver>vector</driver>
+	        <security>
+	            <user-name>${user}</user-name>
+	            <password>${password}</password>
+	        </security>
+	    </datasource> 
+	    <drivers>
+	    <driver name="vector" module="com.actian.vector">
+	        <driver-class>com.ingres.jdbc.IngresDriver</driver-class>
+	    </driver>
+	    </drivers>     
+    </datasources>
+</subsystem>
+
+
