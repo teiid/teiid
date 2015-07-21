@@ -63,6 +63,8 @@ public class CommandLogMessage {
     private String translatorName;
     private ExecutionContext executionContext;
     private PlanNode plan;
+    
+    private Long cpuTime;
         
     public CommandLogMessage(long timestamp,
                                 String requestID,
@@ -149,7 +151,7 @@ public class CommandLogMessage {
     	if (event == Event.NEW) {
     		return "\tSTART DATA SRC COMMAND:\tstartTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tsql=" + sql;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
     	}
-		return "\t"+ event +" SRC COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tfinalRowCount=" + rowCount;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$
+		return "\t"+ event +" SRC COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tfinalRowCount=" + rowCount + "\tcpuTime(ns)=" + cpuTime;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
   	}
 
 	public long getTimestamp() {
@@ -227,5 +229,17 @@ public class CommandLogMessage {
 	 */
 	public PlanNode getPlan() {
 		return plan;
+	}
+	
+	public void setCpuTime(Long cpuTime) {
+		this.cpuTime = cpuTime;
+	}
+	
+	/**
+	 * the cpu time in nanoseconds
+	 * @return
+	 */
+	public Long getCpuTime() {
+		return cpuTime;
 	}
 }

@@ -125,8 +125,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private boolean areLobsUsableAfterClose;
 	
 	private TeiidException conversionError;
-    
-    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
+	
+	private ThreadCpuTimer timer = new ThreadCpuTimer();
+	
+	ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
@@ -189,7 +191,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	try {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
             if (this.isCancelled.compareAndSet(false, true)) {
-        		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1);
+        		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1, null);
     	        if(execution != null) {
     	            execution.cancel();
     	        }            
@@ -212,9 +214,12 @@ public class ConnectorWorkItem implements ConnectorWork {
     	}
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
     	try {
+        	timer.start();
     		return handleBatch();
     	} catch (Throwable t) {
     		throw handleError(t);
+    	} finally {
+    		timer.stop();
     	}
     }
     
@@ -228,10 +233,8 @@ public class ConnectorWorkItem implements ConnectorWork {
     		return; //already closed
     	}
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing Close :", this.requestMsg.getCommand()}); //$NON-NLS-1$
-    	if (!error) {
-            manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount);
-        }
         try {
+        	timer.start();
 	        if (execution != null) {
 	            execution.close();
 	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed execution"}); //$NON-NLS-1$
@@ -250,6 +253,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        	}
 			    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         	}
+        	Long time = timer.stop();
+        	if (!error) {
+                manager.logSRCCommand(this.requestMsg, this.securityContext, Event.END, this.rowCount, time);
+            }
         } 
     }
     
@@ -261,7 +268,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	if (t instanceof RuntimeException && t.getCause() != null) {
     		t = t.getCause();
     	}
-        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null);
+        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null, null);
         
         String msg = QueryPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
@@ -290,6 +297,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         if(isCancelled()) {
     		 throw new TranslatorException(QueryPlugin.Event.TEIID30476, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30476));
     	}
+        timer.start();
     	try {
 	        if (this.execution == null) {
 	        	if (this.connection == null) {
@@ -335,13 +343,15 @@ public class ConnectorWorkItem implements ConnectorWork {
 				
 		        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
 		        //Log the Source Command (Must be after obtaining the execution context)
-		        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null); 
+		        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null, null); 
 	    	}
 	        // Execute query
 	    	this.execution.execute();
 	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Executed command"}); //$NON-NLS-1$
     	} catch (Throwable t) {
     		throw handleError(t);
+    	} finally {
+    		timer.stop();
     	}
 	}
 
