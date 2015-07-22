@@ -28,9 +28,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory.StructRetrieval;
 
@@ -89,5 +93,17 @@ public class TestJDBCExecutionFactory {
 		Mockito.stub(rs.getBoolean(1)).toReturn(false);
 		Mockito.stub(rs.wasNull()).toReturn(true);
 		assertNull(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.BOOLEAN));
+	}
+	
+	@Test public void testLiteralWithDatabaseTimezone() throws TranslatorException {
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
+		try {
+			JDBCExecutionFactory jef = new JDBCExecutionFactory();
+			jef.setDatabaseTimeZone("GMT+1");
+			jef.start();
+			assertEquals("2015-02-03 05:00:00.0", jef.formatDateValue(TimestampUtil.createTimestamp(115, 1, 3, 4, 0, 0, 0)));
+		} finally {
+			TimestampWithTimezone.resetCalendar(null);
+		}
 	}
 }
