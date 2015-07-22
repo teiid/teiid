@@ -708,12 +708,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     
     /**
      * Format the dateObject (of type date, time, or timestamp) into a string
-     * using the DatabaseTimeZone format.
+     * optionally using the DatabaseTimeZone.
      * @param dateObject
      * @return Formatted string
      */
-    public String formatDateValue(java.util.Date dateObject) {
-        if (dateObject instanceof Timestamp && getTimestampNanoPrecision() < 9) {
+    public String formatDateValue(java.util.Date dateObject, boolean useTimezone) {
+    	if (dateObject instanceof Timestamp && getTimestampNanoPrecision() < 9) {
         	Timestamp ts = (Timestamp)dateObject;
         	Timestamp newTs = new Timestamp(ts.getTime());
         	if (getTimestampNanoPrecision() > 0) {
@@ -724,7 +724,20 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	}
         	dateObject = newTs;
         }
-        return getTypeFacility().convertDate(dateObject, getDatabaseCalendar().getTimeZone(), TimestampWithTimezone.getCalendar(), dateObject.getClass()).toString();
+    	if (!useTimezone) {
+    		return dateObject.toString();
+    	}
+        return getTypeFacility().convertDate(dateObject, getDatabaseCalendar().getTimeZone(), TimestampWithTimezone.getCalendar(), dateObject.getClass()).toString();	
+    }
+    
+    /**
+     * Format the dateObject (of type date, time, or timestamp) into a string
+     * using the DatabaseTimeZone.
+     * @param dateObject
+     * @return Formatted string
+     */
+    public String formatDateValue(java.util.Date dateObject) {
+    	return formatDateValue(dateObject, true);
     }    
     
     /**
