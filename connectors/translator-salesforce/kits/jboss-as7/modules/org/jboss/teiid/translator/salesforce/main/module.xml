@@ -6,14 +6,13 @@
     
     <resources>
         <resource-root path="translator-salesforce-${project.version}.jar" />
-        <!-- Insert resources here -->
     </resources>
-
+        
     <dependencies>
-        <module name="com.force.api" slot="22"/>
         <module name="javax.api"/>
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
+        <module name="com.force.api" slot="22" export="true"/>
     </dependencies>
 </module>

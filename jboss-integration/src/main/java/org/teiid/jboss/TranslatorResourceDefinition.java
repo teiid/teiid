@@ -50,6 +50,7 @@ public class TranslatorResourceDefinition extends SimpleResourceDefinition {
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
 		resourceRegistration.registerReadWriteAttribute(TeiidConstants.TRANSLATOR_MODULE_ATTRIBUTE, null, new AttributeWrite(TeiidConstants.TRANSLATOR_MODULE_ATTRIBUTE));
+		resourceRegistration.registerReadWriteAttribute(TeiidConstants.TRANSLATOR_SLOT_ATTRIBUTE, null, new AttributeWrite(TeiidConstants.TRANSLATOR_SLOT_ATTRIBUTE));
     }
 
     @Override

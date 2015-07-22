@@ -23,13 +23,18 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 import static org.teiid.jboss.TeiidConstants.TRANSLATOR_MODULE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSLATOR_SLOT_ATTRIBUTE;
 import static org.teiid.jboss.TeiidConstants.asString;
 import static org.teiid.jboss.TeiidConstants.isDefined;
 
 import java.util.List;
 import java.util.ServiceLoader;
 
-import org.jboss.as.controller.*;
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -49,6 +54,7 @@ class TranslatorAdd extends AbstractAddStepHandler {
 	@Override
 	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException{
 		TRANSLATOR_MODULE_ATTRIBUTE.validateAndSet(operation, model);
+		TRANSLATOR_SLOT_ATTRIBUTE.validateAndSet(operation, model);
 	}
 	
 	@Override
@@ -64,6 +70,11 @@ class TranslatorAdd extends AbstractAddStepHandler {
     	if (isDefined(TRANSLATOR_MODULE_ATTRIBUTE, operation, context)) {
     		moduleName = asString(TRANSLATOR_MODULE_ATTRIBUTE, operation, context);
     	}
+    	
+        String slot = null;
+        if (isDefined(TRANSLATOR_SLOT_ATTRIBUTE, operation, context)) {
+            slot = asString(TRANSLATOR_SLOT_ATTRIBUTE, operation, context);
+        }    	
 		
         final ServiceTarget target = context.getServiceTarget();
 
@@ -72,7 +83,11 @@ class TranslatorAdd extends AbstractAddStepHandler {
         ModuleLoader ml = Module.getCallerModuleLoader();
         if (moduleName != null && ml != null) {
 	        try {
-            	module = ml.loadModule(ModuleIdentifier.create(moduleName));
+	            ModuleIdentifier id = ModuleIdentifier.create(moduleName);
+	            if (slot != null) {
+	                id = ModuleIdentifier.create(moduleName, slot);
+	            }
+            	module = ml.loadModule(id);
             	translatorLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
 	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50007, moduleName, translatorName))); 

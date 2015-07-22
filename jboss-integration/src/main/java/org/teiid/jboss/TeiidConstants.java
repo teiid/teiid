@@ -515,7 +515,7 @@ public class TeiidConstants {
 	// Translator
 	// TRANSLATOR_ELEMENT("translator"),
     public static SimpleAttributeDefinition TRANSLATOR_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSLATOR_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
-        .setXmlName(Element.TRANSLATOR_MODULE_ATTRIBUTE.getXMLName())
+        .setXmlName(Element.TRANSLATOR_NAME_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)
         .setAllowNull(false)
         .build();    
@@ -526,6 +526,11 @@ public class TeiidConstants {
         .setAllowNull(true)
         .build();    
     
+    public static SimpleAttributeDefinition TRANSLATOR_SLOT_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSLATOR_SLOT_ATTRIBUTE.getModelName(), ModelType.STRING)
+            .setXmlName(Element.TRANSLATOR_SLOT_ATTRIBUTE.getXMLName())
+            .setAllowExpression(false)
+            .setAllowNull(true)
+            .build();   
     	
     public static boolean isDefined(final SimpleAttributeDefinition attr, final ModelNode  model, final OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, model);
