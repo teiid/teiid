@@ -75,7 +75,7 @@ public class TestTeradataTranslator {
     }
     
     @Test public void testTimestampToTime() throws Exception {
-    	helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "time", "cast(TIMESTAMP '2011-05-05 09:16:34.22' AS TIME)");
+    	helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "time", "cast(TIMESTAMP 2011-05-05 09:16:34.22 AS TIME)");
     }
     
     @Test public void testIntegerToString() throws Exception {
@@ -183,7 +183,7 @@ public class TestTeradataTranslator {
 	
 	@Test public void testDateTimeLiterals() throws Exception {
 		String input = "SELECT {t '12:00:00'}, {d '2015-01-01'}, {ts '2015-01-01 12:00:00.1'}";
-		String out = "SELECT TIME '12:00:00', DATE '2015-01-01', TIMESTAMP '2015-01-01 12:00:00.1'";
+		String out = "SELECT TIME 12:00:00, DATE 2015-01-01, TIMESTAMP 2015-01-01 12:00:00.1";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}	
 

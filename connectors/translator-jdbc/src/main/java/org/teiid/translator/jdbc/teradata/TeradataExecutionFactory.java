@@ -248,17 +248,17 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public String translateLiteralDate(Date dateValue) {
-        return "DATE '" + formatDateValue(dateValue) + '\''; //$NON-NLS-1$
+        return "DATE " + formatDateValue(dateValue); //$NON-NLS-1$
     }
 
     @Override
     public String translateLiteralTime(Time timeValue) {
-        return "TIME '" + formatDateValue(timeValue) + '\''; //$NON-NLS-1$
+        return "TIME " + formatDateValue(timeValue); //$NON-NLS-1$
     }
     
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "TIMESTAMP '" + formatDateValue(timestampValue) + '\''; //$NON-NLS-1$ 
+        return "TIMESTAMP " + formatDateValue(timestampValue); //$NON-NLS-1$ 
     }	
     
     // Teradata also supports MINUS & ALL set operators
