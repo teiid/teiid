@@ -128,6 +128,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node, String translatorName) throws XMLStreamException {
     	writer.writeAttribute(Element.TRANSLATOR_NAME_ATTRIBUTE.getLocalName(), translatorName);
     	TRANSLATOR_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    	TRANSLATOR_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     }
     
     // write the elements according to the schema defined.
@@ -699,6 +700,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				translatorName = attrValue;
     				break;
     			case TRANSLATOR_MODULE_ATTRIBUTE:
+    			case TRANSLATOR_SLOT_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     			default: 

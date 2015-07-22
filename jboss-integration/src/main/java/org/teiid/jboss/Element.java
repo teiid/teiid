@@ -126,7 +126,8 @@ enum Element {
 	// Translator
     TRANSLATOR_ELEMENT("translator"),
     TRANSLATOR_NAME_ATTRIBUTE("name", "name"),
-    TRANSLATOR_MODULE_ATTRIBUTE("module", "module");
+    TRANSLATOR_MODULE_ATTRIBUTE("module", "module"),
+    TRANSLATOR_SLOT_ATTRIBUTE("slot", "slot");
     
     private final String xmlName;
     private final String modelName;

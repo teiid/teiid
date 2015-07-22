@@ -19,6 +19,5 @@
         <module name="org.apache.cxf"/>
         <module name="javax.wsdl4j.api"/>
         <module name="org.jboss.teiid.translator.salesforce"/>
-        <module name="com.force.api" slot="22"/>
     </dependencies>
 </module>
