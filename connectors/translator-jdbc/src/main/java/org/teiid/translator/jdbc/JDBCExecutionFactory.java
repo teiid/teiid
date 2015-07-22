@@ -51,6 +51,7 @@ import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.MixinProxy;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
@@ -93,7 +94,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     	protected Calendar initialValue() {
             if(this.timeZone != null && this.timeZone.trim().length() > 0) {
             	TimeZone tz = TimeZone.getTimeZone(this.timeZone);
-                if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
+                if(!TimestampWithTimezone.getCalendar().getTimeZone().hasSameRules(tz)) {
             		return Calendar.getInstance(tz);
                 }
             }      		
@@ -723,7 +724,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	}
         	dateObject = newTs;
         }
-        return getTypeFacility().convertDate(dateObject, DEFAULT_TIME_ZONE, getDatabaseCalendar(), dateObject.getClass()).toString();        
+        return getTypeFacility().convertDate(dateObject, getDatabaseCalendar().getTimeZone(), TimestampWithTimezone.getCalendar(), dateObject.getClass()).toString();
     }    
     
     /**
