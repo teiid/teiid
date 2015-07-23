@@ -24,6 +24,7 @@ package org.teiid.translator.mongodb;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Set;
 
 import org.bson.types.Binary;
 import org.teiid.metadata.*;
@@ -56,8 +57,10 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             BasicDBObject row = (BasicDBObject)rows.findOne();
             Table table = addTable(metadataFactory, tableName, row);
 
-            // top level documents can not be seen as merged
-            table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));
+            if (table != null) {
+                // top level documents can not be seen as merged
+                table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));
+            }
         }
 
         for (Table table:metadataFactory.getSchema().getTables().values()) {
@@ -85,20 +88,23 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             Table t = metadataFactory.getSchema().getTable(tableName);
             return t;
         }
-        
-        Table table = metadataFactory.addTable(tableName);
-        table.setSupportsUpdate(true);
-        
-        for (String columnKey:row.keySet()) {
-            Object value = row.get(columnKey);
+        Set<String> keys = row.keySet();
+        if (keys != null && !keys.isEmpty()) {
+            Table table = metadataFactory.addTable(tableName);
+            table.setSupportsUpdate(true);
             
-            Column column = addColumn(metadataFactory, table, columnKey, value);
-            
-            if (column != null) {
-                column.setUpdatable(true);
+            for (String columnKey:keys) {
+                Object value = row.get(columnKey);
+                
+                Column column = addColumn(metadataFactory, table, columnKey, value);
+                
+                if (column != null) {
+                    column.setUpdatable(true);
+                }
             }
+            return table;
         }
-        return table;
+        return null;
     }
 
     private Column addColumn(MetadataFactory metadataFactory, Table table, String columnKey, Object value) {
@@ -117,15 +123,19 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         if (!columnKey.equals(ID) && value instanceof BasicDBObject) {
             // embedded doc - one to one
             Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value);
-            childTable.setProperty(MERGE, table.getName());
-            childTable.setProperty(ASSOSIATION, MutableDBRef.Association.ONE.name()); 
+            if (childTable != null) {
+                childTable.setProperty(MERGE, table.getName());
+                childTable.setProperty(ASSOSIATION, MutableDBRef.Association.ONE.name());
+            }
         }
         else if (value instanceof BasicDBList) {
             // embedded doc, list one to many
             if (((BasicDBList)value).get(0) instanceof BasicDBObject) {
                 Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0));
-                childTable.setProperty(MERGE, table.getName());
-                childTable.setProperty(ASSOSIATION, MutableDBRef.Association.MANY.name());
+                if (childTable != null) {
+                    childTable.setProperty(MERGE, table.getName());
+                    childTable.setProperty(ASSOSIATION, MutableDBRef.Association.MANY.name());
+                }
             }
             else {
                 column = metadataFactory.addColumn(columnKey, TypeFacility.RUNTIME_NAMES.OBJECT+"[]", table); //$NON-NLS-1$
