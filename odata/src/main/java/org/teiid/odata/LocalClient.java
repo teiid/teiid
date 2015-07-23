@@ -211,7 +211,7 @@ public class LocalClient implements Client {
             	OProperty prop = buildPropery("return", returnType, result, invalidCharacterReplacement); //$NON-NLS-1$
             	return Responses.property(prop); 
             }
-			return Responses.simple(EdmSimpleType.INT32, 1);
+			return null;
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {

@@ -354,6 +354,33 @@ public class TestODataIntegration extends BaseResourceTest {
 	}
 	
 	@Test
+	public void testProcedureNoReturn() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.addSourceMetadata("ddl", "create procedure proc () as BEGIN END");
+			mmd.setModelType(Type.VIRTUAL);
+			
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/proc"));
+	        ClientResponse<String> response = request.post(String.class);
+	        Assert.assertEquals(204, response.getStatus());
+	        
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test
 	public void testSkipNoPKTable() throws Exception {
 		Client client = mockClient();
 		MockProvider.CLIENT = client;
