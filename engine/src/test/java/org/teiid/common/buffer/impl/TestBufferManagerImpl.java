@@ -24,8 +24,15 @@ package org.teiid.common.buffer.impl;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
 public class TestBufferManagerImpl {
 	
@@ -48,6 +55,40 @@ public class TestBufferManagerImpl {
         bufferManager.releaseBuffers(512000);
         //the difference between 1mb and 1000k
         assertEquals(24576, bufferManager.reserveBuffers(1024000, BufferReserveMode.NO_WAIT));
+    }
+    
+    //TEIID-3583 -document for buffer service properties processor-batch-size
+    @Test
+    public void testProcessorBatchSize(){
+    	
+    	BufferManager bm = BufferManagerFactory.createBufferManager();
+    	
+    	int processorBatchSize = bm.getProcessorBatchSize();
+		
+		List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+		ElementSymbol a = new ElementSymbol("a");
+		a.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		ElementSymbol b = new ElementSymbol("b");
+		b.setType(DataTypeManager.DefaultDataClasses.STRING);
+		ElementSymbol c = new ElementSymbol("c");
+		c.setType(DataTypeManager.DefaultDataClasses.STRING);
+		ElementSymbol d = new ElementSymbol("d");
+		d.setType(DataTypeManager.DefaultDataClasses.STRING);
+		ElementSymbol e = new ElementSymbol("e");
+		e.setType(DataTypeManager.DefaultDataClasses.STRING);
+		
+		elements.add(a);
+		assertEquals(2048, bm.getProcessorBatchSize(elements));
+		
+		elements.add(b);
+		assertEquals(1024, bm.getProcessorBatchSize(elements));
+		
+		elements.add(c);
+		assertEquals(processorBatchSize * 2, bm.getProcessorBatchSize(elements));
+		
+		elements.add(d);
+		elements.add(e);
+		assertEquals(processorBatchSize, bm.getProcessorBatchSize(elements));
     }
 
 }
