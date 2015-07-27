@@ -1206,11 +1206,12 @@ public class Evaluator {
 			Expression ex = symbol.getExpression();
 			if (name == null && ex instanceof ElementSymbol) {
 				name = ((ElementSymbol)ex).getShortName();
+			}
+			if (name != null) {
 				if (xmlNames) {
 					name = XMLSystemFunctions.escapeName(name, true);
 				}
-			}
-			if (!xmlNames && name == null) {
+			} else if (!xmlNames) {
 				name = "expr" + (i+1); //$NON-NLS-1$
 			}
 			nameValuePairs[i] = new Evaluator.NameValuePair<Object>(name, eval?internalEvaluate(ex, tuple):ex);
