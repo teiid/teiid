@@ -131,6 +131,17 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlElementWithForestView() throws Exception {
+        String sql = "SELECT xmlelement(x, xmlforest(x, y, '1' as val)) from (select e1 as x, e2 as y from pm1.g1) a order by x, y limit 2"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<x><y>1</y><val>1</val></x>"), //note e1 is not present, because it's null
+        		Arrays.asList("<x><x>a</x><y>0</y><val>1</val></x>"),
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test public void testXmlElementWithAttributes() throws Exception {
         String sql = "SELECT xmlelement(x, xmlattributes(e1, e2, '1' as val)) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
         
@@ -717,7 +728,7 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT XMLELEMENT(NAME metadata, XMLFOREST(e1), (SELECT XMLAGG(XMLELEMENT(NAME subTypes, XMLFOREST(e1))) FROM pm1.g2 AS b WHERE b.e1 = a.e1)) FROM pm1.g1 AS a where e1 = 'a' GROUP BY e1"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<metadata><gcol0>a</gcol0><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes></metadata>"),
+        		Arrays.asList("<metadata><e1>a</e1><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes></metadata>"),
         };    
     
         process(sql, expected);
