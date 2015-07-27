@@ -416,6 +416,7 @@ public class SortUtility {
 		    				needed++;
 		    			}	
 	        	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, true);
+	        	        LogManager.logWarning(LogConstants.CTX_DQP, "performing three pass sort"); //$NON-NLS-1$
 	        		}
 	        	} else if (desiredSpace < Integer.MAX_VALUE) {
 	        		//wait for 1-pass
