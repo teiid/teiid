@@ -106,7 +106,7 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		client = WebClient.create("http://localhost:8080/odata/loopy.1/G1?$filter=e1%20eq%20datetime'2000-01-01T01:01:01'");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
 		response = client.invoke("GET", null);
-		assertEquals(200, statusCode);
+		assertEquals(200, response.getStatus());
 		admin.undeploy("loopy-vdb.xml");
 	}
 	
