@@ -32,6 +32,8 @@ import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.SortOrder;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -249,6 +251,9 @@ public final class DSLSearch   {
 
 		
 		value = escapeReservedChars(value);
+		
+		value =convertValue(value, mdIDElement);
+
 		switch (op) {
 		case NE:
 			if (fcbc == null) {
@@ -298,7 +303,8 @@ public final class DSLSearch   {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
 
 		Expression lhs = obj.getLeftExpression();
-
+		Column col = ((ColumnReference) lhs).getMetadataObject();
+		
 		List<Expression> rhsList = obj.getRightExpressions();
 		
 		List v = new ArrayList(rhsList.size()) ;
@@ -310,6 +316,7 @@ public final class DSLSearch   {
 				Literal literal = (Literal) expr;
 
 				Object value = escapeReservedChars(literal.getValue());
+				value =convertValue(value, col);
 				v.add(value);
 				createdQuery = true;
 			} else {
@@ -318,7 +325,7 @@ public final class DSLSearch   {
 		}
 		
 		if (createdQuery) {
-			Column col = ((ColumnReference) lhs).getMetadataObject();
+			
 
 			if (fcbc == null) {
 				if (obj.isNegated()) {
@@ -430,4 +437,14 @@ public final class DSLSearch   {
 		return sb.toString();
 	}
 	
+	// convert the value based on the native type
+	private static Object convertValue(Object value, Column mdIDElement) throws TranslatorException {
+		try {
+			value  = DataTypeManager.transformValue(value,  mdIDElement.getJavaType());
+			return value;
+		} catch (TransformationException e) {
+			throw new TranslatorException(e);
+		}
+	}
+
 }

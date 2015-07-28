@@ -214,7 +214,7 @@ public class ObjectConverterUtil {
     
     public static void write(final Reader reader, final File f) throws IOException {
     	f.getParentFile().mkdirs();
-    	FileWriter fw = new FileWriter(f);        
+    	OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");        
         write(fw, reader, -1, true);   
     }
 
@@ -268,7 +268,7 @@ public class ObjectConverterUtil {
      * @throws IOException if a problem occurred reading the file.
      */
     public static String convertFileToString(final File file) throws IOException {
-        return new String(convertFileToCharArray(file,null));
+        return new String(convertFileToCharArray(file,"UTF-8")); 
     }
 
     
@@ -277,7 +277,7 @@ public class ObjectConverterUtil {
      * @throws IOException if a problem occurred reading the file.
      */
     public static String convertToString(final InputStream stream) throws IOException {
-        return new String(convertToCharArray(stream, -1, null));
+        return new String(convertToCharArray(stream, -1, "UTF-8")); //$NON-NLS-1$
     }
     
     /**

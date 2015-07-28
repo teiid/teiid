@@ -533,7 +533,6 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	
 	private void writeColumnData(Object entity, Column column, Object value, Map<String, Method> writeMethods) throws TranslatorException {
 		
-		try {
 			String nis = getRecordName(column);
 			
 			// if this is a child table, the nis will have the table.columnName formatted
@@ -542,29 +541,49 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			}
 
 			Method m = writeMethods.get(nis);
-			if (value == null) {
-				ClassRegistry.executeSetMethod(m, entity, value);
-				return;
-			}
-			if (value.getClass().equals(m.getParameterTypes().clone()[0])) {
-				ClassRegistry.executeSetMethod(m, entity, value);
-//			} else	if (value.getClass().getName().equals(column.getJavaType().getName())) {
-//				ClassRegistry.executeSetMethod(m, entity, value);
-			} else if (value.getClass().isPrimitive()) {
-				final Object transformedValue = DataTypeManager.transformValue(value,  column.getJavaType());
-				
-				ClassRegistry.executeSetMethod(m, entity, transformedValue);
-				
-			} else {
-				PropertiesUtils.setBeanProperty(entity, nis, value);
-			}
+			if (m == null) {
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25061, new Object[] {nis}));
 
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-		e.printStackTrace();
-			throw new TranslatorException(e);
-		}
+			}
+			try {
+				if (value == null) {
+					ClassRegistry.executeSetMethod(m, entity, value);
+					return;
+				}
+				final Class<?> sourceClassType = value.getClass();
+				final Class<?> targetClassType = m.getParameterTypes()[0];
+				if (targetClassType.isEnum()) {
+					Object[] con = targetClassType.getEnumConstants();
+					for (Object c:con) {
+						if (c.toString().equalsIgnoreCase(value.toString())) {
+							ClassRegistry.executeSetMethod(m, entity, c);
+							return;
+						}
+					}
+					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25061, new Object[] {nis}));
+				} else if (sourceClassType.isAssignableFrom(targetClassType)) {
+					ClassRegistry.executeSetMethod(m, entity, value);
+				} else if (DataTypeManager.isTransformable(value.getClass(), targetClassType)) {
+	
+					final Object transformedValue = DataTypeManager.transformValue(value,  targetClassType ); //column.getJavaType()
+					ClassRegistry.executeSetMethod(m, entity, transformedValue);
+				
+//				} else if (value.getClass().isArray()) {
+//						final ByteString bs = ByteString.copyFrom( (byte[]) value);
+//						ClassRegistry.executeSetMethod(m, entity, bs);
+//					} else {
+//						final Object transformedValue = DataTypeManager.transformValue(value,  column.getJavaType());
+//						ClassRegistry.executeSetMethod(m, entity, transformedValue);
+//					}
+								
+				} else {
+					PropertiesUtils.setBeanProperty(entity, nis, value);
+				}
+
+				
+			} catch (Exception e) {
+				throw new TranslatorException(e);
+			}
 
 	}
 }

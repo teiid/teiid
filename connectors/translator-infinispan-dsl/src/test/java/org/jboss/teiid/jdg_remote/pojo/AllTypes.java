@@ -8,22 +8,44 @@ import java.lang.Character;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.DateBridge;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Index;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
+import org.hibernate.search.annotations.Resolution;
+import org.hibernate.search.annotations.Store;
+
+@Entity
+@Indexed(index="AllTypes")
 public class AllTypes implements Serializable{
 	
 	private static final long serialVersionUID = -3821001741608384452L;
 	
+	@Field(index=Index.YES)
 	private String stringNum;
-	private Character charValue;
+	private char charValue;
 	private Double doubleNum;
 	private BigInteger bigIntegerValue;
 	private Short shortValue;
 	private Float floatNum;
-	private Object  objectValue;
+	private byte[]  objectValue;
+	
+	@Field(index=Index.YES)
 	private Integer intNum;
 	private BigDecimal bigDecimalValue;
+	
+	@Field(index=Index.YES)
 	private Long longNum;
 	private Boolean booleanValue;
 	private Timestamp timeStampValue;
+	
+	@Id 
+	@Field(index=Index.YES)
 	private Integer intKey;
 	private String stringKey;
 	private Time timeValue;
@@ -37,11 +59,11 @@ public class AllTypes implements Serializable{
 		this.stringNum = stringNum;
 	}
 
-	public Character getCharValue() {
+	public char getCharValue() {
 		return charValue;
 	}
 
-	public void setCharValue(Character charValue) {
+	public void setCharValue(char charValue) {
 		this.charValue = charValue;
 	}
 
@@ -77,11 +99,11 @@ public class AllTypes implements Serializable{
 		this.floatNum = floatNum;
 	}
 
-	public Object getObjectValue() {
+	public byte[] getObjectValue() {
 		return objectValue;
 	}
 
-	public void setObjectValue(Object objectValue) {
+	public void setObjectValue(byte[] objectValue) {
 		this.objectValue = objectValue;
 	}
 
