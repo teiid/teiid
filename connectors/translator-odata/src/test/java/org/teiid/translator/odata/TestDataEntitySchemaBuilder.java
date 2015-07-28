@@ -24,6 +24,7 @@ package org.teiid.translator.odata;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.FileReader;
 import java.io.StringReader;
@@ -32,8 +33,19 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.core4j.Enumerable;
 import org.junit.Test;
-import org.odata4j.edm.*;
+import org.odata4j.edm.EdmAssociation;
+import org.odata4j.edm.EdmAssociationEnd;
+import org.odata4j.edm.EdmAssociationSet;
+import org.odata4j.edm.EdmAssociationSetEnd;
+import org.odata4j.edm.EdmDataServices;
+import org.odata4j.edm.EdmEntityContainer;
+import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmEntityType;
+import org.odata4j.edm.EdmNavigationProperty;
+import org.odata4j.edm.EdmProperty;
+import org.odata4j.edm.EdmSchema;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.stax2.util.StaxUtil;
@@ -240,6 +252,29 @@ public class TestDataEntitySchemaBuilder {
 		assertTrue(edm.findEdmEntitySet("nw.BookingCollection")!=null);
 		assertTrue(edm.findEdmEntityType("nw.RMTSAMPLEFLIGHT.Booking")!=null);
 	}
+	
+    @Test
+    public void testEntityPropertyName() throws Exception{
+        String ddl = "CREATE FOREIGN TABLE BookingCollection (\n" + 
+                "   carrid bigdecimal NOT NULL OPTIONS(NAMEINSOURCE '\"carrageid\"'),\n" + 
+                "   connid string(5) NOT NULL  OPTIONS(NAMEINSOURCE '\"connectionid\"'),\n" + 
+                "   PRIMARY KEY(carrid)\n" + 
+                ") OPTIONS (UPDATABLE TRUE, " +
+                " \"teiid_odata:EntityType\" 'RMTSAMPLEFLIGHT.Booking');";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");      
+        EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+        assertTrue(edm.findEdmEntitySet("nw.BookingCollection")!=null);
+        Enumerable<EdmProperty> properties = edm.getEdmEntitySet("nw.BookingCollection").getType().getProperties();
+        assertEquals(2, properties.count());
+        Iterator<EdmProperty> it = properties.iterator();
+        while(it.hasNext()) {
+            EdmProperty property = it.next();
+            if (!property.getName().equals("carrid") && !property.getName().equals("connid")) {
+                fail();
+            }
+        }
+    }	
 	
 	@Test
 	public void testEntityTypeName2() throws Exception{
