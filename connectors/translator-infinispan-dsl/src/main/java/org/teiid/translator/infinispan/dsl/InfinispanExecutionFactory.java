@@ -108,9 +108,13 @@ public class InfinispanExecutionFactory extends
 		return Boolean.TRUE.booleanValue();
 	}
 
+	/**
+	 * @see @link https://issues.jboss.org/browse/TEIID-3573
+	 * Discusses issue with trying to support IS NULL and IS NOT NULL;
+	 */
 	@Override
     public boolean supportsIsNullCriteria() {
-		return Boolean.TRUE.booleanValue();
+		return Boolean.FALSE.booleanValue();
 	}
 	
 	@Override
@@ -139,9 +143,13 @@ public class InfinispanExecutionFactory extends
 		return Boolean.TRUE.booleanValue();
 	}	
 	
+	/**
+	 * @see @link https://issues.jboss.org/browse/TEIID-3573
+	 * Discusses issue with trying to support NOT;
+	 */
 	@Override
 	public boolean supportsNotCriteria() {
-		return Boolean.TRUE.booleanValue();
+		return Boolean.FALSE.booleanValue();
 	}
 
 	public List<Object> search(Select command, String cacheName,
