@@ -1,13 +1,12 @@
 package org.teiid.translator.infinispan.dsl;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +47,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 	public void testInsertRootClass() throws Exception {
 		CONNECTION = AllTypesCacheSource.createConnection();
 		insertRootClass();
+//		insertBytes();
 	}
 	
 	@Test
@@ -89,10 +89,46 @@ public class TestInfinispanUpdateUsingAllTypes {
 		assertTrue(p.getStringKey().equals( String.valueOf("string key value")));
 		assertTrue(p.getLongNum().equals(Long.valueOf(1200)) );
 		assertTrue(p.getBooleanValue().equals(Boolean.TRUE) );
+
+			
+	}
+	
+	private void insertBytes() throws Exception {
+
+		// check the object doesn't exist before inserting
+		Object o = CONNECTION.getCache().get(199);
+		assertNull(o);
+		
+		byte[] b = new byte[] {'1', '2', '3', '4', '5', '1'};
+
+		Command command = translationUtility
+				.parseCommand("Insert into AllTypes (intKey, intNum, stringKey, stringNum, booleanValue, longNum, objectValue) " + 
+							"VALUES (199, 199, 'string key value', '999', true, 1200, '" +  Arrays.toString(b)  + "'    ) ");  
+						//new String(b, "UTF-8")  + "'  )");
+		
+		// no search required by the UpdateExecution logic
+		@SuppressWarnings("unchecked")
+		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+
+		ie.execute();
+
+		AllTypes p = (AllTypes) CONNECTION.getCache().get(199);
+
+		String stringNum = String.valueOf("199");
+		
+		
+		assertNotNull(p);
+		assertTrue(p.getIntKey().equals(Integer.valueOf(199)));
+		assertTrue(p.getIntNum().equals(Integer.valueOf(199)) );
+		assertTrue(p.getStringNum().equals(stringNum));
+		assertTrue(p.getStringKey().equals( String.valueOf("string key value")));
+		assertTrue(p.getLongNum().equals(Long.valueOf(1200)) );
+		assertTrue(p.getBooleanValue().equals(Boolean.TRUE) );
+		assertTrue(p.getObjectValue().equals(b));
 //		assertTrue(p.getDoubleNum().equals(Double.valueOf(23.45d)) );
 //		assertTrue(p.getFloatNum().equals(Float.valueOf(12.456f)) );
 			
-	}
+	}	
 
 	// TEIID-3534 - cannot insert Boolean attribute with null
 	@Test
