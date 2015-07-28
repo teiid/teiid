@@ -79,12 +79,17 @@ public class EntityList extends EntityCollection implements QueryResponse {
     public void addRow(ResultSet rs) throws SQLException {
         Entity entity = null;
         boolean add = true;
+        boolean sameRow = false;
         
-        if (this.currentEntity == null) {
+        if (this.currentEntity != null) {
+            sameRow = isSameRow(rs, this.projectedColumns, this.entityType, this.currentEntity);
+        }
+        
+        if (this.currentEntity == null || !sameRow) {
             entity = createEntity(rs, this.entityType, this.projectedColumns, this.invalidCharacterReplacement);
             this.currentEntity = entity;
         }
-        else if(isSameRow(rs, this.projectedColumns, this.entityType, this.currentEntity)) {
+        else if(sameRow) {
             entity = this.currentEntity;
             add = false;
         }
