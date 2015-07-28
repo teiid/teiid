@@ -55,6 +55,9 @@ public class TestMongoDBMetadataProcessor {
         child.append("col1", "one");
         child.append("col2", "two");
         row.append("child", child);
+
+        BasicDBObject empty = new BasicDBObject();
+        row.append("empty", empty);        
         
         BasicDBObject embedded = new BasicDBObject();
         embedded.append("col1", "one");

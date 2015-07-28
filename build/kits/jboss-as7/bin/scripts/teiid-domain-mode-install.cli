@@ -187,3 +187,5 @@
 
 /deployment=teiid-odata-${project.version}.war:add(runtime-name=teiid-odata-${project.version}.war,content=[{path=dataVirtualization/vdb/teiid-odata-${project.version}.war/,archive=false,relative-to=jboss.home.dir}])
 /server-group=main-server-group/deployment=teiid-odata-${project.version}.war:add(enabled=true)
+/server-group=other-server-group/deployment=teiid-odata-${project.version}.war:add(enabled=true)
+
