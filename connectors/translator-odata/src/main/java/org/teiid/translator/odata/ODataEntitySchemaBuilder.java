@@ -132,7 +132,7 @@ public class ODataEntitySchemaBuilder {
 				}
 				
 				for (Column c : table.getColumns()) {
-					String name = c.getSourceName();
+					String name = c.getName();
 					String complexType = c.getProperty(ODataMetadataProcessor.COMPLEX_TYPE, false);
 					if (complexType == null) {
 						continue;
@@ -146,7 +146,7 @@ public class ODataEntitySchemaBuilder {
 					} else if (complexTypeBuilder.findProperty(name) != null) {
 						continue; //already added
 					}
-					EdmProperty.Builder property = EdmProperty.newBuilder(c.getSourceName())
+					EdmProperty.Builder property = EdmProperty.newBuilder(c.getName())
 							.setType(ODataTypeManager.odataType(c.getRuntimeType()))
 							.setNullable(isPartOfPrimaryKey(table, c.getName())?false:c.getNullType() == NullType.Nullable);
 					if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
@@ -204,7 +204,7 @@ public class ODataEntitySchemaBuilder {
 					entityType.addProperties(property);
 					continue;
 				}
-				EdmProperty.Builder property = EdmProperty.newBuilder(c.getSourceName())
+				EdmProperty.Builder property = EdmProperty.newBuilder(c.getName())
 						.setType(ODataTypeManager.odataType(c.getRuntimeType()))
 						.setNullable(isPartOfPrimaryKey(table, c.getName())?false:c.getNullType() == NullType.Nullable);
 				if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
