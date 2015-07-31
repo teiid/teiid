@@ -52,7 +52,7 @@ import com.sforce.ws.util.Base64;
 import com.sforce.ws.util.FileUtil;
 
 public class SalesforceCXFTransport extends JdkHttpTransport {
-    private static ThreadLocal<ByteArrayOutputStream> PAYLOAD = new ThreadLocal<ByteArrayOutputStream>();
+    private ByteArrayOutputStream payload = new ByteArrayOutputStream();
     private boolean successful;
     private SalesforceConnectorConfig config;
     private WebClient client;
@@ -171,16 +171,12 @@ public class SalesforceCXFTransport extends JdkHttpTransport {
             clientPolicy.setProxyServer(addr.getHostName());
             clientPolicy.setProxyServerPort(addr.getPort());
         }
-        
-        PAYLOAD.set(new ByteArrayOutputStream());
-        return PAYLOAD.get();
+        return this.payload;
     }    
 
     @Override
     public InputStream getContent() throws IOException {
-
-        byte[] input = PAYLOAD.get().toByteArray();
-        javax.ws.rs.core.Response response = client.post(new ByteArrayInputStream(input));
+        javax.ws.rs.core.Response response = client.post(new ByteArrayInputStream(this.payload.toByteArray()));
         successful = true;
         InputStream in = (InputStream)response.getEntity();            
         if (response.getStatus() != 200) {
