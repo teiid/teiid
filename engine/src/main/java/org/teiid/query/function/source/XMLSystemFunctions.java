@@ -206,8 +206,8 @@ public class XMLSystemFunctions {
 
 		private LinkedList<String> nameStack = new LinkedList<String>();
 		private LinkedList<XMLEvent> eventStack = new LinkedList<XMLEvent>();
+		private LinkedList<Boolean> parentArray = new LinkedList<Boolean>();
 		
-		private boolean rootArray;
 		private boolean end;
 		private boolean declaredNs;
 
@@ -229,6 +229,7 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean startObject() throws org.teiid.json.simple.ParseException,
 				IOException {
+			parentArray.push(false);
 			start();
 			return false;
 		}
@@ -251,10 +252,10 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean startArray() throws org.teiid.json.simple.ParseException,
 				IOException {
-			if (this.nameStack.size() == 1) {
-				this.rootArray = true;
+			if ((nameStack.size() == 1 && parentArray.isEmpty()) || parentArray.peek()) {
 				start();
 			}
+			parentArray.push(true);
 			return false;
 		}
 
@@ -295,6 +296,7 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean endObject() throws org.teiid.json.simple.ParseException,
 				IOException {
+			parentArray.pop();
 			end();
 			return false;
 		}
@@ -309,7 +311,8 @@ public class XMLSystemFunctions {
 		@Override
 		public boolean endArray() throws org.teiid.json.simple.ParseException,
 				IOException {
-			if (this.nameStack.size() == 1 && rootArray) {
+			parentArray.pop();
+			if ((nameStack.size() == 1 && parentArray.isEmpty()) || parentArray.peek()) {
 				end();
 			}
 			return false;

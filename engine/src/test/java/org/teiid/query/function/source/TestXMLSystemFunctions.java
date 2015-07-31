@@ -239,8 +239,14 @@ public class TestXMLSystemFunctions {
 	}
 	
 	@Test public void testJsonToXml4() throws Exception {
-		String json = "{ \"kids\":[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]}"; 
-		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><kids><firstName>George</firstName></kids><kids><firstName>Jerry</firstName></kids></Person>";
+		String json = "{ \"kids\":[[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]]}"; 
+		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><kids><kids><firstName>George</firstName></kids><kids><firstName>Jerry</firstName></kids></kids></Person>";
+		helpTestJson(json, "Person", expected);
+	}
+	
+	@Test public void testJsonToXml4a() throws Exception {
+		String json = "{ \"kids\":[[{ \"firstName\" : \"George\" }], [{ \"firstName\" : \"Jerry\" }]]}"; 
+		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><kids><kids><firstName>George</firstName></kids></kids><kids><kids><firstName>Jerry</firstName></kids></kids></Person>";
 		helpTestJson(json, "Person", expected);
 	}
 
