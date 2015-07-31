@@ -44,6 +44,8 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.resource.adapter.salesforce.transport.SalesforceConnectorConfig;
+import org.teiid.resource.adapter.salesforce.transport.SalesforceCXFTransport;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.salesforce.SalesforceConnection;
@@ -59,8 +61,16 @@ import com.sforce.async.BulkConnection;
 import com.sforce.async.ContentType;
 import com.sforce.async.JobInfo;
 import com.sforce.async.OperationEnum;
-import com.sforce.soap.partner.*;
+import com.sforce.soap.partner.DeleteResult;
+import com.sforce.soap.partner.DeletedRecord;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Error;
+import com.sforce.soap.partner.GetDeletedResult;
+import com.sforce.soap.partner.GetUpdatedResult;
+import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.SaveResult;
 import com.sforce.soap.partner.fault.InvalidFieldFault;
 import com.sforce.soap.partner.fault.InvalidIdFault;
 import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
@@ -69,14 +79,13 @@ import com.sforce.soap.partner.fault.MalformedQueryFault;
 import com.sforce.soap.partner.fault.UnexpectedErrorFault;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
-import com.sforce.ws.ConnectorConfig;
 import com.sforce.ws.transport.JdkHttpTransport;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 	
 	private BulkConnection bulkConnection; 
 	private PartnerConnection partnerConnection;
-	private ConnectorConfig config;
+	private SalesforceConnectorConfig config;
 	private String restEndpoint;
 	
 	public SalesforceConnectionImpl(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
@@ -89,8 +98,12 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	
 	private void login(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
 
-		config = new ConnectorConfig();
-
+		config = new SalesforceConnectorConfig();
+		config.setCxfConfigFile(mcf.getConfigFile());
+		if (mcf.getConfigFile() != null) {
+		    config.setTransport(SalesforceCXFTransport.class);
+		}
+		
         config.setCompression(true);
         config.setTraceMessage(false);
 

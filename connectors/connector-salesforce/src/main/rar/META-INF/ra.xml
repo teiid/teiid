@@ -95,6 +95,12 @@
                 <config-property-type>java.lang.Long</config-property-type>
             </config-property> 
             
+            <config-property>
+                <description>{$display:"CXF Configuration File",$description:"CXF client configuration File or URL"}</description>
+                <config-property-name>ConfigFile</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+            </config-property>     
+            
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>

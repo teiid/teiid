@@ -44,6 +44,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	private String proxyUrl;
 	
 	private String configProperties;
+	private String configFile; // path to the "jbossws-cxf.xml" file
 
 	public String getUsername() {
 		return username;
@@ -141,6 +142,14 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	public void setConfigProperties(String configProperties) {
 		this.configProperties = configProperties;
 	}
+	
+    public String getConfigFile() {
+        return this.configFile;
+    }
+
+    public void setConfigFile(String config) {
+        this.configFile = config;
+    }	
 	
 	@Override
 	public int hashCode() {
