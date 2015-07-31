@@ -117,6 +117,11 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		response = httpCall("http://localhost:8080/sample_1/view/largedoc", "GET", null);
 		assertEquals(327801, response.length());
 		
+		//test streaming xmltable
+		execute("select * from xmltable('/rows/row/e1' passing xmlparse(document (select result from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123?p2=test')) as d))) as x");
+		this.internalResultSet.next();
+		assertEquals("<e1>ABCDEFGHIJ</e1>", this.internalResultSet.getString(1));
+		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
     }
