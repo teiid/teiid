@@ -1094,14 +1094,50 @@ public class TestMongoDBQueryExecution {
         params.add(new BasicDBObject("$subtract", subtract));
         params.add(4000);
 
+        DBObject ne = buildNE("$CategoryName", null);
+        BasicDBObject func = new BasicDBObject("$substr", params);
+        BasicDBObject expr = buildCondition(ne, func, null);
+        
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
         BasicDBObject result = new BasicDBObject();
-        result.append( "_m0", new BasicDBObject("$substr", params));
+        result.append( "_m0", expr);
 
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
+    
+    @Test
+    public void testToLower() throws Exception {
+        String query = "SELECT LCASE(CategoryName) FROM Categories";
 
+        DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
+
+        DBObject ne = buildNE("$CategoryName", null);
+        BasicDBObject func = new BasicDBObject("$toLower", "$CategoryName");
+        BasicDBObject expr = buildCondition(ne, func, null);
+        
+        BasicDBObject result = new BasicDBObject();
+        result.append( "_m0", expr);
+
+        List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }    
+
+    private BasicDBObject buildCondition(Object expr, Object trueExpr, Object falseExpr) {
+        BasicDBList values = new BasicDBList();
+        values.add(0, expr);
+        values.add(1, trueExpr);
+        values.add(2, falseExpr);
+        return new BasicDBObject("$cond", values);        
+    }
+    
+    private BasicDBObject buildNE(Object leftExpr, Object rightExpr) {
+        BasicDBList values = new BasicDBList();
+        values.add(0, leftExpr);
+        values.add(1, rightExpr);        
+        return new BasicDBObject("$ne", values);        
+    }
+    
     @Test
     public void testSubStr2() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, CategoryID, 4) FROM Categories";
@@ -1117,9 +1153,14 @@ public class TestMongoDBQueryExecution {
         params.add(new BasicDBObject("$subtract", subtract));
         params.add(4);
 
+        DBObject ne = buildNE("$CategoryName", null);
+        System.out.println(ne);
+        BasicDBObject func = new BasicDBObject("$substr", params);
+        BasicDBObject expr = buildCondition(ne, func, null);
+        
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
         BasicDBObject result = new BasicDBObject();
-        result.append( "_m0", new BasicDBObject("$substr", params));
+        result.append( "_m0", expr);
 
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
