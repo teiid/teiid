@@ -356,8 +356,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     	if (isGeoSpatialFunction(functionName)) {
 			expr = (BasicDBObject)handleGeoSpatialFunction(functionName, obj);
     	} 
-    	else if (isStringCaseFunction(functionName)) {
-    	    expr = (BasicDBObject)handleCaseFunction(functionName, obj);
+    	else if (isStringFunction(functionName)) {
+    	    expr = (BasicDBObject)handleStringFunction(functionName, obj);
     	}
     	else {
 	    	List<Expression> args = obj.getParameters();
@@ -377,21 +377,36 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		}
 	}
 
-    private boolean isStringCaseFunction(String functionName) {
-	    if (functionName.equalsIgnoreCase("UCASE") || functionName.equalsIgnoreCase("LCASE")) {
+    private boolean isStringFunction(String functionName) {
+        if (functionName.equalsIgnoreCase("UCASE")
+                || functionName.equalsIgnoreCase("LCASE")
+                || functionName.equalsIgnoreCase("SUBSTRING")) {
 	        return true;
 	    }
         return false;
     }
     
-    private BasicDBObject handleCaseFunction(String functionName, Function function) {
+    private BasicDBObject handleStringFunction(String functionName, Function function) {
         List<Expression> args = function.getParameters();
+        BasicDBObject func = null;
+
         append(args.get(0));
         Object column = this.onGoingExpression.pop();
-        BasicDBObject func = new BasicDBObject(function.getName(), column);
-        BasicDBObject falseCase = buildCondition(buildEQ(func, ""), 
-                null, func);
-        return buildCondition(buildEQ(column, ""), column, falseCase);
+        if (args.size() == 1) {
+            func = new BasicDBObject(function.getName(), column);
+        } 
+        else {
+            BasicDBList params = new BasicDBList();
+            params.add(column);
+            for (int i = 1; i < args.size(); i++) {
+                append(args.get(i));
+                Object param = this.onGoingExpression.pop();
+                params.add(param);
+            }
+            func = new BasicDBObject(function.getName(), params); 
+        }
+        BasicDBObject ne = buildNE(column.toString(), null);
+        return buildCondition(ne, func, null);
     }    
     
     private BasicDBObject buildCondition(Object expr, Object trueExpr, Object falseExpr) {
@@ -402,11 +417,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         return new BasicDBObject("$cond", values);        
     }
 
-    private BasicDBObject buildEQ(Object leftExpr, Object rightExpr) {
+    private BasicDBObject buildNE(Object leftExpr, Object rightExpr) {
         BasicDBList values = new BasicDBList();
         values.add(0, leftExpr);
         values.add(1, rightExpr);        
-        return new BasicDBObject("$eq", values);        
+        return new BasicDBObject("$ne", values);        
     }
     
     private boolean isGeoSpatialFunction(String name) {
