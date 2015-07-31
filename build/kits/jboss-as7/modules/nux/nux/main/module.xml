@@ -9,6 +9,7 @@
 	</resources>
 
 	<dependencies>
+		<module name="nu.xom"/>
 		<module name="javax.api" />
 	</dependencies>
 
