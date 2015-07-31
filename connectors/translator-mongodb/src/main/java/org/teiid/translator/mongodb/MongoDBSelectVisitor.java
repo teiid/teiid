@@ -355,6 +355,9 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     	BasicDBObject expr = null;
     	if (isGeoSpatialFunction(functionName)) {
 			expr = (BasicDBObject)handleGeoSpatialFunction(functionName, obj);
+    	} 
+    	else if (isStringCaseFunction(functionName)) {
+    	    expr = (BasicDBObject)handleCaseFunction(functionName, obj);
     	}
     	else {
 	    	List<Expression> args = obj.getParameters();
@@ -374,7 +377,39 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		}
 	}
 
-	private boolean isGeoSpatialFunction(String name) {
+    private boolean isStringCaseFunction(String functionName) {
+	    if (functionName.equalsIgnoreCase("UCASE") || functionName.equalsIgnoreCase("LCASE")) {
+	        return true;
+	    }
+        return false;
+    }
+    
+    private BasicDBObject handleCaseFunction(String functionName, Function function) {
+        List<Expression> args = function.getParameters();
+        append(args.get(0));
+        Object column = this.onGoingExpression.pop();
+        BasicDBObject func = new BasicDBObject(function.getName(), column);
+        BasicDBObject falseCase = buildCondition(buildEQ(func, ""), 
+                null, func);
+        return buildCondition(buildEQ(column, ""), column, falseCase);
+    }    
+    
+    private BasicDBObject buildCondition(Object expr, Object trueExpr, Object falseExpr) {
+        BasicDBList values = new BasicDBList();
+        values.add(0, expr);
+        values.add(1, trueExpr);
+        values.add(2, falseExpr);
+        return new BasicDBObject("$cond", values);        
+    }
+
+    private BasicDBObject buildEQ(Object leftExpr, Object rightExpr) {
+        BasicDBList values = new BasicDBList();
+        values.add(0, leftExpr);
+        values.add(1, rightExpr);        
+        return new BasicDBObject("$eq", values);        
+    }
+    
+    private boolean isGeoSpatialFunction(String name) {
 		for (String func:MongoDBExecutionFactory.GEOSPATIAL_FUNCTIONS) {
 			if (name.equalsIgnoreCase(func)) {
 				return true;
