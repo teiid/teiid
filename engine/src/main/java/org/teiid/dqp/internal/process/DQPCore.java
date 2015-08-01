@@ -541,7 +541,7 @@ public class DQPCore implements DQP {
 	}	
 	
     void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount) {
-    	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL))
+    	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO))
     			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
     		return;
     	}
@@ -567,7 +567,7 @@ public class DQPCore implements DQP {
             }
             message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status, plan);
         }
-        LogManager.log(status == Event.PLAN?MessageLevel.TRACE:MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(status == Event.PLAN?MessageLevel.TRACE:MessageLevel.INFO, LogConstants.CTX_COMMANDLOGGING, message);
     }
     
     public TempTableDataManager getDataTierManager() {

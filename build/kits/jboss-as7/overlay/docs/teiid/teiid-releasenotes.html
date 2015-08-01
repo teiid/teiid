@@ -231,6 +231,11 @@ for how to access the underlying SQLWarning chains.
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 8.11</h4>
+<ul>
+  <li>TEIID-3594 User query command log entries are now logged at the INFO level on the org.teiid.COMMAND_LOG context.  This allows command logging of just the user query events by setting the logging level to INFO.  The level will default to WARN in the standard install or to DEBUG when running the auditcommand scripts.
+</ul>
+
 <h4>from 8.9</h4>
 <ul>
     <li>TEIID-3192 The CXF config is no longer a valid option for the Salesforce resource adapter.  Please log an issue if there is feature from the CXF config that you were using that is not present on the new resource adapter.

@@ -7,7 +7,10 @@ connect
 
 
 /profile=ha/subsystem=logging/logger=org.teiid:add 
-/profile=ha/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")  
+/profile=ha/subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")
+ 
+/profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add
+/profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:write-attribute(name="level", value="WARN")
 
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000)

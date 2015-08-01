@@ -1,4 +1,5 @@
 # Batch script to add and configure logging in the JBoss server
+connect
 
 # Start batching commands
 batch
@@ -13,6 +14,7 @@ batch
 
 
 # Create the logger for teiid
+/subsystem=logging/logger=org.teiid.COMMAND_LOG:remove
 /subsystem=logging/logger=org.teiid.COMMAND_LOG:add(level=DEBUG, handlers=[TEIID_COMMAND_LOG_ASYNC], use-parent-handlers=false)
 /subsystem=logging/logger=org.teiid.AUDIT_LOG:add(level=DEBUG, handlers=[TEIID_AUDIT_LOG_ASYNC], use-parent-handlers=false)
 

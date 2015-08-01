@@ -6,6 +6,9 @@ connect
 /subsystem=logging/logger=org.teiid:add 
 /subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")  
 
+/subsystem=logging/logger=org.teiid.COMMAND_LOG:add 
+/subsystem=logging/logger=org.teiid.COMMAND_LOG:write-attribute(name="level", value="WARN")
+
 /subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl:add(batching=true)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)

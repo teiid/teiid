@@ -115,6 +115,9 @@
             <logger category="org.teiid">
                 <level name="INFO"/>
             </logger>
+            <logger category="org.teiid.COMMAND_LOG">
+                <level name="WARN"/>
+            </logger>
             <root-logger>
                 <level name="INFO"/>
                 <handlers>
