@@ -32,7 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.client.BatchSerializer;
@@ -76,7 +76,7 @@ public class STree implements Cloneable {
     
     protected ReentrantLock updateLock = new ReentrantLock();
     
-    private AtomicInteger rowCount = new AtomicInteger();
+    private AtomicLong rowCount = new AtomicLong();
 	
 	public STree(BatchManager manager,
 			BatchManager leafManager,
@@ -113,7 +113,7 @@ public class STree implements Cloneable {
 				clone.lobManager = lobManager.clone();
 			}
 			clone.updateLock = new ReentrantLock();
-			clone.rowCount = new AtomicInteger(rowCount.get());
+			clone.rowCount = new AtomicLong(rowCount.get());
 			//clone the pages
 			clone.pages = new HashMap<Long, SPage>(pages);
 			for (Map.Entry<Long, SPage> entry : clone.pages.entrySet()) {
@@ -151,7 +151,7 @@ public class STree implements Cloneable {
 	
 	public void writeValuesTo(ObjectOutputStream oos) throws TeiidComponentException, IOException {
 		SPage page = header[0];
-		oos.writeInt(this.rowCount.get());
+		oos.writeLong(this.rowCount.get());
 		while (true) {
 			List<List<?>> batch = page.getValues();
 			BatchSerializer.writeBatch(oos, leafManager.getTypes(), batch);
@@ -179,7 +179,7 @@ public class STree implements Cloneable {
 	}
 	
 	public void readValuesFrom(ObjectInputStream ois) throws IOException, ClassNotFoundException, TeiidComponentException {
-		int size = ois.readInt();
+		long size = ois.readLong();
 		int sizeHint = this.getExpectedHeight(size);
 		batchInsert = true;
 		while (this.getRowCount() < size) {
@@ -318,7 +318,7 @@ public class STree implements Cloneable {
 				level = randomLevel();
 			}
 		} else if (!places.isEmpty() && places.getLast().values.size() == getPageSize(true)) {
-			int row = rowCount.get();
+			long row = rowCount.get();
 			while (row != 0 && row%getPageSize(true) == 0) {
 				row = (row - getPageSize(true) + 1)/getPageSize(true);
 				level++;
@@ -348,7 +348,7 @@ public class STree implements Cloneable {
 		return null;
 	}
 	
-	public int getExpectedHeight(int sizeHint) {
+	public int getExpectedHeight(long sizeHint) {
 		if (sizeHint == 0) {
 			return 0;
 		}
@@ -497,12 +497,12 @@ public class STree implements Cloneable {
 		this.leafManager.remove();
 	}
 
-	public int getRowCount() {
+	public long getRowCount() {
 		return this.rowCount.get();
 	}
 	
-	public int truncate(boolean force) {
-		int oldSize = rowCount.getAndSet(0);
+	public long truncate(boolean force) {
+		long oldSize = rowCount.getAndSet(0);
 		for (int i = 0; i < header.length; i++) {
 			SPage page = header[i];
 			while (page != null) {

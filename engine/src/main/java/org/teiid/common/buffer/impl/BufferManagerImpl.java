@@ -1192,7 +1192,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 
 	private void getTupleBufferState(ObjectOutputStream out, TupleBuffer buffer) throws TeiidComponentException, IOException {
-		out.writeInt(buffer.getRowCount());
+		out.writeLong(buffer.getRowCount());
 		out.writeInt(buffer.getBatchSize());
 		out.writeObject(buffer.getTypes());
 		for (int row = 1; row <= buffer.getRowCount(); row+=buffer.getBatchSize()) {
@@ -1223,7 +1223,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 
 	private void setTupleBufferState(String state_id, ObjectInputStream in) throws IOException, ClassNotFoundException, TeiidComponentException {
-		int rowCount = in.readInt();
+		long rowCount = in.readLong();
 		int batchSize = in.readInt();
 		String[] types = (String[])in.readObject();
 		

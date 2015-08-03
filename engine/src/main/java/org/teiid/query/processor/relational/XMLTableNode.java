@@ -117,7 +117,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	
 	private State state = State.BUILDING;
 	private volatile TeiidRuntimeException asynchException;
-	private int outputRow = 1;
+	private long outputRow = 1;
 	private boolean usingOutput;
 	
 	private int rowLimit = -1;

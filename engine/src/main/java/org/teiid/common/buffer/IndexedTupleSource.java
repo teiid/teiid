@@ -49,13 +49,13 @@ public interface IndexedTupleSource extends TupleSource {
 	 * Set the tuple source position
 	 * @param position
 	 */
-	void setPosition(int position);
+	void setPosition(long position);
 	
 	/**
 	 * Get the current position.  The position is 1 based and reports the position of the
 	 * tuple that will be retrieved with a call to {@link TupleSource#nextTuple()}
 	 * @return
 	 */
-	int getCurrentIndex();
+	long getCurrentIndex();
 	
 }

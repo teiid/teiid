@@ -540,7 +540,7 @@ public class DQPCore implements DQP {
 		this.transactionService.terminateTransaction(xid);
 	}	
 	
-    void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount) {
+    void logMMCommand(RequestWorkItem workItem, Event status, Long rowCount) {
     	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO))
     			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
     		return;

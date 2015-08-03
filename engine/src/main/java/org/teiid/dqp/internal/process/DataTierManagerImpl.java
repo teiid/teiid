@@ -327,7 +327,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					state = info.getState().name();
 					updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
 					if (id != null) {
-						cardinaltity = id.getCardinality();
+						cardinaltity = (int)Math.min(Integer.MAX_VALUE, id.getCardinality());
 					}
 					//ttl, pref_mem - not part of proper metadata
 				} else {

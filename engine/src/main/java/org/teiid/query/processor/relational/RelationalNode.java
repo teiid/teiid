@@ -422,7 +422,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         str.append("\n"); //$NON-NLS-1$
 
         // Print batch contents
-        for (int row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
+        for (long row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
         	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         }
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, str.toString());

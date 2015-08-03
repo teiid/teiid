@@ -53,7 +53,7 @@ public class BatchIterator extends AbstractTupleSource {
     }
     
 	@Override
-	protected TupleBatch getBatch(int row) throws TeiidComponentException, TeiidProcessingException {
+	protected TupleBatch getBatch(long row) throws TeiidComponentException, TeiidProcessingException {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -93,7 +93,7 @@ public class BatchIterator extends AbstractTupleSource {
         }
 	}
 	
-	public int available() {
+	public long available() {
 		if (batch != null && batch.containsRow(getCurrentIndex())) {
 			return batch.getEndRow() - getCurrentIndex() + 1;
 		}
@@ -133,8 +133,8 @@ public class BatchIterator extends AbstractTupleSource {
     }
     
     @Override
-    public void setPosition(int position) {
-    	if (this.buffer == null && position < getCurrentIndex() && position < (this.batch != null ? batch.getBeginRow() : Integer.MAX_VALUE)) {
+    public void setPosition(long position) {
+    	if (this.buffer == null && position < getCurrentIndex() && position < (this.batch != null ? batch.getBeginRow() : Long.MAX_VALUE)) {
 			throw new UnsupportedOperationException("Backwards positioning is not allowed"); //$NON-NLS-1$
     	}
     	super.setPosition(position);

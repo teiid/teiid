@@ -489,7 +489,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	 * Any errors that occur will not make it to the client, instead we just log them here.
 	 */
 	protected void close() {
-		int rowcount = -1;
+		long rowcount = -1;
 		try {
 			cancelCancelTask();
 			if (moreWorkTask != null) {
@@ -889,8 +889,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    		fromBuffer = true;
 		    	}
 	    		if (batch.getRowCount() > count) {
-	    			int beginRow = isForwardOnly()?begin:Math.min(this.begin, batch.getEndRow() - count + 1);
-	    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
+	    			long beginRow = isForwardOnly()?begin:Math.min(this.begin, batch.getEndRow() - count + 1);
+	    			long endRow = Math.min(beginRow + count - 1, batch.getEndRow());
 	    			boolean last = false;
 	    			if (endRow == batch.getEndRow()) {
 	    				last = batch.getTerminationFlag();
@@ -898,7 +898,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	        			savedBatch = batch;
 	    			}
 	                List<List<?>> memoryRows = batch.getTuples();
-	                batch = new TupleBatch(beginRow, memoryRows.subList(beginRow - batch.getBeginRow(), endRow - batch.getBeginRow() + 1));
+	                batch = new TupleBatch(beginRow, memoryRows.subList((int)(beginRow - batch.getBeginRow()), (int)(endRow - batch.getBeginRow() + 1)));
 	                batch.setTerminationFlag(last);
 	    		} else if (!fromBuffer){
 	    			result = !isForwardOnly();
@@ -908,14 +908,16 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			} else {
 				result = false;
 			}
-	        int finalRowCount = (this.resultsBuffer.isFinal()&&!this.requestMsg.getRequestOptions().isContinuous())?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
-	        
+	        long finalRowCount = (this.resultsBuffer.isFinal()&&!this.requestMsg.getRequestOptions().isContinuous())?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
+	        if (batch.getBeginRow() > Integer.MAX_VALUE || batch.getEndRow() > Integer.MAX_VALUE || finalRowCount > Integer.MAX_VALUE) {
+	        	throw new AssertionError("Result too large");
+	        }
 	        response = createResultsMessage(batch.getTuples(), this.originalCommand.getProjectedSymbols());
-	        response.setFirstRow(batch.getBeginRow());
+	        response.setFirstRow((int)batch.getBeginRow());
 	        if (batch.getTermination() == TupleBatch.ITERATION_TERMINATED) {
-	        	response.setLastRow(batch.getEndRow() - 1);
+	        	response.setLastRow((int)batch.getEndRow() - 1);
 	        } else {
-	        	response.setLastRow(batch.getEndRow());
+	        	response.setLastRow((int)batch.getEndRow());
 	        }
 	        response.setUpdateResult(this.returnsUpdateCount);
 	        //swap the result for the generated keys
@@ -936,7 +938,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	        	finalRowCount = response.getLastRow();
 	        }
 	        // set final row
-	        response.setFinalRow(finalRowCount);
+	        response.setFinalRow((int)finalRowCount);
 	        if (response.getLastRow() == finalRowCount) {
 	        	response.setDelayDeserialization(false);
 	        }

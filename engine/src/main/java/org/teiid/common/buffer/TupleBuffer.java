@@ -62,7 +62,7 @@ public class TupleBuffer {
 		}
 
 		@Override
-		protected int available() {
+		protected long available() {
 			if (!reverse) {
 				return rowCount - getCurrentIndex() + 1;
 			}
@@ -70,7 +70,7 @@ public class TupleBuffer {
 		}
 
 		@Override
-		protected TupleBatch getBatch(int row) throws TeiidComponentException {
+		protected TupleBatch getBatch(long row) throws TeiidComponentException {
 			return TupleBuffer.this.getBatch(row);
 		}
 
@@ -91,7 +91,7 @@ public class TupleBuffer {
 		}
 		
 		@Override
-		public int getCurrentIndex() {
+		public long getCurrentIndex() {
 			if (!reverse) {
 				return super.getCurrentIndex();
 			}
@@ -124,9 +124,9 @@ public class TupleBuffer {
 	private List<? extends Expression> schema;
 	private int batchSize;
 	
-	private int rowCount;
+	private long rowCount;
 	private boolean isFinal;
-    private TreeMap<Integer, Long> batches = new TreeMap<Integer, Long>();
+    private TreeMap<Long, Long> batches = new TreeMap<Long, Long>();
 	private List<List<?>> batchBuffer;
 	private boolean removed;
 	private boolean forwardOnly;
@@ -206,7 +206,7 @@ public class TupleBuffer {
 		}
 	}
 
-	public void setRowCount(int rowCount)
+	public void setRowCount(long rowCount)
 			throws TeiidComponentException {
 		assert this.rowCount <= rowCount;
 		if (this.rowCount != rowCount) {
@@ -267,7 +267,7 @@ public class TupleBuffer {
 	 * 
 	 * TODO: a method to get the raw batch
 	 */
-	public TupleBatch getBatch(int row) throws TeiidComponentException {
+	public TupleBatch getBatch(long row) throws TeiidComponentException {
 		TupleBatch result = null;
 		if (row > rowCount) {
 			result = new TupleBatch(rowCount + 1, new List[] {});
@@ -282,7 +282,7 @@ public class TupleBuffer {
 				//hard references to batches.
 				saveBatch(false);
 			}
-			Map.Entry<Integer, Long> entry = batches.floorEntry(row);
+			Map.Entry<Long, Long> entry = batches.floorEntry(row);
 			Assertion.isNotNull(entry);
 			Long batch = entry.getValue();
 	    	List<List<?>> rows = manager.getBatch(batch, !forwardOnly);
@@ -316,9 +316,9 @@ public class TupleBuffer {
 	 * Returns the total number of rows contained in managed batches
 	 * @return
 	 */
-	public int getManagedRowCount() {
+	public long getManagedRowCount() {
 		if (!this.batches.isEmpty()) {
-			int start = this.batches.firstKey();
+			long start = this.batches.firstKey();
 			return rowCount - start + 1;
 		} else if (this.batchBuffer != null) {
 			return this.batchBuffer.size();
@@ -330,7 +330,7 @@ public class TupleBuffer {
 	 * Returns the last row number
 	 * @return
 	 */
-	public int getRowCount() {
+	public long getRowCount() {
 		return rowCount;
 	}
 	

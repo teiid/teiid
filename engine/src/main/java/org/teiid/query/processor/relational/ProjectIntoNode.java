@@ -68,7 +68,7 @@ public class ProjectIntoNode extends RelationalNode {
     private Mode mode;
     
     // Processing state
-    private int batchRow = 1;
+    private long batchRow = 1;
     private int insertCount = 0;
     private int phase = REQUEST_CREATION;    
     private int requestsRegistered = 0;
@@ -201,9 +201,9 @@ public class ProjectIntoNode extends RelationalNode {
             	break;
             case BATCH:
                 // Register batched update command against source
-                int endRow = currentBatch.getEndRow();
-                List<Command> rows = new ArrayList<Command>(endRow-batchRow);
-                for(int rowNum = batchRow; rowNum <= endRow; rowNum++) {
+                long endRow = currentBatch.getEndRow();
+                List<Command> rows = new ArrayList<Command>((int)(endRow-batchRow));
+                for(long rowNum = batchRow; rowNum <= endRow; rowNum++) {
 
                     Insert insert = new Insert( intoGroup, 
                                                  intoElements, 

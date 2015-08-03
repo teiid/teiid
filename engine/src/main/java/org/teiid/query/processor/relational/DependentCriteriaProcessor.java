@@ -122,7 +122,7 @@ public class DependentCriteriaProcessor {
                 }
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
-                    int distinctCount = dvs.getTupleBuffer().getRowCount();
+                    long distinctCount = dvs.getTupleBuffer().getRowCount();
                     if (setState.maxNdv <= 0 || setState.maxNdv >= distinctCount) {
                     	continue;
                     }

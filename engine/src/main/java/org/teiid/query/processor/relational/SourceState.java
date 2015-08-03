@@ -54,7 +54,7 @@ class SourceState {
     private IndexedTupleSource iterator;
     private int[] expressionIndexes;
     private List currentTuple;
-    private int maxProbeMatch = 1;
+    private long maxProbeMatch = 1;
     private boolean distinct;
     private ImplicitBuffer implicitBuffer = ImplicitBuffer.FULL;
     boolean open;
@@ -137,7 +137,7 @@ class SourceState {
         this.currentTuple = null;
 	}
 
-    public int getRowCount() throws TeiidComponentException, TeiidProcessingException {
+    public long getRowCount() throws TeiidComponentException, TeiidProcessingException {
     	return this.getTupleBuffer().getRowCount();
     }
     
@@ -224,11 +224,11 @@ class SourceState {
         return this.expressionIndexes;
     }
     
-    void setMaxProbeMatch(int maxProbeMatch) {
+    void setMaxProbeMatch(long maxProbeMatch) {
         this.maxProbeMatch = maxProbeMatch;
     }
 
-    int getMaxProbeMatch() {
+    long getMaxProbeMatch() {
         return maxProbeMatch;
     }
 
@@ -350,7 +350,7 @@ class SourceState {
 		this.currentTuple = null;
 	}
 
-	public int getIncrementalRowCount(boolean low) {
+	public long getIncrementalRowCount(boolean low) {
 		if (this.buffer != null) {
 			return this.buffer.getRowCount();
 		}
@@ -367,7 +367,7 @@ class SourceState {
 			}
 			//TODO: should estimate the rows based upon what is being fed into the sort
 		}
-		return low?0:Integer.MAX_VALUE;
+		return low?0:Long.MAX_VALUE;
 	}
 	
 	public SortUtility getSortUtility() {

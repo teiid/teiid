@@ -261,7 +261,7 @@ public class ConnectorManager  {
      * Add begin point to transaction monitoring table.
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
-    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt, Long cpuTime) {
+    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime) {
     	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
     		return;
     	}

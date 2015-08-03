@@ -160,7 +160,7 @@ public class TestTempTables extends TempTableTestHarness {
 		}
 		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
 		execute("select count(e1) from x", new List[] {Arrays.asList(1500)});
-		gtsi.updateMatViewRow("X", Arrays.asList(2), true);
+		gtsi.updateMatViewRow("X", Arrays.asList(2l), true);
 		tc=null;
 		//outside of the transaction we can see the row removed
 		execute("select count(e1) from x", new List[] {Arrays.asList(1499)});

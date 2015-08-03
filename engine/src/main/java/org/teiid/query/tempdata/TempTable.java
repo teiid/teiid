@@ -318,7 +318,7 @@ public class TempTable implements Cloneable, SearchableTable {
 	
 	private Long id = ID_GENERATOR.getAndIncrement();
 	private STree tree;
-	private AtomicInteger rowId;
+	private AtomicLong rowId;
 	private List<ElementSymbol> columns;
 	private BufferManager bm;
 	private String sessionID;
@@ -344,9 +344,9 @@ public class TempTable implements Cloneable, SearchableTable {
 		if (primaryKeyLength == 0) {
 			startIndex = 1;
             ElementSymbol rid = new ElementSymbol("rowId"); //$NON-NLS-1$
-    		rid.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+    		rid.setType(DataTypeManager.DefaultDataClasses.LONG);
     		columns.add(0, rid);
-    		rowId = new AtomicInteger();
+    		rowId = new AtomicLong();
         	tree = bm.createSTree(columns, sessionID, 1);
         } else {
         	this.uniqueColIndex = primaryKeyLength;
@@ -456,8 +456,8 @@ public class TempTable implements Cloneable, SearchableTable {
 		}
 		if (agg) {
 			if (condition == null) {
-				int count = this.getRowCount();
-				return new CollectionTupleSource(Arrays.asList(Collections.nCopies(projectedCols.size(), count)).iterator());
+				long count = this.getRowCount();
+				return new CollectionTupleSource(Arrays.asList(Collections.nCopies(projectedCols.size(), (int)Math.min(Integer.MAX_VALUE, count))).iterator());
 			}
 			orderBy = null;
 		}
@@ -465,7 +465,7 @@ public class TempTable implements Cloneable, SearchableTable {
 		IndexInfo ii = primary;
 		if (indexTables != null && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Considering indexes on table", this, "for query", projectedCols, condition, orderBy); //$NON-NLS-1$ //$NON-NLS-2$
-			int rowCost = this.tree.getRowCount();
+			long rowCost = this.tree.getRowCount();
 			long bestCost = estimateCost(orderBy, ii, rowCost);
 			for (TempTable table : this.indexTables.values()) {
 				IndexInfo secondary = new IndexInfo(table, projectedCols, condition, orderBy, false);
@@ -589,11 +589,11 @@ public class TempTable implements Cloneable, SearchableTable {
 		return ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder());
 	}
 	
-	public int getRowCount() {
+	public long getRowCount() {
 		return tree.getRowCount();
 	}
 	
-	public int truncate(boolean force) {
+	public long truncate(boolean force) {
 		this.tid.getTableData().dataModified(tree.getRowCount());
 		return tree.truncate(force);
 	}
