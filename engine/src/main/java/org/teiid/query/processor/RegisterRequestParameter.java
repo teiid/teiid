@@ -34,6 +34,7 @@ public class RegisterRequestParameter {
 	public int limit = -1;
 	public SharedAccessInfo info;
 	public boolean doNotCache;
+	public int fetchSize;
 
 	public RegisterRequestParameter(String connectorBindingId, int nodeID,
 			int limit) {

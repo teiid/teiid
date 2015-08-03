@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.junit.Before;
@@ -53,7 +54,7 @@ import org.teiid.query.unittest.TimestampUtil;
 
 public class TestAllResultsImpl {
 
-	private static final long REQUEST_ID = 0;
+	static final long REQUEST_ID = 0;
 	private static final int TYPE_FORWARD_ONLY = ResultSet.TYPE_FORWARD_ONLY;
 	private static final int TYPE_SCROLL_SENSITIVE = ResultSet.TYPE_SCROLL_SENSITIVE;
 
@@ -291,10 +292,21 @@ public class TestAllResultsImpl {
 	@Test public void testGetFetchSize() throws Exception {
 		StatementImpl s = mock(StatementImpl.class);
 		stub(s.getFetchSize()).toReturn(500);
+		ConnectionImpl c = mock(ConnectionImpl.class);
+		stub(s.getConnection()).toReturn(c);
+		Properties p = new Properties();
+		stub(c.getConnectionProps()).toReturn(p);
 		ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg2(), s);
 		assertEquals(500, rs.getFetchSize()); 
 		rs.setFetchSize(100);
 		assertEquals(100, rs.getFetchSize());
+		
+		//ensure that disabling works as well
+		p.setProperty(ResultSetImpl.DISABLE_FETCH_SIZE, Boolean.TRUE.toString());
+		rs = new ResultSetImpl(exampleResultsMsg2(), s);
+		assertEquals(500, rs.getFetchSize()); 
+		rs.setFetchSize(100);
+		assertEquals(500, rs.getFetchSize());
 	}
 
 	// //////////////////////Functions refer to ResultSet's TYPE_FORWARD_ONLY///
@@ -710,6 +722,11 @@ public class TestAllResultsImpl {
 	
 	static ResultSetImpl helpTestBatching(StatementImpl statement, final int fetchSize, final int batchLength,
 			final int totalLength) throws TeiidProcessingException, SQLException {
+		return helpTestBatching(statement, fetchSize, batchLength, totalLength, false);
+	}
+    
+	static ResultSetImpl helpTestBatching(StatementImpl statement, final int fetchSize, final int batchLength,
+			final int totalLength, final boolean partial) throws TeiidProcessingException, SQLException {
 		DQP dqp = statement.getDQP();
 		if (dqp == null) {
 			dqp = mock(DQP.class);
@@ -722,13 +739,16 @@ public class TestAllResultsImpl {
 					InvocationOnMock invocation) throws Throwable {
 				ResultsFuture<ResultsMessage> nextBatch = new ResultsFuture<ResultsMessage>();
 				int begin = Math.min(totalLength, (Integer)invocation.getArguments()[1]);
-				int length = Math.min(totalLength - begin + 1, batchLength);
+				if (partial && begin == fetchSize + 1) {
+					 begin = begin -5;
+				}
+				int length = Math.min(fetchSize, Math.min(totalLength - begin + 1, batchLength));
 				nextBatch.getResultsReceiver().receiveResults(exampleResultsMsg4(begin, length, begin + length - 1>= totalLength));
 				return nextBatch;
 			}
 		});
-		
-		ResultsMessage msg = exampleResultsMsg4(1, batchLength, batchLength == totalLength);
+		int initial = Math.min(fetchSize, batchLength);
+		ResultsMessage msg = exampleResultsMsg4(1, initial, initial == totalLength);
 		return new ResultSetImpl(msg, statement, new ResultSetMetaDataImpl(new MetadataProvider(DeferredMetadataProvider.loadPartialMetadata(msg.getColumnNames(), msg.getDataTypes())), null), 0);
 	}
 
@@ -831,7 +851,7 @@ public class TestAllResultsImpl {
 		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	private static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
+	static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage();

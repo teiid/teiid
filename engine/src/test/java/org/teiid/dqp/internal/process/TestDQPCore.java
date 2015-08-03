@@ -42,8 +42,9 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
+import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -81,6 +82,7 @@ public class TestDQPCore {
 					try {
 						this.wait();
 					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
 					}
 				}
 			}
@@ -311,14 +313,55 @@ public class TestDQPCore {
         assertEquals(ThreadState.IDLE, item.getThreadState());
         assertTrue(item.resultsBuffer.getManagedRowCount() <= rowsPerBatch*23);
         //pull the rest of the results
-        for (int j = 0; j < 48; j++) {
+        int start = 17;
+        while (true) {
             item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
 
-	        message = core.processCursorRequest(reqMsg.getExecutionId(), (j + 2) * rowsPerBatch + 1, rowsPerBatch);
+	        message = core.processCursorRequest(reqMsg.getExecutionId(), start, rowsPerBatch);
 	        rm = message.get(5000, TimeUnit.MILLISECONDS);
 	        assertNull(rm.getException());
-	        assertEquals(rowsPerBatch, rm.getResultsList().size());
+	        assertTrue(rowsPerBatch >= rm.getResultsList().size());
+	        start += rm.getResultsList().size();
+	        if (rm.getFinalRow() == rm.getLastRow()) {
+	        	break;
+	        }
         }
+        
+        //insensitive should not block
+        reqMsg.setCursorType(ResultSet.TYPE_SCROLL_INSENSITIVE);
+        
+        message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+
+		assertEquals(rowsPerBatch, rm.getResultsList().size());
+        item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 9, rowsPerBatch);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(rowsPerBatch, rm.getResultsList().size());
+        //ensure that we are idle
+        for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
+        	Thread.sleep(100);
+        }
+        assertEquals(ThreadState.IDLE, item.getThreadState());
+        //should buffer the same as forward only until a further batch is requested
+        assertTrue(item.resultsBuffer.getManagedRowCount() <= rowsPerBatch*23);
+        
+        //local should not buffer
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
+        reqMsg.setSync(true);
+        
+        message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        rm = message.get(0, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(rowsPerBatch, rm.getResultsList().size());
+        
+        item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+        assertEquals(0, item.resultsBuffer.getManagedRowCount());
+        assertEquals(8, item.resultsBuffer.getRowCount());
     }
     
     @Test public void testBufferReuse() throws Exception {
@@ -337,7 +380,7 @@ public class TestDQPCore {
         assertNull(rm.getException());
         assertEquals(8, rm.getResultsList().size());
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
-        assertEquals(100, item.resultsBuffer.getRowCount());
+    	assertEquals(100, item.resultsBuffer.getRowCount());
     }
     
     @Test public void testFinalRow() throws Exception {
@@ -368,10 +411,10 @@ public class TestDQPCore {
     	//the sql should return 100 rows
         String sql = "SELECT IntKey FROM texttable('1112131415' columns intkey integer width 2 no row delimiter) t " +
         		"union " +
-        		"SELECT IntKey FROM bqt1.smalla"; //$NON-NLS-1$
+        		"SELECT IntKey FROM bqt1.smalla order by intkey"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         String sessionid = "1"; //$NON-NLS-1$
-        agds.sleep = 500;
+        agds.sleep = 50;
         agds.setUseIntCounter(true);
         RequestMessage reqMsg = exampleRequestMessage(sql);
         reqMsg.setRowLimit(11);
@@ -383,7 +426,7 @@ public class TestDQPCore {
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(5, rm.getResultsList().size());
+        assertEquals(10, rm.getResultsList().size());
         
         message = core.processCursorRequest(reqMsg.getExecutionId(), 6, 5);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
@@ -393,8 +436,8 @@ public class TestDQPCore {
         message = core.processCursorRequest(reqMsg.getExecutionId(), 11, 5);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(5, rm.getResultsList().size());
-        assertEquals(7, rm.getFirstRow());
+        assertEquals(1, rm.getResultsList().size());
+        assertEquals(11, rm.getFirstRow());
         assertEquals(11, rm.getFinalRow());
     }
     
@@ -412,44 +455,95 @@ public class TestDQPCore {
     		}
     		sql.append("select stringkey || " + i + " from bqt1.smalla");
     	}
-    	sql.append(" limit 2");
-    	helpExecute(sql.toString(), "a");
+    	//sql.append(" limit 2");
+    	helpExecute(sql.toString(), "a", 1, false);
     	//there's isn't a hard guarantee that only two requests will get started
     	assertTrue(agds.getExecuteCount().get() <= 6);
     	
     	//20 concurrent
     	core.setUserRequestSourceConcurrency(20);
     	agds.getExecuteCount().set(0);
-    	helpExecute(sql.toString(), "a");
-    	assertTrue(agds.getExecuteCount().get() <= 20);
-    	assertTrue(agds.getExecuteCount().get() > 10);
+    	helpExecute(sql.toString(), "a", 2, false);
+    	assertTrue(agds.getExecuteCount().get() > 10 && agds.getExecuteCount().get() <= 20);
     	
     	//serial
     	core.setUserRequestSourceConcurrency(1);
     	agds.getExecuteCount().set(0);
-    	helpExecute(sql.toString(), "a");
-    	assertEquals(1, agds.getExecuteCount().get());
+    	helpExecute(sql.toString(), "a", 3, false);
+    	//there's two since 1 is smaller than the expected batch
+    	assertTrue(agds.getExecuteCount().get() <= 2);
     }
     
+    @Test public void testSourceConcurrencyWithLimitedUnion() throws Exception {
+    	agds.setSleep(100);
+    	helpTestSourceConcurrencyWithLimitedUnion();
+    }
+    
+    @Test public void testSourceConcurrencyWithLimitedUnionThreadBound() throws Exception {
+    	agds.setSleep(100);
+    	agds.threadBound = true;
+    	helpTestSourceConcurrencyWithLimitedUnion();
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testThreadBoundException() throws Exception {
+    	agds.threadBound = true;
+    	agds.throwExceptionOnExecute = true;
+    	String sql = "SELECT IntKey FROM BQT1.SmallA"; //$NON-NLS-1$
+        String userName = "logon"; //$NON-NLS-1$
+    	helpExecute(sql, userName);
+    }
+
+	private void helpTestSourceConcurrencyWithLimitedUnion() throws Exception {
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+    	agds.setCaps(bsc);
+    	StringBuffer sql = new StringBuffer();
+    	int branches = 20;
+    	for (int i = 0; i < branches; i++) {
+    		if (i > 0) {
+    			sql.append(" union all ");
+    		}
+    		sql.append("select stringkey || " + i + " from bqt1.smalla");
+    	}
+    	sql.append(" limit 11");
+    	
+    	helpExecute(sql.toString(), "a", 1, false);
+    	assertTrue(String.valueOf(agds.getExecuteCount()), agds.getExecuteCount().get() <= 2);
+    	
+    	//20 concurrent max, but we'll use 6
+    	core.setUserRequestSourceConcurrency(20);
+    	agds.getExecuteCount().set(0);
+    	helpExecute(sql.toString(), "a", 2, false);
+    	assertTrue(String.valueOf(agds.getExecuteCount()), agds.getExecuteCount().get() <= 6);
+    	
+    	//serial
+    	core.setUserRequestSourceConcurrency(1);
+    	agds.getExecuteCount().set(0);
+    	helpExecute(sql.toString(), "a", 3, false);
+    	assertTrue(agds.getExecuteCount().get() <= 2);
+
+    	//ensure that we'll still consult all sources even if the limit is not met
+    	core.setUserRequestSourceConcurrency(4);
+    	agds.getExecuteCount().set(0);
+    	agds.setRows(0);
+    	helpExecute(sql.toString(), "a", 4, false);
+    	assertEquals(20, agds.getExecuteCount().get());
+	}
+    
     @Test public void testUsingFinalBuffer() throws Exception {
-    	String sql = "select intkey from bqt1.smalla union select 1";
+    	String sql = "select intkey from bqt1.smalla order by intkey";
     	((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
-    	agds.sleep = 500;
+    	agds.sleep = 50;
         RequestMessage reqMsg = exampleRequestMessage(sql);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(1, rm.getResultsList().size());
+        assertEquals(10, rm.getResultsList().size());
 
         message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(1, rm.getResultsList().size());
-        
-        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
-        rm = message.get(500000, TimeUnit.MILLISECONDS);
-        assertNull(rm.getException());
-        assertEquals(0, rm.getResultsList().size());
+        assertEquals(2, rm.getResultsList().size());
     }
 
     @Test public void testPreparedPlanInvalidation() throws Exception {
@@ -562,13 +656,14 @@ public class TestDQPCore {
         	public void onCompletion(ResultsFuture<ResultsMessage> future) {
         		try {
         			final BlobType bt = (BlobType)future.get().getResultsList().get(0).get(0);
-        			t.bt = bt;
-        			t.workContext = DQPWorkContext.getWorkContext();
         			synchronized (t) {
-            			t.notify();
+	        			t.bt = bt;
+	        			t.workContext = DQPWorkContext.getWorkContext();
+        				t.notify();
 					}
         			Thread.sleep(100); //give the Thread a chance to run
 				} catch (Exception e) {
+        			t.interrupt();
 					throw new RuntimeException(e);
 				}
         	}
@@ -630,6 +725,16 @@ public class TestDQPCore {
         
         assertNull(rm.getException());
         assertEquals(2, rm.getResultsList().size());
+    }
+    
+    @Test public void testProcedureUpdateCount() throws Exception {
+    	String sql = "{? = call TEIIDSP8(1)}"; //$NON-NLS-1$
+    	RequestMessage request = exampleRequestMessage(sql);
+    	request.setResultsMode(ResultsMode.UPDATECOUNT);
+    	request.setStatementType(StatementType.CALLABLE);
+        ResultsMessage rm = execute("A", 1, request);
+        assertNull(rm.getException());
+        assertEquals(1, rm.getResultsList().size());
     }
     
 	public void helpTestVisibilityFails(String sql) throws Exception {

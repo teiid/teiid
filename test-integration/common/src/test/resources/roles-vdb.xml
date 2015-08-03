@@ -1,0 +1,9 @@
+<vdb name="z" version="1">
+    <model name="myschema">
+    	<source name="hc" translator-name="hc" connection-jndi-name="hc"/>
+    </model>
+    <data-role name="y" any-authenticated="true"/>
+    <data-role name="z">
+      <mapped-role-name>myrole</mapped-role-name>
+    </data-role>
+</vdb>

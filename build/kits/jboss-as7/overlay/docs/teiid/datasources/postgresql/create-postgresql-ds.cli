@@ -1,0 +1,7 @@
+# note that driver-name could be driver's module name if you went module approach.
+/subsystem=datasources/jdbc-driver=postgres:add(driver-name=postgres,driver-module-name=org.postgresql,driver-class-name="${db.driver}")
+
+/subsystem=datasources/data-source=postgresDS:add(jndi-name="${db.jndi_name}",  driver-name=postgres,  connection-url="${db.url}", user-name="${db.user}", password="${db.password}", enabled=true, use-java-context=true )
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

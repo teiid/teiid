@@ -27,13 +27,10 @@ import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Properties;
 
 import org.jboss.as.network.SocketBinding;
-import org.jboss.as.security.plugins.SecurityDomainContext;
 import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
@@ -48,27 +45,34 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.core.ComponentNotFoundException;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.ConnectionProfile;
+import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
-import org.teiid.security.SecurityHelper;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.transport.*;
+import org.teiid.transport.ClientServiceRegistry;
+import org.teiid.transport.ClientServiceRegistryImpl;
+import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCSocketListener;
+import org.teiid.transport.SocketConfiguration;
+import org.teiid.transport.SocketListener;
+import org.teiid.transport.WireProtocol;
 
-public class TransportService implements Service<ClientServiceRegistry>, ClientServiceRegistry {
-	private enum Protocol {teiid, pg};
-	private ClientServiceRegistryImpl csr;
-	private transient ILogon logon;
+public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
+	private transient LogonImpl logon;
 	private SocketConfiguration socketConfig;
-	final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
-	private List<String> authenticationDomains;;	
+	private String authenticationDomain;	
 	private long sessionMaxLimit;
 	private long sessionExpirationTimeLimit;
 	private SocketListener socketListener;
@@ -76,22 +80,16 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	private AuthenticationType authenticationType;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private boolean embedded;
-	private String krb5Domain;
 	private InetSocketAddress address = null;
+	private String transportName;
 	
 	private final InjectedValue<SocketBinding> socketBindingInjector = new InjectedValue<SocketBinding>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();	
 	private final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	
-	@Override
-	public <T> T getClientService(Class<T> iface) throws ComponentNotFoundException {
-		return csr.getClientService(iface);
-	}
-
-	@Override
-	public SecurityHelper getSecurityHelper() {
-		return csr.getSecurityHelper();
+	public TransportService(String transportName) {
+		this.transportName = transportName;
 	}
 	
 	@Override
@@ -108,35 +106,32 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	
 	@Override
 	public ClassLoader getCallerClassloader() {
-		return csr.getCallerClassloader();
-	}	
-
+		return Module.getCallerModule().getClassLoader();
+	}
+	
 	@Override
 	public void start(StartContext context) throws StartException {
-		this.csr = new ClientServiceRegistryImpl() {
-			@Override
-			public ClassLoader getCallerClassloader() {
-				return Module.getCallerModule().getClassLoader();
-			}
-		};
-		this.csr.setSecurityHelper(new JBossSecurityHelper());
-		
-		this.sessionService = new JBossSessionService(this.securityDomains);
-		if (this.authenticationDomains != null && !this.authenticationDomains.isEmpty()) {
-			this.sessionService.setSecurityDomains(this.authenticationDomains);			
+		this.setSecurityHelper(new JBossSecurityHelper());
+		this.setVDBRepository(this.getVdbRepository());
+		this.sessionService = new SessionServiceImpl();
+		if (this.authenticationDomain != null) {
+			this.sessionService.setSecurityDomain(this.authenticationDomain);				
 		}
 		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
 		this.sessionService.setDqp(getDQP());
 		this.sessionService.setVDBRepository(getVdbRepository());
-		this.sessionService.setSecurityHelper(this.csr.getSecurityHelper());
+		this.sessionService.setSecurityHelper(this.getSecurityHelper());
 		this.sessionService.setAuthenticationType(getAuthenticationType());
-		this.sessionService.setGssSecurityDomain(this.krb5Domain);
 		this.sessionService.start();
-		this.csr.setAuthenticationType(this.sessionService.getAuthenticationType());
+		this.setAuthenticationType(this.sessionService.getDefaultAuthenticationType());
 		
     	// create the necessary services
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
+		
+		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
+    	this.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
+    	this.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
 		
     	if (this.socketConfig != null) {
     		/*
@@ -150,33 +145,48 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 			}
     		*/
     		this.address = getSocketBindingInjector().getValue().getSocketAddress();
-    		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
+    		this.socketConfig.setBindAddress(this.address.getHostName());
+    		this.socketConfig.setPortNumber(this.address.getPort());
     		boolean sslEnabled = false;
     		if (this.socketConfig.getSSLConfiguration() != null) {
     			sslEnabled = this.socketConfig.getSSLConfiguration().isSslEnabled();
     		}
-    		if (protocol == Protocol.teiid) {
-    	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
+    		if (socketConfig.getProtocol() == WireProtocol.teiid) {
+    	    	this.socketListener = new SocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue());
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), this.authenticationDomain)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
-    		else if (protocol == Protocol.pg) {
+    		else if (socketConfig.getProtocol() == WireProtocol.pg) {
         		getVdbRepository().odbcEnabled();
-        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon);
-        		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
+        		TeiidDriver driver = new TeiidDriver();
+        		driver.setEmbeddedProfile(new ConnectionProfile() {
+					@Override
+					public ConnectionImpl connect(String url, Properties info) throws TeiidSQLException {
+						try {
+							LocalServerConnection sc = new LocalServerConnection(info, true){
+								@Override
+								protected ClientServiceRegistry getClientServiceRegistry(String name) {
+									return TransportService.this;
+								}
+							};
+							return new ConnectionImpl(sc, info, url);
+						} catch (CommunicationException e) {
+							throw TeiidSQLException.create(e);
+						} catch (ConnectionException e) {
+							throw TeiidSQLException.create(e);
+						}
+					}
+				});
+        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon, driver);
         		this.socketListener = odbc;
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), this.authenticationDomain)); //$NON-NLS-1$ //$NON-NLS-2$
     		}
     		else {
     			throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50013));
     		}
     	}
     	else {
-    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50038, LocalServerConnection.TEIID_RUNTIME_CONTEXT));   		
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50038, LocalServerConnection.jndiNameForRuntime(transportName)));   		
     	}
-    			
-		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
-    	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
 	}
 
 	@Override
@@ -189,16 +199,15 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     	this.sessionService.stop();
     	
     	if (this.socketConfig != null) {
-    		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
-    		if (protocol == Protocol.teiid) {
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50039, this.address.getHostName(), String.valueOf(this.address.getPort()))); 
+    		if (socketConfig.getProtocol() == WireProtocol.teiid) {
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50039, this.transportName, this.address.getHostName(), String.valueOf(this.address.getPort()))); 
     		}
-    		else if (protocol == Protocol.pg) {
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50040, this.address.getHostName(), String.valueOf(this.address.getPort())));
+    		else if (socketConfig.getProtocol() == WireProtocol.pg) {
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50040, this.transportName, this.address.getHostName(), String.valueOf(this.address.getPort())));
     		}
     	}
     	else {
-    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50041, LocalServerConnection.TEIID_RUNTIME_CONTEXT)); 
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50041, LocalServerConnection.jndiNameForRuntime(transportName))); 
     	}
 	}	
 	
@@ -209,6 +218,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new LogManager.LoggingProxy(instance, context, MessageLevel.TRACE) {
 
+			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				Throwable exception = null;
 				try {
@@ -228,7 +238,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
 		Collection<SessionMetadata> sessions = this.sessionService.getActiveSessions();
 		for (SessionMetadata session:sessions) {
-			if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == vdbVersion) {
+			if (vdbName.equals(session.getVDBName()) && session.getVDBVersion() == vdbVersion) {
 				requests.addAll(getDQP().getRequestsForSession(session.getSessionId()));
 			}
 		}
@@ -263,12 +273,12 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		this.socketConfig = socketConfig;
 	}
 
-	public List<String> getAuthenticationDomains() {
-		return authenticationDomains;
+	public String getAuthenticationDomain() {
+		return authenticationDomain;
 	}
 
-	public void setAuthenticationDomains(List<String> authenticationDomains) {
-		this.authenticationDomains = new LinkedList(authenticationDomains);
+	public void setAuthenticationDomain(String authenticationDomain) {
+		this.authenticationDomain = authenticationDomain;
 	}
 	
 	public void setSessionMaxLimit(long limit) {
@@ -279,10 +289,12 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		this.sessionExpirationTimeLimit = limit;
 	}
 
+	@Override
 	public AuthenticationType getAuthenticationType() {
 		return authenticationType;
 	}
 
+	@Override
 	public void setAuthenticationType(AuthenticationType authenticationType) {
 		this.authenticationType = authenticationType;
 	}
@@ -321,9 +333,5 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	
 	public boolean isEmbedded() {
 		return this.embedded;
-	}
-	
-	public void setKrb5Domain(String domain) {
-		this.krb5Domain = domain;
-	}
+	}	
 }

@@ -96,8 +96,18 @@ public class SortNode extends RelationalNode {
 
     private void sortPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.sortUtility == null) {
-	        this.sortUtility = new SortUtility(new BatchIterator(getChildren()[0]), items, this.mode, getBufferManager(),
-	                                            getConnectionID(), getChildren()[0].getElements());
+    		TupleSource ts = null;
+    		TupleBuffer working = null;
+    		if (!getChildren()[0].hasBuffer(true)) {
+    			ts = new BatchIterator(getChildren()[0]);
+    		} else {
+    			working = getChildren()[0].getBuffer(-1);
+    		}
+	        this.sortUtility = new SortUtility(ts, items, this.mode, getBufferManager(),
+                    getConnectionID(), getChildren()[0].getElements());
+	        if (ts == null) {
+	        	this.sortUtility.setWorkingBuffer(working);
+	        }
 		}
 		this.output = this.sortUtility.sort();
 		if (this.outputTs == null) {
@@ -147,15 +157,17 @@ public class SortNode extends RelationalNode {
         	}
         	this.output = null;
         }
+        if (this.sortUtility != null) {
+        	this.sortUtility.remove();
+        	this.sortUtility = null;
+        }
         this.outputTs = null;
     }
 
 	protected void getNodeString(StringBuffer str) {
 		super.getNodeString(str);
 		str.append("[").append(mode).append("] "); //$NON-NLS-1$ //$NON-NLS-2$
-		if (this.mode != Mode.DUP_REMOVE) {
-			str.append(this.items);
-		}
+		str.append(this.items);
 	}
 
 	protected void copyTo(SortNode target){
@@ -174,7 +186,7 @@ public class SortNode extends RelationalNode {
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         
-        if(this.mode != Mode.DUP_REMOVE && this.items != null) {
+        if(this.items != null) {
             props.addProperty(PROP_SORT_COLS, this.items.toString());
         }
         
@@ -184,7 +196,10 @@ public class SortNode extends RelationalNode {
     }
     
     @Override
-    public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	if (this.isClosed()) {
+    		throw new AssertionError("called after close"); //$NON-NLS-1$
+    	}
     	this.rowLimit = maxRows;
     	//TODO: push limiting into the sort logic
     	if (this.output == null) {
@@ -200,8 +215,11 @@ public class SortNode extends RelationalNode {
     }
     
     @Override
-    public boolean hasFinalBuffer() {
-    	return this.getElements().size() == this.getChildren()[0].getElements().size();
+    public boolean hasBuffer(boolean requireFinal) {
+    	if (this.getElements().size() == this.getChildren()[0].getElements().size()) {
+    		return true;
+    	}
+    	return false;
     }
     
 }

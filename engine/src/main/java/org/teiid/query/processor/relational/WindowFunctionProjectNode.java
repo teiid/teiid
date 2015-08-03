@@ -22,6 +22,8 @@
 
 package org.teiid.query.processor.relational;
 
+import static org.teiid.query.analysis.AnalysisRecord.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,19 +33,21 @@ import java.util.Map;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.STree;
+import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
-import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -52,11 +56,11 @@ import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.WindowSpecification;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
@@ -235,7 +239,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			}
 			while (outputTs.hasNext()) {
 				List<?> tuple = outputTs.nextTuple();
-				int rowId = (Integer)tuple.get(tuple.size() - 1);
+				Integer rowId = (Integer)tuple.get(tuple.size() - 1);
 				int size = getElements().size();
 				ArrayList<Object> outputRow = new ArrayList<Object>(size);
 				for (int i = 0; i < size; i++) {
@@ -322,11 +326,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					ElementSymbol key = new ElementSymbol("rowId"); //$NON-NLS-1$
 					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 					ElementSymbol value = new ElementSymbol("partitionId"); //$NON-NLS-1$
-					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+					value.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 					List<ElementSymbol> elements = Arrays.asList(key, value);
 					partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
 				}
-				SortUtility su = new SortUtility(specificationTs, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
+				SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
+				su.setWorkingBuffer(tb);
+				su.setNonBlocking(true);
 				TupleBuffer sorted = su.sort();
 				specificationTs = sorted.createIndexedTupleSource(true);
 			}
@@ -339,8 +345,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				List<?> tuple = specificationTs.nextTuple();
 				if (multiGroup) {
 				    if (lastRow != null) {
-				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow);
-				    	if (!aggs.isEmpty() && (!samePartition || !GroupingNode.sameGroup(orderIndexes, tuple, lastRow))) {
+				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
+				    	if (!aggs.isEmpty() && (!samePartition || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
 			        		saveValues(specIndex, aggs, groupId, samePartition, false);
 		        			groupId++;
 				    	}
@@ -401,6 +407,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			return aggs;
 		}
 		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size());
+		ElementSymbol key = new ElementSymbol("key"); //$NON-NLS-1$
+	    key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+	    elements.add(key);
 		for (WindowFunctionInfo wfi : functions) {
 			aggs.add(GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes));
 			Class<?> outputType = wfi.function.getType();
@@ -429,7 +438,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			List<Expression> collectedExpressions = new ArrayList<Expression>(expressionIndexes.keySet());
 			Evaluator eval = new Evaluator(elementMap, getDataManager(), getContext());
 			final RelationalNode sourceNode = this.getChildren()[0];
-			inputTs = new ProjectingTupleSource(sourceNode, eval, collectedExpressions) {
+			inputTs = new ProjectingTupleSource(sourceNode, eval, collectedExpressions, elementMap) {
 				int index = 0;
 				@Override
 				public List<Object> nextTuple() throws TeiidComponentException,
@@ -477,6 +486,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		return getElements();
+	}
+	
+	@Override
+	public PlanNode getDescriptionProperties() {
+    	PlanNode props = super.getDescriptionProperties();
+    	AnalysisRecord.addLanaguageObjects(props, PROP_WINDOW_FUNCTIONS, this.windows.keySet());
+        return props;
 	}
     
 }

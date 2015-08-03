@@ -35,7 +35,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings({"unchecked", "nls"})
 public class TestArrayTable {
     
-	@Test public void testCorrelatedTextTable() throws Exception {
+	@Test public void testCorrelatedArrayTable() throws Exception {
     	String sql = "select x.* from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer) x"; //$NON-NLS-1$
     	
         List[] expected = new List[] {
@@ -46,7 +46,7 @@ public class TestArrayTable {
         process(sql, expected);
     }
 	
-	@Test public void testCorrelatedTextTable1() throws Exception {
+	@Test public void testCorrelatedArrayTable1() throws Exception {
     	String sql = "select z from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer, z long) x"; //$NON-NLS-1$
     	
         List[] expected = new List[] {
@@ -57,7 +57,7 @@ public class TestArrayTable {
         process(sql, expected);
     }
 	
-	@Test(expected=TeiidProcessingException.class) public void testCorrelatedTextTable2() throws Exception {
+	@Test(expected=TeiidProcessingException.class) public void testCorrelatedArrayTable2() throws Exception {
     	String sql = "select y from bqt1.smalla, arraytable(objectvalue COLUMNS y integer) x"; //$NON-NLS-1$
     	
         List[] expected = new List[] {};    
@@ -65,7 +65,7 @@ public class TestArrayTable {
         process(sql, expected);
     }
 	
-	@Test public void testCorrelatedTextTable3() throws Exception {
+	@Test public void testCorrelatedArrayTable3() throws Exception {
     	String sql = "select x.* from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer, z integer, aa object) x"; //$NON-NLS-1$
     	
         List[] expected = new List[] {

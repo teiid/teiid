@@ -29,7 +29,6 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 
@@ -69,9 +68,12 @@ public class BatchIterator extends AbstractTupleSource {
 			}
 			batch = source.nextBatch();
 			done = batch.getTerminationFlag();
-			if (buffer != null && (!saveOnMark || mark)) {
+			if (buffer != null && (!saveOnMark || mark) && !buffer.isForwardOnly()) {
             	buffer.addTupleBatch(batch, true);
             }
+			if (done && buffer != null) {
+				this.buffer.close();
+			}
 		}
 		return getCurrentTuple();
 	}
@@ -80,11 +82,15 @@ public class BatchIterator extends AbstractTupleSource {
 	protected List<?> getCurrentTuple() throws TeiidComponentException,
 			BlockedException, TeiidProcessingException {
 		List<?> tuple = super.getCurrentTuple();
+		saveTuple(tuple);
+		return tuple;
+	}
+
+	private void saveTuple(List<?> tuple) throws TeiidComponentException {
 		if (tuple != null && mark && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
         	this.buffer.setRowCount(this.getCurrentIndex() - 1);
         	this.buffer.addTuple(tuple);
         }
-		return tuple;
 	}
 	
 	public int available() {
@@ -117,18 +123,13 @@ public class BatchIterator extends AbstractTupleSource {
     }
 
     @Override
-    public void mark() {
+    public void mark() throws TeiidComponentException {
     	super.mark();
     	if (this.buffer != null && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
 			this.buffer.purge();
     	}
     	mark = true;
-    	if (saveOnMark) {
-        	try {
-    			getCurrentTuple();
-    		} catch (TeiidException e) {
-    		}
-    	}
+		saveTuple(this.currentTuple);
     }
     
     @Override
@@ -138,5 +139,50 @@ public class BatchIterator extends AbstractTupleSource {
     	}
     	super.setPosition(position);
     }
+
+    /**
+     * non-destructive method to set the mark
+     * @return true if the mark was set
+     */
+	public boolean ensureSave() {
+		if (!saveOnMark || mark) {
+			return false;
+		}
+		mark = true;
+		return true;
+	}
+	
+	public void disableSave() {
+		if (buffer != null) {
+			this.saveOnMark = true;
+			this.mark = false;
+			if (batch != null && batch.getEndRow() <= this.buffer.getRowCount()) {
+				this.batch = null;
+			}
+		}
+	}
+	
+	public void readAhead(long limit) throws TeiidComponentException, TeiidProcessingException {
+		if (buffer == null || done) {
+			return;
+		}
+		if (this.buffer.getManagedRowCount() >= limit) {
+			return;
+		}
+		if (this.batch != null && this.buffer.getRowCount() < this.batch.getEndRow() && !this.buffer.isForwardOnly()) {
+			//haven't saved already
+			this.buffer.addTupleBatch(this.batch, true);
+		}
+		TupleBatch tb = source.nextBatch();
+		done = tb.getTerminationFlag();
+		this.buffer.addTupleBatch(tb, true);
+		if (done) {
+			this.buffer.close();
+		}
+	}
+	
+	public TupleBuffer getBuffer() {
+		return buffer;
+	}
     
 }

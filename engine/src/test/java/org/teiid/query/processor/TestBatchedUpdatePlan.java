@@ -26,10 +26,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.common.buffer.TupleBatch;
-import org.teiid.query.processor.BatchedUpdatePlan;
-
 import junit.framework.TestCase;
+
+import org.teiid.common.buffer.TupleBatch;
 
 
 
@@ -49,7 +48,7 @@ public class TestBatchedUpdatePlan extends TestCase {
             totalCommands += commandsPerPlan[i];
             plans.add(new FakeProcessorPlan(commandsPerPlan[i]));
         }
-        BatchedUpdatePlan plan = new BatchedUpdatePlan(plans, totalCommands, null);
+        BatchedUpdatePlan plan = new BatchedUpdatePlan(plans, totalCommands, null, false);
         TupleBatch batch = plan.nextBatch();
         assertEquals(totalCommands, batch.getRowCount());
         for (int i = 1; i <= totalCommands; i++) {
@@ -62,7 +61,7 @@ public class TestBatchedUpdatePlan extends TestCase {
         for (int i = 0; i < plans.length; i++) {
             plans[i] = new FakeProcessorPlan(1);
         }
-        BatchedUpdatePlan plan = new BatchedUpdatePlan(Arrays.asList(plans), plans.length, null);
+        BatchedUpdatePlan plan = new BatchedUpdatePlan(Arrays.asList(plans), plans.length, null, false);
         plan.open();
         // First plan may or may not be opened, but all subsequent plans should not be opened.
         for (int i = 1; i < plans.length; i++) {

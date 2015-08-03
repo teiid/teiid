@@ -8,7 +8,7 @@ package org.teiid.odbc;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
+import java.io.StringReader;
 
 /**
  * This class can split SQL scripts to single SQL statements.
@@ -17,17 +17,13 @@ import java.util.Arrays;
  */
 public class ScriptReader {
     private Reader reader;
-    private char[] buffer;
-    private int bufferPos;
-    private int bufferStart = -1;
-    private int bufferEnd;
+    private StringBuilder builder;
     private boolean endOfFile;
     private boolean insideRemark;
     private boolean blockRemark;
-    private boolean skipRemarks;
-    private int remarkStart;
-
-    private static int IO_BUFFER_SIZE = 4096;
+    private boolean rewrite;
+    private int expressionStart=-1;
+    private int expressionEnd=-1;
     
     /**
      * Create a new SQL script reader from the given reader
@@ -36,9 +32,14 @@ public class ScriptReader {
      */
     public ScriptReader(Reader reader) {
         this.reader = reader;
-        buffer = new char[IO_BUFFER_SIZE * 2];
+        this.builder = new StringBuilder(1<<13);
     }
-
+    
+    public ScriptReader(String string) {
+    	this.reader = new StringReader(string);
+        this.builder = new StringBuilder(string.length());
+    }
+    
     /**
      * Close the underlying reader.
      */
@@ -56,26 +57,29 @@ public class ScriptReader {
         if (endOfFile) {
             return null;
         }
-        return readStatementLoop();
+        while (true) {
+        	String result = readStatementLoop();
+        	if (result != null || endOfFile) {
+        		return result;
+        	}
+        }
+        
     }
 
     private String readStatementLoop() throws IOException {
-        bufferStart = bufferPos;
         int c = read();
         while (true) {
             if (c < 0) {
                 endOfFile = true;
-                if (bufferPos - 1 == bufferStart) {
-                    return null;
-                }
                 break;
             } else if (c == ';') {
+            	builder.setLength(builder.length()-1);
                 break;
             }
             switch (c) {
             case '$': {
                 c = read();
-                if (c == '$' && (bufferPos - bufferStart < 3 || buffer[bufferPos - 3] <= ' ')) {
+                if (c == '$' && (builder.length() < 3 || builder.charAt(builder.length() - 3) <= ' ')) {
                     // dollar quoted string
                     while (true) {
                         c = read();
@@ -97,15 +101,18 @@ public class ScriptReader {
                 break;
             }
             case '\'':
+            	//TODO: in rewrite mode could handle the E' logic here rather than in the parser
+            	//however the parser now uses E' with like to detect pg specific handling
+            	if (expressionEnd != builder.length() - 1) {
+            		expressionStart = builder.length() - 1;
+            	}
                 while (true) {
                     c = read();
-                    if (c < 0) {
-                        break;
-                    }
-                    if (c == '\'') {
+                    if (c < 0 || c == '\'') {
                         break;
                     }
                 }
+                expressionEnd = builder.length();
                 c = read();
                 break;
             case '"':
@@ -133,7 +140,6 @@ public class ScriptReader {
                         if (c == '*') {
                             c = read();
                             if (c < 0) {
-                                clearRemark();
                                 break;
                             }
                             if (c == '/') {
@@ -149,7 +155,6 @@ public class ScriptReader {
                     while (true) {
                         c = read();
                         if (c < 0) {
-                            clearRemark();
                             break;
                         }
                         if (c == '\r' || c == '\n') {
@@ -169,7 +174,6 @@ public class ScriptReader {
                     while (true) {
                         c = read();
                         if (c < 0) {
-                            clearRemark();
                             break;
                         }
                         if (c == '\r' || c == '\n') {
@@ -181,65 +185,120 @@ public class ScriptReader {
                 }
                 break;
             }
+            case ':': {
+            	if (rewrite) {
+                	int start = builder.length();
+                	c = read();
+                	if (c == ':') {
+                        while (true) {
+                            c = read();
+                            if (c < 0 || !Character.isLetterOrDigit(c)) {
+                            	String type = builder.substring(start+1, builder.length() - (c<0?0:1));
+                            	builder.setLength(start-1);
+                            	if (expressionStart != -1 && expressionEnd == start -1) {
+                            		//special handling for regclass cast - it won't always work
+                            		if ("regclass".equalsIgnoreCase(type)) { //$NON-NLS-1$
+                            			String name = builder.substring(expressionStart);
+                        				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$ 
+                            				name = name.substring(2, name.length()-2);
+                            				name = '\''+ name + '\'';
+                            			}
+                        				if (name.startsWith("'")) { //$NON-NLS-1$ 
+                        					builder.setLength(expressionStart);
+                            				builder.append(name.toUpperCase());
+                        				}
+                            			builder.insert(expressionStart, "(SELECT oid FROM pg_class WHERE upper(relname) = "); //$NON-NLS-1$
+                            			builder.append(")"); //$NON-NLS-1$ 
+                            		} else if ("regproc".equalsIgnoreCase(type)) {
+                            			String name = builder.substring(expressionStart);
+                        				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$ 
+                            				name = name.substring(2, name.length()-2);
+                            				name = '\''+ name + '\'';
+                            			}
+                        				if (name.startsWith("'")) { //$NON-NLS-1$ 
+                        					builder.setLength(expressionStart);
+                            				builder.append(name.toUpperCase());
+                        				}
+                            			builder.insert(expressionStart, "(SELECT oid FROM pg_proc WHERE upper(proname) = "); //$NON-NLS-1$
+                            			builder.append(")"); //$NON-NLS-1$
+                            		} else {
+	                            		builder.insert(expressionStart, "cast("); //$NON-NLS-1$
+	                                	builder.append(" AS ").append(type).append(")"); //$NON-NLS-1$ //$NON-NLS-2$
+                            		}
+                            	}
+                            	if (c != -1) {
+                            		builder.append((char)c);
+                            	}
+                            	break;
+                            }
+                        }
+                	}
+                	break;
+            	}
+            	c = read();
+            	break;
+            }
+            case '~': {
+            	if (rewrite) {
+            		int start = builder.length() - 1;
+            		boolean not = false;
+            		if (start > 0 && builder.charAt(start - 1) == '!') {
+        				not = true;
+        				start -= 1;
+            		}
+            		c = read();
+            		boolean like = false;
+            		if (c == '~') {
+            			like = true;
+            			c = read();
+            		}
+            		if (c == '*') {
+            			break; //can't handle
+            		}
+            		builder.setLength(start);
+            		if (not) {
+            			builder.append(" NOT"); //$NON-NLS-1$
+            		}
+            		if (like) {
+            			builder.append(" LIKE "); //$NON-NLS-1$
+            		} else {
+            			builder.append(" LIKE_REGEX "); //$NON-NLS-1$
+            		}
+            		if (c != -1) {
+                		builder.append((char)c);
+                	}
+            	}
+            	c = read();
+            	break;
+            }
             default: {
                 c = read();
             }
             }
         }
-        return new String(buffer, bufferStart, bufferPos - 1 - bufferStart);
+        String result = builder.toString();
+        builder.setLength(0);
+        if (result.length() == 0) {
+        	return null;
+        }
+        return result;
     }
 
     private void startRemark(boolean block) {
         blockRemark = block;
-        remarkStart = bufferPos - 2;
         insideRemark = true;
     }
 
     private void endRemark() {
-        clearRemark();
         insideRemark = false;
     }
 
-    private void clearRemark() {
-        if (skipRemarks) {
-            Arrays.fill(buffer, remarkStart, bufferPos, ' ');
-        }
-    }
-
     private int read() throws IOException {
-        if (bufferPos >= bufferEnd) {
-            return readBuffer();
-        }
-        return buffer[bufferPos++];
-    }
-
-    private int readBuffer() throws IOException {
-        if (endOfFile) {
-            return -1;
-        }
-        int keep = bufferPos - bufferStart;
-        if (keep > 0) {
-            char[] src = buffer;
-            if (keep + IO_BUFFER_SIZE > src.length) {
-                buffer = new char[src.length * 2];
-            }
-            System.arraycopy(src, bufferStart, buffer, 0, keep);
-        }
-        remarkStart -= bufferStart;
-        bufferStart = 0;
-        bufferPos = keep;
-        int len = reader.read(buffer, keep, IO_BUFFER_SIZE);
-        if (len == -1) {
-            // ensure bufferPos > bufferEnd
-            bufferEnd = -1024;
-            endOfFile = true;
-            // ensure the right number of characters are read
-            // in case the input buffer is still used
-            bufferPos++;
-            return -1;
-        }
-        bufferEnd = keep + len;
-        return buffer[bufferPos++];
+       int c = reader.read();
+       if (c != -1) {
+    	   builder.append((char)c);
+       }
+       return c;
     }
 
     /**
@@ -262,13 +321,8 @@ public class ScriptReader {
         return blockRemark;
     }
 
-    /**
-     * If comments should be skipped completely by this reader.
-     *
-     * @param skipRemarks true if comments should be skipped
-     */
-    public void setSkipRemarks(boolean skipRemarks) {
-        this.skipRemarks = skipRemarks;
-    }
+    public void setRewrite(boolean rewrite) {
+		this.rewrite = rewrite;
+	}
 
 }

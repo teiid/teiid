@@ -105,6 +105,9 @@ public class PGUtil {
         case Types.SQLXML:        	
             return PG_TYPE_TEXT;
             
+        case Types.ARRAY:
+        	return PG_TYPE_TEXTARRAY;
+        	
         default:
             return PG_TYPE_UNKNOWN;
         }

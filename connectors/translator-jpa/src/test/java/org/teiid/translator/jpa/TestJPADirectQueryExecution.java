@@ -21,9 +21,7 @@
  */
 package org.teiid.translator.jpa;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -47,7 +45,7 @@ public class TestJPADirectQueryExecution {
     @BeforeClass
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new JPA2ExecutionFactory();
-        TRANSLATOR.setSupportsNativeQueries(true);
+        TRANSLATOR.setSupportsDirectQueryProcedure(true);
         TRANSLATOR.start();
     }	
     

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="AdminAPITestVDB" version="1">
+
+	<description>The adminapi test VDB</description>
+	
+	<model name="TestModel" type="VIRTUAL">
+        <property name="supports-multi-source-bindings" value="true"/>
+        <source name="text-connector" translator-name="file" connection-jndi-name="java:/test-file"/>
+        <metadata type="DDL">
+			<![CDATA[
+				CREATE VIEW helloworld as SELECT 'HELLO WORLD';
+			]]>
+		</metadata>
+    </model>
+<!--     
+     <data-role name="TestDataRole"  >
+        <description>Test Data Role</description>
+
+        <permission>
+            <resource-name>TestModel</resource-name>
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+            <allow-delete>true</allow-delete>
+        </permission>
+
+        <mapped-role-name>anonymous</mapped-role-name>
+    </data-role>
+	 -->
+</vdb>

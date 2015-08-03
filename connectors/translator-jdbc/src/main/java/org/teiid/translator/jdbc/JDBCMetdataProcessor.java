@@ -41,34 +41,30 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.BaseColumn;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.DuplicateRecordException;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 
 
 /**
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
  */
-public class JDBCMetdataProcessor {
+public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	
 	/**
 	 * A holder for table records that keeps track of catalog and schema information.
 	 */
-	private static class TableInfo {
+	static class TableInfo {
 		private String catalog;
 		private String schema;
 		private String name;
 		private Table table;
+		private String type;
 		
 		public TableInfo(String catalog, String schema, String name, Table table) {
 			this.catalog = catalog;
@@ -79,10 +75,11 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private boolean importProcedures;
-	private boolean importKeys;
+	private boolean importKeys = true;
+	private boolean importForeignKeys = true;
 	private boolean importIndexes;
 	private String procedureNamePattern;
-	private boolean useFullSchemaName = true;	
+	protected boolean useFullSchemaName = true;	
 	private String[] tableTypes;
 	private String tableNamePattern;
 	private String catalog;
@@ -92,7 +89,9 @@ public class JDBCMetdataProcessor {
 	private boolean quoteNameInSource = true;
 	private boolean useProcedureSpecificName;
 	private boolean useCatalogName = true;
+	private String catalogSeparator = String.valueOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
 	private boolean autoCreateUniqueConstraints = true;
+	private boolean useQualifiedName = true;
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String quoteString;
@@ -102,48 +101,101 @@ public class JDBCMetdataProcessor {
 	
 	private int excludedTables;
 	
+	private boolean useAnyIndexCardinality;
+	private boolean importStatistics;
+	
+	private String columnNamePattern;
+	
+	
+	public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
+    	try {
+    	    getConnectorMetadata(conn, metadataFactory);
+        } catch (SQLException e) {
+            throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
+        }
+	}
+	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
-			throws SQLException, TranslatorException {
+			throws SQLException {
 		DatabaseMetaData metadata = conn.getMetaData();
 		
-		quoteString = metadata.getIdentifierQuoteString();
+		if (this.quoteString == null) {
+			try {
+				quoteString = metadata.getIdentifierQuoteString();
+			} catch (SQLException e) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Assuming identifier quoting not supported"); //$NON-NLS-1$
+			}
+		}
 		if (quoteString != null && quoteString.trim().length() == 0) {
 			quoteString = null;
 		}
 		
 		if (widenUnsingedTypes) {
-			ResultSet rs = metadata.getTypeInfo();
-			while (rs.next()) {
-				String name = rs.getString(1);
-				boolean unsigned = rs.getBoolean(10);
-				if (unsigned) {
-					unsignedTypes.add(name);
+			ResultSet rs = null;
+			try {
+				rs = metadata.getTypeInfo();
+			} catch (SQLException e) {
+				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11021));
+			}
+			if (rs != null) {
+				while (rs.next()) {
+					String name = rs.getString(1);
+					boolean unsigned = rs.getBoolean(10);
+					if (unsigned) {
+						unsignedTypes.add(name);
+					}
 				}
 			}
 		}
 		
-		try {
-			Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
-			HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
-			if (importKeys) {
-				getPrimaryKeys(metadataFactory, metadata, tables);
-				getIndexes(metadataFactory, metadata, tables, !importIndexes);
+		if (useCatalogName) {
+			String separator = metadata.getCatalogSeparator();
+			if (separator != null && !separator.isEmpty()) {
+				this.catalogSeparator = separator;
+			}
+		}
+		
+		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata, conn);
+		HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
+		if (importKeys) {
+			getPrimaryKeys(metadataFactory, metadata, tables);
+			getIndexes(metadataFactory, metadata, tables, !importIndexes);
+			if (importForeignKeys) {
 				getForeignKeys(metadataFactory, metadata, tables, tableMap);
-			} else if (importIndexes) {
-				getIndexes(metadataFactory, metadata, tables, false);
 			}
-			
-			if (importProcedures) {
-				getProcedures(metadataFactory, metadata);
+		} else if (importIndexes) {
+			getIndexes(metadataFactory, metadata, tables, false);
+		}
+		
+		if (importStatistics) {
+			for (TableInfo tableInfo : tables) {
+				if (tableInfo.table.getCardinality() == Table.UNKNOWN_CARDINALITY) {
+					getTableStatistics(conn, tableInfo.catalog, tableInfo.schema, tableInfo.name, tableInfo.table);
+				}
 			}
-		} catch (DuplicateRecordException e) {
-			 throw new TranslatorException(JDBCPlugin.Event.TEIID11006, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11006));
+		}
+		
+		if (importProcedures) {
+			getProcedures(metadataFactory, metadata);
 		}
 		
 	}
 
+	/**
+	 * 
+	 * @param conn
+	 * @param catalog
+	 * @param schema
+	 * @param name
+	 * @param table
+	 * @throws SQLException 
+	 */
+	protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
+		
+	}
+
 	private void getProcedures(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing procedures"); //$NON-NLS-1$
 		ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
 		int rsColumns = procedures.getMetaData().getColumnCount();
@@ -176,12 +228,11 @@ public class JDBCMetdataProcessor {
 				}
 				BaseColumn record = null;
 				int precision = columns.getInt(8);
-				String runtimeType = getRuntimeType(sqlType, typeName, precision);
+				int scale = columns.getInt(10);
+				String runtimeType = getRuntimeType(sqlType, typeName, precision, scale);
 				switch (columnType) {
 				case DatabaseMetaData.procedureColumnResult:
-					Column column = metadataFactory.addProcedureResultSetColumn(columnName, runtimeType, procedure);
-					record = column;
-					column.setNativeType(typeName);
+					record = metadataFactory.addProcedureResultSetColumn(columnName, runtimeType, procedure);
 					break;
 				case DatabaseMetaData.procedureColumnIn:
 					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.In, procedure);
@@ -198,11 +249,12 @@ public class JDBCMetdataProcessor {
 				default:
 					continue; //shouldn't happen
 				}
-				record.setPrecision(columns.getInt(8));
+				record.setNativeType(typeName);
+				record.setPrecision(precision);
 				record.setLength(columns.getInt(9));
-				record.setScale(columns.getInt(10));
+				record.setScale(scale);
 				record.setRadix(columns.getInt(11));
-				record.setNullType(NullType.values()[columns.getShort(12)]);
+				record.setNullType(NullType.values()[columns.getInt(12)]);
 				record.setAnnotation(columns.getString(13));
 			}
 		}
@@ -227,7 +279,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata, Connection conn) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
 		Map<String, TableInfo> tableMap = new HashMap<String, TableInfo>();
@@ -235,48 +287,85 @@ public class JDBCMetdataProcessor {
 			String tableCatalog = tables.getString(1);
 			String tableSchema = tables.getString(2);
 			String tableName = tables.getString(3);
+			String remarks = tables.getString(5);
 			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
-			if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
+			if (shouldExclude(fullName)) {
 				excludedTables++;
 				continue;
 			}
-			Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
-			table.setNameInSource(getFullyQualifiedName(tableCatalog, tableSchema, tableName, true));
-			table.setSupportsUpdate(true);
-			String remarks = tables.getString(5);
-			table.setAnnotation(remarks);
+			Table table = addTable(metadataFactory, tableCatalog, tableSchema,
+					tableName, remarks, fullName, tables);
+			if (table == null) {
+				continue;
+			}
 			TableInfo ti = new TableInfo(tableCatalog, tableSchema, tableName, table);
+			ti.type = tables.getString(4);
 			tableMap.put(fullName, ti);
 			tableMap.put(tableName, ti);
 		}
 		tables.close();
 		
-		getColumns(metadataFactory, metadata, tableMap);
+		getColumns(metadataFactory, metadata, tableMap, conn);
 		return tableMap;
+	}
+	
+	
+	protected boolean shouldExclude(String fullName) {
+		return excludeTables != null && excludeTables.matcher(fullName).matches();
+	}
+
+	/**
+	 * @throws SQLException  
+	 */
+	protected Table addTable(MetadataFactory metadataFactory,
+			String tableCatalog, String tableSchema, String tableName,
+			String remarks, String fullName, ResultSet tables) throws SQLException {
+		return addTable(metadataFactory, tableCatalog, tableSchema, tableName,
+				remarks, fullName);
+	}
+
+	/**
+	 * 
+	 * @param metadataFactory
+	 * @param tableCatalog
+	 * @param tableSchema
+	 * @param tableName
+	 * @param remarks
+	 * @param fullName
+	 * @return
+	 */
+	protected Table addTable(MetadataFactory metadataFactory,
+			String tableCatalog, String tableSchema, String tableName,
+			String remarks, String fullName) {
+		Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
+		table.setNameInSource(getFullyQualifiedName(tableCatalog, tableSchema, tableName, true));
+		table.setSupportsUpdate(true);
+		table.setAnnotation(remarks);
+		return table;
 	}
 
 	private void getColumns(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
-			throws SQLException, TranslatorException {
+			DatabaseMetaData metadata, Map<String, TableInfo> tableMap, Connection conn)
+			throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
 		boolean singleSchema = schemaPattern != null && !schemaPattern.contains("_") && !schemaPattern.contains("%"); //$NON-NLS-1$ //$NON-NLS-2$
 		if ((excludeTables == null && schemaPattern == null && tableNamePattern == null) //getting everything
 			|| (singleSchema && tableNamePattern == null && 
 					(excludeTables == null //getting all from a single schema 
 					|| tableMap.size()/2 > Math.sqrt(tableMap.size()/2 + excludedTables)))) {  //not excluding enough from a single schema
-			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
-			processColumns(metadataFactory, tableMap, columns);
+			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
+			processColumns(metadataFactory, tableMap, columns, conn);
 		} else {
 			for (TableInfo ti : new LinkedHashSet<TableInfo>(tableMap.values())) {
-				ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, null);
-				processColumns(metadataFactory, tableMap, columns);
+				ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, columnNamePattern);
+				processColumns(metadataFactory, tableMap, columns, conn);
 			}
 		}
 	}
 
 	private void processColumns(MetadataFactory metadataFactory,
-			Map<String, TableInfo> tableMap, ResultSet columns)
-			throws SQLException, TranslatorException {
+			Map<String, TableInfo> tableMap, ResultSet columns, Connection conn)
+			throws SQLException {
 		int rsColumns = columns.getMetaData().getColumnCount();
 		while (columns.next()) {
 			String tableCatalog = columns.getString(1);
@@ -290,51 +379,88 @@ public class JDBCMetdataProcessor {
 					continue;
 				}
 			}
-			String columnName = columns.getString(4);
-			int type = columns.getInt(5);
-			String typeName = columns.getString(6);
-			int columnSize = columns.getInt(7);
-			String runtimeType = getRuntimeType(type, typeName, columnSize);
-			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
-			Column column = metadataFactory.addColumn(columnName, runtimeType, tableInfo.table);
-			column.setNameInSource(quoteName(columnName));
-			column.setPrecision(columnSize);
-			column.setLength(columnSize);
-			column.setNativeType(typeName);
-			column.setRadix(columns.getInt(10));
-			column.setNullType(NullType.values()[columns.getShort(11)]);
-			column.setUpdatable(true);
-			String remarks = columns.getString(12);
-			column.setAnnotation(remarks);
-			String defaultValue = columns.getString(13);
-			column.setDefaultValue(defaultValue);
-			if (defaultValue != null && type == Types.BIT && TypeFacility.RUNTIME_NAMES.BOOLEAN.equals(runtimeType)) {
-				//try to determine a usable boolean value
-                if(defaultValue.length() == 1) {
-                    int charIntVal = defaultValue.charAt(0);
-                    // Set boolean FALse for incoming 0, TRUE for 1
-                    if(charIntVal==0) {
-                        column.setDefaultValue(Boolean.FALSE.toString());
-                    } else if(charIntVal==1) {
-                        column.setDefaultValue(Boolean.TRUE.toString());
-                    }
-				} else { //SQLServer quotes bit values
-                    String trimedDefault = defaultValue.trim();
-                    if (defaultValue.startsWith("(") && defaultValue.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
-                        trimedDefault = defaultValue.substring(1, defaultValue.length() - 1);
-                    }
-                    column.setDefaultValue(trimedDefault);
-                }
-			}
-			column.setCharOctetLength(columns.getInt(16));
-			if (rsColumns >= 23) {
-				column.setAutoIncremented("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
+			Column c = addColumn(columns, tableInfo.table, metadataFactory, rsColumns);
+			if (TypeFacility.RUNTIME_TYPES.GEOMETRY.equals(c.getJavaType())) {
+				String columnName = columns.getString(4);
+				getGeometryMetadata(c, conn, tableCatalog, tableSchema, tableName, columnName);
 			}
 		}
 		columns.close();
 	}
+	
+	/**
+	 * 
+	 * @param c
+	 * @param conn
+	 * @param tableCatalog
+	 * @param tableSchema
+	 * @param tableName
+	 * @param columnName 
+	 */
+	protected void getGeometryMetadata(Column c, Connection conn, String tableCatalog, String tableSchema, String tableName, String columnName) {
+		
+	}
+	
+	/**
+	 * Add a column to the given table based upon the current row of the columns resultset
+	 * @param columns
+	 * @param table
+	 * @param metadataFactory
+	 * @param rsColumns
+	 * @return the column added
+	 * @throws SQLException
+	 */
+	protected Column addColumn(ResultSet columns, Table table, MetadataFactory metadataFactory, int rsColumns) throws SQLException {
+		String columnName = columns.getString(4);
+		int type = columns.getInt(5);
+		String typeName = columns.getString(6);
+		int columnSize = columns.getInt(7);
+		int scale = columns.getInt(9);
+		String runtimeType = getRuntimeType(type, typeName, columnSize, scale);
+		//note that the resultset is already ordered by position, so we can rely on just adding columns in order
+		Column column = metadataFactory.addColumn(columnName, runtimeType, table);
+		column.setNameInSource(quoteName(columnName));
+		column.setPrecision(columnSize);
+		column.setScale(scale); //assume that null means 0
+		column.setLength(columnSize);
+		column.setNativeType(typeName);
+		column.setRadix(columns.getInt(10));
+		column.setNullType(NullType.values()[columns.getInt(11)]);
+		column.setUpdatable(true);
+		String remarks = columns.getString(12);
+		column.setAnnotation(remarks);
+		String defaultValue = columns.getString(13);
+		column.setDefaultValue(defaultValue);
+		if (defaultValue != null && type == Types.BIT && TypeFacility.RUNTIME_NAMES.BOOLEAN.equals(runtimeType)) {
+			//try to determine a usable boolean value
+            if(defaultValue.length() == 1) {
+                int charIntVal = defaultValue.charAt(0);
+                // Set boolean FALse for incoming 0, TRUE for 1
+                if(charIntVal==0) {
+                    column.setDefaultValue(Boolean.FALSE.toString());
+                } else if(charIntVal==1) {
+                    column.setDefaultValue(Boolean.TRUE.toString());
+                }
+			} else { //SQLServer quotes bit values
+                String trimedDefault = defaultValue.trim();
+                if (defaultValue.startsWith("(") && defaultValue.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
+                    trimedDefault = defaultValue.substring(1, defaultValue.length() - 1);
+                }
+                column.setDefaultValue(trimedDefault);
+            }
+		}
+		column.setCharOctetLength(columns.getInt(16));
+		if (rsColumns >= 23) {
+			column.setAutoIncremented("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
+		}
+		return column;
+	}
+	
+	protected String getRuntimeType(int type, String typeName, int precision, int scale) {
+		return getRuntimeType(type, typeName, precision);
+	}
 
-	private String getRuntimeType(int type, String typeName, int precision) {
+	protected String getRuntimeType(int type, String typeName, int precision) {
 		if (type == Types.BIT && precision > 1) {
 			type = Types.BINARY;
 		}
@@ -343,7 +469,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	protected String quoteName(String name) {
-		if (quoteNameInSource) {
+		if (quoteNameInSource && quoteString != null) {
 			return quoteString + StringUtil.replaceAll(name, quoteString, quoteString + quoteString) + quoteString;
 		}
 		return name;
@@ -351,7 +477,7 @@ public class JDBCMetdataProcessor {
 
 	private void getPrimaryKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables)
-			throws SQLException, TranslatorException {
+			throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing primary keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
 			ResultSet pks = metadata.getPrimaryKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
@@ -378,64 +504,75 @@ public class JDBCMetdataProcessor {
 		}
 	}
 	
+	private class FKInfo {
+		TableInfo pkTable;
+		TreeMap<Short, String> keyColumns = new TreeMap<Short, String>();
+		TreeMap<Short, String> referencedKeyColumns = new TreeMap<Short, String>();
+		boolean valid = true;
+	}
+	
 	private void getForeignKeys(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
 			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
-			TreeMap<Short, String> keyColumns = null;
-			TreeMap<Short, String> referencedKeyColumns = null;
-			String fkName = null;
-			TableInfo pkTable = null;
-			short savedSeqNum = Short.MAX_VALUE;
+			HashMap<String, FKInfo> allKeys = new HashMap<String, FKInfo>();
 			while (fks.next()) {
 				String columnName = fks.getString(8);
 				short seqNum = fks.getShort(9);
 				String pkColumnName = fks.getString(4);
 				
-				if (seqNum <= savedSeqNum) {
-					if (keyColumns != null) {
-						KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, fkName, referencedKeyColumns, pkTable.table);						
-						ForeignKey fk = metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table.getName(), tableInfo.table);
-						if (record != null) {
-							fk.setPrimaryKey(record);
-						}
-					}
-					keyColumns = new TreeMap<Short, String>();
-					referencedKeyColumns = new TreeMap<Short, String>();
-					fkName = null;
-				}
-				savedSeqNum = seqNum;
-				keyColumns.put(seqNum, columnName);
-				referencedKeyColumns.put(seqNum, pkColumnName);
+				String fkName = fks.getString(12);
 				if (fkName == null) {
+					fkName = "FK_" + tableInfo.table.getName().toUpperCase(); //$NON-NLS-1$
+				}
+				
+				FKInfo fkInfo = allKeys.get(fkName);
+				
+				if (fkInfo == null) {
+					fkInfo = new FKInfo();
+					allKeys.put(fkName, fkInfo);
+
 					String tableCatalog = fks.getString(1);
 					String tableSchema = fks.getString(2);
 					String tableName = fks.getString(3);
 					String fullTableName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
-					pkTable = tableMap.get(fullTableName);
-					if (pkTable == null) {
+					fkInfo.pkTable = tableMap.get(fullTableName);
+					if (fkInfo.pkTable == null) {
 						//throw new TranslatorException(JDBCPlugin.Util.getString("JDBCMetadataProcessor.cannot_find_primary", fullTableName)); //$NON-NLS-1$
-						continue; //just drop the foreign key, the user probably didn't import the other table
+						fkInfo.valid = false;
+						continue;
 					}
-					fkName = fks.getString(12);
-					if (fkName == null) {
-						fkName = "FK_" + tableInfo.table.getName().toUpperCase(); //$NON-NLS-1$
-					}
-				} 
+				}
+				
+				if (!fkInfo.valid) {
+					continue;
+				}
+				
+				if (fkInfo.keyColumns.put(seqNum, columnName) != null) {
+					//We can't gracefully handle two unnamed fks
+					fkInfo.valid = false;
+				}
+				fkInfo.referencedKeyColumns.put(seqNum, pkColumnName);
 			}
-			if (keyColumns != null) {
-				KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, fkName, referencedKeyColumns, pkTable.table);
-				ForeignKey fk = metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table.getName(), tableInfo.table);
+			
+			for (Map.Entry<String, FKInfo> entry : allKeys.entrySet()) {
+				FKInfo info = entry.getValue();
+				if (!info.valid) {
+					continue;
+				}
+				
+				KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, entry.getKey(), info.referencedKeyColumns, info.pkTable.table);
+				ForeignKey fk = metadataFactory.addForiegnKey(entry.getKey(), new ArrayList<String>(info.keyColumns.values()), new ArrayList<String>(info.referencedKeyColumns.values()), info.pkTable.table.getName(), tableInfo.table);
 				if (record != null) {
-					fk.setPrimaryKey(record);
+					fk.setReferenceKey(record);
 				}
 			}
 			fks.close();
 		}
 	}
 	
-	private KeyRecord autoCreateUniqueKeys(boolean create, MetadataFactory factory, String name, TreeMap<Short, String> referencedKeyColumns, Table pkTable) throws TranslatorException {
+	private KeyRecord autoCreateUniqueKeys(boolean create, MetadataFactory factory, String name, TreeMap<Short, String> referencedKeyColumns, Table pkTable) {
 		if (referencedKeyColumns != null && pkTable.getPrimaryKey() == null && pkTable.getUniqueKeys().isEmpty()) {
 			factory.addIndex(name + "_unique", false, new ArrayList<String>(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
 		}
@@ -445,17 +582,17 @@ public class JDBCMetdataProcessor {
 			uniqueKey = pkTable.getPrimaryKey();
 		} else {
 			for (KeyRecord record : pkTable.getUniqueKeys()) {
-				if (keyMatches(new ArrayList(referencedKeyColumns.values()), record)) {
+				if (keyMatches(new ArrayList<String>(referencedKeyColumns.values()), record)) {
 					uniqueKey = record;
 					break;
 				}
 			}
-			if (uniqueKey == null && pkTable.getPrimaryKey() != null && keyMatches(new ArrayList(referencedKeyColumns.values()), pkTable.getPrimaryKey())) {
+			if (uniqueKey == null && pkTable.getPrimaryKey() != null && keyMatches(new ArrayList<String>(referencedKeyColumns.values()), pkTable.getPrimaryKey())) {
 				uniqueKey = pkTable.getPrimaryKey();
 			}
 		}
 		if (uniqueKey == null && create) {
-			uniqueKey = factory.addIndex(name + "_unique", false, new ArrayList(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
+			uniqueKey = factory.addIndex(name + "_unique", false, new ArrayList<String>(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
 		}
 		return uniqueKey;
 	}
@@ -472,31 +609,47 @@ public class JDBCMetdataProcessor {
 		return true;
 	}	
 
-	private void getIndexes(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException, TranslatorException {
+	void getIndexes(MetadataFactory metadataFactory,
+			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
-			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, false, importApproximateIndexes);
+			if (!getIndexInfoForTable(tableInfo.catalog, tableInfo.schema, tableInfo.name, uniqueOnly, importApproximateIndexes, tableInfo.type)) {
+				continue;
+			}
+			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, uniqueOnly, importApproximateIndexes);
 			TreeMap<Short, String> indexColumns = null;
 			String indexName = null;
 			short savedOrdinalPosition = Short.MAX_VALUE;
 			boolean nonUnique = false;
+			boolean valid = true;
+			boolean cardinalitySet = false;
 			while (indexInfo.next()) {
 				short type = indexInfo.getShort(7);
 				if (type == DatabaseMetaData.tableIndexStatistic) {
-					tableInfo.table.setCardinality(indexInfo.getInt(11));
+					tableInfo.table.setCardinality(getCardinality(indexInfo));
+					cardinalitySet = true;
 					continue;
 				}
 				short ordinalPosition = indexInfo.getShort(8);
+				if (useAnyIndexCardinality && !cardinalitySet) {
+					long cardinality = getCardinality(indexInfo);
+					tableInfo.table.setCardinality(Math.max(cardinality, (long)tableInfo.table.getCardinalityAsFloat()));
+				}
 				if (ordinalPosition <= savedOrdinalPosition) {
-					if (indexColumns != null && (!uniqueOnly || !nonUnique)) {
+					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique) 
+							&& (indexName == null || nonUnique || tableInfo.table.getPrimaryKey() == null || !indexName.equals(tableInfo.table.getPrimaryKey().getName()))) {
 						metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 					}
 					indexColumns = new TreeMap<Short, String>();
 					indexName = null;
+					valid = true;
 				}
 				savedOrdinalPosition = ordinalPosition;
 				String columnName = indexInfo.getString(9);
+				if (valid && columnName == null || tableInfo.table.getColumnByName(columnName) == null) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Skipping the import of non-simple index", indexInfo.getString(6)); //$NON-NLS-1$
+					valid = false;
+				}
 				nonUnique = indexInfo.getBoolean(4);
 				indexColumns.put(ordinalPosition, columnName);
 				if (indexName == null) {
@@ -506,24 +659,62 @@ public class JDBCMetdataProcessor {
 					}
 				}
 			}
-			if (indexColumns != null && (!uniqueOnly || !nonUnique)) {
+			if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)
+					&& (indexName == null || nonUnique || tableInfo.table.getPrimaryKey() == null || !indexName.equals(tableInfo.table.getPrimaryKey().getName()))) {
 				metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 			}
 			indexInfo.close();
 		}
 	}
 
+	/**
+	 * Get the cardinality, trying first using getLong for tables with more than max int rows
+	 * @param indexInfo
+	 * @return
+	 * @throws SQLException
+	 */
+	private long getCardinality(ResultSet indexInfo) throws SQLException {
+		long result = Table.UNKNOWN_CARDINALITY;
+		try {
+			result = indexInfo.getLong(11);
+			
+		} catch (SQLException e) {
+			//can't get as long, try int
+			result = indexInfo.getInt(11);
+		}
+		if (indexInfo.wasNull()) {
+			return Table.UNKNOWN_CARDINALITY;
+		}
+		return result;
+	}
+
+	/**
+	 * @param catalogName
+	 * @param schemaName
+	 * @param tableName
+	 * @param uniqueOnly
+	 * @param approximateIndexes
+	 * @param tableType 
+	 * @return
+	 */
+	protected boolean getIndexInfoForTable(String catalogName, String schemaName, String tableName, boolean uniqueOnly, 
+			boolean approximateIndexes, String tableType) {
+		return true;
+	}
+
 	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName) {
 		return getFullyQualifiedName(catalogName, schemaName, objectName, false);
 	}
 	
-	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName, boolean quoted) {
+	protected String getFullyQualifiedName(String catalogName, String schemaName, String objectName, boolean quoted) {
 		String fullName = (quoted?quoteName(objectName):objectName);
-		if (schemaName != null && schemaName.length() > 0) {
-			fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
-		}
-		if (useCatalogName && catalogName != null && catalogName.length() > 0) {
-			fullName = (quoted?quoteName(catalogName):catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+		if (useQualifiedName) {
+			if (schemaName != null && schemaName.length() > 0) {
+				fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+			}
+			if (useCatalogName && catalogName != null && catalogName.length() > 0) {
+				fullName = (quoted?quoteName(catalogName):catalogName) + catalogSeparator + fullName;
+			}
 		}
 		return fullName;
 	}
@@ -534,6 +725,11 @@ public class JDBCMetdataProcessor {
 
 	public void setTableTypes(String[] tableTypes) {
 		this.tableTypes = tableTypes;
+	}
+	
+	@TranslatorProperty (display="Table Types", category=PropertyType.IMPORT, description="Comma separated list - without spaces - of imported table types. null returns all types")
+	public String[] getTableTypes() {
+		return tableTypes;
 	}
 
 	public void setUseFullSchemaName(boolean useFullSchemaName) {
@@ -560,9 +756,18 @@ public class JDBCMetdataProcessor {
 		this.importApproximateIndexes = importApproximateIndexes;
 	}
 
-	public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
+	/**
+	 * @deprecated
+	 * @see #setWidenUnsignedTypes
+	 */
+	@Deprecated
+    public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
 		this.widenUnsingedTypes = widenUnsingedTypes;
 	}
+	
+	public void setWidenUnsignedTypes(boolean widenUnsignedTypes) {
+		this.widenUnsingedTypes = widenUnsignedTypes;
+	}	
 	
 	public void setQuoteNameInSource(boolean quoteIdentifiers) {
 		this.quoteNameInSource = quoteIdentifiers;
@@ -598,4 +803,139 @@ public class JDBCMetdataProcessor {
 		this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 	}
 	
+	public void setUseQualifiedName(boolean useQualifiedName) {
+		this.useQualifiedName = useQualifiedName;
+	}
+	
+	public void setUseAnyIndexCardinality(boolean useAnyIndexCardinality) {
+		this.useAnyIndexCardinality = useAnyIndexCardinality;
+	}
+	
+	public void setImportStatistics(boolean importStatistics) {
+		this.importStatistics = importStatistics;
+	}
+	
+	public void setImportForeignKeys(boolean importForeignKeys) {
+		this.importForeignKeys = importForeignKeys;
+	}
+	
+	protected void setColumnNamePattern(String columnNamePattern) {
+		this.columnNamePattern = columnNamePattern;
+	}
+
+	@TranslatorProperty(display="Import Procedures", category=PropertyType.IMPORT, description="true to import procedures and procedure columns - Note that it is not always possible to import procedure result set columns due to database limitations. It is also not currently possible to import overloaded procedures.")
+    public boolean isImportProcedures() {
+        return importProcedures;
+    }
+
+	@TranslatorProperty(display="Import Keys", category=PropertyType.IMPORT, description="true to import primary and foreign keys - NOTE foreign keys to tables that are not imported will be ignored")
+    public boolean isImportKeys() {
+        return importKeys;
+    }
+
+	@TranslatorProperty(display="Import Foreign Key", category=PropertyType.IMPORT, description="true to import foreign keys")
+    public boolean isImportForeignKeys() {
+        return importForeignKeys;
+    }
+
+	@TranslatorProperty(display="Import Indexes", category=PropertyType.IMPORT, description="true to import index/unique key/cardinality information")
+    public boolean isImportIndexes() {
+        return importIndexes;
+    }
+
+	@TranslatorProperty(display="Procedure Name Pattern", category=PropertyType.IMPORT, description=" a procedure name pattern; must match the procedure name as it is stored in the database")
+    public String getProcedureNamePattern() {
+        return procedureNamePattern;
+    }
+
+	@TranslatorProperty(display="Use Full Schema Name", category=PropertyType.IMPORT, description="When false, directs the importer to drop the source catalog/schema from the Teiid object name, so that the Teiid fully qualified name will be in the form of <model name>.<table name> - Note: when false this may lead to objects with duplicate names when importing from multiple schemas, which results in an exception.  This option does not affect the name in source property.")
+    public boolean isUseFullSchemaName() {
+        return useFullSchemaName;
+    }
+
+	@TranslatorProperty(display="Table Name Pattern", category=PropertyType.IMPORT, description=" a table name pattern; must match the table name as it is stored in the database")
+    public String getTableNamePattern() {
+        return tableNamePattern;
+    }
+
+    @TranslatorProperty(display="catalog", category=PropertyType.IMPORT, description="a catalog name; must match the catalog name as it is stored in the database; \"\" retrieves those without a catalog; null means that the catalog name should not be used to narrow the search")
+    public String getCatalog() {
+        return catalog;
+    }
+
+    @TranslatorProperty(display="Schema Pattern", category=PropertyType.IMPORT, description="a schema name pattern; must match the schema name as it is stored in the database; \"\" retrieves those without a schema; null means that the schema name should not be used to narrow the search")
+    public String getSchemaPattern() {
+        return schemaPattern;
+    }
+
+    @TranslatorProperty(display="Import Approximate Indexes", category=PropertyType.IMPORT, description="true to import approximate index information. when true, result is allowed to reflect approximate or out of data values; when false, results are requested to be accurate")
+    public boolean isImportApproximateIndexes() {
+        return importApproximateIndexes;
+    }
+
+    @TranslatorProperty(display="Widen unSigned Types", category=PropertyType.IMPORT, description="true to convert unsigned types to the next widest type. For example SQL Server reports tinyint as an unsigned type. With this option enabled, tinyint would be imported as a short instead of a byte.")
+    public boolean isWidenUnsingedTypes() {
+        return widenUnsingedTypes;
+    }
+
+    @TranslatorProperty(display="Quote NameInSource", category=PropertyType.IMPORT, description="false will override the default and direct Teiid to create source queries using unquoted identifiers.")
+    public boolean isQuoteNameInSource() {
+        return quoteNameInSource;
+    }
+
+    @TranslatorProperty(display="Use Procedure Specific Name", category=PropertyType.IMPORT, description="true will allow the import of overloaded procedures (which will normally result in a duplicate procedure error) by using the unique procedure specific name as the Teiid name. This option will only work with JDBC 4.0 compatible drivers that report specific names.")
+    public boolean isUseProcedureSpecificName() {
+        return useProcedureSpecificName;
+    }
+
+    @TranslatorProperty(display="Use Catalog Name", category=PropertyType.IMPORT, description="true will use any non-null/non-empty catalog name as part of the name in source, e.g. \"catalog\".\"schema\".\"table\".\"column\", and in the Teiid runtime name if useFullSchemaName is also true. false will not use the catalog name in either the name in source or the Teiid runtime name. Should be set to false for sources that do not fully support a catalog concept, but return a non-null catalog name in their metadata - such as HSQL.")
+    public boolean isUseCatalogName() {
+        return useCatalogName;
+    }
+
+    @TranslatorProperty(display="Auto Create Unique Constraints", category=PropertyType.IMPORT, description="true to create a unique constraint if one is not found for a foreign keys")
+    public boolean isAutoCreateUniqueConstraints() {
+        return autoCreateUniqueConstraints;
+    }
+
+    @TranslatorProperty(display="use Qualified Name", category=PropertyType.IMPORT, description="true will use name qualification for both the Teiid name and name in source as dictated by the useCatalogName and useFullSchemaName properties.  Set to false to disable all qualification for both the Teiid name and the name in source, which effectively ignores the useCatalogName and useFullSchemaName properties.  Note: when false this may lead to objects with duplicate names when importing from multiple schemas, which results in an exception.")
+    public boolean isUseQualifiedName() {
+        return useQualifiedName;
+    }
+
+    @TranslatorProperty(display="Use Any Index Cardinality", category=PropertyType.IMPORT, description="true will use the maximum cardinality returned from DatabaseMetaData.getIndexInfo. importKeys or importIndexes needs to be enabled for this setting to have an effect. This allows for better stats gathering from sources that don't support returning a statistical index.")
+    public boolean isUseAnyIndexCardinality() {
+        return useAnyIndexCardinality;
+    }
+
+    @TranslatorProperty(display="Import Statistics", category=PropertyType.IMPORT, description="true will use database dependent logic to determine the cardinality if none is determined. Not yet supported by all database types - currently only supported by Oracle and MySQL.")
+    public boolean isImportStatistics() {
+        return importStatistics;
+    }
+    
+    @TranslatorProperty(display="Column Name Pattern", category=PropertyType.IMPORT, description="a column name pattern; must match the column name as it is stored in the database. Used to import columns of tables")
+    public String getColumnNamePattern() {
+        return columnNamePattern;
+    }
+    
+    @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
+    public String getExcludeTables() {
+    	if (this.excludeTables == null) {
+    		return null;
+    	}
+        return this.excludeTables.pattern();
+    }
+    
+    @TranslatorProperty(display="Exclude Procedures", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid procedure name will exclude it from import.  Applied after procedure names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
+    public String getExcludeProcedures() {
+    	if (this.excludeProcedures == null) {
+    		return null;
+    	}
+        return this.excludeProcedures.pattern();
+    }    
+    
+    public void setQuoteString(String quoteString) {
+		this.quoteString = quoteString;
+	}
+    
 }

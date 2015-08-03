@@ -25,13 +25,15 @@ package org.teiid.query.resolver.util;
 import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.StringUtil;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
@@ -44,11 +46,14 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -264,6 +269,13 @@ public class ResolverUtil {
                                             String targetTypeName,
                                             boolean implicit, FunctionLibrary library) {
         Class<?> srcType = DataTypeManager.getDataTypeClass(sourceTypeName);
+        
+        Class<?> targetType = DataTypeManager.getDataTypeClass(targetTypeName);
+        
+    	try {
+			setDesiredType(sourceExpression, targetType, sourceExpression);
+		} catch (QueryResolverException e) {
+		} 
 
         FunctionDescriptor fd = library.findTypedConversionFunction(srcType, DataTypeManager.getDataTypeClass(targetTypeName));
 
@@ -325,19 +337,22 @@ public class ResolverUtil {
 	 * @param metadata
 	 *            QueryMetadataInterface
 	 */
-    public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, QueryMetadataInterface metadata)
+    public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
 
     	List<Expression> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
     	
     	boolean isSimpleQuery = false;
     	List<GroupSymbol> fromClauseGroups = Collections.emptyList();
-        
+        GroupBy groupBy = null;
         if (command instanceof Query) {
         	Query query = (Query)command;
         	isSimpleQuery = !query.getSelect().isDistinct() && !query.hasAggregates();
         	if (query.getFrom() != null) {
         		fromClauseGroups = query.getFrom().getGroups();
+        	}
+        	if (!query.getSelect().isDistinct()) {
+        		groupBy = query.getGroupBy();
         	}
         }
     	
@@ -408,6 +423,17 @@ public class ResolverUtil {
         	if (command instanceof SetQuery) {
     			 throw new QueryResolverException(QueryPlugin.Event.TEIID30086, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30086, sortKey));
     		}
+        	
+        	//resolve subqueries
+        	for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(sortKey)) {
+            	Command c = container.getCommand();
+                
+                QueryResolver.setChildMetadata(c, command);
+                c.pushNewResolvingContext(fromClauseGroups);
+                
+                QueryResolver.resolveCommand(c, metadata.getMetadata(), false);
+        	}
+            
         	for (ElementSymbol symbol : ElementCollectorVisitor.getElements(sortKey, false)) {
         		try {
         	    	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, command.getExternalGroupContexts(), metadata);
@@ -415,11 +441,13 @@ public class ResolverUtil {
         	    	 throw new QueryResolverException(QueryPlugin.Event.TEIID30087, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30087, symbol.getName()) );
         	    } 
 			}
-            ResolverVisitor.resolveLanguageObject(sortKey, metadata);
-            
+        	
+        	ResolverVisitor.resolveLanguageObject(sortKey, metadata);
+        	
             int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
-            if (index == -1 && !isSimpleQuery) {
-    	         throw new QueryResolverException(QueryPlugin.Event.TEIID30088, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30088, sortKey));
+            //if unrelated and not a simple query - that is more than just a grouping, throw an exception
+            if (index == -1 && !isSimpleQuery && groupBy == null) {
+        		throw new QueryResolverException(QueryPlugin.Event.TEIID30088, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30088, sortKey));
         	}
         	orderBy.setExpressionPosition(i, index);
         }
@@ -438,6 +466,7 @@ public class ResolverUtil {
      * default value is defined
      * @throws QueryMetadataException for error retrieving metadata
      * @throws TeiidComponentException
+     * @throws QueryParserException 
      * @since 4.3
      */
 	public static Expression getDefault(ElementSymbol symbol, QueryMetadataInterface metadata) throws TeiidComponentException, QueryMetadataException, QueryResolverException {
@@ -445,10 +474,26 @@ public class ResolverUtil {
 		Object mid = symbol.getMetadataID();
     	Class<?> type = symbol.getType();
 		
-        Object defaultValue = metadata.getDefaultValue(mid);
+        String defaultValue = metadata.getDefaultValue(mid);
         
         if (defaultValue == null && !metadata.elementSupports(mid, SupportConstants.Element.NULL)) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30089, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30089, symbol.getOutputName()));
+        }
+        
+        if ("expression".equalsIgnoreCase(metadata.getExtensionProperty(mid,  BaseColumn.DEFAULT_HANDLING, false))) { //$NON-NLS-1$
+        	Expression ex = null;
+        	try {
+        		ex = QueryParser.getQueryParser().parseExpression(defaultValue);
+        	} catch (QueryParserException e) {
+        		//TODO: also validate this at load time
+        		throw new QueryMetadataException(QueryPlugin.Event.TEIID31170, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31170, symbol));
+        	}
+        	List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex);
+        	ResolverVisitor.resolveLanguageObject(ex, metadata);
+        	for (SubqueryContainer<?> container : subqueries) {
+        		QueryResolver.resolveCommand(container.getCommand(), metadata);
+        	}
+        	return ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(type), metadata);
         }
         
         return getProperlyTypedConstant(defaultValue, type);
@@ -908,8 +953,10 @@ public class ResolverUtil {
 	        // should not come here
 	    } 
 	    
-	    symbol.setOutputDefinition(definition);
-	    symbol.setOutputName(name);
+	    if (metadata.useOutputName()) {
+	    	symbol.setOutputDefinition(definition);
+	    	symbol.setOutputName(name);
+	    }
 	}
 	
 	public static void findKeyPreserved(Query query, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)
@@ -1055,7 +1102,7 @@ public class ResolverUtil {
 				if (!entry.getKey().get(left?0:1).equals(gs) || !otherGroups.contains(entry.getKey().get(left?1:0))) {
 					continue;
 				}
-				if (RuleRaiseAccess.matchesForeignKey(metadata, entry.getValue().get(left?0:1), entry.getValue().get(left?1:0), gs, false)) {
+				if (RuleRaiseAccess.matchesForeignKey(metadata, entry.getValue().get(left?0:1), entry.getValue().get(left?1:0), gs, false, true)) {
 					keyPreservingGroups.add(gs);
 					result.add(entry.getKey().get(left?1:0));
 				}

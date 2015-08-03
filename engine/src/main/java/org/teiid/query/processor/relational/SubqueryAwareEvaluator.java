@@ -23,32 +23,55 @@
 package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.LRUCache;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -57,6 +80,76 @@ import org.teiid.query.util.CommandContext;
  * of processor nodes will use an instance of this class to do that work.
  */
 public class SubqueryAwareEvaluator extends Evaluator {
+
+	private static final class SimpleProcessorPlan extends ProcessorPlan {
+		private final Query command;
+		private final FunctionDescriptor fd;
+		private ProcessorDataManager dataMgr;
+		TupleSource ts;
+		private List<? extends Expression> output;
+		private String schema;
+
+		private SimpleProcessorPlan(Query command, String schema, FunctionDescriptor fd, List<? extends Expression> output) {
+			this.command = command;
+			this.fd = fd;
+			this.output = output;
+			this.schema = schema;
+		}
+		
+		@Override
+		public void initialize(CommandContext context,
+				ProcessorDataManager dataMgr, BufferManager bufferMgr) {
+			super.initialize(context, dataMgr, bufferMgr);
+			this.dataMgr = dataMgr;
+		}
+
+		@Override
+		public void open() throws TeiidComponentException, TeiidProcessingException {
+			RegisterRequestParameter parameterObject = new RegisterRequestParameter();
+			ts = dataMgr.registerRequest(getContext(), command, schema, parameterObject);
+		}
+
+		@Override
+		public TupleBatch nextBatch() throws BlockedException,
+				TeiidComponentException, TeiidProcessingException {
+			ArrayList<List<?>> result = new ArrayList<List<?>>(2);
+			List<?> list = ts.nextTuple();
+			if (list != null) {
+				result.add(list);
+				list = ts.nextTuple();
+				if (list != null) {
+					result.add(list);
+				}
+			}
+			ts.closeSource();
+			TupleBatch tb = new TupleBatch(1, result);
+			tb.setTerminationFlag(true);
+			return tb;
+		}
+
+		@Override
+		public List getOutputElements() {
+			return output;
+		}
+
+		@Override
+		public void close() throws TeiidComponentException {
+			if (ts != null) {
+				ts.closeSource();
+			}
+			ts = null;
+		}
+
+		@Override
+		public void reset() {
+			ts = null;
+		}
+
+		@Override
+		public ProcessorPlan clone() {
+			return new SimpleProcessorPlan(command, schema, fd, output);
+		}
+	}
 
 	@SuppressWarnings("serial")
 	private final class LRUBufferCache extends LRUCache<List<?>, TupleBuffer> {
@@ -91,17 +184,19 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		}
 	}
 
-	public class SubqueryState {
+	public static class SubqueryState {
 		QueryProcessor processor;
 		BatchCollector collector;
 		ProcessorPlan plan;
 		List<Object> refValues;
 		boolean comparable = true;
+		public boolean blocked;
 		
 		void close(boolean removeBuffer) {
 			if (processor == null) {
 				return;
 			}
+			processor.requestCanceled();
 			processor.closeProcessing();
 			if (removeBuffer) {
 				collector.getTupleBuffer().remove();
@@ -120,6 +215,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	private LRUCache<List<?>, TupleBuffer> cache = new LRUBufferCache(512, smallCache);
 	private int maxTuples = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE << 4;
 	private int currentTuples = 0;
+	
+	private Map<Function, ScalarSubquery> functionState;
+	private Map<List<?>, QueryProcessor> procedureState;
 	
 	public SubqueryAwareEvaluator(Map elements, ProcessorDataManager dataMgr,
 			CommandContext context, BufferManager manager) {
@@ -140,6 +238,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		cache.clear();
 		smallCache.clear();
 		currentTuples = 0;
+		if (this.functionState != null) {
+			this.functionState.clear();
+		}
 	}
 	
 	public void close() {
@@ -185,9 +286,6 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		if (state.processor != null) {
 			Determinism determinism = state.processor.getContext().getDeterminismLevel();
 			deterministic = Determinism.COMMAND_DETERMINISTIC.compareTo(determinism) <= 0;
-			if (!deterministic) {
-				shouldClose = true;
-			}
 		}
 		boolean removeBuffer = true;
 		if (correlatedRefs != null) {
@@ -242,9 +340,10 @@ public class SubqueryAwareEvaluator extends Evaluator {
             	shouldClose = true;
             }
 		}
-		if (shouldClose) {
+		if (shouldClose || (!deterministic && !state.blocked)) {
 			state.close(removeBuffer);
 		}
+		state.blocked = true;
 		if (state.processor == null) {
 			CommandContext subContext = context.clone();
 			state.plan.reset();
@@ -254,7 +353,129 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	        }
 	        state.collector = state.processor.createBatchCollector();
 		}
-		return new TupleSourceValueIterator(state.collector.collectTuples().createIndexedTupleSource(), 0);
+		TupleSourceValueIterator iter = new TupleSourceValueIterator(state.collector.collectTuples().createIndexedTupleSource(), 0);
+		state.blocked = false;
+		return iter;
+	}
+	
+	/**
+	 * Implements procedure function handling.
+	 * TODO: cache results
+	 */
+	@Override
+	protected Object evaluateProcedure(Function function, List<?> tuple,
+			Object[] values) throws TeiidComponentException, TeiidProcessingException {
+		QueryProcessor qp = null;
+		List<?> key = Arrays.asList(function, Arrays.asList(values));
+		if (procedureState != null) {
+			qp = this.procedureState.get(key); 
+		}
+		if (qp == null) {
+			String args = Collections.nCopies(values.length, '?').toString().substring(1);
+			args = args.substring(0, args.length() - 1);
+			String fullName = function.getFunctionDescriptor().getFullName();
+			String call = String.format("call %1$s(%2$s)", fullName, args); //$NON-NLS-1$
+			qp = this.context.getQueryProcessorFactory().createQueryProcessor(call, fullName, this.context, values);
+			if (this.procedureState == null) {
+				this.procedureState = new HashMap<List<?>, QueryProcessor>();
+			}
+			this.procedureState.put(key, qp);
+		}
+		
+		//just in case validate the rows being returned
+		TupleBatch tb = qp.nextBatch();
+		TupleBatch next = tb;
+		while (!next.getTerminationFlag()) {
+			if (next.getEndRow() >= 2) {
+				break;
+			}
+			next = qp.nextBatch();
+		}
+		if (next.getEndRow() >= 2) {
+			throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30345, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30345, function));
+		}
+		
+		Object result = null;
+		if (next.getRowCount() > 0) {
+			result = next.getTuples().get(0).get(0);
+		}
+		this.procedureState.remove(key);
+		qp.closeProcessing();
+	    return result;
+	}
+	
+	/**
+	 * Implements must pushdown function handling if supported by the source.
+	 * 
+	 * The basic strategy is to create a dummy subquery to represent the evaluation
+	 */
+	@Override
+	protected Object evaluatePushdown(Function function, List<?> tuple,
+			Object[] values) throws TeiidComponentException, TeiidProcessingException {
+		final FunctionDescriptor fd = function.getFunctionDescriptor();
+	    if (fd.getMethod() == null) {
+	    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
+	    }
+	    String schema = null;
+	    if (fd.getMethod().getParent() == null || !fd.getMethod().getParent().isPhysical()) {
+	    	//find a suitable target
+	    	//TODO: do better than a linear search
+	    	VDBMetaData vdb = this.context.getVdb();
+	    	CapabilitiesFinder capabiltiesFinder = this.context.getQueryProcessorFactory().getCapabiltiesFinder();
+	    	for (ModelMetaData mmd : vdb.getModelMetaDatas().values()) {
+	    		if (!mmd.isSource()) {
+	    			continue;
+	    		}
+	    		SourceCapabilities caps = capabiltiesFinder.findCapabilities(mmd.getName());
+    			if (caps.supportsCapability(Capability.SELECT_WITHOUT_FROM) && caps.supportsFunction(fd.getMethod().getFullName())) {
+    				schema = mmd.getName();
+    				break;
+    			}
+	    	}
+	    	if (schema == null) {
+	    		throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
+	    	}
+	    } else {
+	    	if (!CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, fd.getMethod().getParent(), context.getMetadata(), context.getQueryProcessorFactory().getCapabiltiesFinder())) {
+		    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
+	    	}
+	    	schema = fd.getSchema();
+	    }
+	    
+		ScalarSubquery ss = null;
+		if (functionState != null) {
+			ss = functionState.get(function);
+		}
+		Expression[] functionArgs = new Expression[values.length];
+	    for(int i=0; i < values.length; i++) {
+	        functionArgs[i] = new Constant(values[i]);
+	    }  
+		if (ss == null) {
+	    	final Query command = new Query();
+	    	Select select = new Select();
+	    	command.setSelect(select);
+		    Function f = new Function(function.getName(), functionArgs);
+		    f.setType(function.getType());
+		    f.setFunctionDescriptor(fd);
+	    	select.addSymbol(f);
+	    	ss = new ScalarSubquery(command);
+	    	SymbolMap correlatedReferences = new SymbolMap();
+	    	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(function, true);
+	    	if (!elements.isEmpty()) {
+				for (ElementSymbol es : elements) {
+		    		correlatedReferences.addMapping(es, es);
+		    	}
+	    		command.setCorrelatedReferences(correlatedReferences);
+	    	}
+	    	command.setProcessorPlan(new SimpleProcessorPlan(command, schema, fd, Arrays.asList(new Constant(null, fd.getReturnType()))));
+		} else {
+			((Function)((ExpressionSymbol)ss.getCommand().getProjectedSymbols().get(0)).getExpression()).setArgs(functionArgs);
+		}
+		if (functionState == null) {
+			this.functionState = new HashMap<Function, ScalarSubquery>(2);
+		}
+		functionState.put(function, ss);
+		return internalEvaluate(ss, tuple);
 	}
 	
 }

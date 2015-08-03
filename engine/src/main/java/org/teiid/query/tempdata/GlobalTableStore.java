@@ -38,6 +38,8 @@ public interface GlobalTableStore {
 	
 	TempMetadataID getGlobalTempTableMetadataId(Object groupID) throws TeiidComponentException, TeiidProcessingException;
 	
+	TempMetadataID getGlobalTempTableMetadataId(String matTableName);
+	
 	TempMetadataID getCodeTableMetadataId(String codeTableName,
 			String returnElementName, String keyElementName,
 			String matTableName) throws TeiidComponentException,
@@ -45,7 +47,7 @@ public interface GlobalTableStore {
 
 	MatTableInfo getMatTableInfo(String matTableName);
 	
-	TempTableStore getTempTableStore();
+	TempTable getTempTable(String matTableName);
 
 	Serializable getAddress();
 	

@@ -52,7 +52,7 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
  *	 	Option			Defines any extra options on the query
  * </pre>
  */
-public class Query extends QueryCommand {
+public class Query extends QueryCommand implements FilteredCommand {
 
     /** The select clause. */
     private Select select;
@@ -77,6 +77,9 @@ public class Query extends QueryCommand {
     
     /** xml projected symbols */
     private List<Expression> selectList;
+    
+    //currently set by parser, but can be derived
+    private boolean isRowConstructor;
 	
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -88,7 +91,16 @@ public class Query extends QueryCommand {
     public Query() {
         super();
     }
-
+    
+    public static Query rowConstructor(List<Expression> select) {
+    	Query query = new Query();
+    	query.setSelect(new Select());
+    	query.getSelect().addSymbols(select);
+    	query.setRowConstructor(true);
+    	return query;
+    }
+    
+    
     /**
      * Constructs an instance of this class given the specified clauses
      * @param select SELECT clause
@@ -365,7 +377,7 @@ public class Query extends QueryCommand {
         }
         
         copyMetadataState(copy);
-        
+        copy.setRowConstructor(this.isRowConstructor);
 		return copy;
 	}
 	
@@ -451,4 +463,13 @@ public class Query extends QueryCommand {
     	|| getHaving() != null 
     	|| !AggregateSymbolCollectorVisitor.getAggregates(getSelect(), false).isEmpty();
     }
+    
+    public boolean isRowConstructor() {
+		return isRowConstructor;
+	}
+    
+    public void setRowConstructor(boolean isRowConstructor) {
+		this.isRowConstructor = isRowConstructor;
+	}
+    
 }  // END CLASS

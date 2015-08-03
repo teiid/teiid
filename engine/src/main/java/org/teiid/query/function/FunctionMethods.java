@@ -24,14 +24,15 @@ package org.teiid.query.function;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.sql.Blob;
-import java.sql.Clob;
+import java.nio.charset.CodingErrorAction;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -43,41 +44,66 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.client.util.ExceptionUtil;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.core.CorePlugin;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.SourceSystemFunctions;
 
 /**
  * Static method hooks for most of the function library.
  */
 public final class FunctionMethods {
+	
+	private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.calendarTimestampDiff", true); //$NON-NLS-1$
 
 	// ================== Function = plus =====================
 
-	public static int plus(int x, int y) {
-		return x + y;
+	public static int plus(int x, int y) throws FunctionExecutionException {
+		long result = (long)x + y;
+		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
+		}
+		return (int)result;
 	}
 	
-	public static long plus(long x, long y) {
+	public static long plus(long x, long y) throws FunctionExecutionException {
+		if (y > 0) {
+			if (x > Long.MAX_VALUE - y) {
+				throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).add(BigInteger.valueOf(y))));
+			}
+		} else if (x < Long.MIN_VALUE - y) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).add(BigInteger.valueOf(y))));
+		}
 		return x + y;
 	}
 	
@@ -99,11 +125,22 @@ public final class FunctionMethods {
 
 	// ================== Function = minus =====================
 
-	public static int minus(int x, int y) {
-		return x - y;
+	public static int minus(int x, int y) throws FunctionExecutionException {
+		long result = (long)x - y;
+		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
+		}
+		return (int)result;
 	}
 	
-	public static long minus(long x, long y) {
+	public static long minus(long x, long y) throws FunctionExecutionException {
+		if (y > 0) {
+			if (x < Long.MIN_VALUE + y) {
+				throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).subtract(BigInteger.valueOf(y))));
+			}
+		} else if (x > Long.MAX_VALUE + y) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).subtract(BigInteger.valueOf(y))));
+	    } 
 		return x - y;
 	}
 	
@@ -125,11 +162,20 @@ public final class FunctionMethods {
 
 	// ================== Function = multiply =====================
 
-	public static int multiply(int x, int y) {
-		return x * y;
+	public static int multiply(int x, int y) throws FunctionExecutionException {
+		long result = (long)x * y;
+		if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, result));
+		}
+		return (int)result;
 	}
 	
-	public static long multiply(long x, long y) {
+	public static long multiply(long x, long y) throws FunctionExecutionException {
+		if ((y > 0 && (x > Long.MAX_VALUE/y || x < Long.MIN_VALUE/y))
+				|| ((y < -1) && (x > Long.MIN_VALUE/y || x < Long.MAX_VALUE/y))
+				|| (y == -1 && x == Long.MIN_VALUE)) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).multiply(BigInteger.valueOf(y))));
+		}
 		return x * y;
 	}
 	
@@ -151,11 +197,17 @@ public final class FunctionMethods {
 
 	// ================== Function = divide =====================
 
-	public static int divide(int x, int y) {
+	public static int divide(int x, int y) throws FunctionExecutionException {
+		if (x == Integer.MIN_VALUE && y == -1) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, (long)Integer.MAX_VALUE + 1));
+		}
 		return x / y;
 	}
 	
-	public static long divide(long x, long y) {
+	public static long divide(long x, long y) throws FunctionExecutionException {
+		if (x == Long.MIN_VALUE && y == -1) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1))));
+		}
 		return x / y;
 	}
 	
@@ -184,11 +236,17 @@ public final class FunctionMethods {
 
 	// ================== Function = abs =====================
 
-	public static int abs(int x) {
+	public static int abs(int x) throws FunctionExecutionException {
+		if (x == Integer.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, (long)Integer.MAX_VALUE + 1));
+		}
 		return Math.abs(x);
 	}
 	
-	public static long abs(long x) {
+	public static long abs(long x) throws FunctionExecutionException {
+		if (x == Long.MIN_VALUE) {
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1))));
+		}
 		return Math.abs(x);
 	}
 	
@@ -417,9 +475,6 @@ public final class FunctionMethods {
 
 	public static int dayOfWeek(Date x) {
 		int result = getField(x, Calendar.DAY_OF_WEEK);
-		if (TimestampWithTimezone.ISO8601_WEEK) {
-			return (result + 6) % 7;
-		}
 		return result;
 	}
 
@@ -552,44 +607,110 @@ public final class FunctionMethods {
 
 	//	================== Function = timestampdiff =====================
 
-	/**
-     * This method truncates (ignores) figures
-     * @param interval
-     * @param timestamp1
-     * @param timestamp2
-     * @return
-     * @throws FunctionExecutionException
-     */
-    public static Object timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj)  {
-        long ts1 = ts1Obj.getTime() / 1000 * 1000000000 + ts1Obj.getNanos();
-        long ts2 = ts2Obj.getTime() / 1000 * 1000000000 + ts2Obj.getNanos();
+    public static Long timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj) throws FunctionExecutionException  {
+    	return timestampDiff(intervalType, ts1Obj, ts2Obj, CALENDAR_TIMESTAMPDIFF);
+    }
+	
+    public static Long timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj, boolean calendarBased) throws FunctionExecutionException  {
+        long ts1 = ts1Obj.getTime() / 1000;
+        long ts2 = ts2Obj.getTime() / 1000;
         
         long tsDiff = ts2 - ts1;
 
         long count = 0;
         if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_FRAC_SECOND)) {
-            count = tsDiff;
+        	if (Math.abs(tsDiff) > Integer.MAX_VALUE) {
+        		throw new FunctionExecutionException(QueryPlugin.Event.TEIID31144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31144));
+        	}
+            count = tsDiff * 1000000000 + ts2Obj.getNanos() - ts1Obj.getNanos();
         } else { 
-        	tsDiff = tsDiff / 1000000; //convert to milliseconds
             if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_SECOND)) {
-                count = tsDiff / 1000;
+                count = tsDiff;
+            } else if (calendarBased) {
+            	//alternative logic is needed to compute calendar differences 
+            	//which looks at elapsed date parts, not total time between
+            	if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MINUTE)) {
+            		count = ts2 / 60 - ts1 / 60;
+            	} else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_HOUR)) {
+            		TimeZone tz = TimestampWithTimezone.getCalendar().getTimeZone();
+            		if (tz.getDSTSavings() > 0 || tz.getRawOffset() % 3600000 != 0) {
+            			ts1 += tz.getOffset(ts1Obj.getTime())/1000;
+            			ts2 += tz.getOffset(ts2Obj.getTime())/1000;
+            		}
+            		count = ts2 / (60*60) - ts1 / (60*60);	
+            	} else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY) || intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
+            		TimeZone tz = TimestampWithTimezone.getCalendar().getTimeZone();
+            		if (tz.getDSTSavings() > 0 || tz.getRawOffset() % 3600000 != 0) {
+            			ts1 += tz.getOffset(ts1Obj.getTime())/1000;
+            			ts2 += tz.getOffset(ts2Obj.getTime())/1000;
+            		}
+            		//since we are now effectively using GMT we can simply divide since the unix epoch starts at midnight.
+            		count = ts2 / (60*60*24) - ts1 / (60*60*24);
+                	if (intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
+                    	//TODO:  this behavior matches SQL Server - but not Derby which expects only whole week
+                		
+                    	long days = count;
+                    	//whole weeks between the two dates
+                		count = count/7;
+                    	//check for calendar difference assuming sunday as the first week day
+                		if (days%7!=0) {
+	                    	int day1 = dayOfWeek(ts1Obj);
+	                    	int day2 = dayOfWeek(ts2Obj);
+	                    	int diff = Integer.signum(day2 - day1);
+	                    	if (diff > 0) {
+	                    		if (tsDiff < 0) {
+	                    			count--;
+	                    		}
+	                    	} else if (diff < 0) {
+	                    		if (tsDiff > 0) {
+	                    			count++; 
+	                    		}
+	                    	}
+                		}
+                	}
+                } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MONTH)) {
+                	Calendar cal = TimestampWithTimezone.getCalendar();
+                	cal.setTimeInMillis(ts1Obj.getTime());
+                	int months1 = cal.get(Calendar.YEAR) * 12 + cal.get(Calendar.MONTH);
+                	cal.setTimeInMillis(ts2Obj.getTime());
+                	int months2 = cal.get(Calendar.YEAR) * 12 + cal.get(Calendar.MONTH);
+                    count = months2 - months1;
+                } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_QUARTER)) {
+                	Calendar cal = TimestampWithTimezone.getCalendar();
+                	cal.setTimeInMillis(ts1Obj.getTime());
+                	int quarters1 = cal.get(Calendar.YEAR) * 4 + cal.get(Calendar.MONTH)/3;
+                	cal.setTimeInMillis(ts2Obj.getTime());
+                	int quarters2 = cal.get(Calendar.YEAR) * 4 + cal.get(Calendar.MONTH)/3;
+                    count = quarters2 - quarters1;
+                } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_YEAR)) {
+                	Calendar cal = TimestampWithTimezone.getCalendar();
+                	cal.setTimeInMillis(ts1Obj.getTime());
+                	int years1 = cal.get(Calendar.YEAR);
+                	cal.setTimeInMillis(ts2Obj.getTime());
+                	int years2 = cal.get(Calendar.YEAR);
+                    count = years2 - years1;
+                }
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MINUTE)) {
-                count = (tsDiff / 1000) / 60;
+                count = tsDiff / 60;
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_HOUR)) {
-                count = (tsDiff / 1000) / (60*60);
+                count = tsDiff / (60*60);	
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY)) {
-                count = (tsDiff / 1000) / (60*60*24);
+                count = tsDiff / (60*60*24);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
-                count = (tsDiff / 1000) / (60*60*24*7);
+                count = tsDiff / (60*60*24*7);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MONTH)) {
-                count = (tsDiff / 1000) / (60*60*24*30);
+                count = tsDiff / (60*60*24*30);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_QUARTER)) {
-                count = (tsDiff / 1000) / (60*60*24*91);
+                count = tsDiff / (60*60*24*91);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_YEAR)) {
-                count = (tsDiff / 1000) / (60*60*24*365);
+                count = tsDiff / (60*60*24*365);
             }    
         }
-        return new Long(count);
+        //TODO: long results are not consistent with other sources
+    	/*if (calendarBased && ((count > 0 && count > Integer.MAX_VALUE) || (count < 0 && count < Integer.MIN_VALUE))) {
+    		throw new FunctionExecutionException(QueryPlugin.Event.TEIID31136, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31136));
+    	}*/
+        return Long.valueOf(count);
 	}
 
     //  ================== Function = timestampcreate =====================
@@ -715,6 +836,12 @@ public final class FunctionMethods {
 	public static Object locate(String sub, String str) {
 		return locate(sub, str, 1);
 	}
+	
+	// ================== Function = endsWith =====================
+
+	public static Object endsWith(String sub, String str) {
+		return str.endsWith(sub);
+	}	
 
 	/**
 	 * TODO: The treatment of negative start indexes is inconsistent here.
@@ -1293,26 +1420,65 @@ public final class FunctionMethods {
         return TimestampWithTimezone.createTimestamp(value, context.getServerTimeZone(), cal);
     } 
     
-    public static Clob toChars(BlobType value, String encoding) {
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_chars", nullOnNull=true)
+    public static ClobType toChars(BlobType value, String encoding) throws SQLException, IOException {
+    	//TODO: defaulting to true as that was the pre 8.4.1 behavior
+    	return toChars(value, encoding, true);
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_chars")
+    public static ClobType toChars(BlobType value, String encoding, boolean wellFormed) throws SQLException, IOException {
     	Charset cs = getCharset(encoding);
 		BlobInputStreamFactory bisf = new BlobInputStreamFactory(value.getReference());
     	ClobImpl clob = new ClobImpl(bisf, -1);
     	clob.setCharset(cs);
+    	if (!wellFormed && !CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) && !CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
+    		//validate that the charcter conversion is possible
+    		//TODO: cache the result in a filestore
+    		Reader r = clob.getCharacterStream();
+    		try {
+	    		while (r.read() != -1) {
+	    			
+	    		}
+    		} catch (IOException e) {
+    			CharacterCodingException cce = ExceptionUtil.getExceptionOfType(e, CharacterCodingException.class);
+    			if (cce != null) {
+    				throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10082, cs.displayName()), cce);
+    			}
+    			throw e;
+    		} finally {
+    			r.close();
+    		}
+    	}
     	return new ClobType(clob);
     }
     
-    public static Blob toBytes(ClobType value, String encoding) throws IOException {
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_bytes", nullOnNull=true)
+    public static BlobType toBytes(ClobType value, String encoding) throws IOException, SQLException {
+    	return toBytes(value, encoding, true);
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_bytes")
+    public static BlobType toBytes(ClobType value, String encoding, boolean wellFormed) throws IOException, SQLException {
     	Charset cs = getCharset(encoding);
     	ClobInputStreamFactory cisf = new ClobInputStreamFactory(value.getReference());
     	cisf.setCharset(cs);
-    	if (CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) || CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
+    	if (!wellFormed || CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) || CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
     		//validate that the binary conversion is possible
     		//TODO: cache the result in a filestore
-    		InputStream is = cisf.getInputStream();
+    		InputStream is = new ReaderInputStream(value.getCharacterStream(), 
+    				cs.newEncoder().onMalformedInput(CodingErrorAction.REPORT)
+    				.onUnmappableCharacter(CodingErrorAction.REPORT));
     		try {
 	    		while (is.read() != -1) {
 	    			
 	    		}
+    		} catch (IOException e) {
+    			CharacterCodingException cce = ExceptionUtil.getExceptionOfType(e, CharacterCodingException.class);
+    			if (cce != null) {
+    				throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10083, cs.displayName()), cce);
+    			}
+    			throw e;
     		} finally {
     			is.close();
     		}
@@ -1331,75 +1497,9 @@ public final class FunctionMethods {
 	}
 
     public static String unescape(String string) {
-    	StringBuilder sb = new StringBuilder();
-    	boolean escaped = false;
-    	for (int i = 0; i < string.length(); i++) {
-    		char c = string.charAt(i);
-    		if (escaped) {
-	    		switch (c) {
-	    		case 'b':
-	    			sb.append('\b');
-	    			break;
-	    		case 't':
-	    			sb.append('\t');
-	    			break;
-	    		case 'n':
-	    			sb.append('\n');
-	    			break;
-	    		case 'f':
-	    			sb.append('\f');
-	    			break;
-	    		case 'r':
-	    			sb.append('\r');
-	    			break;
-	    		case 'u':
-					i = parseNumericValue(string, sb, i, 0, 4, 4);
-					//TODO: this should probably be strict about needing 4 digits
-	    			break;
-    			default:
-    				int value = Character.digit(c, 8);
-					if (value == -1) {
-						sb.append(c);
-					} else {
-						int possibleDigits = value < 3 ? 2:1;
-						int radixExp = 3;
-    					i = parseNumericValue(string, sb, i, value, possibleDigits, radixExp);
-    				}
-	    		}
-	    		escaped = false;
-    		} else {
-    			if (c == '\\') {
-    				escaped = true;
-    			} else {
-					sb.append(c);
-    			}
-    		}
-    	}
-    	//TODO: should this be strict?
-    	//if (escaped) {
-    		//throw new FunctionExecutionException();
-    	//}
-    	return sb.toString();
+    	return StringUtil.unescape(string, -1, true, new StringBuilder());
     }
 
-	private static int parseNumericValue(String string, StringBuilder sb,
-			int i, int value, int possibleDigits, int radixExp) {
-		for (int j = 0; j < possibleDigits; j++) {
-			if (i + 1 == string.length()) {
-				break;
-			}
-			char digit = string.charAt(i + 1);
-			int val = Character.digit(digit, 1 << radixExp);
-			if (val == -1) {
-				break;
-			}
-			i++;
-			value = (value << radixExp) + val;
-		}
-		sb.append((char)value);
-		return i;
-	}
-    
 	public static String uuid() {
 		return UUID.randomUUID().toString();
 	}
@@ -1428,4 +1528,116 @@ public final class FunctionMethods {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
+	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException {
+		if (!validity && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
+			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
+				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
+			}
+			context.getWorkItem().scheduleWork(10000);
+			throw BlockedException.INSTANCE;
+		}
+		return 1;
+	}	
+	
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM)
+	public static String[] tokenize(String str, char delimiter) {
+		List<String> tokens = StringUtil.tokenize(str, delimiter);
+		return tokens.toArray(new String[tokens.size()]);
+	}
+
+    /**
+     * Perform find-replace operation on a string using regular expressions.
+     *
+     * See {@link java.util.regex.Pattern} for more information.
+     *
+     * @param context
+     * @param source Value to perform replacement on.
+     * @param regex Regular expression pattern.
+     * @param replacement Replacement string.
+     * @return Modified source if the pattern was matched, otherwise source.
+     * @throws FunctionExecutionException If regex pattern was invalid.
+     */
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+                   category=FunctionCategoryConstants.STRING,
+                   nullOnNull=true)
+    public static String regexpReplace(CommandContext context,
+                                       String source,
+                                       String regex,
+                                       String replacement)
+            throws FunctionExecutionException {
+        return regexpReplace(context, source, regex, replacement, ""); //$NON-NLS-1$
+    }
+
+    /**
+     * Perform find-replace operation on a string using regular expressions.
+     *
+     * See {@link java.util.regex.Pattern} for more information.
+     *
+     * Flags can be used to modify the matching behavior of the regular expression.
+     * <ul>
+     *   <li>g - Replaces all matches instead of just the first.</li>
+     *   <li>i - Performs case insensitive pattern match.</li>
+     *   <li>m - Changes behavior of "^" and "$" to match the beginning and end
+     *           of the line instead of the entire string.</li>
+     * </ul>
+     *
+     * @param context
+     * @param source Value to perform replacement on.
+     * @param regex Regular expression pattern.
+     * @param replacement Replacement string.
+     * @param flags Flags to modify behavior of the pattern.
+     * @return Modified source if the pattern was matched, otherwise source.
+     * @throws FunctionExecutionException If an invalid flag was supplied or if the
+     *                                    regex pattern was invalid.
+     */
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+                   category=FunctionCategoryConstants.STRING,
+                   nullOnNull=true)
+    public static String regexpReplace(CommandContext context,
+                                       String source,
+                                       String regex,
+                                       String replacement,
+                                       String flags)
+            throws FunctionExecutionException {
+        
+        // Parse regex flags into a bitmask for Pattern API.
+        // Exception is the 'g' flag which makes us call replaceAll instead of
+        // replaceFirst.
+        boolean global = false;
+        int bitFlags = 0;
+
+        for (int i = 0; i < flags.length(); ++i) {
+            char c = flags.charAt(i);
+            if (c == 'g') {
+                // Global match.
+                global = true;
+            } else if (c == 'i') {
+                // Case insensitive match.
+                bitFlags |= Pattern.CASE_INSENSITIVE;
+            } else if (c == 'm') {
+                // Change ^$ to match line endings instad of entire source.
+                bitFlags |= Pattern.MULTILINE;
+            } else {
+                throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31168, c));
+            }
+        }
+        
+        // Compile regex into pattern and do replacement.
+        Pattern pattern;
+        try {
+            pattern = CommandContext.getPattern(context, regex, bitFlags);
+        } catch (PatternSyntaxException e) {
+            throw new FunctionExecutionException(e);
+        }
+        Matcher matcher = pattern.matcher(source);
+        String result;
+        if (global) {
+            result = matcher.replaceAll(replacement);
+        } else {
+            result = matcher.replaceFirst(replacement);
+        }
+
+        return result;
+    }
 }

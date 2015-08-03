@@ -57,6 +57,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		XMLAGG,
 		TEXTAGG,
 		ARRAY_AGG,
+		JSONARRAY_AGG,
 		ANY,
 		SOME,
 		EVERY,
@@ -67,6 +68,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		RANK,
 		DENSE_RANK,
 		ROW_NUMBER,
+		STRING_AGG,
 		USER_DEFINED;
 	}
 	
@@ -208,6 +210,10 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 				return null;
 			}
 			return this.getFunctionDescriptor().getReturnType();
+		case JSONARRAY_AGG:
+			return DataTypeManager.DefaultDataClasses.CLOB;
+		case STRING_AGG:
+			return super.getType();
 		}
 		if (isBoolean()) {
 			return DataTypeManager.DefaultDataClasses.BOOLEAN;
@@ -217,6 +223,9 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		}
 		if (isAnalytical()) {
 			return DataTypeManager.DefaultDataClasses.INTEGER;
+		}
+		if (this.getArgs().length == 0) {
+			return null;
 		}
 		return this.getArg(0).getType();
 	}
@@ -337,18 +346,21 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		switch (this.aggregate) {
 		case TEXTAGG:
 		case ARRAY_AGG:
+		case JSONARRAY_AGG:
 			return true;
 		}
 		return false;
 	}
 	
 	public boolean canStage() {
+		if (orderBy != null) {
+			return false;
+		}
 		switch (this.aggregate) {
 		case TEXTAGG:
 		case ARRAY_AGG:
+		case JSONARRAY_AGG:
 			return false;
-		case XMLAGG:
-			return orderBy == null;
 		case USER_DEFINED:
 			return this.getArgs().length == 1 && this.getFunctionDescriptor().getMethod().getAggregateAttributes().isDecomposable();
 		}

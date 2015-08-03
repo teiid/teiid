@@ -22,9 +22,11 @@
 
 package org.teiid.translator.jdbc.sqlserver;
 
+import static org.junit.Assert.*;
+
 import java.util.List;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.cdk.api.TranslationUtility;
@@ -39,22 +41,19 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-
-/**
- */
+@SuppressWarnings("nls")
 public class TestSqlServerConversionVisitor {
 
     private static SQLServerExecutionFactory trans = new SQLServerExecutionFactory();
     
-    @BeforeClass
-    public static void oneTimeSetup() throws TranslatorException {
-        trans.start();
-    }
-    
+    @Before
     public void setUp() throws Exception {
+    	trans = new SQLServerExecutionFactory();
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
+    	trans.start();
     }
 
     public String getTestVDB() {
@@ -110,6 +109,16 @@ public class TestSqlServerConversionVisitor {
     }
     
     @Test
+    public void testRowLimitAndCTE() throws Exception {
+        String input = "with x (a) as (select intkey from bqt1.smalla) select a from x union all select a from x limit 100"; //$NON-NLS-1$
+        String output = "WITH x (a) AS (SELECT SmallA.IntKey FROM SmallA) SELECT TOP 100 * FROM (SELECT x.a FROM x UNION ALL SELECT x.a FROM x) AS X"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test
     public void testUnionLimitWithOrderBy() throws Exception {
         String input = "select intkey from bqt1.smalla union select intnum from bqt1.smalla order by intkey limit 100"; //$NON-NLS-1$
         String output = "SELECT TOP 100 * FROM (SELECT SmallA.IntKey FROM SmallA UNION SELECT SmallA.IntNum FROM SmallA) AS X ORDER BY intkey"; //$NON-NLS-1$
@@ -130,8 +139,8 @@ public class TestSqlServerConversionVisitor {
     
     @Test
     public void testDateFunctions() throws Exception {
-        String input = "select dayName(timestampValue), dayOfWeek(timestampValue), quarter(timestampValue) from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT {fn dayname(SmallA.TimestampValue)}, {fn dayofweek(SmallA.TimestampValue)}, {fn quarter(SmallA.TimestampValue)} FROM SmallA"; //$NON-NLS-1$
+        String input = "select dayName(timestampValue), dayOfWeek(timestampValue), quarter(timestampValue), week(timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT {fn dayname(SmallA.TimestampValue)}, {fn dayofweek(SmallA.TimestampValue)}, {fn quarter(SmallA.TimestampValue)}, DATEPART(ISO_WEEK, SmallA.TimestampValue) FROM SmallA"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 
@@ -156,10 +165,45 @@ public class TestSqlServerConversionVisitor {
             output);        
     }
     
+    @Test public void testConvertTime() throws Exception {
+        String input = "select cast('12:00:00' as time) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT CAST('1970-01-01 12:00:00.0' AS DATETIME) FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
     @Test public void testConvertDate2008() throws Exception {
+    	trans = new SQLServerExecutionFactory();
     	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+    	trans.start();
         String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
         String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.DateValue IN (CAST('2000-01-12' AS DATE), CAST('2000-02-02' AS DATE))"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test public void testTimeLiteral2008() throws Exception {
+    	trans = new SQLServerExecutionFactory();
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+    	trans.start();
+    	String input = "select stringkey from bqt1.smalla where BQT1.SmallA.TimeValue = {t '00:00:00'}"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.TimeValue = cast('00:00:00' as time)"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test public void testTimestampConversion2008() throws Exception {
+    	trans = new SQLServerExecutionFactory();
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+    	trans.start();
+        String input = "select stringkey from bqt1.smalla where cast(BQT1.SmallA.Timestampvalue as time) = timevalue"; //$NON-NLS-1$
+        String output = "SELECT SmallA.StringKey FROM SmallA WHERE cast(SmallA.TimestampValue AS time) = SmallA.TimeValue"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 
@@ -203,7 +247,7 @@ public class TestSqlServerConversionVisitor {
     
     @Test public void testWith() throws Exception {
         String input = "with x as (select intkey from bqt1.smalla) select intkey from x limit 100"; //$NON-NLS-1$
-        String output = "WITH x AS (SELECT SmallA.IntKey FROM SmallA) SELECT TOP 100 g_0.intkey AS c_0 FROM x g_0"; //$NON-NLS-1$
+        String output = "WITH x (IntKey) AS (SELECT SmallA.IntKey FROM SmallA) SELECT TOP 100 g_0.intkey AS c_0 FROM x g_0"; //$NON-NLS-1$
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
@@ -213,6 +257,35 @@ public class TestSqlServerConversionVisitor {
     @Test public void testParseFormat() throws Exception {
         String input = "select parsetimestamp(smalla.timestampvalue, 'yyyy.MM.dd'), formattimestamp(smalla.timestampvalue, 'yy.MM.dd') from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT CONVERT(DATETIME, convert(varchar, g_0.TimestampValue, 21), 102), CONVERT(VARCHAR, g_0.TimestampValue, 2) FROM SmallA g_0"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
+    
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("create table foo (COL1 int, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(trans, true));
+    }
+    
+    @Test public void testUnicodeLiteral() throws Exception {
+        String input = "select N'\u0FFF'"; //$NON-NLS-1$
+        String output = "SELECT N'\u0FFF'"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
+    
+    @Test public void testConvertSupport() throws Exception {
+    	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.TIME));
+    	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.INTEGER));
+    	assertFalse(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.CLOB));
+    	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.TIMESTAMP, TypeFacility.RUNTIME_CODES.TIME));
+    }
+    
+    @Test public void testWithInsert() throws Exception {
+        String input = "insert into bqt1.smalla (intkey) with a (x) as (select intnum from bqt1.smallb) select x from a"; //$NON-NLS-1$
+        String output = "WITH a (x) AS (SELECT SmallB.IntNum FROM SmallB) INSERT INTO SmallA (IntKey) SELECT a.x FROM a"; //$NON-NLS-1$
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);

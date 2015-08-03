@@ -22,14 +22,14 @@
 
 package org.teiid.metadata;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 
 
 /**
- * ProcedureRecordImpl
+ * Represents Teiid and source procedures.  Can also represent a function with restrictions.
  */
 public class Procedure extends AbstractMetadataRecord implements Modifiable {
     
@@ -45,12 +45,12 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     private boolean isFunction;
     private boolean isVirtual;
     private int updateCount = 1;
-    private List<ProcedureParameter> parameters = new LinkedList<ProcedureParameter>();
+    private List<ProcedureParameter> parameters = new ArrayList<ProcedureParameter>(2);
     private ColumnSet<Procedure> resultSet;
-    private String queryPlan;
+    private volatile String queryPlan;
     
     private Schema parent;
-    private transient long lastModified;
+    private volatile transient long lastModified;
     
     public void setParent(Schema parent) {
 		this.parent = parent;

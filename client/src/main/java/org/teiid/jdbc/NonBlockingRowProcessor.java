@@ -22,6 +22,7 @@
  
 package org.teiid.jdbc;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -105,6 +106,14 @@ public class NonBlockingRowProcessor implements
 				return false;
 			}
 
+			List<?> row = stmt.getResultSet().getCurrentRecord();
+			if (row == null) {
+				if (callback instanceof ContinuousStatementCallback) {
+					((ContinuousStatementCallback)callback).beforeNextExecution(this.stmt);
+				}
+				return true;
+			}
+			
 			callback.onRow(stmt, stmt.getResultSet());
 
 			return true;

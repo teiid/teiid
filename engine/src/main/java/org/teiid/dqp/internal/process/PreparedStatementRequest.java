@@ -89,21 +89,26 @@ public class PreparedStatementRequest extends Request {
      */
 	@Override
     protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
+		createCommandContext();
     	String sqlQuery = requestMsg.getCommands()[0];
+    	if (this.preParser != null) {
+    		sqlQuery = this.preParser.preParse(sqlQuery, this.context);
+    	}
     	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
         prepPlan = prepPlanCache.get(id);
         
         if (prepPlan != null) {
+        	//already in cache. obtain the values from cache
+            analysisRecord = prepPlan.getAnalysisRecord();
         	ProcessorPlan cachedPlan = prepPlan.getPlan();
         	this.userCommand = prepPlan.getCommand();
         	if (validateAccess(requestMsg.getCommands(), userCommand, CommandType.PREPARED)) {
         		LogManager.logDetail(LogConstants.CTX_DQP, requestId, "AuthorizationValidator indicates that the prepared plan for command will not be used"); //$NON-NLS-1$
             	prepPlan = null;
+            	analysisRecord = null;
             } else {
 	        	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
 	            processPlan = cachedPlan.clone();
-	            //already in cache. obtain the values from cache
-	            analysisRecord = prepPlan.getAnalysisRecord();
             }
         }
         
@@ -187,7 +192,8 @@ public class PreparedStatementRequest extends Request {
 				}
 				for (int i = 0; i < values.size(); i++) {
 					List<Object> multiValue = multiValues.get(i);
-					multiValue.add(values.get(i));
+					Object value = this.context.getVariableContext().getGlobalValue(this.prepPlan.getReferences().get(i).getContextSymbol());
+					multiValue.add(value);
 				}
 			} else { //just accumulate copies of the command/plan - clones are not necessary
 				if (command == null) {
@@ -245,14 +251,14 @@ public class PreparedStatementRequest extends Request {
         	if(value != null) {
                 try {
                     String targetTypeName = DataTypeManager.getDataTypeName(param.getType());
-                    Expression expr = ResolverUtil.convertExpression(new Constant(value), targetTypeName, metadata);
+                    Expression expr = ResolverUtil.convertExpression(new Constant(DataTypeManager.convertToRuntimeType(value, param.getType() != DataTypeManager.DefaultDataClasses.OBJECT)), targetTypeName, metadata);
                     value = Evaluator.evaluate(expr);
 				} catch (ExpressionEvaluationException e) {
-                    String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
-                    throw new QueryResolverException(QueryPlugin.Event.TEIID30557, msg);
+                    String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", i + 1, value, value.getClass(), DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID30557, e, msg);
 				} catch (QueryResolverException e) {
-					String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
-                    throw new QueryResolverException(QueryPlugin.Event.TEIID30558, msg);
+					String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", i + 1, value, value.getClass(), DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID30558, e, msg);
 				}
 	        }
 	        	        
@@ -280,5 +286,14 @@ public class PreparedStatementRequest extends Request {
 			}
 		}
 		return false;
+	}
+	
+	@Override
+	public void processRequest() throws TeiidComponentException,
+			TeiidProcessingException {
+		super.processRequest();
+		if (this.requestMsg.getRequestOptions().isContinuous()) {
+			this.processor.setContinuous(this.prepPlan, this.requestMsg.getCommandString());
+		}
 	}
 } 

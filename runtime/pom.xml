@@ -3,16 +3,36 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.2.0.Beta1-SNAPSHOT</version>
+    <version>8.12.0.Alpha3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>teiid-runtime</artifactId>
   <name>Runtime Engine</name>
   <description>Teiid Runtime Engine</description>
+  <packaging>bundle</packaging>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Import-Package>!org.jboss.*,*</Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>  
+      
   <dependencies>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
@@ -42,9 +62,19 @@
       <type>test-jar</type>
     </dependency>
     <dependency>
-        <groupId>org.jboss.netty</groupId>
+        <groupId>org.jboss.teiid.connectors</groupId>
+        <artifactId>translator-file</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.teiid.connectors</groupId>
+        <artifactId>connector-file</artifactId>
+        <classifier>lib</classifier>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.netty</groupId>
         <artifactId>netty</artifactId>
-        <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>javax.transaction</groupId>
@@ -79,6 +109,19 @@
     <dependency>
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-vfs</artifactId>
     </dependency>    
+    <dependency>   
+        <groupId>org.jboss</groupId>
+        <artifactId>staxmapper</artifactId>
+    </dependency>    
+    <dependency>
+        <groupId>postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

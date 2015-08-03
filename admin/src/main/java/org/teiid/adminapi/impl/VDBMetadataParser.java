@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -46,7 +45,6 @@ import javax.xml.validation.Validator;
 
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
@@ -56,6 +54,8 @@ import org.xml.sax.SAXException;
 
 @SuppressWarnings("nls")
 public class VDBMetadataParser {
+	
+	private boolean writePropertyElements;
 
 	public static VDBMetaData unmarshell(InputStream content) throws XMLStreamException {
 		 XMLInputFactory inputFactory=XMLType.getXmlInputFactory();
@@ -104,6 +104,9 @@ public class VDBMetadataParser {
 			case DESCRIPTION:
 				vdb.setDescription(reader.getElementText());
 				break;
+			case CONNECTION_TYPE:
+				vdb.setConnectionType(reader.getElementText());
+				break;
 			case PROPERTY:
 		    	parseProperty(reader, vdb);
 				break;
@@ -149,11 +152,14 @@ public class VDBMetadataParser {
 
 	private static void ignoreTillEnd(XMLStreamReader reader)
 			throws XMLStreamException {
-		while(reader.nextTag() != XMLStreamConstants.END_ELEMENT);
+		while(reader.nextTag() != XMLStreamConstants.END_ELEMENT) {
+			;
+		}
 	}
 
 	private static void parseProperty(XMLStreamReader reader, AdminObjectImpl anObj)
 			throws XMLStreamException {
+		boolean text = false;
 		if (reader.getAttributeCount() > 0) {
 			String key = null;
 			String value = null;
@@ -162,20 +168,26 @@ public class VDBMetadataParser {
 				String attrValue = reader.getAttributeValue(i);
 				if (attrName.equals(Element.NAME.getLocalName())) {
 					key = attrValue;
-				}
-				if (attrName.equals(Element.VALUE.getLocalName())) {
+				} else if (attrName.equals(Element.VALUE.getLocalName())) {
 					value = attrValue;
-				}		    			
+				} 
+			}
+			if (value == null) {
+				value = reader.getElementText();
+				text = true;
 			}
 			anObj.addProperty(key, value);
 		}
-		ignoreTillEnd(reader);
+		if (!text) {
+			ignoreTillEnd(reader);
+		}
 	}
 	
 	private static void parseDataRole(XMLStreamReader reader, DataPolicyMetadata policy) throws XMLStreamException {
 		Properties props = getAttributes(reader);
 		policy.setName(props.getProperty(Element.NAME.getLocalName()));
 		policy.setAnyAuthenticated(Boolean.parseBoolean(props.getProperty(Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName())));
+		policy.setGrantAll(Boolean.parseBoolean(props.getProperty(Element.DATA_ROLE_GRANT_ALL_ATTR.getLocalName())));
 		policy.setAllowCreateTemporaryTables(Boolean.parseBoolean(props.getProperty(Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName())));
 		
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
@@ -229,7 +241,18 @@ public class VDBMetadataParser {
 			case ALLOW_UPADTE:
 				permission.setAllowUpdate(Boolean.parseBoolean(reader.getElementText()));
 				break;				
-
+			case CONDITION:
+				if (reader.getAttributeCount() > 0) {
+					permission.setConstraint(Boolean.valueOf(reader.getAttributeValue(0)));
+				}
+				permission.setCondition(reader.getElementText());
+				break;
+			case MASK:
+				if (reader.getAttributeCount() > 0) {
+					permission.setOrder(Integer.valueOf(reader.getAttributeValue(0)));
+				}
+				permission.setMask(reader.getElementText());
+				break;
              default: 
             	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element7",reader.getName(), 
             			 Element.RESOURCE_NAME.getLocalName(),
@@ -238,7 +261,8 @@ public class VDBMetadataParser {
             			 Element.ALLOW_DELETE.getLocalName(),
             			 Element.ALLOW_EXECUTE.getLocalName(),
             			 Element.ALLOW_READ.getLocalName(),
-            			 Element.ALLOW_UPADTE, Element.ALLOW_LANGUAGE), reader.getLocation()); 
+            			 Element.ALLOW_UPADTE.getLocalName(), Element.ALLOW_LANGUAGE.getLocalName(), Element.CONSTRAINT.getLocalName(), 
+            			 Element.CONDITION.getLocalName(), Element.MASK.getLocalName()), reader.getLocation()); 
             }
         }		
 	}	
@@ -318,9 +342,8 @@ public class VDBMetadataParser {
 			case METADATA:
 				Properties metdataProps = getAttributes(reader);
 				String type = metdataProps.getProperty(Element.TYPE.getLocalName(), "DDL");
-				String schema = reader.getElementText();
-				model.setSchemaSourceType(type);
-				model.setSchemaText(schema);
+				String text = reader.getElementText();
+				model.addSourceMetadata(type, text);
 				break;
              default: 
             	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element5",reader.getName(), 
@@ -353,6 +376,7 @@ public class VDBMetadataParser {
 	    NAME("name"),
 	    VERSION("version"),
 	    DESCRIPTION("description"),
+	    CONNECTION_TYPE("connection-type"),
 	    PROPERTY("property"),
 	    VALUE("value"),
 	    MODEL("model"),
@@ -369,6 +393,7 @@ public class VDBMetadataParser {
 	    TRANSLATOR("translator"),
 	    DATA_ROLE("data-role"),
 	    DATA_ROLE_ANY_ATHENTICATED_ATTR("any-authenticated"),
+	    DATA_ROLE_GRANT_ALL_ATTR("grant-all"),
 	    DATA_ROLE_ALLOW_TEMP_TABLES_ATTR("allow-create-temporary-tables"),
 	    PERMISSION("permission"),
 	    RESOURCE_NAME("resource-name"),
@@ -379,6 +404,10 @@ public class VDBMetadataParser {
 	    ALLOW_EXECUTE("allow-execute"),
 	    ALLOW_ALTER("allow-alter"),
 	    ALLOW_LANGUAGE("allow-language"),
+	    CONDITION("condition"),
+	    MASK("mask"),
+	    ORDER("order"),
+	    CONSTRAINT("constraint"),
 	    MAPPED_ROLE_NAME("mapped-role-name"),
 	    ENTRY("entry"),
 	    METADATA("metadata");
@@ -404,7 +433,9 @@ public class VDBMetadataParser {
 	        final Map<String, Element> map = new HashMap<String, Element>();
 	        for (Element element : values()) {
 	            final String name = element.getLocalName();
-	            if (name != null) map.put(name, element);
+	            if (name != null) {
+					map.put(name, element);
+				}
 	        }
 	        elements = map;
 	    }
@@ -416,6 +447,11 @@ public class VDBMetadataParser {
 	}
 
 	public static void marshell(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
+		VDBMetadataParser parser = new VDBMetadataParser();
+		parser.writeVDB(vdb, out);
+	}
+	
+	private void writeVDB(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
 		XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(out);
 		
 		writer.writeStartDocument();
@@ -426,7 +462,8 @@ public class VDBMetadataParser {
 		if (vdb.getDescription() != null) {
 			writeElement(writer, Element.DESCRIPTION, vdb.getDescription());
 		}
-		writeProperties(writer, vdb.getProperties());
+		writeElement(writer, Element.CONNECTION_TYPE, vdb.getConnectionType().name());
+		writeProperties(writer, vdb.getPropertiesMap());
 
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
 			writer.writeStartElement(Element.IMPORT_VDB.getLocalName());
@@ -439,11 +476,14 @@ public class VDBMetadataParser {
 		// models
 		Collection<ModelMetaData> models = vdb.getModelMetaDatas().values();
 		for (ModelMetaData model:models) {
+			if (vdb.getImportedModels().contains(model.getName())) {
+				continue;
+			}
 			writeModel(writer, model);
 		}
 		
 		// override translators
-		for(Translator translator:vdb.getOverrideTranslators()) {
+		for(VDBTranslatorMetaData translator:vdb.getOverrideTranslatorsMap().values()) {
 			writeTranslator(writer, translator);
 		}
 		
@@ -460,7 +500,7 @@ public class VDBMetadataParser {
 			if (em.getDescription() != null) {
 				writeElement(writer, Element.DESCRIPTION, em.getDescription());
 			}
-			writeProperties(writer, em.getProperties());			
+			writeProperties(writer, em.getPropertiesMap());			
 			writer.writeEndElement();
 		}
 		
@@ -469,12 +509,13 @@ public class VDBMetadataParser {
 		writer.close();
 		out.close();
 	}
-	
-	private static void writeDataPolicy(XMLStreamWriter writer, DataPolicy dp)  throws XMLStreamException {
+
+	private void writeDataPolicy(XMLStreamWriter writer, DataPolicy dp)  throws XMLStreamException {
 		writer.writeStartElement(Element.DATA_ROLE.getLocalName());
 		
 		writeAttribute(writer, Element.NAME.getLocalName(), dp.getName());
 		writeAttribute(writer, Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName(), String.valueOf(dp.isAnyAuthenticated()));
+		writeAttribute(writer, Element.DATA_ROLE_GRANT_ALL_ATTR.getLocalName(), String.valueOf(dp.isGrantAll()));
 		writeAttribute(writer, Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
 
 		writeElement(writer, Element.DESCRIPTION, dp.getDescription());
@@ -504,6 +545,20 @@ public class VDBMetadataParser {
 			if (permission.getAllowLanguage() != null) {
 				writeElement(writer, Element.ALLOW_LANGUAGE, permission.getAllowLanguage().toString());
 			}
+			if (permission.getCondition() != null) {
+				if (permission.getConstraint() != null) {
+					writeElement(writer, Element.CONDITION, permission.getCondition(), new String[] {Element.CONSTRAINT.getLocalName(), String.valueOf(permission.getCondition())});
+				} else {
+					writeElement(writer, Element.CONDITION, permission.getCondition());
+				}
+			}
+			if (permission.getMask() != null) {
+				if (permission.getOrder() != null) {
+					writeElement(writer, Element.MASK, permission.getMask(), new String[] {Element.ORDER.getLocalName(), String.valueOf(permission.getOrder())});
+				} else {
+					writeElement(writer, Element.MASK, permission.getMask());
+				}
+			}
 			writer.writeEndElement();			
 		}
 		
@@ -515,19 +570,19 @@ public class VDBMetadataParser {
 		writer.writeEndElement();
 	}
 
-	private static void writeTranslator(final XMLStreamWriter writer, Translator translator)  throws XMLStreamException  {
+	private void writeTranslator(final XMLStreamWriter writer, VDBTranslatorMetaData translator)  throws XMLStreamException  {
 		writer.writeStartElement(Element.TRANSLATOR.getLocalName());
 		
 		writeAttribute(writer, Element.NAME.getLocalName(), translator.getName());
 		writeAttribute(writer, Element.TYPE.getLocalName(), translator.getType());
 		writeAttribute(writer, Element.DESCRIPTION.getLocalName(), translator.getDescription());
 		
-		writeProperties(writer, translator.getProperties());
+		writeProperties(writer, translator.getPropertiesMap());
 		
 		writer.writeEndElement();
 	}
 
-	private static void writeModel(final XMLStreamWriter writer, ModelMetaData model) throws XMLStreamException {
+	private void writeModel(final XMLStreamWriter writer, ModelMetaData model) throws XMLStreamException {
 		writer.writeStartElement(Element.MODEL.getLocalName());
 		writeAttribute(writer, Element.NAME.getLocalName(), model.getName());
 		writeAttribute(writer, Element.TYPE.getLocalName(), model.getModelType().name());
@@ -538,7 +593,7 @@ public class VDBMetadataParser {
 		if (model.getDescription() != null) {
 			writeElement(writer, Element.DESCRIPTION, model.getDescription());
 		}
-		writeProperties(writer, model.getProperties());
+		writeProperties(writer, model.getPropertiesMap());
 		
 		// source mappings
 		for (SourceMappingMetadata source:model.getSourceMappings()) {
@@ -549,10 +604,10 @@ public class VDBMetadataParser {
 			writer.writeEndElement();
 		}
 		
-		if (model.getSchemaSourceType() != null) {
+		for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
 			writer.writeStartElement(Element.METADATA.getLocalName());
-			writeAttribute(writer, Element.TYPE.getLocalName(), model.getSchemaSourceType());
-			writer.writeCData(model.getSchemaText());
+			writeAttribute(writer, Element.TYPE.getLocalName(), model.getSourceMetadataType().get(i));
+			writer.writeCData(model.getSourceMetadataText().get(i));
 			writer.writeEndElement();
 		}
 		
@@ -567,27 +622,35 @@ public class VDBMetadataParser {
 		writer.writeEndElement();
 	}
 	
-	private static void writeProperties(final XMLStreamWriter writer, Properties props)  throws XMLStreamException  {
-		Enumeration<?> keys = props.propertyNames();
-		while (keys.hasMoreElements()) {
+	private void writeProperties(final XMLStreamWriter writer, Map<String, String> props)  throws XMLStreamException  {
+		for (Map.Entry<String, String> prop : props.entrySet()) {
 	        writer.writeStartElement(Element.PROPERTY.getLocalName());
-			String key = (String)keys.nextElement();
-			String value = props.getProperty(key);
+			String key = prop.getKey();
+			String value = prop.getValue();
 			writeAttribute(writer, Element.NAME.getLocalName(), key);
-			writeAttribute(writer, Element.VALUE.getLocalName(), value);
+			if (value != null) {
+				if (writePropertyElements) {
+					writer.writeCharacters(value);
+				} else {
+					writeAttribute(writer, Element.VALUE.getLocalName(), value);
+				}
+			}
 			writer.writeEndElement();
 		}
 	}
 	
-    private static void writeAttribute(XMLStreamWriter writer,
+    private void writeAttribute(XMLStreamWriter writer,
 			String localName, String value) throws XMLStreamException {
 		if (value != null) {
 			writer.writeAttribute(localName, value);
 		}
 	}
 
-	private static void writeElement(final XMLStreamWriter writer, final Element element, String value) throws XMLStreamException {
+	private void writeElement(final XMLStreamWriter writer, final Element element, String value, String[] ... attributes) throws XMLStreamException {
         writer.writeStartElement(element.getLocalName());
+        for (String[] attribute : attributes) {
+        	writeAttribute(writer, attribute[0], attribute[1]);
+        }
         writer.writeCharacters(value);
         writer.writeEndElement();
     }     

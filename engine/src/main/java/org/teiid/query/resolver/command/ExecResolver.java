@@ -211,10 +211,21 @@ public class ExecResolver extends ProcedureContainerResolver {
                 String nameKey = param.getParameterSymbol().getShortName();
                 Expression expr = namedExpressions.remove(nameKey);
                 // With named parameters, have to check on optional params and default values
-                if (expr == null && param.getParameterType() != ParameterInfo.OUT) {
-                	expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
-                	param.setUsingDefault(true);
-                	expected.add(nameKey);
+                if (expr == null) {
+                	if (param.getParameterType() != ParameterInfo.OUT) {
+                		param.setUsingDefault(true);
+	                	expected.add(nameKey);
+                		if (!param.isVarArg()) {
+                			expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
+                		} else {
+                			//zero length array
+                        	List<Expression> exprs = new ArrayList<Expression>(0);
+                        	Array array = new Array(exprs);
+                        	array.setImplicit(true);
+                        	array.setType(param.getClassType());
+                            expr = array;
+                		}
+                	}
                 } 
                 param.setExpression(expr);                    
             } else {
@@ -254,8 +265,7 @@ public class ExecResolver extends ProcedureContainerResolver {
                 	Array array = new Array(exprs);
                 	array.setImplicit(true);
                 	array.setType(param.getClassType());
-                    param.setExpression(array);
-                	break;
+                    expr = array;
                 }
                 param.setExpression(expr);
             }

@@ -57,7 +57,6 @@ public class IntegrationPlugin {
     	TEIID50018, // failed VDB dependency processing
     	TEIID50019, // redeploying VDB
     	TEIID50021, // vdb defined translator not found
-    	TEIID50023, // replication failed
     	TEIID50024, // failed metadata load
     	TEIID50025, // VDB deployed
     	TEIID50026, // VDB undeployed
@@ -87,7 +86,6 @@ public class IntegrationPlugin {
     	TEIID50075,
     	TEIID50076,
     	TEIID50077,
-    	TEIID50078,
     	TEIID50088,
     	TEIID50089, 
     	TEIID50090, //Missing context
@@ -96,5 +94,15 @@ public class IntegrationPlugin {
     	TEIID50093,
     	TEIID50094,
     	TEIID50095,
+    	TEIID50096,
+    	TEIID50097,
+    	TEIID50098, 
+    	TEIID50099,
+    	TEIID50100,
+    	TEIID50101, 
+    	TEIID50102,
+    	TEIID50103, 
+    	TEIID50104,
+    	TEIID50105
     }
 }

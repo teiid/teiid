@@ -24,25 +24,34 @@ package org.teiid.query.optimizer;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Column;
+import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
+import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -198,6 +207,50 @@ public class TestDependentJoins {
     @Test public void testDepJoinHintForceRight() throws Exception {
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep pm1.g2", TestOptimizer.example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
+    }
+    
+    @Test public void testGlobalHint() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep @g4.g2", TestOptimizer.example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
+    }
+    
+    @Test public void testGlobalHint1() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 as x option makedep @x.g2", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -506,6 +559,7 @@ public class TestDependentJoins {
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
         RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
@@ -549,10 +603,10 @@ public class TestDependentJoins {
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            1,      // DependentAccess
+            1,      // Access
+            2,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
@@ -633,7 +687,7 @@ public class TestDependentJoins {
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             1,      // DependentAccess
@@ -672,7 +726,7 @@ public class TestDependentJoins {
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
             1,      // DependentAccess
@@ -758,7 +812,7 @@ public class TestDependentJoins {
             "SELECT table1comp.IntKey, table1comp.key1, BQT1.SmallA.StringKey FROM (SELECT t1.*, (STRINGKEY || STRINGNUM) AS key1 FROM BQT2.SmallA AS t1) AS table1comp, BQT1.SmallA WHERE table1comp.key1 = BQT1.SmallA.StringKey AND table1comp.key1 = BQT1.SmallA.StringNum",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_0.StringKey, g_0.StringNum, g_0.IntKey FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey, g_0.StringNum FROM BQT1.SmallA AS g_0 WHERE (g_0.StringNum = g_0.StringKey) AND ((g_0.StringKey, g_0.StringNum) IN (<dependent values>))"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"SELECT g_0.StringKey, g_0.StringNum, g_0.IntKey FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey, g_0.StringNum FROM BQT1.SmallA AS g_0 WHERE (g_0.StringNum = g_0.StringKey) AND (g_0.StringKey IN (<dependent values>))"}, //$NON-NLS-1$ //$NON-NLS-2$
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -803,7 +857,7 @@ public class TestDependentJoins {
             "SELECT max(a.stringkey) from bqt1.smalla a, bqt2.smalla a2, bqt1.smalla a1 where a.intnum = a2.intnum and a1.stringnum = a2.stringnum and a.floatnum = a1.floatnum",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT DISTINCT g_0.StringNum AS c_0, g_0.IntNum AS c_1 FROM BQT2.SmallA AS g_0 WHERE (g_0.StringNum IN (<dependent values>)) AND (g_0.IntNum IN (<dependent values>)) ORDER BY c_0, c_1", "SELECT g_1.StringNum AS c_0, g_0.IntNum AS c_1, MAX(g_0.StringKey) AS c_2 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 WHERE g_0.FloatNum = g_1.FloatNum GROUP BY g_1.StringNum, g_0.IntNum ORDER BY c_0, c_1"},
+            new String[] {"SELECT g_0.StringNum, g_0.IntNum FROM BQT2.SmallA AS g_0 WHERE (g_0.StringNum IN (<dependent values>)) AND (g_0.IntNum IN (<dependent values>))", "SELECT g_1.StringNum AS c_0, g_0.IntNum AS c_1, MAX(g_0.StringKey) AS c_2 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 WHERE g_0.FloatNum = g_1.FloatNum GROUP BY g_1.StringNum, g_0.IntNum ORDER BY c_0, c_1"},
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -824,5 +878,174 @@ public class TestDependentJoins {
         });             
 
     } 
+    
+    @Test public void testSystemDependent() throws TeiidComponentException, TeiidProcessingException { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, sys.columns makedep where pm1.g1.e1 = sys.columns.name"; //$NON-NLS-1$
+        
+        CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(RealMetadataFactory.example1Store(), SystemMetadata.getInstance().getSystemStore()));
+        TransformationMetadata tm = new TransformationMetadata(null, cms, null, null, null);
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                sql,  //$NON-NLS-1$
+                tm,
+                null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT SYS.Columns.Name FROM SYS.Columns WHERE SYS.Columns.Name IN (<dependent values>)"},
+                TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                1,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                2,      // Project - we expect a project over the system query
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            }); 
+    }
+    
+    @Test public void testPlanningOverJoin() throws Exception {
+        // Create query
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, (select pm2.g2.e1, pm2.g3.e2 from pm2.g2 left outer join pm2.g3 on pm2.g2.e1 = pm2.g3.e1) as x where pm1.g1.e1 = x.e1";//$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY, metadata);
+        RealMetadataFactory.setCardinality("pm2.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+        RealMetadataFactory.setCardinality("pm2.g3", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+    
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
+            null, capFinder,
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 LEFT OUTER JOIN pm2.g3 AS g_1 ON g_0.e1 = g_1.e1 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });         
+    }
+    
+    /**
+     * Makes sure that hints are considered after rule push aggregates
+     * @throws Exception
+     */
+    @Test public void testMakedepWithAggregatePushdown() throws Exception {
+        String sql = "select count(x.e2), pm2.g2.e1 from pm1.g1 x makedep, pm2.g2 where x.e3 = pm2.g2.e3 group by pm2.g2.e1";//$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
+            null, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()),
+            new String[] { "SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e3 IN (<dependent values>)", "SELECT g_0.e3 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            2,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });         
+    }
+    
+    @Test public void testKeepTransitiveWithDependentJoin() throws Exception {
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm2.g1, pm2.g2 where pm1.g1.e1 = pm2.g1.e1 and pm1.g1.e1 = pm2.g2.e1 and pm2.g1.e2 = pm2.g2.e2 option makedep pm2.g1", RealMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
+            new String[] { "SELECT g_1.e1, g_0.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE (g_0.e2 = g_1.e2) AND (g_1.e1 = g_0.e1) AND (g_1.e1 IN (<dependent values>))", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
+    
+    @Test public void testNestedLeftOuterJoin() throws TeiidComponentException, TeiidProcessingException {
+    	String sql = "select pm1.g1.e2, 'a', trim(pm1.g3.e1) from (pm1.g1 left outer join pm1.g2 on pm1.g1.e2 = pm1.g2.e2) left outer join pm1.g3 on pm1.g3.e3 = pm1.g2.e3 and pm1.g3.e4 = pm1.g1.e4"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g2", 6, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("pm1.g1", 0, metadata); //$NON-NLS-1$
+        RealMetadataFactory.setCardinality("pm1.g3", 0, metadata); //$NON-NLS-1$
+
+    	CapabilitiesFinder finder = TestOptimizer.getGenericFinder(false);
+    	
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, new String[] {
+        		"SELECT g_0.e3, g_0.e4, g_0.e1 FROM pm1.g3 AS g_0",
+        		"SELECT g_0.e2, g_0.e4 FROM pm1.g1 AS g_0", 
+        		"SELECT g_0.e2, g_0.e3 FROM pm1.g2 AS g_0 WHERE g_0.e2 IN (<dependent values>)"}, finder, ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            2,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+        
+        RelationalPlan rPlan = (RelationalPlan)plan;
+        RelationalNode node = rPlan.getRootNode().getChildren()[0];
+        assertTrue(node instanceof JoinNode);
+        node = node.getChildren()[0];
+        assertTrue(node instanceof JoinNode);
+        assertEquals(JoinType.JOIN_LEFT_OUTER, ((JoinNode)node).getJoinType());
+    }
     
 }

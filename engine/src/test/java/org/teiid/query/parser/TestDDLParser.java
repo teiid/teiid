@@ -29,8 +29,8 @@ import java.util.Properties;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
@@ -121,6 +121,14 @@ public class TestDDLParser {
 	@Test(expected=MetadataException.class)
 	public void testDuplicatePrimarykey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer primary key, e2 varchar primary key)";
+		MetadataStore mds = new MetadataStore();
+		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf, ddl);
+		mf.mergeInto(mds);
+	}
+	
+	@Test public void testAutoIncrementPrimarykey() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer auto_increment primary key, e2 varchar)";
 		MetadataStore mds = new MetadataStore();
 		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf, ddl);
@@ -230,7 +238,7 @@ public class TestDDLParser {
 	public void testFK() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
 				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, " +
-				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
+				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2) options (\"teiid_rel:allow-join\" true))";
 		
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -241,6 +249,7 @@ public class TestDDLParser {
 		
 		Table table = tableMap.get("G2");
 		ForeignKey fk = table.getForeignKeys().get(0);
+		assertEquals(Boolean.TRUE.toString(), fk.getProperty(ForeignKey.ALLOW_JOIN, false));
 		assertEquals(fk.getColumns(), table.getColumns());
 		assertEquals("G1", fk.getReferenceTableName());
 	}	
@@ -336,7 +345,7 @@ public class TestDDLParser {
 		Table table = s.getSchema("model2").getTable("G2");
 		ForeignKey fk = table.getForeignKeys().get(0);
 		assertEquals(fk.getColumns(), table.getColumns());
-		assertEquals("model.G1", fk.getReferenceTableName());
+		assertEquals("G1", fk.getReferenceTableName());
 		
 		assertEquals(fk.getPrimaryKey().getColumns(), s.getSchema("model").getTable("G1").getColumns());
 	}	
@@ -516,7 +525,7 @@ public class TestDDLParser {
 	}
 	
 	@Test(expected=MetadataException.class) public void testInvalidFunctionBody() throws Exception {
-		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
+		String ddl = "CREATE FOREIGN FUNCTION SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		
@@ -595,7 +604,20 @@ public class TestDDLParser {
 		assertTrue("Table not found", tableMap.containsKey("G1"));
 		assertTrue("Table not found", tableMap.containsKey("G2"));
 		assertEquals("FOR EACH ROW\nBEGIN ATOMIC\nINSERT INTO g1 (e1, e2) VALUES (1, 'trig');\nEND", s.getTable("G1").getInsertPlan());
+	}
+	
+	@Test(expected=MetadataException.class)
+	public void testInsteadOfTriggerNoView() throws Exception {
+		String ddl = 	"CREATE TRIGGER ON G1 INSTEAD OF INSERT AS " +
+						"FOR EACH ROW \n" +
+						"BEGIN ATOMIC \n" +
+						"insert into g1 (e1, e2) values (1, 'trig');\n" +
+						"END;" +
+						"CREATE View G2( e1 integer, e2 varchar) AS select * from foo;";
+
+		helpParse(ddl, "model");
 	}	
+
 	
 	@Test
 	public void testSourceProcedure() throws Exception {
@@ -650,7 +672,55 @@ public class TestDDLParser {
 		
 		assertTrue(mf.getNamespaces().keySet().contains("teiid"));
 		assertEquals("http://teiid.org", mf.getNamespaces().get("teiid"));
-	}		
+	}
+	
+    @Test
+    public void testReservedNamespace1() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_sf";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("teiid_sf"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_sf"));
+    }   
+    
+    @Test(expected=MetadataException.class)
+    public void testReservedNamespaceURIWrong() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2013' AS teiid_sf";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("teiid_sf"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_sf"));
+    } 
+    
+    @Test(expected=MetadataException.class)
+    public void testReservedNamespacePrefixMismatch() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_foo";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("teiid_foo"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_foo"));
+    }     
+	
+    @Test
+    public void testReservedURIDifferentNS() throws Exception {
+        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS ns";
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        parser.parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        
+        assertTrue(mf.getNamespaces().keySet().contains("ns"));
+        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("ns"));
+    }    
 
 	public static MetadataFactory helpParse(String ddl, String model) {
 		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
@@ -665,8 +735,8 @@ public class TestDDLParser {
 	@Test public void testKeyResolve() {
 		MetadataFactory mf = new MetadataFactory(null, 1, "foo", getDataTypes(), new Properties(), null);
 		mf.addNamespace("x", "http://x");
-		assertEquals("{http://x}z", SQLParserUtil.resolvePropertyKey(mf, "x:z"));
-		assertEquals("y:z", SQLParserUtil.resolvePropertyKey(mf, "y:z"));
+		assertEquals("{http://x}z", MetadataFactory.resolvePropertyKey(mf, "x:z"));
+		assertEquals("y:z", MetadataFactory.resolvePropertyKey(mf, "y:z"));
 	}
 	
 	@Test public void testCreateError() {
@@ -676,5 +746,146 @@ public class TestDDLParser {
 		} catch (org.teiid.metadata.ParseException e) {
 			assertEquals("TEIID30386 org.teiid.api.exception.query.QueryParserException: TEIID31100 Parsing error: Encountered \"CREATE foreign FUNCTION [*]convert[*](msg\" at line 1, column 25.\nWas expecting: id", e.getMessage());
 		}
+	}
+	
+	
+	@Test
+	public void testAlterTableAddOptions() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(ADD CARDINALITY 12);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(ADD FOO 'BAR');";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		Map<String, Table> tableMap = s.getTables();	
+		
+		assertTrue("Table not found", tableMap.containsKey("G1"));
+		Table table = tableMap.get("G1");
+		assertEquals(12, table.getCardinality());
+		assertEquals("BAR", table.getProperty("FOO", false));
+	}	
+	
+	@Test
+	public void testAlterTableModifyOptions() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date) OPTIONS(CARDINALITY 12, FOO 'BAR');" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(SET CARDINALITY 24);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(SET FOO 'BARBAR');";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		Map<String, Table> tableMap = s.getTables();	
+		
+		assertTrue("Table not found", tableMap.containsKey("G1"));
+		Table table = tableMap.get("G1");
+		assertEquals(24, table.getCardinality());
+		assertEquals("BARBAR", table.getProperty("FOO", false));
+	}	
+	
+	@Test
+	public void testAlterTableDropOptions() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date) OPTIONS(CARDINALITY 12, FOO 'BAR');" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(DROP CARDINALITY);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(DROP FOO);";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		Map<String, Table> tableMap = s.getTables();	
+		
+		assertTrue("Table not found", tableMap.containsKey("G1"));
+		Table table = tableMap.get("G1");
+		assertEquals(-1, table.getCardinality());
+		assertNull(table.getProperty("FOO", false));
+	}	
+	
+	@Test
+	public void testAlterTableAddColumnOptions() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(ADD CARDINALITY 12);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(ADD NULL_VALUE_COUNT 12);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(ADD FOO 'BAR');";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		Map<String, Table> tableMap = s.getTables();	
+		
+		assertTrue("Table not found", tableMap.containsKey("G1"));
+		Table table = tableMap.get("G1");
+		assertEquals(12, table.getCardinality());
+		Column c = table.getColumnByName("e1");
+		assertNotNull(c);
+		
+		assertEquals("BAR", c.getProperty("FOO", false));
+		assertEquals(12, c.getNullValues());
+	}	
+	
+	@Test
+	public void testAlterTableRemoveColumnOptions() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer OPTIONS (NULL_VALUE_COUNT 12, FOO 'BAR'), e2 varchar, e3 date);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(DROP NULL_VALUE_COUNT);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(DROP FOO);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS( ADD x 'y');" ;
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		Map<String, Table> tableMap = s.getTables();	
+		
+		assertTrue("Table not found", tableMap.containsKey("G1"));
+		Table table = tableMap.get("G1");
+		Column c = table.getColumnByName("e1");
+		assertNotNull(c);
+		
+		assertNull(c.getProperty("FOO", false));
+		assertEquals(-1, c.getNullValues());
+		assertEquals("y", c.getProperty("x", false));
+	}	
+	
+	@Test
+	public void testAlterProcedureOptions() throws Exception {
+		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+				"RETURNS (r1 varchar, r2 decimal)" +
+				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');" +
+				"ALTER FOREIGN PROCEDURE myProc OPTIONS(SET NAMEINSOURCE 'x')" +
+				"ALTER FOREIGN PROCEDURE myProc ALTER PARAMETER p2 OPTIONS (ADD x 'y');" +
+				"ALTER FOREIGN PROCEDURE myProc OPTIONS(DROP UPDATECOUNT);";
+		
+		Schema s = helpParse(ddl, "model").getSchema();
+		Procedure proc = s.getProcedure("myProc");
+		assertNotNull(proc);
+	
+		assertEquals("x", proc.getNameInSource());
+		assertEquals("p2", proc.getParameters().get(1).getName());
+		assertEquals("y", proc.getParameters().get(1).getProperty("x", false));
+		assertEquals(1, proc.getUpdateCount());
+	}	
+	
+	@Test
+	public void testTypeLength() throws Exception {
+		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+				"RETURNS (r1 varchar(10), r2 decimal(11,2), r3 object(1), r4 clob(10000))" +
+				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');";
+		
+		Schema s = helpParse(ddl, "model").getSchema();
+		Procedure proc = s.getProcedure("myProc");
+		assertNotNull(proc);
+	
+		List<Column> cols = proc.getResultSet().getColumns();
+		assertEquals(10, cols.get(0).getLength());
+		assertEquals(11, cols.get(1).getPrecision());
+		assertEquals(1, cols.get(2).getLength());
+		assertEquals(10000, cols.get(3).getLength());
+	}
+	
+	@Test
+	public void testGlobalTemp() throws Exception {
+		String ddl = "CREATE GLOBAL TEMPORARY TABLE T (col string);";
+		
+		Schema s = helpParse(ddl, "model").getSchema();
+		Table t = s.getTable("T");
+		assertEquals(1, t.getColumns().size());
+	}
+	
+	@Test public void testArrayType() throws Exception {
+		String ddl = "CREATE VIEW V (col string[]) as select ('a','b');";
+		
+		Schema s = helpParse(ddl, "model").getSchema();
+		Table t = s.getTable("V");
+		assertEquals(1, t.getColumns().size());
+		assertEquals("string[]", t.getColumns().get(0).getRuntimeType());
+		assertEquals(String[].class, t.getColumns().get(0).getJavaType());
 	}
 }

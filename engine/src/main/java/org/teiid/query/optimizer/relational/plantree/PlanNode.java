@@ -33,6 +33,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -175,7 +176,7 @@ public class PlanNode {
         }
         Object result = nodeProperties.get(propertyID);
         if (result != null) {
-        	modified = true;
+        	modified = true; //we may modify this object
         }
         return result;
     }
@@ -243,45 +244,49 @@ public class PlanNode {
      */
     public String toString() {
         StringBuilder str = new StringBuilder();
-        getRecursiveString(str, 0);
+        getRecursiveString(str, 0, null);
         return str.toString();
     }
 
     /**
-     * Just print single node to string instead of node+recursive plan.
+     * Get the single node in full or recursive which considers modifications.
      * @return String representing just this node
      */
-    public String nodeToString() {
+    public String nodeToString(boolean recusive) {
     	StringBuilder str = new StringBuilder();
-        getNodeString(str);
+    	if (!recusive) {
+    		getNodeString(str, null);
+    	} else {
+    		getRecursiveString(str, 0, this.modified);
+    	}
         return str.toString();
     }
     
     // Define a single tab
     private static final String TAB = "  "; //$NON-NLS-1$
     
-    private void setTab(StringBuilder str, int tabStop) {
+    private static void setTab(StringBuilder str, int tabStop) {
         for(int i=0; i<tabStop; i++) {
             str.append(TAB);
         }            
     }
     
-    void getRecursiveString(StringBuilder str, int tabLevel) {
+    void getRecursiveString(StringBuilder str, int tabLevel, Boolean mod) {
         setTab(str, tabLevel);
-        getNodeString(str);
+        getNodeString(str, mod);
         str.append(")\n");  //$NON-NLS-1$
         
         // Recursively add children at one greater tab level
         for (PlanNode child : children) {
-            child.getRecursiveString(str, tabLevel+1);
+            child.getRecursiveString(str, tabLevel+1, mod==null?null:child.modified);
         }        
     }
 
-    void getNodeString(StringBuilder str) {
+    void getNodeString(StringBuilder str, Boolean mod) {
         str.append(NodeConstants.getNodeTypeString(this.type));
         str.append("(groups="); //$NON-NLS-1$
         str.append(this.groups);
-        if (modified) {
+        if (!Boolean.FALSE.equals(mod)) {
 	        if(nodeProperties != null) {
 	            str.append(", props="); //$NON-NLS-1$
 	            String props = nodeProperties.toString();
@@ -290,7 +295,9 @@ public class PlanNode {
 	            }
 	            str.append(props);
 	        }
-	        modified = false;
+	        if (Boolean.TRUE.equals(mod)) {
+	        	modified = false;
+	        }
         }
     }
     
@@ -321,12 +328,12 @@ public class PlanNode {
     }
     
     public List<SymbolMap> getCorrelatedReferences() {
-    	List<SubqueryContainer> containers = getSubqueryContainers();
+    	List<SubqueryContainer<?>> containers = getSubqueryContainers();
     	if (containers.isEmpty()) {
     		return Collections.emptyList();
     	}
     	ArrayList<SymbolMap> result = new ArrayList<SymbolMap>(containers.size());
-    	for (SubqueryContainer container : containers) {
+    	for (SubqueryContainer<?> container : containers) {
     		SymbolMap map = container.getCommand().getCorrelatedReferences();
 			if (map != null) {
 				result.add(map);
@@ -382,7 +389,7 @@ public class PlanNode {
         return result;
     }
     
-	public List<SubqueryContainer> getSubqueryContainers() {
+	public List<SubqueryContainer<?>> getSubqueryContainers() {
 		Collection<? extends LanguageObject> toSearch = Collections.emptyList();
 		switch (this.getType()) {
 			case NodeConstants.Types.SELECT: {
@@ -410,6 +417,12 @@ public class PlanNode {
 				toSearch = groupMap.getValues();
 				break;
 			}
+			case NodeConstants.Types.SORT: {
+				OrderBy orderBy = (OrderBy) this.getProperty(NodeConstants.Info.SORT_ORDER);
+				if (orderBy != null) {
+					toSearch = orderBy.getOrderByItems();
+				}
+			}
 		}
 		return ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
 	}
@@ -426,9 +439,20 @@ public class PlanNode {
 		if (record != null && record.recordAnnotations()) {
 			boolean current = this.modified;
 			this.modified = true;
-			record.addAnnotation(Annotation.RELATIONAL_PLANNER, annotation + (modelID != null?" " + metadata.getName(modelID):""), resolution + " " + this.nodeToString(), Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			record.addAnnotation(Annotation.RELATIONAL_PLANNER, annotation + (modelID != null?" " + metadata.getName(modelID):""), resolution + " " + this.nodeToString(false), Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			this.modified = current;
 		}
+	}
+	
+	@Override
+	public PlanNode clone() {
+		PlanNode node = new PlanNode();
+		node.type = this.type;
+		node.groups = new HashSet<GroupSymbol>(this.groups);
+		if (this.nodeProperties != null) {
+			node.nodeProperties = new LinkedHashMap<NodeConstants.Info, Object>(this.nodeProperties);
+		}
+		return node;
 	}
         
 }

@@ -27,10 +27,10 @@ import java.util.List;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -64,9 +64,9 @@ public class BatchCollector {
 	     * @throws TeiidComponentException 
 	     * @throws BlockedException 
 	     */
-	    TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException;
+	    TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException;
 	    
-	    boolean hasFinalBuffer();
+	    boolean hasBuffer(boolean requireFinal);
 	    
 	    void close() throws TeiidComponentException;
 	}
@@ -78,6 +78,11 @@ public class BatchCollector {
 
 		public BatchProducerTupleSource(BatchProducer sourceNode) {
 			this.sourceNode = sourceNode;
+		}
+		
+		public BatchProducerTupleSource(BatchProducer sourceNode, int startRow) {
+			this.sourceNode = sourceNode;
+			this.sourceRow = startRow;
 		}
 
 		@Override
@@ -124,11 +129,13 @@ public class BatchCollector {
     private boolean forwardOnly;
     private int rowLimit = -1; //-1 means no_limit
     private boolean hasFinalBuffer;
+
+	private boolean saveLastRow;
     
     public BatchCollector(BatchProducer sourceNode, BufferManager bm, CommandContext context, boolean forwardOnly) throws TeiidComponentException {
         this.sourceNode = sourceNode;
         this.forwardOnly = forwardOnly;
-        this.hasFinalBuffer = this.sourceNode.hasFinalBuffer();
+        this.hasFinalBuffer = this.sourceNode.hasBuffer(false);
         if (!this.hasFinalBuffer) {
             this.buffer = bm.createTupleBuffer(sourceNode.getOutputElements(), context.getConnectionId(), TupleSourceType.PROCESSOR);
             this.buffer.setForwardOnly(forwardOnly);
@@ -136,11 +143,15 @@ public class BatchCollector {
     }
 
     public TupleBuffer collectTuples() throws TeiidComponentException, TeiidProcessingException {
+    	return collectTuples(false);
+    }
+    
+    public TupleBuffer collectTuples(boolean singleBatch) throws TeiidComponentException, TeiidProcessingException {
         TupleBatch batch = null;
     	while(!done) {
     		if (this.hasFinalBuffer) {
 	    		if (this.buffer == null) {
-	    			TupleBuffer finalBuffer = this.sourceNode.getFinalBuffer(rowLimit);
+	    			TupleBuffer finalBuffer = this.sourceNode.getBuffer(rowLimit);
 	    			Assertion.isNotNull(finalBuffer);
 					this.buffer = finalBuffer;
 	    		}
@@ -156,9 +167,26 @@ public class BatchCollector {
     	    	if (!done) {
     	    		this.sourceNode.close();
     	    	}
+    	    	List<?> lastTuple = null;
+    	    	if (saveLastRow) {
+    	    		if (batch.getTerminationFlag()) {
+    	    			lastTuple = batch.getTuples().get(batch.getTuples().size() - 1);
+    	    		} else if (rowLimit < batch.getBeginRow()) {
+    	    			continue; //skip until end
+    	    		}
+    	    	}
+    	    	boolean modified = false;
     	    	if (rowLimit < batch.getEndRow()) {
-    	    		List<List<?>> tuples = batch.getTuples().subList(0, rowLimit - batch.getBeginRow() + 1);
-    	    		batch = new TupleBatch(batch.getBeginRow(), tuples);
+    	    		int firstRow = Math.min(rowLimit + 1, batch.getBeginRow());
+    	    		List<List<?>> tuples = batch.getTuples().subList(0, rowLimit - firstRow + 1);
+    	    		batch = new TupleBatch(firstRow, tuples);
+    	    		modified = true;
+    	    	}
+    	    	if (lastTuple != null) {
+    	    		if (!modified) {
+    	    			batch = new TupleBatch(batch.getBeginRow(), batch.getTuples());
+    	    		}
+    	    		batch.getTuples().add(lastTuple);
     	    	}
     	    	batch.setTerminationFlag(true);
     	    }
@@ -168,10 +196,14 @@ public class BatchCollector {
             // Check for termination condition
             if(batch.getTerminationFlag()) {
             	done = true;
-            	if (!this.sourceNode.hasFinalBuffer()) {
+            	if (!this.sourceNode.hasBuffer(false)) {
             		buffer.close();
             	}
                 break;
+            }
+            
+            if (singleBatch) {
+            	return null;
             }
         }
         return buffer;
@@ -185,7 +217,7 @@ public class BatchCollector {
      * Flush the batch by giving it to the buffer manager.
      */
     private void flushBatch(TupleBatch batch) throws TeiidComponentException, TeiidProcessingException {
-    	if (batch.getRowCount() == 0 && !batch.getTerminationFlag()) {
+    	if (batch.getRowCount() == 0 && batch.getTermination() == TupleBatch.NOT_TERMINATED) {
     		return;
     	}
     	flushBatchDirect(batch, true);
@@ -207,6 +239,14 @@ public class BatchCollector {
     
     public void setRowLimit(int rowLimit) {
 		this.rowLimit = rowLimit;
+	}
+
+	public void setSaveLastRow(boolean saveLastRow) {
+		this.saveLastRow = saveLastRow;
+	}
+	
+	public boolean isSaveLastRow() {
+		return saveLastRow;
 	}
     
 }

@@ -1,0 +1,5 @@
+<vdb name="dynamic-ddl" version= "1">
+    <model visible = "true" type = "VIRTUAL" name = "portfolio">
+         <metadata type = "DDL-FILE">/test.ddl</metadata>
+    </model>
+</vdb>

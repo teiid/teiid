@@ -27,11 +27,9 @@
               <useProjectArtifact>true</useProjectArtifact>
               <unpack>false</unpack>
               <useTransitiveDependencies>true</useTransitiveDependencies>
-              <useDefaultExcludes>true</useDefaultExcludes>
             </dependencySet>
           </dependencySets>
           <outputDirectory>lib</outputDirectory>
-          <fileMode>0644</fileMode>
         </binaries>
       
     </moduleSet>
@@ -54,7 +52,6 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>
-        <fileMode>0644</fileMode>      
     </fileSet>      
     
     <fileSet>
@@ -63,7 +60,6 @@
         <include>teiid-${project.version}-jdbc.jar</include>
       </includes>
       <outputDirectory>lib</outputDirectory>
-      <fileMode>0644</fileMode>      
     </fileSet>
         
   </fileSets>

@@ -25,15 +25,7 @@ package org.teiid.query.processor.relational;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 
@@ -178,5 +170,14 @@ public class RelationalNodeUtil {
                commandType == Command.TYPE_UPDATE ||
                commandType == Command.TYPE_DELETE;
     }
+
+	public static boolean hasOutputParams(Command command) {
+		boolean hasOutParams = false;
+        if (command instanceof StoredProcedure) {
+        	StoredProcedure sp = (StoredProcedure)command;
+        	hasOutParams = sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size();
+        }
+		return hasOutParams;
+	}
 
 }

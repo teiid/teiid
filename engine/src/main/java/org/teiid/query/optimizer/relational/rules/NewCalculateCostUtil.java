@@ -38,12 +38,13 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
@@ -291,7 +292,10 @@ public class NewCalculateCostUtil {
 		if (projectNode != null) {
 			result = getNDVEstimate(node.getParent(), metadata, cost, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), false);
 			if (result == UNKNOWN_VALUE) {
-				return cost;
+				if (cost == UNKNOWN_VALUE) {
+					return UNKNOWN_VALUE;
+				}
+				return cost/2;
 			}
 		}
 		return result;
@@ -496,7 +500,21 @@ public class NewCalculateCostUtil {
             GroupSymbol group = node.getGroups().iterator().next();
             float cardinality = metadata.getCardinality(group.getMetadataID());
             if (cardinality <= QueryMetadataInterface.UNKNOWN_CARDINALITY){
-                cardinality = UNKNOWN_VALUE;
+            	if (group.isTempTable() && metadata.getModelID(group.getMetadataID()) == TempMetadataAdapter.TEMP_MODEL) {
+            		//this should be with-in the scope of a procedure or an undefined size common table
+            		//
+            		//the typical assumption is that this should drive other joins, thus assume
+            		//a relatively small number of rows.  This is a relatively safe assumption
+            		//as we do not need parallel processing with the temp fetch and the 
+            		//dependent join backoff should prevent unacceptable performance
+            		//
+            		//another strategy (that is generally applicable) is to delay the full affect of dependent join planning
+            		//until the size is known - however that is somewhat complicated with the current WITH logic
+            		//as the table is loaded on demand
+            		cardinality = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+            	} else {
+            		cardinality = UNKNOWN_VALUE;
+            	}
             }
             cost = cardinality;
             if (!node.hasProperty(Info.ATOMIC_REQUEST)) {
@@ -522,7 +540,7 @@ public class NewCalculateCostUtil {
 			float ndv = metadata.getDistinctValues(es.getMetadataID());
 			float nnv = metadata.getNullValues(es.getMetadataID());
 			if (cardinality != UNKNOWN_VALUE) {
-            	int groupCardinality = metadata.getCardinality(es.getGroupSymbol().getMetadataID());
+            	float groupCardinality = metadata.getCardinality(es.getGroupSymbol().getMetadataID());
             	if (groupCardinality != UNKNOWN_VALUE && groupCardinality > cardinality) {
             		if (ndv != UNKNOWN_VALUE) {
             			ndv *= cardinality / Math.max(1, groupCardinality);
@@ -654,7 +672,7 @@ public class NewCalculateCostUtil {
                         continue;
                     }
                     if (childCost != UNKNOWN_VALUE) {
-                        cost *= nextCost/childCost;
+                        cost = (Math.min(cost, nextCost) + (cost * nextCost/childCost))/2;
                     } else {
                         if (cost == UNKNOWN_VALUE) {
                             cost = nextCost;
@@ -803,6 +821,10 @@ public class NewCalculateCostUtil {
         if(predicateCriteria instanceof CompareCriteria) {
             CompareCriteria compCrit = (CompareCriteria) predicateCriteria;
                         
+            if (compCrit.isOptional()) {
+        		return childCost;
+        	}
+            
             if (compCrit.getOperator() == CompareCriteria.EQ || compCrit.getOperator() == CompareCriteria.NE){
                 if (unknownChildCost && (!usesKey || multiGroup)) {
                     return UNKNOWN_VALUE;
@@ -1145,8 +1167,7 @@ public class NewCalculateCostUtil {
 			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, false);
 			boolean unknownNDV = false;
 			if (indSymbolNDV == UNKNOWN_VALUE) {
-				unknownNDV = true;
-				indSymbolNDV = independentCardinality/2;
+				indSymbolNDV = independentCardinality;
 			}
 			Expression depExpr = (Expression)dependentExpressions.get(i);
 			
@@ -1288,9 +1309,20 @@ public class NewCalculateCostUtil {
 				continue;
 			}
 			PlanNode sourceNode = FrameUtil.findOriginatingNode(initial, critNode.getGroups());
+			if (sourceNode == null) {
+				continue;
+			}
 			PlanNode target = sourceNode;
 			if (initial != sourceNode) {
-				target = rpsc.examinePath(initial, sourceNode, metadata, capFinder);					
+				//pretend the criteria starts at the initial location
+				//either above or below depending upon the node type
+				if (initial.getChildCount() > 1) {
+					initial.addAsParent(critNode);
+				} else {
+					initial.getFirstChild().addAsParent(critNode);
+				}
+				target = rpsc.examinePath(critNode, sourceNode, metadata, capFinder);
+				critNode.getParent().replaceChild(critNode, critNode.getFirstChild());
 			}
 			if (target != sourceNode || (sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0)) {
 				targets.add(target);
@@ -1344,6 +1376,29 @@ public class NewCalculateCostUtil {
 			return cardinality;
 		}
 		float ndv = getStat(Stat.NDV, elems, indNode, cardinality, metadata);
+		//special handling if cardinality has been set, but not ndv
+		if (ndv == UNKNOWN_VALUE && useCardinalityIfUnknown) {
+			Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(elems);
+			PlanNode source = FrameUtil.findOriginatingNode(indNode, groups);
+			if (source != null) {
+				ndv = getStat(Stat.NDV, elems, source, cardinality, metadata);
+				if (ndv == UNKNOWN_VALUE) {
+					ndv = source.getCardinality();
+					if (ndv != UNKNOWN_VALUE && !usesKey(source, elems, metadata)) {
+						ndv/=2; //guess that it's non-unique
+					}
+				}
+				if (ndv != UNKNOWN_VALUE) {
+					while (source != indNode) {
+						source = source.getParent();
+						float parentCardinality = source.getCardinality();
+						if (parentCardinality != UNKNOWN_VALUE && parentCardinality < ndv) {
+							ndv = parentCardinality;
+						}
+					}
+				}
+			}
+		}
 		if (ndv == UNKNOWN_VALUE) { 
 			if (cardinality == UNKNOWN_VALUE) {
 				return UNKNOWN_VALUE;

@@ -22,7 +22,11 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -32,13 +36,13 @@ import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.crypto.NullCryptor;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -104,7 +108,7 @@ public class TestCommSockets {
 	@Test public void testConnectWithPooling() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		SocketListenerStats stats = listener.getStats();
-		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(2, stats.objectsRead); // handshake response, logon
 		assertEquals(1, stats.sockets);
 		conn.close();
 		stats = listener.getStats();
@@ -119,7 +123,6 @@ public class TestCommSockets {
 		assertEquals(1, stats.maxSockets);
 	}
 
-	@Ignore
 	@Test public void testLobs() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		FakeService fs = conn.getService(FakeService.class);
@@ -205,13 +208,13 @@ public class TestCommSockets {
 		config.setEnabledCipherSuites("x"); //ensure that this cipher suite is not used
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
-		p.setProperty("org.teiid.sockets.soTimeout", "100");
 		helpEstablishConnection(true, config, p);
 		SocketServerConnection conn = helpEstablishConnection(true, config, p);
 		conn.close();
 		
 		try {
 			helpEstablishConnection(false, config, p);
+			fail();
 		} catch (CommunicationException e) {
 			
 		}
@@ -223,6 +226,65 @@ public class TestCommSockets {
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
 		p.setProperty(SocketUtil.ALLOW_ANON, Boolean.FALSE.toString());
+		helpEstablishConnection(true, config, p);
+	}
+	
+	@Test(expected=CommunicationException.class) public void testOnewayFails() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setMode(SSLConfiguration.ENABLED);
+		config.setAuthenticationMode(SSLConfiguration.ONEWAY);
+		Properties p = new Properties();
+		helpEstablishConnection(true, config, p);
+		//TODO: we may want to clarify the server exception in this case, which
+		//is just that there are no cipher suites in common
+	}
+	
+	/**
+	 * shows one-way auth with a key alias/password
+	 */
+	@Test public void testSSLSelfSigned() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setMode(SSLConfiguration.ENABLED);
+		config.setAuthenticationMode(SSLConfiguration.ONEWAY);
+		config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		config.setKeystorePassword("password");
+		config.setKeystoreKeyPassword("changeit");
+		config.setKeystoreKeyAlias("selfsigned");
+		Properties p = new Properties();
+		p.setProperty("org.teiid.ssl.trustStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		p.setProperty("org.teiid.ssl.trustStorePassword", "password");
+		helpEstablishConnection(true, config, p);
+	}
+	
+	@Test public void testSSLSelfSignedTrustAll() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setMode(SSLConfiguration.ENABLED);
+		config.setAuthenticationMode(SSLConfiguration.ONEWAY);
+		config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		config.setKeystorePassword("password");
+		config.setKeystoreKeyPassword("changeit");
+		config.setKeystoreKeyAlias("selfsigned");
+		Properties p = new Properties();
+		p.setProperty("org.teiid.ssl.trustAll", "true");
+		helpEstablishConnection(true, config, p);
+	}
+	
+	@Test public void testTwoWaySSLSelfSigned() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setMode(SSLConfiguration.ENABLED);
+		config.setAuthenticationMode(SSLConfiguration.TWOWAY);
+		config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		config.setKeystorePassword("password");
+		config.setKeystoreKeyPassword("changeit");
+		config.setKeystoreKeyAlias("selfsigned");
+		config.setTruststoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		config.setTruststorePassword("password");
+		Properties p = new Properties();
+		p.setProperty("org.teiid.ssl.trustStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		p.setProperty("org.teiid.ssl.trustStorePassword", "password");
+		p.setProperty("org.teiid.ssl.keyStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		p.setProperty("org.teiid.ssl.keyStorePassword", "password");
+		p.setProperty("org.teiid.ssl.keyPassword", "changeit");
 		helpEstablishConnection(true, config, p);
 	}
 	

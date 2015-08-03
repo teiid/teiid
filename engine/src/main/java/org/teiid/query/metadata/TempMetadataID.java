@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.core.util.LRUCache;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
@@ -59,14 +60,16 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
 		List<TempMetadataID> primaryKey;
 		QueryNode queryNode;
-		LRUCache<Object, Object> localCache;
-		CacheHint cacheHint;
+		Map<Object, Object> localCache;
+		volatile CacheHint cacheHint;
+		long cacheHintUpdated;
 		List<List<TempMetadataID>> keys;
 		List<TempMetadataID> indexes;
-		long lastDataModification;
-		long lastModified = System.currentTimeMillis();
+		volatile long lastDataModification;
+		volatile long lastModified = System.currentTimeMillis();
 		int modCount;
 		private LinkedHashMap<Expression, Integer> functionBasedExpressions;
+		private Object model;
 		
 		public long getLastDataModification() {
 			return lastDataModification;
@@ -101,6 +104,22 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		public LinkedHashMap<Expression, Integer> getFunctionBasedExpressions() {
 			return functionBasedExpressions;
 		}
+
+		public void setModel(Object mid) {
+			this.model = mid;
+		}
+		
+		public Object getModel() {
+			return model;
+		}
+
+		public synchronized boolean updateCacheHint(long time) {
+			if (time >= cacheHintUpdated) {
+				cacheHintUpdated = time;
+				return true;
+			}
+			return false;
+		}
 		
 	}
 	
@@ -127,6 +146,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
     private boolean autoIncrement;
     private boolean notNull;
     private boolean updatable;
+    private boolean accessed;
     
     /**
      * Constructor for group form of metadata ID.
@@ -321,7 +341,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
     
     Object setProperty(Object key, Object value) {
 		if (this.getTableData().localCache == null) {
-			this.getTableData().localCache = new LRUCache<Object, Object>(LOCAL_CACHE_SIZE);
+			this.getTableData().localCache = Collections.synchronizedMap(new LRUCache<Object, Object>(LOCAL_CACHE_SIZE));
     	}
 		return this.getTableData().localCache.put(key, value);
     }
@@ -431,6 +451,14 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 			this.name = Symbol.getShortName(this.ID);
 		}
 		return this.name;
+	}
+	
+	public void setAccessed(boolean accessed) {
+		this.accessed = accessed;
+	}
+	
+	public boolean isAccessed() {
+		return accessed;
 	}
 	
 }

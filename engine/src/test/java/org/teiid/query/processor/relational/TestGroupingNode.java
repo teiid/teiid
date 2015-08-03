@@ -54,7 +54,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings({"unchecked", "nls"})
+@SuppressWarnings({"unchecked", "rawtypes", "nls"})
 public class TestGroupingNode {
 
 	public static FakeTupleSource createTupleSource1() { 
@@ -171,8 +171,8 @@ public class TestGroupingNode {
         helpProcess(mgr, node, context, expected, null);
         
         //ensure that the distinct input type is correct
-        AggregateFunction[] functions = node.getFunctions();
-        AggregateFunction countDist = functions[5];
+        AggregateFunction[][] functions = node.getFunctions();
+        AggregateFunction countDist = functions[5][0];
         SortingFilter dup = (SortingFilter)countDist;
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, dup.getElements().get(0).getType());
 	}
@@ -364,7 +364,7 @@ public class TestGroupingNode {
         // Set grouping elements to null 
         if (groupBy) {
             List groupingElements = new ArrayList();
-            groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
+            groupingElements.add(col1.clone()); //$NON-NLS-1$
             node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
         }
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$

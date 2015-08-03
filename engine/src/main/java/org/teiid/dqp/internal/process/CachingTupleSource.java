@@ -44,17 +44,18 @@ import org.teiid.translator.CacheDirective.Scope;
  * A proxy {@link TupleSource} that caches a {@link DataTierTupleSource}
  */
 final class CachingTupleSource extends
-		TupleSourceCache.BufferedTupleSource {
+		TupleSourceCache.CopyOnReadTupleSource {
 	private final DataTierManagerImpl dataTierManagerImpl;
 	private final CacheID cid;
 	private final RegisterRequestParameter parameterObject;
 	private final CacheDirective cd;
 	private final Collection<GroupSymbol> accessedGroups;
-	DataTierTupleSource dtts;
+	final DataTierTupleSource dtts;
+	final RequestWorkItem item;
 
 	CachingTupleSource(DataTierManagerImpl dataTierManagerImpl, TupleBuffer tb, DataTierTupleSource ts, CacheID cid,
 			RegisterRequestParameter parameterObject, CacheDirective cd,
-			Collection<GroupSymbol> accessedGroups) {
+			Collection<GroupSymbol> accessedGroups, RequestWorkItem item) {
 		super(tb, ts);
 		this.dataTierManagerImpl = dataTierManagerImpl;
 		this.dtts = ts;
@@ -62,6 +63,7 @@ final class CachingTupleSource extends
 		this.parameterObject = parameterObject;
 		this.cd = cd;
 		this.accessedGroups = accessedGroups;
+		this.item = item;
 	}
 
 	@Override
@@ -94,22 +96,27 @@ final class CachingTupleSource extends
 		        	cr.setRowLimit(rowNumber);
 		        }
 		        tb.setPrefersMemory(Boolean.TRUE.equals(cd.getPrefersMemory()));
-		    	Determinism determinismLevel = Determinism.SESSION_DETERMINISTIC;
-		    	if (dtts.scope != null) {
-		    		switch (dtts.scope) {
-		    		case VDB:
-		    			determinismLevel = Determinism.VDB_DETERMINISTIC;
-		    		case SESSION:
-		    			determinismLevel = Determinism.SESSION_DETERMINISTIC;
-		    		case USER:
-		    			determinismLevel = Determinism.USER_DETERMINISTIC;
-		    		}
-		    	}
+		    	Determinism determinismLevel = getDeterminismLevel(this.dtts.scope);
 		        this.dataTierManagerImpl.requestMgr.getRsCache().put(cid, determinismLevel, cr, cd.getTtl()); 
 		        tb = null;
 			}
 		}
 		return tuple;
+	}
+
+	public static Determinism getDeterminismLevel(CacheDirective.Scope scope) {
+		Determinism determinismLevel = Determinism.SESSION_DETERMINISTIC;
+		if (scope != null) {
+			switch (scope) {
+			case VDB:
+				determinismLevel = Determinism.VDB_DETERMINISTIC;
+			case SESSION:
+				determinismLevel = Determinism.SESSION_DETERMINISTIC;
+			case USER:
+				determinismLevel = Determinism.USER_DETERMINISTIC;
+			}
+		}
+		return determinismLevel;
 	}
 
 	private void removeTupleBuffer() {
@@ -132,7 +139,11 @@ final class CachingTupleSource extends
 					//we should also shut off any warnings, since the plan isn't consuming these tuples
 					//the approach would probably be to do more read-ahead
 					dtts.getAtomicRequestMessage().setSerial(true);
-					while (dtts.scope != Scope.NONE) { 
+					while (dtts.scope != Scope.NONE) {
+						if (item.isCanceled()) {
+							LogManager.logDetail(LogConstants.CTX_DQP, dtts.getAtomicRequestMessage().getAtomicRequestID(), "Not using full results due to cancellation."); //$NON-NLS-1$
+							break;
+						}
 						try {
 							List<?> tuple = nextTuple();
 							if (tuple == null) {

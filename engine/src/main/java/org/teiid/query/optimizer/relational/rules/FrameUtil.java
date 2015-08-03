@@ -32,10 +32,10 @@ import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -475,7 +475,12 @@ public class FrameUtil {
      * @param accessNode
      * @return
      */
-    static ProcessorPlan getNestedPlan(PlanNode accessNode) {
+    public static ProcessorPlan getNestedPlan(PlanNode accessNode) {
+    	//semi-join plans are put directly on the access node
+    	ProcessorPlan plan = (ProcessorPlan)accessNode.getProperty(NodeConstants.Info.PROCESSOR_PLAN);
+    	if (plan != null) {
+    		return plan;
+    	}
         PlanNode sourceNode = accessNode.getFirstChild(); 
         if (sourceNode == null) {
         	return null;
@@ -538,7 +543,7 @@ public class FrameUtil {
     }
     
     public static boolean isOrderedOrStrictLimit(PlanNode node) {
-    	return node.getType() == NodeConstants.Types.TUPLE_LIMIT && (NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT | NodeConstants.Types.SET_OP) != null || node.hasProperty(Info.IS_STRICT));
+    	return node.getType() == NodeConstants.Types.TUPLE_LIMIT && (NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT | NodeConstants.Types.SET_OP) != null || !node.hasBooleanProperty(Info.IS_NON_STRICT));
     }
 
 }

@@ -25,6 +25,7 @@ package org.teiid.query.resolver.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -42,8 +43,8 @@ import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.FunctionForm;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionLibrary.ConversionResult;
 import org.teiid.query.metadata.GroupInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
@@ -53,7 +54,6 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.proc.ExceptionExpression;
 import org.teiid.query.sql.symbol.*;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 
@@ -62,16 +62,6 @@ public class ResolverVisitor extends LanguageVisitor {
     public static final String TEIID_PASS_THROUGH_TYPE = "teiid:pass-through-type"; //$NON-NLS-1$
 	private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
 
-    private static ThreadLocal<Boolean> determinePartialName = new ThreadLocal<Boolean>() {
-    	protected Boolean initialValue() {
-    		return false;
-    	}
-    };
-    
-    public static void setFindShortName(boolean enabled) {
-    	determinePartialName.set(enabled);
-    }
-    
     private Collection<GroupSymbol> groups;
     private GroupContext externalContext;
     protected QueryMetadataInterface metadata;
@@ -81,6 +71,7 @@ public class ResolverVisitor extends LanguageVisitor {
     private boolean findShortName;
     private List<ElementSymbol> matches = new ArrayList<ElementSymbol>(2);
     private List<GroupSymbol> groupMatches = new ArrayList<GroupSymbol>(2);
+	private boolean hasUserDefinedAggregate;
     
     /**
      * Constructor for ResolveElementsVisitor.
@@ -91,7 +82,7 @@ public class ResolverVisitor extends LanguageVisitor {
         this.groups = internalGroups;
         this.externalContext = externalContext;
         this.metadata = metadata;
-        this.findShortName = determinePartialName.get();
+        this.findShortName = metadata.findShortName();
     }
 
 	public void setGroups(Collection<GroupSymbol> groups) {
@@ -223,7 +214,9 @@ public class ResolverVisitor extends LanguageVisitor {
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
         elementSymbol.setGroupSymbol(resolvedGroup);
         elementSymbol.setShortName(resolvedSymbol.getShortName());
-        elementSymbol.setOutputName(oldName);
+        if (metadata.useOutputName()) {
+        	elementSymbol.setOutputName(oldName);
+        }
         return true;
 	}
     
@@ -302,6 +295,9 @@ public class ResolverVisitor extends LanguageVisitor {
     public void visit(Function obj) {
         try {
             resolveFunction(obj, this.metadata.getFunctionLibrary());
+            if (obj.isAggregate()) {
+            	hasUserDefinedAggregate = true;
+            }
         } catch(QueryResolverException e) {
         	if (QueryPlugin.Event.TEIID30069.name().equals(e.getCode()) || QueryPlugin.Event.TEIID30067.name().equals(e.getCode())) {
 	        	if (unresolvedFunctions == null) {
@@ -324,16 +320,24 @@ public class ResolverVisitor extends LanguageVisitor {
 	    		for (int i = 0; i < array.getExpressions().size(); i++) {
 	    			Expression expr = array.getExpressions().get(i);
 	    			setDesiredType(expr, array.getComponentType(), array);
-	    			array.getExpressions().set(i, ResolverUtil.convertExpression(expr, type, metadata));
+	    			if (array.getComponentType() != DefaultDataClasses.OBJECT) {
+	    				array.getExpressions().set(i, ResolverUtil.convertExpression(expr, type, metadata));
+	    			}
 	    		}
 	    	} else {
-	    		String[] types = new String[array.getExpressions().size()];
+	    		Class<?> type = null;
 	    		for (int i = 0; i < array.getExpressions().size(); i++) {
 	    			Expression expr = array.getExpressions().get(i);
-	    			types[i] = DataTypeManager.getDataTypeName(expr.getType());
+	    			if (type == null) {
+	    				type = expr.getType();
+	    			} else if (type != expr.getType()) {
+	    				type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    			}
 	    		}
-	    		String commonType = ResolverUtil.getCommonType(types);
-	    		array.setComponentType(DataTypeManager.getDataTypeClass(commonType));
+	    		if (type == null) {
+	    			type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    		}
+	    		array.setComponentType(type);
 	    	}
     	} catch (QueryResolverException e) {
     		handleException(e);
@@ -383,6 +387,11 @@ public class ResolverVisitor extends LanguageVisitor {
 		} catch (QueryResolverException e) {
 			handleException(e); 
 		}
+    }
+    
+    @Override
+    public void visit(XMLExists obj) {
+    	visit(obj.getXmlQuery());
     }
     
     @Override
@@ -455,10 +464,63 @@ public class ResolverVisitor extends LanguageVisitor {
 				handleException(e);
 			}
     	}
-    	if (obj.getAggregateFunction() == Type.USER_DEFINED) {
+    	switch (obj.getAggregateFunction()) {
+    	case USER_DEFINED:
     		visit((Function)obj);
+    		break;
+    	case STRING_AGG:
+    		try {
+	    		if (obj.getArgs().length != 2) {
+	    			throw new QueryResolverException(QueryPlugin.Event.TEIID31140, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31140, obj));
+	    		}
+	    		if (obj.getType() == null) {
+					Expression arg = obj.getArg(0);
+					Expression arg1 = obj.getArg(1);
+					Class<?> type = null;
+					if (isBinary(arg)) {
+						setDesiredType(arg1, DataTypeManager.DefaultDataClasses.BLOB, obj);
+						if (isBinary(arg1)) {
+							type = DataTypeManager.DefaultDataClasses.BLOB;
+						}
+					} else if (isCharacter(arg)) {
+						setDesiredType(arg1, DataTypeManager.DefaultDataClasses.CLOB, obj);
+						if (isCharacter(arg1)) {
+							type = DataTypeManager.DefaultDataClasses.CLOB;
+						}
+					} else if (arg.getType() == null) {
+						if (isBinary(arg1)) {
+							setDesiredType(arg, DataTypeManager.DefaultDataClasses.BLOB, obj);
+							if (isBinary(arg)) {
+								type = DataTypeManager.DefaultDataClasses.BLOB;
+							}
+						} else if (isCharacter(arg1)) {
+							setDesiredType(arg, DataTypeManager.DefaultDataClasses.CLOB, obj);
+							if (isCharacter(arg)) {
+								type = DataTypeManager.DefaultDataClasses.CLOB;
+							}
+						}
+					}
+					if (type == null) {
+						throw new QueryResolverException(QueryPlugin.Event.TEIID31141, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31141, obj));
+					}
+	    			obj.setType(type);
+	    		}
+    		} catch (QueryResolverException e) {
+				handleException(e);
+			}
+    		break;
     	}
     }
+
+	private boolean isCharacter(Expression arg) {
+		return arg.getType() == DataTypeManager.DefaultDataClasses.STRING
+				|| arg.getType() == DataTypeManager.DefaultDataClasses.CLOB;
+	}
+
+	private boolean isBinary(Expression arg) {
+		return arg.getType() == DataTypeManager.DefaultDataClasses.VARBINARY
+				|| arg.getType() == DataTypeManager.DefaultDataClasses.BLOB;
+	}
 
     public TeiidComponentException getComponentException() {
         return this.componentException;
@@ -534,23 +596,34 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	
 	    // Attempt to get exact match of function for this signature
-	    FunctionDescriptor fd = findWithImplicitConversions(library, function, args, types, hasArgWithoutType);
-	    
-	    // Function did not resolve - determine reason and throw exception
-	    if(fd == null) {
-	        FunctionForm form = library.findFunctionForm(function.getName(), args.length);
-	        if(form == null) {
-	            // Unknown function form
-	             throw new QueryResolverException(QueryPlugin.Event.TEIID30068, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30068, function));
-	        }
-	        // Known function form - but without type information
+	    List<FunctionDescriptor> fds;
+		try {
+			fds = findWithImplicitConversions(library, function, args, types, hasArgWithoutType);
+			if(fds.isEmpty()) {
+		        if(!library.hasFunctionMethod(function.getName(), args.length)) {
+		            // Unknown function form
+		             throw new QueryResolverException(QueryPlugin.Event.TEIID30068, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30068, function));
+		        }
+		        // Known function form - but without type information
+		        if (hasArgWithoutType) {
+		             throw new QueryResolverException(QueryPlugin.Event.TEIID30069, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30069, function));
+		        }
+		        
+		        // Known function form - unable to find implicit conversions
+		        throw new QueryResolverException(QueryPlugin.Event.TEIID30070, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30070, function));
+		    }
+			if (fds.size() > 1) {
+				throw new QueryResolverException(QueryPlugin.Event.TEIID31150, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31150, function));
+			}
+		} catch (InvalidFunctionException e) {
+			// Known function form - but without type information
 	        if (hasArgWithoutType) {
 	             throw new QueryResolverException(QueryPlugin.Event.TEIID30069, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30069, function));
 	        }
-	        // Known function form - unable to find implicit conversions
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30070, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30070, function));
-	    }
+			throw new QueryResolverException(QueryPlugin.Event.TEIID31150, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31150, function));
+		}
 	    
+	    FunctionDescriptor fd = fds.get(0);
 	    if (fd.getMethod().isVarArgs() 
 	    		&& fd.getTypes().length == types.length 
 	    		&& library.isVarArgArrayParam(fd.getMethod(), types, types.length - 1, fd.getTypes()[types.length - 1])) {
@@ -574,9 +647,17 @@ public class ResolverVisitor extends LanguageVisitor {
 	    } else if(fd.isSystemFunction(FunctionLibrary.LOOKUP)) {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
-	    } else if (fd.isSystemFunction(FunctionLibrary.ARRAY_GET) && args[0].getType().isArray()) {
-	    	//hack to use typed array values
-			fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
+	    } else if (fd.isSystemFunction(FunctionLibrary.ARRAY_GET)) {
+	    	if (args[0].getType().isArray()) {
+				fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
+	    	} else {
+	    		if (function.getType() != null) {
+	    			setDesiredType(args[0], function.getType(), function);
+	    		}
+	    		if (args[0].getType() != DataTypeManager.DefaultDataClasses.OBJECT) {
+	    			throw new QueryResolverException(QueryPlugin.Event.TEIID31145, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31145, DataTypeManager.getDataTypeName(args[0].getType()), function));
+	    		}
+	    	}
 	    } else if (Boolean.valueOf(fd.getMethod().getProperty(TEIID_PASS_THROUGH_TYPE, false))) {
 	    	//hack largely to support pg
 	    	fd = library.copyFunctionChangeReturnType(fd, args[0].getType());
@@ -598,20 +679,18 @@ public class ResolverVisitor extends LanguageVisitor {
 	 * @param types
 	 * @return
 	 * @throws TeiidComponentException 
+	 * @throws InvalidFunctionException 
 	 * @since 4.3
 	 */
-	private FunctionDescriptor findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException {
-	    
+	private List<FunctionDescriptor> findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException, InvalidFunctionException {
 	    // Try to find implicit conversion path to still perform this function
-	    FunctionDescriptor[] conversions;
-		try {
-			conversions = library.determineNecessaryConversions(function.getName(), function.getType(), args, types, hasArgWithoutType);
-		} catch (InvalidFunctionException e) {
-			return null;
-		}
+	    ConversionResult cr = library.determineNecessaryConversions(function.getName(), function.getType(), args, types, hasArgWithoutType);
+	    if (cr.method == null) {
+	    	return Collections.emptyList();
+	    }
 		Class<?>[] newSignature = types;
-	    
-	    if(conversions != null) {
+		if (cr.needsConverion) {
+			FunctionDescriptor[] conversions = library.getConverts(cr.method, types);
 		    newSignature = new Class[conversions.length];
 		    // Insert new conversion functions as necessary, while building new signature
 		    for(int i=0; i<conversions.length; i++) {
@@ -631,10 +710,11 @@ public class ResolverVisitor extends LanguageVisitor {
 		                    
 		        newSignature[i] = newType;
 		    }
-	    }
+		}
+	    String name = cr.method.getFullName();
 	
 	    // Now resolve using the new signature to get the function's descriptor
-	    return library.findFunction(function.getName(), newSignature);
+	    return library.findAllFunctions(name, newSignature);
 	}
 
 	/**
@@ -1044,6 +1124,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	    ResolverVisitor elementsVisitor = new ResolverVisitor(metadata, groups, externalContext);
 	    PostOrderNavigator.doVisit(obj, elementsVisitor);
 	    elementsVisitor.throwException(true);
+	}
+	
+	public boolean hasUserDefinedAggregate() {
+		return hasUserDefinedAggregate;
 	}
     
 }

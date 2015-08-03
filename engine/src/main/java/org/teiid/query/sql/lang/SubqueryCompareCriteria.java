@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -73,6 +74,8 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
     private QueryCommand command;
     private String id = "$scc/id" + ID.getAndIncrement(); //$NON-NLS-1$
+    
+    private SubqueryHint subqueryHint = new SubqueryHint();
 
     public SubqueryCompareCriteria(){
         super();
@@ -132,9 +135,9 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
      */
     public String getPredicateQuantifierAsString() {
         switch ( this.predicateQuantifier ) {
-            case ANY: return "ANY "; //$NON-NLS-1$
-            case SOME: return "SOME "; //$NON-NLS-1$
-            case ALL: return "ALL "; //$NON-NLS-1$
+            case ANY: return "ANY"; //$NON-NLS-1$
+            case SOME: return "SOME"; //$NON-NLS-1$
+            case ALL: return "ALL"; //$NON-NLS-1$
             default: return "??"; //$NON-NLS-1$
         }
     }
@@ -178,7 +181,8 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
         return getOperator() == scc.getOperator() &&
                getPredicateQuantifier() == scc.getPredicateQuantifier() &&
                EquivalenceUtil.areEqual(getLeftExpression(), scc.getLeftExpression()) &&
-               EquivalenceUtil.areEqual(getCommand(), scc.getCommand());
+               EquivalenceUtil.areEqual(getCommand(), scc.getCommand()) &&
+               EquivalenceUtil.areEqual(subqueryHint, scc.subqueryHint);
     }
 
     /**
@@ -199,7 +203,11 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
             copyCommand = (QueryCommand) getCommand().clone();
         }
 
-        return new SubqueryCompareCriteria(leftCopy, copyCommand, this.getOperator(), this.getPredicateQuantifier());
+        SubqueryCompareCriteria copy = new SubqueryCompareCriteria(leftCopy, copyCommand, this.getOperator(), this.getPredicateQuantifier());
+        if (this.subqueryHint != null) {
+        	copy.subqueryHint = this.subqueryHint.clone();
+        }
+        return copy;
     }
 
     /** 
@@ -218,5 +226,13 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     		this.predicateQuantifier = ALL;
     	}
     }
+    
+    public SubqueryHint getSubqueryHint() {
+		return subqueryHint;
+	}
+    
+    public void setSubqueryHint(SubqueryHint subqueryHint) {
+		this.subqueryHint = subqueryHint;
+	}
 
 }

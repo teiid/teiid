@@ -22,7 +22,9 @@
 
 package org.teiid.language;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.teiid.language.AndOr.Operator;
 
@@ -96,5 +98,28 @@ public final class LanguageUtil {
             return languageFactory.createAndOr(Operator.AND, primaryCrit, additionalCrit);
         }               
     }   
+    
+    /**
+     * Combines a list of conditions under a single AndOr
+     * @param crits
+     * @return
+     */
+    public static Condition combineCriteria(List<Condition> crits) {
+        if(crits == null || crits.isEmpty()) {
+            return null;
+        }
+        if (crits.size() == 1) {
+        	return crits.get(0);
+        }
+        Condition result = null;
+        for (Condition crit : crits) {
+        	if (result == null) {
+        		result = crit;
+        	} else {
+        		result = new AndOr(result, crit, Operator.AND);
+        	}
+        }                
+        return result;
+    }  
     
 }

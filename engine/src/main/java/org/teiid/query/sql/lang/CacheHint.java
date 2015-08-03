@@ -35,6 +35,10 @@ public class CacheHint extends CacheDirective {
 	public static final String UPDATABLE = "updatable"; //$NON-NLS-1$
 	public static final String CACHE = "cache"; //$NON-NLS-1$
 	public static final String SCOPE = "scope:"; //$NON-NLS-1$
+
+	public static final String MIN = "min:"; //$NON-NLS-1$
+	
+	private Long minRows;
 	
 	public CacheHint() {
 	}
@@ -83,6 +87,26 @@ public class CacheHint extends CacheDirective {
 			return getUpdatable();
 		}
 		return b;
+	}
+	
+	public CacheHint clone() {
+		CacheHint copy = new CacheHint();
+		copy.setInvalidation(this.getInvalidation());
+		copy.setPrefersMemory(this.getPrefersMemory());
+		copy.setReadAll(this.getReadAll());
+		copy.setScope(this.getScope());
+		copy.setTtl(this.getTtl());
+		copy.setUpdatable(this.getUpdatable());
+		copy.setMinRows(this.getMinRows());
+		return copy;
+	}
+
+	public void setMinRows(Long minRows) {
+		this.minRows = minRows;
+	}
+	
+	public Long getMinRows() {
+		return minRows;
 	}
 
 }

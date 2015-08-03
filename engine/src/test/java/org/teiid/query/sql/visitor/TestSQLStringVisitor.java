@@ -295,16 +295,33 @@ public class TestSQLStringVisitor {
    		Insert insert = new Insert();
    		insert.setGroup(new GroupSymbol("m.g1"));      //$NON-NLS-1$
    		
-   		List vars = new ArrayList();
+   		List<ElementSymbol> vars = new ArrayList<ElementSymbol>();
    		vars.add(new ElementSymbol("e1")); //$NON-NLS-1$
    		vars.add(new ElementSymbol("e2")); //$NON-NLS-1$
    		insert.setVariables(vars);
-   		List values = new ArrayList();
+   		List<Constant> values = new ArrayList<Constant>();
    		values.add(new Constant(new Integer(5)));
    		values.add(new Constant("abc")); //$NON-NLS-1$
    		insert.setValues(values);
    		
    		helpTest(insert, "INSERT INTO m.g1 (e1, e2) VALUES (5, 'abc')"); //$NON-NLS-1$
+    }
+    
+    @Test public void testMerge1() {
+   		Insert insert = new Insert();
+   		insert.setMerge(true);
+   		insert.setGroup(new GroupSymbol("m.g1"));      //$NON-NLS-1$
+   		
+   		List<ElementSymbol> vars = new ArrayList<ElementSymbol>();
+   		vars.add(new ElementSymbol("e1")); //$NON-NLS-1$
+   		vars.add(new ElementSymbol("e2")); //$NON-NLS-1$
+   		insert.setVariables(vars);
+   		List<Constant> values = new ArrayList<Constant>();
+   		values.add(new Constant(new Integer(5)));
+   		values.add(new Constant("abc")); //$NON-NLS-1$
+   		insert.setValues(values);
+   		
+   		helpTest(insert, "MERGE INTO m.g1 (e1, e2) VALUES (5, 'abc')"); //$NON-NLS-1$
     }
   
   	@Test public void testIsNullCriteria1() {
@@ -685,7 +702,7 @@ public class TestSQLStringVisitor {
 	@Test public void testSetCriteria1() {
 		SetCriteria sc = new SetCriteria();
 		sc.setExpression(new ElementSymbol("e1"));		 //$NON-NLS-1$
-		sc.setValues(new ArrayList());
+		sc.setValues(new ArrayList<Expression>());
 		
 		helpTest(sc, "e1 IN ()"); //$NON-NLS-1$
 	}
@@ -693,7 +710,7 @@ public class TestSQLStringVisitor {
 	@Test public void testSetCriteria2() {
 		SetCriteria sc = new SetCriteria();
 		sc.setExpression(new ElementSymbol("e1"));	 //$NON-NLS-1$
-		ArrayList values = new ArrayList();	
+		ArrayList<Expression> values = new ArrayList<Expression>();	
 		values.add(new ElementSymbol("e2")); //$NON-NLS-1$
 		values.add(new Constant("abc")); //$NON-NLS-1$
 		sc.setValues(values);
@@ -704,7 +721,7 @@ public class TestSQLStringVisitor {
 	@Test public void testSetCriteria3() {
 		SetCriteria sc = new SetCriteria();
 		sc.setExpression(new ElementSymbol("e1"));	 //$NON-NLS-1$
-		ArrayList values = new ArrayList();	
+		ArrayList<Expression> values = new ArrayList<Expression>();	
 		values.add(null);
 		values.add(new Constant("b")); //$NON-NLS-1$
 		sc.setValues(values);
@@ -715,7 +732,7 @@ public class TestSQLStringVisitor {
     @Test public void testSetCriteria4() {
         SetCriteria sc = new SetCriteria();
         sc.setExpression(new ElementSymbol("e1"));   //$NON-NLS-1$
-        ArrayList values = new ArrayList(); 
+        ArrayList<Expression> values = new ArrayList<Expression>(); 
         values.add(new ElementSymbol("e2")); //$NON-NLS-1$
         values.add(new Constant("abc")); //$NON-NLS-1$
         sc.setValues(values);
@@ -1426,7 +1443,7 @@ public class TestSQLStringVisitor {
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "BEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
     
     @Test public void testCreateUpdateProcedure2() {
@@ -1440,7 +1457,7 @@ public class TestSQLStringVisitor {
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "BEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
 
     @Test public void testCreateUpdateProcedure3() {
@@ -1454,7 +1471,7 @@ public class TestSQLStringVisitor {
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "BEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
 
     @Test public void testSubqueryCompareCriteria1() {
@@ -1507,7 +1524,7 @@ public class TestSQLStringVisitor {
     }
     
     @Test public void testDynamicCommand() {
-		List symbols = new ArrayList();
+		List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
 	
 	    ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
 	    a1.setType(DataTypeManager.DefaultDataClasses.STRING);
@@ -1708,13 +1725,33 @@ public class TestSQLStringVisitor {
     }
     
     @Test public void testTextTable() throws Exception {
-    	String sql = "SELECT * from texttable(file columns x string WIDTH 1 NO TRIM NO ROW DELIMITER) as x"; //$NON-NLS-1$
-        helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT * FROM TEXTTABLE(file COLUMNS x string WIDTH 1 NO TRIM NO ROW DELIMITER) AS x");
+    	String sql = "SELECT * from texttable(file columns y for ordinality, x string WIDTH 1 NO TRIM NO ROW DELIMITER) as x"; //$NON-NLS-1$
+        helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT * FROM TEXTTABLE(file COLUMNS y FOR ORDINALITY, x string WIDTH 1 NO TRIM NO ROW DELIMITER) AS x");
     }
     
     @Test public void testArray() {
     	Array array = new Array(TypeFacility.RUNTIME_TYPES.INTEGER, Arrays.asList(new ElementSymbol("e1"), new Constant(1)));
         helpTest(array, "(e1, 1)");             //$NON-NLS-1$
     }
-
+    
+    @Test public void testReturnStatement() throws QueryParserException {
+		helpTest(QueryParser.getQueryParser().parseProcedure("begin if (true) return 1; return; end", false), "BEGIN\nIF(TRUE)\nBEGIN\nRETURN 1;\nEND\nRETURN;\nEND");
+    }
+    
+    @Test public void testConditionNesting() throws Exception {
+    	String sql = "select (intkey = intnum) is null, (intkey < intnum) in (true, false) from bqt1.smalla";
+    	
+    	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT (intkey = intnum) IS NULL, (intkey < intnum) IN (TRUE, FALSE) FROM bqt1.smalla"); //$NON-NLS-1$
+    }
+    
+    @Test public void testSubqueryNameEscaping() throws Exception {
+    	helpTest(new SubqueryFromClause("user", QueryParser.getQueryParser() .parseCommand("select 1")), "(SELECT 1) AS \"user\"");
+	}
+    
+    @Test public void testEscaping() throws Exception {
+    	String sql = "select 'a\\u0000\u0001b''c''d\u0002e\u0003f''' from TEXTTABLE(x COLUMNS y string ESCAPE '\u0000' HEADER) AS A";
+    	
+    	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT 'a\\u0000\\u0001b''c''d\\u0002e\\u0003f''' FROM TEXTTABLE(x COLUMNS y string ESCAPE '\\u0000' HEADER) AS A"); //$NON-NLS-1$
+    }
+    
 }

@@ -1,16 +1,17 @@
-This distribution is to collect all the necessary jar files needed to deploy the Teiid in the embedded mode. Note that, Teiid
-embedded does not require JBoss AS to run. This also brings in many issues to be resolved in the host environment, like
+This distribution has all the necessary jar and many optional files needed to 
+deploy Teiid in the embedded mode. Note that, Teiid embedded does not require 
+JBoss AS to run. This also brings in many issues to be resolved in the host 
+environment, like
 
 - Connections to your sources
-- Providing the metadata
-- Transaction manager
+- Transaction manager/Connection pools (Narayana/IronJacamar is shown in the
+  examples)
+- Security
 
-The user is responsible for providing alternative provisions for features to execute properly.
+The user is responsible for providing alternative provisions for the related
+features to execute properly.
 
-Also there will be not be any functionality provided in these areas
-
-- Access through Admin API
-- Authentication
-- Connection pools
+Access through the remote Admin API is not possible, but the EmbeddedServer does
+implement the Admin interface.
 
  

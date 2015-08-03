@@ -31,7 +31,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Array;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -49,12 +51,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
-import org.teiid.client.security.ILogon;
+import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.net.socket.SocketUtil;
+import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.TestEmbeddedServer;
+import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
 
 @SuppressWarnings("nls")
 public class TestODBCSocketTransport {
@@ -71,21 +79,25 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			}			
 		}
 
+		@Override
 		public Socket createSocket() throws IOException {
 			return sslSocketFactory.createSocket();
 		}
 
+		@Override
 		public Socket createSocket(InetAddress address, int port,
 				InetAddress localAddress, int localPort) throws IOException {
 			return sslSocketFactory.createSocket(address, port, localAddress,
 					localPort);
 		}
 
+		@Override
 		public Socket createSocket(InetAddress host, int port)
 				throws IOException {
 			return sslSocketFactory.createSocket(host, port);
 		}
 
+		@Override
 		public Socket createSocket(Socket s, String host, int port,
 				boolean autoClose) throws IOException {
 			SSLSocket socket = (SSLSocket)sslSocketFactory.createSocket(s, host, port, autoClose);
@@ -93,6 +105,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			return socket;
 		}
 
+		@Override
 		public Socket createSocket(String host, int port,
 				InetAddress localHost, int localPort) throws IOException,
 				UnknownHostException {
@@ -100,44 +113,68 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 					localPort);
 		}
 
+		@Override
 		public Socket createSocket(String host, int port) throws IOException,
 				UnknownHostException {
 			return sslSocketFactory.createSocket(host, port);
 		}
 
+		@Override
 		public String[] getDefaultCipherSuites() {
 			return sslSocketFactory.getDefaultCipherSuites();
 		}
 
+		@Override
 		public String[] getSupportedCipherSuites() {
 			return sslSocketFactory.getSupportedCipherSuites();
 		}
 		
 	}
+
+	private static final MockTransactionManager TRANSACTION_MANAGER = new TestEmbeddedServer.MockTransactionManager();
+
+	enum Mode {
+		LEGACY,//how the test was originally written
+		ENABLED,
+		LOGIN,
+		DISABLED
+	}
 	
 	static class FakeOdbcServer {
 		InetSocketAddress addr;
 		ODBCSocketListener odbcTransport;
+		FakeServer server;
 		
-		public void start() throws Exception {
+		public void start(Mode mode) throws Exception {
 			SocketConfiguration config = new SocketConfiguration();
 			SSLConfiguration sslConfig = new SSLConfiguration();
-			sslConfig.setMode(SSLConfiguration.ENABLED);
-			sslConfig.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+			if (mode == Mode.LOGIN) {
+				sslConfig.setMode(SSLConfiguration.LOGIN);
+			} else if (mode == Mode.ENABLED || mode == Mode.LEGACY) {
+				sslConfig.setMode(SSLConfiguration.ENABLED);
+				sslConfig.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+			} else {
+				sslConfig.setMode(SSLConfiguration.DISABLED);
+			}
 			config.setSSLConfiguration(sslConfig);
 			addr = new InetSocketAddress(0);
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(addr.getPort());
-			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, Mockito.mock(ILogon.class));
+			server = new FakeServer(false);
+			EmbeddedConfiguration ec = new EmbeddedConfiguration();
+			ec.setTransactionManager(TRANSACTION_MANAGER);
+			server.start(ec, false);
+			LogonImpl logon = Mockito.mock(LogonImpl.class);
+			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
-			FakeServer server = new FakeServer(true);
-			server.setUseCallingThread(false);
+			if (mode == Mode.LEGACY) {
+				odbcTransport.setRequireSecure(false);
+			}
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-			
-			odbcTransport.setDriver(server.getDriver());
 		}
 		
 		public void stop() {
+			server.stop();
 			odbcTransport.stop();
 		}
 		
@@ -146,7 +183,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	private static FakeOdbcServer odbcServer = new FakeOdbcServer();
 	
 	@BeforeClass public static void oneTimeSetup() throws Exception {
-		odbcServer.start();
+		odbcServer.start(Mode.LEGACY);
 	}
 	
 	@AfterClass public static void oneTimeTearDown() throws Exception {
@@ -156,11 +193,17 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	Connection conn;
 	
 	@Before public void setUp() throws Exception {
+		String database = "parts";
+		TRANSACTION_MANAGER.reset();
+		connect(database);
+	}
+
+	private void connect(String database) throws SQLException {
 		Driver d = new Driver();
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
-		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/"+database, p);
 	}
 	
 	@After public void tearDown() throws Exception {
@@ -200,6 +243,23 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			rs.getString(1);
 		}
 		assertEquals(7000, i);
+	}
+	
+	/**
+	 * tests that the portal max is handled correctly
+	 */
+	@Test public void testMultibatchSelectPrepared() throws Exception {
+		PreparedStatement s = conn.prepareStatement("select * from (select * from tables order by name desc limit 21) t1, (select * from tables order by name desc limit 21) t2 where t1.name > ?");
+		conn.setAutoCommit(false);
+		s.setFetchSize(100);
+		s.setString(1, "0");
+		ResultSet rs = s.executeQuery();
+		int i = 0;
+		while (rs.next()) {
+			i++;
+			rs.getString(1);
+		}
+		assertEquals(441, i);
 	}
 	
 	@Test public void testBlob() throws Exception {
@@ -309,12 +369,65 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		TestMMDatabaseMetaData.compareResultSet(rs); //compare the rest
 	}
 	
-	// this does not work as JDBC always sends the queries in prepared form
-	public void testPgDeclareCursor() throws Exception {
+	@Test public void testCursor() throws Exception {
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("begin;declare \"foo\" cursor for select * from pg_proc;fetch 10 in \"foo\"; close \"foo\"");
-		rs.next();		
+		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		try {
+			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc;"));
+			assertFalse(stmt.execute("move 5 in \"foo\""));
+			stmt.execute("fetch 10 in \"foo\"");
+			ResultSet rs = stmt.getResultSet();
+			int rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(8, rowCount);
+			stmt.execute("close \"foo\"");
+		} finally {
+			ExtendedQueryExectutorImpl.simplePortal = null;
+		}
+		
 	}	
+	
+	@Test public void testScrollCursor() throws Exception {
+		Statement stmt = conn.createStatement();
+		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		try {
+			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc;"));
+			assertFalse(stmt.execute("move 5 in \"foo\""));
+			stmt.execute("fetch 6 in \"foo\"");
+			ResultSet rs = stmt.getResultSet();
+			int rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(6, rowCount);
+			stmt.execute("close \"foo\"");
+		} finally {
+			ExtendedQueryExectutorImpl.simplePortal = null;
+		}
+		
+	}
+	
+	@Test public void testScrollCursorWithHold() throws Exception {
+		Statement stmt = conn.createStatement();
+		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		try {
+			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor with hold for select * from pg_proc;"));
+			assertFalse(stmt.execute("move 5 in \"foo\""));
+			stmt.execute("fetch 7 in \"foo\"");
+			ResultSet rs = stmt.getResultSet();
+			int rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(7, rowCount);
+			stmt.execute("close \"foo\"");
+		} finally {
+			ExtendedQueryExectutorImpl.simplePortal = null;
+		}
+		
+	}
 	
 	@Test public void testPgProcedure() throws Exception {
 		Statement stmt = conn.createStatement();
@@ -362,7 +475,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		ResultSet rs = s.getResultSet();
 		assertTrue(rs.next());
 		String str = rs.getString(1);
-		assertTrue(str.startsWith("ProjectNode\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1"));
+		assertTrue(str.startsWith("ProjectNode\n  + Relational Node ID:0\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1"));
 	}
 	
 	@Test public void testSetEmptyLiteral() throws Exception {
@@ -374,12 +487,25 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertEquals("", rs.getString(1));
 	}
 	
+	@Test public void testSetNonString() throws Exception {
+		Statement s = conn.createStatement();
+		assertFalse(s.execute("SET extra_float_digits TO 2"));
+		assertTrue(s.execute("SHOW extra_float_digits"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		assertEquals("2", rs.getString(1));
+	}
+	
 	@Test public void testColons() throws Exception {
 		Statement s = conn.createStatement();
 		//make sure that we aren't mishandling the ::
 		ResultSet rs = s.executeQuery("select 'a::b'");
 		assertTrue(rs.next());
 		assertEquals("a::b", rs.getString(1));
+		
+		rs = s.executeQuery("select ' a::b'");
+		assertTrue(rs.next());
+		assertEquals(" a::b", rs.getString(1));
 		
 		rs = s.executeQuery("select name::varchar from tables where name = 'Columns'");
 		assertTrue(rs.next());
@@ -405,6 +531,22 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	}
 	
 	/**
+	 * TODO: we really want an odbc test, but this confirms the pg_description table and ~ rewrite handling
+	 * @throws Exception
+	 */
+	@Test public void test_table_with_underscore() throws Exception {
+		DatabaseMetaData metadata = conn.getMetaData();
+		ResultSet rs = metadata.getTables(null, null, "pg_index", null);
+		assertTrue(rs.next());
+	}
+	
+	@Test public void test_pg_cast() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select '2011-01-01'::date");
+		rs.next();
+	}
+	
+	/**
 	 * Ensures that the client is notified about the change.  However the driver will
 	 * throw an exception as it requires UTF8
 	 * @throws Exception
@@ -412,6 +554,75 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	@Test(expected=SQLException.class) public void test_pg_client_encoding1() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set client_encoding LATIN1");
+	}
+	
+	@Test public void testArray() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select (1,2)");
+		rs.next();
+		Array result = rs.getArray(1);
+		ResultSet rs1 = result.getResultSet();
+		rs1.next();
+		assertEquals(1, rs1.getInt(1));
+		
+		//TODO:we are squashing the result to a text array, since
+		//that is a known type - eventually we will need typed array support
+		//Object array = result.getArray();
+		//assertEquals(1, java.lang.reflect.Array.get(array, 0));
+	}
+	
+	
+	@Test public void testClientIp() throws Exception {
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.session.IPAddress') as X"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String value = rs.getString(1);
+		assertNotNull(value);
+	}
+	
+	@Test public void testVDBConnectionProperty() throws Exception {
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("x");
+		vdb.addProperty("connection.foo", "bar");
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setSchemaSourceType("ddl");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.setSchemaText("create view v as select 1");
+		vdb.addModel(mmd);
+		odbcServer.server.deployVDB(vdb);
+		this.conn.close();
+		connect("x");
+		Statement s = conn.createStatement();
+		assertTrue(s.execute("show foo"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String value = rs.getString(1);
+		assertEquals("bar", value);
+	}
+	
+	@Test public void testTransactionCycleDisabled() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("set disableLocalTxn true");
+		conn.setAutoCommit(false); 
+		assertTrue(s.execute("select * from tables order by name"));
+		conn.setAutoCommit(true);
+	}
+	
+	@Test public void testGropuByPositional() throws Exception {
+		Statement s = conn.createStatement();
+		//would normally throw an exception, but is allowable over odbc
+		s.execute("select name, count(schemaname) from tables group by 1");
+	}
+	
+	@Test public void testImplicitPortalClosing() throws Exception {
+		PreparedStatement s = conn.prepareStatement("select 1");
+		s.executeQuery();
+		
+		s.executeQuery();
+		
+		assertEquals(1, odbcServer.server.getDqp().getRequests().size());
 	}
 
 }

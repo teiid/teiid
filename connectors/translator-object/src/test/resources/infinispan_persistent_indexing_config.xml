@@ -1,34 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns="urn:infinispan:config:5.0">
+            xsi:schemaLocation="urn:infinispan:config:6.0 http://www.infinispan.org/schemas/infinispan-config-6.0.xsd"
+            xmlns="urn:infinispan:config:6.0">
   <global />
   <default>
-    <loaders shared="false" preload="true">
-      <loader class="org.infinispan.loaders.file.FileCacheStore" 
-              fetchPersistentState="false" 
-              ignoreModifications="false"
-              purgeOnStartup="false">
-        <properties>
-          <property name="location" value="target/localcache"/>
-        </properties>
-      </loader>
-    </loaders>
       <indexing enabled="true" indexLocalOnly="true">
-          <properties>
-              <property name="hibernate.search.default.directory_provider" value="ram" />
-          </properties>
+      	<properties>
+     			<property name="default.directory_provider" value="ram" />
+                <property name="lucene_version" value="LUCENE_36" />
+         </properties>  
       </indexing>
   </default>
-    <namedCache name="Trades">
-        <loaders shared="false" preload="true">
-            <loader class="org.infinispan.loaders.file.FileCacheStore"
-                fetchPersistentState="true"
-                ignoreModifications="false"
-                purgeOnStartup="false">
-                <properties>
-                    <property name="location" value="./target/localcache/indexing/trades"/>
-                </properties>
-            </loader>
-        </loaders>
-    </namedCache>
+      <namedCache name="Trades">
+        <eviction
+                strategy="LIRS"
+                maxEntries="1000"/>
+        <persistence passivation="false">
+            <singleFile
+                    shared="false"
+                    fetchPersistentState="false"
+                    ignoreModifications="false"
+                    purgeOnStartup="true"
+                    preload="false"
+                    location="./target/localcache/indexing/trades">
+            </singleFile>
+        </persistence>
+    </namedCache> 
+  
 </infinispan>

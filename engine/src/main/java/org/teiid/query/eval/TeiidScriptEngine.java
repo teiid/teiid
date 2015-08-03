@@ -30,12 +30,15 @@ import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import javax.script.AbstractScriptEngine;
@@ -48,15 +51,17 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionMethods;
 
 /**
  * A simplistic script engine that supports root variable access and 0-ary methods on the subsequent objects.
  */
 public final class TeiidScriptEngine extends AbstractScriptEngine implements Compilable {
-	private static Map<ClassLoader, Map<Class<?>, Map<String, Method>>> properties = new WeakHashMap<ClassLoader, Map<Class<?>, Map<String, Method>>>(100);
+	private static Reference<Map<Class<?>, Map<String, Method>>> properties;
 	private static Pattern splitter = Pattern.compile("\\."); //$NON-NLS-1$
 	
 	@Override
@@ -67,12 +72,18 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 	@Override
 	public CompiledScript compile(String script) throws ScriptException {
 		final String[] parts = splitter.split(script);
+		final int[] indexes = new int[parts.length];
 		for (int i = 1; i < parts.length; i++) {
 			String string = parts[i];
 			for (int j = 0; j < string.length(); j++) {
 				if (!Character.isJavaIdentifierPart(string.charAt(j))) {
 					throw new ScriptException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30431,string, string.charAt(j)));
 				}
+			}
+			try {
+				indexes[i] = Integer.parseInt(string);
+			} catch (NumberFormatException e) {
+				indexes[i] = -1;
 			}
 		}
 		return new CompiledScript() {
@@ -91,14 +102,33 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 				if (parts.length > 0) {
 					obj = sc.getAttribute(parts[0]);
 				}
-				if (obj == null) {
-					return null;
-				}
 				for (int i = 1; i < parts.length; i++) {
+					if (obj == null) {
+						return null;
+					}
 					String part = parts[i];
 					Map<String, Method> methodMap = getMethodMap(obj.getClass());
 					Method m = methodMap.get(part);
 					if (m == null) {
+						int index = indexes[i];
+						if (index > 0) { //assume it's a list/array
+							if (obj instanceof List) {
+								try {
+									obj = ((List<?>)obj).get(index - 1);
+								} catch (IndexOutOfBoundsException e) {
+									obj = null;
+								}
+								continue;
+							}
+							try {
+								obj = FunctionMethods.array_get(obj, index);
+								continue;
+							} catch (FunctionExecutionException e) {
+								throw new ScriptException(e);
+							} catch (SQLException e) {
+								throw new ScriptException(e);
+							}
+						}
 						throw new ScriptException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31111, part, obj.getClass()));
 					}
 					try {
@@ -117,48 +147,52 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 		};
 	}
 	
-	private Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
+	public Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
 		Map<Class<?>, Map<String, Method>> clazzMaps = null;
-		synchronized (properties) {
-			clazzMaps = properties.get(clazz.getClassLoader());
-			if (clazzMaps == null) {
-				clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String, Method>>(100));
-				properties.put(clazz.getClassLoader(), clazzMaps);
+		Map<String, Method> methodMap = null; 
+		if (properties != null) {
+			clazzMaps = properties.get();
+			if (clazzMaps != null) {
+				methodMap = clazzMaps.get(clazz);
+				if (methodMap != null) {
+					return methodMap;
+				}
 			}
 		}
-		Map<String, Method> methodMap = clazzMaps.get(clazz);
-		if (methodMap == null) {
-			try {
-				BeanInfo info = Introspector.getBeanInfo(clazz);
-				PropertyDescriptor[] pds = info.getPropertyDescriptors();
-				methodMap = new HashMap<String, Method>();
-				if (pds != null) {
-					for (int j = 0; j < pds.length; j++) {
-						PropertyDescriptor pd = pds[j];
-						if (pd.getReadMethod() == null || pd instanceof IndexedPropertyDescriptor) {
-							continue;
-						}
-						String name = pd.getName();
-						Method m = pd.getReadMethod();
-						methodMap.put(name, m);
+		try {
+			BeanInfo info = Introspector.getBeanInfo(clazz);
+			PropertyDescriptor[] pds = info.getPropertyDescriptors();
+			methodMap = new LinkedHashMap<String, Method>();
+			if (pds != null) {
+				for (int j = 0; j < pds.length; j++) {
+					PropertyDescriptor pd = pds[j];
+					if (pd.getReadMethod() == null || pd instanceof IndexedPropertyDescriptor) {
+						continue;
 					}
+					String name = pd.getName();
+					Method m = pd.getReadMethod();
+					methodMap.put(name, m);
 				}
-				MethodDescriptor[] mds = info.getMethodDescriptors();
-				if (pds != null) {
-					for (int j = 0; j < mds.length; j++) {
-						MethodDescriptor md = mds[j];
-						if (md.getMethod() == null || md.getMethod().getParameterTypes().length > 0 || md.getMethod().getReturnType() == Void.class) {
-							continue;
-						}
-						String name = md.getName();
-						Method m = md.getMethod();
-						methodMap.put(name, m);
-					}
-				}
-				clazzMaps.put(clazz, methodMap);
-			} catch (IntrospectionException e) {
-				throw new ScriptException(e);
 			}
+			MethodDescriptor[] mds = info.getMethodDescriptors();
+			if (pds != null) {
+				for (int j = 0; j < mds.length; j++) {
+					MethodDescriptor md = mds[j];
+					if (md.getMethod() == null || md.getMethod().getParameterTypes().length > 0 || md.getMethod().getReturnType() == Void.class || md.getMethod().getReturnType() == void.class) {
+						continue;
+					}
+					String name = md.getName();
+					Method m = md.getMethod();
+					methodMap.put(name, m);
+				}
+			}
+			if (clazzMaps == null) {
+				clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String,Method>>(100));
+				properties = new SoftReference<Map<Class<?>,Map<String,Method>>>(clazzMaps);
+			}
+			clazzMaps.put(clazz, methodMap);
+		} catch (IntrospectionException e) {
+			throw new ScriptException(e);
 		}
 		return methodMap;
 	}

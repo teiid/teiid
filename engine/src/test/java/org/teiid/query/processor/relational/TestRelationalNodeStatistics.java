@@ -22,36 +22,25 @@
 
 package org.teiid.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.processor.relational.RelationalNodeStatistics;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
+@SuppressWarnings({"rawtypes", "nls"})
+public class TestRelationalNodeStatistics {
 
-
-/** 
- * @since 4.2
- */
-public class TestRelationalNodeStatistics extends TestCase {
-
-    private int actualNodeOutputRows;
-    private int actualNodeNextBatchCalls;
-    private int actualNodeCumulativeBlocks;
-    private int actualNodeBlocks;
-//    private long actualNodeProcessingTime;
-//    private long actualNodeCumulativeProcessingTime;
-//    private long actualNodeCumulativeNextBatchProcessingTime;
-    
-    
-    public void testBatchTimer() {
+    @Test public void testBatchTimer() {
         RelationalNodeStatistics testnodeStatistics = new RelationalNodeStatistics();
         testnodeStatistics.startBatchTimer();
         assertTrue("The batch timer did not yield a start time", testnodeStatistics.getBatchStartTime()!= 0); //$NON-NLS-1$
@@ -59,9 +48,9 @@ public class TestRelationalNodeStatistics extends TestCase {
         assertTrue("The batch timer did not yield an end time", testnodeStatistics.getBatchEndTime()!= 0); //$NON-NLS-1$
     }
 
-    public void testStatsCollection() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testStatsCollection() throws TeiidComponentException, TeiidProcessingException {
         List[] data = createData(1000);
-        FakeRelationalNode fakeNode = this.createFakeNode(data);
+        FakeRelationalNode fakeNode = createFakeNode(data);
         
         // read from fake node
         while(true) {
@@ -71,26 +60,37 @@ public class TestRelationalNodeStatistics extends TestCase {
             } 
         }
         
-        this.actualNodeBlocks = fakeNode.getNodeStatistics().getNodeBlocks();
-        this.actualNodeNextBatchCalls = fakeNode.getNodeStatistics().getNodeNextBatchCalls();
-        this.actualNodeOutputRows = fakeNode.getNodeStatistics().getNodeOutputRows();
-//            this.actualNodeCumulativeNextBatchProcessingTime = fakeNode.getNodeStatistics().getNodeCumulativeNextBatchProcessingTime();
-//            this.actualNodeCumulativeProcessingTime = fakeNode.getNodeStatistics().getNodeCumulativeProcessingTime();
-//            this.actualNodeProcessingTime = fakeNode.getNodeStatistics().getNodeProcessingTime();
+        int actualNodeBlocks = fakeNode.getNodeStatistics().getNodeBlocks();
+        int actualNodeNextBatchCalls = fakeNode.getNodeStatistics().getNodeNextBatchCalls();
+        int actualNodeOutputRows = fakeNode.getNodeStatistics().getNodeOutputRows();
         
-        //System.out.println("Actual NodeComulativeNextBatchProcessingTime: "+ this.actualNodeCumulativeNextBatchProcessingTime); //$NON-NLS-1$
-        //System.out.println("Actual NodeComulativeProcessingTime: "+ this.actualNodeCumulativeProcessingTime); //$NON-NLS-1$
-        //System.out.println("Actual NodeProcessingTime: "+ this.actualNodeProcessingTime); //$NON-NLS-1$
-        
-        assertEquals("The NodeOutputRows was Inccorrect. Correct: 1000 Actual: "+ this.actualNodeOutputRows, 1000, this.actualNodeOutputRows); //$NON-NLS-1$
-        assertEquals("The NodeNextBatchCalls was Inccorrect. Correct: 10 Actual: "+ this.actualNodeNextBatchCalls, 10, this.actualNodeNextBatchCalls); //$NON-NLS-1$
-        assertEquals("The NodeBlocks was Inccorrect. Correct: 0 Actual: "+ this.actualNodeBlocks, 0, this.actualNodeBlocks); //$NON-NLS-1$
-        assertEquals("The NodeComulativeBlocks was Inccorrect. Correct: 0 Actual: "+ this.actualNodeCumulativeBlocks, 0, this.actualNodeCumulativeBlocks); //$NON-NLS-1$
+        assertEquals("The NodeOutputRows was Inccorrect. Correct: 1000 Actual: "+ actualNodeOutputRows, 1000, actualNodeOutputRows); //$NON-NLS-1$
+        assertEquals("The NodeNextBatchCalls was Inccorrect. Correct: 10 Actual: "+ actualNodeNextBatchCalls, 10, actualNodeNextBatchCalls); //$NON-NLS-1$
+        assertEquals("The NodeBlocks was Inccorrect. Correct: 0 Actual: "+ actualNodeBlocks, 0, actualNodeBlocks); //$NON-NLS-1$
+    }
+    
+    @Test public void testCumulativeCalculation() {
+    	RelationalNode[] children = new RelationalNode[2];
+    	children[0] = createFakeNode(createData(1));
+    	children[1] = createFakeNode(createData(1));
+    	children[0].getNodeStatistics().setBatchEndTime(100);
+    	children[0].getNodeStatistics().collectCumulativeNodeStats(new TupleBatch(1, Collections.EMPTY_LIST), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+    	children[0].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
+    	children[1].getNodeStatistics().setBatchEndTime(200);
+    	children[1].getNodeStatistics().collectCumulativeNodeStats(new TupleBatch(1, Collections.EMPTY_LIST), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+    	children[1].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
+    	RelationalNodeStatistics stats = new RelationalNodeStatistics();
+    	stats.setBatchEndTime(1000);
+    	stats.setBatchStartTime(0);
+    	stats.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+    	stats.collectNodeStats(children);
+    	assertEquals(1000, stats.getNodeCumulativeProcessingTime());
+    	assertEquals(700, stats.getNodeNextBatchProcessingTime());
     }
 
-    public void testDescriptionProperties() throws Exception {
+    @Test public void testDescriptionProperties() throws Exception {
         List[] data = createData(1000);
-        FakeRelationalNode fakeNode = this.createFakeNode(data);
+        FakeRelationalNode fakeNode = createFakeNode(data);
         
         // read from fake node
         while(true) {
@@ -106,12 +106,12 @@ public class TestRelationalNodeStatistics extends TestCase {
         // setup 
         ElementSymbol element = new ElementSymbol("a"); //$NON-NLS-1$
         element.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        List elements = new ArrayList();
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(element);
         
         FakeRelationalNode fakeNode = new FakeRelationalNode(1, data, 100);
         fakeNode.setElements(elements);
-        CommandContext context = new CommandContext("pid", "group", null, null, null, 1, true); //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("group", null, null, null, 1, true); 
         fakeNode.initialize(context, BufferManagerFactory.getStandaloneBufferManager(), null);
         return fakeNode;
     }

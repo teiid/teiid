@@ -1,0 +1,74 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+
+    <id>jboss-as7-dist</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>modules</baseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>kits/jboss-as7/modules</directory>
+            <outputDirectory>${jbossas-module-root}</outputDirectory>
+            <filtered>true</filtered>
+            <excludes>
+                <exclude>**/*.jar</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>kits/jboss-as7/modules</directory>
+            <outputDirectory>${jbossas-module-root}</outputDirectory>
+            <filtered>false</filtered>
+            <includes>
+                <include>**/*.jar</include>
+            </includes>
+        </fileSet>        
+        <fileSet>
+            <directory>${project.build.directory}/rar-unpack</directory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/webservice/main</outputDirectory>
+            <includes>
+                <include>**/connector-ws-*</include>
+                <include>**/META-INF/*</include>
+            </includes>           
+        </fileSet>
+    </fileSets>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/org/apache/cxf/impl/frontend-jaxrs/main</outputDirectory>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>org.apache.cxf:cxf-rt-frontend-jaxrs</include>
+                <include>org.apache.cxf:cxf-rt-rs-security-oauth</include>
+                <include>org.apache.cxf:cxf-rt-rs-security-oauth2</include>
+                <include>org.apache.cxf:cxf-rt-rs-security-oauth2-saml</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/javax/ws/rs/api/2.0</outputDirectory>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>javax.ws.rs:javax.ws.rs-api</include>
+            </includes>
+        </dependencySet> 
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/org/springframework/spring/main</outputDirectory>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>org.springframework:spring-beans</include>
+                <include>org.springframework:spring-context</include>
+                <include>org.springframework:spring-core</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/net/oauth/core/main</outputDirectory>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>net.oauth.core:oauth</include>
+            </includes>
+        </dependencySet>         
+    </dependencySets>
+</assembly>

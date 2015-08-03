@@ -21,8 +21,8 @@
  */
 package org.teiid.jboss;
 
+import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -40,19 +40,12 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.ModuleClassLoader;
-import org.jboss.msc.service.AbstractServiceListener;
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.value.InjectedValue;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
@@ -67,12 +60,12 @@ import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataRepository;
-import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -142,20 +135,18 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		udf.setFunctionClassLoader(classLoader);
 		deployment.addAttchment(UDFMetaData.class, udf);
 		
-		// set up the metadata repositories for each models
-		IndexMetadataRepository indexRepo = null;
-		IndexMetadataStore indexFactory = deploymentUnit.removeAttachment(TeiidAttachments.INDEX_METADATA);
-		LinkedHashMap<String, Resource> visibilityMap = null;
-		if (indexFactory != null) {
-			indexRepo = new IndexMetadataRepository(indexFactory);
-			visibilityMap = indexFactory.getEntriesPlusVisibilities();
+		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
+		VDBResources resources;
+		try {
+			resources = new VDBResources(file, deployment);
+		} catch (IOException e) {
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
+		
 		this.vdbRepository.addPendingDeployment(deployment);
 		// build a VDB service
-		final VDBService vdb = new VDBService(deployment, visibilityMap);
-		if (indexRepo != null) {
-			vdb.addMetadataRepository("index", indexRepo); //$NON-NLS-1$
-		}
+		final VDBService vdb = new VDBService(deployment, resources, shutdownListener);
+		vdb.addMetadataRepository("index", new IndexMetadataRepository()); //$NON-NLS-1$
 		
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		
@@ -252,10 +243,17 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			final VDBKey vdbKey,
 			final String dsName) {
 		final String jndiName = getJndiName(dsName);
-		final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName);
+		ServiceName dsListenerServiceName;
+		try {
+			dsListenerServiceName = TeiidServiceNames.dsListenerServiceName(vdbKey.getName(), vdbKey.getVersion(), dsName);
+		} catch (InvalidServiceNameException e) {
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, e, e.getMessage());
+			return;
+		}
+		ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName);
 		final ServiceName svcName = bindInfo.getBinderServiceName();
 		DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbKey);									
-		ServiceBuilder<DataSourceListener> sb = serviceTarget.addService(TeiidServiceNames.dsListenerServiceName(vdbKey.getName(), vdbKey.getVersion(), dsName), dsl);
+		ServiceBuilder<DataSourceListener> sb = serviceTarget.addService(dsListenerServiceName, dsl);
 		sb.addDependency(svcName);
 		sb.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, dsl.vdbStatusCheckInjector);
 		sb.setInitialMode(Mode.PASSIVE).install();
@@ -266,12 +264,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		Set<String> dataSources = new HashSet<String>();
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (String sourceName:model.getSourceNames()) {
-				String translatorName = model.getSourceTranslatorName(sourceName);
-				if (deployment.isOverideTranslator(translatorName)) {
-					VDBTranslatorMetaData translator = deployment.getTranslator(translatorName);
-					translatorName = translator.getType();
-				}
-
 				// Need to make the data source service as dependency; otherwise dynamic vdbs will not work correctly.
 				String dsName = model.getSourceConnectionJndiName(sourceName);
 				if (dsName == null) {
@@ -352,7 +344,12 @@ class VDBDeployer implements DeploymentUnitProcessor {
 					continue;
 				}
 		        
-				final ServiceController<?> dsService = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName));
+				ServiceController<?> dsService;
+				try {
+					dsService = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName));
+				} catch (InvalidServiceNameException e) {
+					continue;
+				}
 				if (dsService != null) {
 					dsService.setMode(ServiceController.Mode.REMOVE);
 				}

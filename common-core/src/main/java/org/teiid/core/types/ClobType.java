@@ -22,14 +22,7 @@
 
 package org.teiid.core.types;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
@@ -37,6 +30,7 @@ import java.sql.SQLException;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.ObjectConverterUtil;
 
@@ -45,10 +39,16 @@ import org.teiid.core.util.ObjectConverterUtil;
  * This is wrapper on top of a "clob" object, which implements the "java.sql.Clob"
  * interface. This class also implements the Streamable interface
  */
-public final class ClobType extends Streamable<Clob> implements Clob, NClob, Sequencable, Comparable<ClobType> {
+public final class ClobType extends Streamable<Clob> implements NClob, Sequencable, Comparable<ClobType> {
+	
+	public enum Type {
+		TEXT, JSON
+	}
 
 	private static final long serialVersionUID = 2753412502127824104L;
     
+	private Type type = Type.TEXT;
+	
     public ClobType() {
     }
     
@@ -141,16 +141,20 @@ public final class ClobType extends Streamable<Clob> implements Clob, NClob, Seq
      */
     public static String getString(Clob clob) throws SQLException, IOException {
         Reader reader = clob.getCharacterStream();
-        StringWriter writer = new StringWriter();
-        int c = reader.read();
-        while (c != -1) {
-            writer.write((char)c);
-            c = reader.read();
+        try {
+	        StringWriter writer = new StringWriter();
+	        int c = reader.read();
+	        while (c != -1) {
+	            writer.write((char)c);
+	            c = reader.read();
+	        }
+	        reader.close();
+	        String data = writer.toString();
+	        writer.close();
+	        return data;        
+        } finally {
+        	reader.close();
         }
-        reader.close();
-        String data = writer.toString();
-        writer.close();
-        return data;        
     }
     
     private final static int CHAR_SEQUENCE_BUFFER_SIZE = 1 << 12;
@@ -299,6 +303,33 @@ public final class ClobType extends Streamable<Clob> implements Clob, NClob, Seq
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.expHashCode(this.getCharSequence());
+	}
+	
+	public Type getType() {
+		return type;
+	}
+	
+	public void setType(Type type) {
+		this.type = type;
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		super.readExternal(in);
+		try {
+			this.type = ExternalizeUtil.readEnum(in, Type.class, Type.TEXT);
+		} catch (OptionalDataException e) {
+			this.type = Type.TEXT;
+		} catch(IOException e) {
+			this.type = Type.TEXT;
+		}
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		ExternalizeUtil.writeEnum(out, this.type);
 	}
 
 }

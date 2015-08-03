@@ -1,0 +1,25 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <xa-datasource jndi-name="java:/teiidDS" pool-name="teiidDS" enabled="true" use-java-context="true" use-ccm="true">
+    
+        <xa-datasource-property name="DatabaseName">{db-name}</xa-datasource-property>
+        
+        <driver>teiid-local</driver>
+        
+        <xa-pool>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+            <no-tx-separate-pools/>
+        </xa-pool>
+
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+            <!-- 
+            <security-domain>mysecurity-realm</security-domain>
+            -->
+        </security>
+         
+    </xa-datasource>                
+</datasources>

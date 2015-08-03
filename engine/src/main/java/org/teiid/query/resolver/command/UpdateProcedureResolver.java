@@ -86,6 +86,18 @@ public class UpdateProcedureResolver implements CommandResolver {
      */
     public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
+
+        //by creating a new group context here it means that variables will resolve with a higher precedence than input/changing
+        GroupContext externalGroups = command.getExternalGroupContexts();
+        
+        List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
+        
+        String countVar = ProcedureReservedWords.VARIABLES + Symbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
+        ElementSymbol updateCount = new ElementSymbol(countVar);
+        updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        symbols.add(updateCount);
+
+        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);    
     	
     	if (command instanceof TriggerAction) {
     		TriggerAction ta = (TriggerAction)command;
@@ -99,29 +111,18 @@ public class UpdateProcedureResolver implements CommandResolver {
 
         CreateProcedureCommand procCommand = (CreateProcedureCommand) command;
 
-        //by creating a new group context here it means that variables will resolve with a higher precedence than input/changing
-        GroupContext externalGroups = command.getExternalGroupContexts();
-        
-        List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
-        
-        String countVar = ProcedureReservedWords.VARIABLES + Symbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
-        ElementSymbol updateCount = new ElementSymbol(countVar);
-        updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        symbols.add(updateCount);
-
-        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);    
         resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata);
     }
 
-	public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext externalGroups, 
-                              TempMetadataAdapter metadata)
+	public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext originalExternalGroups, 
+                              TempMetadataAdapter original)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
         //create a new variable and metadata context for this block so that discovered metadata is not visible else where
-        TempMetadataStore store = metadata.getMetadataStore().clone();
-        metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
-        externalGroups = new GroupContext(externalGroups, null);
+        TempMetadataStore store = original.getMetadataStore().clone();
+        TempMetadataAdapter metadata = new TempMetadataAdapter(original.getMetadata(), store);
+        GroupContext externalGroups = new GroupContext(originalExternalGroups, null);
         
         //create a new variables group for this block
         GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<Expression>());
@@ -132,9 +133,9 @@ public class UpdateProcedureResolver implements CommandResolver {
         
         if (block.getExceptionGroup() != null) {
             //create a new variable and metadata context for this block so that discovered metadata is not visible else where
-        	store = metadata.getMetadataStore().clone();
-            metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
-            externalGroups = new GroupContext(externalGroups, null);
+        	store = original.getMetadataStore().clone();
+            metadata = new TempMetadataAdapter(original.getMetadata(), store);
+            externalGroups = new GroupContext(originalExternalGroups, null);
             
             //create a new variables group for this block
             variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<Expression>());
@@ -203,7 +204,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                     
                     if(dynCommand.getIntoGroup() == null
                     		&& !dynCommand.isAsClauseSet()) {
-            		    if ((command.getResultSetColumns() != null && command.getResultSetColumns().isEmpty()) || !cmdStmt.isReturnable()) {
+            		    if ((command.getResultSetColumns() != null && command.getResultSetColumns().isEmpty()) || !cmdStmt.isReturnable() || command.getResultSetColumns() == null) {
             		    	//we're not interested in the resultset
             		    	dynCommand.setAsColumns(Collections.EMPTY_LIST);
             		    } else {
@@ -213,14 +214,18 @@ public class UpdateProcedureResolver implements CommandResolver {
                     }
                 }
                 
-                if (command.getResultSetColumns() == null && cmdStmt.isReturnable() && subCommand.returnsResultSet() && !subCommand.getResultSetColumns().isEmpty()) {
+                if (command.getResultSetColumns() == null && cmdStmt.isReturnable() && subCommand.returnsResultSet() && subCommand.getResultSetColumns() != null && !subCommand.getResultSetColumns().isEmpty()) {
                 	command.setResultSetColumns(subCommand.getResultSetColumns());
+                	if (command.getProjectedSymbols().isEmpty()) {
+                		command.setProjectedSymbols(subCommand.getResultSetColumns());
+                	}
                 }
 
                 break;
             case Statement.TYPE_ERROR:
             case Statement.TYPE_ASSIGNMENT:
             case Statement.TYPE_DECLARE:
+            case Statement.TYPE_RETURN:
 				ExpressionStatement exprStmt = (ExpressionStatement) statement;
                 //first resolve the value.  this ensures the value cannot use the variable being defined
             	if (exprStmt.getExpression() != null) {
@@ -232,17 +237,30 @@ public class UpdateProcedureResolver implements CommandResolver {
             	}
                 
                 //second resolve the variable
-                if(statement.getType() == Statement.TYPE_DECLARE) {
-                    collectDeclareVariable((DeclareStatement)statement, variables, metadata, externalGroups);
-                } else if (statement.getType() == Statement.TYPE_ASSIGNMENT) {
-                	AssignmentStatement assStmt = (AssignmentStatement)statement;
+            	switch (statement.getType()) {
+            	case Statement.TYPE_DECLARE:
+            		collectDeclareVariable((DeclareStatement)statement, variables, metadata, externalGroups);
+            		break;
+            	case Statement.TYPE_ASSIGNMENT:
+            		AssignmentStatement assStmt = (AssignmentStatement)statement;
                     ResolverVisitor.resolveLanguageObject(assStmt.getVariable(), null, externalGroups, metadata);
                     if (!metadata.elementSupports(assStmt.getVariable().getMetadataID(), SupportConstants.Element.UPDATE)) {
                          throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, assStmt.getVariable()));
                     }
                     //don't allow variable assignments to be external
                     assStmt.getVariable().setIsExternalReference(false);
-                }
+                    break;
+            	case Statement.TYPE_RETURN:
+            		ReturnStatement rs = (ReturnStatement)statement;
+            		if (rs.getExpression() != null) {
+            			if (command.getReturnVariable() == null) {
+            				throw new QueryResolverException(QueryPlugin.Event.TEIID31125, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31125, rs));
+            			}
+            			rs.setVariable(command.getReturnVariable().clone());
+            		}
+            		//else - we don't currently require the use of return for backwards compatibility
+            		break;
+            	}
                 
                 //third ensure the type matches
                 if (exprStmt.getExpression() != null) {

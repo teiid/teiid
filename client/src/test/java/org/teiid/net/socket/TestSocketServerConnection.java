@@ -25,10 +25,14 @@
  */
 package org.teiid.net.socket;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -133,7 +137,7 @@ public class TestSocketServerConnection {
 	@Test public void testSocketServerConnection_PropertiesClientHost() throws Throwable {
 		Properties p = new Properties();
 		
-		SocketServerConnectionFactory.updateConnectionProperties(p);
+		SocketServerConnection.updateConnectionProperties(p, InetAddress.getLocalHost(), true);
        
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
@@ -212,8 +216,7 @@ public class TestSocketServerConnection {
 				Mockito.stub(instance.getCryptor()).toReturn(new NullCryptor());
 				Mockito.stub(instance.getHostInfo()).toReturn(hostInfo);
 				Mockito.stub(instance.getService(ILogon.class)).toReturn(logon);
-				Mockito.stub(instance.getServerVersion()).toReturn("7.3");
-				Mockito.stub(instance.getAuthenticationType()).toReturn(AuthenticationType.CLEARTEXT);
+				Mockito.stub(instance.getServerVersion()).toReturn("07.03");
 				if (t != null) {
 					try {
 						Mockito.doAnswer(new Answer<Void>() {

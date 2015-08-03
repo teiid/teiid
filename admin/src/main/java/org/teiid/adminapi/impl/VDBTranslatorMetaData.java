@@ -30,6 +30,7 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	private Class<?> executionClass;
 	private String description;
 	private String moduleName;
+	private transient VDBTranslatorMetaData parent;
 	
 	@Override
 	public String getName() {
@@ -54,6 +55,9 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	}
 
 	public Class<?> getExecutionFactoryClass() {
+		if (this.executionClass == null && this.parent != null) {
+			return this.parent.getExecutionFactoryClass();
+		}
 		return this.executionClass;
 	}	
 	
@@ -76,5 +80,13 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	
 	public void setModuleName(String name) {
 		this.moduleName = name;
+	}
+
+	public void setParent(VDBTranslatorMetaData parent) {
+		this.parent = parent;
+	}
+	
+	public VDBTranslatorMetaData getParent() {
+		return parent;
 	}
 }

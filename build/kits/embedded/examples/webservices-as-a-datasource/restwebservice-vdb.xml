@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="restwebservice" version="1">
+
+    <description>Shows how to call Web Services</description>
+    
+    <property name="UseConnectorMetadata" value="true" />
+    <!--property name="{http://teiid.org/rest}auto-generate" value="true"/-->
+
+    <model name="CustomerSource">
+        <source name="webservice" translator-name="translator-rest" connection-jndi-name="java:/CustomerRESTWebSvcSource"/>
+    </model>
+    
+      <model name="Customers" type="VIRTUAL">
+        <metadata type="DDL"><![CDATA[
+        
+              CREATE  VIEW CustomersView (
+         customernumber varchar(100), customername varchar(200), contactlastname varchar(100),  contactfirstname varchar(100), phone varchar(50), addressline1 varchar(100), addressline2 varchar(100), city varchar(100), state varchar(100),  postalcode varchar(50),  country varchar(100),  salesrepemployeenumber varchar(100),  creditlimit varchar(100) )
+         AS
+ SELECT
+		A.customernumber, A.customername, A.contactlastname, A.contactfirstname, A.phone, A.addressline1, A.addressline2, A.city, A.state, A.postalcode, A.country, A.salesrepemployeenumber, A.creditlimit
+	FROM
+		(EXEC CustomerSource.invokeHttp('GET', null, 'http://localhost:8080/CustomerRESTWebSvc/MyRESTApplication/customerList', 'TRUE')) AS f, XMLTABLE('/customers/customer' PASSING XMLPARSE(DOCUMENT f.result) COLUMNS customernumber string PATH 'customernumber/text()', customername string PATH 'customername/text()', contactlastname string PATH 'contactlastname/text()', contactfirstname string PATH 'contactfirstname/text()', phone string PATH 'phone/text()', addressline1 string PATH 'addressline1/text()', addressline2 string PATH 'addressline2/text()', state string PATH 'state/text()', city string PATH 'city/text()', postalcode string PATH 'postalcode/text()', country string PATH 'country/text()', salesrepemployeenumber string PATH 'salesrepemployeenumber/text()', creditlimit string PATH 'creditlimit/text()') AS A;  
+        
+        ]]>
+        </metadata>
+    </model>
+       
+</vdb>

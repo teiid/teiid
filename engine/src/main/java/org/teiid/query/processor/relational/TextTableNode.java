@@ -35,16 +35,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.TextTable;
@@ -76,9 +80,20 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private int textLine = 0;
 	private Map<String, Integer> nameIndexes;
 	private String systemId;
+	private int rowNumber;
 
 	private boolean cr;
 	private boolean eof;
+	
+	private boolean running;
+	private TeiidProcessingException asynchException;
+
+	private int limit = -1;
+
+	private boolean noTrim;
+	
+	private char newLine = '\n';
+	private boolean crNewLine = true;
 	
 	public TextTableNode(int nodeID) {
 		super(nodeID);
@@ -124,6 +139,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	        }
 			lineWidth = table.getColumns().size() * DataTypeManager.MAX_STRING_LENGTH;
 		}
+		if (table.isUsingRowDelimiter()) {
+			Character c = table.getRowDelimiter();
+			if (c != null) {
+				this.newLine = c;
+				this.crNewLine = false;
+			}
+		}
         Map<Expression, Integer> elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
 	}
@@ -146,6 +168,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 		this.nameIndexes = null;
 		this.textLine = 0;
+		this.rowNumber = 0;
 		this.cr = false;
 		this.eof = false;
 		if (this.parentLines != null) {
@@ -153,10 +176,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				entry.setValue(null);
 			}
 		}
+		this.running = false;
+		this.asynchException = null;
+		this.limit = -1;
 	}
 	
 	public void setTable(TextTable table) {
 		this.table = table;
+		this.noTrim = table.isNoTrim();
 	}
 
 	@Override
@@ -166,9 +193,20 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		clone.setTable(table);
 		return clone;
 	}
+	
+	@Override
+	public void open() throws TeiidComponentException, TeiidProcessingException {
+		super.open();
+		if (getParent() instanceof LimitNode) {
+			LimitNode parent = (LimitNode)getParent();
+			if (parent.getLimit() > 0) {
+				limit = parent.getLimit() + parent.getOffset();
+			}
+		}
+	}
 
 	@Override
-	protected TupleBatch nextBatchDirect() throws BlockedException,
+	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		
 		if (reader == null) {
@@ -180,73 +218,152 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			return pullBatch();
 		}
 		
-		while (!isBatchFull()) {
-			String line = readLine(lineWidth, table.isFixedWidth());
-			
-			if (line == null) {
-				terminateBatches();
-				break;
-			}
-			
-			String parentSelector = null;
-			if (table.getSelector() != null && !line.regionMatches(0, table.getSelector(), 0, table.getSelector().length())) {
-				if (parentLines == null) {
-					continue; //doesn't match any selector
-				}
-				parentSelector = line.substring(0, table.getSelector().length());
-				
-				if (!parentLines.containsKey(parentSelector)) {
-					continue; //doesn't match any selector
-				} 
-			}
-			
-			List<String> vals = parseLine(line);
-			
-			if (parentSelector != null) {
-				this.parentLines.put(parentSelector, vals);
-				continue;
-			} else if (table.getSelector() != null && !table.getSelector().equals(vals.get(0))) {
-				continue;
-			}
-			
-			List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
-			for (int output : projectionIndexes) {
-				TextColumn col = table.getColumns().get(output);
-				String val = null;
-				int index = output;
-				
-				if (col.getSelector() != null) {
-					vals = this.parentLines.get(col.getSelector());
-					index = col.getPosition() - 1;
-				} else if (nameIndexes != null) {
-					index = nameIndexes.get(col.getName());
-				}
-				if (vals == null || index >= vals.size()) {
-					//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
-					tuple.add(null);
-					continue;
-				} 
-				val = vals.get(index);
-				try {
-					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
-				} catch (TransformationException e) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30176, col.getName(), textLine, systemId));
-				}
-			}
-			addBatchRow(tuple);
+		if (isLastBatch()) {
+			return pullBatch();
 		}
 		
-		return pullBatch();
+		if (isBatchFull()) {
+			TupleBatch result = pullBatch();
+			processAsynch(); // read ahead
+			return result;
+		}
+		
+		if (asynchException != null) {
+			throw asynchException;
+		}
+		
+		processAsynch();
+		
+		if (this.getContext().getWorkItem() == null) {
+			//this is for compatibility with engine tests that are below the level of using the work item
+			synchronized (this) {
+				while (running) {
+					try {
+						this.wait();
+					} catch (InterruptedException e) {
+						throw new TeiidRuntimeException(e);
+					}
+				}
+			}
+		}
+		
+		throw BlockedException.block("Blocking on results from file processing."); //$NON-NLS-1$
 	}
 
-	private String readLine(int maxLength, boolean exact) throws TeiidProcessingException {
+	private void processAsynch() {
+		if (!running) {
+			running = true;
+			getContext().getExecutor().execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						process();
+					} catch (TeiidProcessingException e) {
+						asynchException = e;
+					} finally {
+						running = false;
+						RequestWorkItem workItem = TextTableNode.this.getContext().getWorkItem();
+						if (workItem != null) {
+							workItem.moreWork();
+						} else {
+							synchronized (TextTableNode.this) {
+								TextTableNode.this.notifyAll();
+							}
+						}
+					}
+				}
+			});
+		}
+	}
+
+	private void process() throws TeiidProcessingException {
+		while (true) {
+			synchronized (this) {
+				if (isBatchFull()) {
+					return;
+				}
+				StringBuilder line = readLine(lineWidth, table.isFixedWidth());
+				
+				if (line == null) {
+					terminateBatches();
+					break;
+				}
+				
+				String parentSelector = null;
+				if (table.getSelector() != null) {
+					if (line.length() < table.getSelector().length()) {
+						continue;
+					}
+					if (!line.substring(0, table.getSelector().length()).equals(table.getSelector())) {
+						if (parentLines == null) {
+							continue; //doesn't match any selector
+						}
+						parentSelector = line.substring(0, table.getSelector().length());
+						
+						if (!parentLines.containsKey(parentSelector)) {
+							continue; //doesn't match any selector
+						} 
+					}
+				}
+				
+				List<String> vals = parseLine(line);
+				
+				if (parentSelector != null) {
+					this.parentLines.put(parentSelector, vals);
+					continue;
+				} else if (table.getSelector() != null && !table.getSelector().equals(vals.get(0))) {
+					continue;
+				}
+				
+				rowNumber++;
+				
+				List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
+				for (int output : projectionIndexes) {
+					TextColumn col = table.getColumns().get(output);
+					String val = null;
+					int index = output;
+					
+					if (col.isOrdinal()) {
+						tuple.add(rowNumber);
+						continue;
+					}
+					
+					if (col.getSelector() != null) {
+						vals = this.parentLines.get(col.getSelector());
+						index = col.getPosition() - 1;
+					} else if (nameIndexes != null) {
+						index = nameIndexes.get(col.getName());
+					}
+					if (vals == null || index >= vals.size()) {
+						//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
+						tuple.add(null);
+						continue;
+					} 
+					val = vals.get(index);
+					try {
+						tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
+					} catch (TransformationException e) {
+						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30176, col.getName(), textLine, systemId));
+					}
+				}
+				addBatchRow(tuple);
+				
+				if (rowNumber == limit) {
+					terminateBatches();
+					break;
+				}
+			}
+		}
+	}
+
+	private StringBuilder readLine(int maxLength, boolean exact) throws TeiidProcessingException {
 		if (eof) {
 			return null;
 		}
 		StringBuilder sb = new StringBuilder(exact ? maxLength : (maxLength >> 4));
 		while (true) {
 			char c = readChar();
-			if (c == '\n') {
+			if (c == newLine) {
 				if (sb.length() == 0) {
 					if (eof) {
 						return null;
@@ -256,26 +373,25 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					}
 				}
 				if (table.isUsingRowDelimiter()) {
-				    if (exact && sb.length() < lineWidth) {
-				    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30177, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30177, sb.length(), lineWidth, textLine, systemId));
-				    }
-					return sb.toString();
+					return sb;
 				}
 		    }
 		    sb.append(c);
 		    if (exact && sb.length() == maxLength && !table.isUsingRowDelimiter()) {
-		    	return sb.toString();
+		    	return sb;
 		    }
 		    if (sb.length() > maxLength) {
 		    	if (exact) {
 		    		sb.deleteCharAt(sb.length() - 1);
 		    		//we're not forcing them to fully specify the line, so just drop the rest
 		    		//TODO: there should be a max read length
-		    		while (readChar() != '\n') {
+		    		while (readChar() != newLine) {
 		    			
 		    		}
-		    		return sb.toString();
+		    		return sb;
 		    	}
+		    	//protects non-fixed width processing from run-away values
+		    	//TODO it is possible that string values could be desired that are longer than the max and/or returned as clobs
 		    	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30178, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30178, textLine+1, systemId, maxLength));
 		    }
 		}
@@ -285,27 +401,31 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		try {
 			int c = reader.read();
 		    if (cr) {
-				if (c == '\n') {
+				if (c == newLine) {
 				    c = reader.read();
 				}
 				cr = false;
 		    }
 		    switch (c) {
 		    case '\r':
-				cr = true;
-				textLine++;
-				return '\n';
+		    	if (crNewLine) {
+					cr = true;
+					textLine++;
+					return newLine;
+		    	}
+		    	break;
 		    case -1:
 		    	eof = true;
 		    	textLine++;
-				return '\n';
-		    case '\n':		
+				return newLine;
+		    }
+		    if (c == newLine) {
 				textLine++;
-				return '\n';
+				return newLine;
 		    }
 		    return (char)c;
 		} catch (IOException e) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30179, e);
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30179, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30179, systemId));
 		}
 	}
 
@@ -344,14 +464,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		while (textLine < skip) {
 			boolean isHeader = textLine == header;
 			if (isHeader) {
-				String line = readLine(DataTypeManager.MAX_STRING_LENGTH * 16, false);
+				StringBuilder line = readLine(DataTypeManager.MAX_STRING_LENGTH * 16, false);
 				if (line == null) { //just return an empty batch
 					reset();
 					return;
 				}
 				processHeader(parseLine(line));
 			} else {
-				while (readChar() != '\n') {
+				while (readChar() != newLine) {
 	    			
 	    		}
 			}
@@ -368,7 +488,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			nameIndexes.put(string.toUpperCase(), nameIndexes.size());
 		}
 		for (TextColumn col : table.getColumns()) {
-			Integer index = nameIndexes.get(col.getName().toUpperCase());
+			if (col.isOrdinal()) {
+				continue;
+			}
+			String name = col.getName().toUpperCase();
+			if (col.getHeader() != null) {
+				name = col.getHeader().toUpperCase();
+			}
+			Integer index = nameIndexes.get(name);
 			if (index == null) {
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30181, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30181, col.getName(), systemId));
 			}
@@ -376,14 +503,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 	}
 
-	private List<String> parseLine(String line) throws TeiidProcessingException {
+	private List<String> parseLine(StringBuilder line) throws TeiidProcessingException {
 		if (table.isFixedWidth()) {
 			return parseFixedWidth(line);
 		} 
 		return parseDelimitedLine(line);
 	}
 
-	private List<String> parseDelimitedLine(String line) throws TeiidProcessingException {
+	private List<String> parseDelimitedLine(StringBuilder line) throws TeiidProcessingException {
 		ArrayList<String> result = new ArrayList<String>();
 		StringBuilder builder = new StringBuilder();
 		boolean escaped = false;
@@ -396,14 +523,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					if (cr) {
 						builder.append('\r'); 
 					}
-					builder.append('\n'); 
+					builder.append(newLine); 
 					escaped = false;
 					line = readLine(lineWidth, false);
 					continue;
 				} 
 				if (!qualified) {
 					//close the last entry
-					addValue(result, wasQualified, builder.toString());
+					addValue(result, wasQualified || noTrim, builder.toString());
 					return result;
 				} 
 				line = readLine(lineWidth, false);
@@ -411,15 +538,14 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30182, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30182, systemId));
 				}
 			}
-			char[] chars = line.toCharArray();
-			for (int i = 0; i < chars.length; i++) {
-				char chr = chars[i];
+			for (int i = 0; i < line.length(); i++) {
+				char chr = line.charAt(i);
 				if (chr == delimiter) {
 					if (escaped || qualified) {
 						builder.append(chr);
 						escaped = false;
 					} else {
-						addValue(result, wasQualified, builder.toString());
+						addValue(result, wasQualified || noTrim, builder.toString());
 						wasQualified = false;
 						builder = new StringBuilder();  //next entry
 					} 
@@ -475,13 +601,17 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		result.add(val);
 	}
 
-	private List<String> parseFixedWidth(String line) {
+	private List<String> parseFixedWidth(StringBuilder line) {
 		ArrayList<String> result = new ArrayList<String>();
 		int beginIndex = 0;
 		for (TextColumn col : table.getColumns()) {
-			String val = new String(line.substring(beginIndex, beginIndex + col.getWidth()));
-			addValue(result, col.isNoTrim(), val);
-			beginIndex += col.getWidth();
+			if (beginIndex >= line.length()) {
+				result.add(null);
+			} else {
+				String val = new String(line.substring(beginIndex, Math.min(line.length(), beginIndex + col.getWidth())));
+				addValue(result, col.isNoTrim(), val);
+				beginIndex += col.getWidth();
+			}		
 		}
 		return result;
 	}
@@ -489,6 +619,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		return Arrays.asList(this.table.getFile());
+	}
+	
+	@Override
+	public PlanNode getDescriptionProperties() {
+		PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
+        return props;
 	}
 	
 }

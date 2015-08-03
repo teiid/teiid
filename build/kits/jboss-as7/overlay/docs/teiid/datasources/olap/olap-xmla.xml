@@ -1,0 +1,27 @@
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/xmlaDS" pool-name="xmlaDS">
+            <!-- This is XMLA URL for your OLAP CUBE; Example shown is for a Mondrian Foodmart 
+            from Mondrian Examples  -->
+            <connection-url>jdbc:xmla:Server=http://localhost:8000/mondrian/xmla</connection-url>
+            <driver>olap</driver>
+            <transaction-isolation>-1</transaction-isolation>
+            <pool>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+            </pool>
+            <!-- 
+            <security>
+                <user-name>{user}</user-name>
+                <password>{password}</password>
+            </security>
+             -->
+        </datasource>                               
+        <drivers>
+            <driver name="olap" module="org.olap4j">
+                <driver-class>org.olap4j.driver.xmla.XmlaOlap4jDriver</driver-class>
+            </driver>        
+         </drivers>
+    </datasources>
+</subsystem

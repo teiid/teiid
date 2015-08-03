@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.teiid.client.plan.Annotation;
-import org.teiid.client.plan.PlanNode;
 import org.teiid.client.plan.Annotation.Priority;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
@@ -61,6 +61,8 @@ public class AnalysisRecord {
 
 	// Common 
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
+    public static final String PROP_ID = "Relational Node ID"; //$NON-NLS-1$
+    public static final String PROP_DATA_BYTES_SENT = "Data Bytes Sent"; //$NON-NLS-1$
     
     // Relational
     public static final String PROP_CRITERIA = "Criteria"; //$NON-NLS-1$
@@ -77,12 +79,16 @@ public class AnalysisRecord {
     public static final String PROP_INTO_GROUP = "Into Target"; //$NON-NLS-1$
     public static final String PROP_SORT_COLS = "Sort Columns"; //$NON-NLS-1$
     public static final String PROP_SORT_MODE = "Sort Mode"; //$NON-NLS-1$
+    public static final String PROP_ROLLUP = "Rollup"; //$NON-NLS-1$
     public static final String PROP_NODE_STATS_LIST = "Statistics"; //$NON-NLS-1$
     public static final String PROP_NODE_COST_ESTIMATES = "Cost Estimates";  //$NON-NLS-1$
     public static final String PROP_ROW_OFFSET = "Row Offset";  //$NON-NLS-1$
     public static final String PROP_ROW_LIMIT = "Row Limit";  //$NON-NLS-1$
     public static final String PROP_WITH = "With"; //$NON-NLS-1$
-    
+    public static final String PROP_WINDOW_FUNCTIONS = "Window Functions"; //$NON-NLS-1$
+    //Table functions
+	public static final String PROP_TABLE_FUNCTION = "Table Function"; //$NON-NLS-1$
+	
     // XML
     public static final String PROP_MESSAGE = "Message"; //$NON-NLS-1$
     public static final String PROP_TAG = "Tag"; //$NON-NLS-1$
@@ -108,6 +114,8 @@ public class AnalysisRecord {
     public static final String PROP_THEN = "Then"; //$NON-NLS-1$
     public static final String PROP_ELSE = "Else"; //$NON-NLS-1$
 
+	public static final String PROP_PLANNING_TIME = "Planning Time"; //$NON-NLS-1$
+
     // Flags regarding what should be recorded
     private boolean recordQueryPlan;
     private boolean recordDebug;
@@ -120,8 +128,8 @@ public class AnalysisRecord {
     private PrintWriter debugWriter;    // public
     
     public AnalysisRecord(boolean recordQueryPlan, boolean recordDebug) {
-    	this.recordQueryPlan = recordQueryPlan | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
-        this.recordDebug = recordDebug | LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
+    	this.recordQueryPlan = recordQueryPlan || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
+        this.recordDebug = recordDebug || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
         
         if(this.recordQueryPlan) {
             this.annotations = new ArrayList<Annotation>();
@@ -173,7 +181,7 @@ public class AnalysisRecord {
     public void addAnnotation(Annotation annotation) {
         this.annotations.add(annotation);
         if (this.recordDebug()) {
-        	this.println(annotation.getPriority() + " " + annotation.getCategory() + " " + annotation.getAnnotation() + " - " + annotation.getResolution()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        	this.println(annotation.toString());
         }
     }
     
@@ -232,14 +240,14 @@ public class AnalysisRecord {
 	    return Collections.emptyList();
 	}
 	
-	public static void addLanaguageObjects(PlanNode node, String key, List<? extends LanguageObject> objects) {
+	public static void addLanaguageObjects(PlanNode node, String key, Collection<? extends LanguageObject> objects) {
 		List<String> values = new ArrayList<String>();
 		int index = 0;
 		for (LanguageObject languageObject : objects) {
 			values.add(languageObject.toString());
-			List<SubqueryContainer> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(objects);
-			for (ListIterator<SubqueryContainer> iterator = subqueries.listIterator(); iterator.hasNext();) {
-				SubqueryContainer subqueryContainer = iterator.next();
+			List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(languageObject);
+			for (ListIterator<SubqueryContainer<?>> iterator = subqueries.listIterator(); iterator.hasNext();) {
+				SubqueryContainer<?> subqueryContainer = iterator.next();
 				node.addProperty(key + " Subplan " + index++, subqueryContainer.getCommand().getProcessorPlan().getDescriptionProperties()); //$NON-NLS-1$
 			}
 		}

@@ -22,10 +22,7 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.util.Arrays;
@@ -43,6 +40,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -51,54 +49,25 @@ import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
-import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
-import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"nls", "unchecked"})
-public class TestTempTables {
+public class TestTempTables extends TempTableTestHarness {
 	
-	private TempMetadataAdapter metadata;
-	private TempTableDataManager dataManager;
-	private TempTableStore tempStore;
-	
-	private TransactionContext tc;
 	private Transaction txn;
 	private Synchronization synch;
 	
-	private ProcessorPlan execute(String sql, List[] expectedResults) throws Exception {
-		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
-		execute(plan, expectedResults);
-		return plan;
-	}
-	
-	private void execute(ProcessorPlan processorPlan, List[] expectedResults) throws Exception {
-		CommandContext cc = TestProcessor.createCommandContext();
-		cc.setTransactionContext(tc);
-		cc.setMetadata(metadata);
-		cc.setTempTableStore(tempStore);
-		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, cc);
-		assertTrue(Determinism.SESSION_DETERMINISTIC.compareTo(cc.getDeterminismLevel()) <= 0);
-	}
-	
 	@Before public void setUp() {
-		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
-		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
-		metadata.setSession(true);
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
-	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-	    
-	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
-	    cache.setTupleBufferCache(bm);
-		dataManager = new TempTableDataManager(fdm, bm, cache);
+		this.setUp(RealMetadataFactory.example1Cached(), fdm);
 	}
 	
 	@Test public void testRollbackNoExisting() throws Exception {
@@ -182,7 +151,7 @@ public class TestTempTables {
 	}
 	
 	@Test public void testIsolateReads() throws Exception {
-		GlobalTableStoreImpl gtsi = new GlobalTableStoreImpl(BufferManagerFactory.getStandaloneBufferManager(), RealMetadataFactory.example1Cached());
+		GlobalTableStoreImpl gtsi = new GlobalTableStoreImpl(BufferManagerFactory.getStandaloneBufferManager(), RealMetadataFactory.example1Cached().getVdbMetaData(), RealMetadataFactory.example1Cached());
 		tempStore = gtsi.getTempTableStore();
 		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
@@ -305,7 +274,7 @@ public class TestTempTables {
 	
 	@Test public void testPrimaryKeyMetadata() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
-		Collection c = metadata.getUniqueKeysInGroup(metadata.getGroupID("x"));
+		Collection<?> c = metadata.getUniqueKeysInGroup(metadata.getGroupID("x"));
 		assertEquals(1, c.size());
 		assertEquals(1, (metadata.getElementIDsInKey(c.iterator().next()).size()));
 	}
@@ -339,6 +308,14 @@ public class TestTempTables {
 		execute("insert into x (e2, e1) values (3, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (2, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("select * from x where e2 = 3", new List[] {Arrays.asList("a", 3)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testCompareLessThan() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (3, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (4, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		ProcessorPlan plan = execute("select * from x where e2 < 4", new List[] {Arrays.asList("a", 3)}); //$NON-NLS-1$
+		TestOptimizer.checkAtomicQueries(new String[] {"SELECT x.e1, x.e2 FROM x WHERE x.e2 < 4"}, plan);
 	}
 	
 	@Test public void testLikeWithIndex() throws Exception {
@@ -496,7 +473,7 @@ public class TestTempTables {
 		execute("insert into x1 (e3, e2, e1) values (5, 2, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x1 (e3, e2, e1) values (5, 1, '2')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		//ensure predicates are preserved
-		execute("select x.e1 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2", new List[] {Arrays.asList("1"), Arrays.asList("2")}); //$NON-NLS-1$
+		execute("select x.e1, upper(x.e1),  x1.e2 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2", new List[0]); //$NON-NLS-1$
 		execute("select x.e1 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2 and x1.e3 = x.e3", new List[0]); //$NON-NLS-1$
 		//ensure there's no bad interaction with makedep
 		execute("select x.e1 from /*+ makedep */ x inner join  x1 on x.e1 = x1.e1 and x.e2 = x1.e2", new List[] {Arrays.asList("1")}); //$NON-NLS-1$
@@ -508,6 +485,115 @@ public class TestTempTables {
 		execute("insert into x (e2, e1) values (2, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (1, 'c')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (1, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testForeignTemp() throws Exception {
+		HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+	    cache.setTupleBufferCache(bm);
+		dataManager = new TempTableDataManager(hdm, bm, cache);
+		
+		execute("create foreign temporary table x (e1 string options (nameinsource 'a'), e2 integer, e3 string, primary key (e1)) options (cardinality 1000, updatable true) on pm1", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		
+		TempMetadataID id = this.tempStore.getMetadataStore().getData().get("x");
+		
+		//ensure that we're using the actual metadata
+		assertNotNull(id);
+		assertNotNull(this.metadata.getPrimaryKey(id));
+		assertEquals(1000, this.metadata.getCardinality(id), 0);
+		assertEquals("pm1", this.metadata.getName(this.metadata.getModelID(id)));
+		
+		hdm.addData("SELECT x.a, x.e2, x.e3 FROM x", new List[] {Arrays.asList(1, 2, "3")});
+		execute("select * from x", new List[] {Arrays.asList(1, 2, "3")}); //$NON-NLS-1$
+		
+		hdm.addData("SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.a AS c_2 FROM x AS g_0 ORDER BY c_1, c_0", new List[] {Arrays.asList(2, "3", "1")});
+		hdm.addData("SELECT g_0.e3, g_0.e2 FROM x AS g_0", new List[] {Arrays.asList("3", 2)});
+		hdm.addData("DELETE FROM x WHERE x.a = '1'", new List[] {Arrays.asList(1)});
+		
+		//ensure compensation behaves as if physical - not temp
+		execute("delete from x where e2 = (select max(e2) from x as z where e3 = x.e3)", new List[] {Arrays.asList(1)}, TestOptimizer.getGenericFinder()); //$NON-NLS-1$
+
+		hdm.addData("SELECT g_0.e1 FROM g1 AS g_0, x AS g_1 WHERE g_1.a = g_0.e1", new List[] {Arrays.asList(1)});
+
+		//ensure pushdown support
+		execute("select g1.e1 from pm1.g1 g1, x where x.e1 = g1.e1", new List[] {Arrays.asList(1)}, TestOptimizer.getGenericFinder()); //$NON-NLS-1$
+		
+		try {
+			execute("create local temporary table x (e1 string)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+			fail();
+		} catch (QueryResolverException e) {
+			
+		}
+		
+		//ensure that drop works
+		execute("drop table x", new List[] {Arrays.asList(0)});
+		
+		try {
+			execute("drop table x", new List[] {Arrays.asList(0)});
+			fail();
+		} catch (QueryResolverException e) {
+			
+		}
+	}
+	
+	@Test public void testInherentUpdateUsingTemp() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+				"create foreign table g1 (e1 string primary key, e2 integer, e3 boolean, e4 double, FOREIGN KEY (e1) REFERENCES G2 (e1)) options (updatable true);"
+			    + " create foreign table g2 (e1 string primary key, e2 integer, e3 boolean, e4 double) options (updatable true);"
+				+ " create view v options (updatable true) as select g1.e2 from g1 inner join g2 on g1.e1 = g2.e1;"
+				, "x", "pm1");
+		HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+		setUp(metadata, hdm);
+		
+	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+	    cache.setTupleBufferCache(bm);
+		dataManager = new TempTableDataManager(hdm, bm, cache);
+		
+		execute("create temporary table x (e1 string, e2 integer, e3 string, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		
+		execute("insert into x values ('a', 1, 'b')", new List[] {Arrays.asList(1)});
+		
+		TempMetadataID id = this.tempStore.getMetadataStore().getData().get("x");
+		
+		//ensure that we're using the actual metadata
+		assertNotNull(id);
+		assertNotNull(this.metadata.getPrimaryKey(id));
+		
+		hdm.addData("SELECT g_0.e1 FROM g1 AS g_0, g2 AS g_1 WHERE g_0.e1 = g_1.e1 AND g_0.e2 = 1", new List[] {Arrays.asList("a")});
+		hdm.addData("DELETE FROM g1 WHERE g1.e1 = 'a'", new List[] {Arrays.asList(1)});
+		
+		execute("delete from v where e2 = (select max(e2) from x as z where e3 = z.e3)", new List[] {Arrays.asList(1)}, TestOptimizer.getGenericFinder()); //$NON-NLS-1$
+	}
+	
+	@Test public void testDependentArrayType() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, e3 integer, primary key (e2, e3))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("create local temporary table x1 (e1 string, e2 integer, e3 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+		execute("insert into x (e3, e2, e1) values (4, 2, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e3, e2, e1) values (3, 2, '2')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x1 (e3, e2, e1) values (4, 2, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x1 (e3, e2, e1) values (3, 2, '2')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+
+		//single value
+		execute("select x.e1 from x inner join /*+ makeind */ x1 on x.e2 = x1.e2 and x.e3 = x1.e3 and x1.e1='1'", new List[] {Arrays.asList("1")}); //$NON-NLS-1$
+		
+		//multiple values
+		execute("select x.e1 from x inner join /*+ makeind */ x1 on x.e2 = x1.e2 and x.e3 = x1.e3", new List[] {Arrays.asList("2"), Arrays.asList("1")}); //$NON-NLS-1$
+		
+		//multiple out of order values
+		execute("select x.e1 from x inner join /*+ makeind */ x1 on x.e3 = x1.e3 and x.e2 = x1.e2", new List[] {Arrays.asList("2"), Arrays.asList("1")}); //$NON-NLS-1$
+	}
+	
+	@Test public void testSubquery() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, e3 integer, primary key (e2, e3))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+		execute("insert into x (e3, e2, e1) values (4, 2, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e3, e2, e1) values (4, 3, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+
+		execute("update x set e1 = 1 where e1 in (select e1 from pm1.g1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		
 	}
 	
 }

@@ -1,0 +1,25 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs read readme.txt-->
+<subsystem xmlns="urn:jboss:domain:datasources:1.0">
+    <datasources>
+        <datasource jndi-name="java:/mondrianDS" pool-name="mondrianDS">
+            <!-- If you use the Mondiran's foodmart example as defined with external MySQL database--> 
+            <connection-url>jdbc:mondrian:Jdbc='jdbc:mysql://localhost/foodmart?user=foodmart&amp;password=foodmart';Catalog='${path-to-foodmart}/WEB-INF/queries/FoodMart.xml';JdbcDrivers=com.mysql.jdbc.Driver;</connection-url>
+            
+            <!--  if you use Teiid VDB for star schema the connection URL will look like below 
+            <connection-url>jdbc:mondrian:Jdbc='jdbc:teiid:{vdb-name}?user=user&amp;password=user';Catalog='${path-to-queries}/queries.xml';JdbcDrivers=org.teiid.jdbc.TeiidDriver;</connection-url>
+            -->            
+            
+            <driver>mondrian</driver>
+            <pool>
+                <prefill>false</prefill>
+                <use-strict-min>false</use-strict-min>
+                <flush-strategy>FailingConnectionOnly</flush-strategy>
+            </pool>
+        </datasource>                               
+        <drivers>
+            <driver name="mondrian" module="org.mondrian">
+                <driver-class>mondrian.olap4j.MondrianOlap4jDriver</driver-class>
+            </driver>
+        </drivers>
+    </datasources>
+</subsystem

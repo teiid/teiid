@@ -28,8 +28,8 @@ import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidException;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Schema;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -616,6 +616,10 @@ public class TestCriteriaCapabilityValidatorVisitor {
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(2));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
+        helpTestVisitor("pm1.g1.e1 IN ('x', 'y', 'z')", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
+        
+        caps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        
         helpTestVisitor("pm1.g1.e1 IN ('x', 'y', 'z')", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
     
@@ -884,5 +888,27 @@ public class TestCriteriaCapabilityValidatorVisitor {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS(SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
-    }    
+    }
+    
+    @Test public void testEvaluatableCriteria() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Object modelID = metadata.getMetadataStore().getSchema("PM1");
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        helpTestVisitor("now() IS NULL", modelID, metadata, capFinder, true, false); 
+    }
+    
+    @Test public void testEvaluatableCriteria1() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        Object modelID = metadata.getMetadataStore().getSchema("PM1");
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        helpTestVisitor("pm1.g1.e1 is null or now() IS NULL", modelID, metadata, capFinder, false, false); 
+    }
 }

@@ -28,19 +28,20 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.STree;
+import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.common.buffer.TupleBrowser;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.BufferReserveMode;
-import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
+import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -100,9 +101,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	private SourceState sortedSource;
 	private SourceState notSortedSource;
 	private List<?> currentTuple;
+	private boolean matched;
 	private TupleBrowser tb;
 	private SingleTupleSource keyTs;
-	private int reserved;
 	private STree index;
 	private int[] reverseIndexes;
 	private List<?> sortedTuple;
@@ -131,21 +132,13 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	if (this.index != null) {
     		this.index.remove();
     	}
-    	releaseReserved();
-    	this.index = null;
-    	this.tb = null;
-    	this.currentSource = null;
-    	this.sortedSource = null;
-    	this.notSortedSource = null;
-    	this.sortedTuple = null;
-    	this.reverseIndexes = null;
-    	this.keyTs = null;
     }
     
     /**
      * Create an index of the smaller size
      */
-    public void createIndex(SourceState state, boolean sorted) throws TeiidComponentException, TeiidProcessingException {
+    public void createIndex(SourceState state, SortOption sortOption) throws TeiidComponentException, TeiidProcessingException {
+    	boolean sorted = sortOption == SortOption.ALREADY_SORTED;
     	int[] expressionIndexes = state.getExpressionIndexes();
 		int keyLength = expressionIndexes.length;
     	List elements = state.getSource().getOutputElements();
@@ -163,7 +156,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		}
     	}
     	List<Expression> reordered = RelationalNode.projectTuple(reorderedSortIndex, elements);
-    	if (!state.isDistinct()) {
+    	if (sortOption == SortOption.SORT_DISTINCT) {
+    		keyLength = elements.size();
+    	} else if (!state.isExpresssionDistinct()) {
     		//need to add a rowid, just in case
     		reordered = new ArrayList<Expression>(reordered);
     		ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
@@ -173,14 +168,16 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	}
     	index = this.joinNode.getBufferManager().createSTree(reordered, this.joinNode.getConnectionID(), keyLength);
     	index.setPreferMemory(true);
-    	if (!state.isDistinct()) {
+    	if (sortOption == SortOption.SORT_DISTINCT) {
+    		index.getComparator().setDistinctIndex(expressionIndexes.length);
+    	} else if (!state.isExpresssionDistinct()) {
     		index.getComparator().setDistinctIndex(keyLength-2);
     	}
     	IndexedTupleSource its = state.getTupleBuffer().createIndexedTupleSource(!joinNode.isDependent());
     	int rowId = 0;
     	List<?> lastTuple = null;
-    	boolean sortedDistinct = sorted && !state.isDistinct();
-    	int sizeHint = index.getExpectedHeight(state.getTupleBuffer().getRowCount());
+    	boolean sortedDistinct = sorted && !state.isExpresssionDistinct();
+    	int sizeHint = index.getExpectedHeight(state.getRowCount());
     	index.setBatchInsert(sorted);
     	outer: while (its.hasNext()) {
     		//detect if sorted and distinct
@@ -196,7 +193,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		}
     		lastTuple = originalTuple;
     		List<Object> tuple = (List<Object>) RelationalNode.projectTuple(reorderedSortIndex, originalTuple);
-    		if (!state.isDistinct()) {
+    		if (!state.isExpresssionDistinct() && sortOption != SortOption.SORT_DISTINCT) {
     			tuple.add(keyLength - 1, rowId++);
     		}
     		index.insert(tuple, sorted?InsertMode.ORDERED:InsertMode.NEW, sizeHint);
@@ -210,12 +207,15 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	this.reverseIndexes = new int[elements.size()];
     	for (int i = 0; i < reorderedSortIndex.length; i++) {
     		int oldIndex = reorderedSortIndex[i];
-    		this.reverseIndexes[oldIndex] = i + (!state.isDistinct()&&i>=keyLength-1?1:0); 
+    		this.reverseIndexes[oldIndex] = i + ((!state.isExpresssionDistinct()&&(i>=keyLength-1)&&sortOption!=SortOption.SORT_DISTINCT)?1:0); 
     	}
-    	if (!state.isDistinct() 
+    	//TODO: this logic doesn't catch distinct join expressions when using sort distinct very well
+    	if (!state.isExpresssionDistinct() 
     			&& ((!sorted && index.getComparator().isDistinct()) || (sorted && sortedDistinct))) {
-    		this.index.removeRowIdFromKey();
-    		state.markDistinct(true);
+    		if (sortOption!=SortOption.SORT_DISTINCT) {
+    			this.index.removeRowIdFromKey();
+    		}
+    		state.markExpressionsDistinct(true);
     	}
     	keyTs = new SingleTupleSource();
     	keyTs.indexes = this.notSortedSource.getExpressionIndexes();
@@ -231,44 +231,82 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     }
     
     private boolean shouldIndexIfSmall(SourceState source) throws TeiidComponentException, TeiidProcessingException {
-    	Number cardinality = source.getSource().getEstimateNodeCardinality();
-    	return (source.hasBuffer() || (cardinality != null && cardinality.floatValue() != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality.floatValue() <= source.getSource().getBatchSize() / 4)) 
-    	&& (source.getRowCount() <= source.getSource().getBatchSize() / 2);
+    	return source.rowCountLE(source.getSource().getBatchSize() / 2);
     }
     
     @Override
     protected void loadRight() throws TeiidComponentException,
     		TeiidProcessingException {
     	//the checks are done in a particular order to ensure we don't buffer if possible
-    	if (processingSortRight == SortOption.SORT && shouldIndexIfSmall(this.leftSource)) {
+    	if (processingSortRight == SortOption.SORT && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER && shouldIndexIfSmall(this.leftSource)) {
     		this.processingSortRight = SortOption.NOT_SORTED; 
     	} else if (!this.leftSource.hasBuffer() && processingSortLeft == SortOption.SORT && shouldIndexIfSmall(this.rightSource)) {
     		this.processingSortLeft = SortOption.NOT_SORTED;
     	} else { 
-    		this.leftSource.getTupleBuffer();
-    		if (!this.rightSource.hasBuffer() && processingSortRight == SortOption.SORT && shouldIndexIfSmall(this.leftSource)) {
+    		if (!this.rightSource.hasBuffer() && processingSortRight == SortOption.SORT && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER && shouldIndexIfSmall(this.leftSource)) {
         		this.processingSortRight = SortOption.NOT_SORTED; 
-        	} else if (processingSortRight == SortOption.SORT && shouldIndex(this.leftSource, this.rightSource)) {
+        	} else if (processingSortRight == SortOption.SORT && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER && shouldIndex(this.leftSource, this.rightSource)) {
     			this.processingSortRight = SortOption.NOT_SORTED;
 	    	} else if (processingSortLeft == SortOption.SORT && shouldIndex(this.rightSource, this.leftSource)) {
 	    		this.processingSortLeft = SortOption.NOT_SORTED;
 	    	} 
     	}
+    	RelationalNode parent = this.joinNode.getParent();
+		boolean hasLimit = false;
+		while (parent != null && !hasLimit) {
+			if (parent instanceof LimitNode) {
+				LimitNode ln = (LimitNode)parent;
+				if (ln.getLimit() != -1) {
+    				hasLimit = true;
+				}
+				break;
+			}
+			if (parent instanceof WindowFunctionProjectNode) {
+				break;
+			}
+			if (parent instanceof GroupingNode) {
+				break;
+			}
+			if (parent instanceof JoinNode) {
+				break;
+			}
+			if (parent instanceof SortNode) {
+				break;
+			}
+			if (parent instanceof DupRemoveNode) {
+				break;
+			}
+			parent = parent.getParent();
+		}
     	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
-    		super.loadRight();
-    		super.loadLeft();
-    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_DQP, "degrading to merged join", this.joinNode.getID()); //$NON-NLS-1$
+    		if (hasLimit && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER) {
+    			//still use a more incremental join/sort approach
+    			if (this.processingSortLeft == SortOption.SORT && 
+	    				(!this.rightSource.rowCountLE(this.leftSource.getIncrementalRowCount(false)) || this.processingSortRight != SortOption.SORT)) {
+	    			this.processingSortRight = SortOption.NOT_SORTED;
+	    			repeatedMerge = true;
+	    		} else if (this.processingSortRight == SortOption.SORT) {
+	    			this.processingSortLeft = SortOption.NOT_SORTED;
+	    			repeatedMerge = true;
+	    		}
     		}
-    		return; //degrade to merge join
+    		if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
+	    		super.loadRight();
+	    		super.loadLeft();
+	    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+	    			LogManager.logDetail(LogConstants.CTX_DQP, "degrading to merged join", this.joinNode.getID()); //$NON-NLS-1$
+	    		}
+	    		return; //degrade to merge join
+    		}
     	}
         if (this.processingSortLeft == SortOption.NOT_SORTED) {
         	this.sortedSource = this.rightSource;
         	this.notSortedSource = this.leftSource;
 
         	if (!repeatedMerge) {
-        		createIndex(this.rightSource, this.processingSortRight == SortOption.ALREADY_SORTED);
+        		createIndex(this.rightSource, this.processingSortRight);
         	} else {
+        		this.notSortedSource.isLimited(hasLimit);
         		super.loadRight(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
         		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -279,7 +317,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	this.sortedSource = this.leftSource;
         	this.notSortedSource = this.rightSource;
 
-    		if (semiDep && this.leftSource.isDistinct()) {
+    		if (semiDep && this.leftSource.isExpresssionDistinct()) {
     			this.rightSource.getTupleBuffer();
     			if (!this.joinNode.getDependentValueSource().isUnused()) {
     				//sort is not needed
@@ -291,8 +329,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	}
 
         	if (!repeatedMerge) {
-        		createIndex(this.leftSource, this.processingSortLeft == SortOption.ALREADY_SORTED);
+        		createIndex(this.leftSource, this.processingSortLeft);
         	} else {
+        		this.notSortedSource.isLimited(hasLimit);
         		super.loadLeft(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
         		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -303,38 +342,62 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     }
     
     private boolean shouldIndex(SourceState possibleIndex, SourceState other) throws TeiidComponentException, TeiidProcessingException {
-    	if (possibleIndex.getRowCount() * 4 > other.getRowCount()) {
-    		return false; //index is too large
-    	}
+    	long size = joinNode.getBatchSize();
+    	int indexSize = possibleIndex.hasBuffer()?possibleIndex.getRowCount():-1;
+    	int otherSize = other.hasBuffer()?other.getRowCount():-1;
     	int schemaSize = this.joinNode.getBufferManager().getSchemaSize(other.getSource().getOutputElements());
     	int toReserve = this.joinNode.getBufferManager().getMaxProcessingSize();
+    	int minSize = toReserve/schemaSize*this.joinNode.getBatchSize();
+
+    	//determine sizes in an incremental fashion as to avoid a full buffer of the unsorted side
+    	while (size < Integer.MAX_VALUE && (indexSize == -1 || otherSize == -1)) {
+    		if (indexSize == -1 && (possibleIndex.rowCountLE((int)size) || possibleIndex.hasBuffer())) {
+    			indexSize = possibleIndex.getRowCount();
+    		}
+    		if (otherSize == -1 && (other.rowCountLE((int)size) || other.hasBuffer())) {
+    			otherSize = other.getRowCount();
+    		}
+    		if (indexSize == -1 && otherSize != -1 && size * 4 > otherSize) {
+    			return false;
+    		}
+    		if (indexSize != -1 && otherSize == -1 && indexSize * 4 <= size) {
+    			break;
+    		}
+    		size *=2;
+    	}
+		if ((size > Integer.MAX_VALUE && (indexSize == -1 || otherSize == -1)) || (indexSize != -1 && otherSize != -1 && indexSize * 4 > otherSize)) {
+    		return false; //index is too large
+    	}
     	//check if the other side can be sorted in memory
-    	if (other.getRowCount() <= this.joinNode.getBatchSize() 
-    			|| (possibleIndex.getRowCount() > this.joinNode.getBatchSize() && other.getRowCount()/this.joinNode.getBatchSize() < toReserve/schemaSize)) {
-    		return false;
+    	if (other.hasBuffer() && ((other.getRowCount() <= this.joinNode.getBatchSize()) 
+    			|| (possibleIndex.getRowCount() > this.joinNode.getBatchSize() && other.rowCountLE(minSize)))) {
+    		return false; //just use a merge join
     	}
     	boolean useIndex = false;
     	int indexSchemaSize = this.joinNode.getBufferManager().getSchemaSize(possibleIndex.getSource().getOutputElements());
     	//approximate that 1/2 of the index will be memory resident 
-    	toReserve = (int)(indexSchemaSize * possibleIndex.getTupleBuffer().getRowCount() / (possibleIndex.getTupleBuffer().getBatchSize() * .5)); 
+    	toReserve = (int)(indexSchemaSize * possibleIndex.getRowCount() / (possibleIndex.getSource().getBatchSize())); 
     	if (toReserve < this.joinNode.getBufferManager().getMaxProcessingSize()) {
     		useIndex = true;
-    	} else if (possibleIndex.getTupleBuffer().getRowCount() / this.joinNode.getBatchSize() < preferMemCutoff) {
+    	} else if (possibleIndex.getRowCount() / this.joinNode.getBatchSize() < preferMemCutoff) {
     		useIndex = true;
     	} 
     	if (useIndex) {
-    		reserved = this.joinNode.getBufferManager().reserveBuffers(toReserve, BufferReserveMode.FORCE);
+    		//TODO: unreserve the base amount once the index is loaded
+    		reserved += this.joinNode.getBufferManager().reserveBuffers(toReserve, BufferReserveMode.FORCE);
+    		if (other.hasBuffer()) {
+    			other.getTupleBuffer().setForwardOnly(true);
+    		}
     		return true;
     	} 
+    	if (joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
+    		return false; //repeated is not supported as it could produce multiple outer matches
+    	}
     	this.repeatedMerge = true;
+    	possibleIndex.setImplicitBuffer(ImplicitBuffer.FULL);
     	return true;
     }
     
-	private void releaseReserved() {
-		this.joinNode.getBufferManager().releaseBuffers(this.reserved);
-		this.reserved = 0;
-	}
-        
     @Override
     protected void process() throws TeiidComponentException,
     		TeiidProcessingException {
@@ -342,11 +405,14 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		super.process();
     		return;
     	}
-    	if (this.sortedSource.getTupleBuffer().getRowCount() == 0) {
+    	if (this.sortedSource.getRowCount() == 0 && joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER) {
     		return;
     	}
     	if (repeatedMerge) {
-    		while (this.notSortedSource.hasBuffer()) {
+    		while (!this.notSortedSource.getSortUtility().isDoneReading() || this.notSortedSource.hasBuffer()) {
+    			if (!this.notSortedSource.hasBuffer()) {
+    				this.notSortedSource.nextBuffer();
+    			}
     			super.process();
     			resetMatchState();
     			this.sortedSource.resetState();
@@ -356,14 +422,21 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	}
     	//else this is a single scan against the index
     	if (currentSource == null) {
+    		this.notSortedSource.setImplicitBuffer(ImplicitBuffer.NONE);
     		currentSource = this.notSortedSource.getIterator();
     	}
     	while (true) {
 	    	if (this.currentTuple == null) {
 	    		currentTuple = this.currentSource.nextTuple();
+	    		matched = false;
 	    		if (currentTuple == null) {
 	    			return;
 	    		}
+	    		//short-cut when a match is not possible
+	        	if (this.sortedSource.getRowCount() == 0 && joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
+	        		outerMatch();
+	        		continue;
+	        	}
 	    		if (validSemiDep) {
 	    			List<?> tuple = this.currentTuple;
 	    			this.currentTuple = null;
@@ -377,7 +450,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	    		sortedTuple = tb.nextTuple();
 	    	
 		    	if (sortedTuple == null) {
-		    		currentTuple = null;
+		    		outerMatch();
 		    		continue;
 		    	}
 	    	}
@@ -387,21 +460,40 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 			boolean matches = this.joinNode.matchesCriteria(outputTuple);
 	        this.sortedTuple = null;
 	        if (matches) {
+	        	matched = true;
 	        	this.joinNode.addBatchRow(outputTuple);
 	        }
     	}
     }
+
+	private void outerMatch() {
+		List<?> tuple = currentTuple;
+		currentTuple = null;
+		if (!matched && joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
+			this.joinNode.addBatchRow(outputTuple(tuple, this.rightSource.getOuterVals()));
+		}
+	}
     
     @Override
     public EnhancedSortMergeJoinStrategy clone() {
     	EnhancedSortMergeJoinStrategy clone = new EnhancedSortMergeJoinStrategy(this.sortLeft, this.sortRight);
     	clone.semiDep = this.semiDep;
+    	clone.preferMemCutoff = this.preferMemCutoff;
     	return clone;
     }
     
     @Override
     public String getName() {
-    	return "ENHANCED SORT JOIN" + (semiDep?" [SEMI]":""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    	StringBuilder result = new StringBuilder("ENHANCED SORT JOIN"); //$NON-NLS-1$ 
+    	if (semiDep) {
+    		result.append(" [SEMI]"); //$NON-NLS-1$  
+    	}
+    	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
+    		result.append(" RAN AS SORT MERGE"); //$NON-NLS-1$
+    	} else if (repeatedMerge) {
+    		result.append(" RAN AS REPEATED SORT MERGE"); //$NON-NLS-1$
+    	}
+    	return result.toString();
     }
     
     public void setSemiDep(boolean semiDep) {

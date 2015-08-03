@@ -56,6 +56,7 @@ public class InfinispanCacheFactory implements CacheFactory, Serializable{
 	
 	public void destroy() {
 		this.destroyed = true;		
+		this.cacheStore.stop();
 	}	
 	
 	public void stop() {

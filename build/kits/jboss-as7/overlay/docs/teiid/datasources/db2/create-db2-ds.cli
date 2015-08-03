@@ -1,0 +1,6 @@
+/subsystem=datasources/jdbc-driver=db2:add(driver-name=db2,driver-module-name=com.ibm.db2,driver-class-name="${db.driver}")
+
+/subsystem=datasources/data-source=db2DS:add(jndi-name="${db.jndi_name}",  driver-name=db2,  connection-url="${db.url}", user-name="${db.user}", password="${db.password}", enabled=true, use-java-context=true )
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

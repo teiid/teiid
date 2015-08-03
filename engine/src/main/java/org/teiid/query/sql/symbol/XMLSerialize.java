@@ -30,8 +30,6 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class XMLSerialize implements Expression {
 
-	private static final long serialVersionUID = -6574662238317329252L;
-	
 	private Boolean document;
 	private Boolean declaration;
 	private Expression expression;
@@ -80,7 +78,7 @@ public class XMLSerialize implements Expression {
 		return expression;
 	}
 	
-	public Boolean isDocument() {
+	public Boolean getDocument() {
 		return document;
 	}
 	
@@ -116,6 +114,10 @@ public class XMLSerialize implements Expression {
 		clone.version = this.version;
 		clone.encoding = this.encoding;
 		return clone;
+	}
+	
+	public boolean isDocument() {
+		return document != null && document;
 	}
 	
 	@Override

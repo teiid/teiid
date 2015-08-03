@@ -31,6 +31,7 @@ import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -47,13 +48,14 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.ExecutionFactory.Format;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -107,6 +109,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
     
     @Override
+    public void visit(JSONObject obj) {
+    	markInvalid(obj, "Pushdown of JSONObject not allowed"); //$NON-NLS-1$
+    }
+    
+    @Override
     public void visit(XMLElement obj) {
     	markInvalid(obj, "Pushdown of XMLElement not allowed"); //$NON-NLS-1$
     }
@@ -127,8 +134,30 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
     
     @Override
+    public void visit(XMLExists obj) {
+    	markInvalid(obj, "Pushdown of XMLExists not allowed"); //$NON-NLS-1$
+    }
+    
+    public void visit(XMLCast xmlCast) {
+    	markInvalid(xmlCast, "Pushdown of XMLCast not allowed"); //$NON-NLS-1$
+    }
+    
+    @Override
     public void visit(QueryString obj) {
     	markInvalid(obj, "Pushdown of QueryString not allowed"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(Array array) {
+    	try {
+			if (!CapabilitiesUtil.supports(Capability.ARRAY_TYPE, modelID, metadata, capFinder)) {
+				markInvalid(array, "Array type not supported by source"); //$NON-NLS-1$
+			}
+		} catch (QueryMetadataException e) {
+            handleException(new TeiidComponentException(e));
+        } catch(TeiidComponentException e) {
+            handleException(e);            
+		}
     }
     
     public void visit(AggregateSymbol obj) {
@@ -160,6 +189,19 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     		markInvalid(windowFunction, "Window function distinct aggregate not supported by source"); //$NON-NLS-1$
             return;
     	}
+    	/* Some sources do not like this case. While we don't allow it to be entered directly,
+    	 * it can occur when raising a null node.
+    	 * TODO: support rewrites of the ordering/entire window function expression
+    	 */
+		OrderBy orderBy = windowFunction.getWindowSpecification().getOrderBy();
+		if (orderBy != null) {
+			for (OrderByItem item : orderBy.getOrderByItems()) {
+				if (EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(item.getSymbol()))) {
+					markInvalid(windowFunction, "Window function order by constant not supported."); //$NON-NLS-1$
+		            return;			
+				}
+			}
+		}
     	try {
 	    	if (!CapabilitiesUtil.checkElementsAreSearchable(windowFunction.getWindowSpecification().getPartition(), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
 	    		markInvalid(windowFunction, "not all source columns support search type"); //$NON-NLS-1$
@@ -219,8 +261,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 operatorCap = Capability.CRITERIA_COMPARE_EQ;
                 break; 
             case CompareCriteria.LT: 
-            case CompareCriteria.GT: 
-                negated = true;
+            case CompareCriteria.GT:
+            	operatorCap = Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE;
+            	break;
             case CompareCriteria.LE: 
             case CompareCriteria.GE: 
                 operatorCap = Capability.CRITERIA_COMPARE_ORDERED;
@@ -229,8 +272,15 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
         // Check if compares are allowed
         if(! this.caps.supportsCapability(operatorCap)) {
-            markInvalid(obj, "ordered CompareCriteria not supported by source"); //$NON-NLS-1$
-            return;
+        	boolean unsupported = true;
+        	if (operatorCap == Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE 
+        			&& this.caps.supportsCapability(Capability.CRITERIA_COMPARE_ORDERED) && this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+    			unsupported = false;
+        	}
+        	if (unsupported) {
+	            markInvalid(obj, operatorCap + " CompareCriteria not supported by source"); //$NON-NLS-1$
+	            return;
+        	}
         }                       
         if (negated && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
         	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
@@ -239,7 +289,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         
         // Check capabilities of the elements
         try {
-            checkElementsAreSearchable(obj, SupportConstants.Element.SEARCHABLE_COMPARE);                                
+        	int support = SupportConstants.Element.SEARCHABLE_COMPARE;
+        	if (!negated && obj.getOperator() == CompareCriteria.EQ) {
+        		support = SupportConstants.Element.SEARCHABLE_EQUALITY;
+        	}
+            checkElementsAreSearchable(obj.getLeftExpression(), support);                                
+            checkElementsAreSearchable(obj.getRightExpression(), support);
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {
@@ -353,7 +408,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
         // Check capabilities of the elements
         try {
-            checkElementsAreSearchable(obj, SupportConstants.Element.SEARCHABLE_LIKE);
+            checkElementsAreSearchable(obj.getLeftExpression(), SupportConstants.Element.SEARCHABLE_LIKE);
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {
@@ -381,8 +436,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	checkAbstractSetCriteria(crit);
         try {    
             int maxSize = CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder); 
-            
-            if (maxSize > 0 && crit.getValues().size() > maxSize) {
+            int maxPredicates = CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder);
+            //allow 1/2 to a single predicate - TODO: make this more precise
+            if (maxSize > 0 && maxPredicates > 0 && crit.getValues().size() > Math.max(maxSize, (maxSize * (long)maxPredicates)/2)) {
                 markInvalid(crit, "SetCriteria size exceeds maximum for source"); //$NON-NLS-1$
                 return;
             }
@@ -509,7 +565,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 return;
             }
             // Check capabilities of the elements
-            checkElementsAreSearchable(crit, SupportConstants.Element.SEARCHABLE_COMPARE);                        
+            checkElementsAreSearchable(crit.getExpression(), SupportConstants.Element.SEARCHABLE_COMPARE);                        
                  
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -550,7 +606,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     			return null;
     		}
     		
-    		critNodeModelID = validateCommandPushdown(critNodeModelID, metadata, capFinder,	aNode);  
+    		critNodeModelID = validateCommandPushdown(critNodeModelID, metadata, capFinder,	aNode, true);  
     	}
     	if (critNodeModelID == null) {
     		return null;
@@ -567,9 +623,19 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(subqueryContainer.getCommand(), critNodeModelID, metadata, capFinder, analysisRecord )) {
                     return null;
                 }
+            } else if (CapabilitiesUtil.supports(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, critNodeModelID, metadata, capFinder)) {
+            	return null;
             }
         } catch(QueryMetadataException e) {
              throw new TeiidComponentException(QueryPlugin.Event.TEIID30271, e);
+        }
+        
+        if (!CapabilitiesUtil.supports(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, critNodeModelID, metadata, capFinder) 
+        		&& subqueryContainer.getCommand() instanceof QueryCommand) {
+        	QueryCommand command = (QueryCommand)subqueryContainer.getCommand();
+        	if (command.getWith() != null) {
+        		return null;
+        	}
         }
 
         // Found no reason why this node is not eligible
@@ -578,7 +644,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
 	public static Object validateCommandPushdown(Object critNodeModelID,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-			AccessNode aNode) throws TeiidComponentException {
+			AccessNode aNode, boolean considerConformed) throws TeiidComponentException {
 		// Check that query in access node is for the same model as current node
 		try {                
 			if (!(aNode.getCommand() instanceof QueryCommand)) {
@@ -587,7 +653,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 		    Object modelID = aNode.getModelId();
 		    if (critNodeModelID == null) {
 		    	critNodeModelID = modelID;
-		    } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
+		    } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder) 
+		    		&& (!considerConformed || !RuleRaiseAccess.isConformed(metadata, capFinder, aNode.getConformedTo(), modelID, null, critNodeModelID))) {
 		        return null;
 		    }
 		} catch(QueryMetadataException e) {
@@ -668,7 +735,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false);
     }
     
-    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin) throws QueryMetadataException, TeiidComponentException {
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }
@@ -688,7 +755,78 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
         visitor.analysisRecord = analysisRecord;
         visitor.isJoin = isJoin;
-        PostOrderNavigator.doVisit(obj, visitor);
+        //we use an array to represent multiple comparision attributes,
+        //but we don't want that to inhibit pushdown as we'll account for that later
+        //in criteria processing
+        final EvaluatableVisitor ev = new EvaluatableVisitor(modelID, metadata, capFinder);
+        PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.POST_ORDER, false) {
+        	@Override
+        	public void visit(DependentSetCriteria obj1) {
+        		if (obj1.hasMultipleAttributes()) {
+        			Array array = (Array) obj1.getExpression();
+        			visitNodes(array.getExpressions());
+            		super.postVisitVisitor(obj1);
+        		} else {
+        			super.visit(obj1);
+        		}
+        	}
+        	
+        	@Override
+        	protected void visitNode(LanguageObject obj) {
+        		if (obj == null) {
+        			return;
+        		}
+        		Determinism d = ev.getDeterminismLevel();
+        		boolean pushDown = ev.requiresEvaluation(EvaluationLevel.PUSH_DOWN);
+        		//decend with clean state, then restore
+        		ev.reset();
+        		super.visitNode(obj);
+        		ev.setDeterminismLevel(d);
+        		if (pushDown) {
+        			ev.evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+        		}
+        	}
+        	
+        	@Override
+        	protected void visitVisitor(LanguageObject obj) {
+        		if (obj == null) {
+        			return;
+        		}
+        		if (!ev.requiresEvaluation(EvaluationLevel.PUSH_DOWN) 
+        				&& ev.getDeterminismLevel() != Determinism.NONDETERMINISTIC) {
+        			if (obj instanceof ElementSymbol) {
+        				ElementSymbol es = (ElementSymbol)obj;
+    	        		if (es.getMetadataID() != null) {
+    		        		try {
+    		        			if (metadata.isMultiSourceElement(es.getMetadataID())) {
+    		        				return;  //no need to visit
+    		        			}
+    		        		} catch (QueryMetadataException e) {
+    		        		} catch (TeiidComponentException e) {
+    		        		}
+    	        		}
+        			}
+	        		obj.acceptVisitor(ev);
+	        		if (obj instanceof Expression) {
+	        			if (obj instanceof Function) {
+	        				if (!(obj instanceof AggregateSymbol)) {
+		        				Function f = (Function)obj;
+		        				if (f.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN
+		        						&& f.getFunctionDescriptor().getDeterministic() != Determinism.NONDETERMINISTIC) {
+		        					return; //don't need to consider
+		        				}
+	        				}
+	        			} else if (obj instanceof Criteria 
+	        					&& !(obj instanceof SubqueryContainer)
+	        					&& !(obj instanceof DependentSetCriteria)) {
+	        				return; //don't need to consider
+	        			} 
+	        		}
+        		}
+        		super.visitVisitor(obj);
+        	}
+        };
+        obj.acceptVisitor(nav);
         
         if(visitor.getException() != null) {
             throw visitor.getException();

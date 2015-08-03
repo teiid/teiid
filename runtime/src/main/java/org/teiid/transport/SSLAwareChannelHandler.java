@@ -26,6 +26,7 @@
 package org.teiid.transport;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,21 +38,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.net.ssl.SSLEngine;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.ChannelHandler.Sharable;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.ObjectChannel;
@@ -65,6 +57,8 @@ import org.teiid.runtime.RuntimePlugin;
 @Sharable
 public class SSLAwareChannelHandler extends SimpleChannelHandler implements ChannelPipelineFactory {
 	
+	private static final int DEFAULT_MAX_MESSAGE_SIZE = 1 << 21;
+
 	public class ObjectChannelImpl implements ObjectChannel {
 		private final Channel channel;
 
@@ -82,6 +76,11 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		
 		public SocketAddress getRemoteAddress() {
 			return channel.getRemoteAddress();
+		}
+		
+		@Override
+		public InetAddress getLocalAddress() {
+			throw new UnsupportedOperationException();
 		}
 		
 		@Override
@@ -144,6 +143,8 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	private AtomicLong objectsRead = new AtomicLong(0);
 	private AtomicLong objectsWritten = new AtomicLong(0);
 	private volatile int maxChannels;
+	private int maxMessageSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxMessageSize", DEFAULT_MAX_MESSAGE_SIZE); //$NON-NLS-1$
+	private long maxLobSize = PropertiesUtils.getLongProperty(System.getProperties(), "org.teiid.maxStreamingLobSize", ObjectDecoder.MAX_LOB_SIZE); //$NON-NLS-1$
 	
 	private ChannelFutureListener completionListener = new ChannelFutureListener() {
 
@@ -197,8 +198,9 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		ChannelListener listener = this.listeners.get(e.getChannel());
 		if (listener != null) {
 			listener.exceptionOccurred(e.getCause());
+		} else {
+			e.getChannel().close();
 		}
-		e.getChannel().close();
 	}
 
 	@Override
@@ -230,7 +232,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 		    }
 		}
-	    pipeline.addLast("decoder", new ObjectDecoder(1 << 20, classLoader, storageManager)); //$NON-NLS-1$
+	    pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, maxLobSize, classLoader, storageManager)); //$NON-NLS-1$
 	    pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
 	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
 	    pipeline.addLast("handler", this); //$NON-NLS-1$
@@ -251,6 +253,18 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	
 	public int getMaxConnectedChannels() {
 		return this.maxChannels;
+	}
+	
+	public int getMaxMessageSize() {
+		return maxMessageSize;
+	}
+	
+	public void setMaxMessageSize(int maxMessageSize) {
+		this.maxMessageSize = maxMessageSize;
+	}
+	
+	public void setMaxLobSize(long maxLobSize) {
+		this.maxLobSize = maxLobSize;
 	}
 
 }

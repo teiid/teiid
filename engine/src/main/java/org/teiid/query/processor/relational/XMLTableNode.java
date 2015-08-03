@@ -22,48 +22,61 @@
 
 package org.teiid.query.processor.relational;
 
+import java.lang.reflect.Array;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
+import net.sf.saxon.Configuration;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.SequenceTool;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.EmptyIterator;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ConversionResult;
+import net.sf.saxon.type.Converter;
+import net.sf.saxon.type.ValidationException;
 import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.CalendarValue;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.value.Value;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
+import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 
 /**
  * Handles xml table processing.
@@ -109,6 +122,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	
 	private int rowLimit = -1;
 	
+	private boolean streaming;
+	
 	public XMLTableNode(int nodeID) {
 		super(nodeID);
 	}
@@ -126,7 +141,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	}
 	
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		super.reset();
 		if (this.result != null) {
 			result.close();
@@ -158,6 +173,18 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		clone.setProjectedColumns(projectedColumns);
 		return clone;
 	}
+	
+	@Override
+	public void open() throws TeiidComponentException, TeiidProcessingException {
+		super.open();
+		if (getParent() instanceof LimitNode) {
+			LimitNode parent = (LimitNode)getParent();
+			if (parent.getLimit() > 0) {
+				rowLimit = parent.getLimit() + parent.getOffset();
+			}
+		}
+		streaming = this.table.getXQueryExpression().isStreaming();
+	}
 
 	@Override
 	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
@@ -165,7 +192,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		
 		evaluate(false);
 		
-		if (this.table.getXQueryExpression().isStreaming()) {
+		if (streaming) {
 			while (state == State.BUILDING) {
 				try {
 					this.wait();
@@ -196,6 +223,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				}
 			}
 			addBatchRow(processRow());
+			if (rowCount == rowLimit) {
+				terminateBatches();
+				break;
+			}
 		}
 		return pullBatch();
 	}
@@ -209,7 +240,20 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		setReferenceValues(this.table);
 		final HashMap<String, Object> parameters = new HashMap<String, Object>();
 		Evaluator eval = getEvaluator(Collections.emptyMap());
-		final Object contextItem = eval.evaluateParameters(this.table.getPassing(), null, parameters);
+		eval.evaluateParameters(this.table.getPassing(), null, parameters);
+		final Object contextItem;
+		if (parameters.containsKey(null)) {
+			contextItem = parameters.remove(null);
+			//null context item mean no rows
+			if (contextItem == null) {
+				result = new Result();
+				result.iter = EmptyIterator.emptyIterator();
+				streaming = false;
+				return;
+			}
+		} else {
+			contextItem = null;
+		}
 
 		if (this.table.getXQueryExpression().isStreaming()) {
 			if (this.buffer == null) {
@@ -223,13 +267,11 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				public void run() {
 					try {
 						XQueryEvaluator.evaluateXQuery(table.getXQueryExpression(), contextItem, parameters, XMLTableNode.this, getContext());
-					} catch (TeiidException e) {
-						asynchException = new TeiidRuntimeException(e);
 					} catch (TeiidRuntimeException e) {
 						if (e != EARLY_TERMINATION) {
 							asynchException = e;
 						}
-					} catch (RuntimeException e) {
+					} catch (Throwable e) {
 						asynchException = new TeiidRuntimeException(e);
 					} finally {
 						synchronized (XMLTableNode.this) {
@@ -255,7 +297,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 			unwrapException(e);
 		}
 	}
-
+	
 	private List<?> processRow() throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
@@ -277,34 +319,29 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						continue;
 					}
 					if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), this.getBufferManager(), false);
+						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), this.getBufferManager(), false, getContext());
 						tuple.add(value);
 						continue;
 					}
-					if (pathIter.next() != null) {
-						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
-					}
-					Object value = colItem;
-					if (value instanceof AtomicValue) {
-						value = getValue((AtomicValue)colItem);
-					} else if (value instanceof Item) {
-						Item i = (Item)value;
-						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
-						if (bat != null) {
-							ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);
-							value = cr.asAtomic();
-							value = getValue((AtomicValue)value);
-							if (value instanceof Item) {
-								value = ((Item)value).getStringValue();
+					Item next = pathIter.next();
+					if (next != null) {
+						if (proColumn.getSymbol().getType().isArray()) {
+							ArrayList<Object> vals = new ArrayList<Object>();
+							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem, this.table.getXQueryExpression().getConfig(), getContext()));
+							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.table.getXQueryExpression().getConfig(), getContext()));
+							while ((next = pathIter.next()) != null) {
+								vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.table.getXQueryExpression().getConfig(), getContext()));
 							}
-						} else {
-							value = i.getStringValue();
+							Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(proColumn.getSymbol().getType().getComponentType(), vals.size())));
+							tuple.add(value);
+							continue;
 						}
+						throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
 					}
-					value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType());
+					Object value = getValue(proColumn.getSymbol().getType(), colItem, this.table.getXQueryExpression().getConfig(), getContext());
 					tuple.add(value);
 				} catch (XPathException e) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30172, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30172, proColumn.getName()));
+					throw new TeiidProcessingException(QueryPlugin.Event.TEIID30172, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30172, proColumn.getName()));
 				}
 			}
 		}
@@ -312,35 +349,48 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		return tuple;
 	}
 
-	private Object getValue(AtomicValue value) throws XPathException {
+	public static Object getValue(Class<?> type,
+			Item colItem, Configuration config, CommandContext context) throws XPathException,
+			ValidationException, TransformationException {
+		Object value = colItem;
+		if (value instanceof AtomicValue) {
+			value = getValue((AtomicValue)colItem, context);
+		} else if (value instanceof Item) {
+			Item i = (Item)value;
+			if (XMLSystemFunctions.isNull(i)) {
+				return null;
+			}
+			BuiltInAtomicType bat = typeMapping.get(type);
+			if (bat != null) {
+				AtomicValue av = new StringValue(i.getStringValueCS());
+				ConversionResult cr = Converter.convert(av, bat, config.getConversionRules());
+				value = cr.asAtomic();
+				value = getValue((AtomicValue)value, context);
+				if (value instanceof Item) {
+					value = ((Item)value).getStringValue();
+				}
+			} else {
+				value = i.getStringValue();
+			}
+		}
+		return FunctionDescriptor.importValue(value, type);
+	}
+
+	static private Object getValue(AtomicValue value, CommandContext context) throws XPathException {
 		if (value instanceof CalendarValue) {
 			CalendarValue cv = (CalendarValue)value;
 			if (!cv.hasTimezone()) {
-				int tzMin = getContext().getServerTimeZone().getRawOffset()/60000;
+				TimeZone tz = context.getServerTimeZone();
+				int tzMin = tz.getRawOffset()/60000;
+				if (tz.getDSTSavings() > 0) {
+					tzMin = tz.getOffset(cv.getCalendar().getTimeInMillis())/60000;
+				}
 				cv.setTimezoneInMinutes(tzMin);
 				Calendar cal = cv.getCalendar();
 				return new Timestamp(cal.getTime().getTime());
 			}
 		}
-		return Value.convertToJava(value);
-	}
-	
-	@Override
-	public boolean hasFinalBuffer() {
-		return this.table.getXQueryExpression().isStreaming();
-	}
-	
-	@Override
-	public synchronized TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
-			TeiidComponentException, TeiidProcessingException {
-		this.rowLimit = maxRows;
-		evaluate(true);
-		usingOutput = true;
-    	TupleBuffer finalBuffer = this.buffer;
-    	if (!this.table.getXQueryExpression().isStreaming()) {
-    		close();
-    	}
-		return finalBuffer;
+		return SequenceTool.convertToJava(value);
 	}
 	
 	@Override
@@ -372,6 +422,13 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		return this.table.getPassing();
+	}
+	
+	@Override
+	public PlanNode getDescriptionProperties() {
+		PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
+        return props;
 	}
 
 }

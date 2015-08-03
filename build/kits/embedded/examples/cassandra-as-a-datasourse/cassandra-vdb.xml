@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="users" version="1">
+
+    <description>Shows how to call Cassandra</description>
+    
+    <property name="UseConnectorMetadata" value="cached" />
+    <model name="Users" visible="false">
+        <source name="cassandra" translator-name="translator-cassandra" connection-jndi-name="java:/demoCassandra" />
+    </model>
+    <model name="UserView" type="VIRTUAL">
+        <metadata type="DDL"><![CDATA[
+        CREATE VIEW UsersView (
+            firstname string, 
+            lastname string
+        )
+            AS
+        SELECT U.firstname, U.lastname FROM users AS U;
+        ]]> </metadata>
+    </model>
+</vdb>

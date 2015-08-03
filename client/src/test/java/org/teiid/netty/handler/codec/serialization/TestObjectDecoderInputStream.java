@@ -22,9 +22,10 @@
 
 package org.teiid.netty.handler.codec.serialization;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,9 +39,8 @@ import org.junit.Test;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.AccessibleBufferedInputStream;
 import org.teiid.core.util.ReaderInputStream;
-
-import static org.junit.Assert.*;
 
 public class TestObjectDecoderInputStream {
 
@@ -61,7 +61,7 @@ public class TestObjectDecoderInputStream {
 				return bais.read();
 			}
 		};
-		ObjectDecoderInputStream odis = new ObjectDecoderInputStream(new DataInputStream(is), Thread.currentThread().getContextClassLoader(), 1024);
+		ObjectDecoderInputStream odis = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(is, 1024), Thread.currentThread().getContextClassLoader(), 1024);
 		Object result = null;
 		do {
 			try {
@@ -72,16 +72,6 @@ public class TestObjectDecoderInputStream {
 		} while (result == null);
 		assertEquals(obj, result);
 	}
-	
-	@Test public void testLargeIntConversion() throws Exception {
-		int testValue = 204503404;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(baos);
-		dos.writeInt(testValue);
-		dos.close();
-		assertEquals(testValue, ObjectDecoderInputStream.getIntFromBytes(baos.toByteArray()));
-	}
-	
 	
 	@Test public void testReplaceObject() throws Exception {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -97,7 +87,7 @@ public class TestObjectDecoderInputStream {
 		
 		out.writeObject(clob);
 		
-		ObjectDecoderInputStream in = new ObjectDecoderInputStream(new DataInputStream(new ByteArrayInputStream(baos.toByteArray())), Thread.currentThread().getContextClassLoader(), 1024);
+		ObjectDecoderInputStream in = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(new ByteArrayInputStream(baos.toByteArray()), 1024), Thread.currentThread().getContextClassLoader(), 1024);
 		Object result = in.readObject();
 		assertTrue(result instanceof ClobImpl);
 	}	

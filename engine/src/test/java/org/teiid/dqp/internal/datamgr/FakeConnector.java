@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.BatchedCommand;
+import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -41,6 +43,7 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     private int connectionCount;
     private int executionCount;
     private int closeCount;
+    private boolean returnSingleUpdate;
 
     public int getConnectionCount() {
 		return connectionCount;
@@ -53,7 +56,11 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
     	executionCount++;
-        return new FakeExecution(executionContext);
+        FakeExecution result = new FakeExecution(executionContext);
+        if (command instanceof BatchedUpdates || (command instanceof BatchedCommand && ((BatchedCommand)command).getParameterValues() != null)) {
+        	result.batchOrBulk = true;
+        } 
+        return result;
     }
     
     @Override
@@ -73,6 +80,7 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     
     public final class FakeExecution implements ResultSetExecution, UpdateExecution {
         private int rowCount;
+        boolean batchOrBulk;
         ExecutionContext ec;
         
         public FakeExecution(ExecutionContext ec) {
@@ -93,6 +101,12 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
 		@Override
 		public int[] getUpdateCounts() throws DataNotAvailableException,
 				TranslatorException {
+			if (batchOrBulk) {
+				if (returnSingleUpdate) {
+					return new int[] {2};
+				}
+				return new int[] {1, 1};
+			}
 			return new int[] {1};
 		}
 		
@@ -103,6 +117,15 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
 		@Override
 		public void cancel() throws TranslatorException {
 		}
+    }
+    
+    public void setReturnSingleUpdate(boolean returnSingleUpdate) {
+		this.returnSingleUpdate = returnSingleUpdate;
+	}
+    
+    @Override
+    public boolean returnsSingleUpdateCount() {
+    	return returnSingleUpdate;
     }
 
 	

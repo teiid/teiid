@@ -38,15 +38,7 @@ import java.util.Map;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.SQLXMLInputStreamFactory;
@@ -64,7 +56,7 @@ public class LobManager {
 	public enum ReferenceMode {
 		ATTACH,
 		CREATE,
-		REMOVE
+		REMOVE, 
 	}
 	
 	private static class LobHolder {
@@ -118,16 +110,6 @@ public class LobManager {
 				continue;
 			}
 			Streamable lob = (Streamable) anObj;
-			try {
-				if (lob.getReferenceStreamId() == null || (inlineLobs 
-						&& (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY
-						|| lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes))) {
-					lob.setReferenceStreamId(null);
-					continue;
-				}
-			} catch (SQLException e) {
-				//presumably the lob is bad, but let it slide for now
-			}
 			String id = lob.getReferenceStreamId();
 			LobHolder lobHolder = this.lobReferences.get(id);
 			switch (mode) {
@@ -148,6 +130,21 @@ public class LobManager {
 				}
 				break;
 			case CREATE:
+				try {
+					StorageMode storageMode = InputStreamFactory.getStorageMode(lob);
+					if (lob.getReferenceStreamId() == null || (inlineLobs 
+							&& (storageMode == StorageMode.MEMORY
+							|| (storageMode != StorageMode.FREE && lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes)))) {
+						lob.setReferenceStreamId(null);
+						//since this is untracked at this point, we must detach if possible
+						if (inlineLobs && storageMode == StorageMode.OTHER) {
+							persistLob(lob, null, null, true, maxMemoryBytes);
+						}
+						continue;
+					}
+				} catch (SQLException e) {
+					//presumably the lob is bad, but let it slide for now
+				}
 				if (lob.getReference() == null) {
 					 throw new TeiidComponentException(QueryPlugin.Event.TEIID30034, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30034));
 				}
@@ -156,6 +153,7 @@ public class LobManager {
 				} else {
 					lobHolder.referenceCount++;
 				}
+				break;
 			}
 		}
 	}
@@ -191,47 +189,52 @@ public class LobManager {
 		byte[] bytes = new byte[1 << 14]; 
 		AutoCleanupUtil.setCleanupReference(this, lobStore);
 		for (Map.Entry<String, LobHolder> entry : this.lobReferences.entrySet()) {
-			entry.getValue().lob = detachLob(entry.getValue().lob, lobStore, bytes);
+			detachLob(entry.getValue().lob, lobStore, bytes);
 		}
 	}    
     
-	public Streamable<?> detachLob(final Streamable<?> lob, final FileStore store, byte[] bytes) throws TeiidComponentException {
+	public void detachLob(final Streamable<?> lob, final FileStore store, byte[] bytes) throws TeiidComponentException {
 		// if this is not attached, just return
-		if (InputStreamFactory.getStorageMode(lob) != StorageMode.OTHER) {
-			return lob;
+		if (InputStreamFactory.getStorageMode(lob) != StorageMode.MEMORY) {
+			persistLob(lob, store, bytes, inlineLobs, maxMemoryBytes);
 		}
-		
-		return persistLob(lob, store, bytes, inlineLobs, maxMemoryBytes);
 	}
 
-	public static Streamable<?> persistLob(final Streamable<?> lob,
+	public static void persistLob(final Streamable<?> lob,
 			final FileStore store, byte[] bytes, boolean inlineLobs, int maxMemoryBytes) throws TeiidComponentException {
+		long byteLength = Integer.MAX_VALUE;
+		
+		try {
+			byteLength = lob.length()*(lob instanceof ClobType?2:1);
+		} catch (SQLException e) {
+			//just ignore for now - for a single read resource computing the length invalidates
+			//TODO - inline small persisted lobs
+		}
+
 		try {
 			//inline
-			long byteLength = lob.length()*(lob instanceof ClobType?2:1);
 			if (lob.getReferenceStreamId() == null || (inlineLobs 
 					&& (byteLength <= maxMemoryBytes))) {
 				lob.setReferenceStreamId(null);
 				if (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY) {
-					return lob;
+					return;
 				}
 				
 				if (lob instanceof BlobType) {
 					BlobType b = (BlobType)lob;
 					byte[] blobBytes = b.getBytes(1, (int)byteLength);
 					b.setReference(new SerialBlob(blobBytes));
-					return b;
 				} else if (lob instanceof ClobType) {
 					ClobType c = (ClobType)lob;
 					String s = c.getSubString(1, (int)(byteLength>>>1));
-					c.setReference(ClobImpl.createClob(s.toCharArray()));
-					return c;
+					c.setReference(new ClobImpl(s));
 				} else {
 					XMLType x = (XMLType)lob;
 					String s = x.getString();
 					x.setReference(new SQLXMLImpl(s));
-					return x;
 				}
+				
+				return;
 			}
 			
 			InputStream is = null;
@@ -244,7 +247,6 @@ public class LobManager {
 	    	}
 
 			long offset = store.getLength();
-			Streamable<?> persistedLob;
 						
 			OutputStream fsos = store.createOutputStream();
 			byteLength = ObjectConverterUtil.write(fsos, is, bytes, -1);
@@ -270,17 +272,14 @@ public class LobManager {
 			};			
 			isf.setLength(byteLength);
 			if (lob instanceof BlobType) {
-				persistedLob = new BlobType(new BlobImpl(isf));
+				((BlobType)lob).setReference(new BlobImpl(isf));
 			}
 			else if (lob instanceof ClobType) {
-				persistedLob = new ClobType(new ClobImpl(isf, ((ClobType)lob).length()));
+				((ClobType)lob).setReference(new ClobImpl(isf, ((ClobType)lob).length()));
 			}
 			else {
-				persistedLob = new XMLType(new SQLXMLImpl(isf));
-				((XMLType)persistedLob).setEncoding(((XMLType)lob).getEncoding());
-				((XMLType)persistedLob).setType(((XMLType)lob).getType());
+				((XMLType)lob).setReference(new SQLXMLImpl(isf));
 			}
-			return persistedLob;		
 		} catch (SQLException e) {
 			throw new TeiidComponentException(QueryPlugin.Event.TEIID30037, e);
 		} catch (IOException e) {
@@ -294,6 +293,6 @@ public class LobManager {
 
 	public void remove() {
 		this.lobReferences.clear();
-		//we don't remove the filestore as there could be local connection references to the lob objects
+		this.lobStore.remove();
 	}
 }

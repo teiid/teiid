@@ -1,0 +1,10 @@
+/subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
+/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=RemoteServerList:add(value="${remote.serverlist}")
+/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Database:add(value="${database}")
+#/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Username:add(value="${username}")
+#/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Password:add(value="${password}")
+#/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=SecurityType:add(value="SCRAM_SHA_1")
+#/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=AuthDatabase:add(value="${database}")
+#/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Ssl:add(value="false")
+/subsystem=resource-adapters/resource-adapter=mongodb:activate

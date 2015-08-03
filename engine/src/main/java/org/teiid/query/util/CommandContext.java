@@ -22,48 +22,66 @@
 
 package org.teiid.query.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
 
 import org.teiid.CommandListener;
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
+import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.TeiidConnection;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.net.ServerConnection;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.relational.PlanToProcessConverter;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.GlobalTableStore;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.translator.ReusableExecution;
 
@@ -75,9 +93,44 @@ import org.teiid.translator.ReusableExecution;
  */
 public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
-	private static class GlobalState {
-	    /** Uniquely identify the command being processed */
-	    private Object processorID;
+	private static ThreadLocal<LinkedList<CommandContext>> threadLocalContext = new ThreadLocal<LinkedList<CommandContext>>() {
+		@Override
+		protected LinkedList<CommandContext> initialValue() {
+			return new LinkedList<CommandContext>();
+		}
+	};
+	
+	private static class VDBState {
+	    private String vdbName = ""; //$NON-NLS-1$
+	    private int vdbVersion;
+	    private QueryMetadataInterface metadata; 
+	    private GlobalTableStore globalTables;
+		private SessionMetadata session;
+		private ClassLoader classLoader;	    
+		private DQPWorkContext dqpWorkContext;
+	}
+	
+	private static class LookupKey implements Comparable<LookupKey> {
+		String matTableName;
+		Comparable keyValue;
+		
+		public LookupKey(String matTableName, Object keyValue) {
+			this.matTableName = matTableName;
+			this.keyValue = (Comparable) keyValue;
+		}
+		
+		@Override
+		public int compareTo(LookupKey arg0) {
+			int comp = matTableName.compareTo(arg0.matTableName);
+			if (comp != 0) {
+				return comp;
+			}
+			return keyValue.compareTo(arg0.keyValue);
+		}
+	}
+	
+	private static class GlobalState implements Cloneable {
+	    private WeakReference<RequestWorkItem> processorID;
 	    
 	    /** Identify a group of related commands, which typically get cleaned up together */
 	    private String connectionID;
@@ -88,39 +141,26 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private Serializable commandPayload;
 	    
-	    private String vdbName = ""; //$NON-NLS-1$
-	    
-	    private int vdbVersion;
-	    
 	    /** Indicate whether statistics should be collected for relational node processing*/
 	    private boolean collectNodeStatistics;
 	    
 	    private Random random = null;
 	    
-	    private SecurityFunctionEvaluator securityFunctionEvaluator;
-	    
 	    private TimeZone timezone = TimeZone.getDefault();
-	    
-	    private PlanToProcessConverter planToProcessConverter;
 	    
 	    private QueryProcessor.ProcessorFactory queryProcessorFactory;
 	        
-	    private Determinism determinismLevel = Determinism.DETERMINISTIC;
-	    
 	    private Set<String> groups;
+	    private Map<String, String> aliasMapping;
 	    
 	    private long timeSliceEnd = Long.MAX_VALUE;
 	    
 	    private long timeoutEnd = Long.MAX_VALUE;
 	    
-	    private QueryMetadataInterface metadata; 
-	    
 	    private boolean validateXML;
 	    
 	    private BufferManager bufferManager;
-	    
-	    private GlobalTableStore globalTables;
-	    
+
 	    private SessionAwareCache<PreparedPlan> planCache;
 	    
 	    private boolean resultSetCacheEnabled = true;
@@ -129,25 +169,31 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private Subject subject;
 	    private HashSet<Object> dataObjects;
 
-		private SessionMetadata session;
-
 		private RequestID requestId;
 		
-		private DQPWorkContext dqpWorkContext;
 		private TransactionContext transactionContext;
 		private TransactionService transactionService;
-		private SourceHint sourceHint;
 		private Executor executor = ExecutorUtils.getDirectExecutor();
-		Map<String, ReusableExecution<?>> reusableExecutions;
+		Map<Object, List<ReusableExecution<?>>> reusableExecutions;
 	    Set<CommandListener> commandListeners = null;
 	    private LRUCache<String, DecimalFormat> decimalFormatCache;
 		private LRUCache<String, SimpleDateFormat> dateFormatCache;
+		private LRUCache<Entry<String,Integer>, Pattern> patternCache;
 		private AtomicLong reuseCount = null;
-		private ClassLoader classLoader;
 		
 	    private List<Exception> warnings = null;
 	    
 	    private Options options = null;
+	    private boolean returnAutoGeneratedKeys;
+	    private GeneratedKeysImpl generatedKeys;
+	    private long reservedBuffers;
+
+		private AuthorizationValidator authorizationValidator;
+		
+		private Map<LookupKey, TupleSource> lookups;
+		private TempTableStore sessionTempTableStore;
+		
+		private Set<InputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<InputStreamFactory, Boolean>());
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -159,13 +205,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private HashSet<Object> planningObjects;
     private HashSet<Object> dataObjects = this.globalState.dataObjects;
     private TupleSourceCache tupleSourceCache;
+    private VDBState vdbState = new VDBState();
+    private Determinism[] determinismLevel = new Determinism[] {Determinism.DETERMINISTIC};
 
     /**
      * Construct a new context.
      */
-    public CommandContext(Object processorID, String connectionID, String userName, 
-        Serializable commandPayload, String vdbName, int vdbVersion, boolean collectNodeStatistics) {
-        setProcessorID(processorID);
+    public CommandContext(String connectionID, String userName, Serializable commandPayload, 
+        String vdbName, int vdbVersion, boolean collectNodeStatistics) {
         setConnectionID(connectionID);
         setUserName(userName);
         setCommandPayload(commandPayload);
@@ -180,8 +227,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public CommandContext(Object processorID, String connectionID, String userName, 
         String vdbName, int vdbVersion) {
 
-        this(processorID, connectionID, userName, null, vdbName, 
-            vdbVersion, false);            
+        this(connectionID, userName, null, vdbName, vdbVersion, 
+            false);            
              
     }
 
@@ -194,34 +241,45 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
     
     public Determinism getDeterminismLevel() {
-		return globalState.determinismLevel;
+		return determinismLevel[0];
 	}
     
-    public Determinism resetDeterminismLevel() {
-    	Determinism result = globalState.determinismLevel;
-    	globalState.determinismLevel = Determinism.DETERMINISTIC;
+    public Determinism resetDeterminismLevel(boolean detach) {
+    	Determinism result = determinismLevel[0];
+    	if (detach) {
+    		determinismLevel = new Determinism[1];
+    	}
+    	determinismLevel[0] = Determinism.DETERMINISTIC;
     	return result;
+    	
+    }
+    
+    public Determinism resetDeterminismLevel() {
+    	return resetDeterminismLevel(false);
     }
     
     public void setDeterminismLevel(Determinism level) {
-    	if (globalState.determinismLevel == null || level.compareTo(globalState.determinismLevel) < 0) {
-    		globalState.determinismLevel = level;
+    	if (determinismLevel[0] == null || level.compareTo(determinismLevel[0]) < 0) {
+    		determinismLevel[0] = level;
     	}
     }
     
     /**
      * @return
      */
-    public Object getProcessorID() {
-        return globalState.processorID;
+    public RequestWorkItem getWorkItem() {
+    	if (globalState.processorID == null) {
+    		return null;
+    	}
+        return globalState.processorID.get();
     }
 
     /**
      * @param object
      */
-    public void setProcessorID(Object object) {
+    public void setWorkItem(RequestWorkItem object) {
         ArgCheck.isNotNull(object);
-        globalState.processorID = object;
+        globalState.processorID = new WeakReference<RequestWorkItem>(object);
     }
 
     public CommandContext clone() {
@@ -233,7 +291,24 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         }
     	clone.setNonBlocking(this.nonBlocking);
     	clone.tupleSourceCache = this.tupleSourceCache;
+    	clone.vdbState = this.vdbState;
+    	clone.determinismLevel = this.determinismLevel; 
     	return clone;
+    }
+    
+    public void setNewVDBState(DQPWorkContext newWorkContext) {
+    	this.vdbState = new VDBState();
+    	VDBMetaData vdb = newWorkContext.getVDB();
+		GlobalTableStore actualGlobalStore = vdb.getAttachment(GlobalTableStore.class);
+		this.vdbState.globalTables = actualGlobalStore;
+		this.vdbState.session = newWorkContext.getSession();
+		this.vdbState.classLoader = vdb.getAttachment(ClassLoader.class);
+		this.vdbState.vdbName = vdb.getName();
+		this.vdbState.vdbVersion = vdb.getVersion();
+		this.vdbState.dqpWorkContext = newWorkContext;
+		TempMetadataAdapter metadata = new TempMetadataAdapter(vdb.getAttachment(QueryMetadataInterface.class), globalState.sessionTempTableStore.getMetadataStore());
+		metadata.setSession(true);
+		this.vdbState.metadata = metadata;
     }
     
     public String toString() {
@@ -253,11 +328,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
 
     public String getVdbName() {
-        return globalState.vdbName;
+        return vdbState.vdbName;
     }
 
     public int getVdbVersion() {
-        return globalState.vdbVersion;
+        return vdbState.vdbVersion;
     }
 
     /**
@@ -281,7 +356,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
      * @param vdbName The vdbName to set
      */
     public void setVdbName(String vdbName) {
-        this.globalState.vdbName = vdbName;
+        this.vdbState.vdbName = vdbName;
     }
 
     /**
@@ -289,7 +364,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
      * @param vdbVersion The vdbVersion to set
      */
     public void setVdbVersion(int vdbVersion) {
-        this.globalState.vdbVersion = vdbVersion;
+        this.vdbState.vdbVersion = vdbVersion;
     }
 
     public Serializable getCommandPayload() {
@@ -367,17 +442,10 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
 
     /** 
-     * @return Returns the securityFunctionEvaluator.
-     */
-    public SecurityFunctionEvaluator getSecurityFunctionEvaluator() {
-        return this.globalState.securityFunctionEvaluator;
-    }
-    
-    /** 
      * @param securityFunctionEvaluator The securityFunctionEvaluator to set.
      */
-    public void setSecurityFunctionEvaluator(SecurityFunctionEvaluator securityFunctionEvaluator) {
-        this.globalState.securityFunctionEvaluator = securityFunctionEvaluator;
+    public void setAuthoriziationValidator(AuthorizationValidator authorizationValidator) {
+        this.globalState.authorizationValidator = authorizationValidator;
     }
 
 	public TempTableStore getTempTableStore() {
@@ -386,20 +454,23 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
 	public void setTempTableStore(TempTableStore tempTableStore) {
 		this.tempTableStore = tempTableStore;
+		if (globalState.sessionTempTableStore == null) {
+			globalState.sessionTempTableStore = tempTableStore;
+		}
+	} 
+	
+	public TempTableStore getSessionTempTableStore() {
+		return globalState.sessionTempTableStore;
+	}
+
+	public void setSessionTempTableStore(TempTableStore tempTableStore) {
+		this.globalState.sessionTempTableStore = tempTableStore;
 	}
 	
 	public TimeZone getServerTimeZone() {
 		return globalState.timezone;
 	}
 
-	public void setPlanToProcessConverter(PlanToProcessConverter planToProcessConverter) {
-		this.globalState.planToProcessConverter = planToProcessConverter;
-	}
-
-	public PlanToProcessConverter getPlanToProcessConverter() {
-		return globalState.planToProcessConverter;
-	}
-	
 	public QueryProcessor.ProcessorFactory getQueryProcessorFactory() {
 		return this.globalState.queryProcessorFactory;
 	}
@@ -434,9 +505,16 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public Set<String> getGroups() {
 		if (globalState.groups == null) {
-			globalState.groups = new HashSet<String>();
+			globalState.groups = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		}
 		return globalState.groups;
+	}
+	
+	public Map<String, String> getAliasMapping() {
+		if (globalState.aliasMapping == null) {
+			globalState.aliasMapping = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		}
+		return globalState.aliasMapping;
 	}
 	
 	public long getTimeSliceEnd() {
@@ -456,11 +534,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 
 	public void setMetadata(QueryMetadataInterface metadata) {
-		globalState.metadata = metadata;
+		vdbState.metadata = metadata;
 	}
 	
 	public QueryMetadataInterface getMetadata() {
-		return globalState.metadata;
+		return vdbState.metadata;
 	}
     
     public void setValidateXML(boolean validateXML) {
@@ -480,11 +558,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
     
     public GlobalTableStore getGlobalTableStore() {
-    	return globalState.globalTables;
+    	return vdbState.globalTables;
     }
     
     public void setGlobalTableStore(GlobalTableStore tempTableStore) {
-    	globalState.globalTables = tempTableStore;
+    	vdbState.globalTables = tempTableStore;
     }
     
     public boolean isNonBlocking() {
@@ -579,11 +657,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public SessionMetadata getSession() {
-		return this.globalState.session;
+		return this.vdbState.session;
 	}
 	
 	public void setSession(SessionMetadata session) {
-		this.globalState.session = session;
+		this.vdbState.session = session;
 	}
 	
 	@Override
@@ -596,21 +674,27 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	public void setDQPWorkContext(DQPWorkContext workContext) {
-		this.globalState.dqpWorkContext = workContext;
+		this.vdbState.dqpWorkContext = workContext;
 	}
 	
 	@Override
 	public Map<String, DataPolicy> getAllowedDataPolicies() {
-		return this.globalState.dqpWorkContext.getAllowedDataPolicies();
+		if (this.vdbState.dqpWorkContext == null) {
+			return null;
+		}
+		return this.vdbState.dqpWorkContext.getAllowedDataPolicies();
 	}
 	
 	@Override
-	public VDB getVdb() {
-		return this.globalState.dqpWorkContext.getVDB();
+	public VDBMetaData getVdb() {
+		if (this.vdbState.dqpWorkContext == null) {
+			return null;
+		}
+		return this.vdbState.dqpWorkContext.getVDB();
 	}
 	
 	public DQPWorkContext getDQPWorkContext() {
-		return this.globalState.dqpWorkContext;
+		return this.vdbState.dqpWorkContext;
 	}
 	
 	public TransactionContext getTransactionContext() {
@@ -629,14 +713,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		globalState.transactionService = transactionService;
 	}
 	
-	public SourceHint getSourceHint() {
-		return this.globalState.sourceHint;
-	}
-	
-	public void setSourceHint(SourceHint hint) {
-		this.globalState.sourceHint = hint;
-	}
-	
 	public Executor getExecutor() {
 		return this.globalState.executor;
 	}
@@ -645,32 +721,48 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		this.globalState.executor = e;
 	}
 	
-	public ReusableExecution<?> getReusableExecution(String nodeId) {
+	public ReusableExecution<?> getReusableExecution(Object key) {
 		synchronized (this.globalState) {
 			if (this.globalState.reusableExecutions == null) {
 				return null;
 			}
-			return this.globalState.reusableExecutions.get(nodeId);
+			List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
+			if (reusableExecutions != null && !reusableExecutions.isEmpty()) {
+				return reusableExecutions.remove(0);
+			}
+			return null;
 		}
 	}
 	
-	public void putReusableExecution(String nodeId, ReusableExecution<?> execution) {
+	public void putReusableExecution(Object key, ReusableExecution<?> execution) {
 		synchronized (this.globalState) {
 			if (this.globalState.reusableExecutions == null) {
-				this.globalState.reusableExecutions = new ConcurrentHashMap<String, ReusableExecution<?>>();
+				this.globalState.reusableExecutions = new HashMap<Object, List<ReusableExecution<?>>>();
 			}
-			this.globalState.reusableExecutions.put(nodeId, execution);
+			List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
+			if (reusableExecutions == null) {
+				reusableExecutions = new LinkedList<ReusableExecution<?>>();
+				this.globalState.reusableExecutions.put(key, reusableExecutions);
+			}
+			reusableExecutions.add(execution);
 		}
 	}
 
 	public void close() {
 		synchronized (this.globalState) {
+			if (this.globalState.reservedBuffers > 0) {
+				long toRelease = this.globalState.reservedBuffers;
+				this.globalState.reservedBuffers = 0;
+				this.globalState.bufferManager.releaseOrphanedBuffers(toRelease);
+			}
 			if (this.globalState.reusableExecutions != null) {
-				for (ReusableExecution<?> reusableExecution : this.globalState.reusableExecutions.values()) {
-					try {
-						reusableExecution.dispose();
-					} catch (Exception e) {
-						LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30030));
+				for (List<ReusableExecution<?>> reusableExecutions : this.globalState.reusableExecutions.values()) {
+					for (ReusableExecution<?> reusableExecution : reusableExecutions) {
+						try {
+							reusableExecution.dispose();
+						} catch (Exception e) {
+							LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30030));
+						}
 					}
 				}
 				this.globalState.reusableExecutions.clear();
@@ -684,6 +776,21 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 					}
 				}
 				this.globalState.commandListeners.clear();
+			}
+			if (this.globalState.lookups != null) {
+				for (TupleSource ts : this.globalState.lookups.values()) {
+					ts.closeSource();
+				}
+				this.globalState.lookups = null;
+			}
+			if (this.globalState.created != null) {
+				for (InputStreamFactory isf : this.globalState.created) {
+					try {
+						isf.free();
+					} catch (IOException e) {
+					}
+				}
+				this.globalState.created.clear();
 			}
 		}
 	}
@@ -747,6 +854,33 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		}
 		return result;
 	}
+
+    /**
+     * Compile a regular expression into a {@link java.util.regex.Pattern} and cache it in
+     * the {@link CommandContext} for future use.
+     *
+     * @param context
+     * @param regex Regular expression.
+     * @param flags Bitmask flags like {@link java.util.regex.Pattern#CASE_INSENSITIVE}.
+     * @return Compiled regex.
+     */
+    public static Pattern getPattern(CommandContext context, String regex, int flags) {
+        Pattern result = null;
+        if (context != null) {
+            if (context.globalState.patternCache == null) {
+                context.globalState.patternCache = new LRUCache<Entry<String,Integer>,Pattern>(32);
+            } else {
+                result = context.globalState.patternCache.get(new SimpleEntry(result, flags));
+            }
+        }
+        if (result == null) {
+            result = Pattern.compile(regex, flags);
+            if (context != null) {
+                context.globalState.patternCache.put(new SimpleEntry(result, flags), result);
+            }
+        }
+        return result;
+    }
 	
 	public void incrementReuseCount() {
 		globalState.reuseCount.getAndIncrement();
@@ -771,11 +905,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
 	@Override
 	public ClassLoader getVDBClassLoader() {
-		return this.globalState.classLoader;
+		return this.vdbState.classLoader;
 	}
 	
 	public void setVDBClassLoader(ClassLoader classLoader) {
-		this.globalState.classLoader = classLoader;
+		this.vdbState.classLoader = classLoader;
 	}
 	
     /**
@@ -806,7 +940,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
             }
             globalState.warnings.add(warning);
 		}
-        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
+    	if (!this.getOptions().isSanitizeMessages() || LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+    		LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
+    	}
     }
     
     public TupleSourceCache getTupleSourceCache() {
@@ -827,5 +963,158 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public void setOptions(Options options) {
     	this.globalState.options = options;
     }
+    
+	@Override
+	public boolean isReturnAutoGeneratedKeys() {
+		return this.globalState.returnAutoGeneratedKeys;
+	}
 
+	public void setReturnAutoGeneratedKeys(boolean b) {
+		this.globalState.returnAutoGeneratedKeys = b;
+	}
+	
+	@Override
+	public GeneratedKeysImpl returnGeneratedKeys(String[] columnNames,
+			Class<?>[] columnDataTypes) {
+		synchronized (this.globalState) {
+			this.globalState.generatedKeys = new GeneratedKeysImpl(columnNames, columnDataTypes);
+			return this.globalState.generatedKeys;
+		}
+	}
+	
+	public GeneratedKeysImpl getGeneratedKeys() {
+		synchronized (this.globalState) {
+			return this.globalState.generatedKeys;
+		}
+	}
+	
+	public static CommandContext getThreadLocalContext() {
+		return threadLocalContext.get().peek();
+	}
+	
+	public static void pushThreadLocalContext(CommandContext context) {
+		threadLocalContext.get().push(context);
+	}
+	
+	public static void popThreadLocalContext() {
+		threadLocalContext.get().poll();
+	}
+
+	public long addAndGetReservedBuffers(int i) {
+		return globalState.reservedBuffers += i;
+	}
+
+	@Override
+	public Object setSessionVariable(String key, Object value) {
+		return this.vdbState.session.getSessionVariables().put(key, value);
+	}
+
+	@Override
+	public Object getSessionVariable(String key) {
+		return this.vdbState.session.getSessionVariables().get(key);
+	}
+	
+	public AuthorizationValidator getAuthorizationValidator() {
+		return this.globalState.authorizationValidator;
+	}
+	
+	public TupleSource getCodeLookup(String matTableName, Object keyValue) {
+		if (this.globalState.lookups != null) {
+			return this.globalState.lookups.remove(new LookupKey(matTableName, keyValue));
+		}
+		return null;
+	}
+
+	public void putCodeLookup(String matTableName, Object keyValue, TupleSource ts) {
+		if (this.globalState.lookups == null) {
+			this.globalState.lookups = new TreeMap<LookupKey, TupleSource>();
+		}
+		this.globalState.lookups.put(new LookupKey(matTableName, keyValue), ts);
+	}
+	
+	
+	public GlobalTableStoreImpl getSessionScopedStore(boolean create) {
+		GlobalTableStoreImpl impl = getSession().getAttachment(GlobalTableStoreImpl.class);
+		if (!create) {
+			return impl;
+		} 
+		impl = getSession().getAttachment(GlobalTableStoreImpl.class);
+		if (impl == null) {
+			impl = new GlobalTableStoreImpl(getBufferManager(), null, getMetadata());
+			getSession().addAttchment(GlobalTableStoreImpl.class, impl);
+		}
+		return impl;
+	}
+	
+	public static GlobalTableStoreImpl removeSessionScopedStore(SessionMetadata session) {
+		return session.removeAttachment(GlobalTableStoreImpl.class);
+	}
+	
+	@Override
+	public TeiidConnection getConnection() throws TeiidSQLException {
+		EmbeddedProfile ep = getDQPWorkContext().getConnectionProfile();
+		//TODO: this is problematic as the client properties are not conveyed
+		Properties info = new Properties();
+		info.put(EmbeddedProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
+		String url = "jdbc:teiid:" + getVdbName() + "." + getVdbVersion(); //$NON-NLS-1$ //$NON-NLS-2$
+		ServerConnection sc;
+		try {
+			sc = ep.createServerConnection(info);
+		} catch (TeiidException e) {
+			throw TeiidSQLException.create(e);
+		}
+		return new ConnectionImpl(sc, info, url) {
+			@Override
+			public void close() throws SQLException {
+				//just ignore
+			}
+			
+			@Override
+			public void rollback() throws SQLException {
+				//just ignore
+			}
+			
+			@Override
+			public void setAutoCommit(boolean autoCommit) throws SQLException {
+				//TODO: detect if attempted set conflicts with current txn state
+				throw new TeiidSQLException();
+			}
+			
+			@Override
+			public void commit() throws SQLException {
+				throw new TeiidSQLException();
+			}
+
+			@Override
+			public void changeUser(String userName, String newPassword)
+					throws SQLException {
+				throw new TeiidSQLException();
+			}
+		};
+	}
+	
+	/**
+	 * Used by the system table logic
+	 * @return
+	 */
+	public Clob getSpatialRefSys() {
+		return new ClobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return getClass().getClassLoader().getResourceAsStream("org/teiid/metadata/spatial_ref_sys.csv"); //$NON-NLS-1$
+			}
+		}, -1);
+	}
+
+	public void addCreatedLob(InputStreamFactory isf) {
+		if (this.globalState.created != null) {
+			this.globalState.created.add(isf);
+		}
+	}
+
+	public void disableAutoCleanLobs() {
+		this.globalState.created = null;
+	}
+	
 }

@@ -53,9 +53,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	private boolean multiValued;
 	private boolean bindEligible;
 
-	public static final String COLLATION_LOCALE = System.getProperties().getProperty("org.teiid.collationLocale"); //$NON-NLS-1$
-
-	public static final Comparator<Object> COMPARATOR = getComparator(COLLATION_LOCALE, DataTypeManager.PAD_SPACE);
+	public static final Comparator<Object> COMPARATOR = getComparator(DataTypeManager.COLLATION_LOCALE, DataTypeManager.PAD_SPACE);
 	
 	static Comparator<Object> getComparator(String localeString, final boolean padSpace) {
 		if (localeString == null) {
@@ -127,22 +125,13 @@ public class Constant implements Expression, Comparable<Constant> {
 	 * @param type Type for the constant, should never be null
 	 */
 	public Constant(Object value, Class<?> type) {
-        // Set value
-        this.value = DataTypeManager.convertToRuntimeType(value);
+        this.value = value;
 
         // Check that type is valid, then set it
         if(type == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0014")); //$NON-NLS-1$
         }
-        Class<?> originalType = type;
-        while (type.isArray()) {
-        	type = type.getComponentType();
-        }
-        if(! DataTypeManager.getAllDataTypeClasses().contains(type)) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0015", type.getName())); //$NON-NLS-1$
-        }
-        assert value == null || originalType.isArray() || originalType.isAssignableFrom(value.getClass()) : "Invalid value for specified type."; //$NON-NLS-1$
-        this.type = originalType;
+        this.type = type;
 	}
 
 	/**
@@ -151,19 +140,19 @@ public class Constant implements Expression, Comparable<Constant> {
 	 * @param value Constant value, may be null
 	 */
 	public Constant(Object value) {
-		this.value = DataTypeManager.convertToRuntimeType(value);
+		this.value = value;
 		if (this.value == null) {
 			this.type = DataTypeManager.DefaultDataClasses.NULL;
 		} else { 
 			this.type = this.value.getClass();
 			Class<?> originalType = type;
-	        while (type.isArray()) {
+	        while (type.isArray() && !type.getComponentType().isPrimitive()) {
 	        	type = type.getComponentType();
 	        }
 			if (DataTypeManager.getAllDataTypeClasses().contains(type)) {
 				//array of a runtime-type
 				this.type = originalType;
-			} else if (originalType.isArray()) {
+			} else if (originalType.isArray() && !originalType.getComponentType().isPrimitive()) {
 				this.type = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
 			} else {
 				this.type = DataTypeManager.DefaultDataClasses.OBJECT;

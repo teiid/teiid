@@ -27,18 +27,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Entity;
-
-import org.hibernate.search.annotations.DateBridge;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Index;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
-import org.hibernate.search.annotations.ProvidedId;
-import org.hibernate.search.annotations.Resolution;
-
-@Entity
-@Indexed @ProvidedId
+//@Entity
+//@Indexed @ProvidedId
 public class Trade  implements Serializable {
 	
 	// 4 attributes, legs is not selectable
@@ -47,11 +37,11 @@ public class Trade  implements Serializable {
 	private static final long serialVersionUID = 8611785625511714561L;
 	
 
-protected @IndexedEmbedded List<Leg> legs = new ArrayList<Leg>();
-protected  @Field(index=Index.YES) long tradeId;
-protected  @Field String name;
-protected  @Field @DateBridge(resolution=Resolution.MINUTE) Date tradeDate;
-protected  @Field boolean settled;
+protected  List<Leg> legs = new ArrayList<Leg>();
+protected  long tradeId;
+protected   String name;
+protected   Date tradeDate;
+protected   boolean settled;
 
    public Trade() {
    }
@@ -63,7 +53,6 @@ protected  @Field boolean settled;
        this.tradeDate=tradeDate;
    }
    
-   @Field 
    public long getTradeId() {
 	   return tradeId;
    }
@@ -76,22 +65,18 @@ protected  @Field boolean settled;
 	   this.name = name;
    }
    
-  
    public String getName() {
 	   return this.name;
    }
    
-   @Field
    public Date getTradeDate() {
 	   return this.tradeDate;
    }
    
-   @Field
    public boolean isSettled() {
 	   return this.settled;
    }
 
- //  @IndexedEmbedded  
    public List<Leg> getLegs() {
 	   if (legs == null) {
 		   return Collections.EMPTY_LIST;
@@ -111,6 +96,7 @@ protected  @Field boolean settled;
 	   this.settled = isSettled;
    }
   
+   @Override
    public String toString() {
 	   
 	   StringBuffer sb = new StringBuffer("Trade:");

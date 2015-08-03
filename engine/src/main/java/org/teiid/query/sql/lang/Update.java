@@ -37,7 +37,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * Represents a SQL Update statement of the form:
  * "UPDATE <group> SET <element> = <expression>, ... [WHERE <criteria>]".
  */
-public class Update extends TranslatableProcedureContainer {
+public class Update extends ProcedureContainer implements FilteredCommand {
 
     /** Identifies the group to be updated. */
     private GroupSymbol group;
@@ -46,6 +46,8 @@ public class Update extends TranslatableProcedureContainer {
 
     /** optional criteria defining which row get updated. */
     private Criteria criteria;
+    
+    private Criteria constraint;
 
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -227,6 +229,9 @@ public class Update extends TranslatableProcedureContainer {
 		}
 
         this.copyMetadataState(copy);
+        if (this.constraint != null) {
+        	copy.constraint = (Criteria) this.constraint.clone();
+        }
 		return copy;
 	}
 	
@@ -245,6 +250,14 @@ public class Update extends TranslatableProcedureContainer {
 	 */
 	public boolean areResultsCachable(){
 		return false;
+	}
+	
+	public Criteria getConstraint() {
+		return constraint;
+	}
+	
+	public void setConstraint(Criteria constraint) {
+		this.constraint = constraint;
 	}
     
 }

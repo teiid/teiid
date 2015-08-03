@@ -32,6 +32,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
@@ -43,7 +44,6 @@ import java.sql.Timestamp;
 
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.ReaderInputStream;
 
 
@@ -68,6 +68,10 @@ final class DataTypeTransformer {
     }
     
     static final <T> T transform(Object value, Class<T> targetType) throws SQLException {
+    	return transform(value, targetType, getRuntimeType(targetType));
+    }
+    
+    static final <T> T transform(Object value, Class<T> targetType, Class<?> runtimeType) throws SQLException {
     	if (value == null || targetType.isAssignableFrom(value.getClass())) {
     		return targetType.cast(value);
     	}
@@ -98,8 +102,8 @@ final class DataTypeTransformer {
         	}
     	}
     	try {
-    		return targetType.cast(DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), getRuntimeType(targetType)));
-    	} catch (TransformationException e) {
+    		return (T)DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value, true), runtimeType);
+    	} catch (Exception e) {
     		String valueStr = value.toString();
     		if (valueStr.length() > 20) {
     			valueStr = valueStr.substring(0, 20) + "..."; //$NON-NLS-1$
@@ -348,6 +352,11 @@ final class DataTypeTransformer {
 				}
 			}
 		});
+    }
+    
+    static final Array getArray(Object obj) throws SQLException {
+    	//TODO: type primitive arrays more closely
+    	return transform(obj, Array.class, Object[].class); 
     }
 
 }

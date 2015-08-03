@@ -3,12 +3,13 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-adminshell</artifactId>
 	<name>Adminshell</name>
 	<description>Adminshell for Teiid</description>
+    <packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -28,21 +29,22 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-admin</artifactId>
-        </dependency>        
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-jboss-admin</artifactId>
+        </dependency>                 
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
-			<version>1.7.2</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.4</version>
 		</dependency>
         <dependency>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
-            <version>0.9.94</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
@@ -54,13 +56,11 @@
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
             <artifactId>jansi</artifactId>
-            <version>1.2.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
-            <version>1.2</version>
             <scope>compile</scope>
         </dependency>
 	</dependencies>

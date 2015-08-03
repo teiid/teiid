@@ -56,7 +56,8 @@ public class TestASTQueries {
     	server.start(new EmbeddedConfiguration());
     	LoopbackExecutionFactory loopy = new LoopbackExecutionFactory();
     	loopy.setRowCount(10);
-    	server.addTranslator(loopy);
+    	loopy.start();
+    	server.addTranslator("l", loopy);
     	
     	String DDL = "CREATE FOREIGN TABLE G1 (e1 string, e2 integer);";
     	ModelMetaData model = new ModelMetaData();
@@ -66,7 +67,7 @@ public class TestASTQueries {
     	model.setSchemaText(DDL);
     	SourceMappingMetadata sm = new SourceMappingMetadata();
     	sm.setName("loopy");
-    	sm.setTranslatorName("loopback");
+    	sm.setTranslatorName("l");
     	model.addSourceMapping(sm);
     	server.deployVDB("test", model);
     }

@@ -1,6 +1,6 @@
 <vdb name="dynamic" version= "1">
     <model name="MarketData">
-        <source name="text-connector" translator-name="file" connection-jndi-name="java:/marketdata-file"/>
+        <source name="text-connector" translator-name="file1" connection-jndi-name="java:/marketdata-file"/>
     </model>
     <model visible = "true" type = "VIRTUAL" name = "portfolio">
          <metadata type = "DDL"><![CDATA[
@@ -13,4 +13,8 @@
          ]]>
          </metadata>
     </model>
+    
+    <translator name="file1" type="file">
+         <property name="exceptionIfFileNotFound" value="false"/>
+     </translator>
 </vdb>

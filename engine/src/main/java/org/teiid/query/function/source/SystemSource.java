@@ -22,18 +22,25 @@
 
 package org.teiid.query.function.source;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.function.GeometryFunctionMethods;
+import org.teiid.query.function.JSONFunctionMethods;
+import org.teiid.query.function.SystemFunctionMethods;
+import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.translator.SourceSystemFunctions;
@@ -136,15 +143,13 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addRepeatFunction();
 		addSpaceFunction();
 		addInsertFunction();
+		addEndsWithFunction();
 		
         // clob
         addClobFunction(SourceSystemFunctions.UCASE, QueryPlugin.Util.getString("SystemSource.UcaseClob_result"), "upperCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ 
         addClobFunction(SourceSystemFunctions.LCASE, QueryPlugin.Util.getString("SystemSource.LcaseClob_result"), "lowerCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ 
         addClobFunction("lower", QueryPlugin.Util.getString("SystemSource.LowerClob_result"), "lowerCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         addClobFunction("upper", QueryPlugin.Util.getString("SystemSource.UpperClob_result"), "upperCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        
-        addToCharsFunction();
-        addToBytesFunction();
         
         // conversion
         addConversionFunctions();   
@@ -194,7 +199,56 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addArrayGet();
         addArrayLength();
         addTrimFunction();
+
+        addFunctions(JSONFunctionMethods.class);
+        addFunctions(GeometryFunctionMethods.class);
+        addFunctions(SystemFunctionMethods.class);
+        addFunctions(FunctionMethods.class);
+        addFunctions(XMLSystemFunctions.class);
     }
+    
+    private void addFunctions(Class<?> clazz) {
+		Method[] methods = clazz.getMethods();
+		//need a consistent order for tests
+		Arrays.sort(methods, new Comparator<Method>() {
+			@Override
+			public int compare(Method arg0, Method arg1) {
+				return arg0.toGenericString().compareTo(arg1.toGenericString());
+			}
+		});
+		for (Method method : methods) {
+			TeiidFunction f = method.getAnnotation(TeiidFunction.class);
+			if (f == null) {
+				continue;
+			}
+			String name = f.name();
+			if (name.isEmpty()) {
+				name = method.getName();
+			}
+			addFunction(method, f, name);
+			if (!f.alias().isEmpty()) {
+				addFunction(method, f, f.alias());
+			}
+		}
+	}
+
+	private FunctionMethod addFunction(Method method, TeiidFunction f,
+			String name) {
+		FunctionMethod func = MetadataFactory.createFunctionFromMethod(name, method);
+		func.setDescription(QueryPlugin.Util.getString(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_description"))); //$NON-NLS-1$ //$NON-NLS-2$
+		func.setCategory(f.category());
+		for (int i = 0; i < func.getInputParameterCount(); i++) {
+			func.getInputParameters().get(i).setDescription(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_param" + (i+1))); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		func.getOutputParameter().setDescription(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_result")); //$NON-NLS-1$ //$NON-NLS-2$
+		if (f.nullOnNull()) {
+			func.setNullOnNull(true);
+		}
+		func.setDeterminism(f.determinism());
+		func.setPushdown(f.pushdown());
+		functions.add(func);
+		return func;
+	}
     
     private void addTrimFunction() {
         functions.add(
@@ -604,6 +658,16 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                     new FunctionParameter("replacement", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Replace_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Replace_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    private void addEndsWithFunction() {
+        FunctionMethod f =
+            new FunctionMethod(SourceSystemFunctions.ENDSWITH, QueryPlugin.Util.getString("SystemSource.endswith_desc"), STRING, FUNCTION_CLASS, "endsWith", //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter[] {
+                    new FunctionParameter("substring", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_result")) );                 //$NON-NLS-1$ //$NON-NLS-2$
+        functions.add(f);
+    }    
 
 	private void addRepeatFunction() {
 		functions.add(
@@ -630,24 +694,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 					new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Insert_arg3")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("str2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Insert_arg4")) }, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Insert_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
-	private void addToCharsFunction() {
-		functions.add(
-			new FunctionMethod("to_chars", QueryPlugin.Util.getString("SystemSource.encode_desc"), CONVERSION, FUNCTION_CLASS, "toChars", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
-				new FunctionParameter[] {
-					new FunctionParameter("value", DataTypeManager.DefaultDataTypes.BLOB, QueryPlugin.Util.getString("SystemSource.encode_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-					new FunctionParameter("encoding", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.encode_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.encode_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
-	private void addToBytesFunction() {
-		functions.add(
-			new FunctionMethod("to_bytes", QueryPlugin.Util.getString("SystemSource.decode_desc"), CONVERSION, FUNCTION_CLASS, "toBytes", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
-				new FunctionParameter[] {
-					new FunctionParameter("value", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.decode_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-					new FunctionParameter("encoding", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.decode_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BLOB, QueryPlugin.Util.getString("SystemSource.decode_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     private void addAsciiFunction() {
@@ -1001,7 +1047,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     private void addXmlComment() {
         functions.add(new FunctionMethod(SourceSystemFunctions.XMLCOMMENT, QueryPlugin.Util.getString("SystemSource.xmlcomment_description"), XML, XML_FUNCTION_CLASS, "xmlComment", //$NON-NLS-1$ //$NON-NLS-2$  
                             new FunctionParameter[] { 
-                                new FunctionParameter("value", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlcomment_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                new FunctionParameter("value", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlcomment_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlcomment_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -1081,12 +1127,13 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                     new FunctionParameter("op3", type, QueryPlugin.Util.getString("SystemSource.coalesce_param1"), true) ), //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.coalesce_result")), false, Determinism.DETERMINISTIC)); //$NON-NLS-1$ //$NON-NLS-2$
     }
-		
+    
     /**
      * Get all function signatures for this metadata source.
      * @return Unordered collection of {@link FunctionMethod}s
      */
-    public Collection<org.teiid.metadata.FunctionMethod> getFunctionMethods() {
+    @Override
+	public Collection<org.teiid.metadata.FunctionMethod> getFunctionMethods() {
         return this.functions;
 	}
     

@@ -54,7 +54,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 	public final static class NullException extends RuntimeException {};
 	private final static NullException ex = new NullException();
 	
-	public ArrayImpl(Object[] values) {
+	public ArrayImpl(Object... values) {
 		this.values = values;
 	}
 
@@ -83,12 +83,18 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 		} catch (SQLException e) {
 			throw new TeiidRuntimeException(e);
 		}
+		Object[] values2 = o.values;
+		return compare(noNulls, comparator, values, values2);
+	}
+
+	private static int compare(boolean noNulls, Comparator<Object> comparator,
+			Object[] values, Object[] values2) {
 		int len1 = values.length;
-		int len2 = o.values.length;
+		int len2 = values2.length;
 	    int lim = Math.min(len1, len2);
 	    for (int k = 0; k < lim; k++) {
 	    	Object object1 = values[k];
-			Object object2 = o.values[k];
+			Object object2 = values2[k];
 			if (object1 == null) {
 				if (noNulls) {
 					throw ex;
@@ -104,7 +110,9 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 	    		return 1;
 	    	}
 			int comp = 0;
-			if (comparator != null) {
+			if (object1 instanceof Object[] && object2 instanceof Object[]) {
+				comp = compare(noNulls, comparator, (Object[])object1, (Object[])object2);
+			} else if (comparator != null) {
 				comp = comparator.compare(object1, object2);				
 			} else {
 				comp = ((Comparable)object1).compareTo(object2);
@@ -130,7 +138,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 			return false;
 		}
 		ArrayImpl other = (ArrayImpl)obj;
-		return zeroBased == other.zeroBased && Arrays.equals(values, other.values);
+		return zeroBased == other.zeroBased && compareTo(other) == 0;
 	}
 	
 	public Object[] getValues() {
@@ -230,7 +238,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 		if (INVALID.equalsIgnoreCase(componentType)) {
 			return;
 		}
-		ExternalizeUtil.readArray(in, DataTypeManager.getDataTypeClass(componentType));
+		this.values = ExternalizeUtil.readArray(in, DataTypeManager.getDataTypeClass(componentType));
 		zeroBased = in.readBoolean();
 	}
 	

@@ -3,7 +3,7 @@
   <parent>
     <artifactId>connectors</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.teiid.connectors</groupId>
@@ -13,5 +13,6 @@
   <description>Experimental connectors in progress</description>
   <modules>
     <module>translator-yahoo</module>
+    <module>translator-logger</module>
   </modules>
 </project>

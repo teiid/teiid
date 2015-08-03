@@ -39,6 +39,7 @@ import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
@@ -67,6 +68,7 @@ public class STree implements Cloneable {
     private int pageSize;
     protected int leafSize;
     protected int minPageSize;
+	protected int minStorageSize;
     protected int keyLength;
 	protected boolean batchInsert;
 	protected SPage incompleteInsert;
@@ -100,6 +102,7 @@ public class STree implements Cloneable {
 		this.keyLength = keyLength;
 		this.lobManager = lobManager;
 		this.minPageSize = this.pageSize>>5;
+		this.minStorageSize = this.pageSize>>2;
 	}
 	
 	public STree clone() {
@@ -155,6 +158,7 @@ public class STree implements Cloneable {
 			if (page.next == null) {
 				break;
 			}
+			page = page.next;
 		}
 	}
 	
@@ -269,10 +273,13 @@ public class STree implements Cloneable {
 	}
 	
 	public List find(List n) throws TeiidComponentException {
-		return find(n, new LinkedList<SearchResult>());
+		return find(n, new LinkedList<SPage.SearchResult>());
 	}
 	
 	public List insert(List tuple, InsertMode mode, int sizeHint) throws TeiidComponentException {
+		if (tuple.size() != this.leafManager.getTypes().length) {
+			throw new AssertionError("Invalid tuple."); //$NON-NLS-1$
+		}
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
 		List match = null;
 		if (this.lobManager != null) {
@@ -588,6 +595,47 @@ public class STree implements Cloneable {
 			return leafManager;
 		}
 		return keyManager;
+	}
+	
+	public TupleSource getTupleSource(final boolean destructive) {
+		return new TupleSource() {
+			SPage current = header[0];
+			List<List<?>> values;
+			int index = 0;
+			
+			@Override
+			public List<?> nextTuple() throws TeiidComponentException,
+					TeiidProcessingException {
+				if (current == null) {
+					return null;
+				}
+				if (values == null) {
+					values = current.getValues();
+				}
+				if (index >= values.size()) {
+					if (destructive) {
+						current.remove(true);
+					}
+					values = null;
+					current = current.next;
+					if (current == null) {
+						return null;
+					}
+					values = current.getValues();
+					index = 0;
+				}
+				return values.get(index++);
+			}
+			
+			@Override
+			public void closeSource() {
+				
+			}
+		};
+	}
+	
+	public void setMinStorageSize(int minStorageSize) {
+		this.minStorageSize = minStorageSize;
 	}
 
 }

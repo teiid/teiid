@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
@@ -60,7 +61,8 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
     private HashMap<String, ClientService> clientServices = new HashMap<String, ClientService>();
     private SecurityHelper securityHelper;
     private Type type = Type.JDBC;
-    private AuthenticationType authenticationType = AuthenticationType.CLEARTEXT;
+    private AuthenticationType authenticationType = AuthenticationType.USERPASSWORD;
+    private VDBRepository vdbRepository;
     
     public ClientServiceRegistryImpl() {
     	
@@ -109,6 +111,15 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
 	public void waitForFinished(String vdbName, int vdbVersion,
 			int timeOutMillis) throws ConnectionException {
 		
+	}
+	
+	@Override
+	public VDBRepository getVDBRepository() {
+		return vdbRepository;
+	}
+	
+	public void setVDBRepository(VDBRepository vdbRepository) {
+		this.vdbRepository = vdbRepository;
 	}
 	
 }

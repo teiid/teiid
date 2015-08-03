@@ -30,6 +30,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
@@ -72,8 +73,8 @@ public class JoinUtil {
      * @param joinNode
      * @return
      */
-    static final JoinType optimizeJoinType(PlanNode critNode, PlanNode joinNode, QueryMetadataInterface metadata) {
-        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups())) {
+    static final JoinType optimizeJoinType(PlanNode critNode, PlanNode joinNode, QueryMetadataInterface metadata, boolean modifyJoin) {
+        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups()) || joinNode.hasBooleanProperty(Info.PRESERVE)) {
             return null;
         }
 
@@ -121,12 +122,16 @@ public class JoinUtil {
             if (isNullDepdendent && !isNullDepdendentOther) {
                 result =  JoinType.JOIN_LEFT_OUTER;
             } else if (!isNullDepdendent && isNullDepdendentOther) {
-                JoinUtil.swapJoinChildren(joinNode);
-                result = JoinType.JOIN_LEFT_OUTER;
+            	if (modifyJoin) {
+	                JoinUtil.swapJoinChildren(joinNode);
+	                result = JoinType.JOIN_LEFT_OUTER;
+            	}
             }
         }
         
-        joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, result);
+        if (modifyJoin) {
+        	joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, result);
+        }
         
         return result;
     }

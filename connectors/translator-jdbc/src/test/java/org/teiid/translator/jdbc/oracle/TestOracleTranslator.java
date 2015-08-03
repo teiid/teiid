@@ -28,9 +28,12 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +48,9 @@ import org.teiid.language.Array;
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Literal;
+import org.teiid.language.Parameter;
 import org.teiid.language.Select;
+import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
@@ -66,6 +71,7 @@ import org.teiid.translator.jdbc.JDBCQueryExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 @SuppressWarnings("nls")
 public class TestOracleTranslator {
@@ -78,6 +84,7 @@ public class TestOracleTranslator {
     public void setup() throws Exception {
         TRANSLATOR = new OracleExecutionFactory();  
         TRANSLATOR.setUseBindVariables(false);
+        TRANSLATOR.setDatabaseVersion(Version.DEFAULT_VERSION);
         TRANSLATOR.start();
     }
 
@@ -87,14 +94,27 @@ public class TestOracleTranslator {
 	
 	@Test public void testSourceHint() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHint("hello world");
+		impl.setHints(Arrays.asList("hello world"));
 		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world */ g_0.PART_NAME FROM PARTS g_0", true);
 	}
 	
 	@Test public void testSourceHint1() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHint("hello world");
+		impl.setHints(Arrays.asList("hello world"));
 		helpTestVisitor(getTestVDB(), "select part_name from parts union select part_id from parts", impl, null, "SELECT /*+ hello world */ g_1.PART_NAME AS c_0 FROM PARTS g_1 UNION SELECT g_0.PART_ID AS c_0 FROM PARTS g_0", true);
+	}
+	
+	@Test public void testSourceHint2() throws Exception {
+		ExecutionContextImpl impl = new FakeExecutionContextImpl();
+		impl.setHints(Arrays.asList("hello world"));
+		helpTestVisitor(getTestVDB(), "with x (y) as (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT PARTS.PART_NAME AS y FROM PARTS) SELECT /*+ hello world */ g_0.y FROM x g_0", true);
+	}
+	
+	@Test public void testSourceHint3() throws Exception {
+		ExecutionContextImpl impl = new FakeExecutionContextImpl();
+		impl.setHints(Arrays.asList("hello world"));
+		impl.setGeneralHints(Arrays.asList("other"));
+		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world other */ g_0.PART_NAME FROM PARTS g_0", true);
 	}
 	
 	@Test public void testInsertWithSequnce() throws Exception {
@@ -551,11 +571,12 @@ public class TestOracleTranslator {
     /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename 
      * @throws TranslatorException 
      */
-    private void helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
+    private Command helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         Command obj = commandBuilder.getCommand(input);
 		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
+		return obj;
     }
     
     private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
@@ -579,6 +600,24 @@ public class TestOracleTranslator {
         String output = "SELECT CASE WHEN CASE WHEN CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL OR CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END IS NULL OR to_char(EXTRACT(YEAR FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat(CASE WHEN CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL OR CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END, to_char(EXTRACT(YEAR FROM SmallA.DateValue))) END, SUM(SmallA.IntKey) FROM SmallA GROUP BY SmallA.DateValue"; //$NON-NLS-1$
         
         helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
+                        input, 
+                        EMPTY_CONTEXT, null, output);
+    }
+    
+    @Test public void testDateStuff1() throws Exception {
+        String input = "SELECT hour(datevalue), minute(timestampvalue), second(cast(stringkey as date)) FROM bqt1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT EXTRACT(HOUR FROM cast(SmallA.DateValue AS timestamp)), EXTRACT(MINUTE FROM SmallA.TimestampValue), EXTRACT(SECOND FROM cast(to_date(SmallA.StringKey, 'YYYY-MM-DD') AS timestamp)) FROM SmallA"; //$NON-NLS-1$
+        
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
+                        input, 
+                        EMPTY_CONTEXT, null, output);
+    }
+    
+    @Test public void testDateStuff2() throws Exception {
+        String input = "SELECT hour(timestampvalue) FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT EXTRACT(HOUR FROM cast(SmallishA.timestampvalue AS timestamp)) FROM SmallishA"; //$NON-NLS-1$
+        
+        helpTestVisitor(getOracleSpecificMetadata(),
                         input, 
                         EMPTY_CONTEXT, null, output);
     }
@@ -790,12 +829,14 @@ public class TestOracleTranslator {
             "DoubleNum",  //$NON-NLS-1$ 
             "ID", //$NON-NLS-1$
             "timestampvalue", //$NON-NLS-1$
-            "description"
+            "description",
+            "ndescription"
         };
         String[] elemTypes = new String[] {  
             DataTypeManager.DefaultDataTypes.DOUBLE,
             DataTypeManager.DefaultDataTypes.INTEGER,
             DataTypeManager.DefaultDataTypes.TIMESTAMP,
+            DataTypeManager.DefaultDataTypes.STRING,
             DataTypeManager.DefaultDataTypes.STRING,
         };
         RealMetadataFactory.createElements(x, elemNames, elemTypes);
@@ -805,6 +846,7 @@ public class TestOracleTranslator {
         cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
         cols.get(2).setNativeType("date"); //$NON-NLS-1$
         cols.get(3).setNativeType("CHAR");
+        cols.get(4).setNativeType("NCHAR");
         List<Column> dualCols = RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
         dualCols.get(0).setNameInSource("seq.nextval");
         
@@ -874,7 +916,7 @@ public class TestOracleTranslator {
     
     @Test public void testLikeRegex() throws Exception {
         String input = "SELECT intkey FROM BQT1.SMALLA where stringkey like_regex 'ab.*c+' and stringkey not like_regex 'ab{3,5}c'"; //$NON-NLS-1$
-        String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.StringKey REGEXP_LIKE 'ab.*c+' AND SmallA.StringKey NOT REGEXP_LIKE 'ab{3,5}c'";  //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE REGEXP_LIKE(SmallA.StringKey, 'ab.*c+') AND NOT(REGEXP_LIKE(SmallA.StringKey, 'ab{3,5}c'))";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -883,7 +925,16 @@ public class TestOracleTranslator {
     
     @Test public void testCallWithResultSet() throws Exception {
         String input = "call spTest5(1)"; //$NON-NLS-1$
-        String output = "{ ?= call spTest5(?)}";  //$NON-NLS-1$
+        String output = "{?= call spTest5(?)}";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testCallWithoutResultSet() throws Exception {
+        String input = "call sp_noreturn()"; //$NON-NLS-1$
+        String output = "{call sp_noreturn()}";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -898,7 +949,7 @@ public class TestOracleTranslator {
 		ResultSet rs = Mockito.mock(ResultSet.class);
 		Mockito.stub(cs.getObject(1)).toReturn(rs);
 		Mockito.stub(cs.getInt(3)).toReturn(4);
-		Mockito.stub(connection.prepareCall("{ ?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+		Mockito.stub(connection.prepareCall("{?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
 		OracleExecutionFactory ef = new OracleExecutionFactory();
 		
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
@@ -908,9 +959,18 @@ public class TestOracleTranslator {
 		Mockito.verify(cs, Mockito.times(1)).getObject(1);
 	}
 	
-	@Test public void testNativeQuery() throws Exception {
+	@Test (expected=IllegalArgumentException.class)public void testNativeQueryWithNoCorrelationName() throws Exception {
 		String input = "SELECT (DoubleNum * 1.0) FROM x"; //$NON-NLS-1$
         String output = "SELECT (x.DoubleNum * 1.0) FROM (select c from d) x"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
+	
+	@Test public void testNativeQuery() throws Exception {
+		String input = "SELECT (DoubleNum * 1.0) FROM x as y"; //$NON-NLS-1$
+        String output = "SELECT (y.DoubleNum * 1.0) FROM (select c from d) y"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
@@ -956,21 +1016,24 @@ public class TestOracleTranslator {
 	
 	@Test public void testCharType() throws Exception {
 		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
-        Command command = commandBuilder.getCommand("select id from smalla where description = 'a'");
-        ((Literal)((Comparison)((Select)command).getWhere()).getRightExpression()).setBindEligible(true);
+        Command command = commandBuilder.getCommand("select id from smalla where description = 'a' and ndescription in ('b', 'c')");
+        for (Literal l : CollectorVisitor.collectObjects(Literal.class, command)) {
+        	l.setBindEligible(true);
+        }
 		Connection connection = Mockito.mock(Connection.class);
 		PreparedStatement ps = Mockito.mock(PreparedStatement.class);
-		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ?")).toReturn(ps); //$NON-NLS-1$
+		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ? AND SmallishA.ndescription IN (?, ?)")).toReturn(ps); //$NON-NLS-1$
 		OracleExecutionFactory ef = new OracleExecutionFactory();
-		
-		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+		ef.start();
+		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
 		e.execute();
-		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", 999);
+		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", OracleExecutionFactory.FIXED_CHAR_TYPE);
+		Mockito.verify(ps, Mockito.times(1)).setObject(2, "b", OracleExecutionFactory.FIXED_CHAR_TYPE);
 	}
 	
     @Test public void testParseFormat() throws Exception {
         String input = "select parsetimestamp(smalla.timestampvalue, 'yyyy.MM.dd'), formattimestamp(smalla.timestampvalue, 'yy.MM.dd') from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT TO_TIMESTAMP(to_char(cast(g_0.TimestampValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF'), YYYY.MM.DD), TO_CHAR(g_0.TimestampValue, YY.MM.DD) FROM SmallA g_0"; //$NON-NLS-1$
+        String output = "SELECT TO_TIMESTAMP(to_char(cast(g_0.TimestampValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF'), 'YYYY.MM.DD'), TO_CHAR(g_0.TimestampValue, 'YY.MM.DD') FROM SmallA g_0"; //$NON-NLS-1$
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
@@ -989,5 +1052,190 @@ public class TestOracleTranslator {
         comp.setRightExpression(new Array(comp.getLeftExpression().getType(), Arrays.asList(comp.getRightExpression(), new Literal(2, TypeFacility.RUNTIME_TYPES.INTEGER))));
         TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
     }
+    
+    @Test public void testWith() throws Exception {
+        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5"; //$NON-NLS-1$
+        String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5"; //$NON-NLS-1$
+               
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testWithAndLimit() throws Exception {
+        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5 limit 10"; //$NON-NLS-1$
+        String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT * FROM (SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5) WHERE ROWNUM <= 10"; //$NON-NLS-1$
+               
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testVersionedCapabilities() throws Exception {
+    	OracleExecutionFactory oef = new OracleExecutionFactory();
+    	oef.setDatabaseVersion("10.0");
+    	oef.start();
+    	assertTrue(oef.supportsCommonTableExpressions());
+    }
+    
+	@Test public void testSelectWithoutFrom() throws Exception {
+		String input = "SELECT 1"; //$NON-NLS-1$
+        String output = "SELECT 1 FROM DUAL"; //$NON-NLS-1$
 
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
+	
+    @Test public void testSequenceFunction() throws Exception {
+        String input = "SELECT seq.nextval()"; //$NON-NLS-1$
+        String output = "SELECT seq.nextval FROM DUAL"; //$NON-NLS-1$
+               
+        String ddl = "create foreign function \"seq.nextval\" () returns integer OPTIONS (\"teiid_rel:native-query\" 'seq.nextval');";
+        
+        helpTestVisitor(RealMetadataFactory.fromDDL(ddl, "x", "y"),
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+    }
+    
+    @Test public void testCursorResult() throws Exception {
+        String input = "call proc('foo')"; //$NON-NLS-1$
+        String output = "{call proc(?,?)}"; //$NON-NLS-1$
+               
+        String ddl = "create foreign procedure proc (in x string, out y object options (native_type 'REF CURSOR')) returns table (a string);";
+        
+        Command command = helpTestVisitor(RealMetadataFactory.fromDDL(ddl, "x", "y"),
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+        
+		Connection connection = Mockito.mock(Connection.class);
+		CallableStatement cs = Mockito.mock(CallableStatement.class);
+		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Mockito.stub(cs.getObject(2)).toReturn(rs);
+		Mockito.stub(connection.prepareCall(output)).toReturn(cs); //$NON-NLS-1$
+		OracleExecutionFactory ef = new OracleExecutionFactory();
+		
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+		procedureExecution.execute();
+		//TODO we may not want to actually return the resultset, but this ensures full compatibility
+		assertEquals(Arrays.asList(rs), procedureExecution.getOutputParameterValues());
+		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, OracleExecutionFactory.CURSOR_TYPE);
+    }
+    
+	@Test public void testDependentJoin() throws Exception {
+		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
+        Select command = (Select) commandBuilder.getCommand("select id from smalla where description = 'a'");
+        Parameter param = new Parameter();
+        param.setType(TypeFacility.RUNTIME_TYPES.STRING);
+        param.setDependentValueId("x");
+        param.setValueIndex(0);
+        Map<String, List<? extends List<?>>> dependentValues = new HashMap<String, List<? extends List<?>>>();
+        dependentValues.put("x", Arrays.asList(Arrays.asList("a"), Arrays.asList("b")));
+        command.setDependentValues(dependentValues);
+        ((Comparison)command.getWhere()).setRightExpression(param);
+		Connection connection = Mockito.mock(Connection.class);
+		Statement statement = Mockito.mock(Statement.class);
+		Mockito.stub(connection.createStatement()).toReturn(statement);
+		PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+		Mockito.stub(ps.executeBatch()).toReturn(new int[] {-2, -2});
+		Mockito.stub(connection.prepareStatement("INSERT INTO TEIID_DKJ1 (COL1) VALUES (?)")).toReturn(ps); //$NON-NLS-1$
+		
+		//we won't bother to retrieve the results, but we expect the following join query
+		PreparedStatement ps1 = Mockito.mock(PreparedStatement.class);
+		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM TEIID_DKJ1, SmallishA WHERE SmallishA.description = TEIID_DKJ1.COL1")).toReturn(ps1); //$NON-NLS-1$
+		
+		OracleExecutionFactory ef = new OracleExecutionFactory() {
+			public String getTemporaryTableName(String prefix) {
+				return prefix; //don't use random for testing
+			}
+		};
+		ef.setDatabaseVersion(Version.DEFAULT_VERSION);
+		ef.start();
+		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
+		e.execute();
+		Mockito.verify(statement, Mockito.times(1)).execute("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table TEIID_DKJ1 (COL1 varchar2(100 char)) on commit delete rows; END;");
+		
+		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", Types.VARCHAR);
+		Mockito.verify(ps, Mockito.times(1)).setObject(1, "b", Types.VARCHAR);
+		Mockito.verify(ps, Mockito.times(2)).addBatch();
+		Mockito.verify(ps, Mockito.times(1)).executeBatch();
+	}
+	
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) on commit delete rows; END;", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    	assertEquals("create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
+    }
+
+    @Test
+    public void testGeometrySelectConvert() throws Exception {
+        String input = "select shape x from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT SDO_UTIL.TO_GMLGEOMETRY(COLA_MARKETS.SHAPE) AS x FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test
+    public void testGeometryDistance() throws Exception {
+        String input = "select ST_Distance(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT SDO_GEOM.DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test
+    public void testGeometryDisjoint() throws Exception {
+        String input = "select ST_Disjoint(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test
+    public void testGeometryIntersects() throws Exception {
+        String input = "select ST_Intersects(shape, shape) from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testGeometryInsert() throws Exception {
+        String input = "insert into cola_markets(name,shape) values('foo124', ST_GeomFromText('POINT (300 100)', 8307))"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', SDO_GEOMETRY(TO_BLOB(?), 8307))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testGeometryInsertNull() throws Exception {
+        String input = "insert into cola_markets(name,shape) values('foo124', null)"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', ?)"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSrid() throws Exception {
+        String input = "select st_srid(shape) from cola_markets c"; //$NON-NLS-1$
+        String output = "SELECT nvl(c.SHAPE.sdo_srid, 0) FROM COLA_MARKETS c"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testGeometryInsertQueryExpression() throws Exception {
+        String input = "insert into cola_markets select * from cola_markets"; //$NON-NLS-1$
+        String output = "INSERT INTO COLA_MARKETS (MKT_ID, NAME, SHAPE) SELECT COLA_MARKETS.MKT_ID, COLA_MARKETS.NAME, COLA_MARKETS.SHAPE FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testVarbinaryComparison() throws Exception {
+        String input = "select bin_col from binary_test where bin_col = x'ab'"; //$NON-NLS-1$
+        String output = "SELECT binary_test.BIN_COL FROM binary_test WHERE binary_test.BIN_COL = HEXTORAW('AB')"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testVarbinaryInsert() throws Exception {
+        String input = "insert into binary_test (bin_col) values (x'bc')"; //$NON-NLS-1$
+        String output = "INSERT INTO binary_test (BIN_COL) VALUES (HEXTORAW('BC'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

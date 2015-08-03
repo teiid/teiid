@@ -40,7 +40,7 @@ public final class RuleConstants {
     public static final OptimizerRule CLEAN_CRITERIA = new RuleCleanCriteria();    
     public static final OptimizerRule VALIDATE_WHERE_ALL = new RuleValidateWhereAll();    
     public static final OptimizerRule REMOVE_OPTIONAL_JOINS = new RuleRemoveOptionalJoins();
-    public static final OptimizerRule PUSH_NON_JOIN_CRITERIA = new RulePushNonJoinCriteria();
+    public static final OptimizerRule PUSH_NON_JOIN_CRITERIA = new RulePushNonJoinCriteria(true);
     public static final OptimizerRule RAISE_NULL = new RuleRaiseNull();
     public static final OptimizerRule PLAN_JOINS = new RulePlanJoins();
     public static final OptimizerRule IMPLEMENT_JOIN_STRATEGY = new RuleImplementJoinStrategy();
@@ -50,5 +50,5 @@ public final class RuleConstants {
     public static final OptimizerRule CALCULATE_COST = new RuleCalculateCost();
     public static final OptimizerRule PLAN_SORTS = new RulePlanSorts();
     public static final OptimizerRule DECOMPOSE_JOIN = new RuleDecomposeJoin();
-    public static final OptimizerRule SUBSTITUE_EXPRESSIONS = new RuleSubstituteExpressions();
+    public static final OptimizerRule SUBSTITUTE_EXPRESSIONS = new RuleSubstituteExpressions();
 }

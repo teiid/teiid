@@ -25,20 +25,23 @@ package org.teiid.translator.jdbc.derby;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.teiid.translator.jdbc.Version;
 
 public class TestDerbyCapabilities {
 	
 	@Test public void testLimitSupport() {
 		DerbyExecutionFactory derbyCapabilities = new DerbyExecutionFactory();
+		derbyCapabilities.setDatabaseVersion(Version.DEFAULT_VERSION);
 		assertFalse(derbyCapabilities.supportsRowLimit());
-		derbyCapabilities.setDatabaseVersion(DerbyExecutionFactory.TEN_5);
+		derbyCapabilities.setDatabaseVersion(DerbyExecutionFactory.TEN_5.toString());
 		assertTrue(derbyCapabilities.supportsRowLimit());
 	}
 	
 	@Test public void testFunctionSupport() {
 		DerbyExecutionFactory derbyCapabilities = new DerbyExecutionFactory();
+		derbyCapabilities.setDatabaseVersion(Version.DEFAULT_VERSION);
 		assertEquals(27, derbyCapabilities.getSupportedFunctions().size());
-		derbyCapabilities.setDatabaseVersion(DerbyExecutionFactory.TEN_4);
+		derbyCapabilities.setDatabaseVersion(DerbyExecutionFactory.TEN_4.toString());
 		assertEquals(44, derbyCapabilities.getSupportedFunctions().size());
 	}
 

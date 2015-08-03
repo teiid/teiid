@@ -22,24 +22,34 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
+import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -76,8 +86,192 @@ public class TestFunctionPushdown {
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 AS c_0, func(g_0.e1) AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1, "a")});
         dataManager.addData("SELECT g_0.e2 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("a")});
+	}
+	
+	@Test public void testSimpleFunctionPushdown() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
         
-        TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("a")});
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+		String sql = "select func(1)"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2)});
+        
+        //ensure that pseudo-correlation works
+        sql = "select func(0) from g1 where func(e1) = 2"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT y.g1.e1 FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT y.g1.e1 FROM y.g1", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT func(0)", new List[] {Arrays.asList(1)});
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        dataManager.addData("SELECT func(2)", new List[] {Arrays.asList(3)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(1)});
+        
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        
+        //ensure that pseudo-correlation works
+        sql = "select case when hasrole('x') then func(0) else 2 end from g1"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT func(0) FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT func(0) FROM g1", new List[] {Arrays.asList(1), Arrays.asList(1)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(1), Arrays.asList(1)});
+	}
+	
+	@Test public void testSimpleFunctionPushdown1() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
+		
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+		bsc.setFunctionSupport("parseDate_", true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+		String sql = "select parseDate_('2011-11-11')"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT parsedate_('2011-11-11')", new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        cc.setDQPWorkContext(RealMetadataFactory.buildWorkContext(tm));
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        
+		sql = "select misc.namespace.func('2011-11-11')"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT parseDate_('2011-11-11')", new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        try {
+        	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+        	fail();
+        } catch (TeiidProcessingException e) {
+        	//not supported by any source
+        }
+	}
+	
+	@Test public void testSimpleFunctionPushdown2() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "CREATE FOREIGN FUNCTION func(a object, b object) RETURNS string;"), 
+				new DDLHolder("z", "CREATE FOREIGN FUNCTION func1(a object, b object) RETURNS string; create foreign table g1 (e1 object)"));
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+        String sql = "select e1 from g1 where func(1, 1) = '2'"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT z.g1.e1 FROM z.g1 WHERE func(1, 1) = '2'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT func(1, 1)", new List[] {Arrays.asList("hello world")});
+    	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {});
+    	
+    	sql = "select e1 from g1 where func1(1, 1) = '2'"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT z.g1.e1 FROM z.g1 WHERE func1(1, 1) = '2'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT g1.e1 FROM g1 WHERE func1(1, 1) = '2'", new List[] {Arrays.asList("hello world")});
+    	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("hello world")});
 	}
 
 	@Test public void testMustPushdownOverMultipleSourcesWithView() throws Exception {
@@ -97,8 +291,9 @@ public class TestFunctionPushdown {
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1)});
         dataManager.addData("SELECT g_0.e2 AS c_0, func(g_0.e1) AS c_1, g_0.e1 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1, "aa", "a"), Arrays.asList(2, "bb", "b")});
-        
-        TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("aa")});
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("aa")});
 	}
 	
 	@Test public void testMustPushdownOverMultipleSourcesWithViewDupRemoval() throws Exception {
@@ -160,7 +355,9 @@ public class TestFunctionPushdown {
         //ensure that the source query contains the function schemas
         HardcodedDataManager dm = new HardcodedDataManager(metadata);
         dm.addData("SELECT a.sourcefunc(g_0.Y), b.sourceFunc(g_0.Y) FROM X AS g_0", new List[0]);
-        TestProcessor.helpProcess(plan, dm, new List[0]);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, dm, new List[0]);
 	}
 	
 	@Test public void testDDLMetadataNameConflict() throws Exception {
@@ -206,6 +403,109 @@ public class TestFunctionPushdown {
         //will get replaced in the LanguageBridgeFactory
         helpPlan(sql, metadata, null, capFinder, 
                 new String[] {"SELECT concat2(g_0.e1, g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	}
+	
+	@Test public void testPartialProjectPushdown() throws Exception {
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        
+        ProcessorPlan plan = helpPlan("select case when e1 = 1 then 1 else 0 end, e2 + e4 from pm1.g1", metadata, null, new DefaultCapabilitiesFinder(caps), 
+                new String[] {"SELECT CASE WHEN g_0.e1 = '1' THEN 1 ELSE 0 END, g_0.e2, g_0.e4 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        HardcodedDataManager dm = new HardcodedDataManager(metadata);
+        dm.addData("SELECT CASE WHEN g_0.e1 = '1' THEN 1 ELSE 0 END, g_0.e2, g_0.e4 FROM g1 AS g_0", new List[] {Arrays.asList(1, 2, 3.1)});
+        TestProcessor.helpProcess(plan, dm, new List[] {Arrays.asList(1, 5.1)});
+	}
+	
+	@Test public void testMustPushdownOverGrouping() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+        String sql = "select func(e1) from g1 group by e1"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT y.g1.e1 FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT y.g1.e1 FROM y.g1", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        dataManager.addData("SELECT func(2)", new List[] {Arrays.asList(3)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(3)});
+	}
+	
+	@Test public void testMustPushdownSubexpressionOverGrouping() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer, e2 integer)", "x", "y");
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+        String sql = "select max(func(e2)) from g1 group by e1"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT y.g1.e1, func(y.g1.e2) FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT y.g1.e1, func(y.g1.e2) FROM y.g1", new List[] {Arrays.asList(1, 2), Arrays.asList(2, 3)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(3)});
 	}
 	
 	public static String sourceFunc(String msg) {

@@ -34,6 +34,7 @@ import java.util.Map;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
@@ -62,6 +63,7 @@ import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SetClause;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -169,14 +171,23 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			Map<ElementSymbol, Expression> nameValueMap = createVariableValuesMap(localContext);
             ValidationVisitor visitor = new ValidationVisitor();
             Request.validateWithVisitor(visitor, metadata, command);
-
-            if (dynamicCommand.getAsColumns() != null
+            boolean insertInto = false;
+            boolean updateCommand = false;
+            if (!command.returnsResultSet() && !(command instanceof StoredProcedure)) {
+            	if (dynamicCommand.isAsClauseSet()) {
+            		if (dynamicCommand.getProjectedSymbols().size() != 1 || ((Expression)dynamicCommand.getProjectedSymbols().get(0)).getType() != DataTypeManager.DefaultDataClasses.INTEGER) {
+            			throw new QueryProcessingException(QueryPlugin.Event.TEIID31157, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31157));
+            		}
+            	}
+            	updateCommand = true;
+            } else if (dynamicCommand.getAsColumns() != null
 					&& !dynamicCommand.getAsColumns().isEmpty()) {
         		command = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), command, metadata, dynamicCommand.getAsColumns()); //$NON-NLS-1$
 				if (dynamicCommand.getIntoGroup() != null) {
 					Insert insert = new Insert(dynamicCommand.getIntoGroup(), dynamicCommand.getAsColumns(), Collections.emptyList());
 					insert.setQueryExpression((Query)command);
 					command = insert;
+					insertInto = true;
 				}
 			}
             
@@ -188,7 +199,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, dynamicCommand.getIntoGroup() != null?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
+			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, (insertInto||updateCommand)?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
 				@Override
 				public void process(ProcedurePlan procEnv)
 						throws BlockedException, TeiidComponentException,
@@ -207,13 +218,28 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 	//create the temp table in the parent scope
                 	Create create = new Create();
                 	create.setTable(new GroupSymbol(groupName));
-                	for (ElementSymbol es : ((Insert)command).getVariables()) {
+                	for (ElementSymbol es : (List<ElementSymbol>)dynamicCommand.getAsColumns()) {
                 		Column c = new Column();
                 		c.setName(es.getShortName());
                 		c.setRuntimeType(DataTypeManager.getDataTypeName(es.getType()));
                 		create.getColumns().add(c);
                 	}
                     procEnv.getDataManager().registerRequest(procEnv.getContext(), create, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
+                }
+                //backwards compatibility to support into with a rowcount
+                if (updateCommand) {
+                	Insert insert = new Insert();
+                	insert.setGroup(new GroupSymbol(groupName));
+                	for (ElementSymbol es : (List<ElementSymbol>)dynamicCommand.getAsColumns()) {
+                		ElementSymbol col = new ElementSymbol(es.getShortName(), insert.getGroup());
+                		col.setType(es.getType());
+                		insert.addVariable(col);
+                	}
+                	insert.addValue(new Constant(procEnv.getCurrentVariableContext().getValue(ProcedurePlan.ROWCOUNT)));
+                	QueryResolver.resolveCommand(insert, metadata.getDesignTimeMetadata());
+                	TupleSource ts = procEnv.getDataManager().registerRequest(procEnv.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
+                	ts.nextTuple();
+                	ts.closeSource();
                 }
             }
 
@@ -258,10 +284,12 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		localContext.getFlattenedContextMap(variableMap);
 		Map<ElementSymbol, Expression> nameValueMap = new HashMap<ElementSymbol, Expression>(variableMap.size());
 		for (Map.Entry<ElementSymbol, Object> entry : variableMap.entrySet()) {
-			if (entry.getValue() instanceof Expression) {
-				nameValueMap.put(entry.getKey(), (Expression) entry.getValue());
-			} else {
-				nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+			if (entry.getKey() instanceof ElementSymbol) {
+				if (entry.getValue() instanceof Expression) {
+					nameValueMap.put(entry.getKey(), (Expression) entry.getValue());
+				} else {
+					nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+				}
 			}
 		}
 		return nameValueMap;
@@ -322,7 +350,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
 			context.pushCall(Command.getCommandToken(parentProcCommand.getUpdateType()) + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
 		} else {
-			context.pushCall(parentProcCommand.getVirtualGroup().toString());
+			if (parentProcCommand.getVirtualGroup() != null) {
+				context.pushCall(parentProcCommand.getVirtualGroup().toString());
+			}
 		}
 	}
 

@@ -24,10 +24,11 @@ package org.teiid.metadata;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.core.types.DataTypeManager;
@@ -40,11 +41,15 @@ import org.teiid.core.util.StringUtil;
  */
 public abstract class AbstractMetadataRecord implements Serializable {
 	
+	private static final Collection<AbstractMetadataRecord> EMPTY_INCOMING = Collections.emptyList();
+	
 	public interface Modifiable {
 		long getLastModified();
 	}
 	
 	public interface DataModifiable {
+		public static final String DATA_TTL = AbstractMetadataRecord.RELATIONAL_URI + "data-ttl"; //$NON-NLS-1$
+		
 		long getLastDataModification();
 	}
 	
@@ -59,8 +64,10 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     private String nameInSource;
 	
-	private Map<String, String> properties;
+	private volatile Map<String, String> properties;
 	private String annotation;
+	
+	private transient Collection<AbstractMetadataRecord> incomingObjects;
 
 	public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
 	
@@ -81,6 +88,18 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	
 	public void setNameInSource(String nameInSource) {
 		this.nameInSource = DataTypeManager.getCanonicalString(nameInSource);
+	}
+	
+	/**
+	 * Get the name in source or the name if
+	 * the name in source is not set.
+	 * @return
+	 */
+	public String getSourceName() {
+		if (this.nameInSource != null && this.nameInSource.length() > 0) {
+			return this.nameInSource;
+		}
+		return getName();
 	}
 	
 	/**
@@ -174,21 +193,23 @@ public abstract class AbstractMetadataRecord implements Serializable {
      * @param value, if null the property will be removed
      */
     public String setProperty(String key, String value) {
-    	if (value == null) {
-    		if (this.properties == null) {
-    			return null;
-    		}
-    		return this.properties.remove(key);
-    	}
     	if (this.properties == null) {
-    		this.properties = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    		synchronized (this) {
+    			if (this.properties == null && value == null) {
+    				return null;
+    			}
+    			this.properties = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    		}
+		}
+    	if (value == null) {
+    		return this.properties.remove(key);
     	}
     	return this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
     }
     
-    public void setProperties(Map<String, String> properties) {
+    public synchronized void setProperties(Map<String, String> properties) {
     	if (this.properties == null) {
-    		this.properties = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    		this.properties = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     	} else {
     		this.properties.clear();
     	}
@@ -224,13 +245,28 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     	in.defaultReadObject();
-    	if (this.properties != null && !(this.properties instanceof TreeMap<?, ?>)) {
-    		this.setProperties(this.getProperties());
+    	if (this.properties != null && !(this.properties instanceof ConcurrentSkipListMap<?, ?>)) {
+    		this.properties = new ConcurrentSkipListMap<String, String>(this.properties);
     	}
     }
 
     public int hashCode() {
         return getUUID().hashCode();
+    }
+    
+    public Collection<AbstractMetadataRecord> getIncomingObjects() {
+    	if (incomingObjects == null) {
+    		return EMPTY_INCOMING;
+    	}
+		return incomingObjects;
+	}
+    
+    public void setIncomingObjects(Collection<AbstractMetadataRecord> incomingObjects) {
+		this.incomingObjects = incomingObjects;
+	}
+    
+    public boolean isUUIDSet() {
+    	return this.uuid != null && this.uuid.length() > 0 && !Character.isDigit(this.uuid.charAt(0));
     }
         
 }

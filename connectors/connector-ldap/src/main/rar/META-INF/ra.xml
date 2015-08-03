@@ -41,7 +41,7 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-               <description>{$display:"Ldap Admin User DN",$description:"User DN for the LDAP admin account.",$required:"true"}</description>
+               <description>{$display:"Ldap Admin User DN",$description:"User DN for the LDAP admin account.  Use an empty string for anonymous binds.",$required:"true"}</description>
                <config-property-name>LdapAdminUserDN</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>cn=&lt;&gt;,ou=&lt;&gt;,dc=&lt;&gt;</config-property-value>

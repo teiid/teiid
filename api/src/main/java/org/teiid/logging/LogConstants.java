@@ -37,6 +37,7 @@ public interface LogConstants {
 	public static final String CTX_ADMIN_API = "org.teiid.ADMIN_API"; //$NON-NLS-1$
 	public static final String CTX_RUNTIME = "org.teiid.RUNTIME"; //$NON-NLS-1$
 	public static final String CTX_ODBC = "org.teiid.ODBC"; //$NON-NLS-1$
+	public static final String CTX_ODATA = "org.teiid.ODATA"; //$NON-NLS-1$
 	
 	// Query contexts
 	public static final String CTX_FUNCTION_TREE = CTX_QUERY_PLANNER + ".FUNCTION_TREE"; //$NON-NLS-1$

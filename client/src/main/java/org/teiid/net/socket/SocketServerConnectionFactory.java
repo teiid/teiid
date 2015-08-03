@@ -28,11 +28,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -153,6 +149,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	private long synchronousTtl = 240000l;
 	private int maxCachedInstances=16;
 
+	private boolean disablePing;
+
 	public static synchronized SocketServerConnectionFactory getInstance() {
 		if (INSTANCE == null) {
 			INSTANCE = new SocketServerConnectionFactory();
@@ -180,8 +178,17 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 	}
 	
+	public void setDisablePing(boolean disable) {
+		this.disablePing = disable;
+	}
+	
 	public void initialize(Properties info) {
 		PropertiesUtils.setBeanProperties(this, info, "org.teiid.sockets"); //$NON-NLS-1$
+		this.channelFactory = new OioOjbectChannelFactory(info);
+
+		if (disablePing) {
+			return;
+		}
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
 		this.pingTimer.schedule(new TimerTask() {
 			
@@ -200,7 +207,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 					try {
 						instance = getServerInstance(entry.getKey());
 						ILogon logon = instance.getService(ILogon.class);
-						if ("7.1.1".compareTo(instance.getServerVersion()) > 0) { //$NON-NLS-1$
+						if ("07.01.01".compareTo(instance.getServerVersion()) > 0) { //$NON-NLS-1$
 							for (SessionToken session : entries) {
 								try {
 									logon.assertIdentity(session);
@@ -227,7 +234,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				}
 			}
 		}, ServerConnection.PING_INTERVAL, ServerConnection.PING_INTERVAL);
-		this.channelFactory = new OioOjbectChannelFactory(info);
 	}
 	
 	@Override
@@ -267,7 +273,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				}
 			}
 		}
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, getSynchronousTtl());
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, getSynchronousTtl(), this.channelFactory.getSoTimeout());
 		ssii.connect(this.channelFactory);
 		if (useCache) {
 			key.actual = ssii;
@@ -283,8 +289,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	 * @param connectionProperties will be updated with additional information before logon
 	 */
 	public SocketServerConnection getConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
-		
-		updateConnectionProperties(connectionProperties);
 		
 		TeiidURL url;
 		try {
@@ -310,27 +314,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		discovery.init(url, connectionProperties);
 		
 		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties);
-	}
-
-	static void updateConnectionProperties(Properties connectionProperties) {
-		try {
-			InetAddress addr = InetAddress.getLocalHost();
-			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, addr.getHostAddress());
-			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
-			NetworkInterface ni = NetworkInterface.getByInetAddress(addr);
-			if (ni != null && ni.getHardwareAddress() != null) {
-				StringBuilder sb = new StringBuilder();
-				for (byte b : ni.getHardwareAddress()) {
-					sb.append(PropertiesUtils.toHex(b >> 4));
-					sb.append(PropertiesUtils.toHex(b));
-				}
-				connectionProperties.put(TeiidURL.CONNECTION.CLIENT_MAC, sb.toString());
-			}
-        } catch (UnknownHostException err1) {
-        	connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, "UnknownClientAddress"); //$NON-NLS-1$
-        } catch (SocketException e) {
-        	
-        }
 	}
 
 	public long getSynchronousTtl() {

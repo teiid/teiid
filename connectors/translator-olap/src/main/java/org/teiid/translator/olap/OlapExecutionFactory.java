@@ -48,8 +48,8 @@ public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
 	public OlapExecutionFactory() {
 		setSourceRequiredForMetadata(false);
-		setSupportsNativeQueries(true);
-		setNativeQueryProcedureName(INVOKE_MDX);
+		setSupportsDirectQueryProcedure(true);
+		setDirectQueryProcedureName(INVOKE_MDX);
 	}
 	
     @Override

@@ -30,24 +30,17 @@ import java.nio.ByteBuffer;
  */
 public class BlockByteBuffer {
 	
-	private final static class ThreadLocalByteBuffer extends ThreadLocal<ByteBuffer> {
-		private final ByteBuffer byteBuffer;
-		
-		public ThreadLocalByteBuffer(ByteBuffer byteBuffer) {
-			this.byteBuffer = byteBuffer;
-		}
-		
-		protected ByteBuffer initialValue() {
-			return byteBuffer.duplicate();
-		}
+	private static class BlockByteBufferData {
+		int blockAddressBits;
+		int segmentAddressBits;
+		int segmentSize;
+		int blockSize;
+		int blockCount;
 	}
 
-	private int blockAddressBits;
-	private int segmentAddressBits;
-	private int segmentSize;
-	private int blockSize;
-	private int blockCount;
-	private ThreadLocal<ByteBuffer>[] buffers;
+	private BlockByteBufferData data;
+	private ByteBuffer[] origBuffers;
+	private ByteBuffer[] buffers;
 	
 	/**
 	 * Creates a new {@link BlockByteBuffer} where each buffer segment will be
@@ -57,27 +50,32 @@ public class BlockByteBuffer {
 	 * @param blockAddressBits
 	 * @param direct
 	 */
-	@SuppressWarnings("unchecked")
 	public BlockByteBuffer(int segmentAddressBits, int blockCount, int blockAddressBits, boolean direct) {
-		this.segmentAddressBits = segmentAddressBits;
-		this.blockAddressBits = blockAddressBits;
-		this.blockSize = 1 << blockAddressBits;
-		this.segmentSize = 1 << this.segmentAddressBits;
-		this.blockCount = blockCount;
+		this.data = new BlockByteBufferData();
+		this.data.segmentAddressBits = segmentAddressBits;
+		this.data.blockAddressBits = blockAddressBits;
+		this.data.blockSize = 1 << blockAddressBits;
+		this.data.segmentSize = 1 << this.data.segmentAddressBits;
+		this.data.blockCount = blockCount;
 		long size = ((long)blockCount)<<blockAddressBits;
 		int fullSegments = (int)size>>segmentAddressBits;
-		int lastSegmentSize = (int) (size&(segmentSize-1));
+		int lastSegmentSize = (int) (size&(data.segmentSize-1));
 		int segments = fullSegments;
 		if (lastSegmentSize > 0) {
 			segments++;
 		}
-		buffers = new ThreadLocal[segments];
+		origBuffers = new ByteBuffer[segments];
+		buffers = new ByteBuffer[segments];
 		for (int i = 0; i < fullSegments; i++) {
-			buffers[i] = new ThreadLocalByteBuffer(allocate(lastSegmentSize, direct));
+			origBuffers[i] = allocate(data.segmentSize, direct);
 		}
 		if (lastSegmentSize > 0) {
-			buffers[fullSegments] = new ThreadLocalByteBuffer(allocate(lastSegmentSize, direct));
+			origBuffers[fullSegments] = allocate(lastSegmentSize, direct);
 		}
+	}
+	
+	private BlockByteBuffer() {
+		
 	}
 
 	public static ByteBuffer allocate(int size, boolean direct) {
@@ -93,6 +91,14 @@ public class BlockByteBuffer {
 		return ByteBuffer.allocate(size);
 	}
 	
+	public BlockByteBuffer duplicate() {
+		BlockByteBuffer dup = new BlockByteBuffer();
+		dup.data = data;
+		dup.origBuffers = origBuffers;
+		dup.buffers = new ByteBuffer[dup.origBuffers.length];
+		return dup;
+	}
+	
 	/**
 	 * Return a buffer positioned at the given start byte.
 	 * It is assumed that the caller will handle blocks in
@@ -101,16 +107,20 @@ public class BlockByteBuffer {
 	 * @return
 	 */
 	public ByteBuffer getByteBuffer(int block) {
-		if (block < 0 || block >= blockCount) {
+		if (block < 0 || block >= data.blockCount) {
 			throw new IndexOutOfBoundsException("Invalid block " + block); //$NON-NLS-1$
 		}
-		int segment = block>>(segmentAddressBits-blockAddressBits);
-		ByteBuffer bb = buffers[segment].get();
-		bb.rewind();
-		int position = (block<<blockAddressBits)&(segmentSize-1);
-		bb.limit(position + blockSize);
+		int segment = block>>(data.segmentAddressBits-data.blockAddressBits);
+		ByteBuffer bb = buffers[segment];
+		if (bb == null) {
+			bb = buffers[segment] = origBuffers[segment].duplicate();
+		} else {
+			bb.rewind();	
+		}
+		int position = (block<<data.blockAddressBits)&(data.segmentSize-1);
+		bb.limit(position + data.blockSize);
 		bb.position(position);
 		return bb;
 	}
-	
+		
 }

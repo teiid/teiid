@@ -1,0 +1,4 @@
+/subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
+/subsystem=resource-adapters/resource-adapter=webservice/connection-definitions=wsDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.ws.WSManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=webservice/connection-definitions=wsDS/config-properties=EndPoint:add(value="${end.point}")
+/subsystem=resource-adapters/resource-adapter=webservice:activate

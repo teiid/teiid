@@ -31,10 +31,10 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.util.SymbolMap;
 
 
 /**
@@ -52,10 +52,9 @@ public class Insert extends ProcedureContainer {
     private QueryCommand queryExpression;
     
     private TupleSource tupleSource;
-
-    // =========================================================================
-    //                         C O N S T R U C T O R S
-    // =========================================================================
+    private Criteria constraint;
+    
+    private boolean merge;
 
     /**
      * Constructs a default instance of this class.
@@ -83,10 +82,6 @@ public class Insert extends ProcedureContainer {
         this.values = values;
     }
 
-    // =========================================================================
-    //                             M E T H O D S
-    // =========================================================================
-
     /**
      * Returns the group being inserted into
      * @return Group being inserted into
@@ -103,16 +98,6 @@ public class Insert extends ProcedureContainer {
         this.group = group;
     }
     
-    public boolean isBulk() {
-    	if (this.values == null) {
-    		return false;
-    	}
-    	if (!(this.values.get(0) instanceof Constant)) {
-    		return false;
-    	}
-    	return ((Constant)this.values.get(0)).isMultiValued();
-    }
-
     /**
      * Return an ordered List of variables, may be null if no columns were specified
      * @return List of {@link org.teiid.query.sql.symbol.ElementSymbol}
@@ -173,6 +158,22 @@ public class Insert extends ProcedureContainer {
     }
 
     public void setQueryExpression( QueryCommand query ) {
+    	if (query instanceof Query) {
+    		Query expr = (Query)query;
+    		//a single row constructor query is the same as values 
+    		if (expr.isRowConstructor()) {
+    			this.values.clear();
+    			this.queryExpression = null;
+    			for (Expression ex : expr.getSelect().getSymbols()) {
+    				addValue(SymbolMap.getExpression(ex));
+    			}
+    			if (expr.getOption() != null && this.getOption() == null) {
+    				//this isn't ideal, parsing associates the option with values
+    				this.setOption(expr.getOption());
+    			}
+    			return;
+    		}
+    	}
         this.queryExpression = query;        
     }
     
@@ -221,7 +222,9 @@ public class Insert extends ProcedureContainer {
                EquivalenceUtil.areEqual(getValues(), other.getValues()) &&
                EquivalenceUtil.areEqual(getVariables(), other.getVariables()) &&
                sameOptionAndHint(other) &&
-               EquivalenceUtil.areEqual(getQueryExpression(), other.getQueryExpression());
+               EquivalenceUtil.areEqual(getQueryExpression(), other.getQueryExpression()) &&
+               this.merge == other.merge;
+               
     }
     
 	/**
@@ -247,6 +250,10 @@ public class Insert extends ProcedureContainer {
 	    	copy.setQueryExpression((QueryCommand)this.queryExpression.clone());
 	    }
         this.copyMetadataState(copy);
+        if (this.constraint != null) {
+        	copy.constraint = (Criteria) this.constraint.clone();
+        }
+        copy.merge = this.merge;
 		return copy;
 	}
 	
@@ -273,6 +280,22 @@ public class Insert extends ProcedureContainer {
 	
 	public TupleSource getTupleSource() {
 		return tupleSource;
+	}
+	
+	public Criteria getConstraint() {
+		return constraint;
+	}
+	
+	public void setConstraint(Criteria constraint) {
+		this.constraint = constraint;
+	}
+	
+	public boolean isMerge() {
+		return merge;
+	}
+	
+	public void setMerge(boolean merge) {
+		this.merge = merge;
 	}
     
 }

@@ -22,22 +22,22 @@
 
 package org.teiid.core.crypto;
 
-import org.teiid.core.crypto.CryptoException;
-import org.teiid.core.crypto.DhKeyGenerator;
-import org.teiid.core.crypto.SymmetricCryptor;
+import static org.junit.Assert.*;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 
-public class TestDhKeyGenerator extends TestCase {
+
+public class TestDhKeyGenerator {
 	
+	@Test
 	public void testKeyGenerationDefault() throws CryptoException {
 		DhKeyGenerator keyGenServer = new DhKeyGenerator();
 		DhKeyGenerator keyGenClient = new DhKeyGenerator();
 		byte[] serverKey = keyGenServer.createPublicKey();
 		byte[] clientKey = keyGenClient.createPublicKey();
-		SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey);
-		SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey);
+		SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey, false, TestDhKeyGenerator.class.getClassLoader());
+		SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey, false, TestDhKeyGenerator.class.getClassLoader());
 		
 		String cleartext = "cleartext!"; //$NON-NLS-1$
 		
@@ -46,6 +46,12 @@ public class TestDhKeyGenerator extends TestCase {
 		
 		assertEquals(cleartext, cleartext2);
 		assertTrue(!ciphertext.equals(cleartext));
+		
+		Object sealed = serverCryptor.sealObject(cleartext);
+		Object unsealed = clientCryptor.unsealObject(sealed);
+		
+		assertEquals(cleartext, unsealed);
+		assertTrue(!sealed.equals(unsealed));
 	}
 
 }

@@ -37,18 +37,6 @@ import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 
 
-/**
- * <p> This class inherits Statement methods, which deal with SQL statements in
- * general and also inherits PreparedStatement methods, which deal with IN parameters.
- * This object provides a way to call stored procedures.  This call
- * is written in an escape syntax that may take one of two forms: one form with
- * result parameter, and the other without one.  A result parameter, a kind of OUT
- * parameter is the return value for the stored procedure.  Both forms may have a
- * variable number of parameters used for input(IN parameters), output(OUT parameters),
- * or both (INOUT parameters).</p>
- * <p> The methods in this class can be used to retrieve values of OUT parameters or
- * the output aspect of INOUT parameters.</p>
- */
 public class CallableStatementImpl extends PreparedStatementImpl implements CallableStatement {
 
     // object representing parameter value
@@ -81,12 +69,6 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
     	return message;
     }
     
-    /**
-     * In many cases, it is desirable to immediately release a Statements's database
-     * and JDBC resources instead of waiting for this to happen when it is automatically
-     * closed; the close method provides this immediate release.
-     * @throws SQLException should never occur.
-     */
     public void close() throws SQLException {
         this.prepareSql = null;
         super.close();
@@ -99,50 +81,22 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         return bigDecimalParam.setScale(scale);
     }
     
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.math.BigDecimal object.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as an BigDecimal object.
-     * @throws SQLException if param datatype is not NUMERIC
-     */
     public java.math.BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getBigDecimal(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Blob object.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a Blob object.
-     */
     public Blob getBlob(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getBlob(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a boolean.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a boolean value.
-     * @throws SQLException if param datatype is not BIT
-     */
     public boolean getBoolean(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getBoolean(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a byte.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a byte value.
-     * @throws SQLException if param datatype is not TINYINT
-     */
     public byte getByte(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getByte(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a java.sql.Clob object.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a Clob object.
-     */
     public Clob getClob(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getClob(getObject(parameterIndex));
     }
@@ -170,42 +124,18 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         return value;
 	}
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a double.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a double value.
-     * @throws SQLException if param datatype is not DOUBLE or FLOAT
-     */
     public double getDouble(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getDouble(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a float.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a float value.
-     * @throws SQLException if param datatype is not FLOAT
-     */
     public float getFloat(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getFloat(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a int.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a int value.
-     * @throws SQLException if param datatype is not INTEGER
-     */
     public int getInt(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getInteger(getObject(parameterIndex));
     }
 
-    /**
-     * <p>Gets the value of a OUTPUT parameter as a long.
-     * @param parameterIndex whose value is to be fetched from the result.
-     * @return The parameter at the given index is returned as a long value.
-     * @throws SQLException if param datatype is not BIGINT
-     */
     public long getLong(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getLong(getObject(parameterIndex));
     }
@@ -308,11 +238,11 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public Array getArray(int parameterIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getArray(getObject(parameterIndex));
 	}
 
 	public Array getArray(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getArray(getObject(parameterName));
 	}
 
 	public BigDecimal getBigDecimal(String parameterName) throws SQLException {

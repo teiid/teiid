@@ -37,7 +37,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminFactory;
+import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
@@ -65,11 +65,11 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
 		
 		Properties props = new Properties();
-		props.setProperty("ParentDirectory", "../docs/teiid/examples/dynamicvdb-portfolio/data");
+		props.setProperty("ParentDirectory", ".");
 		props.setProperty("AllowParentPaths", "true");
 		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
 		
-		AdminUtil.createDataSource(admin, "marketdata-file", "teiid-connector-file.rar", props);
+		AdminUtil.createDataSource(admin, "marketdata-file", "file", props);
 		
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3));
 		
@@ -91,6 +91,20 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-func@mm://localhost:31000;user=user;password=user", null);
 		
 		execute("SELECT func('a')"); //$NON-NLS-1$
+		assertRowCount(1);
+	}
+	
+	@Test public void testVdbZipWithDDL() throws Exception {
+		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "temp.jar")
+			      .addAsManifestResource(UnitTestUtil.getTestDataFile("vdb.xml"))
+			      .addAsResource(UnitTestUtil.getTestDataFile("test.ddl"));
+		admin.deploy("dynamic-ddl.vdb", jar.as(ZipExporter.class).exportAsInputStream());
+		
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1, 3));
+		
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-ddl@mm://localhost:31000;user=user;password=user", null);
+		
+		execute("SELECT * from stock"); //$NON-NLS-1$
 		assertRowCount(1);
 	}
 

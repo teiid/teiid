@@ -264,6 +264,18 @@ public final class LogManager {
      * @param msgParts the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
+    public static void logDetail(String context, Object msgPart) {
+        logMessage(MessageLevel.DETAIL, context, msgPart);
+    }
+    
+    public static void logDetail(String context, Object msgPart, Object msgPart1) {
+        logMessage(MessageLevel.DETAIL, context, msgPart, msgPart1);
+    }
+    
+    public static void logDetail(String context, Object msgPart, Object msgPart1, Object msgPart2) {
+        logMessage(MessageLevel.DETAIL, context, msgPart, msgPart1, msgPart2);
+    }
+    
     public static void logDetail(String context, Object ... msgParts) {
         logMessage(MessageLevel.DETAIL, context, msgParts);
     }
@@ -300,6 +312,18 @@ public final class LogManager {
      */
     public static void logTrace(String context, Object ... msgParts) {
         logMessage(MessageLevel.TRACE, context, msgParts);
+    }
+    
+    public static void logTrace(String context, Object msgPart) {
+        logMessage(MessageLevel.TRACE, context, msgPart);
+    }
+    
+    public static void logTrace(String context, Object msgPart, Object msgPart1) {
+        logMessage(MessageLevel.TRACE, context, msgPart, msgPart1);
+    }
+    
+    public static void logTrace(String context, Object msgPart, Object msgPart1, Object msgPart2) {
+        logMessage(MessageLevel.TRACE, context, msgPart, msgPart1, msgPart2);
     }
 
     /**
@@ -347,13 +371,10 @@ public final class LogManager {
      * @param message the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
-    public static void log(int msgLevel, String context, Throwable e, Object message) {
+    public static void log(int msgLevel, String context, Throwable e, Object... message) {
 		if (!isMessageToBeRecorded(context, msgLevel)) {
 			return;
 		} 
-		if (message != null && message.getClass().isArray()) {
-			message = new LogMessage((Object[]) message);
-		}
     	logListener.log(msgLevel, context, e, message);
     }
 
@@ -386,9 +407,29 @@ public final class LogManager {
 		if (msgParts == null || msgParts.length == 0 || !isMessageToBeRecorded(context, level)) {
 			return;
 		} 
-		logListener.log(level, context, msgParts.length == 1? msgParts[0] : new LogMessage(msgParts));
+		logListener.log(level, context, msgParts);
     }
-
+    
+    private static void logMessage(int level, String context, Object msgPart) {
+		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
+			return;
+		} 
+		logListener.log(level, context, msgPart);
+    }
+    
+    private static void logMessage(int level, String context, Object msgPart, Object msgPart1) {
+		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
+			return;
+		} 
+		logListener.log(level, context, msgPart, msgPart1);
+    }
+    
+    private static void logMessage(int level, String context, Object msgPart, Object msgPart1, Object msgPart2) {
+		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
+			return;
+		} 
+		logListener.log(level, context, msgPart, msgPart1, msgPart2);
+    }
     
     /**
      * Create a logging proxy, that logs at entry and exit points of the method calls on the provided interfaces.  
@@ -407,4 +448,12 @@ public final class LogManager {
             ClassLoader classLoader) {
     		return Proxy.newProxyInstance(classLoader, interfaces, new LoggingProxy(instance, loggingContext, level));
     }
+    
+    public static void putMdc(String key, String val) {
+    	logListener.putMdc(key, val);
+    }
+
+	public static void removeMdc(String key) {
+    	logListener.removeMdc(key);
+	}
 }

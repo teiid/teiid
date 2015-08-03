@@ -1,4 +1,4 @@
-TEIID_PATH=..\..\lib\*;..\..\optional\translator-file-${pom.version}.jar;..\..\optional\connector-file-${pom.version}-lib.jar;..\..\optional\translator-jdbc-${pom.version}.jar;h2-1.3.161.jar
+TEIID_PATH=..\..\lib\*;..\..\optional\file\*;..\..\optional\jdbc\*;..\..\optional\jdbc\h2\*;..\..\optional\jdbc\tm\*;..\..\optional\*
 
 javac -cp %TEIID_PATH% src\org\teiid\example\*.java 
 

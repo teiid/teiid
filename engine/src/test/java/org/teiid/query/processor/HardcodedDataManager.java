@@ -22,7 +22,11 @@
 
 package org.teiid.query.processor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
@@ -30,6 +34,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.events.EventDistributor;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
@@ -49,6 +54,8 @@ public class HardcodedDataManager implements
     private Set<String> validModels;
     
     private boolean mustRegisterCommands = true;
+    
+    private boolean fullBatchedUpdate = false;
     
     private boolean blockOnce;
     
@@ -71,7 +78,7 @@ public class HardcodedDataManager implements
     	this.mustRegisterCommands = mustRegisterCommands;
     }
     
-    public void addData(String sql, List<?>[] rows) {
+    public void addData(String sql, List<?>... rows) {
         data.put(sql, rows);
     }
     
@@ -137,7 +144,11 @@ public class HardcodedDataManager implements
 
         String commandString = null;
         if (lbf == null) {
-        	commandString = command.toString();
+        	if (command instanceof BatchedUpdateCommand && fullBatchedUpdate) {
+        		commandString = ((BatchedUpdateCommand)command).getStringForm(true);
+        	} else {
+        		commandString = command.toString();
+        	}
         } else {
         	org.teiid.language.Command cmd = lbf.translate(command);
         	this.pushdownCommands.add(cmd);
@@ -176,5 +187,9 @@ public class HardcodedDataManager implements
 	@Override
 	public EventDistributor getEventDistributor() {
 		return null;
+	}
+	
+	public void setFullBatchedUpdate(boolean fullBatchedUpdate) {
+		this.fullBatchedUpdate = fullBatchedUpdate;
 	}
 }

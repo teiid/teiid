@@ -24,13 +24,17 @@ package org.teiid.query.function.metadata;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.api.exception.query.FunctionMetadataException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.validator.ValidatorReport;
 
 
@@ -55,11 +59,19 @@ public class FunctionMetadataValidator {
 	 * Validate a collection of {@link FunctionMethod} objects.
 	 * @param methods Collection of {@link FunctionMethod} objects
 	 * @param report Report to store validation errors
+	 * @param runtimeTypeMap 
 	 */
 	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report) {
+		validateFunctionMethods(methods, report, null);
+	}
+	
+	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report, Map<String, Datatype> runtimeTypeMap) {
+		if (runtimeTypeMap == null) {
+			runtimeTypeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
+		}
 	    if(methods != null) {
 	    	for (FunctionMethod method : methods) {
-	    		validateFunctionMethod(method, report);
+	    		validateFunctionMethod(method, report, runtimeTypeMap);
 	    	}
 	    }
 	}
@@ -77,7 +89,7 @@ public class FunctionMetadataValidator {
      * @param method The method to validate
      * @param report The report to update during validation
      */
-    public static final void validateFunctionMethod(FunctionMethod method, ValidatorReport report) {
+    public static final void validateFunctionMethod(FunctionMethod method, ValidatorReport report, Map<String, Datatype> runtimeTypeMap) {
         if(method == null) {
             updateReport(report, method, QueryPlugin.Util.getString("ERR.015.001.0052", "FunctionMethod")); //$NON-NLS-1$ //$NON-NLS-2$
             return;  // can't validate
@@ -89,17 +101,22 @@ public class FunctionMetadataValidator {
 	        validateDescription(method.getDescription());
 	        validateCategory(method.getCategory());
 	        validateInvocationMethod(method.getInvocationClass(), method.getInvocationMethod(), method.getPushdown());
-
 	        // Validate input parameters
 	       List<FunctionParameter> params = method.getInputParameters();
-	        if(params != null && !params.isEmpty()) {
+			if(params != null && !params.isEmpty()) {
 	            for(int i=0; i<params.size(); i++) {
-	                validateFunctionParameter(params.get(i));
+	            	FunctionParameter param = params.get(i);
+	                validateFunctionParameter(param);
+	                param.setPosition(i+1);
+	                MetadataFactory.setDataType(param.getRuntimeType(), param, runtimeTypeMap, true);
+	                param.getUUID();
 	            }
 	        }
 
 	        // Validate output parameters
 	        validateFunctionParameter(method.getOutputParameter());
+            method.getOutputParameter().setPosition(0);
+            MetadataFactory.setDataType(method.getOutputParameter().getRuntimeType(), method.getOutputParameter(), runtimeTypeMap, true);
         } catch(FunctionMetadataException e) {
         	updateReport(report, method, e.getMessage());
         }
@@ -193,8 +210,9 @@ public class FunctionMetadataValidator {
      * @throws FunctionMetadataException Thrown if category is not valid in some way
      */
     public static final void validateCategory(String category) throws FunctionMetadataException {
-        validateIsNotNull(category, "Category"); //$NON-NLS-1$
-        validateLength(category, MAX_LENGTH, "Category"); //$NON-NLS-1$
+        if (category != null) {
+        	validateLength(category, MAX_LENGTH, "Category"); //$NON-NLS-1$
+        }
     }
 
     /**

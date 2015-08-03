@@ -27,6 +27,7 @@ package org.teiid.dqp.internal.datamgr;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -35,6 +36,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.translator.TranslatorException;
 
@@ -47,6 +49,24 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     public RuntimeMetadataImpl(QueryMetadataInterface metadata){
     	ArgCheck.isNotNull(metadata);
         this.metadata = metadata;
+    }
+    
+    @Override
+    public Column getColumn(String schema, String table, String name)
+    		throws TranslatorException {
+    	return getColumn(schema + AbstractMetadataRecord.NAME_DELIM_CHAR + table + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
+    }
+    
+    @Override
+    public Procedure getProcedure(String schema, String name)
+    		throws TranslatorException {
+    	return getProcedure(schema + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
+    }
+    
+    @Override
+    public Table getTable(String schema, String name)
+    		throws TranslatorException {
+    	return getTable(schema + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
     }
     
     @Override
@@ -81,6 +101,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
 
 	public Table getGroup(Object groupId) throws QueryMetadataException, TeiidComponentException {
+		groupId = TempMetadataAdapter.getActualMetadataId(groupId);
 		if (groupId instanceof Table && !metadata.isVirtualGroup(groupId)) {
 			return (Table)groupId;
 		}

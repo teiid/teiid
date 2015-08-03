@@ -38,12 +38,13 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * descriptor.
  */
 public class Function implements Expression {
-
+	
 	private String name;
 	private Expression[] args;
 	private Class<?> type;
 	private FunctionDescriptor descriptor;
 	private boolean implicit = false;
+	private boolean eval = true;
 	
 	/**
 	 * Construct a function with function name and array of arguments.  For 
@@ -233,7 +234,7 @@ public class Function implements Expression {
 		if(this.isImplicit()) { 
 			copy.makeImplicit();
 		}	
-		
+		copy.eval = this.eval;
 		return copy;	
 	}
 	
@@ -248,5 +249,13 @@ public class Function implements Expression {
 	public String toString() { 
 		return SQLStringVisitor.getSQLString(this);    
 	}	
+	
+	public boolean isEval() {
+		return eval;
+	}
+	
+	public void setEval(boolean eval) {
+		this.eval = eval;
+	}
 
 }

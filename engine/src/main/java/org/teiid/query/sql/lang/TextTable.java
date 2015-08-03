@@ -25,6 +25,7 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.Expression;
@@ -39,6 +40,13 @@ public class TextTable extends TableFunctionReference {
 		private boolean noTrim;
 		private String selector;
 		private Integer position;
+		private boolean ordinal;
+		private String header;
+		
+		public TextColumn(String name) {
+			super(name, DataTypeManager.DefaultDataTypes.INTEGER);
+			this.ordinal = true;
+		}
 		
 		public TextColumn(String name, String type, Integer width, boolean noTrim) {
 			super(name, type);
@@ -66,6 +74,14 @@ public class TextTable extends TableFunctionReference {
 			this.noTrim = noTrim;
 		}
 		
+		public String getHeader() {
+			return header;
+		}
+		
+		public void setHeader(String header) {
+			this.header = header;
+		}
+		
 		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
@@ -78,7 +94,9 @@ public class TextTable extends TableFunctionReference {
 			return EquivalenceUtil.areEqual(width, other.width)
 			&& EquivalenceUtil.areEqual(selector, other.selector)
 			&& EquivalenceUtil.areEqual(position, other.position)
-			&& noTrim == other.noTrim;
+			&& noTrim == other.noTrim
+			&& ordinal == other.ordinal
+			&& EquivalenceUtil.areEqual(header, other.header);
 		}
 		
 		@Override
@@ -88,6 +106,8 @@ public class TextTable extends TableFunctionReference {
 			clone.noTrim = this.noTrim;
 			clone.selector = this.selector;
 			clone.position = this.position;
+			clone.ordinal = this.ordinal;
+			clone.header = this.header;
 			this.copyTo(clone);
 			return clone;
 		}
@@ -108,10 +128,15 @@ public class TextTable extends TableFunctionReference {
 			this.position = position;
 		}
 		
+		public boolean isOrdinal() {
+			return ordinal;
+		}
+		
 	}
 	
     private Expression file;
     private List<TextColumn> columns = new ArrayList<TextColumn>();
+    private Character rowDelimiter;
 	private Character delimiter;
 	private Character quote;
     private boolean escape;
@@ -162,6 +187,14 @@ public class TextTable extends TableFunctionReference {
 		this.columns = columns;
 	}
     
+    public Character getRowDelimiter() {
+		return rowDelimiter;
+	}
+    
+    public void setRowDelimiter(Character rowDelimiter) {
+		this.rowDelimiter = rowDelimiter;
+	}
+    
     public Character getDelimiter() {
 		return delimiter;
 	}
@@ -201,6 +234,21 @@ public class TextTable extends TableFunctionReference {
     public void setUsingRowDelimiter(boolean usingRowDelimiter) {
 		this.usingRowDelimiter = usingRowDelimiter;
 	}
+    
+    public void setNoTrim() {
+    	for (TextColumn col : columns) {
+    		col.noTrim = true;
+    	}
+    }
+    
+    public boolean isNoTrim() {
+    	for (TextColumn col : columns) {
+    		if (!col.noTrim) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
 
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
@@ -222,6 +270,7 @@ public class TextTable extends TableFunctionReference {
 		}
 		clone.fixedWidth = this.fixedWidth;
 		clone.usingRowDelimiter = this.usingRowDelimiter;
+		clone.rowDelimiter = this.rowDelimiter;
 		return clone;
 	}
 
@@ -241,7 +290,9 @@ public class TextTable extends TableFunctionReference {
 			&& EquivalenceUtil.areEqual(quote, other.quote)
 			&& EquivalenceUtil.areEqual(header, other.header)
 			&& EquivalenceUtil.areEqual(skip, other.skip)
-			&& usingRowDelimiter == other.usingRowDelimiter;
+			&& usingRowDelimiter == other.usingRowDelimiter
+			&& EquivalenceUtil.areEqual(rowDelimiter, other.rowDelimiter);
+		
 	}
 	
 }

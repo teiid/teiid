@@ -29,17 +29,38 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.connector.DataPlugin;
 
 /**
  * Simple holder for metadata.
  */
 public class MetadataStore implements Serializable {
+	
+	protected static class Grant implements Serializable {
+		private static final long serialVersionUID = -3768577122034702953L;
+		protected String role;
+		protected PermissionMetaData perm;
+		
+		public Grant(String role, PermissionMetaData perm) {
+			this.role = role;
+			this.perm = perm;
+		}
+		
+		public String getRole() {
+			return role;
+		}
+		
+		public PermissionMetaData getPermission() {
+			return perm;
+		}
+	}
 
 	private static final long serialVersionUID = -3130247626435324312L;
 	protected NavigableMap<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
 	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
 	protected NavigableMap<String, Datatype> datatypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
+	protected List<Grant> grants;
 	
 	public NavigableMap<String, Schema> getSchemas() {
 		return schemas;
@@ -69,7 +90,9 @@ public class MetadataStore implements Serializable {
 	}
 	
 	public void addDatatype(Datatype datatype) {
-		this.datatypes.put(datatype.getName(), datatype);
+		if (!this.datatypes.containsKey(datatype.getName())) {
+			this.datatypes.put(datatype.getName(), datatype);
+		}
 	}
 		
 	public NavigableMap<String, Datatype> getDatatypes() {
@@ -82,6 +105,18 @@ public class MetadataStore implements Serializable {
 				addSchema(s);
 			}
 			addDataTypes(store.getDatatypes().values());
+			addGrants(store.grants);
 		}
 	}
+
+	void addGrants(List<Grant> g) {
+		if (g == null) {
+			return;
+		}
+		if (this.grants == null) {
+			this.grants = new ArrayList<Grant>();
+		}
+		this.grants.addAll(g);
+	}
+
 }

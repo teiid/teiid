@@ -176,7 +176,7 @@ public class Block extends Statement implements Labeled {
         return this.atomic == other.atomic 
         && StringUtil.equalsIgnoreCase(label, other.label)
         && EquivalenceUtil.areEqual(getStatements(), other.getStatements())
-        && EquivalenceUtil.areEqual(exceptionGroup, exceptionGroup)
+        && EquivalenceUtil.areEqual(exceptionGroup, other.exceptionGroup)
         && EquivalenceUtil.areEqual(exceptionStatements, exceptionStatements);
     }    
 

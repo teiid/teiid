@@ -26,6 +26,7 @@ package org.teiid.translator.jdbc;
 
 import java.util.List;
 
+import org.teiid.language.BatchedCommand;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.language.Parameter;
@@ -75,7 +76,7 @@ public class TranslatedCommand {
 		sqlConversionVisitor.append(command);
 		this.sql = sqlConversionVisitor.toString();
         this.preparedValues = sqlConversionVisitor.getPreparedValues();
-        this.prepared = sqlConversionVisitor.isPrepared();
+        this.prepared = command instanceof BatchedCommand?sqlConversionVisitor.isUsingBinding():sqlConversionVisitor.isPrepared();
     }
 	
     /**
@@ -104,6 +105,7 @@ public class TranslatedCommand {
 		return TypeFacility.RUNTIME_TYPES.XML.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.CLOB.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.BLOB.equals(l.getType())
+				|| TypeFacility.RUNTIME_TYPES.GEOMETRY.equals(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
 	}
     

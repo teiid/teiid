@@ -25,7 +25,10 @@ package org.teiid.net.socket;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -162,22 +165,34 @@ public class SocketServerConnection implements ServerConnection {
 		 throw new CommunicationException(JDBCPlugin.Event.TEIID20021, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20021, hostCopy.toString()));
 	}
 
-	private void logon(ILogon newLogon, boolean logoff) throws LogonException,
-			TeiidComponentException, CommunicationException {
+	private void logon(ILogon newLogon, boolean logoff) throws LogonException, TeiidComponentException, CommunicationException {
 
 		SocketServerInstance instance = this.serverInstance;
+		
+		updateConnectionProperties(connProps, instance.getLocalAddress(), true);
+
 		LogonResult newResult = null;
 
-		AuthenticationType authType  = instance.getAuthenticationType();
-		if (AuthenticationType.CLEARTEXT.equals(authType)) {
+		// - if gss
+		if (connProps.contains(TeiidURL.CONNECTION.JAAS_NAME)) {
+			newResult = MakeGSS.authenticate(newLogon, connProps);
+		} else {
 			newResult = newLogon.logon(connProps);
 		}
-		else if (AuthenticationType.GSS.equals(authType)) {
-			newResult = MakeGSS.authenticate(newLogon, connProps);
+
+		AuthenticationType type = (AuthenticationType) newResult.getProperty(ILogon.AUTH_TYPE);
+		
+		if (type != null) {
+			//server has issued an additional challange
+			if (type == AuthenticationType.GSS) {
+				newResult = MakeGSS.authenticate(newLogon, connProps);
+			} else {
+				throw new LogonException(JDBCPlugin.Event.TEIID20034, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20034, type));
+			}
 		}
 		
 		if (logoff) {
-			if ("7.3".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
+			if ("07.03".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
 				//just remove the current instance - the server has already logged off the current user
 				LogonResult old = this.logonResults.remove(this.serverInstance.getHostInfo());
 				this.connectionFactory.disconnected(this.serverInstance, old.getSessionToken());
@@ -188,6 +203,34 @@ public class SocketServerConnection implements ServerConnection {
 		this.logonResult = newResult;
 		this.logonResults.put(instance.getHostInfo(), this.logonResult);
 		this.connectionFactory.connected(instance, this.logonResult.getSessionToken());
+	}
+	
+	public static void updateConnectionProperties(Properties connectionProperties, InetAddress addr, boolean setMac) {
+		if (addr == null) {
+			return;
+		}
+		String address = addr.getHostAddress();
+		Object old = connectionProperties.put(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS, address);
+		if (old == null || !address.equals(old)) {
+			connectionProperties.put(TeiidURL.CONNECTION.CLIENT_HOSTNAME, addr.getCanonicalHostName());
+			if (setMac) {
+				try {
+					NetworkInterface ni = NetworkInterface.getByInetAddress(addr);
+					if (ni != null && ni.getHardwareAddress() != null) {
+						StringBuilder sb = new StringBuilder();
+						for (byte b : ni.getHardwareAddress()) {
+							sb.append(PropertiesUtils.toHex(b >> 4));
+							sb.append(PropertiesUtils.toHex(b));
+						}
+						connectionProperties.put(TeiidURL.CONNECTION.CLIENT_MAC, sb.toString());
+					}
+		        } catch (SocketException e) {
+					connectionProperties.remove(TeiidURL.CONNECTION.CLIENT_MAC);
+		        }
+			} else {
+				connectionProperties.remove(TeiidURL.CONNECTION.CLIENT_MAC);
+			}
+		}
 	}
 	
 	private ILogon connect(HostInfo hostInfo) throws CommunicationException,
@@ -234,6 +277,7 @@ public class SocketServerConnection implements ServerConnection {
 				}
 			}
 			
+			@Override
 			public Object invoke(Object proxy, Method method, Object[] args)
 					throws Throwable {
 				try {
@@ -335,7 +379,7 @@ public class SocketServerConnection implements ServerConnection {
 	}
 	
 	public void cleanUp() {
-		if (this.serverInstance != null && this.logonResult != null && "8.2".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
+		if (this.serverInstance != null && this.logonResult != null && "08.02".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
 			ILogon newLogon = this.serverInstance.getService(ILogon.class);
 			try {
 				newLogon.assertIdentity(null);
@@ -374,6 +418,11 @@ public class SocketServerConnection implements ServerConnection {
 	
 	@Override
 	public boolean supportsContinuous() {
+		return false;
+	}
+	
+	@Override
+	public boolean isLocal() {
 		return false;
 	}
 }

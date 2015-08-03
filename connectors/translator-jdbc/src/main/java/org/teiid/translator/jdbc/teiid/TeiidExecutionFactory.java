@@ -27,9 +27,12 @@ package org.teiid.translator.jdbc.teiid;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.SQLDialect;
+import org.teiid.translator.jdbc.Version;
 
 /** 
  * @since 4.3
@@ -37,16 +40,19 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="teiid", description="A translator for Teiid 7.0 or later")
 public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	
-	public static final String SEVEN_0 = "7.0"; //$NON-NLS-1$
-	public static final String SEVEN_1 = "7.1"; //$NON-NLS-1$
-	public static final String SEVEN_2 = "7.2"; //$NON-NLS-1$
-	public static final String SEVEN_3 = "7.3"; //$NON-NLS-1$
-	public static final String SEVEN_4 = "7.4"; //$NON-NLS-1$
-	public static final String SEVEN_5 = "7.5"; //$NON-NLS-1$
-	public static final String SEVEN_6 = "7.6"; //$NON-NLS-1$
+	public static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
+	public static final Version SEVEN_1 = Version.getVersion("7.1"); //$NON-NLS-1$
+	public static final Version SEVEN_2 = Version.getVersion("7.2"); //$NON-NLS-1$
+	public static final Version SEVEN_3 = Version.getVersion("7.3"); //$NON-NLS-1$
+	public static final Version SEVEN_4 = Version.getVersion("7.4"); //$NON-NLS-1$
+	public static final Version SEVEN_5 = Version.getVersion("7.5"); //$NON-NLS-1$
+	public static final Version SEVEN_6 = Version.getVersion("7.6"); //$NON-NLS-1$
+	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
+	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
+	public static final Version EIGHT_5 = Version.getVersion("8.5"); //$NON-NLS-1$
+	public static final Version EIGHT_10 = Version.getVersion("8.10"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
-		setDatabaseVersion(SEVEN_0);
 	}
     
 	@Override
@@ -144,18 +150,39 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("NULLIF"); //$NON-NLS-1$
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
         
-        if (getDatabaseVersion().compareTo(SEVEN_3) >= 0) {
+        if (getVersion().compareTo(SEVEN_3) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.UNESCAPE);
         }
         
-        if (getDatabaseVersion().compareTo(SEVEN_4) >= 0) {
+        if (getVersion().compareTo(SEVEN_4) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.UUID);
         	supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
         	supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
         }
         
-        if (getDatabaseVersion().compareTo(SEVEN_5) >= 0) {
+        if (getVersion().compareTo(SEVEN_5) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.TRIM);
+        }
+        
+        if (getVersion().compareTo(EIGHT_3) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ENDSWITH);
+        }
+        
+        if (getVersion().compareTo(EIGHT_10) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        	supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+        	supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        	supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
+        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+        	supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+        	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        	supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+        	supportedFunctions.add(SourceSystemFunctions.ST_SETSRID);
         }
         
         return supportedFunctions;
@@ -190,7 +217,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return getDatabaseVersion().compareTo(SEVEN_1) >= 0;
+    	return getVersion().compareTo(SEVEN_1) >= 0;
     }
     
     @Override
@@ -205,42 +232,134 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsCommonTableExpressions() {
-    	return getDatabaseVersion().compareTo(SEVEN_2) >= 0;
+    	return getVersion().compareTo(SEVEN_2) >= 0;
+    }
+    
+    @Override
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return getVersion().compareTo(EIGHT_10) >= 0;
     }
     
     @Override
     public boolean supportsAdvancedOlapOperations() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsElementaryOlapOperations() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsArrayAgg() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsLikeRegex() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsSimilarTo() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsWindowDistinctAggregates() {
-    	return getDatabaseVersion().compareTo(SEVEN_6) >= 0;
+    	return getVersion().compareTo(SEVEN_6) >= 0;
     }
     
     @Override
     public boolean supportsWindowOrderByWithAggregates() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsFormatLiteral(String literal,
+    		org.teiid.translator.ExecutionFactory.Format format) {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsGeneratedKeys() {
+    	return getVersion().compareTo(EIGHT_3) >= 0;
+    }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+    	return true;
+    }
+    
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsStringAgg() {
+    	return getVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
+    @Override
+    public SQLDialect getDialect() {
+    	if (dialect == null) {
+    		//TODO: should pull in our own dialect
+    		this.dialect = new SQLDialect() {
+				
+				@Override
+				public boolean supportsTemporaryTables() {
+					return true;
+				}
+				
+				@Override
+				public String getTypeName(int code, long length, int precision, int scale) {
+					return JDBCSQLTypeInfo.getJavaClassName(code);
+				}
+				
+				@Override
+				public String getDropTemporaryTableString() {
+					return "drop table"; //$NON-NLS-1$
+				}
+				
+				@Override
+				public String getCreateTemporaryTableString() {
+					return "create local temporary table"; //$NON-NLS-1$
+				}
+				
+				@Override
+				public String getCreateTemporaryTablePostfix() {
+					return ""; //$NON-NLS-1$
+				}
+			};
+    	}
+    	return super.getDialect();
+    }
+    
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return getVersion().compareTo(EIGHT_5) >= 0;
+    }
+    
+    @Override
+    public boolean useScientificNotation() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsOrderByUnrelated() {
+    	//prior to 8.10 we did not support unrelated from the grouping columns
+    	return getVersion().compareTo(EIGHT_10) >= 0;
     }
     
 }

@@ -37,6 +37,8 @@ import org.teiid.logging.MessageLevel;
 public class BlockedException extends TeiidComponentException {
 
     public static final BlockedException INSTANCE = new BlockedException();
+    
+    public static final BlockedException BLOCKED_ON_MEMORY_EXCEPTION = new BlockedException();
 
     /**
      * No-arg costructor required by Externalizable semantics

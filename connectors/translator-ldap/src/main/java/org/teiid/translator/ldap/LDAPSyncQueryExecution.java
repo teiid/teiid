@@ -149,7 +149,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12002, contextName));
 			}
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.createContextError"); //$NON-NLS-1$
-			throw new TranslatorException(msg); 
+			throw new TranslatorException(ne, msg); 
 		}
 	}
 
@@ -162,7 +162,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 		ArrayList<Column> modelAttrList = searchDetails.getElementList();
 		String[] attrs = new String[modelAttrList.size()];
 		for (int i = 0; i < attrs.length; i++) {
-			attrs[i] = (IQueryToLdapSearchParser.getNameFromElement(modelAttrList.get(i)));
+			attrs[i] = modelAttrList.get(i).getSourceName();
 		}
 
 		ctrls.setSearchScope(searchDetails.getSearchScope());

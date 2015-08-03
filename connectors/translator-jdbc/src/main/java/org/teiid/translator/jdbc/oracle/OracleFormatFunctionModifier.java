@@ -28,52 +28,68 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.StringUtil;
 import org.teiid.translator.jdbc.ParseFormatFunctionModifier;
 
-public final class OracleFormatFunctionModifier extends
+public class OracleFormatFunctionModifier extends
 		ParseFormatFunctionModifier {
 
-	public static final Pattern tokenPattern = Pattern.compile("(G|y{1,4}|M{1,4}|D{1,3}|d{1,2}|E{1,4}|a{1,2}|H{1,2}|h{1,2}|m{1,2}|s{1,2}|S{1,3}|Z|[\\- /,.;:]+|(?:'[^'\"]*')+|[^'\"a-zA-Z]+)"); //$NON-NLS-1$
+	static final Pattern tokenPattern = Pattern.compile("(G+|y{1,4}|M{2,4}|DD|dd|E+|a+|HH|hh|mm|ss|S+|Z+|[\\- /,.;:]+|(?:'[^'\"]*')+|[^'\"a-zA-Z]+)"); //$NON-NLS-1$
 
 	public OracleFormatFunctionModifier(String prefix) {
 		super(prefix);
 	}
 	
-	public static boolean supportsLiteral(String literal) {
-		Matcher m = tokenPattern.matcher(literal);
-		int end = 0;
-    	while (m.find()) {
-    		if (end != m.start()) {
-    			return false;
-    		}
-    		end = m.end();
-    	}
-    	return end == literal.length();
+	public boolean supportsLiteral(String literal) {
+		try {
+			translateFormat(literal);
+		} catch (IllegalArgumentException e) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override
 	protected Object translateFormat(String format) {
 		Matcher m = tokenPattern.matcher(format);
 		StringBuilder sb = new StringBuilder();
+		sb.append("'"); //$NON-NLS-1$
+		int end = 0;
+		char previous = 0;
 		while (m.find()) {
 			if (m.group().length() == 0) {
 				continue;
 			}
+			if (end == 0) {
+				if (m.start() != 0) {
+					throw new IllegalArgumentException();
+				}
+			} else if (m.start() != end) {
+				throw new IllegalArgumentException();
+			}
 			String group = m.group();
+			if (Character.isLetter(previous) && group.charAt(0) == previous) {
+				throw new IllegalArgumentException();
+			}
+			previous = group.charAt(0);
 			sb.append(convertToken(group));
+			end = m.end();
 		} 
+		if (end != format.length()) {
+			throw new IllegalArgumentException();
+		}
+		sb.append("'"); //$NON-NLS-1$
 		return sb.toString();
 	}
 
-	private Object convertToken(String group) {
+	protected Object convertToken(String group) {
 		switch (group.charAt(0)) {
 		case 'G':
 			return "AD"; //$NON-NLS-1$
 		case 'y':
-			if (group.length() == 4) {
-				return "YYYY"; //$NON-NLS-1$
+			if (group.length() == 2) {
+				return "YY"; //$NON-NLS-1$
 			}
-			return "YY"; //$NON-NLS-1$
+			return "YYYY"; //$NON-NLS-1$
 		case 'M':
-			if (group.length() <= 2) {
+			if (group.length() == 2) {
 				return "MM"; //$NON-NLS-1$
 			}
 			if (group.length() == 3) {
@@ -85,12 +101,12 @@ public final class OracleFormatFunctionModifier extends
 		case 'd':
 			return "DD"; //$NON-NLS-1$
 		case 'E':
-			if (group.length() == 4) {
+			if (group.length() >= 4) {
 				return "Day"; //$NON-NLS-1$
 			}
 			return "Dy"; //$NON-NLS-1$
 		case 'a':
-			return "PM"; //$NON-NLS-1$
+			return "AM"; //$NON-NLS-1$
 		case 'H':
 			return "HH24"; //$NON-NLS-1$
 		case 'h':
@@ -104,7 +120,7 @@ public final class OracleFormatFunctionModifier extends
 		case 'Z':
 			return "TZHTZM";//$NON-NLS-1$
 		case '\'':
-			return '"' + StringUtil.replace(group.substring(1, group.length() - 1), "''", "'") + '"'; //$NON-NLS-1$ //$NON-NLS-2$
+			return '"' + StringUtil.replaceAll(StringUtil.replaceAll(StringUtil.replaceAll(group.substring(1, group.length() - 1), "''", "'"), "'", "''"), "\"", "\"\"") + '"'; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 		case ' ':
 		case '-':
 		case '/':

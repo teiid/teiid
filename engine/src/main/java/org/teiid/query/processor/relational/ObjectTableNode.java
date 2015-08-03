@@ -36,12 +36,14 @@ import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -55,7 +57,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class ObjectTableNode extends SubqueryAwareRelationalNode {
 
-	private static final String TEIID_ROWN_NUMBER = "teiid_row_number"; //$NON-NLS-1$
+	private static final String TEIID_ROW_NUMBER = "teiid_row_number"; //$NON-NLS-1$
 	private static final String TEIID_ROW = "teiid_row"; //$NON-NLS-1$
 	private static final String TEIID_CONTEXT = "teiid_context"; //$NON-NLS-1$
 	
@@ -162,8 +164,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 		}
 		setReferenceValues(this.table);
 		Evaluator eval = getEvaluator(Collections.emptyMap());
-		Object context = eval.evaluateParameters(this.table.getPassing(), null, scriptContext.getBindings(ScriptContext.ENGINE_SCOPE));
-		assert context == null;
+		eval.evaluateParameters(this.table.getPassing(), null, scriptContext.getBindings(ScriptContext.ENGINE_SCOPE));
 
 		Object value = evalScript(this.table.getCompiledScript(), this.table.getRowScript());
 		if (value instanceof Iterable<?>) {
@@ -190,7 +191,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 			TeiidComponentException, TeiidProcessingException {
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
 		this.scriptContext.setAttribute(TEIID_ROW, this.item, ScriptContext.ENGINE_SCOPE);
-		this.scriptContext.setAttribute(TEIID_ROWN_NUMBER, this.rowCount, ScriptContext.ENGINE_SCOPE);
+		this.scriptContext.setAttribute(TEIID_ROW_NUMBER, this.rowCount, ScriptContext.ENGINE_SCOPE);
 		for (ObjectColumn proColumn : projectedColumns) {
 			Object value = evalScript(proColumn.getCompiledScript(), proColumn.getPath());
 			if (value == null) {
@@ -211,6 +212,13 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		return this.table.getPassing();
+	}
+	
+	@Override
+	public PlanNode getDescriptionProperties() {
+		PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
+        return props;
 	}
 
 }

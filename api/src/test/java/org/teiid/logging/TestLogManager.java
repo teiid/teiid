@@ -29,10 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.teiid.logging.Logger;
-import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
-
 import junit.framework.TestCase;
 
 
@@ -111,12 +107,12 @@ public class TestLogManager extends TestCase {
         public ListLogger() {
         }
         
-        public void log(int level, String context, Object msg){
-            this.messages.add(msg.toString());
+        public void log(int level, String context, Object... msg){
+            this.messages.add(msg[0].toString());
         }
         
-		public void log(int level, String context, Throwable t, Object msg) {
-            this.messages.add(msg.toString());
+		public void log(int level, String context, Throwable t, Object... msg) {
+            this.messages.add(msg[0].toString());
 		}        
 
         public void shutdown() {
@@ -154,6 +150,16 @@ public class TestLogManager extends TestCase {
     		int level = getLogLevel(context);
     		return level >= msgLevel;
     	}
+
+		@Override
+		public void putMdc(String key, String val) {
+
+		}
+
+		@Override
+		public void removeMdc(String key) {
+			
+		}
     }
 
 }

@@ -33,9 +33,11 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
@@ -51,7 +53,9 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class SQLParserUtil {
 	
-    static Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
+    static final Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
+    
+    static final Pattern hintPattern = Pattern.compile("\\s*(\\w+(?:\\(\\s*(max:\\d+)?\\s*((?:no)?\\s*join)\\s*\\))?)\\s*", Pattern.DOTALL | Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
 	
@@ -160,10 +164,10 @@ public class SQLParserUtil {
     	return true;
     }    
 
-    String validateName(String id, boolean element) throws ParseException {
+    String validateName(String id, boolean nonAlias) throws ParseException {
         if(id.indexOf('.') != -1) { 
             String key = "SQLParser.Invalid_alias"; //$NON-NLS-1$
-            if (element) {
+            if (nonAlias) {
                 key = "SQLParser.Invalid_short_name"; //$NON-NLS-1$
             }
             throw new ParseException(QueryPlugin.Util.getString(key, id)); 
@@ -176,22 +180,51 @@ public class SQLParserUtil {
     }
     
     void setFromClauseOptions(Token groupID, FromClause fromClause){
-        String[] parts = getComment(groupID).split("\\s"); //$NON-NLS-1$
-
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].equalsIgnoreCase(Option.OPTIONAL)) {
-                fromClause.setOptional(true);
-            } else if (parts[i].equalsIgnoreCase(Option.MAKEDEP)) {
-                fromClause.setMakeDep(true);
-            } else if (parts[i].equalsIgnoreCase(Option.MAKENOTDEP)) {
-                fromClause.setMakeNotDep(true);
-            } else if (parts[i].equalsIgnoreCase(FromClause.MAKEIND)) {
-                fromClause.setMakeInd(true);
-            } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
+    	String comment = getComment(groupID);
+    	if (comment == null || comment.isEmpty()) {
+    		return;
+    	}
+    	Matcher m = hintPattern.matcher(comment);
+    	int start = 0;
+    	boolean makedep = false;
+    	while (m.find(start)) {
+    		String hint = m.group(1);
+    		start = m.end();
+    		if (StringUtil.startsWithIgnoreCase(hint, "make")) { //$NON-NLS-1$
+        		if (hint.equalsIgnoreCase(Option.MAKENOTDEP)) {
+                    fromClause.setMakeNotDep(true);
+        		} else if (StringUtil.startsWithIgnoreCase(hint, Option.MAKEDEP)) {
+        			Option.MakeDep option = new Option.MakeDep();
+                    fromClause.setMakeDep(option);
+                    parseOptions(m, option);
+        		} else if (StringUtil.startsWithIgnoreCase(hint, SQLConstants.Reserved.MAKEIND)) {
+        			Option.MakeDep option = new Option.MakeDep();
+                    fromClause.setMakeInd(option);
+                    parseOptions(m, option);
+                }
+        	} else if (hint.equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
             	fromClause.setNoUnnest(true);
+            } else if (hint.equalsIgnoreCase(FromClause.PRESERVE)) {
+            	fromClause.setPreserve(true);
+            } else if (hint.equalsIgnoreCase(Option.OPTIONAL)) {
+                fromClause.setOptional(true);
             }
-        }
+    	}
     }
+
+	//([max:val] [[no] join])
+	private void parseOptions(Matcher m, Option.MakeDep option) {
+		if (m.group(3) != null) {
+			if (StringUtil.startsWithIgnoreCase(m.group(3), "no")) { //$NON-NLS-1$
+				option.setJoin(false);
+			} else {
+				option.setJoin(true);
+			}
+		}
+		if (m.group(2) != null) {
+			option.setMax(Integer.valueOf(m.group(2).trim().substring(4)));
+		}
+	}
     
     SubqueryHint getSubqueryHint(Token t) {
     	SubqueryHint hint = new SubqueryHint();
@@ -226,17 +259,30 @@ public class SQLParserUtil {
         return hint;
 	}
 	
-	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^:]+):((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(\\s+KEEP ALIASES)?\\s*(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^: ]+)(\\s+KEEP ALIASES)?\\s*:((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	
-	SourceHint getSourceHint(Token t) {
+	SourceHint getSourceHint(SQLParser parser) {
+		int index = 1; 
+		//scan for the first keyword
+	    Token t = null;
+	    do {
+	    	t = parser.getToken(index++);
+	    } while (t != null && t.kind == SQLParserConstants.LPAREN);
+	    t = parser.getToken(index);
+	    if (t == null) {
+	    	return null;
+	    }
 		String comment = getComment(t);
 		Matcher matcher = SOURCE_HINT.matcher(comment);
 		if (!matcher.find()) {
 			return null;
 		}
 		SourceHint sourceHint = new SourceHint();
-		String generalHint = matcher.group(1);
+		if (matcher.group(1) != null) {
+			sourceHint.setUseAliases(true);
+		}
+		String generalHint = matcher.group(2);
 		if (generalHint != null) {
 			sourceHint.setGeneralHint(normalizeStringLiteral(generalHint));
 		}
@@ -244,9 +290,19 @@ public class SQLParserUtil {
 		matcher = SOURCE_HINT_ARG.matcher(comment);
 		while (matcher.find(end)) {
 			end = matcher.end();
-			sourceHint.setSourceHint(matcher.group(1), normalizeStringLiteral(matcher.group(2)));
+			sourceHint.setSourceHint(matcher.group(1), normalizeStringLiteral(matcher.group(3)), matcher.group(2) != null);
 		}
 		return sourceHint;
+	}
+	
+	void setSourceHint(SourceHint sourceHint, Command command) {
+	    if (sourceHint != null) {
+	        if (command instanceof SetQuery) {
+	        	((SetQuery)command).getProjectedQuery().setSourceHint(sourceHint);
+	        } else {
+	    		command.setSourceHint(sourceHint);
+	    	}
+	    }
 	}
 	
 	boolean isNonStrictHint(Token t) {
@@ -259,7 +315,7 @@ public class SQLParserUtil {
     	return false;
 	}
 	
-	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?\\s*(min:\\d{1,19})?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
     
 	static CacheHint getQueryCacheOption(String query) {
     	Matcher match = CACHE_HINT.matcher(query);
@@ -279,7 +335,11 @@ public class SQLParserUtil {
     		if (scope != null) {
     			scope = scope.substring(6);
     			hint.setScope(scope);
-    		}    		
+    		}
+    		String min = match.group(7);
+    		if (min != null) {
+    			hint.setMinRows(Long.valueOf(min.substring(4)));
+    		}
     		return hint;
     	}
     	return null;
@@ -328,9 +388,62 @@ public class SQLParserUtil {
     		c.setRadix(Integer.parseInt(v));
     	}
     	
+    	v = props.remove(DDLConstants.NATIVE_TYPE);
+    	if (v != null) {
+    		c.setNativeType(v);
+    	}
+    	
     	if (c instanceof Column) {
     		setColumnOptions((Column)c, props);
     	}
+    }
+    
+    void removeColumnOption(String key, BaseColumn c)  throws MetadataException {
+    	if (c.getProperty(key, false) != null) {
+    		c.setProperty(key, null);
+    	}    	
+		removeCommonProperty(key, c);
+		
+    	if (key.equals(DDLConstants.RADIX)) {
+    		c.setRadix(0);
+    	} else if (key.equals(DDLConstants.NATIVE_TYPE)) {
+    		c.setNativeType(null);
+    	} else if (c instanceof Column) {
+    		removeColumnOption(key, (Column)c);
+    	}
+    }    
+    
+    private void removeColumnOption(String key, Column c) {
+        if (key.equals(DDLConstants.CASE_SENSITIVE)) {
+        	c.setCaseSensitive(false);
+        } else if (key.equals(DDLConstants.SELECTABLE)) {
+    		c.setSelectable(true);
+    	} else if (key.equals(DDLConstants.UPDATABLE)) {
+    		c.setUpdatable(false);
+    	} else if (key.equals(DDLConstants.SIGNED)) {
+    		c.setSigned(false);
+    	} else if (key.equals(DDLConstants.CURRENCY)) {
+    		c.setSigned(false);
+    	} else if (key.equals(DDLConstants.FIXED_LENGTH)) {
+    		c.setFixedLength(false);
+    	} else if (key.equals(DDLConstants.SEARCHABLE)) {
+    		c.setSearchType(null);
+    	} else if (key.equals(DDLConstants.MIN_VALUE)) {
+    		c.setMinimumValue(null);
+    	} else if (key.equals(DDLConstants.MAX_VALUE)) {
+    		c.setMaximumValue(null);
+    	} else if (key.equals(DDLConstants.CHAR_OCTET_LENGTH)) {
+    		c.setCharOctetLength(0);
+    	} else if (key.equals(DDLConstants.NULL_VALUE_COUNT)) {
+    		c.setNullValues(-1);
+    	} else if (key.equals(DDLConstants.DISTINCT_VALUES)) {
+    		c.setDistinctValues(-1);
+    	} else if (key.equals(DDLConstants.UDT)) {
+			c.setDatatype(null);
+			c.setLength(0);
+			c.setPrecision(0);
+			c.setScale(0);
+    	}    	
     }
 
 	private void setColumnOptions(Column c, Map<String, String> props) throws MetadataException {
@@ -384,11 +497,6 @@ public class SQLParserUtil {
     		c.setCharOctetLength(Integer.parseInt(v));
     	}
         
-    	v = props.remove(DDLConstants.NATIVE_TYPE);
-    	if (v != null) {
-    		c.setNativeType(v);
-    	}
-
     	v = props.remove(DDLConstants.NULL_VALUE_COUNT); 
     	if (v != null) {
     		c.setNullValues(Integer.parseInt(v));
@@ -431,6 +539,16 @@ public class SQLParserUtil {
 			c.setNameInSource(v);
 		}
 	}
+	
+	void removeCommonProperty(String key, AbstractMetadataRecord c) {
+		if (key.equals(DDLConstants.UUID)) {
+			c.setUUID(null);
+		} else if (key.equals(DDLConstants.ANNOTATION)) {
+    		c.setAnnotation(null);
+    	} else if (key.equals(DDLConstants.NAMEINSOURCE)) {
+			c.setNameInSource(null);
+		}
+	}	
     
     void setTableOptions(Table table) {
     	Map<String, String> props = table.getProperties();
@@ -455,12 +573,48 @@ public class SQLParserUtil {
 		
     	value = props.remove(DDLConstants.CARDINALITY); 
     	if (value != null) {
-    		table.setCardinality(Integer.parseInt(value));
+			table.setCardinality(Long.valueOf(value));
     	}
     }     
     
+    void removeTableOption(String key, Table table) {
+    	if (table.getProperty(key, false) != null) {
+    		table.setProperty(key, null);
+    	}
+    	removeCommonProperty(key, table);
+    	
+    	if (key.equals(DDLConstants.MATERIALIZED)) {
+    		table.setMaterialized(false);
+    	}
+    	
+    	if (key.equals(DDLConstants.MATERIALIZED_TABLE)) {
+    		table.setMaterializedTable(null);
+    	}
+    	
+    	if (key.equals(DDLConstants.UPDATABLE)) {
+    		table.setSupportsUpdate(false);
+    	}
+    	
+    	if (key.equals(DDLConstants.CARDINALITY)) {
+    		table.setCardinality(-1);
+    	}    	
+    }
+    
 	static void replaceProcedureWithFunction(MetadataFactory factory,
 			Procedure proc) throws MetadataException {
+		if (proc.isFunction() && proc.getQueryPlan() != null) {
+			return;
+		}
+		FunctionMethod method = createFunctionMethod(proc);
+
+		//remove the old proc
+		factory.getSchema().getResolvingOrder().remove(factory.getSchema().getResolvingOrder().size() - 1);
+		factory.getSchema().getProcedures().remove(proc.getName());
+		
+		factory.getSchema().addFunction(method);
+	}
+
+	public static FunctionMethod createFunctionMethod(Procedure proc) {
 		FunctionMethod method = new FunctionMethod();
 		method.setName(proc.getName());
 		method.setPushdown(proc.isVirtual()?FunctionMethod.PushDown.CAN_PUSHDOWN:FunctionMethod.PushDown.MUST_PUSHDOWN);
@@ -470,13 +624,24 @@ public class SQLParserUtil {
 			if (pp.getType() == ProcedureParameter.Type.InOut || pp.getType() == ProcedureParameter.Type.Out) {
 				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_in", proc.getName())); //$NON-NLS-1$
 			}
-			
+			//copy the metadata
 			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getRuntimeType(), pp.getAnnotation());
+			fp.setDatatype(pp.getDatatype(), true, pp.getArrayDimensions());
+			fp.setLength(pp.getLength());
+			fp.setNameInSource(pp.getNameInSource());
+			fp.setNativeType(pp.getNativeType());
+			fp.setNullType(pp.getNullType());
+			fp.setProperties(pp.getProperties());
+			fp.setRadix(pp.getRadix());
+			fp.setScale(pp.getScale());
+			fp.setUUID(pp.getUUID());
 			if (pp.getType() == ProcedureParameter.Type.In) {
 				fp.setVarArg(pp.isVarArg());
 				ins.add(fp);
+				fp.setPosition(ins.size());
 			} else {
 				method.setOutputParameter(fp);
+				fp.setPosition(0);
 			}
 		}
 		method.setInputParameters(ins);
@@ -511,8 +676,10 @@ public class SQLParserUtil {
 		}
 		
 		FunctionMethod.convertExtensionMetadata(proc, method);
-		factory.getSchema().addFunction(method);
-		factory.getSchema().getProcedures().remove(proc.getName());
+		if (method.getInvocationMethod() != null) {
+    		method.setPushdown(PushDown.CAN_PUSHDOWN);
+    	}
+		return method;
 	}
     
     void setProcedureOptions(Procedure proc) {
@@ -524,10 +691,56 @@ public class SQLParserUtil {
     		proc.setUpdateCount(Integer.parseInt(value));
     	}
     }
+    
+    void removeOption(String option, AbstractMetadataRecord record) {
+    	if (record instanceof Table) {
+    		removeTableOption(option, (Table)record);
+    	}
+    	if (record instanceof Procedure) {
+    		removeProcedureOption(option, (Procedure)record);
+    	}
+    	if (record instanceof BaseColumn) {
+    		removeColumnOption(option, (BaseColumn)record);
+    	}
+    }
+    
+    void setOptions(AbstractMetadataRecord record) {
+    	if (record instanceof Table) {
+    		setTableOptions((Table)record);
+    	}
+    	if (record instanceof Procedure) {
+    		setProcedureOptions((Procedure)record);
+    	}
+    	if (record instanceof BaseColumn) {
+    		setColumnOptions((BaseColumn)record);
+    	}
+    }
+    
+    void removeProcedureOption(String key, Procedure proc) {
+    	if (proc.getProperty(key, false) != null) {
+    		proc.setProperty(key, null);
+    	}    	
+    	removeCommonProperty(key, proc);
+    	
+    	if (key.equals("UPDATECOUNT")) { //$NON-NLS-1$
+    		proc.setUpdateCount(1);
+    	}
+    }    
 
     public static boolean isTrue(final String text) {
         return Boolean.valueOf(text);
     }    
+    
+    AbstractMetadataRecord getChild(String name, AbstractMetadataRecord record, boolean parameter) {
+    	if (record instanceof Table) {
+    		if (parameter) {
+    			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_table_param", name, record.getName())); //$NON-NLS-1$
+    		}
+    		return getColumn(name, (Table)record);
+    	}
+		return getColumn(name, (Procedure)record, parameter);
+    	//TODO: function is not supported yet because we store by uid, which should instead be a more friendly "unique name"
+    }
 	
 	Column getColumn(String columnName, Table table) throws MetadataException {
 		Column c = table.getColumnByName(columnName);
@@ -537,10 +750,41 @@ public class SQLParserUtil {
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
 	}
 	
+	AbstractMetadataRecord getColumn(String paramName, Procedure proc, boolean parameter) throws MetadataException {
+		if (proc.getResultSet() != null) {
+			Column result = proc.getResultSet().getColumnByName(paramName);
+			if (result != null) {
+				return result;
+			}
+		}
+		if (parameter) {
+			List<ProcedureParameter> params = proc.getParameters();
+			for (ProcedureParameter param:params) {
+				if (param.getName().equalsIgnoreCase(paramName)) {
+					return param;
+				}
+			}
+		}
+		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_procedure_param_doesnot_exist", paramName, proc.getName())); //$NON-NLS-1$
+	}
+	
+	FunctionParameter getParameter(String paramName, FunctionMethod func) throws MetadataException {
+		List<FunctionParameter> params = func.getInputParameters();
+		for (FunctionParameter param:params) {
+			if (param.getName().equalsIgnoreCase(paramName)) {
+				return param;
+			}
+		}
+		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_function_param_doesnot_exist", paramName, func.getName())); //$NON-NLS-1$
+	}	
+	
 	void createDDLTrigger(MetadataFactory schema, AlterTrigger trigger) {
 		GroupSymbol group = trigger.getTarget();
 		
 		Table table = schema.getSchema().getTable(group.getName());
+		if (table == null || !table.isVirtual()) {
+			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_doesnot_exist", group.getName())); //$NON-NLS-1$
+		}
 		if (trigger.getEvent().equals(Table.TriggerEvent.INSERT)) {
 			table.setInsertPlan(trigger.getDefinition().toString());
 		}
@@ -586,22 +830,6 @@ public class SQLParserUtil {
 		}
 	}	
 	
-	static String resolvePropertyKey(MetadataFactory factory, String key) {
-	 	int index = key.indexOf(':');
-	 	if (index > 0 && index < key.length() - 1) {
-	 		String prefix = key.substring(0, index);
-	 		String uri = MetadataFactory.BUILTIN_NAMESPACES.get(prefix);
-	 		if (uri == null) {
-	 			uri = factory.getNamespaces().get(prefix);
-	 		}
-	 		if (uri != null) {
-	 			key = '{' +uri + '}' + key.substring(index + 1, key.length());
-	 		}
-	 		//TODO warnings or errors if not resolvable 
-	 	}
-	 	return key;
-	}
-	
 	KeyRecord addFBI(MetadataFactory factory, List<Expression> expressions, Table table, String name) throws MetadataException {
 		List<String> columnNames = new ArrayList<String>(expressions.size());
 		List<Boolean> nonColumnExpressions = new ArrayList<Boolean>(expressions.size());
@@ -617,8 +845,22 @@ public class SQLParserUtil {
 				fbi = true;
 			}
 		}
-		table.addAttchment(MetadataFactory.class, factory);
     	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
+	}
+	
+	MetadataFactory getTempMetadataFactory() {
+		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		return workContext.getTempMetadataFactory();
+	}
+	
+	List<Expression> arrayExpressions(List<Expression> expressions, Expression expr) {
+		if (expressions == null) {
+			expressions = new ArrayList<Expression>();
+		}
+		if (expr != null) {
+			expressions.add(expr);
+		}
+		return expressions;
 	}
 	
 	static class  ParsedDataType{

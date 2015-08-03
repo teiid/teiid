@@ -27,6 +27,7 @@ import java.util.List;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.Streamable;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.util.Options;
 
 
 /**
@@ -62,7 +63,6 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
 		NO_WAIT
 	}
 
-	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 512;
 	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 256;
 	public static int DEFAULT_MAX_PROCESSING_KB = -1;
 	public static int DEFAULT_RESERVE_BUFFER_KB = -1;
@@ -79,12 +79,6 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
      */
     int getProcessorBatchSize();
 
-    /**
-     * Get the batch size to use when reading data from a connector.  
-     * @return Batch size (# of rows)
-     */
-    int getConnectorBatchSize();
-    
 	TupleBuffer createTupleBuffer(List elements, String groupName, TupleSourceType tupleSourceType) 
     throws TeiidComponentException;
 	
@@ -131,14 +125,15 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
 	 * @param maxActivePlans
 	 */
 	void setMaxActivePlans(int maxActivePlans);
-
-	/**
-	 * Wait for additional buffers to become available.
-	 * @param additional
-	 * @return
-	 */
-	int reserveAdditionalBuffers(int additional);
 	
-	Streamable<?> persistLob(final Streamable<?> lob,
+	void setOptions(Options options);
+
+	void persistLob(final Streamable<?> lob,
 			final FileStore store, byte[] bytes) throws TeiidComponentException;
+
+	int reserveBuffersBlocking(int count, long[] attempts, boolean force) throws BlockedException;
+
+	void releaseOrphanedBuffers(long count);
+
+	Options getOptions();
 }

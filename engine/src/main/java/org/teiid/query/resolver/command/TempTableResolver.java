@@ -30,8 +30,9 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Schema;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
@@ -90,6 +91,20 @@ public class TempTableResolver implements CommandResolver {
             groups.add(create.getTable());
             ResolverVisitor.resolveLanguageObject(command, groups, metadata);
             addAdditionalMetadata(create, tempTable);
+            tempTable.setOriginalMetadataID(create.getTableMetadata());
+            if (create.getOn() != null) {
+	    		Object mid = null;
+				try {
+					mid = metadata.getModelID(create.getOn());
+				} catch (QueryMetadataException e) {
+					throw new QueryResolverException(QueryPlugin.Event.TEIID31134, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31134, create.getOn()));
+				}
+				if (mid != null && (metadata.isVirtualModel(mid) || !(mid instanceof Schema))) {
+					throw new QueryResolverException(QueryPlugin.Event.TEIID31135, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31135, create.getOn()));
+				}
+				create.getTableMetadata().setParent((Schema)mid);
+	            tempTable.getTableData().setModel(mid);
+            }
         } else if(command.getType() == Command.TYPE_DROP) {
             ResolverUtil.resolveGroup(((Drop)command).getTable(), metadata);
         }
@@ -99,7 +114,13 @@ public class TempTableResolver implements CommandResolver {
 		if (!create.getPrimaryKey().isEmpty()) {
 			ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(create.getPrimaryKey().size());
 			for (ElementSymbol symbol : create.getPrimaryKey()) {
-				primaryKey.add((TempMetadataID) symbol.getMetadataID());
+				Object mid = symbol.getMetadataID();
+				if (mid instanceof TempMetadataID) {
+					primaryKey.add((TempMetadataID)mid);
+				} else if (mid instanceof Column) {
+					//TODO: this breaks our normal metadata usage
+					primaryKey.add(tempTable.getElements().get(((Column)mid).getPosition() - 1));					
+				}
 			}
 			tempTable.setPrimaryKey(primaryKey);
 		}

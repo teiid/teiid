@@ -29,7 +29,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.QueryOptimizer;
@@ -51,7 +50,7 @@ import org.teiid.query.validator.ValidationVisitor;
 
 public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactory {
 
-	private QueryMetadataInterface metadata;
+	private QueryMetadataInterface defaultMetadata;
 	private CapabilitiesFinder finder;
 	private IDGenerator idGenerator;
 	private BufferManager bufferMgr;
@@ -64,16 +63,32 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 		this.dataMgr = dataMgr;
 		this.finder = finder;
 		this.idGenerator = idGenerator;
-		this.metadata = metadata;
+		this.defaultMetadata = metadata;
 	}
 
 	@Override
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException {
-		PreparedPlan pp = commandContext.getPlan(query);
-        CommandContext copy = commandContext.clone();
-        if (recursionGroup != null) {
-        	copy.pushCall(recursionGroup);
+		CommandContext copy = commandContext.clone();
+		copy.resetDeterminismLevel(true);
+		copy.setDataObjects(null);
+        QueryMetadataInterface metadata = commandContext.getMetadata();
+        if (metadata == null) {
+        	metadata = defaultMetadata;
         }
+        PreparedPlan pp = getPreparedPlan(query, recursionGroup, copy, metadata);
+		copy.pushVariableContext(new VariableContext());
+		PreparedStatementRequest.resolveParameterValues(pp.getReferences(), Arrays.asList(params), copy, metadata);
+        return new QueryProcessor(pp.getPlan().clone(), copy, bufferMgr, dataMgr);
+	}
+
+	@Override
+	public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+			CommandContext commandContext, QueryMetadataInterface metadata) throws 
+			TeiidComponentException, TeiidProcessingException {
+		if (recursionGroup != null) {
+			commandContext.pushCall(recursionGroup);
+        }
+        PreparedPlan pp = commandContext.getPlan(query);
 		if (pp == null) {
 			ParseInfo parseInfo = new ParseInfo();
 			Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
@@ -83,20 +98,22 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 	        
 	        AbstractValidationVisitor visitor = new ValidationVisitor();
 	        Request.validateWithVisitor(visitor, metadata, newCommand);
-	        Determinism determinismLevel = copy.resetDeterminismLevel();
-	        newCommand = QueryRewriter.rewrite(newCommand, metadata, copy);
+	        newCommand = QueryRewriter.rewrite(newCommand, metadata, commandContext);
 	        AnalysisRecord record = new AnalysisRecord(false, false);
-	        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, copy);
+	        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, commandContext);
 	        pp = new PreparedPlan();
-	        pp.setPlan(plan, copy);
+	        pp.setPlan(plan, commandContext);
 	        pp.setReferences(references);
 	        pp.setAnalysisRecord(record);
 	        pp.setCommand(newCommand);
-	        commandContext.putPlan(query, pp, copy.getDeterminismLevel());
-	        copy.setDeterminismLevel(determinismLevel);
+	        commandContext.putPlan(query, pp, commandContext.getDeterminismLevel());
 		}
-		copy.pushVariableContext(new VariableContext());
-		PreparedStatementRequest.resolveParameterValues(pp.getReferences(), Arrays.asList(params), copy, metadata);
-        return new QueryProcessor(pp.getPlan().clone(), copy, bufferMgr, dataMgr);
+		return pp;
 	}
+	
+	@Override
+	public CapabilitiesFinder getCapabiltiesFinder() {
+		return finder;
+	}
+	
 }

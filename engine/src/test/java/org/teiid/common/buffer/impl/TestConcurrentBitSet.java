@@ -111,4 +111,12 @@ public class TestConcurrentBitSet {
 		
 	}
 	
+	@Test public void testCompactHighestEmpty() {
+		ConcurrentBitSet bst = new ConcurrentBitSet(1 << 19, 1);
+		bst.setCompact(true);
+		bst.getAndSetNextClearBit();
+		bst.clear(0);
+		assertEquals(-1, bst.compactHighestBitSet(0));
+	}
+	
 }

@@ -1,0 +1,12 @@
+/subsystem=datasources/jdbc-driver=postgresXA:add(driver-name=postgresXA,driver-module-name=org.postgresql,driver-xa-datasource-class-name="${db.driver}")
+
+# XA Data source
+/subsystem=datasources/xa-data-source=postgresXADS:add(jndi-name="${db.jndi_name}",  driver-name=postgresXA, user-name="${db.user}", password="${db.password}", use-java-context=true)
+/subsystem=datasources/xa-data-source=postgresXADS/xa-datasource-properties=DatabaseName:add(value="${db.database_name}")
+/subsystem=datasources/xa-data-source=postgresXADS/xa-datasource-properties=PortNumber:add(value="${db.port}")
+/subsystem=datasources/xa-data-source=postgresXADS/xa-datasource-properties=ServerName:add(value="${db.host}")
+/subsystem=datasources/xa-data-source=postgresXADS:enable
+
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

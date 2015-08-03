@@ -31,20 +31,23 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
-import junit.framework.Assert;
-
 import org.mockito.Mockito;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 
-
+@SuppressWarnings("nls")
 public class TranslationHelper {
 	
     public static final String PARTS_VDB = "/PartsSupplier.vdb"; //$NON-NLS-1$
@@ -61,7 +64,11 @@ public class TranslationHelper {
     	} else if (BQT_VDB.equals(vdbFileName)){
     		util = FakeTranslationFactory.getInstance().getBQTTranslationUtility();
     	} else {
-    		Assert.fail("unknown vdb"); //$NON-NLS-1$
+    		try {
+				util = new TranslationUtility(RealMetadataFactory.fromDDL(vdbFileName, "vdb", "test"));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
     	}
     	
     	if (udf != null) {
@@ -101,21 +108,29 @@ public class TranslationHelper {
     	return util.parseCommand(sql);
     }    
 
-	public static void helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
-		helpTestVisitor(vdb,null,input, expectedOutput, translator);
+	public static TranslatedCommand helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
+		return helpTestVisitor(vdb,null,input, expectedOutput, translator);
 	}
 	
-	public static void helpTestVisitor(String vdb, String udf, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
+	public static TranslatedCommand helpTestVisitor(String vdb, String udf, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
 	    // Convert from sql to objects
 	    Command obj = helpTranslate(vdb, udf, translator.getPushDownFunctions(), input);
 	    
-	    helpTestVisitor(expectedOutput, translator, obj);
+	    return helpTestVisitor(expectedOutput, translator, obj);
 	}	
 
-	public static void helpTestVisitor(String expectedOutput, JDBCExecutionFactory translator, Command obj) throws TranslatorException {
+	public static TranslatedCommand helpTestVisitor(String expectedOutput, JDBCExecutionFactory translator, Command obj) throws TranslatorException {
 		TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), translator);
 	    tc.translateCommand(obj);
 	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
+	    return tc;
+	}
+	
+	public static String helpTestTempTable(JDBCExecutionFactory transaltor, boolean transactional) throws QueryMetadataException, TeiidComponentException {
+		List<ColumnReference> cols = new ArrayList<ColumnReference>();
+		cols.add(new ColumnReference(null, "COL1", RealMetadataFactory.exampleBQTCached().getElementID("BQT1.SMALLA.INTKEY"), TypeFacility.RUNTIME_TYPES.INTEGER));
+		cols.add(new ColumnReference(null, "COL2", RealMetadataFactory.exampleBQTCached().getElementID("BQT1.SMALLA.STRINGKEY"), TypeFacility.RUNTIME_TYPES.STRING));
+		return transaltor.getCreateTempTableSQL("foo", cols, transactional);
 	}
 
 }

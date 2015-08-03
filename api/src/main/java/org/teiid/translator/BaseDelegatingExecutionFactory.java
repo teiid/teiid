@@ -56,7 +56,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	/**
 	 * For testing only
 	 */
-	ExecutionFactory<F, C> getDelegate() {
+	protected ExecutionFactory<F, C> getDelegate() {
 		return this.delegate;
 	}
 	
@@ -85,34 +85,28 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		delegate.closeConnection(connection, factory);
 	}
 	@Override
-	public Execution createExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			C connection) throws TranslatorException {
-		return delegate.createExecution(command, executionContext, metadata,
-				connection);
-	}
-	@Override
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			C connection) throws TranslatorException {
-		return delegate.createProcedureExecution(command, executionContext,
+		return (ProcedureExecution) delegate.createExecution(command, executionContext,
 				metadata, connection);
 	}
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			C connection) throws TranslatorException {
-		return delegate.createResultSetExecution(command, executionContext,
+		return (ResultSetExecution) delegate.createExecution(command, executionContext,
 				metadata, connection);
 	}
 	@Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			C connection) throws TranslatorException {
-		return delegate.createUpdateExecution(command, executionContext,
+		return (UpdateExecution) delegate.createExecution(command, executionContext,
 				metadata, connection);
 	}
-	public C getConnection(F factory, ExecutionContext executionContext) throws TranslatorException {
+	@Override
+    public C getConnection(F factory, ExecutionContext executionContext) throws TranslatorException {
 		return delegate.getConnection(factory, executionContext);
 	}
 	@Override
@@ -453,12 +447,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.supportsArrayType();
 	}
 	@Override
-	public String getNativeQueryProcedureName() {
-		return delegate.getNativeQueryProcedureName();
-	}	
-	
-	public boolean supportsNativeQueries() {
-		return delegate.supportsNativeQueries();
+	public String getDirectQueryProcedureName() {
+		return delegate.getDirectQueryProcedureName();
+	}
+	@Override
+	public boolean supportsDirectQueryProcedure() {
+		return delegate.supportsDirectQueryProcedure();
 	}
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments,
@@ -466,4 +460,68 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 			RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 return delegate.createDirectExecution(arguments, command, executionContext, metadata, connection);
 	}	
+	@Override
+	public boolean supportsOnlyCorrelatedSubqueries() {
+		return delegate.supportsOnlyCorrelatedSubqueries();
+	}
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+		return delegate.isSourceRequiredForCapabilities();
+	}
+	@Override
+	public void initCapabilities(C connection) throws TranslatorException {
+		delegate.initCapabilities(connection);
+	}
+	@Override
+	public boolean supportsStringAgg() {
+		return delegate.supportsStringAgg();
+	}
+	@Override
+	public boolean supportsFullDependentJoins() {
+		return delegate.supportsFullDependentJoins();
+	}
+	@Override
+	public boolean supportsSelectWithoutFrom() {
+		return delegate.supportsSelectWithoutFrom();
+	}
+	@Override
+	public boolean supportsGroupByRollup() {
+		return delegate.supportsGroupByRollup();
+	}
+	@Override
+	public boolean supportsOrderByWithExtendedGrouping() {
+		return delegate.supportsOrderByWithExtendedGrouping();
+	}
+	@Override
+	public boolean isThreadBound() {
+		return delegate.isThreadBound();
+	}
+	@Override
+	public String getCollationLocale() {
+		return delegate.getCollationLocale();
+	}
+	@Override
+	public boolean supportsRecursiveCommonTableExpressions() {
+		return delegate.supportsRecursiveCommonTableExpressions();
+	}
+	@Override
+	public boolean supportsCompareCriteriaOrderedExclusive() {
+		return delegate.supportsCompareCriteriaOrderedExclusive();
+	}
+	@Override
+	public boolean returnsSingleUpdateCount() {
+		return delegate.returnsSingleUpdateCount();
+	}
+	@Override
+	public boolean supportsPartialFiltering() {
+		return delegate.supportsPartialFiltering();
+	}
+	@Override
+	public boolean useBindingsForDependentJoin() {
+		return delegate.useBindingsForDependentJoin();
+	}
+	@Override
+	public boolean supportsSubqueryCommonTableExpressions() {
+		return delegate.supportsSubqueryCommonTableExpressions();
+	}
 }

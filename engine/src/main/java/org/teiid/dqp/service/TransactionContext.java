@@ -47,6 +47,7 @@ public class TransactionContext extends ExecutionContext implements Serializable
     private Transaction transaction;
     private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     private int isolationLevel;
+    private boolean noTnx;
 
     public int getIsolationLevel() {
 		return isolationLevel;
@@ -104,5 +105,17 @@ public class TransactionContext extends ExecutionContext implements Serializable
     public Set<String> getSuspendedBy() {
         return this.suspendedBy;
     }
+
+    /**
+     * If no transaction is expected, which corresponds
+     * to autoCommit=true and txnAutoCommit=off
+     */
+	public boolean isNoTxn() {
+		return noTnx;
+	}
+	
+	public void setNoTnx(boolean noTnx) {
+		this.noTnx = noTnx;
+	}
 
 }

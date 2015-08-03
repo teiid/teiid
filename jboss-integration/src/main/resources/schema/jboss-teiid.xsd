@@ -54,7 +54,7 @@
                             <xs:documentation>Use disk for buffer management</xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
-                  <xs:attribute name="inline-lobs" type="xs:boolean">
+                    <xs:attribute name="inline-lobs" type="xs:boolean">
                         <xs:annotation>
                             <xs:documentation>Set to true to allow inlining of memory based and small lobs into results.</xs:documentation>
                         </xs:annotation>
@@ -108,6 +108,11 @@
                         <xs:annotation>
                             <xs:documentation>The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608 or 8MB). Setting this value too high will reduce the effectiveness of the memory buffer.</xs:documentation>
                         </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="encrypt-files" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Set to true to encrypt temporary data files with 128-bit AES.</xs:documentation>
+                        </xs:annotation>
                     </xs:attribute>                                                                     
                 </xs:complexType>
             </xs:element>
@@ -133,7 +138,7 @@
                 </xs:annotation>
             </xs:element>
             
-            <xs:element name="time-slice-in-millseconds" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
+            <xs:element name="time-slice-in-milliseconds" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
                 <xs:annotation>
                     <xs:documentation>Query processor time slice, in milliseconds. (default 2000)</xs:documentation>
                 </xs:annotation>
@@ -192,6 +197,12 @@
                 </xs:annotation>
             </xs:element>                             
             
+            <xs:element name="data-roles-required" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false">
+                <xs:annotation>
+                    <xs:documentation>If data roles are required. default false</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
             <xs:element name="authorization-validator-module" type="xs:string" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>An authorization validator that by default uses data role information stored in VDBs. Provide module name.</xs:documentation>
@@ -204,9 +215,15 @@
                 </xs:annotation>
             </xs:element>
             
-            <xs:element name="metadata-repository-module" type="xs:string" minOccurs="0" maxOccurs="1">
+            <!-- <xs:element name="metadata-repository-module" type="xs:string" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Runtime Metadata Updates can be made persistent though by configuring a "org.teiid.metadata.MetadataRepository"</xs:documentation>
+                </xs:annotation>
+            </xs:element> -->
+            
+            <xs:element name="preparser-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Incoming SQL can be modified by an "org.teiid.PreParser"</xs:documentation>
                 </xs:annotation>
             </xs:element>
             
@@ -283,6 +300,11 @@
                         <xs:annotation>
                             <xs:documentation>Kerberos domain name if GSS API based single sign on is being used</xs:documentation>
                         </xs:annotation>                    
+                    </xs:attribute>                                        
+                    <xs:attribute name="type" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Default authentication type to be used with the transport. Allowed values(CLEARTEXT, GSS)</xs:documentation>
+                        </xs:annotation>                    
                     </xs:attribute>                    
                 </xs:complexType>                
             </xs:element>
@@ -321,6 +343,16 @@
                                         <xs:documentation>Keystore Type</xs:documentation>
                                     </xs:annotation>                    
                                 </xs:attribute>
+                                <xs:attribute name="key-alias" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>key alias name</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>                   
+                                <xs:attribute name="key-password" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>key password</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>             
                             </xs:complexType>                        
                         </xs:element>
                         <xs:element name="truststore" minOccurs="0" maxOccurs="1">
@@ -370,6 +402,12 @@
                     <xs:attribute name="ssl-protocol" type="xs:string" default="TLSv1"/>
                     <xs:attribute name="keymanagement-algorithm" type="xs:string"/>
                     <xs:attribute name="enable" type="xs:boolean"/>
+                    <xs:attribute name="enabled-cipher-suites" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Comma separated cipher suites that are allowed to be used for SSL. Use to restrict encryption strength(128 bit, 256 bit). 
+                            Only provide encryption suites that are supported by the server JVM.</xs:documentation>
+                        </xs:annotation>        
+                    </xs:attribute>
                 </xs:complexType>
             </xs:element>            
         </xs:sequence>
@@ -400,12 +438,6 @@
                         Setting this value above the max available processors is not recommended.</xs:documentation>
                 </xs:annotation>        
         </xs:attribute>
-        <xs:attribute name="enabled-cipher-suites" type="xs:string">
-                <xs:annotation>
-                    <xs:documentation>Cipher suites that are allowed to be used for SSL. Use to restrict encryption strength(128 bit, 256 bit). 
-                    Only provide encryption suites that are supported by both client and server JVM.</xs:documentation>
-                </xs:annotation>        
-        </xs:attribute>        
     </xs:complexType>
 
 </xs:schema>

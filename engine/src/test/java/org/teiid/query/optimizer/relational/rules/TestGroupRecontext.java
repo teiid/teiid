@@ -23,18 +23,15 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.TreeSet;
 
-import org.teiid.query.optimizer.relational.rules.FrameUtil;
-import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
+import junit.framework.TestCase;
+
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-
-import junit.framework.TestCase;
 
 
 public class TestGroupRecontext extends TestCase {
@@ -56,7 +53,7 @@ public class TestGroupRecontext extends TestCase {
 	    }	    
 	    oldSymbol.setMetadataID(oldSymbol.getName());		// Dummy metadata ID
 	    	    	    
-	    Set<String> known = new HashSet<String>();
+	    TreeSet<String> known = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 	    for (int i = 0; i < knownGroupNames.length; i++) {
             known.add(knownGroupNames[i].toUpperCase());
         }

@@ -36,9 +36,9 @@ public interface Logger {
      */
     boolean isEnabled(String context, int msgLevel);
 
-    void log(int level, String context, Object msg);
+    void log(int level, String context, Object... msg);
     
-    void log(int level, String context, Throwable t, Object msg);
+    void log(int level, String context, Throwable t, Object... msg);
 
     /**
      * Shut down this listener, requesting it clean up and release any resources it
@@ -46,6 +46,10 @@ public interface Logger {
      * request if it is not responsible for managing the resources it uses or if
      * there are no resources.
      */
-    void shutdown(); 
+    void shutdown();
+
+	void putMdc(String key, String val);
+
+	void removeMdc(String key); 
 
 }

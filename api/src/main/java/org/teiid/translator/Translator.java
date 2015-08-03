@@ -38,4 +38,9 @@ import java.lang.annotation.Target;
 public @interface Translator {
 	String name();
 	String description() default "";
+	/**
+	 * If this Translator is considered deprecated, this should be set to name of the translator to use instead
+	 * @return
+	 */
+	String deprecated() default "";
 }

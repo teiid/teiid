@@ -37,13 +37,15 @@ import java.util.List;
  */
 public class TupleBatch {
 	
-	private static final long serialVersionUID = 6304443387337336957L;
+	public static final byte NOT_TERMINATED = 0;
+	public static final byte TERMINATED = 1;
+	public static final byte ITERATION_TERMINATED = 2;
 	
 	private int rowOffset;    
     protected List<List<?>> tuples;
     
     // Optional state
-    private boolean terminationFlag = false;
+    private byte terminationFlag = NOT_TERMINATED;
     
     /** Required to honor Externalizable contract */
     public TupleBatch() {
@@ -68,9 +70,9 @@ public class TupleBatch {
      * @param listOfTupleLists List containing List objects, each of which is
      * a single tuple
      */
-    public TupleBatch(int beginRow, List listOfTupleLists) {
+    public TupleBatch(int beginRow, List<? extends List<?>> listOfTupleLists) {
         this.rowOffset = beginRow;
-        this.tuples = new ArrayList(listOfTupleLists);
+        this.tuples = new ArrayList<List<?>>(listOfTupleLists);
     }
 
     /**
@@ -103,7 +105,7 @@ public class TupleBatch {
      * Return the tuple at the given index (one-based).
      * @return the tuple at the given index
      */
-    public List getTuple(int rowIndex) {
+    public List<?> getTuple(int rowIndex) {
         return tuples.get(rowIndex-rowOffset);
     }
     
@@ -115,7 +117,7 @@ public class TupleBatch {
      * Get all tuples 
      * @return All tuples
      */
-    public List[] getAllTuples() { 
+    public List<?>[] getAllTuples() { 
     	return tuples.toArray(new List[tuples.size()]);    
     }
 
@@ -124,7 +126,7 @@ public class TupleBatch {
      * @return True if this batch is last
      */
     public boolean getTerminationFlag() {
-        return this.terminationFlag;    
+        return this.terminationFlag == TERMINATED;    
     }
     
     /**
@@ -132,7 +134,15 @@ public class TupleBatch {
      * @param terminationFlag True if last
      */
     public void setTerminationFlag(boolean terminationFlag) {
-        this.terminationFlag = terminationFlag;    
+        this.terminationFlag = terminationFlag?TERMINATED:NOT_TERMINATED;    
+    }
+    
+    public void setTermination(byte val) {
+    	this.terminationFlag = val;
+    }
+    
+    public byte getTermination() {
+    	return this.terminationFlag;
     }
     
     public boolean containsRow(int row) {

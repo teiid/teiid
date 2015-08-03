@@ -22,13 +22,12 @@
 
 package org.teiid.net.socket;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
@@ -38,6 +37,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.util.AccessibleBufferedInputStream;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
@@ -47,6 +47,8 @@ import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 
 public final class OioOjbectChannelFactory implements ObjectChannelFactory {
+	
+	public static ThreadLocal<Long> TIMEOUTS = new ThreadLocal<Long>();
 	
 	private final static int STREAM_BUFFER_SIZE = 1<<15;
 	private final static int DEFAULT_MAX_OBJECT_SIZE = 1 << 25;
@@ -62,14 +64,10 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		private OioObjectChannel(Socket socket, int maxObjectSize) throws IOException {
 			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
 			this.socket = socket;
-            BufferedOutputStream bos = new BufferedOutputStream( socket.getOutputStream(), STREAM_BUFFER_SIZE);
-            outputStream = new ObjectEncoderOutputStream( new DataOutputStream(bos), 512);
-            //The output stream must be flushed on creation in order to write some initialization data
-            //through the buffered stream to the input stream on the other side
-            outputStream.flush();
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            outputStream = new ObjectEncoderOutputStream(out, STREAM_BUFFER_SIZE);
             final ClassLoader cl = this.getClass().getClassLoader();
-            BufferedInputStream bis = new BufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE);
-            inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, maxObjectSize);
+            inputStream = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE), cl, maxObjectSize);
 		}
 
 		@Override
@@ -101,6 +99,11 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		public SocketAddress getRemoteAddress() {
 			return socket.getRemoteSocketAddress();
 		}
+		
+		@Override
+		public InetAddress getLocalAddress() {
+			return socket.getLocalAddress();
+		}
 
 		@Override
 		public boolean isOpen() {
@@ -114,6 +117,11 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 				try {
 					return inputStream.readObject();
 				} catch (SocketTimeoutException e) {
+					Long timeout = TIMEOUTS.get();
+					if (timeout != null && timeout < System.currentTimeMillis()) {
+						TIMEOUTS.set(null);
+						throw new InterruptedIOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20035));
+					}
 					throw e;
 		        } catch (IOException e) {
 		            close();
@@ -143,7 +151,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	private int receiveBufferSize = 0;
 	private int sendBufferSize = 0;
 	private boolean conserveBandwidth;
-	private int soTimeout = 3000;
+	private int soTimeout = 1000;
 	private volatile SSLSocketFactory sslSocketFactory;
 	private int maxObjectSize = DEFAULT_MAX_OBJECT_SIZE;
 

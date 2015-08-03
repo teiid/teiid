@@ -22,21 +22,44 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.Select;
+import org.teiid.language.SetQuery;
+import org.teiid.metadata.Table;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
@@ -73,6 +96,13 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.LPAD, new PadFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.RPAD, new PadFunctionModifier());
+        //WEEKINYEAR assumes 4.1.1
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier("WEEKOFYEAR")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("AsWKB")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("AsWKT")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMWKB, new AliasModifier("GeomFromWKB")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("GeomFromText")); //$NON-NLS-1$
+
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("signed", FunctionModifier.BOOLEAN, FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG); //$NON-NLS-1$
@@ -91,7 +121,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addTypeConversion(new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				return Arrays.asList(function.getParameters().get(0), " + 0.0"); //$NON-NLS-1$
+				return Arrays.asList("(", function.getParameters().get(0), " + 0.0)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);
     	convertModifier.addNumericBooleanConversions();
@@ -212,6 +242,11 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
+        
+        supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
         
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("ISNULL"); //$NON-NLS-1$
@@ -374,5 +409,198 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsRowOffset() {
         return true;
+    }  
+    
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	return "org.hibernate.dialect.MySQLDialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetdataProcessor() {
+            @Override
+            protected String getRuntimeType(int type, String typeName, int precision) {
+                //mysql will otherwise report a 0/null type for geometry
+            	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                    return TypeFacility.RUNTIME_NAMES.GEOMETRY;
+                }                
+                return super.getRuntimeType(type, typeName, precision);                    
+            }
+                
+    		@Override
+    		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
+    	        PreparedStatement stmt = null;
+    	        ResultSet rs = null;
+		        try {
+		            stmt = conn.prepareStatement("SELECT cardinality FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema = ? AND table_name = ?");  //$NON-NLS-1$
+		            if (catalog != null && schema == null) {
+		            	//mysql jdbc reports the schema as the catalog
+		            	stmt.setString(1, catalog);
+		            } else {
+		            	stmt.setString(1, schema);
+		            }
+		            stmt.setString(2, name);
+		            rs = stmt.executeQuery();
+		            if(rs.next()) {
+		            	int cardinality = rs.getInt(1);
+		            	if (!rs.wasNull()) {
+		            		table.setCardinality(cardinality);
+		            	}
+		            }
+		        } finally { 
+		            if(rs != null) {
+		                rs.close();
+		            }
+		            if(stmt != null) {
+		                stmt.close();
+		            }
+		        }
+    		}
+    	};
+    }
+    
+    @Override
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
     }    
+    
+    @Override
+    public Expression translateGeometrySelect(Expression expr) {
+    	return expr;
+    }
+    
+    @Override
+    public GeometryType retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        Blob val = results.getBlob(paramIndex);
+        
+        return toGeometryType(val);
+    }
+    
+    @Override
+    public Object retrieveValue(CallableStatement results, int parameterIndex,
+    		Class<?> expectedType) throws SQLException {
+        Blob val = results.getBlob(parameterIndex);
+        
+        return toGeometryType(val);
+    }
+
+    /**
+     * It appears that mysql will actually return a byte array or a blob backed by a byte array
+     * but just to be safe we'll assume that there may be true blob and that we should back the
+     * geometry value with that blob.
+     * @param val
+     * @return
+     * @throws SQLException
+     */
+	GeometryType toGeometryType(final Blob val) throws SQLException {
+        if (val == null) {
+        	return null;
+        }
+    	//create a wrapper for that will handle the srid
+    	long length = val.length() - 4;
+    	InputStreamFactory streamFactory = new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				InputStream is;
+				try {
+					is = val.getBinaryStream();
+				} catch (SQLException e) {
+					throw new IOException(e);
+				}
+				for (int i = 0; i < 4; i++) {
+					is.read();
+				}
+				return is;
+			}
+			
+		};
+		
+		//read the little endian srid
+		InputStream is = val.getBinaryStream();
+		int srid = 0;
+		try {
+			for (int i = 0; i < 4; i++) {
+				try {
+					int b = is.read();
+					srid += (b << i*8);
+				} catch (IOException e) {
+					srid = GeometryType.UNKNOWN_SRID; //could not determine srid
+				}
+			}
+		} finally {
+			try {
+				is.close();
+			} catch (IOException e) {
+				//i
+			}
+		}
+		
+		streamFactory.setLength(length);
+		Blob b = new BlobImpl(streamFactory);
+    	
+		GeometryType geom = new GeometryType(b);
+        geom.setSrid(srid);
+        return geom;
+	}
+	
+	@Override
+	public List<?> translateCommand(Command command, ExecutionContext context) {
+		if (command instanceof SetQuery) {
+			//mysql may not be able to find a common collation if a cast is used in a union
+			//TODO: it's a little sloppy to do this here as there can be nested set queries
+			SetQuery sq = (SetQuery)command;
+			if (!sq.isAll()) {
+				List<Select> allQueries = new ArrayList<Select>();
+				gatherSelects(sq, allQueries);
+				int size = allQueries.get(0).getDerivedColumns().size();
+				outer: for (int i = 0; i < size; i++) {
+					boolean casted = false;
+					boolean notCasted = false;
+					for (Select select : allQueries) {
+						Expression ex = select.getDerivedColumns().get(i).getExpression();
+						if (ex.getType() != TypeFacility.RUNTIME_TYPES.STRING) {
+							continue outer;
+						}
+						if (ex instanceof Function) {
+							Function f = (Function)ex;
+							if (f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT)) {
+								casted = true;
+								continue;
+							}
+						}
+						notCasted = true;
+					}
+					if (casted && notCasted) {
+						//allow mysql to implicitly convert
+						for (Select select : allQueries) {
+							DerivedColumn dc = select.getDerivedColumns().get(i);
+							if ((dc.getExpression() instanceof Function) &&
+									(((Function)dc.getExpression()).getName().equalsIgnoreCase(SQLConstants.Reserved.CONVERT))) {
+								dc.setExpression(((Function)dc.getExpression()).getParameters().get(0));
+							}
+						}	
+					}
+				}
+			}
+		}
+		return super.translateCommand(command, context);
+	}
+
+	private void gatherSelects(QueryExpression qe, List<Select> allQueries) {
+		if (qe instanceof Select) {
+			allQueries.add((Select)qe);
+			return;
+		}
+		SetQuery sq = (SetQuery)qe;
+		gatherSelects(sq.getLeftQuery(), allQueries);
+		gatherSelects(sq.getRightQuery(), allQueries);
+	}
 }

@@ -21,32 +21,37 @@
  */
 package org.teiid.jboss;
 
-class OperationsConstants {
-	public static final String SESSION = "session";//$NON-NLS-1$
-	public static final String VDB_NAME = "vdb-name";//$NON-NLS-1$
-	public static final String VDB_VERSION = "vdb-version";//$NON-NLS-1$
-	public static final String EXECUTION_ID = "execution-id";//$NON-NLS-1$
-	public static final String CACHE_TYPE = "cache-type";//$NON-NLS-1$
-	public static final String XID = "xid";//$NON-NLS-1$
-	public static final String DATA_ROLE = "data-role"; //$NON-NLS-1$
-	public static final String MAPPED_ROLE = "mapped-role"; //$NON-NLS-1$
-	public static final String CONNECTION_TYPE = "connection-type"; //$NON-NLS-1$
-	public static final String MODEL_NAME = "model-name"; //$NON-NLS-1$
-	public static final String SOURCE_NAME = "source-name"; //$NON-NLS-1$
-	public static final String DS_NAME = "ds-name"; //$NON-NLS-1$
-	public static final String RAR_NAME = "rar-name"; //$NON-NLS-1$
-	public static final String MODEL_NAMES = "model-names"; //$NON-NLS-1$
-	
-	public static final String SOURCE_VDBNAME = "source-vdb-name";//$NON-NLS-1$
-	public static final String SOURCE_VDBVERSION = "source-vdb-version";//$NON-NLS-1$
-	public static final String TARGET_VDBNAME = "target-vdb-name";//$NON-NLS-1$
-	public static final String TARGET_VDBVERSION = "target-vdb-version";//$NON-NLS-1$
-	public static final String SQL_QUERY = "sql-query";//$NON-NLS-1$
-	public static final String TIMEOUT_IN_MILLI = "timeout-in-milli";//$NON-NLS-1$
-	public static final String TRANSLATOR_NAME = "translator-name"; //$NON-NLS-1$
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.dmr.ModelType;
 
-	public static final String ENTITY_TYPE = "entity-type"; //$NON-NLS-1$
-	public static final String ENTITY_PATTERN = "entity-pattern"; //$NON-NLS-1$
+class OperationsConstants {
+	public static final SimpleAttributeDefinition SESSION = new SimpleAttributeDefinition("session", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition EXECUTION_ID = new SimpleAttributeDefinition("execution-id", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition CACHE_TYPE = new SimpleAttributeDefinition("cache-type", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition XID = new SimpleAttributeDefinition("xid", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition DATA_ROLE = new SimpleAttributeDefinition("data-role", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition MAPPED_ROLE = new SimpleAttributeDefinition("mapped-role", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition CONNECTION_TYPE = new SimpleAttributeDefinition("connection-type", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition MODEL_NAME = new SimpleAttributeDefinition("model-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition SOURCE_NAME = new SimpleAttributeDefinition("source-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition DS_NAME = new SimpleAttributeDefinition("ds-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition RAR_NAME = new SimpleAttributeDefinition("rar-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition MODEL_NAMES = new SimpleAttributeDefinition("model-names", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition SOURCE_VDBNAME = new SimpleAttributeDefinition("source-vdb-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition SOURCE_VDBVERSION = new SimpleAttributeDefinition("source-vdb-version", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition TARGET_VDBNAME = new SimpleAttributeDefinition("target-vdb-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition TARGET_VDBVERSION = new SimpleAttributeDefinition("target-vdb-version", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition SQL_QUERY = new SimpleAttributeDefinition("sql-query", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition TIMEOUT_IN_MILLI = new SimpleAttributeDefinition("timeout-in-milli", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition TRANSLATOR_NAME = new SimpleAttributeDefinition("translator-name", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition PROPERTY_TYPE = new SimpleAttributeDefinition("type", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition ENTITY_TYPE = new SimpleAttributeDefinition("entity-type", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition ENTITY_PATTERN = new SimpleAttributeDefinition("entity-pattern", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition INCLUDE_SOURCE = new SimpleAttributeDefinition("include-source", ModelType.STRING, true); //$NON-NLS-1$
 	
-	public static final String INCLUDE_SOURCE = "include-source"; //$NON-NLS-1$
+	public static final SimpleAttributeDefinition OPTIONAL_VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition OPTIONAL_VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
+	
 }

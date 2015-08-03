@@ -22,9 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,7 +62,6 @@ public class TestBatchedUpdateNode {
 		}
         BatchedUpdateNode node = new BatchedUpdateNode(1, commands, Collections.EMPTY_LIST, shouldEvaluate, "myModelName"); //$NON-NLS-1$
         CommandContext context = new CommandContext();
-        context.setProcessorID("myProcessorID"); //$NON-NLS-1$
         context.setMetadata(md);
         node.initialize(context, Mockito.mock(BufferManager.class), pdm); 
         return node;
@@ -216,7 +213,6 @@ public class TestBatchedUpdateNode {
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,TeiidComponentException {return null;}
         public TupleSource registerRequest(CommandContext context,Command command,String modelName,RegisterRequestParameter parameterObject) throws TeiidComponentException {
-            assertEquals("myProcessorID", context.getProcessorID()); //$NON-NLS-1$
             assertEquals("myModelName", modelName); //$NON-NLS-1$
             assertEquals(1, parameterObject.nodeID);
             commands.add(command.toString());

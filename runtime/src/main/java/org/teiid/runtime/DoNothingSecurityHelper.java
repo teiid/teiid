@@ -22,23 +22,19 @@
 
 package org.teiid.runtime;
 
-import java.security.Principal;
-
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
+import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 /**
  * A {@link SecurityHelper} that does nothing and always assumes that thread
  * has the proper security context.
  */
-public final class DoNothingSecurityHelper implements SecurityHelper {
-	@Override
-	public boolean sameSubject(String securityDomain, Object context,
-			Subject subject) {
-		return true;
-	}
-
+public class DoNothingSecurityHelper implements SecurityHelper {
+	
 	@Override
 	public Subject getSubjectInContext(String securityDomain) {
 		return new Subject();
@@ -46,12 +42,6 @@ public final class DoNothingSecurityHelper implements SecurityHelper {
 
 	@Override
 	public Object getSecurityContext() {
-		return new Object();
-	}
-
-	@Override
-	public Object createSecurityContext(String securityDomain, Principal p,
-			Object credentials, Subject subject) {
 		return new Object();
 	}
 
@@ -64,9 +54,17 @@ public final class DoNothingSecurityHelper implements SecurityHelper {
 	public Object associateSecurityContext(Object context) {
 		return null;
 	}
-
+	
 	@Override
-	public String getSecurityDomain(Object context) {
-		return null;
+	public Object authenticate(String securityDomain, String baseUserName,
+			Credentials credentials, String applicationName)
+			throws LoginException {
+		return new Object();
 	}
+
+    @Override
+    public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+        return null;
+    }
+    
 }

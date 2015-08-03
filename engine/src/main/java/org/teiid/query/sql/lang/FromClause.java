@@ -24,8 +24,10 @@ package org.teiid.query.sql.lang;
 
 import java.util.Collection;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.Option.MakeDep;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -39,13 +41,14 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class FromClause implements LanguageObject {
 	
-	public static String MAKEIND = "MAKEIND"; //$NON-NLS-1$
+	public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 	
     private boolean optional;
-    private boolean makeDep;
+    private MakeDep makeDep;
     private boolean makeNotDep;
-    private boolean makeInd;
+    private MakeDep makeInd;
     private boolean noUnnest;
+    private boolean preserve;
 
     public boolean isOptional() {
         return optional;
@@ -55,11 +58,11 @@ public abstract class FromClause implements LanguageObject {
         this.optional = optional;
     }
     
-    public boolean isMakeInd() {
+    public MakeDep getMakeInd() {
 		return makeInd;
 	}
     
-    public void setMakeInd(boolean makeInd) {
+    public void setMakeInd(MakeDep makeInd) {
 		this.makeInd = makeInd;
 	}
     
@@ -86,11 +89,21 @@ public abstract class FromClause implements LanguageObject {
 	}
 
     public boolean isMakeDep() {
-        return this.makeDep;
+        return this.makeDep != null;
     }
+    
+    public MakeDep getMakeDep() {
+		return makeDep;
+	}
 
     public void setMakeDep(boolean makeDep) {
-        this.makeDep = makeDep;
+    	if (makeDep) {
+    		if (this.makeDep == null) {
+    			this.makeDep = new MakeDep();
+    		}
+    	} else {
+    		this.makeDep = null;
+    	}
     }
 
     public boolean isMakeNotDep() {
@@ -101,8 +114,20 @@ public abstract class FromClause implements LanguageObject {
         this.makeNotDep = makeNotDep;
     }
     
+    public void setMakeDep(MakeDep makedep) {
+    	this.makeDep = makedep;
+    }
+    
+    public boolean isPreserve() {
+		return preserve;
+	}
+    
+    public void setPreserve(boolean preserve) {
+		this.preserve = preserve;
+	}
+    
     public boolean hasHint() {
-        return optional || makeDep || makeNotDep || makeInd || noUnnest;
+        return optional || makeDep != null || makeNotDep || makeInd != null || noUnnest || preserve;
     }
     
     public boolean equals(Object obj) {
@@ -117,10 +142,11 @@ public abstract class FromClause implements LanguageObject {
         FromClause other = (FromClause)obj;
 
         return other.isOptional() == this.isOptional()
-               && other.isMakeDep() == this.isMakeDep()
+               && EquivalenceUtil.areEqual(this.makeDep, other.makeDep)
                && other.isMakeNotDep() == this.isMakeNotDep()
-        	   && other.isMakeInd() == this.isMakeInd()
-        	   && other.isNoUnnest() == this.isNoUnnest();
+        	   && EquivalenceUtil.areEqual(this.makeInd, other.makeInd)
+        	   && other.isNoUnnest() == this.isNoUnnest()
+			   && other.isNoUnnest() == this.isNoUnnest();
     }
     
     @Override

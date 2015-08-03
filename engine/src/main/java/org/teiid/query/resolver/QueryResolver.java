@@ -68,9 +68,9 @@ import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator;
-import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateType;
+import org.teiid.query.validator.ValidationVisitor;
 
 
 /**
@@ -102,7 +102,7 @@ public class QueryResolver {
     	if (command == null) {
     		return null;
     	}
-    	resolveCommand(command, proc.getGroup(), proc.getType(), metadata.getDesignTimeMetadata());
+    	resolveCommand(command, proc.getGroup(), proc.getType(), metadata.getDesignTimeMetadata(), false);
     	return command;
     }
 
@@ -127,8 +127,9 @@ public class QueryResolver {
 	/**
 	 * Resolve a command in a given type container and type context.
 	 * @param type The {@link Command} type
+	 * @param inferProcedureResultSetColumns if true and the currentCommand is a procedure definition, then resolving will set the getResultSetColumns on the command to what is discoverable in the procedure body.
 	 */
-    public static TempMetadataStore resolveCommand(Command currentCommand, GroupSymbol container, int type, QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
+    public static TempMetadataStore resolveCommand(Command currentCommand, GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns) throws QueryResolverException, TeiidComponentException {
     	ResolverUtil.resolveGroup(container, metadata);
     	switch (type) {
 	    case Command.TYPE_QUERY:
@@ -140,7 +141,7 @@ public class QueryResolver {
     	case Command.TYPE_UPDATE:
     	case Command.TYPE_DELETE:
     	case Command.TYPE_STORED_PROCEDURE:
-    		ProcedureContainerResolver.findChildCommandMetadata(currentCommand, container, type, metadata);
+    		ProcedureContainerResolver.findChildCommandMetadata(currentCommand, container, type, metadata, inferProcedureResultSetColumns);
     	}
     	return resolveCommand(currentCommand, metadata, false);
     }
@@ -172,6 +173,7 @@ public class QueryResolver {
 		    	ResolverVisitor.resolveLanguageObject(elementSymbol, metadata);
 		    	elementSymbol.setIsExternalReference(true);
 		    	if (!positional) {
+		    		symbolMap.put(new ElementSymbol("INPUT" + Symbol.SEPARATOR + name), elementSymbol.clone());
 		    		symbolMap.put(new ElementSymbol(BINDING_GROUP + Symbol.SEPARATOR + name), elementSymbol.clone());
 		    		elementSymbol.setShortName(name);
 		    	}
@@ -425,6 +427,8 @@ public class QueryResolver {
                 }
                 
                 bindings = qnode.getBindings();
+            } else {
+            	result = (Command) result.clone();
             }
             if (bindings != null && !bindings.isEmpty()) {
             	QueryResolver.resolveWithBindingMetadata(result, qmi, qnode, true);
@@ -435,13 +439,18 @@ public class QueryResolver {
             
 	        validateProjectedSymbols(virtualGroup, qmi, result);
             cachedNode = new QueryNode(qnode.getQuery());
-            cachedNode.setCommand((Command)result.clone());
+            cachedNode.setCommand(result);
 	        
 			if(isView(virtualGroup, qmi)) {
 		        String updatePlan = qmi.getUpdatePlan(virtualGroup.getMetadataID());
 				String deletePlan = qmi.getDeletePlan(virtualGroup.getMetadataID());
 				String insertPlan = qmi.getInsertPlan(virtualGroup.getMetadataID());
-
+				//the elements must be against the view and not the alias
+				if (virtualGroup.getDefinition() != null) {
+					GroupSymbol group = new GroupSymbol(virtualGroup.getNonCorrelationName());
+					group.setMetadataID(virtualGroup.getMetadataID());
+					virtualGroup = group;
+				}
 	            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
 	    		UpdateValidator validator = new UpdateValidator(qmi, determineType(insertPlan), determineType(updatePlan), determineType(deletePlan));
 				validator.validate(result, elements);

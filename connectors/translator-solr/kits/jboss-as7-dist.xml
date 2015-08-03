@@ -1,0 +1,44 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+ <id>jboss-as7-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+    <fileSet>
+        <directory>kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+     <dependencySet>
+         <outputDirectory>${jbossas-module-root}/org/apache/solr/main</outputDirectory>
+         <includes>
+             <include>org.apache.solr:solr-solrj</include>
+             <include>org.noggit:noggit</include>
+         </includes>
+         <useProjectArtifact>false</useProjectArtifact>
+         <unpack>false</unpack>
+         <useTransitiveDependencies>true</useTransitiveDependencies>
+     </dependencySet>
+     <dependencySet>
+         <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/solr/main</outputDirectory>
+         <useTransitiveDependencies>false</useTransitiveDependencies>
+         <includes>
+             <include>org.jboss.teiid.connectors:translator-solr</include>
+         </includes>
+     </dependencySet>
+  </dependencySets>
+  
+</assembly>

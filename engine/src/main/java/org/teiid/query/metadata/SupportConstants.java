@@ -42,6 +42,7 @@ public class SupportConstants {
 		public static final int SELECT = 0;
 		public static final int SEARCHABLE_LIKE = 1;
 		public static final int SEARCHABLE_COMPARE = 2;
+		public static final int SEARCHABLE_EQUALITY = 3;
 		public static final int NULL = 4;
 		public static final int UPDATE = 5;
         public static final int DEFAULT_VALUE = 7;

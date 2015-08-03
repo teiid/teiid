@@ -49,13 +49,35 @@ public class ConnectorManagerRepository implements Serializable{
 		}
 	}
 	
+	/**
+	 * Provides {@link ExecutionFactory}s to the {@link ConnectorManagerRepository}
+	 */
 	public interface ExecutionFactoryProvider {
+		/**
+		 * 
+		 * @param name
+		 * @return the named {@link ExecutionFactory} or throw a {@link ConnectorManagerException} if it does not exist
+		 * @throws ConnectorManagerException
+		 */
 		ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException;
 	}
 	
 	private static final long serialVersionUID = -1611063218178314458L;
 	
 	private Map<String, ConnectorManager> repo = new ConcurrentHashMap<String, ConnectorManager>();
+	private boolean shared;
+	private ExecutionFactoryProvider provider;
+	
+	public ConnectorManagerRepository() {
+	}
+	
+	protected ConnectorManagerRepository(boolean b) {
+		this.shared = b;
+	}
+
+	public boolean isShared() {
+		return shared;
+	}
 	
 	public void addConnectorManager(String connectorName, ConnectorManager mgr) {
 		this.repo.put(connectorName, mgr);
@@ -83,26 +105,51 @@ public class ConnectorManagerRepository implements Serializable{
 				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31102, model.getName(), deployment.getName(), deployment.getVersion()));
 			}
 			for (SourceMappingMetadata source : model.getSourceMappings()) {
-				ConnectorManager cm = getConnectorManager(source.getName());
-				String name = source.getTranslatorName();
-				String connection = source.getConnectionJndiName();
-				if (cm != null) {
-					if (!cm.getTranslatorName().equals(name)
-							|| !EquivalenceUtil.areEqual(cm.getConnectionName(), connection)) {
-						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31103, source, deployment.getName(), deployment.getVersion()));
-					}
-					continue;
-				}
-				cm = createConnectorManager(name, connection);
-				ExecutionFactory<Object, Object> ef = provider.getExecutionFactory(name);
-				cm.setExecutionFactory(ef);
-				addConnectorManager(source.getName(), cm);
+				createConnectorManager(deployment, provider, source, false);
 			}
 		}
 	}
 
+	public void createConnectorManager(
+			VDBMetaData deployment, ExecutionFactoryProvider provider,
+			SourceMappingMetadata source, boolean replace) throws ConnectorManagerException {
+		ConnectorManager cm = getConnectorManager(source.getName());
+		String name = source.getTranslatorName();
+		String connection = source.getConnectionJndiName();
+		ExecutionFactory<Object, Object> ef = null;
+		if (cm != null) {
+			if (!cm.getTranslatorName().equals(name)
+					|| !EquivalenceUtil.areEqual(cm.getConnectionName(), connection)) {
+				if (!replace) {
+					throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31103, source, deployment.getName(), deployment.getVersion()));
+				}
+				if (cm.getTranslatorName().equals(name)) {
+					ef = cm.getExecutionFactory();
+				}
+			} else {
+				return;
+			}
+		}
+		if (ef == null) {
+			ef = provider.getExecutionFactory(name);
+			if (ef == null) {
+				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), name));
+			}
+		}
+		cm = createConnectorManager(name, connection, ef);
+		addConnectorManager(source.getName(), cm);
+	}
+
 	protected ConnectorManager createConnectorManager(String name,
-			String connection) {
-		return new ConnectorManager(name, connection);
+			String connection, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {
+		return new ConnectorManager(name, connection, ef);
+	}
+	
+	public void setProvider(ExecutionFactoryProvider provider) {
+		this.provider = provider;
+	}
+	
+	public ExecutionFactoryProvider getProvider() {
+		return provider;
 	}
 }

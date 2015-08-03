@@ -40,7 +40,6 @@ public interface DDLConstants {
 	public static final String SIGNED = "SIGNED";//$NON-NLS-1$
 	public static final String SELECTABLE = "SELECTABLE";//$NON-NLS-1$
 	public static final String CASE_SENSITIVE = "CASE_SENSITIVE";//$NON-NLS-1$
-	public static final String AUTO_INCREMENT = "AUTO_INCREMENT";//$NON-NLS-1$
 	public static final String NOT_NULL = "NOT NULL";//$NON-NLS-1$
 	public static final String FOREIGN_KEY = "FOREIGN KEY";//$NON-NLS-1$
 	public static final String PRIMARY_KEY = "PRIMARY KEY";//$NON-NLS-1$

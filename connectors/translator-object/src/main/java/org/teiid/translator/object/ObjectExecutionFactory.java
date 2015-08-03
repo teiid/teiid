@@ -23,18 +23,16 @@
 package org.teiid.translator.object;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.language.Delete;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
+import org.teiid.translator.*;
+import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
 
 /**
@@ -49,7 +47,8 @@ public class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
 	public static final int MAX_SET_SIZE = 10000;
-
+	private SearchType searchType=new SearchByKey();
+	
 	public ObjectExecutionFactory() {
 		setSourceRequiredForMetadata(false);
 		setMaxInCriteriaSize(MAX_SET_SIZE);
@@ -66,29 +65,16 @@ public class ObjectExecutionFactory extends
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			ObjectConnection connection) throws TranslatorException {
-		return new ObjectExecution((Select) command, metadata, this, connection);
+		return new ObjectExecution((Select) command, metadata, this, connection, executionContext);
 	}
 
 	@Override
-	public boolean supportsInnerJoins() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOuterJoins() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsFullOuterJoins() {
-		return false;
-	}
-
-	public boolean supportsCompareCriteriaEquals() {
+    public boolean supportsCompareCriteriaEquals() {
 		return true;
 	}
 
-	public boolean supportsInCriteria() {
+	@Override
+    public boolean supportsInCriteria() {
 		return true;
 	}
 
@@ -96,9 +82,48 @@ public class ObjectExecutionFactory extends
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
-
-	public List<Object> search(Select query, Map<?, ?> map, Class<?> type) throws TranslatorException {
-		return SearchByKey.get(query.getWhere(), map, type);
+	
+	public void setSearchType(SearchType type) {
+		this.searchType = type;
 	}
+	
+	public SearchType getSearchType() {
+		return this.searchType;
+	}
+	
+	@Override
+    public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
+	    return new JavaBeanMetadataProcessor();
+	}
+	
+	public List<Object> search(Select command, String cacheName, ObjectConnection connection, ExecutionContext executionContext)
+			throws TranslatorException {
+		return searchType.performSearch(command, cacheName, connection);
+	}
+	
+	public List<Object> search(Delete command, String cacheName, ObjectConnection connection, ExecutionContext executionContext)
+				throws TranslatorException {   
+		return searchType.performSearch(command, cacheName, connection);
+	}
+	
+	public List<Object> search(Update command, String cacheName, ObjectConnection connection, ExecutionContext executionContext)
+			throws TranslatorException {   
+		return searchType.performSearch(command, cacheName, connection);
+	}	
+	
+	/**
+	 * The searchByKey is used by update operations that need to obtain a specific object, but don't need
+	 * to create a Select command in order to find a single object.
+	 * @param cacheName
+	 * @param columnName
+	 * @param value
+	 * @param connection
+	 * @param executionContext
+	 * @return Object
+	 * @throws TranslatorException
+	 */
+	public Object performKeySearch(String cacheName, String columnName, Object value, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
+		return searchType.performKeySearch(cacheName, columnName, value, connection);
+	}		
 
 }

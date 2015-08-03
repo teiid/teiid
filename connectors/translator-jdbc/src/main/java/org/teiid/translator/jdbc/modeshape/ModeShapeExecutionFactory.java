@@ -22,8 +22,10 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -31,21 +33,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.Comparison;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Literal;
-import org.teiid.language.Not;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 /** 
  * Translator class for accessing the ModeShape JCR repository.  
  */
@@ -60,7 +55,6 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	private static final String JCR_ISCHILDNODE = "JCR_ISCHILDNODE";//$NON-NLS-1$
 	
 	public ModeShapeExecutionFactory() {
-		setDatabaseVersion("2.0"); //$NON-NLS-1$
 		setUseBindVariables(false);
 	}
 	
@@ -68,8 +62,8 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public void start() throws TranslatorException {
         super.start();
         
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UpperCase")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("LowerCase")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("LOWER")); //$NON-NLS-1$
         
 		registerFunctionModifier(JCR_ISCHILDNODE, new IdentifierFunctionModifier()); 
 		registerFunctionModifier(JCR_ISDESCENDANTNODE, new IdentifierFunctionModifier()); 
@@ -252,5 +246,26 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSetQueryOrderBy() {
     	return false;
     }
-        
+	
+	@Override
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
+    }    
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new ModeShapeJDBCMetdataProcessor();
+    }	
+    
+    /**
+     * TEIID-3102 - ModeShape requires the use of JOIN, and not ',' when joining tables.
+     * {@inheritDoc}
+     *
+     * @see org.teiid.translator.ExecutionFactory#useAnsiJoin()
+     */
+	@Override
+	public boolean useAnsiJoin() {
+		return true;
+	}
 }

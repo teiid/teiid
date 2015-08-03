@@ -32,6 +32,7 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.Argument;
 import org.teiid.language.BatchedUpdates;
@@ -100,6 +101,7 @@ public class ExecutionFactory<F, C> {
 	private boolean immutable;
 	private boolean sourceRequired = true;
 	private Boolean sourceRequiredForMetadata;
+	private boolean threadBound;
 	
 	/*
 	 * Support properties
@@ -117,6 +119,7 @@ public class ExecutionFactory<F, C> {
 	private boolean supportsNativeQueries;
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
+	private String collationLocale;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -159,7 +162,8 @@ public class ExecutionFactory<F, C> {
 	 * @return a connection
 	 * @throws TranslatorException
 	 */
-	@SuppressWarnings("unchecked")
+	@Deprecated
+    @SuppressWarnings("unchecked")
 	public C getConnection(F factory) throws TranslatorException {
 		if (factory == null) {
 			return null;
@@ -171,7 +175,7 @@ public class ExecutionFactory<F, C> {
 				 throw new TranslatorException(DataPlugin.Event.TEIID60000, e);
 			}
 		}
-		throw new AssertionError("A connection factory was supplied, but no implementation was provided getConnection"); //$NON-NLS-1$
+		throw new AssertionError(factory.getClass().getName() + " is was not a ConnectionFactory implementation"); //$NON-NLS-1$
 	}
 	
 	/**
@@ -228,7 +232,7 @@ public class ExecutionFactory<F, C> {
 	
 	/**
      * Flag that indicates if a underlying source connection required for this execution factory to return metadata 
-     * @return {@link Boolean#TRUE} if required, null if possibly required, or {@link Boolean#FALSE} if not required
+     * @return true if required
      */
 	public boolean isSourceRequiredForMetadata() {
 		if (sourceRequiredForMetadata == null) {
@@ -237,6 +241,24 @@ public class ExecutionFactory<F, C> {
 		}
 		//TODO we could also consider making this an annotation of the getMetadata call
 		return sourceRequiredForMetadata;
+	}
+	
+	/**
+	 * If true, the {@link #initCapabilities(Object)} method will be consulted prior
+	 * to determining the capabilities
+	 * @return
+	 */
+	public boolean isSourceRequiredForCapabilities() {
+		return false;
+	}
+	
+	/**
+	 * Invoked if {@link #isSourceRequiredForCapabilities()} returns true
+	 * @param connection
+	 * @throws TranslatorException
+	 */
+	public void initCapabilities(C connection) throws TranslatorException {
+		
 	}
 	
 	public void setSourceRequiredForMetadata(boolean sourceRequiredForMetadata) {
@@ -277,7 +299,7 @@ public class ExecutionFactory<F, C> {
 			//to explicitly set this proc as direct.
 			//the other approach would be to addd a native system stored procedure, but that would require
 			//special security semantics, whereas this proc can be secured on a schema basis
-			if (supportsNativeQueries() && obj.getMetadataObject().getName().equals(getNativeQueryProcedureName())) {
+			if (supportsDirectQueryProcedure() && obj.getMetadataObject().getName().equals(getDirectQueryProcedureName())) {
 				List<Argument> arguments = obj.getArguments();
 	    		return createDirectExecution(arguments, command, executionContext, metadata, connection);
 			}
@@ -310,6 +332,14 @@ public class ExecutionFactory<F, C> {
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createDirectExecution")); //$NON-NLS-1$
 	}	
+	
+	/**
+	 * Get a MetadataProcessor for the translator to read the metadata.  Typically this will return a new instance.
+	 * @return
+	 */
+	public MetadataProcessor<C> getMetadataProcessor() {
+	    return null;
+	}
 	
     /** 
      * Support indicates connector can accept queries with SELECT DISTINCT
@@ -432,6 +462,13 @@ public class ExecutionFactory<F, C> {
     public boolean supportsCompareCriteriaOrdered() {
     	return false;
     }
+    
+    /** 
+     * Support indicates connector accepts criteria of form (element &lt;|&gt; constant)
+     */
+    public boolean supportsCompareCriteriaOrderedExclusive() {
+    	return supportsCompareCriteriaOrdered();
+    }
 
     /** 
      * Support indicates connector accepts criteria of form (element LIKE constant) 
@@ -529,6 +566,18 @@ public class ExecutionFactory<F, C> {
 		this.supportsOrderBy = supportsOrderBy;
 	}
     
+    /** 
+     * Indicates the collation used for sorting
+     */
+    @TranslatorProperty(display="Collation Locale", description="The collation locale used by default for sorting.", advanced=true)
+    public String getCollationLocale() {
+		return collationLocale;
+	}
+    
+    public void setCollationLocale(String collation) {
+		this.collationLocale = collation;
+	}
+    
     /**
      * Support indicates connector accepts ORDER BY clause with columns not from the select    
      * @since 6.2
@@ -548,7 +597,7 @@ public class ExecutionFactory<F, C> {
     }
     
 	/**
-	 * Returns whether the database supports explicit join ordering.
+	 * Returns whether the database supports explicit null ordering.
 	 * @since 7.1
 	 * @return true if nulls first/last can be specified
 	 */
@@ -643,6 +692,14 @@ public class ExecutionFactory<F, C> {
     public boolean supportsAggregatesEnhancedNumeric() {
     	return false;
     }
+    
+    /**
+     * @return true if string_agg is supported
+     * @since 8.4
+     */
+    public boolean supportsStringAgg() {
+    	return false;
+    }
 
     /** 
      * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and
@@ -709,6 +766,7 @@ public class ExecutionFactory<F, C> {
      * not all system functions are listed as some functions will use a common name
      * such as CONCAT vs. the || operator, and other functions will be rewritten and
      * not pushed down, such as SPACE.
+     * <br><b>Note:</b> User defined functions should be specified fully qualified. 
      * @since 3.1 SP3    
      */        
     public List<String> getSupportedFunctions() {
@@ -878,7 +936,11 @@ public class ExecutionFactory<F, C> {
      * @see #isSourceRequiredForMetadata()
      */
     public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {
-    	
+    	MetadataProcessor mp = getMetadataProcessor();
+    	if (mp != null) {
+    	    PropertiesUtils.setBeanProperties(mp, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+    	    mp.process(metadataFactory, conn);
+    	}
     }
     
     /**
@@ -896,6 +958,22 @@ public class ExecutionFactory<F, C> {
      */
     public boolean supportsCommonTableExpressions() {
     	return false;
+    }
+    
+    /**
+     * @return true if a recursive WITH clause item is supported
+     * @since 8.9
+     */
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return false;
+    }
+    
+    /**
+     * @return true if the WITH clause can appear in subqueries
+     * @since 8.12
+     */
+    public boolean supportsSubqueryCommonTableExpressions() {
+    	return supportsCommonTableExpressions();
     }
     
     /**
@@ -986,14 +1064,24 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
-	 * @return true if dependent join pushdown is supported
+ 	 * NOTE: The pushed independent tuples will not have been
+	 * converted to a unique set and may contain duplicates.
+	 * @return true if dependent join key pushdown is supported
 	 * @since 8.0
 	 */
 	public boolean supportsDependentJoins() {
 		return false;
 	}
 	
-		
+	/**
+	 * @return true if full dependent join pushdown is supported
+	 * @since 8.5
+	 * @return
+	 */
+	public boolean supportsFullDependentJoins() {
+		return false;
+	}
+	
 	public enum Format {
 		NUMBER,
 		DATE
@@ -1048,6 +1136,14 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
+	 * @return True, if this translator's executions must complete in a single thread.
+	 */
+	@TranslatorProperty(display="Thread Bound", description="True, if this translator's executions must complete in a single thread.", advanced=true)
+	public boolean isThreadBound() {
+		return threadBound;
+	}
+	
+	/**
 	 * The engine currently uses array types for dependent joins.
 	 * @return true if an array type is supported.
 	 */
@@ -1056,29 +1152,145 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
-	 * True, if this translator supports execution of source specific commands unaltered through 'native' procedure.
+	 * True, if this translator supports execution of source specific commands unaltered through a direct procedure.
+ 	 * @deprecated
+	 * @see #supportsDirectQueryProcedure()
 	 * @return
 	 */
-	@TranslatorProperty(display="Supports Native Queries", description="True, if this translator supports execution of source specific commands unaltered through a 'native' procedure", advanced=true)
-	public boolean supportsNativeQueries() {
+	@Deprecated
+    @TranslatorProperty(display="Deprecated Property:Supports Direct Query Procedure", description="Deprecated Property, Use Supports Direct Query Procedure instead", advanced=true)
+	final public boolean supportsNativeQueries() {
 		return this.supportsNativeQueries;
 	}
 	
-	public void setSupportsNativeQueries(boolean state) {
+	/**
+	 * @deprecated
+	 * @see #setSupportsDirectQueryProcedure(boolean)
+	 */
+	@Deprecated
+    final public void setSupportsNativeQueries(boolean state) {
 		this.supportsNativeQueries = state;
 	}
 	
 	/**
-	 * Defines the name of the procedure that need to be treated as "native" query processing procedure. This metadata or signature
+	 * True, if this translator supports execution of source specific commands unaltered through a direct procedure.
+	 * @return
+	 */
+	@TranslatorProperty(display="Supports Direct Query Procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
+	public boolean supportsDirectQueryProcedure() {
+		return this.supportsNativeQueries;
+	}
+	
+	public void setSupportsDirectQueryProcedure(boolean state) {
+		this.supportsNativeQueries = state;
+	}
+	
+	/**
+	 * Defines the name of the direct processing procedure. This metadata or signature
+	 * of the procedure is defined automatically.
+	 * @deprecated
+	 * @see #getDirectQueryProcedureName()
+	 * @return
+	 */
+	@Deprecated
+    @TranslatorProperty(display="Deprecated Property:Direct Query Procedure Name", description="Deprecated Property, use Direct Query Procedure Name", advanced=true)
+	final public String getNativeQueryProcedureName() {
+		return this.nativeProcedureName;
+	}
+
+	/**
+	 * @deprecated
+	 * @see #setDirectQueryProcedureName(String)
+	 */
+	@Deprecated
+    final public void setNativeQueryProcedureName(String name) {
+		this.nativeProcedureName = name;
+	}
+	
+	/**
+	 * Defines the name of the direct processing procedure. This metadata or signature
 	 * of the procedure is defined automatically.
 	 * @return
 	 */
-	@TranslatorProperty(display="Name of the native query", description="The name of the direct query procedure", advanced=true)
-	public String getNativeQueryProcedureName() {
+	@TranslatorProperty(display="Direct Query Procedure Name", description="The name of the direct query procedure", advanced=true)
+	public String getDirectQueryProcedureName() {
 		return this.nativeProcedureName;
 	}
 	
-	public void setNativeQueryProcedureName(String name) {
+	public void setDirectQueryProcedureName(String name) {
 		this.nativeProcedureName = name;
-	}	
+	}
+	
+	/**
+	 * @return true if only correlated subqueries are supported.
+	 */
+	public boolean supportsOnlyCorrelatedSubqueries() {
+		return false;
+	}
+	
+	/**
+	 * @return true if the translator support SELECT without a FROM clause
+	 */
+	public boolean supportsSelectWithoutFrom() {
+		return false;
+	}
+
+	/**
+	 * @return true if the translator support GROUP BY ROLLUP
+	 */
+	public boolean supportsGroupByRollup() {
+		return false;
+	}
+	
+	/**
+	 * @return true if order by is supported over a grouping with a rollup, cube, etc.
+	 */
+	public boolean supportsOrderByWithExtendedGrouping() {
+		return supportsOrderBy();
+	}
+	
+	public void setThreadBound(boolean threadBound) {
+		this.threadBound = threadBound;
+	}
+	
+	/**
+	 * True if the only a single value is returned for the update count.
+	 * This overrides the default expectation of a update count array
+	 * for bulk/batch commands.  It is expected that every command
+	 * is successful.
+	 * @return
+	 */
+	public boolean returnsSingleUpdateCount() {
+		return false;
+	}
+	
+	/**
+	 * Return true if the source has columns marked with the teiid_rel:partial that
+	 * can return more rows than specified by a filter if the column is also projected.
+	 * This most closely matches the semantics of ldap queries with multi-valued 
+	 * attributes marked as partial.
+	 * <br>When true, the following supports cannot also be true:
+	 * <ul>
+	 *   <li>supportsOuterJoins()
+	 *   <li>supportsFullOuterJoins()
+	 *   <li>supportsInlineViews()
+	 *   <li>supportsIntersect()
+	 *   <li>supportsExcept()
+	 *   <li>supportsSelectExpression()
+	 *   <li>supportsUnions()
+	 *   <li>supportsSelectDistinct()
+	 *   <li>supportsGroupBy()
+	 * </ul>
+	 * @return
+	 */
+	public boolean supportsPartialFiltering() {
+		return false;
+	}
+	
+	/**
+	 * If dependent join predicates should use literals that are marked as bind eligible.
+	 */
+	public boolean useBindingsForDependentJoin() {
+		return true;
+	}
 }

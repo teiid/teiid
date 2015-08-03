@@ -21,10 +21,24 @@
  */
 package org.teiid.translator.jdbc;
 
-import org.junit.Test;
 import static org.junit.Assert.*;
-import java.util.Calendar;
 
+import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Struct;
+import java.util.Calendar;
+import java.util.TimeZone;
+
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.JDBCExecutionFactory.StructRetrieval;
+
+@SuppressWarnings("nls")
 public class TestJDBCExecutionFactory {
 
 	@Test public void testDatabaseCalender() throws Exception {
@@ -51,5 +65,45 @@ public class TestJDBCExecutionFactory {
 		t2.join();
 		
 		assertNotSame(cals[0], cals[1]);
+	}
+	
+	@Test public void testVersion() {
+		JDBCExecutionFactory jef = new JDBCExecutionFactory();
+		jef.setDatabaseVersion("Some db 1.2.3 (some build)");
+		assertEquals("1.2.3", jef.getDatabaseVersion().toString());
+		assertEquals(new Version(new Integer[] {1, 2, 3}), jef.getVersion());
+		
+		Version version = Version.getVersion("10.0");
+		assertTrue(version.compareTo(Version.getVersion("9.1")) > 0);
+		assertTrue(version.compareTo(Version.getVersion("10.0.1")) < 0);
+	}
+	
+	@Test public void testStructRetrival() throws SQLException {
+		JDBCExecutionFactory jef = new JDBCExecutionFactory();
+		jef.setStructRetrieval(StructRetrieval.ARRAY);
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Struct s = Mockito.mock(Struct.class);
+		Mockito.stub(rs.getObject(1)).toReturn(s);
+		assertTrue(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.OBJECT) instanceof Array);
+	}
+	
+	@Test public void testBooleanRetrival() throws SQLException {
+		JDBCExecutionFactory jef = new JDBCExecutionFactory();
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Mockito.stub(rs.getBoolean(1)).toReturn(false);
+		Mockito.stub(rs.wasNull()).toReturn(true);
+		assertNull(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.BOOLEAN));
+	}
+	
+	@Test public void testLiteralWithDatabaseTimezone() throws TranslatorException {
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
+		try {
+			JDBCExecutionFactory jef = new JDBCExecutionFactory();
+			jef.setDatabaseTimeZone("GMT+1");
+			jef.start();
+			assertEquals("2015-02-03 05:00:00.0", jef.formatDateValue(TimestampUtil.createTimestamp(115, 1, 3, 4, 0, 0, 0)));
+		} finally {
+			TimestampWithTimezone.resetCalendar(null);
+		}
 	}
 }

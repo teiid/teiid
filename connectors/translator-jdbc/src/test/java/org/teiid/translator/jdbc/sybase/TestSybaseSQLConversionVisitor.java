@@ -29,9 +29,11 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
 /**
  */
@@ -43,6 +45,7 @@ public class TestSybaseSQLConversionVisitor {
     @BeforeClass
     public static void setup() throws TranslatorException {
     	trans.setUseBindVariables(false);
+    	trans.setDatabaseVersion(Version.DEFAULT_VERSION);
         trans.start();
     }
 
@@ -86,7 +89,17 @@ public class TestSybaseSQLConversionVisitor {
         helpTestVisitor(getTestVDB(),
             input, 
             output);
-    }    
+    }   
+    
+    @Test
+    public void testProjectedCriteria() {
+        String input = "SELECT part_name like '%b' FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN PARTS.PART_NAME LIKE '%b' THEN 1 WHEN NOT (PARTS.PART_NAME LIKE '%b') THEN 0 END FROM PARTS"; //$NON-NLS-1$
+        
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }   
 
     @Test
     public void testLcaseFunction() {
@@ -267,6 +280,21 @@ public class TestSybaseSQLConversionVisitor {
     	assertFalse(sybaseExecutionFactory.supportsRowLimit());
     	sybaseExecutionFactory.setDatabaseVersion("15.1");
     	assertTrue(sybaseExecutionFactory.supportsRowLimit());
+    }
+    
+    @Test public void testFormatSupport() {
+    	assertTrue(trans.supportsFormatLiteral("MM/dd/yy", Format.DATE));
+    	assertFalse(trans.supportsFormatLiteral("MMM/yyy", Format.DATE));
+    	
+        helpTestVisitor(getBQTVDB(),
+                "SELECT formattimestamp(timestampvalue, 'yy.MM.dd') from bqt1.smalla", //$NON-NLS-1$
+                "SELECT CONVERT(VARCHAR, SmallA.TimestampValue, 2) FROM SmallA"); //$NON-NLS-1$
+    }
+    
+    @Test public void testGroupBySelect() {
+        helpTestVisitor(getBQTVDB(),
+                "SELECT 1 from bqt1.smalla group by intkey", //$NON-NLS-1$
+                "SELECT SmallA.IntKey FROM SmallA GROUP BY SmallA.IntKey"); //$NON-NLS-1$
     }
     
 }

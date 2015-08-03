@@ -34,17 +34,22 @@ import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.BlockedException;
@@ -67,14 +72,7 @@ import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestTextTable;
-import org.teiid.query.processor.relational.BlockingFakeRelationalNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
-import org.teiid.query.processor.relational.FakeRelationalNode;
-import org.teiid.query.processor.relational.JoinNode;
-import org.teiid.query.processor.relational.JoinStrategy;
-import org.teiid.query.processor.relational.MergeJoinStrategy;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.SortNode;
+import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.Command;
@@ -85,10 +83,14 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
+@FixMethodOrder(MethodSorters.JVM)
 @SuppressWarnings("nls")
 public class TestEnginePerformance {
 	
+	private static boolean debug = false;
+	
 	private static BufferManagerImpl bm;
+	private static BufferFrontedFileStoreCache cache;
 	private static ExecutorService es;
 	private static Random r = new Random(0);
 	
@@ -145,9 +147,9 @@ public class TestEnginePerformance {
 				
 			});
 		}
-		es.invokeAll(tasks);
-		for (Callable<Void> callable : tasks) {
-			callable.call();
+		List<Future<Void>> result = es.invokeAll(tasks);
+		for (Future<Void> future : result) {
+			future.get();
 		}
 	}
 	
@@ -197,7 +199,7 @@ public class TestEnginePerformance {
 		for (int i = 0; i < rowCount; i++) {
 			data[i] = Arrays.asList(i, String.valueOf(i));
 		}
-		//Collections.shuffle(Arrays.asList(data), r);
+		Collections.shuffle(Arrays.asList(data), r);
 		return data;
 	}
 	
@@ -266,11 +268,11 @@ public class TestEnginePerformance {
 		bm = new BufferManagerImpl();
 
 		bm.setMaxProcessingKB(1<<12);
-		bm.setMaxReserveKB((1<<19)-(1<<17));
+		bm.setMaxReserveKB((1<<18)-(1<<16));
 		bm.setMaxActivePlans(20);
 		
-		BufferFrontedFileStoreCache cache = new BufferFrontedFileStoreCache();
-		cache.setMemoryBufferSpace(1<<27);
+		cache = new BufferFrontedFileStoreCache();
+		cache.setMemoryBufferSpace(1<<26);
 		FileStorageManager fsm = new FileStorageManager();
 		fsm.setStorageDirectory(UnitTestUtil.getTestScratchPath() + "/data");
 		cache.setStorageManager(fsm);
@@ -279,6 +281,12 @@ public class TestEnginePerformance {
 		bm.initialize();
 		
 		es = Executors.newCachedThreadPool();
+	}
+	
+	@After public void tearDown() throws Exception {
+		if (debug) {
+			showStats();
+		}
 	}
 	
 	private void helpTestXMLTable(int iterations, int threadCount, String file, int expectedRowCount) throws QueryParserException,
@@ -346,6 +354,10 @@ public class TestEnginePerformance {
 		helpTestEquiJoin(bm, 100, 100, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 100);
 	}
 	
+	@Test public void runOuterMergeJoin_1_1000_1000() throws Exception {
+		helpTestEquiJoin(bm, 1000, 1000, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_FULL_OUTER, 1000);
+	}
+	
 	@Test public void runInnerMergeJoin_4_4000_4000() throws Exception {
 		helpTestEquiJoin(bm, 4000, 4000, 500, 4, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 4000);
 	}
@@ -385,6 +397,17 @@ public class TestEnginePerformance {
 		final List<List<?>> batch = new ArrayList<List<?>>();
 		for (int i = 0; i < size; i++) {
 			batch.add(Arrays.asList(String.valueOf(i)));
+		}
+		helpTestBatchSerialization(types, batch, 50000, 2);
+	}
+	
+	@Test public void runBatchSerialization_StringRepeated() throws Exception {
+		String[] types = new String[] {DataTypeManager.DefaultDataTypes.STRING};
+		int size = 1024;
+		
+		final List<List<?>> batch = new ArrayList<List<?>>();
+		for (int i = 0; i < size; i++) {
+			batch.add(Arrays.asList("aaaaaaaa"));
 		}
 		helpTestBatchSerialization(types, batch, 50000, 2);
 	}
@@ -454,6 +477,102 @@ public class TestEnginePerformance {
 		});
 	}
 	
+	private void helpTestLargeSort(int iterations, int threads, final int rows) throws InterruptedException, Exception {
+		final List<ElementSymbol> elems = new ArrayList<ElementSymbol>();
+		final int cols = 50;
+		for (int i = 0; i < cols; i++) {
+			ElementSymbol elem1 = new ElementSymbol("e" + i);
+			elem1.setType(DataTypeManager.DefaultDataClasses.STRING);
+			elems.add(elem1);
+		}
+		
+		final List<ElementSymbol> sortElements = Arrays.asList(elems.get(0));
+		
+		final Task task = new Task() {
+			@Override
+			public Void call() throws Exception {
+				CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
+				SortNode sortNode = new SortNode(1);
+		    	sortNode.setSortElements(new OrderBy(sortElements).getOrderByItems());
+		        sortNode.setMode(Mode.SORT);
+				sortNode.setElements(elems);
+				RelationalNode rn = new RelationalNode(2) {
+					int blockingPeriod = 3;
+					int count = 0;
+					int batches = 0;
+					
+					@Override
+					protected TupleBatch nextBatchDirect() throws BlockedException,
+							TeiidComponentException, TeiidProcessingException {
+						if (count++%blockingPeriod==0) {
+							throw BlockedException.INSTANCE;
+						}
+						int batchSize = this.getBatchSize();
+						int batchRows = batchSize;
+						boolean done = false;
+						int start = batches++ * batchSize;
+						if (start + batchSize >= rows) {
+							done = true;
+							batchRows = rows - start;  
+						}
+						ArrayList<List<?>> batch = new ArrayList<List<?>>(batchRows);
+						for (int i = 0; i < batchRows; i++) {
+							ArrayList<Object> row = new ArrayList<Object>();
+							for (int j = 0; j < cols; j++) {
+								if (j == 0) {
+									row.add(String.valueOf((i * 279470273) % 4294967291l));
+								} else {
+									row.add(i + "abcdefghijklmnop" + j);	
+								}
+							}
+							batch.add(row);
+						}
+						TupleBatch result = new TupleBatch(start+1, batch);
+						if (done) {
+							result.setTerminationFlag(true);
+						}
+						return result;
+					}
+					
+					@Override
+					public Object clone() {
+						return null;
+					}
+				};
+				rn.setElements(elems);
+		        sortNode.addChild(rn);        
+				sortNode.initialize(context, bm, null);    
+		        rn.initialize(context, bm, null);
+		        process(sortNode, rows);
+				return null;
+			}
+		};
+		runTask(iterations, threads, task);
+	}
+	
+	@Test public void runWideSort_1_100000() throws Exception {
+		helpTestLargeSort(4, 1, 100000);
+	}
+	
+	//tests a sort where the desired space is above 2 GB
+	@Test public void runWideSort_1_500000() throws Exception {
+		helpTestLargeSort(1, 1, 500000);
+	}
+	
+	@Test public void runWideSort_4_100000() throws Exception {
+		helpTestLargeSort(2, 4, 100000);
+	}
+
+	private static void showStats() {
+		System.out.println(bm.getBatchesAdded());
+		System.out.println(bm.getReferenceHits());
+		System.out.println(bm.getReadAttempts());
+		System.out.println(bm.getReadCount());
+		System.out.println(bm.getWriteCount());
+		System.out.println(cache.getStorageReads());
+		System.out.println(cache.getStorageWrites());
+	}
+
 	/**
 	 * Generates a 5 MB document
 	 */

@@ -35,7 +35,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.util.AccessibleByteArrayOutputStream;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.util.MultiArrayOutputStream;
 
 
 
@@ -59,7 +60,7 @@ public abstract class Streamable<T> implements Externalizable {
     public static final int STREAMING_BATCH_SIZE_IN_BYTES = 102400; // 100K
 
     private String referenceStreamId = String.valueOf(counter.getAndIncrement());
-    protected transient T reference;
+    protected transient volatile T reference;
 	protected long length = -1;
     
     public Streamable() {
@@ -86,6 +87,9 @@ public abstract class Streamable<T> implements Externalizable {
     
     public long length() throws SQLException {
     	if (length == -1) {
+    		if (InputStreamFactory.getStorageMode(this.reference) == StorageMode.FREE) {
+    			throw new SQLException("Already freed or streaming"); //$NON-NLS-1$ 
+    		}
     		length = computeLength();
     	}
     	return length;
@@ -110,7 +114,7 @@ public abstract class Streamable<T> implements Externalizable {
     @Override
     public String toString() {
     	if (reference == null) {
-    		return super.toString();
+    		return getClass().getName() + " " + this.referenceStreamId; //$NON-NLS-1$
     	}
         return reference.toString();
     }
@@ -136,10 +140,17 @@ public abstract class Streamable<T> implements Externalizable {
 		}
     	out.writeLong(length);
     	boolean writeBuffer = false;
-    	AccessibleByteArrayOutputStream baos = null;
+    	MultiArrayOutputStream baos = null;
     	if (referenceStreamId == null) {
     		//TODO: detect when this buffering is not necessary
-    		baos = new AccessibleByteArrayOutputStream();
+    		if (length > Integer.MAX_VALUE) {
+    			throw new AssertionError("Should not inline a lob of length " + length); //$NON-NLS-1$
+    		}
+    		if (length > 0) {
+    			baos = new MultiArrayOutputStream((int)length);
+    		} else {
+    			baos = new MultiArrayOutputStream(256);
+    		}
     		DataOutputStream dataOutput = new DataOutputStream(baos);
     		try {
     			writeReference(dataOutput);
@@ -152,8 +163,12 @@ public abstract class Streamable<T> implements Externalizable {
     	}
     	out.writeObject(referenceStreamId);
 		if (writeBuffer) {
-			out.write(baos.getBuffer(), 0, baos.getCount());
+			baos.writeTo(out);
 		}
+    }
+    
+    protected boolean isBinary() {
+    	return true;
     }
     
     protected abstract void writeReference(DataOutput out) throws IOException;

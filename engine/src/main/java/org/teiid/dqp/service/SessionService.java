@@ -30,9 +30,11 @@ import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 
@@ -40,16 +42,7 @@ import org.teiid.security.SecurityHelper;
  * <p>
  * The session service deals with managing sessions; this involves creating
  * sessions, closing sessions, terminating sessions, and updating session
- * state.
- * </p>
- * <p>
- * A session has a timestamp, information about the principal owning the
- * session, and a "state" indicating whether it is actively in use, in use
- * but passivated, or has been rendered invalid by being closed or terminated,
- * or by expiring.
- * </p>
- * <p>
- * Note that this service does <i>not</i> deal with authentication explicitly,
+ * state. Note that this service does <i>not</i> deal with authentication explicitly,
  * but may use a membership service provider to authenticate some
  * requests.
  * </p>
@@ -66,39 +59,28 @@ public interface SessionService {
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
      */
-    public SessionMetadata createSession(String userName,
-                                               Credentials credentials,
-                                               String applicationName,
-                                               Properties properties, boolean authenticate)
-            throws LoginException, SessionServiceException;
+	public SessionMetadata createSession(String vdbName,
+			String vdbVersion, AuthenticationType authType,
+			String user, Credentials credential,
+			String applicationName, Properties connProps) throws LoginException,
+			SessionServiceException;
 
     /**
      * Closes the specified session.
-     *
-     * @param sessionID The MetaMatrixSessionID identifying user's session
-     * to be closed
-     * @throws InvalidSessionException If sessionID identifies an invalid
-     * session
-     * @throws SessionServiceException
      */
     void closeSession(String sessionID) throws InvalidSessionException;
 
     /**
      * Terminates the specified session.  This is an administrative action.
      *
-     * @param terminatedSessionID The MetaMatrixSessionID identifying user's session
-     * to be terminated
+     * @param terminatedSessionID The SessionID identifying user's session to be terminated
      * @param adminSessionID The session id identifying session of administrator
-     * @throws InvalidSessionException If terminatedSessionID identifies an invalid
-     * session
-     * does not have authority to terminate the <code>terminatedSessionID</code> session
-     * @throws SessionServiceException
      */
     boolean terminateSession(String terminatedSessionID, String adminSessionID);
 
     /**
      * Get the collection of active user sessions on the system.
-     * @return The collection of MetaMatrixSessionInfo objects of active users on
+     * @return The collection of Session objects of active users on
      * the system - possibly empty, never null.
      */
     Collection<SessionMetadata> getActiveSessions();
@@ -112,21 +94,17 @@ public interface SessionService {
     /**
      * This method is intended to verify that the session is valid, and, if
      * need be, set the session in an active state, ready to be used.
-     * @param sessionID MetaMatrixSessionID representing the session
-     * @return SessionToken object identifying the session
-     * @throws InvalidSessionException If sessionID identifies an invalid
-     * session
-     * @throws SessionServiceException
+     * @param sessionID SessionID representing the session
+     * @return Session object identifying the session
      */
     SessionMetadata validateSession(String sessionID)
     throws InvalidSessionException, SessionServiceException;
     
     /**
-     * Get all <code>MetaMatrixSessionID</code>s that are in the ACTIVE state
+     * Get all Sessions that are in the ACTIVE state
      * and currently logged in to a VDB.
      * @param VDBName The name of the VDB.
      * @param VDBVersion The version of the VDB.
-     * @throws SessionServiceException when transaction with database fails or unexpected exception happens
      */
     Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int VDBVersion)
     throws SessionServiceException;
@@ -144,9 +122,9 @@ public interface SessionService {
 	
 	LoginContext createLoginContext(String securityDomain, String user, String password) throws LoginException;
 
-	AuthenticationType getAuthenticationType();
-	
-	String getGssSecurityDomain();
+	AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
 	
 	SecurityHelper getSecurityHelper();
+	
+	GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
 }

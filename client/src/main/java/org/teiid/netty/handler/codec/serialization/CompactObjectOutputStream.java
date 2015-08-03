@@ -22,17 +22,7 @@
  */
 package org.teiid.netty.handler.codec.serialization;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamClass;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -65,16 +55,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.BaseLob;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.socket.Handshake;
@@ -155,6 +137,13 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
     public List<InputStream> getStreams() {
 		return streams;
 	}
+    
+    @Override
+    public void reset() throws IOException {
+    	super.reset();
+    	streams.clear();
+    	references.clear();
+    }
     
     public List<StreamFactoryReference> getReferences() {
 		return references;

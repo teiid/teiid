@@ -38,10 +38,68 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         </pluginRepository>
       </pluginRepositories>
     </profile>
+    <profile>
+      <id>jboss-developer-repository</id>
+      <repositories>
+        <repository>
+          <id>jboss-developer-repository-group</id>
+          <name>JBoss Developer Maven Repository Group</name>
+          <url>http://repository.jboss.org/nexus/content/groups/developer/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories> 
+    </profile>    
+    <profile>
+      <id>jboss-techpreview</id>
+      <repositories>
+        <repository>
+          <id>jboss-techpreview</id>
+          <name>JBoss Tech Preview</name>
+          <url>https://maven.repository.redhat.com/techpreview/all/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
+      <id>jboss-earlyaccess</id>
+      <repositories>
+        <repository>
+          <id>jboss-earlyaccess</id>
+          <name>JBoss Early Access</name>
+          <url>https://maven.repository.redhat.com/earlyaccess/all/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>                     
   </profiles>
 
   <activeProfiles>
     <activeProfile>jboss-public-repository</activeProfile>
+    <activeProfile>jboss-developer-repository</activeProfile>
+    <activeProfile>jboss-techpreview</activeProfile>
+    <activeProfile>jboss-earlyaccess</activeProfile>
   </activeProfiles>
 
 </settings>

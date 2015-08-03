@@ -40,7 +40,7 @@ public abstract class Transform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
+	public Object transform(Object value, Class<?> targetType) throws TransformationException {
 		if (value == null) {
 			return null;
 		}

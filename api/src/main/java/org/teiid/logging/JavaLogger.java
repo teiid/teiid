@@ -24,7 +24,10 @@ package org.teiid.logging;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+
+import org.teiid.core.util.StringUtil;
 
 /** 
  * Write to Java logging
@@ -50,18 +53,29 @@ public class JavaLogger implements org.teiid.logging.Logger {
 		return logger;
 	}
 
-    public void log(int level, String context, Object msg) {
-    	Logger logger = getLogger(context);
-    	
-    	Level javaLevel = convertLevel(level);
-		logger.log(javaLevel, msg.toString());
+    public void log(int level, String context, Object... msg) {
+    	log(level, context, null, msg);
     }
     
-    public void log(int level, String context, Throwable t, Object msg) {
+    public void log(int level, String context, Throwable t, Object... msg) {
     	Logger logger = getLogger(context);
     	
     	Level javaLevel = convertLevel(level);
-		logger.log(javaLevel, msg != null ? msg.toString() : null, t);
+		
+		if (msg.length == 0) {
+			logger.log(javaLevel, null, t);
+		}
+		else if (msg.length == 1 && !(msg[0] instanceof String)) {
+    		String msgStr = StringUtil.toString(msg, " ", false); //$NON-NLS-1$
+    		LogRecord record = new LogRecord(javaLevel, msgStr); 
+    		record.setParameters(msg);
+    		record.setThrown(t);
+    		record.setLoggerName(context);
+    		logger.log(record);
+		}
+    	else {
+			logger.log(javaLevel, StringUtil.toString(msg, " ", false), t); //$NON-NLS-1$
+    	}
     }
     
     public Level convertLevel(int level) {
@@ -82,6 +96,16 @@ public class JavaLogger implements org.teiid.logging.Logger {
     }
 
     public void shutdown() {
+    }
+    
+    @Override
+    public void putMdc(String key, String val) {
+
+    }
+    
+    @Override
+    public void removeMdc(String key) {
+    	
     }
 
 }

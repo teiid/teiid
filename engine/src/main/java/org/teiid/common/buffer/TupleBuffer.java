@@ -22,7 +22,6 @@
 
 package org.teiid.common.buffer;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -31,6 +30,7 @@ import java.util.TreeMap;
 import org.teiid.client.ResizingArrayList;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Assertion;
@@ -43,6 +43,63 @@ import org.teiid.query.sql.symbol.Expression;
 
 public class TupleBuffer {
 	
+	public class TupleBufferTupleSource extends
+			AbstractTupleSource {
+		private final boolean singleUse;
+		private boolean noBlocking;
+		private boolean reverse;
+
+		private TupleBufferTupleSource(boolean singleUse) {
+			this.singleUse = singleUse;
+		}
+
+		@Override
+		protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
+			if(isFinal || noBlocking || reverse) {
+		        return null;
+		    } 
+			throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+
+		@Override
+		protected int available() {
+			if (!reverse) {
+				return rowCount - getCurrentIndex() + 1;
+			}
+			return getCurrentIndex();
+		}
+
+		@Override
+		protected TupleBatch getBatch(int row) throws TeiidComponentException {
+			return TupleBuffer.this.getBatch(row);
+		}
+
+		@Override
+		public void closeSource() {
+			super.closeSource();
+			if (singleUse) {
+				remove();
+			}
+		}
+		
+		public void setNoBlocking(boolean noBlocking) {
+			this.noBlocking = noBlocking;
+		}
+		
+		public void setReverse(boolean reverse) {
+			this.reverse = reverse;
+		}
+		
+		@Override
+		public int getCurrentIndex() {
+			if (!reverse) {
+				return super.getCurrentIndex();
+			}
+			return getRowCount() - super.getCurrentIndex() + 1;
+		}
+		
+	}
+
 	/**
      * Gets the data type names for each of the input expressions, in order.
      * @param expressions List of Expressions
@@ -88,6 +145,13 @@ public class TupleBuffer {
 	public void setInlineLobs(boolean inline) {
 		if (this.lobManager != null) {
 			this.lobManager.setInlineLobs(inline);
+		}
+	}
+	
+	public void removeLobTracking() {
+		if (this.lobManager != null) {
+			this.lobManager.remove();
+			this.lobManager = null;
 		}
 	}
 	
@@ -301,7 +365,7 @@ public class TupleBuffer {
 		this.forwardOnly = forwardOnly;
 	}
     
-	public IndexedTupleSource createIndexedTupleSource() {
+	public TupleBufferTupleSource createIndexedTupleSource() {
 		return createIndexedTupleSource(false);
 	}
     
@@ -309,38 +373,11 @@ public class TupleBuffer {
 	 * Create a new iterator for this buffer
 	 * @return
 	 */
-	public IndexedTupleSource createIndexedTupleSource(final boolean singleUse) {
+	public TupleBufferTupleSource createIndexedTupleSource(final boolean singleUse) {
 		if (singleUse) {
 			setForwardOnly(true);
 		}
-		return new AbstractTupleSource() {
-			
-			@Override
-			protected List<?> finalRow() throws BlockedException {
-				if(isFinal) {
-		            return null;
-		        } 
-		        throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			
-			@Override
-			public int available() {
-				return rowCount - getCurrentIndex() + 1;
-			}
-			
-			@Override
-			protected TupleBatch getBatch(int row) throws TeiidComponentException {
-				return TupleBuffer.this.getBatch(row);
-			}
-			
-			@Override
-			public void closeSource() {
-				super.closeSource();
-				if (singleUse) {
-					remove();
-				}
-			}
-		};
+		return new TupleBufferTupleSource(singleUse);
 	}
 	
 	@Override
@@ -370,40 +407,54 @@ public class TupleBuffer {
 		}
 		return this.lobManager.getLobCount();
 	}
-
+	
 	public void truncateTo(int rowLimit) throws TeiidComponentException {
 		if (rowCount <= rowLimit) {
 			return;
 		}
 		//TODO this could be more efficient with handling the last batch
-		TupleBatch last = this.getBatch(rowLimit);
-		TupleBatch tb = last;
 		if (this.batchBuffer != null) {
-			this.batchBuffer.clear();
-		}
-		int begin = tb.getBeginRow();
-		do {
-			if (tb == null) {
-				tb = this.getBatch(begin);
+			for (int i = batchBuffer.size() - 1; i >= 0; i--) {
+				if (this.rowCount == rowLimit) {
+					break;
+				}
+				this.rowCount--;
+				List<?> tuple = this.batchBuffer.remove(i);
+				if (this.lobManager != null) {
+					this.lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
+				}
 			}
-			Long id = this.batches.remove(begin);
+		}
+		TupleBatch last = null;
+		while (rowCount > rowLimit) {
+			last = this.getBatch(rowCount);
+			Long id = this.batches.remove(last.getBeginRow());
 			if (id != null) {
 				this.manager.remove(id);
 			}
 			if (this.lobManager != null) {
-				for (List<?> tuple : tb.getTuples()) {
+				for (List<?> tuple : last.getTuples()) {
 					this.lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
 				}
 			}
-			begin = tb.getEndRow() + 1;
-			tb = null;
-		} while (begin <= rowCount);
-		rowCount = last.getBeginRow() - 1;
-		Iterator<List<?>> iter = last.getTuples().iterator();
-		while (rowCount < rowLimit) {
-			addTuple(iter.next());
+			rowCount = last.getBeginRow() - 1;
+		}
+		if (rowCount < rowLimit) {
+			List<List<?>> tuples = last.getTuples();
+			int i = 0;
+			while (rowCount < rowLimit) {
+				addTuple(tuples.get(i++));
+				
+			}
 		}
 		saveBatch(false);
+	}
+	
+	/**
+	 * Return a more accurate batch estimate or 0 if a new estimate is not available
+	 */
+	public int getRowSizeEstimate() {
+		return this.manager.getRowSizeEstimate();
 	}
 	
 }

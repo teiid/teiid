@@ -31,9 +31,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -52,12 +52,15 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 	
     private Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
     		"&", "|", "^", "#"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-	
+
+    private static Pattern pattern = Pattern.compile("\\$+\\d+"); //$NON-NLS-1$
+    
     protected static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     protected static final String UNDEFINED_PARAM = "?"; //$NON-NLS-1$
     
     protected StringBuilder buffer = new StringBuilder();
     private boolean appendedSourceComment;
+    protected boolean shortNameOnly = false;
                 
     /**
      * Gets the name of a group or element from the RuntimeMetadata
@@ -68,12 +71,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         return getRecordName(object);
     }
 
+    /**
+	 * Get the name in source or the name if
+	 * the name in source is not set.
+	 * @return
+	 */
 	public static String getRecordName(AbstractMetadataRecord object) {
-		String nameInSource = object.getNameInSource();
-        if(nameInSource != null && nameInSource.length() > 0) {
-            return nameInSource;
-        }
-        return object.getName();
+		return object.getSourceName();
     }
     
     /**
@@ -238,7 +242,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(ColumnReference obj) {
-        buffer.append(getElementName(obj, true));
+        buffer.append(getElementName(obj, !shortNameOnly));
     }
 
 	private String getElementName(ColumnReference obj, boolean qualify) {
@@ -446,11 +450,18 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
               .append(Tokens.SPACE)
               .append(BY)
               .append(Tokens.SPACE);
+        if (obj.isRollup()) {
+        	buffer.append(ROLLUP);
+        	buffer.append(Tokens.LPAREN);
+        }
         append(obj.getElements());
+        if (obj.isRollup()) {
+        	buffer.append(Tokens.RPAREN);
+        }
     }
 
     public void visit(In obj) {
-        append(obj.getLeftExpression());
+    	appendNested(obj.getLeftExpression());
         if (obj.isNegated()) {
             buffer.append(Tokens.SPACE)
                   .append(NOT);
@@ -476,25 +487,24 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Insert obj) {
-    	buffer.append(INSERT).append(Tokens.SPACE);
+    	buffer.append(getInsertKeyword()).append(Tokens.SPACE);
 		appendSourceComment(obj);
 		buffer.append(INTO).append(Tokens.SPACE);
 		append(obj.getTable());
 		buffer.append(Tokens.SPACE).append(Tokens.LPAREN);
 
-		int elementCount = obj.getColumns().size();
-		for (int i = 0; i < elementCount; i++) {
-			buffer.append(getElementName(obj.getColumns().get(i), false));
-			if (i < elementCount - 1) {
-				buffer.append(Tokens.COMMA);
-				buffer.append(Tokens.SPACE);
-			}
-		}
+		this.shortNameOnly = true;
+		append(obj.getColumns());
+		this.shortNameOnly = false;
 
 		buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         append(obj.getValueSource());
     }
+
+	protected String getInsertKeyword() {
+		return INSERT;
+	}
     
     @Override
 	public void visit(ExpressionValueSource obj) {
@@ -509,7 +519,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(IsNull obj) {
-        append(obj.getExpression());
+    	appendNested(obj.getExpression());
         buffer.append(Tokens.SPACE)
               .append(IS)
               .append(Tokens.SPACE);
@@ -519,6 +529,21 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
         buffer.append(NULL);
     }
+    
+    /**
+     * Condition operators have lower precedence than LIKE/SIMILAR/IS
+     * @param ex
+     */
+	private void appendNested(Expression ex) {
+		boolean useParens = ex instanceof Condition;
+    	if (useParens) {
+    		buffer.append(Tokens.LPAREN);
+    	}
+        append(ex);
+        if (useParens) {
+        	buffer.append(Tokens.RPAREN);
+        }
+	}
 
     public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
@@ -578,7 +603,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Like obj) {
-        append(obj.getLeftExpression());
+    	append(obj.getLeftExpression());
         if (obj.isNegated()) {
             buffer.append(Tokens.SPACE)
                   .append(NOT);
@@ -602,7 +627,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                   .append(ESCAPE)
                   .append(Tokens.SPACE)
                   .append(Tokens.QUOTE)
-                  .append(obj.getEscapeCharacter().toString())
+                  .append(escapeString(String.valueOf(obj.getEscapeCharacter()), Tokens.QUOTE))
                   .append(Tokens.QUOTE);
         }
     }
@@ -627,34 +652,38 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(NULL);
         } else {
             Class<?> type = obj.getType();
-            String val = obj.getValue().toString();
-            if(Number.class.isAssignableFrom(type)) {
-                buffer.append(val);
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-            	buffer.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-                buffer.append("{ts '") //$NON-NLS-1$
-                      .append(val)
-                      .append("'}"); //$NON-NLS-1$
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-                buffer.append("{t '") //$NON-NLS-1$
-                      .append(val)
-                      .append("'}"); //$NON-NLS-1$
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-                buffer.append("{d '") //$NON-NLS-1$
-                      .append(val)
-                      .append("'}"); //$NON-NLS-1$
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-            	buffer.append("X'") //$NON-NLS-1$
-            		  .append(val)
-            		  .append("'"); //$NON-NLS-1$
-            } else {
-                buffer.append(Tokens.QUOTE)
-                      .append(escapeString(val, Tokens.QUOTE))
-                      .append(Tokens.QUOTE);
-            }
+            appendLiteral(obj, type);
         }
     }
+
+	protected void appendLiteral(Literal obj, Class<?> type) {
+		String val = obj.getValue().toString();
+		if(Number.class.isAssignableFrom(type)) {
+		    buffer.append(val);
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+			buffer.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+		    buffer.append("{ts '") //$NON-NLS-1$
+		          .append(val)
+		          .append("'}"); //$NON-NLS-1$
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
+		    buffer.append("{t '") //$NON-NLS-1$
+		          .append(val)
+		          .append("'}"); //$NON-NLS-1$
+		} else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
+		    buffer.append("{d '") //$NON-NLS-1$
+		          .append(val)
+		          .append("'}"); //$NON-NLS-1$
+		} else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+			buffer.append("X'") //$NON-NLS-1$
+				  .append(val)
+				  .append("'"); //$NON-NLS-1$
+		} else {
+		    buffer.append(Tokens.QUOTE)
+		          .append(escapeString(val, Tokens.QUOTE))
+		          .append(Tokens.QUOTE);
+		}
+	}
 
     public void visit(Not obj) {
         buffer.append(NOT)
@@ -687,7 +716,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Argument obj) {
-        buffer.append(obj.getArgumentValue());
+        visitNode(obj.getExpression());
     }
 
     public void visit(Select obj) {
@@ -836,7 +865,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(SetClause clause) {
-        buffer.append(getElementName(clause.getSymbol(), false));
+        shortNameOnly = true;
+        append(clause.getSymbol());
+        shortNameOnly = false;
         buffer.append(Tokens.SPACE).append(Tokens.EQ).append(Tokens.SPACE);
         append(clause.getValue());
     }
@@ -898,26 +929,38 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     
     @Override
     public void visit(With obj) {
-    	buffer.append(WITH);
+    	appendedSourceComment = true;
+    	appendWithKeyword(obj);
     	buffer.append(Tokens.SPACE);
     	append(obj.getItems());
     	buffer.append(Tokens.SPACE);
+    	appendedSourceComment = false;
     }
     
-    @Override
+    protected void appendWithKeyword(With obj) {
+    	buffer.append(WITH);		
+	}
+
+	@Override
     public void visit(WithItem obj) {
     	append(obj.getTable());
     	buffer.append(Tokens.SPACE);
     	if (obj.getColumns() != null) {
     		buffer.append(Tokens.LPAREN);
+    		shortNameOnly = true;
     		append(obj.getColumns());
+    		shortNameOnly = false;
     		buffer.append(Tokens.RPAREN);
     		buffer.append(Tokens.SPACE);
     	}
     	buffer.append(AS);
     	buffer.append(Tokens.SPACE);
 		buffer.append(Tokens.LPAREN);
-		append(obj.getSubquery());
+		if (obj.getSubquery() == null) {
+			buffer.append(UNDEFINED_PARAM);
+		} else {
+			append(obj.getSubquery());
+		}
 		buffer.append(Tokens.RPAREN);
     }
     
@@ -955,6 +998,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     public void visit(Array array) {
     	buffer.append(Tokens.LPAREN);
     	append(array.getExpressions());
+    	if (array.getExpressions().size() == 1) {
+    		buffer.append(Tokens.COMMA);
+    	}
     	buffer.append(Tokens.RPAREN);
     }
  
@@ -984,7 +1030,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
 	public static void parseNativeQueryParts(String nativeQuery, List<Argument> list, StringBuilder stringBuilder, Substitutor substitutor) {
-		Pattern pattern = Pattern.compile("\\$+\\d+"); //$NON-NLS-1$
 		Matcher m = pattern.matcher(nativeQuery);
 		for (int i = 0; i < nativeQuery.length();) {
 			if (!m.find(i)) {
@@ -1005,11 +1050,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 				}
 				int index = Integer.parseInt(match.substring(end + 1))-1;
 				if (index < 0 || index >= list.size()) {
-					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", index+1, list.size())); //$NON-NLS-1$
+					throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", index+1, list.size())); //$NON-NLS-1$
 				}
 				Argument arg = list.get(index);
 				if (arg.getDirection() != Direction.IN) {
-					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
+					throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
 				}
 				substitutor.substitute(arg, stringBuilder, index);
 			}

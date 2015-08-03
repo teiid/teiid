@@ -42,11 +42,11 @@ public class TestPartsDatabaseMetadata {
 
     static DatabaseMetaData dbMetadata;
     static Connection connection;
-    
+    static FakeServer server;
     static final String VDB = "PartsSupplier";
     
 	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
     	dbMetadata = connection.getMetaData();
@@ -54,6 +54,7 @@ public class TestPartsDatabaseMetadata {
     
     @AfterClass public static void tearDown() throws SQLException {
     	connection.close();
+    	server.stop();
     }
     
     @Test public void testExportedKeys()  throws Exception {
@@ -82,6 +83,10 @@ public class TestPartsDatabaseMetadata {
 
     @Test public void testIndexInfo()  throws Exception {
     	TestMMDatabaseMetaData.compareResultSet(dbMetadata.getIndexInfo(VDB, null, "%", true, true)); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testIndexInfoAll()  throws Exception {
+    	TestMMDatabaseMetaData.compareResultSet(dbMetadata.getIndexInfo(VDB, null, "%", false, true)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testCrossReference()  throws Exception {

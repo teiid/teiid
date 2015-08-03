@@ -40,7 +40,7 @@ public class StringToClobTransform extends Transform {
 	public Object transformDirect(Object value) throws TransformationException {
         String contents = (String)value;
         //TODO: if the value is too large, we should store in a file buffer
-		return new ClobType(ClobImpl.createClob(contents.toCharArray()));
+		return new ClobType(new ClobImpl(contents));
 	}
 
 	/**

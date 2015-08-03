@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
@@ -40,10 +39,8 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.XMLType;
-import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
-import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
@@ -58,15 +55,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.Symbol;
-import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
@@ -113,12 +102,6 @@ public class MetaDataProcessor {
         this.metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
         this.labelAsName = workContext.getClientVersion().compareTo(Version.SEVEN_3) <= 0;
         
-        // If multi-source, use the multi-source wrapper as well
-        Set<String> multiModels = workContext.getVDB().getMultiSourceModelNames();
-        if(multiModels != null && multiModels.size() > 0) { 
-            this.metadata = new MultiSourceMetadataWrapper(this.metadata, multiModels);
-        }
-
         RequestWorkItem workItem = null;
         try {
         	workItem = requestManager.getRequestWorkItem(requestID);

@@ -41,10 +41,11 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TempMetadataID.Type;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.GroupContext;
@@ -216,7 +217,9 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
         ResolverUtil.resolveGroup(group, metadata);
-        procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType(), false));
+        if (!group.isTempTable()) {
+        	procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType(), false));
+        }
     }
 
     public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols) {
@@ -247,10 +250,12 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	
 	/**
 	 * Set the appropriate "external" metadata for the given command
+	 * @param inferProcedureResultSetColumns 
+	 * @throws QueryResolverException 
 	 */
 	public static void findChildCommandMetadata(Command currentCommand,
-			GroupSymbol container, int type, QueryMetadataInterface metadata)
-			throws QueryMetadataException, TeiidComponentException {
+			GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns)
+			throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 		//find the childMetadata using a clean metadata store
 	    TempMetadataStore childMetadata = new TempMetadataStore();
 	    TempMetadataAdapter tma = new TempMetadataAdapter(metadata, childMetadata);
@@ -287,11 +292,20 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		                ElementSymbol symbol = param.getParameterSymbol();
 		                tempElements.add(symbol);
 		                updatable[i++] = param.getParameterType() != ParameterInfo.IN;  
+		                if (param.getParameterType() == ParameterInfo.RETURN_VALUE) {
+		                	cupc.setReturnVariable(symbol);
+		                }
 		            } else {
 		            	rsColumns = param.getResultSetColumns();
 		            }
 		        }
-		        ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
+		        if (inferProcedureResultSetColumns) {
+		        	rsColumns = null;
+		        }
+		        GroupSymbol gs = ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
+		        if (cupc.getReturnVariable() != null) {
+		        	ResolverVisitor.resolveLanguageObject(cupc.getReturnVariable(), Arrays.asList(gs), metadata);
+		        }
 		        cupc.setResultSetColumns(rsColumns);
 		        //the relational planner will override this with the appropriate value
 		        cupc.setProjectedSymbols(rsColumns);

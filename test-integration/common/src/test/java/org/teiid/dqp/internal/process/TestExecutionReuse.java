@@ -21,8 +21,7 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -50,6 +49,7 @@ import org.teiid.jdbc.TeiidStatement;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.query.util.CommandContext;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -202,6 +202,19 @@ public class TestExecutionReuse {
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).execute();
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).close();
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT - 1)).reset((Command)Mockito.anyObject(), (ExecutionContext)Mockito.anyObject(), Mockito.anyObject());
+	}
+	
+	@Test public void testCommandContext() {
+		CommandContext cc = new CommandContext();
+		FakeReusableExecution fe = new FakeReusableExecution();
+		cc.putReusableExecution("a", fe);
+		cc.putReusableExecution("a", new FakeReusableExecution());
+		
+		ReusableExecution<?> re = cc.getReusableExecution("a");
+		ReusableExecution<?> re1 = cc.getReusableExecution("a");
+		assertSame(fe, re);
+		assertNotSame(fe, re1);
+		assertNull(cc.getReusableExecution("a"));
 	}
 
 }

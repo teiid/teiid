@@ -32,6 +32,7 @@ import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -50,6 +51,10 @@ import org.teiid.translator.UpdateExecution;
 @Translator(name="ldap", description="A translator for LDAP directory")
 public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, LdapContext> {
 
+	public static final String DN_PREFIX = MetadataFactory.LDAP_URI + "dn_prefix"; //$NON-NLS-1$
+	public static final String RDN_TYPE = MetadataFactory.LDAP_URI + "rdn_type"; //$NON-NLS-1$
+	public static final String UNWRAP = MetadataFactory.LDAP_URI + "unwrap"; //$NON-NLS-1$
+	
 	public enum SearchDefaultScope {
 		SUBTREE_SCOPE,
 		OBJECT_SCOPE,
@@ -65,6 +70,8 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public LDAPExecutionFactory() {
 		this.setMaxInCriteriaSize(1000);
 		this.setMaxDependentInPredicates(25); //no spec limit on query size, AD is 10MB for the query
+		this.setSupportsInnerJoins(true);
+		this.setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
 	
     @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches")
@@ -192,6 +199,31 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public void setExceptionOnSizeLimitExceeded(
 			boolean exceptionOnSizeLimitExceeded) {
 		this.exceptionOnSizeLimitExceeded = exceptionOnSizeLimitExceeded;
+	}
+	
+	@Override
+	public boolean supportsOnlyLiteralComparison() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsLikeCriteriaEscapeCharacter() {
+		return true;
+	}
+
+	@Override
+	public int getMaxFromGroups() {
+		return 2;
+	}
+	
+	@Override
+	public boolean useAnsiJoin() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsPartialFiltering() {
+		return true;
 	}
 	
 }

@@ -1,7 +1,0 @@
-/subsystem=resource-adapters/resource-adapter=ldapDS:add(archive=teiid-connector-ldap.rar, transaction-support=NoTransaction)
-/subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS:add(jndi-name=java:/ldapDS, class-name=org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory, enabled=true, use-java-context=true)
-/subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS/config-properties=LdapUrl:add(value=ldap://ldapServer:389)
-/subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS/config-properties=LdapAdminUserDN:add(value={cn=???,ou=???,dc=???})
-/subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS/config-properties=LdapAdminUserPassword:add(value={pass})
-/subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS/config-properties=LdapTxnTimeoutInMillis:add(value=-1)
-/subsystem=resource-adapters/resource-adapter=ldapDS:activate

@@ -25,10 +25,8 @@ package org.teiid.metadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
@@ -36,6 +34,7 @@ import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 
 public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiable {
 
+	public static final int UNKNOWN_CARDINALITY = -1;
 	private static final long serialVersionUID = 4891356771125218672L;
 
 	public enum Type {
@@ -44,7 +43,14 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		Document,
 		XmlMappingClass,
 		XmlStagingTable,
-		MaterializedTable
+		MaterializedTable,
+		/** Temporary from a Teiid Perspective - physical will not have a parent set */
+		TemporaryTable {
+			@Override
+			public String toString() {
+				return "TEMPORARY TABLE"; //$NON-NLS-1$
+			}
+		}
 	}
 	
     public static enum TriggerEvent {
@@ -52,8 +58,25 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		UPDATE,
 		DELETE
 	}
+    
+    static final int asInt(long f) {
+		if (f == UNKNOWN_CARDINALITY || f < 0) {
+    		return UNKNOWN_CARDINALITY;
+    	} else if (f <= Integer.MAX_VALUE) {
+    		return (int)f;
+    	}
+		//NaN 0x7ffffffff will map to -1 (unknown)
+		return Float.floatToRawIntBits(f) | 0x80000000;
+	}
+	
+	static final float asFloat(int i) {
+		if (i >= UNKNOWN_CARDINALITY) {
+    		return i;
+    	}
+    	return Float.intBitsToFloat(i & 0x7fffffff);
+	}
 
-	private int cardinality = -1;
+	private volatile int cardinality = UNKNOWN_CARDINALITY;
     private Type tableType;
     private boolean isVirtual;
     private boolean isSystem;
@@ -67,13 +90,13 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private KeyRecord primaryKey;
 
     //view information
-	private String selectTransformation;
-    private String insertPlan;
-    private String updatePlan;
-    private String deletePlan;
-    private boolean insertPlanEnabled;
-    private boolean updatePlanEnabled;
-    private boolean deletePlanEnabled;
+	private volatile String selectTransformation;
+    private volatile String insertPlan;
+    private volatile String updatePlan;
+    private volatile String deletePlan;
+    private volatile boolean insertPlanEnabled;
+    private volatile boolean updatePlanEnabled;
+    private volatile boolean deletePlanEnabled;
     private Table materializedStageTable;
     private Table materializedTable;
 
@@ -82,11 +105,13 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	private List<String> schemaPaths;
 	private String resourcePath;
 	
-	private transient long lastModified;
-	private transient long lastDataModification;
+	private volatile transient long lastModified;
+	private volatile transient long lastDataModification;
 	
-	private transient Map<Class<?>, Object> attachments;
-	
+	/**
+	 * Used in xml document models mapping classes to represent input parameters
+	 * @return
+	 */
     public List<String> getBindings() {
 		return bindings;
 	}
@@ -95,6 +120,11 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		this.bindings = bindings;
 	}
 
+	/**
+	 * If the table represents an xml document model with associated schemas in the vdb, this
+	 * will return a list of the file paths
+	 * @return
+	 */
 	public List<String> getSchemaPaths() {
 		return schemaPaths;
 	}
@@ -104,7 +134,14 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	}
 
     public int getCardinality() {
-        return cardinality;
+    	if (cardinality >= UNKNOWN_CARDINALITY) {
+    		return cardinality;
+    	}
+    	return Integer.MAX_VALUE;
+    }
+    
+    public float getCardinalityAsFloat() {
+    	return asFloat(cardinality);
     }
 
     public boolean isVirtual() {
@@ -138,7 +175,11 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
      * @param i
      */
     public void setCardinality(int i) {
-        cardinality = i;
+    	cardinality = asInt(i);
+    }
+    
+    public void setCardinality(long f) {
+    	cardinality = asInt(f);
     }
 
     /**
@@ -320,7 +361,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	
 	public void setTableStats(TableStats stats) {
 		if (stats.getCardinality() != null) {
-			setCardinality(stats.getCardinality());
+			setCardinality(stats.getCardinality().longValue());
 		}
 	}
 	
@@ -348,74 +389,20 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		this.updatePlanEnabled = updatePlanEnabled;
 	}
 	
-   /**
-    * Add attachment
-    *
-    * @param <T> the expected type
-    * @param attachment the attachment
-    * @param type the type
-    * @return any previous attachment
-    * @throws IllegalArgumentException for a null name, attachment or type
-    * @throws UnsupportedOperationException when not supported by the implementation
-    */	
-	synchronized public <T> T addAttchment(Class<T> type, T attachment) {
-      if (type == null)
-          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-      if (this.attachments == null) {
-    	  this.attachments = new HashMap<Class<?>, Object>();
-      }
-      Object result = this.attachments.put(type, attachment);
-      if (result == null)
-         return null;
-      return type.cast(result);
-	}
-	
-   /**
-    * Get attachment
-    * 
-    * @param <T> the expected type
-    * @param type the type
-    * @return the attachment or null if not present
-    * @throws IllegalArgumentException for a null name or type
-    */
-	synchronized public <T> T getAttachment(Class<T> type) {
-      if (type == null)
-          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-      if (this.attachments == null) {
-    	  return null;
-      }
-      Object result = this.attachments.get(type);
-      if (result == null)
-         return null;
-      return type.cast(result);      
-   }
-	
-   /**
-    * remove attachment
-    * 
-    * @param <T> the expected type
-    * @param type the type
-    * @return the attachment or null if not present
-    * @throws IllegalArgumentException for a null name or type
-    */
-	synchronized public <T> T removeAttachment(Class<T> type) {
-      if (type == null)
-          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-      if (this.attachments == null) {
-    	  return null;
-      }
-      Object result = this.attachments.remove(type);
-      if (result == null)
-         return null;
-      return type.cast(result);      
-   }
-	
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
     	in.defaultReadObject();
     	if (this.functionBasedIndexes == null) {
     		this.functionBasedIndexes = new ArrayList<KeyRecord>(2);
     	}
+    }
+    
+    @Override
+    public String getFullName() {
+    	if (this.tableType == Type.TemporaryTable && !this.isVirtual) {
+    		return this.getName();
+    	}
+    	return super.getFullName();
     }
 	
 }

@@ -23,7 +23,9 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -34,11 +36,12 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.core.util.PropertiesUtils;
 
 public class DataRolePolicyDecider implements PolicyDecider {
 
-    private boolean allowCreateTemporaryTablesByDefault = false;
-    private boolean allowFunctionCallsByDefault = false;
+    private boolean allowCreateTemporaryTablesByDefault = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowCreateTemporaryTablesByDefault", false); //$NON-NLS-1$
+    private boolean allowFunctionCallsByDefault = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowFunctionCallsByDefault", false); //$NON-NLS-1$
 
 	@Override
 	public Set<String> getInaccessibleResources(PermissionType action,
@@ -48,25 +51,47 @@ public class DataRolePolicyDecider implements PolicyDecider {
 		}
 		List<DataPolicy> policies = new ArrayList<DataPolicy>(commandContext.getAllowedDataPolicies().values());
 		int policyCount = policies.size();
+		boolean[] exclude = new boolean[policyCount];
 		outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
 			String resource = iter.next();
-			if (action != PermissionType.LANGUAGE) {
-				resource = resource.toLowerCase();
-			}
+			Arrays.fill(exclude, false);
+			int excludeCount = 0;
 			while (resource.length() > 0) {
-				boolean isFalse = false;
 				for (int j = 0; j < policyCount; j++) {
+					if (exclude[j]) {
+						continue;
+					}
 					DataPolicyMetadata policy = (DataPolicyMetadata)policies.get(j);
+					if (policy.isGrantAll()) {
+						if (policy.getSchemas() == null) {
+							resources.clear();
+							return resources;
+						}
+						if (action == PermissionType.LANGUAGE) {
+							iter.remove();
+							continue outer;
+						}
+						//imported grant all must be checked against the schemas
+						if (resource.indexOf('.') > 0) {
+							continue;
+						}
+						if (policy.getSchemas().contains(resource)) {
+							iter.remove();
+							continue outer;
+						}
+						continue;
+					}
 					Boolean allows = policy.allows(resource, action);
 					if (allows != null) {
 						if (allows) {
 							iter.remove();
 							continue outer;
 						}
-						isFalse = true;
+						exclude[j] = true;
+						excludeCount++;
 					}
 				}
-				if (isFalse || action == PermissionType.LANGUAGE) {
+				if (excludeCount == policyCount || action == PermissionType.LANGUAGE) {
 					break; //don't check less specific permissions
 				}
 				resource = resource.substring(0, Math.max(0, resource.lastIndexOf('.')));
@@ -83,10 +108,15 @@ public class DataRolePolicyDecider implements PolicyDecider {
 	@Override
 	public boolean isTempAccessable(PermissionType action, String resource,
 			Context context, CommandContext commandContext) {
+		if (resource != null) {
+			return getInaccessibleResources(action, new HashSet<String>(Arrays.asList(resource)), context, commandContext).isEmpty();
+		}
 		Boolean result = null;
     	for(DataPolicy p:commandContext.getAllowedDataPolicies().values()) {
 			DataPolicyMetadata policy = (DataPolicyMetadata)p;
-			
+			if (policy.isGrantAll()) {
+				return true;
+			}
 			if (policy.isAllowCreateTemporaryTables() != null) {
 				if (policy.isAllowCreateTemporaryTables()) {
 					return true;

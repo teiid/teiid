@@ -21,7 +21,6 @@
  */
 package org.teiid.transport;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,19 +28,18 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.teiid.client.security.ILogon;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
-import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
 import org.teiid.odbc.ODBCServerRemote;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.PgFrontendProtocol.PGRequest;
 
 public class ODBCClientInstance implements ChannelListener{
@@ -51,7 +49,7 @@ public class ODBCClientInstance implements ChannelListener{
 	private ReflectionHelper serverProxy = new ReflectionHelper(ODBCServerRemote.class);
 	private ConcurrentLinkedQueue<PGRequest> messageQueue = new ConcurrentLinkedQueue<PGRequest>();
 	
-	public ODBCClientInstance(final ObjectChannel channel, AuthenticationType authType, TeiidDriver driver, ILogon logonService) {
+	public ODBCClientInstance(final ObjectChannel channel, TeiidDriver driver, LogonImpl logonService) {
 		this.client = (ODBCClientRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCClientRemote.class}, new InvocationHandler() {
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -63,7 +61,7 @@ public class ODBCClientInstance implements ChannelListener{
 				return null;
 			}
 		});
-		this.server = new ODBCServerRemoteImpl(this, authType, driver, logonService) {
+		this.server = new ODBCServerRemoteImpl(this, driver, logonService) {
 			@Override
 			protected synchronized void doneExecuting() {
 				super.doneExecuting();
@@ -91,7 +89,8 @@ public class ODBCClientInstance implements ChannelListener{
 
 	@Override
 	public void exceptionOccurred(Throwable t) {
-		LogManager.log(t instanceof IOException?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_ODBC, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		int level = SocketClientInstance.getLevel(t);
+		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage()));
 		server.terminate();
 	}
 	

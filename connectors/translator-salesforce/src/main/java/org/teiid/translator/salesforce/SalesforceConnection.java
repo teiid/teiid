@@ -21,16 +21,19 @@
  */
 package org.teiid.translator.salesforce;
 
+import java.util.Calendar;
 import java.util.List;
 
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
+import com.sforce.async.BatchResult;
+import com.sforce.async.JobInfo;
+import com.sforce.async.SObject;
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
@@ -49,15 +52,27 @@ public interface SalesforceConnection extends Connection {
 
 	public int update(List<DataPayload> updateDataList) throws ResourceException;
 
-	public UpdatedResult getUpdated(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ResourceException;
+	public UpdatedResult getUpdated(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
 
-	public DeletedResult getDeleted(String objectName, XMLGregorianCalendar startCalendar, XMLGregorianCalendar endCalendar) throws ResourceException;
+	public DeletedResult getDeleted(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
 	
 	public QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException;
 	
 	public DescribeGlobalResult getObjects() throws ResourceException;
 	
-	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException;
+	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws ResourceException;
 	
-	
+	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws ResourceException;
+
+	public void cancelBulkJob(JobInfo job) throws ResourceException;
+
+	JobInfo closeJob(String jobId) throws ResourceException;
+
+	String addBatch(List<SObject> payload, JobInfo job)
+			throws ResourceException;
+
+	JobInfo createBulkJob(String objectName) throws ResourceException;
+
+	Long getCardinality(String sobject) throws ResourceException;
+
 }

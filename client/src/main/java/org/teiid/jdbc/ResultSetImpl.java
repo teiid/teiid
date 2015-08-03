@@ -55,6 +55,7 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.jdbc.BatchResults.Batch;
@@ -62,9 +63,10 @@ import org.teiid.jdbc.BatchResults.BatchFetcher;
 
 public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchFetcher {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-	private static AsynchPositioningException ape = new AsynchPositioningException();
 	
 	private static final int BEFORE_FIRST_ROW = 0;
+
+	public static final String DISABLE_FETCH_SIZE = "disableResultSetFetchSize"; //$NON-NLS-1$
 
 	// the object which was last read from Results
 	private Object currentValue;
@@ -88,6 +90,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     private PlanNode updatedPlanDescription;
     private int maxFieldSize;
     private int fetchSize;
+    private int maxRows;
     
 	private Map<String, Integer> columnMap;
 	
@@ -95,6 +98,15 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	//results requested
 	private ResultsFuture<ResultsMessage> asynchResults;
     boolean asynch;
+    
+    private ResultsFuture<ResultsMessage> prefetch;
+    private boolean usePrefetch;
+
+	private int skipTo;
+	
+	private static boolean DISABLE_FETCH_SIZE_DEFAULT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid." + DISABLE_FETCH_SIZE, false); //$NON-NLS-1$
+	
+	private Boolean disableFetchSize;
 
 	/**
 	 * Constructor.
@@ -114,7 +126,6 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		// server latency-related timestamp
         this.requestID = statement.getCurrentRequestID();
         this.cursorType = statement.getResultSetType();
-        this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
         this.serverTimeZone = statement.getServerTimeZone();
 		if (metadata == null) {
 			MetadataProvider provider = new DeferredMetadataProvider(resultsMsg.getColumnNames(),
@@ -135,19 +146,20 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		if (logger.isLoggable(Level.FINER)) {
 			logger.finer("Creating ResultSet requestID: " + requestID + " beginRow: " + resultsMsg.getFirstRow() + " resultsColumns: " + resultColumns + " parameters: " + parameters); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
+		this.usePrefetch = cursorType == ResultSet.TYPE_FORWARD_ONLY && !statement.useCallingThread();
+		this.maxRows = statement.getMaxRows();
+		this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
 	}
 	
 	public void setMaxFieldSize(int maxFieldSize) {
 		this.maxFieldSize = maxFieldSize;
 	}
 	
-    /**
-     * Close this result set.
-     */
     public void close() throws SQLException{
     	if(!isClosed) {
             // close the the server's statement object (if necessary)
     		if(this.requestID >= 0){
+    			this.statement.checkStatement();
 	            try {
 					this.statement.getDQP().closeRequest(requestID);
 				} catch (TeiidProcessingException e) {
@@ -158,6 +170,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     		}
             isClosed = true;
         }
+    	//we can do this because the statement can only have a
+    	//single resultset open currently
+    	if (this.statement.isCloseOnCompletion()) {
+    		this.statement.close();
+    	}
     }
     
 	public boolean isClosed() throws SQLException {
@@ -354,12 +371,21 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     public Batch requestBatch(int beginRow) throws SQLException{
     	checkClosed();
         try {
+        	if (prefetch != null) {
+    			//TODO: this is not efficient if the user is skipping around the results
+    			//but the server logic at this point basically requires us
+    			//to read what we have requested before requesting more (no queuing)
+    			ResultsMessage result = getResults(prefetch);
+    			prefetch = null;
+    			Batch nextBatch = processBatch(result);
+				return nextBatch;
+        	}
         	ResultsFuture<ResultsMessage> results = submitRequestBatch(beginRow);
         	if (asynch && !results.isDone()) {
         		synchronized (this) {
             		asynchResults = results;
 				}
-        		throw ape;
+        		throw new AsynchPositioningException();
         	}
         	ResultsMessage currentResultMsg = getResults(results);
             return processBatch(currentResultMsg);
@@ -374,6 +400,9 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	private ResultsFuture<ResultsMessage> submitRequestBatch(int beginRow)
 			throws TeiidSQLException {
+		if (beginRow > maxRows && skipTo > 0) {
+			beginRow = skipTo;
+		}
 		ResultsFuture<ResultsMessage> results;
 		if (asynch) {
 			synchronized (this) {
@@ -416,11 +445,55 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		return currentResultMsg;
 	}
 
-	private Batch getCurrentBatch(ResultsMessage currentResultMsg) {
+	private Batch getCurrentBatch(ResultsMessage currentResultMsg) throws TeiidSQLException {
 		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
-		boolean isLast = currentResultMsg.getResultsList().size() == 0 || currentResultMsg.getFinalRow() == currentResultMsg.getLastRow();
-		Batch result = new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow(), isLast);
-		result.setLastRow(currentResultMsg.getFinalRow());
+		if (usePrefetch && !asynch 
+				&& prefetch == null && currentResultMsg.getLastRow() != currentResultMsg.getFinalRow()) {
+			//fetch before processing the results
+			prefetch = submitRequestBatch(currentResultMsg.getLastRow() + 1);
+		}
+		currentResultMsg.processResults();
+		List<?> lastTuple = null;
+		List<List<?>> resultsList = (List<List<?>>) currentResultMsg.getResultsList();
+		//similar logic to BatchCollector on the server side
+		//this is a catch all in case the server doesn't enforce the max
+		//such as currently the case with cached subset results
+		List<?>[] tuples = null;
+		int firstRow = currentResultMsg.getFirstRow();
+		int endRow = currentResultMsg.getLastRow();
+		int lastRow = currentResultMsg.getFinalRow();
+		if (maxRows > 0) {
+	    	if (parameters > 0) {
+	    		if (currentResultMsg.getLastRow() == currentResultMsg.getFinalRow()) {
+	    			lastTuple = resultsList.get(resultsList.size() - 1);
+	    		} else if (maxRows < currentResultMsg.getFirstRow()) {
+	    			//awkward scenario - there are parameters at the end
+	    			//skip ahead as far as possible
+	    			if (lastRow != 0) {
+	    				skipTo = lastRow;
+	    			} else {
+	    				skipTo = endRow + 1;
+	    			}
+	    			return new Batch(new List<?>[0], firstRow, firstRow - 1);
+	    		}
+	    	}
+	    	if (maxRows < currentResultMsg.getLastRow()) {
+	    		firstRow = Math.min(maxRows + 1, firstRow);
+	    		resultsList = resultsList.subList(0, maxRows - firstRow + 1);
+	    		endRow = maxRows;
+	    		lastRow = endRow;
+	    	}
+	    	tuples = resultsList.toArray(new List<?>[resultsList.size()+(lastTuple!=null?1:0)]);
+	    	if (lastTuple != null) {
+	    		endRow++;
+	    		lastRow = endRow;
+	    		tuples[tuples.length-1] = lastTuple;
+	    	}
+		} else {
+			tuples = resultsList.toArray(new List<?>[resultsList.size()]);
+		}
+		Batch result = new Batch(tuples, firstRow, endRow);
+		result.setLastRow(lastRow);
 		return result;
 	}
     
@@ -436,7 +509,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public int available() throws SQLException {
 		int current = batchResults.getCurrentRowNumber();
 		int highest = batchResults.getHighestRowNumber();
-		return highest - current - getOffset();
+		return highest - current - getOffset() - (batchResults.isTailLast()?1:0);
 	}
 	
 	protected int getOffset() {
@@ -1162,11 +1235,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public Array getArray(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return DataTypeTransformer.getArray(getObject(columnIndex));
 	}
 
 	public Array getArray(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return DataTypeTransformer.getArray(getObject(columnLabel));
 	}
 
 	public InputStream getAsciiStream(int columnIndex) throws SQLException {
@@ -1300,7 +1373,12 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         if (rows == 0) {
             this.fetchSize = BaseDataSource.DEFAULT_FETCH_SIZE;
         } else {
-            this.fetchSize = rows;
+        	if (disableFetchSize == null) {
+        		this.disableFetchSize = PropertiesUtils.getBooleanProperty(statement.getConnection().getConnectionProps(), DISABLE_FETCH_SIZE, DISABLE_FETCH_SIZE_DEFAULT);
+        	}
+        	if (disableFetchSize == null || !disableFetchSize) {
+        		this.fetchSize = rows;
+        	}
         }
 	}
 
@@ -1691,6 +1769,10 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public <T> T getObject(String columnLabel, Class<T> type)
 			throws SQLException {
 		return DataTypeTransformer.transform(getObject(columnLabel), type);
+	}
+	
+	ResultsFuture<ResultsMessage> getPrefetch() {
+		return prefetch;
 	}
 
 }

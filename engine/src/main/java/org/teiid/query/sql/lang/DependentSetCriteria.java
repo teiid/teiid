@@ -31,6 +31,7 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.relational.DependentValueSource;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.Option.MakeDep;
 import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
@@ -49,7 +50,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
 		public Expression dep; 
 		public Expression ind;
 		public float ndv;
-		public float maxNdv;
+		public float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
 	}
 	
     /**
@@ -70,6 +71,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
      * set only for dependent pushdown
      */
     private DependentValueSource dependentValueSource;
+    private MakeDep makeDepOptions;
     
     /** 
      * Construct with the left expression 
@@ -216,6 +218,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         criteriaCopy.maxNdv = this.maxNdv;
         criteriaCopy.maxNdvs = this.maxNdvs;
         criteriaCopy.ndvs = this.ndvs;
+        criteriaCopy.makeDepOptions = this.makeDepOptions;
         return criteriaCopy;
     }
     
@@ -233,6 +236,18 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
     public void setDependentValueSource(
 			DependentValueSource dependentValueSource) {
 		this.dependentValueSource = dependentValueSource;
+	}
+
+	public void setMakeDepOptions(MakeDep makeDep) {
+		this.makeDepOptions = makeDep;
+		//hint overrides computed value
+		if (makeDep != null && makeDep.getMax() != null) {
+			this.maxNdv = makeDep.getMax();
+		}
+	}
+	
+	public MakeDep getMakeDepOptions() {
+		return makeDepOptions;
 	}
     
 }

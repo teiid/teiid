@@ -133,7 +133,7 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
      */
     public Object clone() {
         Block otherBlock = this.loopBlock.clone();    
-        Query otherQuery = (Query)this.query.clone();
+        Command otherQuery = (Command) this.query.clone();
 
         LoopStatement ls = new LoopStatement(otherBlock, otherQuery, this.cursorName);
         ls.setLabel(label);

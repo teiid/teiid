@@ -25,6 +25,10 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -56,7 +60,16 @@ public abstract class BaseQueryTest extends TestCase {
         
     protected void doProcess(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
     	CommandContext context = createCommandContext();
-        Command command = TestOptimizer.helpGetCommand(sql, metadata, null);
+        doProcess(metadata, sql, capFinder, dataManager, expectedResults,
+				debug, context);
+    }
+
+	protected void doProcess(QueryMetadataInterface metadata, String sql,
+			CapabilitiesFinder capFinder, ProcessorDataManager dataManager,
+			List[] expectedResults, boolean debug, CommandContext context)
+			throws TeiidComponentException, TeiidProcessingException,
+			QueryMetadataException, QueryPlannerException, Exception {
+		Command command = TestOptimizer.helpGetCommand(sql, metadata, null);
 
         // plan
         AnalysisRecord analysisRecord = new AnalysisRecord(false, debug);
@@ -70,7 +83,7 @@ public abstract class BaseQueryTest extends TestCase {
         }
 
     	TestProcessor.doProcess(plan, dataManager, expectedResults, context);
-    }
+	}
 
     protected CommandContext createCommandContext() {
         CommandContext context = new CommandContext(new RequestID(), "test", "user", "myvdb", 1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 

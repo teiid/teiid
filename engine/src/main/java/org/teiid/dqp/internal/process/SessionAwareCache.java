@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheFactory;
@@ -39,6 +40,9 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.vdb.runtime.VDBKey;
@@ -155,11 +159,34 @@ public class SessionAwareCache<T> {
 		return localCache.size() + distributedCache.size();
 	}
 	
+	public T remove(CacheID id, Determinism determinismLevel){
+		if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
+			id.setSessionId(id.originalSessionId);
+			LogManager.logTrace(LogConstants.CTX_DQP, "Removing from session/local cache", id); //$NON-NLS-1$
+			return this.localCache.remove(id);
+		} 
+		id.setSessionId(null);
+		
+		if (determinismLevel == Determinism.USER_DETERMINISTIC) {
+			id.setUserName(id.originalUserName);
+		}
+		else {
+			id.setUserName(null);
+		}
+		
+		LogManager.logTrace(LogConstants.CTX_DQP, "Removing from global/distributed cache", id); //$NON-NLS-1$
+		return this.distributedCache.remove(id);
+	}
+	
 	public void put(CacheID id, Determinism determinismLevel, T t, Long ttl){
 		cachePuts.incrementAndGet();
 		if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
 			id.setSessionId(id.originalSessionId);
 			LogManager.logTrace(LogConstants.CTX_DQP, "Adding to session/local cache", id); //$NON-NLS-1$
+			ttl = computeTtl(id, t, ttl);
+			if (ttl != null && ttl == 0) {
+				return;
+			}
 			this.localCache.put(id, t, ttl);
 		} 
 		else {
@@ -177,6 +204,10 @@ public class SessionAwareCache<T> {
 			
 			if (t instanceof Cachable) {
 				Cachable c = (Cachable)t;
+				ttl = computeTtl(id, t, ttl);
+				if (ttl != null && ttl == 0) {
+					return;
+				}
 				insert = c.prepare(this.bufferManager);
 			}
 			
@@ -185,6 +216,62 @@ public class SessionAwareCache<T> {
 				this.distributedCache.put(id, t, ttl);
 			}
 		}
+	}
+
+	Long computeTtl(CacheID id, T t, Long ttl) {
+		if (!(t instanceof Cachable) || type != Type.RESULTSET) {
+			return ttl;
+		}
+		Cachable c = (Cachable)t;
+		AccessInfo info = c.getAccessInfo();
+		if (info == null) {
+			return ttl;
+		}
+		Set<Object> objects = info.getObjectsAccessed();
+		if (objects == null) {
+			return ttl;
+		}
+		long computedTtl = Long.MAX_VALUE;
+		for (Object o : objects) {
+			if (!(o instanceof AbstractMetadataRecord)) {
+				continue;
+			}
+			AbstractMetadataRecord amr = (AbstractMetadataRecord)o;
+			Long l = getDataTtl(amr);
+			if (l == null || l < 0) {
+				continue;
+			}
+			if (l == 0) {
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_DQP, "Not adding cache entry", id, "since", amr.getFullName(), "has caching disabled"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
+				return Long.valueOf(0);
+			}
+			computedTtl = Math.min(l, computedTtl);
+		}
+		if (ttl != null) {
+			ttl = Math.min(ttl, computedTtl);
+		} else if (computedTtl != Long.MAX_VALUE) {
+			ttl = computedTtl;
+		}
+		return ttl;
+	}
+	
+	static Long getDataTtl(AbstractMetadataRecord record) {
+		String value = record.getProperty(DataModifiable.DATA_TTL, false);
+		if (value != null) {
+			try {
+				return Long.valueOf(value);
+			} catch (NumberFormatException e) {
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, "Invalid data ttl specified for ", record.getFullName()); //$NON-NLS-1$
+				}
+			}
+		}
+		if (record.getParent() != null) {
+			return getDataTtl(record.getParent());
+		}
+		return null;
 	}
 	
 	/**
@@ -327,5 +414,14 @@ public class SessionAwareCache<T> {
 
 	public boolean isTransactional() {
 		return this.localCache.isTransactional() || this.distributedCache.isTransactional();
+	}
+	
+	public CacheStatisticsMetadata buildCacheStats(String name) {
+		CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
+		stats.setName(name);
+		stats.setHitRatio(this.getRequestCount() == 0?0:((double)this.getCacheHitCount()/this.getRequestCount())*100);
+		stats.setTotalEntries(this.getTotalCacheEntries());
+		stats.setRequestCount(this.getRequestCount());
+		return stats;
 	}
 }

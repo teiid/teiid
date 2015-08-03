@@ -70,7 +70,7 @@ public class TestObjectTable {
         process(sql, expected);
     }
 	
-	public static void process(String sql, List[] expectedResults) throws Exception {    
+	public static void process(String sql, List<?>[] expectedResults) throws Exception {    
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	dataManager.addData("SELECT BQT1.SmallA.ObjectValue FROM BQT1.SmallA", new List[] {Collections.singletonList(Arrays.asList("hello", "world")), Collections.singletonList(Arrays.asList("x", null, "y")), Collections.singletonList(null)} );
     	Properties p = new Properties();
@@ -79,5 +79,15 @@ public class TestObjectTable {
 		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
         helpProcess(plan, createCommandContext(), dataManager, expectedResults);
     }
+	
+	@Test public void testNull() throws Exception {
+		String sql = "select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.generatedKeys.toString') as X"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] {
+        		Collections.singletonList(null),
+        };    
+
+        process(sql, expected);
+	}
 	
 }

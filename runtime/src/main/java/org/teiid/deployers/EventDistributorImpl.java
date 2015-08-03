@@ -21,12 +21,17 @@
  */
 package org.teiid.deployers;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.DataTierManagerImpl;
 import org.teiid.events.EventDistributor;
+import org.teiid.events.EventListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -35,8 +40,8 @@ import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.TableStats;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
@@ -44,8 +49,40 @@ import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.RuntimePlugin;
 
 public abstract class EventDistributorImpl implements EventDistributor {
-	
+	private Set<EventListener> listeners = Collections.newSetFromMap(new ConcurrentHashMap<EventListener, Boolean>());
+
 	public abstract VDBRepository getVdbRepository();
+	
+	public EventDistributorImpl() {
+		getVdbRepository().addListener(new VDBLifeCycleListener() {
+			@Override
+			public void removed(String name, int version, CompositeVDB vdb) {
+				for(EventListener el:EventDistributorImpl.this.listeners) {
+					el.vdbUndeployed(name, version);
+				}
+			}
+			@Override
+			public void finishedDeployment(String name, int version, CompositeVDB vdb, boolean reloading) {
+				for(EventListener el:EventDistributorImpl.this.listeners) {
+					if (vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
+						el.vdbLoaded(vdb.getVDB());
+					}
+					else {
+						el.vdbLoadFailed(vdb.getVDB());
+					}
+				}
+			}
+			@Override
+			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
+				for(EventListener el:EventDistributorImpl.this.listeners) {
+					el.vdbDeployed(name, version);
+				}
+			}
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB vdb) {
+			}			
+		});
+	}
 	
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
@@ -182,6 +219,21 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		AbstractMetadataRecord record = DataTierManagerImpl.getByUuid(tm.getMetadataStore(), uuid);
 		if (record != null) {
 			record.setProperty(name, value);
+			if (record instanceof Table) {
+				((Table)record).setLastModified(System.currentTimeMillis());
+			} else if (record instanceof Procedure) {
+				((Procedure)record).setLastModified(System.currentTimeMillis());
+			}
 		}
+	}
+	
+	@Override
+	public void register(EventListener listener) {
+		this.listeners.add(listener);
+	}
+	
+	@Override
+	public void unregister(EventListener listener) {
+		this.listeners.remove(listener);
 	}
 }

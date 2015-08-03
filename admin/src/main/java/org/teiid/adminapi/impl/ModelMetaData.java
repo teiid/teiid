@@ -24,30 +24,35 @@ package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
+import org.teiid.core.util.Assertion;
+import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 
 public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	private static final int DEFAULT_ERROR_HISTORY = 10;
-	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "supports-multi-source-bindings"; //$NON-NLS-1$
+	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD = "supports-multi-source-bindings"; //$NON-NLS-1$
+	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "multisource"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
 		
-	protected LinkedHashMap<String, SourceMappingMetadata> sources = new LinkedHashMap<String, SourceMappingMetadata>();	
+	protected Map<String, SourceMappingMetadata> sources = new CopyOnWriteLinkedHashMap<String, SourceMappingMetadata>();	
 	protected String modelType = Type.PHYSICAL.name();
 	protected String description;	
 	protected String path; 
-    protected Boolean visible = true;
+    protected boolean visible = true;
     protected List<Message> messages;
     protected transient List<Message> runtimeMessages;
-    protected String schemaSourceType;
-	protected String schemaText;
+    protected List<String> sourceMetadataType = new ArrayList<String>();
+	protected List<String> sourceMetadataText = new ArrayList<String>();
+	protected MetadataStatus metadataStatus = MetadataStatus.LOADING;
 
 	@Override
 	public String getDescription() {
@@ -87,8 +92,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 	@Override
     public boolean isSupportsMultiSourceBindings() {
-		String supports = getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY);
-		return Boolean.parseBoolean(supports);
+		return this.sources.size() > 1 || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY)) || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD));
     }    
 	
     public void setSupportsMultiSourceBindings(boolean supports) {
@@ -107,19 +111,34 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	}
     }    
     
+	@Override
+	public MetadataStatus getMetadataStatus() {
+		return metadataStatus;
+	}
+
+    public void setMetadataStatus(Model.MetadataStatus status) {
+        this.metadataStatus = status;
+    }
+    
+    public void setMetadataStatus(String status) {
+    	if (status != null) {
+    		this.metadataStatus = Model.MetadataStatus.valueOf(status);
+    	}
+    }
+    
     public String toString() {
 		return getName() + this.sources;
     }
     
-    public void setVisible(Boolean value) {
+    public void setVisible(boolean value) {
     	this.visible = value;
     }    
 
-	public List<SourceMappingMetadata> getSourceMappings(){
-		return new ArrayList<SourceMappingMetadata>(this.sources.values());
+	public Collection<SourceMappingMetadata> getSourceMappings(){
+		return this.sources.values();
 	}
 	
-	public LinkedHashMap<String, SourceMappingMetadata> getSources() {
+	public Map<String, SourceMappingMetadata> getSources() {
 		return sources;
 	}
 	
@@ -257,6 +276,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         
         public Message(Severity severity, String msg) {
         	this.severity = severity;
+        	Assertion.isNotNull(msg);
         	this.value = msg;
         }
     	
@@ -265,6 +285,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		}
 
 		public void setValue(String value) {
+			Assertion.isNotNull(value);
 			this.value = value;
 		}
 
@@ -306,21 +327,64 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			return true;
 		}		
     }
+    
+    public void addSourceMetadata(String type, String text) {
+    	this.sourceMetadataType.add(type);
+    	this.sourceMetadataText.add(text);
+    }
 
+    /**
+     * @see #getSourceMetadataType()
+     */
+    @Deprecated
     public String getSchemaSourceType() {
-		return schemaSourceType;
+    	if (!sourceMetadataType.isEmpty()) {
+    		return sourceMetadataType.get(0);
+    	}
+    	return null;
 	}
 
+    /**
+     * @see #addSourceMetadata(String, String)
+     */
+    @Deprecated
 	public void setSchemaSourceType(String schemaSourceType) {
-		this.schemaSourceType = schemaSourceType;
+		if (!sourceMetadataType.isEmpty()) {
+			sourceMetadataType.set(0, schemaSourceType);
+		} else {
+			sourceMetadataType.add(schemaSourceType);
+		}
 	}
 
+    /**
+     * @see #getSourceMetadataText()
+     */
+    @Deprecated
 	public String getSchemaText() {
-		return schemaText;
+		if (!sourceMetadataText.isEmpty()) {
+    		return sourceMetadataText.get(0);
+    	}
+    	return null;
 	}
 
+    /**
+     * @see #addSourceMetadata(String, String)
+     */
+    @Deprecated
 	public void setSchemaText(String schemaText) {
-		this.schemaText = schemaText;
+		if (!sourceMetadataText.isEmpty()) {
+			sourceMetadataText.set(0, schemaText);
+		} else {
+			sourceMetadataText.add(schemaText);
+		}
+	}
+    
+    public List<String> getSourceMetadataType() {
+		return sourceMetadataType;
+	}
+    
+    public List<String> getSourceMetadataText() {
+		return sourceMetadataText;
 	}
 	
 	@Override

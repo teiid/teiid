@@ -1,0 +1,24 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="accumuloDS">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.accumulo"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.accumulo.AccumuloManagedConnectionFactory" 
+                        jndi-name="java:/accumuloDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-accumulo-ds">
+                        
+                      <config-property name="ZooKeeperServerList">localhost:2181</config-property>
+                      <config-property name="InstanceName">test</config-property>
+                      <config-property name="Username">user</config-property>
+                      <config-property name="Password">password</config-property>
+                      <config-property name="Roles">public</config-property>
+                      
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

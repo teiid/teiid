@@ -24,15 +24,7 @@ package org.teiid.query.function;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.teiid.UserDefinedAggregate;
 import org.teiid.core.CoreConstants;
@@ -42,11 +34,15 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataException;
-import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Schema;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.util.CommandContext;
 
 
@@ -64,11 +60,17 @@ public class FunctionTree {
     // Constant used to look up the special descriptor key in a node map
     private static final Integer DESCRIPTOR_KEY = -1;
 
-    private Map<String, Set<String>> categories = new HashMap<String, Set<String>>();
+    private Map<String, Set<FunctionMethod>> categories = new TreeMap<String, Set<FunctionMethod>>(String.CASE_INSENSITIVE_ORDER);
 
     private Map<String, List<FunctionMethod>> functionsByName = new TreeMap<String, List<FunctionMethod>>(String.CASE_INSENSITIVE_ORDER);
     
+    private Map<String, FunctionMethod> functionsByUuid = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+    
+    private String schemaName;
+    
     private Set<FunctionMethod> allFunctions = new HashSet<FunctionMethod>();
+    
+    private int idCount;
 
 	/**
 	 * Function lookup and invocation use: Function name (uppercase) to Map (recursive tree)
@@ -90,6 +92,7 @@ public class FunctionTree {
      */
     public FunctionTree(String name, FunctionMetadataSource source, boolean validateClass) {
         // Load data structures
+    	this.schemaName = name;
     	this.validateClass = validateClass;
     	boolean system = CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name) || CoreConstants.SYSTEM_ADMIN_MODEL.equalsIgnoreCase(name);
         Collection<FunctionMethod> functions = source.getFunctionMethods();
@@ -102,6 +105,14 @@ public class FunctionTree {
 			}
         }
     }
+    
+    public String getSchemaName() {
+		return schemaName;
+	}
+    
+    public Map<String, FunctionMethod> getFunctionsByUuid() {
+		return functionsByUuid;
+	}
 
 	// ---------------------- FUNCTION SELECTION USE METHODS ----------------------
 
@@ -126,41 +137,15 @@ public class FunctionTree {
     Collection<String> getCategories() {
         return categories.keySet();
     }
-
-    /**
-     * Get collection of function forms in a category
-     * @param category Category to get (case-insensitive)
-     * @return Collection of {@link FunctionForm}s
-     */
-    Collection<FunctionForm> getFunctionForms(String category) {
-        Set<FunctionForm> functionForms = new HashSet<FunctionForm>();
-
-        Set<String> functions = categories.get(category.toUpperCase());
-        if(functions != null) {
-        	for (String functionName : functions) {
-        		for (FunctionMethod functionMethod : this.functionsByName.get(functionName)) {
-                    functionForms.add(new FunctionForm(functionMethod));
-                }
-            }
-        }
-
-        return functionForms;
-    }
-
-    /**
-     * Find function form based on function name and # of arguments.
-     * @param name Function name, case insensitive
-     * @param args Number of arguments
-     * @return Corresponding form or null if not found
-     */
-    FunctionForm findFunctionForm(String name, int args) {
-    	List<FunctionMethod> results = findFunctionMethods(name, args);
-    	if (results.size() > 0) {
-    		return new FunctionForm(results.get(0));
-    	}
-    	return null;
-    }
     
+    Set<FunctionMethod> getFunctionsInCategory(String name) {
+    	Set<FunctionMethod> names = categories.get(name);
+    	if (names == null) {
+    		return Collections.emptySet();
+    	}
+    	return names;
+    }
+
     /**
      * Find all function methods with the given name and arg length
      * @param name Function name, case insensitive
@@ -196,12 +181,11 @@ public class FunctionTree {
     		method.setCategory(FunctionCategoryConstants.MISCELLANEOUS);
     		categoryKey = FunctionCategoryConstants.MISCELLANEOUS;
     	}
-    	categoryKey = categoryKey.toUpperCase();
-        
+        setUuid(method);
         // Look up function map (create if necessary)
-        Set<String> functions = categories.get(categoryKey);
+        Set<FunctionMethod> functions = categories.get(categoryKey);
         if (functions == null) {
-            functions = new HashSet<String>();
+            functions = new HashSet<FunctionMethod>();
             categories.put(categoryKey, functions);
         }
         
@@ -217,27 +201,26 @@ public class FunctionTree {
                 String typeName = inputParams.get(i).getType();
                 Class<?> clazz = DataTypeManager.getDataTypeClass(typeName);
                 types[i] = clazz;
+                setUuid(inputParams.get(i));
             }
         } else {
         	types = new Class<?>[0];
         }
+        
+        setUuid(method.getOutputParameter());
 
         FunctionDescriptor descriptor = createFunctionDescriptor(source, method, types, system);
         descriptor.setSchema(schema);
         // Store this path in the function tree
-        
-        int index = -1;
+        // Look up function in function map
+        functions.add(method);
+        functionsByUuid.put(method.getUUID(), method);        
         while(true) {
-            String nameKey = methodName.toUpperCase();
-
-	        // Look up function in function map
-	        functions.add(nameKey);
-	
 	        // Add method to list by function name
-	        List<FunctionMethod> knownMethods = functionsByName.get(nameKey);
+	        List<FunctionMethod> knownMethods = functionsByName.get(methodName);
 	        if(knownMethods == null) {
 	            knownMethods = new ArrayList<FunctionMethod>();
-	            functionsByName.put(nameKey, knownMethods);
+	            functionsByName.put(methodName, knownMethods);
 	        }
 	        knownMethods.add(method);
 
@@ -268,7 +251,7 @@ public class FunctionTree {
 	        // Store the leaf descriptor in the tree
 	        node.put(DESCRIPTOR_KEY, descriptor);
 	        
-	        index = methodName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR, index+1);
+	        int index = methodName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
 	        if (index == -1) {
 	        	break;
 	        }
@@ -278,6 +261,24 @@ public class FunctionTree {
         allFunctions.add(method);
         return descriptor;
     }
+
+    /**
+     * Adapted from {@link MetadataFactory#setUUID}
+     * @param method
+     */
+	private void setUuid(AbstractMetadataRecord method) {
+		if (!method.isUUIDSet()) {
+        	int lsb = 0;
+    		if (method.getParent() != null) {
+    			lsb  = method.getParent().getUUID().hashCode();
+    		} else {
+    			lsb = CoreConstants.SYSTEM_MODEL.hashCode();
+    		}
+    		lsb = 31*lsb + method.getName().hashCode();
+    		String uuid = "tsid:"+MetadataFactory.hex(lsb, 16) + "-" + MetadataFactory.hex(idCount++, 8); //$NON-NLS-1$ //$NON-NLS-2$
+        	method.setUUID(uuid);
+        }
+	}
 
 	private FunctionDescriptor createFunctionDescriptor(
 			FunctionMetadataSource source, FunctionMethod method,
@@ -359,8 +360,9 @@ public class FunctionTree {
             }
         }
 
-        FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext);
-        if (method.getAggregateAttributes() != null) {
+        FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext,
+                source.getClassLoader());
+        if (method.getAggregateAttributes() != null && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
         	result.newInstance();
         }
         result.setHasWrappedArgs(hasWrappedArg);
@@ -402,5 +404,21 @@ public class FunctionTree {
         // No descriptor at this location in tree
         return null;
     }
+    
+    public static FunctionTree getFunctionProcedures(Schema schema) {
+		UDFSource dummySource = new UDFSource(Collections.EMPTY_LIST);
+		FunctionTree ft = null;
+		for (Procedure p : schema.getProcedures().values()) {
+			if (p.isFunction() && p.getQueryPlan() != null) {
+				if (ft == null) {
+					ft = new FunctionTree(schema.getName(), dummySource, false);
+				}
+				FunctionMethod fm = SQLParserUtil.createFunctionMethod(p);
+				FunctionDescriptor fd = ft.addFunction(schema.getName(), dummySource, fm, false);
+				fd.setProcedure(p);
+			}
+		}
+		return ft;
+	}
 
 }

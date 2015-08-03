@@ -22,9 +22,14 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.GeometryType;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -322,6 +327,14 @@ public class TestMySQLTranslator {
             output, TRANSLATOR);        
     }
 
+    @Test public void testWeek() throws Exception {
+        String input = "select week(smalla.datevalue) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT WEEKOFYEAR(SmallA.DateValue) FROM SmallA"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);        
+    }
     
     @Test public void testPad() throws Exception {
         String input = "select lpad(smalla.stringkey, 18), rpad(smalla.stringkey, 12) from bqt1.smalla"; //$NON-NLS-1$
@@ -365,6 +378,47 @@ public class TestMySQLTranslator {
         String output = ""; //$NON-NLS-1$
           
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+
+    @Test
+    public void testGeometrySelectConvert() throws Exception {
+        String input = "select shape from cola_markets"; //$NON-NLS-1$
+        String output = "SELECT COLA_MARKETS.SHAPE FROM COLA_MARKETS"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testMysqlGeometryRead() throws Exception {
+    	MySQLExecutionFactory msef = new MySQLExecutionFactory();
+    	msef.start();
+    	GeometryType gt = msef.toGeometryType(BlobType.createBlob(new byte[] {01,02,00,00,01,01,00,00,00,00,00,00,00,00,00,(byte)0xf0,(byte)0x3f,00,00,00,00,00,00,(byte)0xf0,0x3f }));
+    	assertEquals(513, gt.getSrid());
+    	GeometryUtils.getGeometry(gt);
+    }
+    
+    @Test public void testStringUnion() throws Exception {
+    	String input = "select intkey FROM bqt1.smalla UNION select stringkey FROM bqt1.smallb"; //$NON-NLS-1$
+        String output = "(SELECT SmallA.IntKey AS IntKey FROM SmallA) UNION (SELECT SmallB.StringKey FROM SmallB)"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+        
+        input = "select cast(intkey as string) FROM bqt1.smalla UNION select cast(intnum as string) FROM bqt1.smallb"; //$NON-NLS-1$
+        output = "(SELECT cast(SmallA.IntKey AS char) FROM SmallA) UNION (SELECT cast(SmallB.IntNum AS char) FROM SmallB)"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+
+    @Test public void testBigDecimalConversion() throws Exception {
+        String input = "SELECT cast(stringkey as bigdecimal) * 2 FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT ((SmallA.StringKey + 0.0) * 2) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
             input, 
             output, TRANSLATOR);
     }

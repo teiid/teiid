@@ -164,7 +164,11 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 						throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12012, name));
 					}
 					Argument argument = arguments.get(attrCount++);
-					Object  anObj = argument.getArgumentValue().getValue();
+					Object  anObj = null;
+					if (argument.getArgumentValue().getValue() != null) {
+						anObj = IQueryToLdapSearchParser.getLiteralString(argument.getArgumentValue());
+					}
+					
 					attributes.add(new BasicAttribute(name, anObj));
 				}
 			} else {

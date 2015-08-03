@@ -67,7 +67,7 @@ public class AlterResolver implements CommandResolver {
 			 throw new QueryResolverException(QueryPlugin.Event.TEIID30116, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30116, alter.getTarget()));
 		}
 		if (alter.getDefinition() != null) {
-			QueryResolver.resolveCommand(alter.getDefinition(), alter.getTarget(), type, metadata.getDesignTimeMetadata());
+			QueryResolver.resolveCommand(alter.getDefinition(), alter.getTarget(), type, metadata.getDesignTimeMetadata(), false);
 		}
 	}
 

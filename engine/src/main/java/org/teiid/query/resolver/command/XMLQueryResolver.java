@@ -43,8 +43,8 @@ import org.teiid.query.mapping.xml.MappingVisitor;
 import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TempMetadataID.Type;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -238,13 +238,13 @@ public class XMLQueryResolver implements CommandResolver {
 		OrderBy orderBy = query.getOrderBy();
 		
 		if(crit != null) {
-	        List<SubqueryContainer> commands = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit);
+	        List<SubqueryContainer<?>> commands = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit);
 	        if (!commands.isEmpty()) {
 	        	TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());
 	        	if (!subQuery) {
 	        		addPseudoSubqueryGroups(tma, group, docGroup);
 	        	}
-		        for (SubqueryContainer subCommand : commands) {
+		        for (SubqueryContainer<?> subCommand : commands) {
 		            QueryResolver.setChildMetadata(subCommand.getCommand(), query);
 		            if (subCommand.getCommand() instanceof Query && QueryResolver.isXMLQuery((Query)subCommand.getCommand(), tma)) {
 		            	resolveCommand((Query)subCommand.getCommand(), docGroup, tma);
@@ -506,7 +506,9 @@ public class XMLQueryResolver implements CommandResolver {
         elem.setMetadataID(exactMatch.getMetadataID());
         elem.setType(exactMatch.getType());
         elem.setGroupSymbol(exactMatch.getGroupSymbol());
-        elem.setOutputName(name);
+        if (metadata.useOutputName()) {
+        	elem.setOutputName(name);
+        }
     }
 
     static List<ElementSymbol> getElementsUnderNode(Object mid, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata) 

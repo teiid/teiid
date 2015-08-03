@@ -34,9 +34,9 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Schema;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
+import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
@@ -131,7 +131,7 @@ public class AccessInfo implements Serializable {
 			for (List<String> key : this.externalNames) {
 				if (key.size() == 1) {
 					String matTableName = key.get(0);
-					TempMetadataID id = globalStore.getTempTableStore().getMetadataStore().getTempGroupID(matTableName);
+					TempMetadataID id = globalStore.getGlobalTempTableMetadataId(matTableName);
 					if (id == null) {
 						//if the id is null, then create a local instance
 						String viewFullName = matTableName.substring(RelationalPlanner.MAT_PREFIX.length());
@@ -166,11 +166,11 @@ public class AccessInfo implements Serializable {
 					if (m.getLastModified() < 0) {
 						return false; //invalid object
 					}
-					if (sensitiveToMetadataChanges && m.getLastModified() - modTime > this.creationTime) {
+					if (sensitiveToMetadataChanges && m.getLastModified() - modTime >= this.creationTime) {
 						return false;
 					}
 				}
-			} else if (o instanceof DataModifiable && ((DataModifiable)o).getLastDataModification() - modTime > this.creationTime) {
+			} else if (o instanceof DataModifiable && ((DataModifiable)o).getLastDataModification() - modTime >= this.creationTime) {
 				return false;
 			}
 		}

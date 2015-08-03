@@ -44,7 +44,65 @@ public class Option implements LanguageObject {
     public final static String MAKENOTDEP = Reserved.MAKENOTDEP; 
     public final static String OPTIONAL = "optional"; //$NON-NLS-1$
 
+    public static class MakeDep {
+    	private Integer max;
+    	private Boolean join;
+    	
+    	@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((max == null) ? 0 : max);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof MakeDep)) {
+				return false;
+			}
+			MakeDep other = (MakeDep) obj;
+			return EquivalenceUtil.areEqual(max, other.max)
+					&& join == other.join; 
+		}
+
+		public MakeDep() {
+			
+		}
+		
+		@Override
+		public String toString() {
+			return new SQLStringVisitor().appendMakeDepOptions(this).getSQLString();
+		}
+
+		public Integer getMax() {
+			return max;
+		}
+
+		public void setMax(Integer max) {
+			this.max = max;
+		}
+		
+		public Boolean getJoin() {
+			return join;
+		}
+		
+		public void setJoin(Boolean join) {
+			this.join = join;
+		}
+		
+		public boolean isSimple() {
+			return max == null && join == null;
+		}
+    }
+    
     private List<String> makeDependentGroups;
+    private List<String> makeIndependentGroups;
+    private List<MakeDep> makeDependentOptions;
+    private List<MakeDep> makeIndependentOptions;
     private List<String> makeNotDependentGroups;
 	private List<String> noCacheGroups;
     private boolean noCache;
@@ -60,10 +118,31 @@ public class Option implements LanguageObject {
      * @param group Group to make dependent
      */
     public void addDependentGroup(String group) {
+    	addDependentGroup(group, new MakeDep());
+    }
+	
+    public void addDependentGroup(String group, MakeDep makedep) {
+    	if (makedep == null) {
+    		return;
+    	}
         if(this.makeDependentGroups == null) {
             this.makeDependentGroups = new ArrayList<String>();
+            this.makeDependentOptions = new ArrayList<MakeDep>();
         }
         this.makeDependentGroups.add(group);    
+        this.makeDependentOptions.add(makedep);
+    }
+    
+    public void addIndependentGroup(String group, MakeDep makedep) {
+    	if (makedep == null) {
+    		return;
+    	}
+        if(this.makeIndependentGroups == null) {
+            this.makeIndependentGroups = new ArrayList<String>();
+            this.makeIndependentOptions = new ArrayList<MakeDep>();
+        }
+        this.makeIndependentGroups.add(group);    
+        this.makeIndependentOptions.add(makedep);
     }
     
     /** 
@@ -73,6 +152,18 @@ public class Option implements LanguageObject {
     public List<String> getDependentGroups() {
         return this.makeDependentGroups;
     }
+    
+    public List<MakeDep> getMakeDepOptions() {
+    	return this.makeDependentOptions;
+    }
+    
+    public List<MakeDep> getMakeIndependentOptions() {
+		return makeIndependentOptions;
+	}
+    
+    public List<String> getMakeIndependentGroups() {
+		return makeIndependentGroups;
+	}
     
     /**
      * Add group to make dependent
@@ -154,7 +245,10 @@ public class Option implements LanguageObject {
 		Option other = (Option) obj;
         
         return noCache == other.noCache &&
-               EquivalenceUtil.areEqual(getDependentGroups(), other.getDependentGroups()) &&
+               EquivalenceUtil.areEqual(makeDependentGroups, other.makeDependentGroups) &&
+               EquivalenceUtil.areEqual(makeIndependentGroups, other.makeIndependentGroups) &&
+               EquivalenceUtil.areEqual(makeDependentOptions, other.makeDependentOptions) &&
+               EquivalenceUtil.areEqual(makeIndependentOptions, other.makeIndependentOptions) &&
                EquivalenceUtil.areEqual(getNotDependentGroups(), other.getNotDependentGroups()) &&
                EquivalenceUtil.areEqual(getNoCacheGroups(), other.getNoCacheGroups());
     }
@@ -165,8 +259,8 @@ public class Option implements LanguageObject {
      */
     public int hashCode() {
 		int hc = 0;
-        if(getDependentGroups() != null) {
-            hc = HashCodeUtil.hashCode(hc, getDependentGroups());
+        if(this.makeDependentGroups != null) {
+            hc = HashCodeUtil.hashCode(hc, this.makeDependentGroups);
         }
         if(getNotDependentGroups() != null) {
             hc = HashCodeUtil.hashCode(hc, getNotDependentGroups());
@@ -185,8 +279,14 @@ public class Option implements LanguageObject {
         Option newOption = new Option();
         newOption.setNoCache(noCache);
         
-        if(getDependentGroups() != null) {
-        	newOption.makeDependentGroups = new ArrayList<String>(getDependentGroups());
+        if(this.makeDependentGroups != null) {
+        	newOption.makeDependentGroups = new ArrayList<String>(this.makeDependentGroups);
+        	newOption.makeDependentOptions = new ArrayList<MakeDep>(this.makeDependentOptions);
+        }
+        
+        if(this.makeIndependentGroups != null) {
+        	newOption.makeIndependentGroups = new ArrayList<String>(this.makeIndependentGroups);
+        	newOption.makeIndependentOptions = new ArrayList<MakeDep>(this.makeIndependentOptions);
         }
             
         if(getNotDependentGroups() != null) {

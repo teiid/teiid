@@ -2,4 +2,11 @@
 target
 .project
 .classpath
+.checkstyle
 bin
+build.xml
+.DS_Store
+m2e-wtp
+
+# btm transaction
+*.tlog

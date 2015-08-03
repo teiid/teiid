@@ -27,21 +27,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.controller.ModelController;
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
-import org.jboss.modules.ModuleLoader;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceContainer;
@@ -51,26 +45,21 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
-import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.RuntimeVDB;
-import org.teiid.deployers.TranslatorUtil;
-import org.teiid.deployers.UDFMetaData;
-import org.teiid.deployers.VDBLifeCycleListener;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VDBStatusChecker;
-import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.jboss.rest.ResteasyEnabler;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -78,11 +67,11 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.tempdata.GlobalTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.runtime.AbstractVDBDeployer;
 import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
@@ -104,11 +93,13 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	
 	private VDBLifeCycleListener vdbListener;
 	private VDBLifeCycleListener restEasyListener;
-	private LinkedHashMap<String, Resource> visibilityMap;
+	private VDBResources vdbResources;
+	private ContainerLifeCycleListener shutdownListener;
 	
-	public VDBService(VDBMetaData metadata, LinkedHashMap<String, Resource> visibilityMap) {
+	public VDBService(VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
 		this.vdb = metadata;
-		this.visibilityMap = visibilityMap;
+		this.vdbResources = vdbResources;
+		this.shutdownListener = shutdownListener;
 	}
 	
 	@Override
@@ -130,13 +121,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			VDBTranslatorMetaData parent = getTranslatorRepository().getTranslatorMetaData(type);
 			data.setModuleName(parent.getModuleName());
 			data.addAttchment(ClassLoader.class, parent.getAttachment(ClassLoader.class));
-			
-			Set<String> keys = parent.getProperties().stringPropertyNames();
-			for (String key:keys) {
-				if (data.getPropertyValue(key) == null && parent.getPropertyValue(key) != null) {
-					data.addProperty(key, parent.getPropertyValue(key));
-				}
-			}
+			data.setParent(parent);
 			repo.addTranslatorMetadata(data.getName(), data);
 		}
 
@@ -144,51 +129,60 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		final ServiceBuilder<Void> vdbService = addVDBFinishedService(context);
 		this.vdbListener = new VDBLifeCycleListener() {
 			@Override
-			public void added(String name, int version, CompositeVDB cvdb) {
+			public void added(String name, int version, CompositeVDB cvdb, boolean reloading) {
 			}
-
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+			}
 			@Override
 			public void removed(String name, int version, CompositeVDB cvdb) {
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB cvdb, boolean reloading) {
 				if (!name.equals(VDBService.this.vdb.getName()) || version != VDBService.this.vdb.getVersion()) {
 					return;
 				}
+				//clear out the indexmetadatarepository as it holds state that is no longer necessary
+				repositories.put("index", new IndexMetadataRepository()); //$NON-NLS-1$ 
 				VDBMetaData vdbInstance = cvdb.getVDB();
-				// add object replication to temp/matview tables
-				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdbInstance.getAttachment(TransformationMetadata.class));
-				if (objectReplicatorInjector.getValue() != null) {
-					try {
-						gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
-					} catch (Exception e) {
-						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
-					}
-				}
-				vdbInstance.addAttchment(GlobalTableStore.class, gts);
-				vdbService.install();
+				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
+					// add object replication to temp/matview tables
+					GlobalTableStore gts = CompositeGlobalTableStore.createInstance(cvdb, getBuffermanager(), objectReplicatorInjector.getValue());
+
+					vdbInstance.addAttchment(GlobalTableStore.class, gts);
+					vdbService.install();
+				}				
 			}
 		};
 		
 		getVDBRepository().addListener(this.vdbListener);
 		
-		this.restEasyListener = new ResteasyEnabler(this.vdb.getName(), this.vdb.getVersion(), controllerValue.getValue(), executorInjector.getValue());
+		this.restEasyListener = new ResteasyEnabler(this.vdb.getName(), this.vdb.getVersion(), controllerValue.getValue(), executorInjector.getValue(), shutdownListener);
 		getVDBRepository().addListener(this.restEasyListener);
 				
 		MetadataStore store = new MetadataStore();
 		
 		try {
-			this.assignMetadataRepositories(vdb, super.getMetadataRepository("index")); //$NON-NLS-1$
+			//check to see if there is an index file.  if there is then we assume
+			//that index is the default metadata repo
+			MetadataRepository<?, ?> defaultRepo = null;
+			for (String s : this.vdbResources.getEntriesPlusVisibilities().keySet()) {
+				if (s.endsWith(VDBResources.INDEX_EXT)) {
+					defaultRepo = super.getMetadataRepository("index"); //$NON-NLS-1$
+					break;
+				}
+			}
+			this.assignMetadataRepositories(vdb, defaultRepo); 
 			// add transformation metadata to the repository.
-			getVDBRepository().addVDB(this.vdb, store, visibilityMap, udf, cmr);
+			getVDBRepository().addVDB(this.vdb, store, vdbResources.getEntriesPlusVisibilities(), udf, cmr, this.shutdownListener.isBootInProgress());
 		} catch (VirtualDatabaseException e) {
 			throw new StartException(e);
 		}		
 		
 		this.vdb.removeAttachment(UDFMetaData.class);
 		try {
-			loadMetadata(this.vdb, cmr, store);
+			loadMetadata(this.vdb, cmr, store, this.vdbResources, this.shutdownListener.isBootInProgress());
 		} catch (TranslatorException e) {
 			throw new StartException(e);
 		}
@@ -229,6 +223,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			}			
 		};
 		return new RuntimeVDB(vdbMetadata, modificationListener) {
+			@Override
 			protected VDBStatusChecker getVDBStatusChecker() {
 				return VDBService.this.vdbStatusCheckInjector.getValue();
 			}
@@ -263,6 +258,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         if (switchSvc != null) {
             switchSvc.setMode(ServiceController.Mode.REMOVE);
         }
+                
 		// stop object replication
 		if (this.objectReplicatorInjector.getValue() != null) {
 			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
@@ -287,13 +283,15 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		final IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		try {
-			cmr.createConnectorManagers(deployment, new ConnectorManagerRepository.ExecutionFactoryProvider() {
+			ConnectorManagerRepository.ExecutionFactoryProvider provider = new ConnectorManagerRepository.ExecutionFactoryProvider() {
 				
 				@Override
 				public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
 					return VDBService.getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
 				}
-			});
+			};
+			cmr.setProvider(provider);
+			cmr.createConnectorManagers(deployment, provider);
 		} catch (ConnectorManagerException e) {
 			if (e.getCause() != null) {
 				throw new StartException(IntegrationPlugin.Event.TEIID50035.name()+" "+e.getMessage(), e.getCause()); //$NON-NLS-1$
@@ -302,6 +300,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 	}
 	
+	@SuppressWarnings({"rawtypes","unchecked"})
 	static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws ConnectorManagerException {
 		if (!building.add(name)) {
 			throw new ConnectorManagerException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50076, deployment.getName(), deployment.getVersion(), building));
@@ -311,46 +310,53 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			translator = repo.getTranslatorMetaData(name);
 		}
 		if (translator == null) {
-			throw new ConnectorManagerException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50078, deployment.getName(), deployment.getVersion(), name));
+			return null;
 		}
-		try {
-			ExecutionFactory<Object, Object> ef = map.get(translator);
-			if ( ef == null) {
-				
-		        ClassLoader classloader = translator.getAttachment(ClassLoader.class);
-		        if (classloader == null) {
-		        	classloader = Thread.currentThread().getContextClassLoader();
-		        }
-				
-				ef = TranslatorUtil.buildExecutionFactory(translator, classloader);
-				if (ef instanceof DelegatingExecutionFactory) {
-					DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
-					String delegateName = delegator.getDelegateName();
-					if (delegateName != null) {
-						ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
-						((DelegatingExecutionFactory) ef).setDelegate(delegate);
-					}
-				}
-				map.put(translator, ef);
+		ExecutionFactory<Object, Object> ef = map.get(translator);
+		if ( ef == null) {
+			try {
+				ef = TranslatorUtil.buildExecutionFactory(translator);
+			} catch (TeiidException e) {
+				throw new ConnectorManagerException(e);
 			}
-			return ef;
-		} catch(TeiidException e) {
-			throw new ConnectorManagerException(e);
+			if (ef instanceof DelegatingExecutionFactory) {
+				DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
+				String delegateName = delegator.getDelegateName();
+				if (delegateName != null) {
+					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
+					if (delegate == null) {
+						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), delegateName));
+					}
+					((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
+				}
+			}
+			map.put(translator, ef);
 		}
+		return ef;
 	}
 
-    protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount) {
+	@Override
+	@SuppressWarnings({"rawtypes","unchecked"})
+    protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount, final VDBResources vdbResources) {
 
-    	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); 
+    	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date()));
+    	model.setMetadataStatus(Model.MetadataStatus.LOADING);
 		model.addRuntimeMessage(Severity.INFO, msg); 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 
-		Runnable job = new Runnable() {
+		final Runnable job = new Runnable() {
 			@Override
 			public void run() {
 				
 				boolean cached = false;
 				Exception ex = null;
+				TranslatorException te = null;
+				
+				// if this is not the first time trying to load metadata
+				if (model.getMetadataStatus() != Model.MetadataStatus.LOADING) {
+					model.setMetadataStatus(Model.MetadataStatus.RETRYING);
+				}
+				
 				// designer based models define data types based on their built in data types, which are system vdb data types
 				Map<String, Datatype> datatypes = getVDBRepository().getRuntimeTypeMap();
 				Map<String, Datatype> builtin = getVDBRepository().getSystemStore().getDatatypes();
@@ -359,26 +365,40 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				if (factory != null) {
 					factory.correctDatatypes(datatypes, builtin);
 					cached = true;
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				} else {
-					factory = createMetadataFactory(vdb, model);
+					factory = createMetadataFactory(vdb, model, vdbResources.getEntriesPlusVisibilities());
 					ExecutionFactory ef = null;
 					Object cf = null;
 					
-					try {
-						ConnectorManager cm = getConnectorManager(model, cmr);
-						if (cm != null) {
-							ef = cm.getExecutionFactory();
-							cf = cm.getConnectionFactory();
+					for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+						if (ex != null) {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, ex, "Failed to get metadata, trying next source."); //$NON-NLS-1$
+							ex = null;
+							te = null;
 						}
-					} catch (TranslatorException e) {
-						//cf not available
-					}
-					try {
-						metadataRepo.loadMetadata(factory, ef, cf);		
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
-					} catch (Exception e) {
-						ex = e;
+						try {
+							if (cm != null) {
+								ef = cm.getExecutionFactory();
+								cf = cm.getConnectionFactory();
+							}
+						} catch (TranslatorException e) {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+							te = e;
+						}
+						ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+						try {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50104,vdb.getName(), vdb.getVersion(), model.getName(), cm != null?cm.getTranslatorName():null, cm != null?cm.getConnectionName():null));
+						    Thread.currentThread().setContextClassLoader(metadataRepo.getClass().getClassLoader());
+							metadataRepo.loadMetadata(factory, ef, cf);		
+							LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
+							break;
+						} catch (Exception e) {
+							factory = createMetadataFactory(vdb, model, vdbResources.getEntriesPlusVisibilities());
+							ex = e;
+						} finally {
+						    Thread.currentThread().setContextClassLoader(originalCL);
+						}
 					}
 				}
 		    					
@@ -389,12 +409,17 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							cacheMetadataStore(model, factory);
 			    		}
 						
-						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true);
+						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true, VDBService.this.shutdownListener.isBootInProgress());
 			    	} else {
-			    		model.addRuntimeError(ex.getMessage()); 
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), ex.getMessage()));
+			    		String errorMsg = ex.getMessage()==null?ex.getClass().getName():ex.getMessage();
+			    		if (te != null) {
+			    			errorMsg += ": " + te.getMessage(); //$NON-NLS-1$ 
+			    		}
+			    		model.addRuntimeError(errorMsg);
+			    		model.setMetadataStatus(Model.MetadataStatus.FAILED);
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, ex, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
 						if (ex instanceof RuntimeException) {
-							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false);
+							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, VDBService.this.shutdownListener.isBootInProgress());
 						} else {
 							//defer the load to the status checker if/when a source is available/redeployed
 							model.addAttchment(Runnable.class, this);
@@ -409,17 +434,38 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			job.run();
 		}
 		else {
-    		executor.execute(job);
+			//wrap the runnable to trap exceptions that may be caused by an asynch deployment issue
+    		executor.execute(new Runnable() {
+    			@Override
+    			public void run() {
+    				try {
+    					job.run();
+    				} catch (IllegalStateException e) {
+    					if (vdb.getStatus() != Status.FAILED && vdb.getStatus() != Status.REMOVED) {
+    						throw e;
+    					}
+    					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not load metadata for a removed or failed deployment."); //$NON-NLS-1$
+    				}
+    			}
+    		});
 		}
 	}	
     
-    // if is not dynamic always cache; else check for the flag (this may need to be revisited with index vdb)
 	private void cacheMetadataStore(final ModelMetaData model, MetadataFactory schema) {
-		boolean cache = !vdb.isDynamic();
-		if (vdb.isDynamic()) {
+		boolean cache = true;
+		if (vdb.isXmlDeployment()) {
 			cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
+		String prop = vdb.getPropertyValue("cache-metadata"); //$NON-NLS-1$
+		if (prop != null) {
+			cache = Boolean.valueOf(prop);	
+		}
+		prop = model.getPropertyValue("cache-metadata"); //$NON-NLS-1$
+		if (prop != null) {
+			cache = Boolean.valueOf(prop);	
+		}
+				
 		if (cache) {
 			final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
 			try {
@@ -435,6 +481,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		getSerializer().removeAttachment(cachedFile);
 	}
 
+	@Override
 	protected VDBRepository getVDBRepository() {
 		return vdbRepositoryInjector.getValue();
 	}
@@ -469,33 +516,19 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	/**
 	 * Override for module based loading
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	protected MetadataRepository<?, ?> getMetadataRepository(String repoType) throws VirtualDatabaseException {
 		MetadataRepository<?, ?> repo = super.getMetadataRepository(repoType);
 		if (repo != null) {
 			return repo;
 		}
-		final Module module;
-        ClassLoader moduleLoader = this.getClass().getClassLoader();
-        ModuleLoader ml = Module.getCallerModuleLoader();
-        if (repoType != null && ml != null) {
-	        try {
-            	module = ml.loadModule(ModuleIdentifier.create(repoType));
-            	moduleLoader = module.getClassLoader();
-	        } catch (ModuleLoadException e) {
-	            throw new VirtualDatabaseException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, repoType));
-	        }
-        }
-        
-        final ServiceLoader<MetadataRepository> serviceLoader =  ServiceLoader.load(MetadataRepository.class, moduleLoader);
-        if (serviceLoader != null) {
-        	for (MetadataRepository loader:serviceLoader) {
-        		MetadataRepository old = this.repositories.putIfAbsent(repoType, loader);
-        		return old!=null?old:loader;
-        	}
-        }
-		return null;
+		try {
+			repo = TeiidAdd.buildService(MetadataRepository.class, repoType);
+		} catch (OperationFailedException e) {
+			throw new VirtualDatabaseException(IntegrationPlugin.Event.TEIID50057, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, repoType));
+		}
+		MetadataRepository old = this.repositories.putIfAbsent(repoType, repo);
+		return old!=null?old:repo;	
 	}	
-
 }

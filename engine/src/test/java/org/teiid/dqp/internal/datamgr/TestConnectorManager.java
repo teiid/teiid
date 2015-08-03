@@ -26,20 +26,22 @@
  */
 package org.teiid.dqp.internal.datamgr;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-import org.teiid.dqp.internal.datamgr.ConnectorManager;
-import org.teiid.dqp.internal.datamgr.ConnectorWork;
+import org.junit.Before;
+import org.junit.Test;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.TranslatorException;
 
 
 /**
  * JUnit test for TestConnectorStateManager
  */
-public final class TestConnectorManager extends TestCase {
+public final class TestConnectorManager {
     private AtomicRequestMessage request;
     private ConnectorManager csm;
     
@@ -57,16 +59,8 @@ public final class TestConnectorManager extends TestCase {
 		return cm;
 	}
 
-    /**
-     * Constructor for TestConnectorStateManager.
-     * @param name
-     */
-    public TestConnectorManager(final String name) {
-        super(name);
-    }
-
-    protected void setUp() throws Exception {
-        super.setUp();
+	@Before
+    public void setUp() throws Exception {
         request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
         csm = getConnectorManager();
     }
@@ -77,12 +71,12 @@ public final class TestConnectorManager extends TestCase {
     	assertEquals(state, csm.getState(request.getAtomicRequestID()));
     }
 
-    public void testCreateAndAddRequestState() throws Exception {
+    @Test public void testCreateAndAddRequestState() throws Exception {
         helpAssureOneState();
         assertEquals("Expected size of 1", 1, csm.size()); //$NON-NLS-1$
     }
 
-    public void testIllegalCreate() throws Exception {
+    @Test public void testIllegalCreate() throws Exception {
         helpAssureOneState();
         try {
         	helpAssureOneState();
@@ -92,17 +86,64 @@ public final class TestConnectorManager extends TestCase {
         }
     }
 
-    public void testRemoveRequestState() throws Exception {
+    @Test public void testRemoveRequestState() throws Exception {
         helpAssureOneState();
         csm.removeState(request.getAtomicRequestID());
         assertEquals("Expected size of 0", 0, csm.size()); //$NON-NLS-1$
     }
 
-    public void testRemoveUnknownRequestState() throws Exception {
+    @Test public void testRemoveUnknownRequestState() throws Exception {
         helpAssureOneState();
         csm.removeState(new AtomicRequestID(new RequestID("ZZZZ", 3210), 5, 5)); //$NON-NLS-1$
 
         assertEquals("Expected size of 1", 1, csm.size()); //$NON-NLS-1$
+    }
+    
+    @Test public void testGetCapabilities() throws Exception {
+    	final Object cf = new Object();
+    	ExecutionFactory ef = new ExecutionFactory() {
+    		public boolean isSourceRequiredForCapabilities() {
+    			return true;
+    		}
+    	};
+    	final Object[] cfHolder = new Object[1]; 
+		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector", ef) { //$NON-NLS-1$ //$NON-NLS-2$
+			
+			public Object getConnectionFactory(){
+				return cfHolder[0];
+			}
+		};
+		cm.start();
+		try {
+			cm.getCapabilities();
+			fail();
+		} catch (TranslatorException e) {
+			
+		}
+		ef = new ExecutionFactory() {
+			
+    		public boolean isSourceRequiredForCapabilities() {
+    			return true;
+    		}
+    		@Override
+    		public Object getConnection(Object factory,
+    				ExecutionContext executionContext)
+    				throws TranslatorException {
+    			assertEquals(cf, factory);
+    			return factory;
+    		}
+    		@Override
+    		public void closeConnection(Object connection, Object factory) {
+        	}
+		};
+		cm = new ConnectorManager("FakeConnector","FakeConnector", ef) { //$NON-NLS-1$ //$NON-NLS-2$
+			
+			public Object getConnectionFactory(){
+				return cfHolder[0];
+			}
+		};
+		cfHolder[0] = cf;
+		cm.getCapabilities();
     }
            
 }

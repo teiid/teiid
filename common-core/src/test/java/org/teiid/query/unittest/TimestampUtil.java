@@ -63,7 +63,7 @@ public class TimestampUtil {
     public static Timestamp createTimestamp(int year, int month, int date, int hour, int minute, int second, int nano) {
         primeCalendar();
         CAL.get().set(year + 1900, month, date, hour, minute, second);
-        long millis = CAL.get().getTime().getTime();
+        long millis = CAL.get().getTimeInMillis();
         Timestamp ts = new Timestamp(millis);
         ts.setNanos(nano);
         return ts;
@@ -81,7 +81,7 @@ public class TimestampUtil {
    public static Date createDate(int year, int month, int date) {
         primeCalendar();
         CAL.get().set(year + 1900, month, date);
-        return new Date(CAL.get().getTime().getTime());
+        return new Date(CAL.get().getTimeInMillis());
    }
 
     /**
@@ -98,7 +98,7 @@ public class TimestampUtil {
         CAL.get().set(Calendar.HOUR_OF_DAY, hour);
         CAL.get().set(Calendar.MINUTE, minute);
         CAL.get().set(Calendar.SECOND, second);
-        return new Time(CAL.get().getTime().getTime());
+        return new Time(CAL.get().getTimeInMillis());
     }
 
     private static void primeCalendar() {

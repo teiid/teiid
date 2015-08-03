@@ -27,7 +27,9 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -36,15 +38,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.client.util.ResultsFuture;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
-import org.teiid.jdbc.AsynchPositioningException;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.jdbc.RequestOptions;
-import org.teiid.jdbc.StatementCallback;
-import org.teiid.jdbc.TeiidResultSet;
-import org.teiid.jdbc.TeiidStatement;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 
 
@@ -60,6 +58,21 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
     @BeforeClass public static void setup() throws Exception {
     	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.setName("x");
+    	mmd.setModelType(Type.VIRTUAL);
+    	mmd.addSourceMetadata("DDL", "create view t as select 1");
+    	ModelMetaData mmd1 = new ModelMetaData();
+    	mmd1.setName("y");
+    	mmd1.setModelType(Type.VIRTUAL);
+    	mmd1.addSourceMetadata("DDL", "create view T as select 1");
+    	server.deployVDB("test", mmd, mmd1);
+    	
+    	ModelMetaData mmd2 = new ModelMetaData();
+    	mmd2.setName("x");
+    	mmd2.setModelType(Type.VIRTUAL);
+    	mmd2.addSourceMetadata("DDL", "create view t (g geometry options (\"teiid_spatial:srid\" 3819)) as select null;");
+    	server.deployVDB("test1", mmd2);
     }
     
     @AfterClass public static void teardown() throws Exception {
@@ -123,12 +136,12 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 
 	@Test public void testVDBResources() throws IOException, SQLException {
-		execute("select * from vdbresources",new Object[] {}); //$NON-NLS-1$
+		execute("select * from vdbresources order by resourcePath",new Object[] {}); //$NON-NLS-1$
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 
 	@Test public void testColumns() throws Exception {
-		checkResult("testColumns", "select* from SYS.Columns order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
+		checkResult("testColumns", "select* from SYS.Columns order by Name, uid"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test public void testTableType() throws Exception {
@@ -159,70 +172,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		execute("call logMsg(level=>'foo', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
 	}
 	
-	@Test public void testAsynch() throws Exception {
-		Statement stmt = this.internalConnection.createStatement();
-		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select * from SYS.columns a, sys.tables b", new StatementCallback() {
-			int rowCount;
-			@Override
-			public void onRow(Statement s, ResultSet rs) {
-				rowCount++;
-				try {
-					if (!rs.isLast()) {
-						assertTrue(rs.unwrap(TeiidResultSet.class).available() > 0);
-					}
-				} catch (AsynchPositioningException e) {
-					try {
-						assertEquals(0, rs.unwrap(TeiidResultSet.class).available());
-					} catch (SQLException e1) {
-						result.getResultsReceiver().exceptionOccurred(e1);
-					}
-				} catch (SQLException e) {
-					result.getResultsReceiver().exceptionOccurred(e);
-				}
-			}
-			
-			@Override
-			public void onException(Statement s, Exception e) {
-				result.getResultsReceiver().exceptionOccurred(e);
-			}
-			
-			@Override
-			public void onComplete(Statement s) {
-				result.getResultsReceiver().receiveResults(rowCount);
-			}
-		}, new RequestOptions());
-		assertEquals(7905, result.get().intValue());
-	}
-	
-	@Test public void testAsynchContinuous() throws Exception {
-		Statement stmt = this.internalConnection.createStatement();
-		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select * from SYS.Schemas", new StatementCallback() {
-			int rowCount;
-			@Override
-			public void onRow(Statement s, ResultSet rs) throws SQLException {
-				rowCount++;
-				if (rowCount == 1024) {
-					s.close();
-				}
-			}
-			
-			@Override
-			public void onException(Statement s, Exception e) {
-				result.getResultsReceiver().exceptionOccurred(e);
-			}
-			
-			@Override
-			public void onComplete(Statement s) {
-				result.getResultsReceiver().receiveResults(rowCount);
-			}
-		}, new RequestOptions().continuous(true));
-		assertEquals(1024, result.get().intValue());
-	}
-	
 	@Test public void testCallableParametersByName() throws Exception {
 		CallableStatement cs = this.internalConnection.prepareCall("{? = call logMsg(?, ?, ?)}");
 		ParameterMetaData pmd = cs.getParameterMetaData();
@@ -247,4 +196,110 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testArrayAggType", sql); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
+	@Test public void testExecuteUpdateWithStoredProcedure() throws Exception {
+		PreparedStatement cs = this.internalConnection.prepareStatement("call logMsg(?, ?, ?)");
+		//different case
+		cs.setString(1, "DEBUG");
+		cs.setString(2, "org.teiid.foo");
+		cs.setString(3, "hello world");
+		assertEquals(0, cs.executeUpdate());
+		
+		Statement s = this.internalConnection.createStatement();
+		assertEquals(0, s.executeUpdate("call logMsg('DEBUG', 'org.teiid.foo', 'hello world')"));
+	}
+	
+	@Test public void testExpectedTypes() throws Exception {
+		ResultSet rs = this.internalConnection.createStatement().executeQuery("select name from tables where schemaname in ('SYS', 'SYSADMIN')");
+		while (rs.next()) {
+			String name = rs.getString(1);
+			ResultSet rs1 = this.internalConnection.createStatement().executeQuery("select * from " + name + " limit 1");
+			ResultSetMetaData metadata = rs1.getMetaData();
+			if (rs1.next()) {
+				for (int i = 1; i <= metadata.getColumnCount(); i++) {
+					Object o = rs1.getObject(i);
+					assertTrue("Type mismatch for " + name + " " + metadata.getColumnName(i), o == null || Class.forName(metadata.getColumnClassName(i)).isAssignableFrom(o.getClass()));
+				}
+			}
+		}
+	}
+	
+	@Test public void testPrefixSearches() throws Exception {
+		this.execute("select name from schemas where ucase(name) >= 'BAZ_BAR' and ucase(name) <= 'A'");
+		//should be 0 rows rather than an exception
+		assertRowCount(0); 
+
+		this.execute("select name from schemas where upper(name) like 'ab[_'");
+		//should be 0 rows rather than an exception
+		assertRowCount(0);		
+	}
+	
+	@Test public void testColumnsIn() throws Exception {
+		this.internalConnection.close();
+		this.internalConnection = server.createConnection("jdbc:teiid:test");
+		this.execute("select tablename, name from columns where tablename in ('t', 'T')");
+		//should be 2, not 4 rows
+		assertRowCount(2);
+		
+		this.execute("select tablename, name from columns where upper(tablename) in ('t', 's')");
+		assertRowCount(0);
+	}
+	
+	@Test public void testViews() throws Exception {
+		checkResult("testViews", "select Name, Body from Views order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testStoredProcedures() throws Exception {
+		checkResult("testStoredProcedures", "select Name, Body from StoredProcedures order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testUsage() throws Exception {
+		checkResult("testUsgae", "select * from usage"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testFunctions() throws Exception {
+		checkResult("testFunctions", "select * from functions"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testFunctionParameters() throws Exception {
+		checkResult("testFunctionParams", "select * from FunctionParams"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testSpatial() throws Exception {
+		checkResult("testSpatial", "select * from spatial_ref_sys"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testGeometryColumns() throws Exception {
+		this.internalConnection.close();
+		this.internalConnection = server.createConnection("jdbc:teiid:test1");
+		checkResult("testGeometryColumns", "select * from GEOMETRY_COLUMNS"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testArrayIterate() throws Exception {
+		String sql = "select array_get(cast(x.col as string[]), 2) from (exec arrayiterate((('a', 'b'),('c','d')))) x"; //$NON-NLS-1$
+		this.execute(sql);
+		assertResults(new String[] {"expr1[string]", "b", "d"});
+		
+		sql = "select array_get(cast(x.col as string[]), 2) from (exec arrayiterate(null)) x"; //$NON-NLS-1$
+		this.execute(sql);
+		assertRowCount(0);
+		
+	}
+	
+	@Test public void testCloseOnCompletion() throws Exception {
+		String sql = "values (1)"; //$NON-NLS-1$
+		this.execute(sql);
+		this.internalStatement.closeOnCompletion();
+		this.internalResultSet.close();
+		assertTrue(this.internalStatement.isClosed());
+		
+		sql = "values (1)"; //$NON-NLS-1$
+		this.execute(sql);
+		this.internalStatement.closeOnCompletion();
+		try {
+			this.internalStatement.execute(sql);
+			fail();
+		} catch (SQLException e) {
+			//implicitly closed
+		}
+	}
 }

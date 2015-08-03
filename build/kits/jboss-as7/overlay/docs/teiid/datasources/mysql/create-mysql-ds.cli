@@ -1,0 +1,7 @@
+# note that driver-name could be driver's module name if you went module approach.
+/subsystem=datasources/jdbc-driver=mysql:add(driver-name=mysql,driver-module-name=com.mysql,driver-class-name="${db.driver}")
+
+/subsystem=datasources/data-source=mysqlDS:add(jndi-name="${db.jndi_name}",  driver-name=mysql,  connection-url="${db.url}", user-name="${db.user}", password="${db.password}", enabled=true, use-java-context=true )
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

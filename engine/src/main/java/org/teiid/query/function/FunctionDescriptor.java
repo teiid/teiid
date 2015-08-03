@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
@@ -40,6 +41,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
 
@@ -58,7 +60,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     private boolean requiresContext;
     private FunctionMethod method;
     private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
-    private Object metadataID;
     private boolean hasWrappedArgs;
     private boolean calledWithVarArgArrayParam; //TODO: could store this on the function and pass to invoke
     
@@ -66,18 +67,23 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     // a different VM.  This function descriptor can be used to look up 
     // the real VM descriptor for execution.
     private transient Method invocationMethod;
+    
+    private ClassLoader classLoader;
+
+	private Procedure procedure;
 	
     FunctionDescriptor() {
     }
     
 	FunctionDescriptor(FunctionMethod method, Class<?>[] types,
 			Class<?> outputType, Method invocationMethod,
-			boolean requiresContext) {
+			boolean requiresContext, ClassLoader classloader) {
 		this.types = types;
 		this.returnType = outputType;
         this.invocationMethod = invocationMethod;
         this.requiresContext = requiresContext;
         this.method = method;
+        this.classLoader = classloader;
 	}
 	
 	public Object newInstance() {
@@ -133,6 +139,14 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         return this.requiresContext;
     }
     
+    public Procedure getProcedure() {
+		return procedure;
+	}
+    
+    public void setProcedure(Procedure procedure) {
+		this.procedure = procedure;
+	}
+    
 	@Override
 	public String toString() {
 		StringBuffer str = new StringBuffer(this.method.getName());
@@ -181,21 +195,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         this.returnType = returnType;
     }
 
-	public Object getMetadataID() {
-		return this.metadataID;
-	}
-
-	public void setMetadataID(Object metadataID) {
-		this.metadataID = metadataID;
-	}
-	
-	public void checkNotPushdown() throws FunctionExecutionException {
-	    // Check for function we can't evaluate
-	    if(getPushdown() == PushDown.MUST_PUSHDOWN) {
-	         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, getFullName()));
-	    }
-	}
-
 	/**
 	 * Invoke the function described in the function descriptor, using the
 	 * values provided.  Return the result of the function.
@@ -206,7 +205,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	 * @param fd Function descriptor describing the name and types of the arguments
 	 * @return Result of invoking the function
 	 */
-	public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget) throws FunctionExecutionException {
+	public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget) throws FunctionExecutionException, BlockedException {
         if (!isNullDependent()) {
         	for (int i = requiresContext?1:0; i < values.length; i++) {
 				if (values[i] == null) {
@@ -273,7 +272,16 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	        		values = newValues;
         		}
         	}
-            Object result = invocationMethod.invoke(functionTarget, values);
+        	Object result = null;
+        	ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+        	try {
+        	    if (this.classLoader != null) {
+        	        Thread.currentThread().setContextClassLoader(this.classLoader);
+        	    }
+        	    result = invocationMethod.invoke(functionTarget, values);
+        	} finally {
+        	    Thread.currentThread().setContextClassLoader(originalCL);
+        	}
             if (context != null && getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
             	context.setDeterminismLevel(getDeterministic());
             }
@@ -281,6 +289,9 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         } catch(ArithmeticException e) {
     		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getFullName()));
         } catch(InvocationTargetException e) {
+        	 if (e.getTargetException() instanceof BlockedException) {
+        		 throw (BlockedException)e.getTargetException();
+        	 }
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e.getTargetException(), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getFullName()));
         } catch(IllegalAccessException e) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30385, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30385, method.toString()));
@@ -304,7 +315,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 		    	}
 		    }
 		}
-		result = DataTypeManager.convertToRuntimeType(result);
+		result = DataTypeManager.convertToRuntimeType(result, expectedType != DataTypeManager.DefaultDataClasses.OBJECT);
 		if (expectedType.isArray() && result instanceof ArrayImpl) {
 			return result;
 		}

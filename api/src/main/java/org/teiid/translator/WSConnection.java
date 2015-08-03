@@ -24,9 +24,11 @@ package org.teiid.translator;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 
 import javax.resource.cci.Connection;
+import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
@@ -36,8 +38,18 @@ import javax.xml.ws.Service;
  * Simple {@link Connection} interface for web services
  */
 public interface WSConnection extends Connection {
+	
+	public static final String STATUS_CODE = "status-code"; //$NON-NLS-1$
 
 	<T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Service.Mode mode);
+	
+	<T> Dispatch<T> createDispatch(Class<T> type, Service.Mode mode) throws IOException;
+	
+	URL getWsdl();
+	
+	QName getServiceQName();
+	
+	QName getPortQName();
 
 	public static class Util {
 		
@@ -74,5 +86,7 @@ public interface WSConnection extends Connection {
 		}
 		
 	}
+
+	String getStatusMessage(int status);
 	
 }

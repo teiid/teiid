@@ -24,9 +24,10 @@ package org.teiid.adminapi.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
@@ -35,9 +36,11 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 
-public class VDBMetaData extends AdminObjectImpl implements VDB {
+public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 
 	private static final String VERSION_DELIM = "."; //$NON-NLS-1$
 
@@ -51,12 +54,12 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	private int version = 1;
 	private String description;
-	private boolean dynamic = false;
+	private boolean xmlDeployment = false;
 	private volatile VDB.Status status = VDB.Status.ACTIVE;
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private long queryTimeout = Long.MIN_VALUE;
 	private Set<String> importedModels = Collections.emptySet();
-	private Set<String> multiSource;
+	private Map<String, Boolean> visibilityOverrides = new HashMap<String, Boolean>(2);
 
 	public String getFullName() {
 		return getName() + VERSION_DELIM + getVersion();
@@ -126,6 +129,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return new ArrayList<Translator>(this.translators.values());
 	}
 	
+	public LinkedHashMap<String, VDBTranslatorMetaData> getOverrideTranslatorsMap() {
+		return this.translators;
+	}
+	
 	public void setOverrideTranslators(List<Translator> translators) {
 		for (Translator t: translators) {
 			this.translators.put(t.getName(), (VDBTranslatorMetaData)t);
@@ -183,34 +190,35 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return getName()+VERSION_DELIM+getVersion()+ models.values(); 
 	}
 	
+	@Override
 	public boolean isVisible(String modelName) {
 		ModelMetaData model = getModel(modelName);
-		return model == null || model.isVisible();
+		if (model == null) {
+			return true;
+		}
+		if (!visibilityOverrides.isEmpty()) {
+			Boolean result = visibilityOverrides.get(modelName);
+			if (result != null) {
+				return result;
+			}
+		}
+		return model.isVisible();
 	}
 
 	public ModelMetaData getModel(String modelName) {
 		return this.models.get(modelName);
 	}
-	
-	public Set<String> getMultiSourceModelNames(){
-		if (multiSource == null) {
-			HashSet<String> set = new HashSet<String>();
-			for(ModelMetaData m: models.values()) {
-				if (m.isSupportsMultiSourceBindings()) {
-					set.add(m.getName());
-				}
-			}
-			multiSource = set;
-		}
-		return multiSource;
-	}
-	
-	public boolean isDynamic() {
-		return dynamic;
+		
+	/**
+	 * If this is a *-vdb.xml deployment
+	 * @return
+	 */
+	public boolean isXmlDeployment() {
+		return xmlDeployment;
 	}
 
-	public void setDynamic(boolean dynamic) {
-		this.dynamic = dynamic;
+	public void setXmlDeployment(boolean dynamic) {
+		this.xmlDeployment = dynamic;
 	}	
 	
 	@Override
@@ -234,8 +242,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return this.dataPolicies.put(policy.getName(), policy);
 	}
 	
-	public DataPolicyMetadata getDataPolicy(String policyName) {
-		return this.dataPolicies.get(policyName);
+	public LinkedHashMap<String, DataPolicyMetadata> getDataPolicyMap() {
+		return this.dataPolicies;
 	}
 	
 	public VDBTranslatorMetaData getTranslator(String name) {
@@ -276,5 +284,28 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public void setEntries(List<EntryMetaData> entries) {
 		this.entries = entries;
+	}
+	
+	@Override
+	public VDBMetaData clone() {
+		try {
+			VDBMetaData clone = (VDBMetaData) super.clone();
+			clone.models = new LinkedHashMap<String, ModelMetaData>(this.models);
+			clone.attachments = new CopyOnWriteLinkedHashMap<Class<?>, Object>();
+			clone.attachments.putAll(attachments);
+			clone.dataPolicies = new LinkedHashMap<String, DataPolicyMetadata>(dataPolicies);
+			clone.visibilityOverrides = new HashMap<String, Boolean>(visibilityOverrides);
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new TeiidRuntimeException(e);
+		}
+	}
+
+	public void setVisibilityOverride(String name, boolean visible) {
+		this.visibilityOverrides.put(name, visible);
+	}
+	
+	public Map<String, Boolean> getVisibilityOverrides() {
+		return visibilityOverrides;
 	}
 }

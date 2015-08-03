@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
@@ -39,11 +38,11 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
@@ -60,39 +59,48 @@ public class ObjectExecution implements ResultSetExecution {
 	private static TeiidScriptEngine scriptEngine = new TeiidScriptEngine();
 	private Iterator<Object> resultsIt = null;
 	private ObjectExecutionFactory factory;
+	private ExecutionContext executionContext;
 
 	public ObjectExecution(Select query, RuntimeMetadata metadata,
-			ObjectExecutionFactory factory, ObjectConnection connection) throws TranslatorException {
+			ObjectExecutionFactory factory, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
 		this.factory = factory;
 		this.query = query;
 		this.connection = connection;
+		this.executionContext = executionContext;
+
 		projects = new ArrayList<CompiledScript>(query.getDerivedColumns().size());
 		for (DerivedColumn dc : query.getDerivedColumns()) {
-			Column c = ((ColumnReference) dc.getExpression()).getMetadataObject();
-			String name = getNameInSource(c);
-			if (name.equalsIgnoreCase("this")) { //$NON-NLS-1$
-				projects.add(null);
+			ColumnReference cr = (ColumnReference) dc.getExpression();
+			String name = null;
+			if (cr.getMetadataObject() != null) {
+				name = cr.getMetadataObject().getSourceName();
 			} else {
-				try {
-					projects.add(scriptEngine.compile(OBJECT_NAME + "." + name)); //$NON-NLS-1$
-				} catch (ScriptException e) {
-					throw new TranslatorException(e);
-				}
+				name = cr.getName();
 			}
+				if (name.equalsIgnoreCase("this")) { //$NON-NLS-1$
+					projects.add(null);
+				} else {
+					try {
+						projects.add(scriptEngine.compile(OBJECT_NAME + "." + name)); //$NON-NLS-1$
+					} catch (ScriptException e) {
+						throw new TranslatorException(e);
+					}
+				}
 		}
 	}
 
 	@Override
 	public void execute() throws TranslatorException {
 
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-				"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.TRACE)) {
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+					"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 
-		String nameInSource = getNameInSource(((NamedTable)query.getFrom().get(0)).getMetadataObject());
-		Map<?, ?> map = this.connection.getMap(nameInSource);
-		Class<?> type = this.connection.getType(nameInSource);
-	    List<Object> results = factory.search(query, map, type); 	
-
+		String nameInSource = ((NamedTable)query.getFrom().get(0)).getMetadataObject().getNameInSource();
+	    
+	    List<Object> results = factory.search(query, nameInSource, connection, executionContext);
+	    
 		if (results != null && results.size() > 0) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
 					"ObjectExecution number of returned objects is :", results.size()); //$NON-NLS-1$
@@ -139,15 +147,7 @@ public class ObjectExecution implements ResultSetExecution {
 	}
 
 	@Override
-	public void cancel() throws TranslatorException {
+	public void cancel()  {
 	}
 	
-	public static String getNameInSource(AbstractMetadataRecord c) {
-		String name = c.getNameInSource();
-		if (name == null || name.trim().isEmpty()) {
-			return c.getName();
-		}
-		return name;
-	}
-
 }

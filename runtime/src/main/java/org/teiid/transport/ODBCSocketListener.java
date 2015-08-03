@@ -25,24 +25,23 @@ import java.net.InetSocketAddress;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.TeiidDriver;
-import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.ObjectChannel;
 
 public class ODBCSocketListener extends SocketListener {
-	private AuthenticationType authType = AuthenticationType.CLEARTEXT;
-	private int maxBufferSize = Integer.parseInt(System.getProperty("org.teiid.ODBCPacketSize", "307200")); //$NON-NLS-1$ //$NON-NLS-2$
+	private int maxBufferSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.ODBCPacketSize", 307200); //$NON-NLS-1$
+	private boolean requireSecure = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ODBCRequireSecure", true); //$NON-NLS-1$
 	private int maxLobSize;
 	private TeiidDriver driver;
-	private ILogon logonService;
+	private LogonImpl logonService;
 	
-	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, ILogon logon) {
+	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, LogonImpl logon, TeiidDriver driver) {
 		//the clientserviceregistry isn't actually used by ODBC 
 		super(address, config, csr, storageManager);
 		this.maxLobSize = maxLobSize;
-		this.driver = new TeiidDriver();
+		this.driver = driver;
 		this.logonService = logon;
 	}
 	
@@ -57,9 +56,10 @@ public class ODBCSocketListener extends SocketListener {
 	@Override
 	protected SSLAwareChannelHandler createChannelPipelineFactory(final SSLConfiguration config, final StorageManager storageManager) {
 		return new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager) {
+			@Override
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = new DefaultChannelPipeline();
-				PgBackendProtocol pgBackendProtocol = new PgBackendProtocol(maxLobSize, maxBufferSize, config);
+				PgBackendProtocol pgBackendProtocol = new PgBackendProtocol(maxLobSize, maxBufferSize, config, requireSecure);
 			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(pgBackendProtocol, 1 << 20)); //$NON-NLS-1$
 			    pipeline.addLast("odbcBackendProtocol", pgBackendProtocol); //$NON-NLS-1$
 			    pipeline.addLast("handler", this); //$NON-NLS-1$
@@ -70,11 +70,10 @@ public class ODBCSocketListener extends SocketListener {
 	
 	@Override
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new ODBCClientInstance(channel, this.authType, driver, logonService);
+		return new ODBCClientInstance(channel, driver, logonService);
 	}
-
-	public void setAuthenticationType(AuthenticationType value) {
-		this.authType = value;
+	
+	public void setRequireSecure(boolean requireSecure) {
+		this.requireSecure = requireSecure;
 	}
-
 }

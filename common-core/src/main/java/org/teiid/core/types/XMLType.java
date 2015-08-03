@@ -35,13 +35,17 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
+import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLResolver;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.util.ExternalizeUtil;
+import org.teiid.core.util.PropertiesUtils;
 
 /**
  * This class represents the SQLXML object along with the Streamable interface.
@@ -56,13 +60,34 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	}
 	
 	private static final long serialVersionUID = -7922647237095135723L;
+	static final boolean SUPPORT_DTD = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.supportDTD", false); //$NON-NLS-1$
 	
 	private static ThreadLocal<XMLInputFactory> threadLocalFactory = new ThreadLocal<XMLInputFactory>() {
 		protected XMLInputFactory initialValue() {
-			return XMLInputFactory.newInstance();
+			return createXMLInputFactory();
 		}
 	};
-	private static XMLInputFactory factory = XMLInputFactory.newInstance();
+	
+	private static XMLInputFactory createXMLInputFactory()
+			throws FactoryConfigurationError {
+		XMLInputFactory factory = XMLInputFactory.newInstance();
+		if (!SUPPORT_DTD) {
+			factory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+			//these next ones are somewhat redundant, we set them just in case the DTD support property is not respected
+			factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+			factory.setXMLResolver(new XMLResolver() {
+				
+				@Override
+				public Object resolveEntity(String arg0, String arg1, String arg2,
+						String arg3) throws XMLStreamException {
+					throw new XMLStreamException("Reading external entities is disabled"); //$NON-NLS-1$
+				}
+			});
+		}
+		return factory;
+	}
+
+	private static XMLInputFactory factory = createXMLInputFactory();
 	private static Boolean factoriesTreadSafe;
 
 	private transient Type type = Type.UNKNOWN;
@@ -162,11 +187,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		}
 		try {
 			if (version > 0) {
-				try {
-					this.type = ExternalizeUtil.readEnum(in, Type.class);
-				} catch (IllegalArgumentException e) {
-					this.type = Type.UNKNOWN;
-				}
+				this.type = ExternalizeUtil.readEnum(in, Type.class, Type.UNKNOWN);
 			} else {
 				this.type = (Type)in.readObject();
 			}
@@ -261,5 +282,17 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		} catch (SQLException e) {
 			throw new IOException();
 		}
+	}
+	
+	@Override
+	public long length() throws SQLException {
+		if (this.length != -1) {
+			return length;
+		}
+		StorageMode storageMode = InputStreamFactory.getStorageMode(this);
+		if (storageMode != StorageMode.OTHER) {
+			return super.length();
+		}
+		throw new SQLException("Computing the length may leave the XML value unreadable"); //$NON-NLS-1$
 	}
 }

@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -34,9 +35,11 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.basic.ObjectToAnyTransform;
 import org.teiid.core.util.TimestampWithTimezone;
 
 /**
@@ -64,6 +67,7 @@ public class TypeFacility {
 		public static final int XML = DataTypeManager.DefaultTypeCodes.XML;
 		public static final int NULL = DataTypeManager.DefaultTypeCodes.NULL;
 		public static final int VARBINARY = DataTypeManager.DefaultTypeCodes.VARBINARY;
+		public static final int GEOMETRY = DataTypeManager.DefaultTypeCodes.GEOMETRY;
 	}
 
     public interface RUNTIME_TYPES {
@@ -87,6 +91,7 @@ public class TypeFacility {
         public static final Class<XMLType> XML           = DataTypeManager.DefaultDataClasses.XML;
         public static final Class<NullType> NULL         = DataTypeManager.DefaultDataClasses.NULL;
         public static final Class<BinaryType> VARBINARY         = DataTypeManager.DefaultDataClasses.VARBINARY;
+        public static final Class<GeometryType> GEOMETRY         = DataTypeManager.DefaultDataClasses.GEOMETRY;
         
     }
     
@@ -110,21 +115,32 @@ public class TypeFacility {
         public static final String BLOB         = DataTypeManager.DefaultDataTypes.BLOB;
         public static final String CLOB         = DataTypeManager.DefaultDataTypes.CLOB;
         public static final String XML         	= DataTypeManager.DefaultDataTypes.XML;
-        public static final String VARBINARY         	= DataTypeManager.DefaultDataTypes.VARBINARY;
+        public static final String VARBINARY    = DataTypeManager.DefaultDataTypes.VARBINARY;
+        public static final String GEOMETRY     = DataTypeManager.DefaultDataTypes.GEOMETRY;
     }
     
     /**
-     * Get the Class constant for the given String type name
+     * Get the Class constant for the given String runtime type name
      */
     public static Class<?> getDataTypeClass(String type) {
     	return DataTypeManager.getDataTypeClass(type);    	
     }
     
     /**
-     * Get the String constant for the given type class
+     * Get the String constant for the given runtime type class
      */
     public static String getDataTypeName(Class<?> type) {
     	return DataTypeManager.getDataTypeName(type);    	
+    }
+    
+    /**
+     * Get the closest runtime type for the given class
+     */
+    public static Class<?> getRuntimeType(Class<?> type) {
+    	if (type.isPrimitive()) {
+    		return convertPrimitiveToObject(type);
+    	}
+    	return DataTypeManager.getRuntimeType(type);    	
     }
     
     /**
@@ -136,7 +152,15 @@ public class TypeFacility {
         return JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(type);
     } 
     
+    /**
+     * Get the runtime type name for the given SQL type
+     * @param sqlType
+     * @return
+     */
     public static final String getDataTypeNameFromSQLType(int sqlType) {
+    	if (sqlType == Types.ARRAY) {
+    		return RUNTIME_NAMES.OBJECT;
+    	}
     	return JDBCSQLTypeInfo.getTypeName(sqlType);
     }
     
@@ -146,7 +170,7 @@ public class TypeFacility {
      * @return
      */
 	public Object convertToRuntimeType(Object value) {
-		return DataTypeManager.convertToRuntimeType(value);
+		return DataTypeManager.convertToRuntimeType(value, true);
 	}
 	
     /**
@@ -161,6 +185,15 @@ public class TypeFacility {
 	public Object convertDate(Date date, TimeZone initial, Calendar target,
 			Class<?> targetType) {
 		return TimestampWithTimezone.create(date, initial, target, targetType);
+	}
+	
+	/**
+	 * Convert a primitive class to the corresponding object class
+	 * @param clazz
+	 * @return
+	 */
+	public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
+		return ObjectToAnyTransform.convertPrimitiveToObject(clazz);
 	}
 
 }

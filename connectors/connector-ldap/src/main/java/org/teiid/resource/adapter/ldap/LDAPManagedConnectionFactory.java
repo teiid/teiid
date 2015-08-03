@@ -33,8 +33,8 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 	private String ldapAdminUserDN;
 	private String ldapAdminUserPassword;
 	private String ldapUrl;
-	private long ldapTxnTimeoutInMillis;
-	private String ldapContextFactory;
+	private Long ldapTxnTimeoutInMillis;
+	private String ldapContextFactory = "com.sun.jndi.ldap.LdapCtxFactory"; //$NON-NLS-1$
 	
 	
 	@Override
@@ -43,7 +43,14 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 		return new BasicConnectionFactory<LDAPConnectionImpl>() {
 			@Override
 			public LDAPConnectionImpl getConnection() throws ResourceException {
-				return new LDAPConnectionImpl(LDAPManagedConnectionFactory.this);
+				ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+				try {
+					Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+					return new LDAPConnectionImpl(LDAPManagedConnectionFactory.this);
+				} 
+				finally {
+					Thread.currentThread().setContextClassLoader(contextClassLoader);
+				}
 			}
 		};
 	}	

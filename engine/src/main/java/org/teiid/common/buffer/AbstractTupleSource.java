@@ -29,7 +29,7 @@ import org.teiid.core.TeiidProcessingException;
 public abstract class AbstractTupleSource implements IndexedTupleSource {
     private int currentRow = 1;
     private int mark = 1;
-	private List<?> currentTuple;
+	protected List<?> currentTuple;
 	protected TupleBatch batch;
 
     @Override
@@ -57,10 +57,11 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 			BlockedException, TeiidProcessingException {
 		if (available() > 0) {
 			//if (forwardOnly) {
-				if (batch == null || !batch.containsRow(currentRow)) {
-					batch = getBatch(currentRow);
+				int row = getCurrentIndex();
+				if (batch == null || !batch.containsRow(row)) {
+					batch = getBatch(row);
 				}
-				return batch.getTuple(currentRow);
+				return batch.getTuple(row);
 			//} 
 			//TODO: determine if we should directly hold a soft reference here
 			//return getRow(currentRow);
@@ -99,7 +100,7 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 	}
 
     @Override
-    public void mark() {
+    public void mark() throws TeiidComponentException {
         this.mark = currentRow;
     }
 

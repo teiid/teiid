@@ -22,39 +22,71 @@
 
 package org.teiid.translator.loopback;
 
-import java.util.Arrays;
-import java.util.List;
-
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.language.Command;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BaseDelegatingExecutionFactory;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 
 /**
  * Loopback translator.
  */
 @Translator(name="loopback", description="A translator for testing, that returns mock data")
-public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
+public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 
 	private int waitTime = 0;
 	private int rowCount = 1;
 	private boolean throwError = false;
 	private long pollIntervalInMilli = -1;
+	private boolean incrementRows = false;
+	private int charValueSize = 10;
 	
 	public LoopbackExecutionFactory() {
-		setSupportsFullOuterJoins(true);
-		setSupportsOrderBy(true);
-		setSupportsOuterJoins(true);
-		setSupportsSelectDistinct(true);
-		setSupportsInnerJoins(true);
+		TeiidExecutionFactory tef = new TeiidExecutionFactory();
+		tef.setDatabaseVersion(ApplicationInfo.getInstance().getReleaseNumber());
+		this.setDelegate(tef);
 	}
 	
 	@Override
+	public void start() throws TranslatorException {
+		if (this.getDelegateName() == null && this.getDelegate() != null) {
+			this.getDelegate().start();
+		}
+		super.start();
+	}
+	
+	@TranslatorProperty(display="Size of values for CLOB, VARCHAR, etc.", advanced=true)
+	public int getCharacterValuesSize() {
+		return charValueSize;
+	}
+	
+	public void setCharacterValuesSize(int charValSize){
+		this.charValueSize = charValSize;
+	}
+	
+	@TranslatorProperty(display="If set to true each value in each column is being incremented with each row", advanced=true)
+	public boolean getIncrementRows() {
+		return incrementRows;
+	}	
+	
+	public void setIncrementRows(boolean incrementRows) {
+		this.incrementRows = incrementRows;
+	}	
+	
+	@Override
 	public Object getConnection(Object factory) throws TranslatorException {
+		return null;
+	}
+	
+	@Override
+	public Object getConnection(Object factory,
+			ExecutionContext executionContext) throws TranslatorException {
 		return null;
 	}
 	
@@ -93,11 +125,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	public void setPollIntervalInMilli(long intervel) {
 		this.pollIntervalInMilli = intervel;
 	}
-	
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-	}
 
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
@@ -108,187 +135,27 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	@Override
 	public boolean isSourceRequired() {
 		return false;
-	}    
+	}   
 	
 	@Override
-    public List<String> getSupportedFunctions() {
-        List<String> functions = Arrays.asList(new String[] {
-            "+", "-", "*", "/", "abs", "acos", "asin", "atan", "atan2", "ceiling", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
-            "bitand", "bitnot", "bitor", "bitxor", "cos", "cot", "degrees", "cos", "cot", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "degrees", "exp", "floor", "log", "log10", "mod", "pi", "power", "radians",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "round", "sign", "sin", "sqrt", "tan",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-            "ascii", "chr", "char", "concat", "initcap", "insert", "lcase", "left", "length", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "locate", "lower", "lpad", "ltrim", "repeat", "replace", "right", "rpad", "rtrim", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "substring", "translate", "ucase", "upper",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            "curdate", "curtime", "now", "dayname", "dayofmonth", "dayofweek", "dayofyear",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            "hour", "minute", "month", "monthname", "quarter", "second", "timestampadd",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            "timestampdiff", "week", "year", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            "cast", "convert", "ifnull", "nvl"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        });
-        return functions;
-    }
-    
-    @Override
-    public boolean supportsGroupBy() {
-    	return true;
-    }
-
-    @Override
-    public boolean supportsAggregatesAvg() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAggregatesCount() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAggregatesCountStar() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAggregatesDistinct() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAggregatesMax() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAggregatesMin() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAggregatesSum() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAliasedTable() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsCompareCriteriaEquals() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsCorrelatedSubqueries() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsExistsCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsInCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsInCriteriaSubquery() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsIsNullCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsLikeCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsLikeCriteriaEscapeCharacter() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsNotCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsOrCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsQuantifiedCompareCriteriaAll() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsScalarSubqueries() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsSearchedCaseExpressions() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsSelfJoins() {
-        return true;
-    }
-    
-    @Override
-    public boolean supportsInlineViews() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsQuantifiedCompareCriteriaSome() {
-        return true;
-    }
-    @Override
-    public boolean supportsRowLimit() {
-        return true;
-    }
-    
-    @Override
-    public boolean supportsSelectExpression() {
-    	return true;
-    }
-        
-    @Override
-    public boolean supportsSetQueryOrderBy() {
-    	return true;
-    }
-    
-    @Override
-    public boolean supportsUnions() {
-    	return true;
-    }
-    
-    @Override
-    public boolean supportsCompareCriteriaOrdered() {
-    	return true;
-    }
-    
-    @Override
-    public boolean supportsExcept() {
-    	return true;
-    }
-    
-    @Override
-    public boolean supportsHaving() {
-    	return true;
-    }
-    
-    @Override
-    public boolean supportsIntersect() {
-    	return true;
-    }	
+	public boolean isSourceRequiredForMetadata() {
+		return false;
+	}
+	
+	@Override
+	public void getMetadata(MetadataFactory metadataFactory, Object conn)
+			throws TranslatorException {
+	}
+	
+	//override to set as non required
+	@Override
+	@TranslatorProperty(display = "Delegate name", required = false)
+	public String getDelegateName() {
+		return super.getDelegateName();
+	}
+	
+	@Override
+	public boolean returnsSingleUpdateCount() {
+		return true;
+	}
 }

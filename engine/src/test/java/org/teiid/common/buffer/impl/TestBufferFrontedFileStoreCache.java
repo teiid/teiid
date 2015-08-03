@@ -29,13 +29,19 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.ref.WeakReference;
 
+import org.junit.After;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.common.buffer.CacheEntry;
+import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.Serializer;
+import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.TeiidComponentException;
 
 public class TestBufferFrontedFileStoreCache {
 	
+	private BufferFrontedFileStoreCache cache;
+
 	private final static class SimpleSerializer implements Serializer<Integer> {
 		@Override
 		public Integer deserialize(ObjectInput ois)
@@ -66,9 +72,15 @@ public class TestBufferFrontedFileStoreCache {
 			return false;
 		}
 	}
+	
+	@After public void teardown() {
+		if (this.cache != null) {
+			cache.shutdown();
+		}
+	}
 
 	@Test public void testAddGetMultiBlock() throws Exception {
-		BufferFrontedFileStoreCache cache = createLayeredCache(1 << 26, 1 << 26);
+		cache = createLayeredCache(1 << 26, 1 << 26, true, true);
 		
 		CacheEntry ce = new CacheEntry(2l);
 		Serializer<Integer> s = new SimpleSerializer();
@@ -147,7 +159,7 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testEviction() throws Exception {
-		BufferFrontedFileStoreCache cache = createLayeredCache(1<<15, 1<<15);
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
 		assertEquals(3, cache.getMaxMemoryBlocks());
 		
 		CacheEntry ce = new CacheEntry(2l);
@@ -176,16 +188,79 @@ public class TestBufferFrontedFileStoreCache {
 		ce = get(cache, 3l, s);
 		assertEquals(Integer.valueOf(5001), ce.getObject());
 	}
+	
+	@Test public void testEvictionFails() throws Exception {
+		cache = createLayeredCache(1<<15, 1<<15, false, true);
+		BufferManagerImpl bmi = Mockito.mock(BufferManagerImpl.class);
+		cache.setBufferManager(bmi);
+		Serializer<Integer> s = new SimpleSerializer();
+		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
+		cache.createCacheGroup(s.getId());
+		
+		for (int i = 0; i < 3; i++) {
+			add(cache, s, ref, i);
+		}
+		Mockito.verify(bmi, Mockito.atLeastOnce()).invalidCacheGroup(Long.valueOf(1));
+	}
 
-	private static BufferFrontedFileStoreCache createLayeredCache(int bufferSpace, int objectSize) throws TeiidComponentException {
+	private void add(BufferFrontedFileStoreCache cache, Serializer<Integer> s,
+			WeakReference<? extends Serializer<?>> ref, int i) {
+		CacheEntry ce = new CacheEntry(Long.valueOf(i));
+		ce.setSerializer(ref);
+		Integer cacheObject = Integer.valueOf(5000 + i);
+		ce.setObject(cacheObject);
+		cache.addToCacheGroup(s.getId(), ce.getId());
+		cache.add(ce, s);
+	}
+
+	private static BufferFrontedFileStoreCache createLayeredCache(int bufferSpace, int objectSize, boolean memStorage, boolean allocate) throws TeiidComponentException {
 		BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+		fsc.cleanerRunning.set(true); //prevent asynch affects
 		fsc.setMemoryBufferSpace(bufferSpace);
 		fsc.setMaxStorageObjectSize(objectSize);
 		fsc.setDirect(false);
-		SplittableStorageManager ssm = new SplittableStorageManager(new MemoryStorageManager());
-		ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
-		fsc.setStorageManager(ssm);
-		fsc.initialize();
+		if (memStorage) {
+			SplittableStorageManager ssm = new SplittableStorageManager(new MemoryStorageManager());
+			ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
+			fsc.setStorageManager(ssm);
+		} else {
+			StorageManager sm = new StorageManager() {
+				
+				@Override
+				public void initialize() throws TeiidComponentException {
+					
+				}
+				
+				@Override
+				public FileStore createFileStore(String name) {
+					return new FileStore() {
+						
+						@Override
+						public void setLength(long length) throws IOException {
+							throw new OutOfDiskException(null);
+						}
+						
+						@Override
+						protected void removeDirect() {
+							
+						}
+						
+						@Override
+						protected int readWrite(long fileOffset, byte[] b, int offSet, int length,
+								boolean write) throws IOException {
+							return 0;
+						}
+						
+						@Override
+						public long getLength() {
+							return 0;
+						}
+					};
+				}
+			};
+			fsc.setStorageManager(sm);
+		}
+		fsc.initialize(allocate);
 		return fsc;
 	}
 	
@@ -209,6 +284,144 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(0, info.sizeIndex);
 		
 		info.setSize(1 + (1<<13));
+	}
+	
+	@Test public void testDefragTruncateEmpty() throws Exception {
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
+		cache.setMinDefrag(10000000);
+		Serializer<Integer> s = new SimpleSerializer();
+		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
+		cache.createCacheGroup(s.getId());
+		Integer cacheObject = Integer.valueOf(5000);
+
+		for (int i = 0; i < 4; i++) {
+			CacheEntry ce = new CacheEntry((long)i);
+			ce.setSerializer(ref);
+			ce.setObject(cacheObject);
+
+			cache.addToCacheGroup(s.getId(), ce.getId());
+			cache.add(ce, s);
+		}
+		assertEquals(98304, cache.getDiskUsage());
+		for (int i = 0; i < 4; i++) {
+			cache.remove(1l, (long)i);
+		}
+		assertEquals(98304, cache.getDiskUsage());
+		cache.setMinDefrag(0);
+		cache.defragTask.run();
+		assertEquals(98304, cache.getDiskUsage());
+		cache.setTruncateInterval(1);
+		cache.defragTask.run();
+		assertEquals(0, cache.getDiskUsage());
+	}
+	
+	@Test public void testDefragTruncate() throws Exception {
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
+		cache.setMinDefrag(10000000);
+		Serializer<Integer> s = new SimpleSerializer();
+		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
+		cache.createCacheGroup(s.getId());
+		Integer cacheObject = Integer.valueOf(5000);
+
+		for (int i = 0; i < 30; i++) {
+			CacheEntry ce = new CacheEntry((long)i);
+			ce.setSerializer(ref);
+			ce.setObject(cacheObject);
+
+			cache.addToCacheGroup(s.getId(), ce.getId());
+			cache.add(ce, s);
+		}
+		assertEquals(950272, cache.getDiskUsage());
+		for (int i = 0; i < 25; i++) {
+			cache.remove(1l, (long)i);
+		}
+		assertEquals(950272, cache.getDiskUsage());
+		cache.setMinDefrag(0);
+		cache.setTruncateInterval(1);
+		cache.defragTask.run();
+		assertEquals(622592, cache.getDiskUsage());
+		cache.defragTask.run();
+		assertEquals(262144, cache.getDiskUsage());
+		cache.defragTask.run();
+		assertEquals(131072, cache.getDiskUsage());
+		cache.defragTask.run();
+		//we've reached a stable size
+		assertEquals(131072, cache.getDiskUsage());
+	}
+	
+	@Test public void testDefragTruncateCompact() throws Exception {
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
+		cache.setCompactBufferFiles(true);
+		cache.setTruncateInterval(1);
+		cache.setMinDefrag(10000000);
+		Serializer<Integer> s = new SimpleSerializer();
+		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
+		cache.createCacheGroup(s.getId());
+		Integer cacheObject = Integer.valueOf(5000);
+
+		for (int i = 0; i < 30; i++) {
+			CacheEntry ce = new CacheEntry((long)i);
+			ce.setSerializer(ref);
+			ce.setObject(cacheObject);
+
+			cache.addToCacheGroup(s.getId(), ce.getId());
+			cache.add(ce, s);
+		}
+		assertEquals(950272, cache.getDiskUsage());
+		for (int i = 0; i < 25; i++) {
+			cache.remove(1l, (long)i);
+		}
+		assertEquals(950272, cache.getDiskUsage());
+		cache.setMinDefrag(0);
+		cache.setTruncateInterval(1);
+		cache.defragTask.run();
+		assertEquals(131072, cache.getDiskUsage());
+		cache.defragTask.run();
+		//we've reached a stable size
+		assertEquals(131072, cache.getDiskUsage());
+	}
+	
+	@Test public void testDefragMin() throws Exception {
+		cache = createLayeredCache(1<<15, 1<<15, true, true);
+		cache.setMinDefrag(10000000);
+		Serializer<Integer> s = new SimpleSerializer();
+		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
+		cache.createCacheGroup(s.getId());
+		Integer cacheObject = Integer.valueOf(5000);
+
+		for (int i = 0; i < 100; i++) {
+			CacheEntry ce = new CacheEntry((long)i);
+			ce.setSerializer(ref);
+			ce.setObject(cacheObject);
+
+			cache.addToCacheGroup(s.getId(), ce.getId());
+			cache.add(ce, s);
+		}
+		assertEquals(3244032, cache.getDiskUsage());
+		for (int i = 0; i < 90; i++) {
+			cache.remove(1l, (long)i);
+		}
+		assertEquals(3244032, cache.getDiskUsage());
+		cache.setMinDefrag(5000);
+		cache.setTruncateInterval(1);
+		cache.defragTask.run();
+		assertEquals(1802240, cache.getDiskUsage());
+		cache.defragTask.run();
+		assertEquals(1114112, cache.getDiskUsage());
+		cache.defragTask.run();
+		assertEquals(655360, cache.getDiskUsage());
+		cache.defragTask.run(); 
+		//we've reached a stable size
+		assertEquals(655360, cache.getDiskUsage());
+	}
+	
+	@Test public void testLargeMax() throws TeiidComponentException {
+		createLayeredCache(1 << 20, 1 << 30, false, false);
+	}
+	
+	@Test public void testNonAlignedMaxBlocks() throws TeiidComponentException {
+		BufferFrontedFileStoreCache bf = createLayeredCache(1 << 20, 8000000, false, false);
+		assertEquals(974, bf.getMaxMemoryBlocks());
 	}
 	
 }

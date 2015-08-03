@@ -39,16 +39,20 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
@@ -141,9 +145,23 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	    int nodeType = root.getType();
         
 		// Update this node's output columns based on parent's columns
-		root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
+	    List<Expression> oldOutput = (List<Expression>) root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
         
 		if (root.getChildCount() == 0) {
+			//update temp access
+			if (root.getType() == NodeConstants.Types.SOURCE && root.getGroups().size() == 1) {
+				GroupSymbol gs = root.getGroups().iterator().next();
+				if (gs.getMetadataID() instanceof TempMetadataID) {
+					for (Expression ex : outputElements) {
+						if (ex instanceof ElementSymbol) {
+							Object id = ((ElementSymbol)ex).getMetadataID();
+							if (id instanceof TempMetadataID) {
+								((TempMetadataID) id).setAccessed(true);
+							}
+						}
+					}
+				}
+			}
             return;
         }
 
@@ -153,56 +171,65 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            if (command instanceof StoredProcedure) {
 	                //if the access node represents a stored procedure, then we can't actually change the output symbols
 	                root.setProperty(NodeConstants.Info.OUTPUT_COLS, command.getProjectedSymbols());
-	            } else if (checkSymbols) {
-	            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
-	            	for (Expression symbol : outputElements) {
-	                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
-	                    	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
-	                    } 
-					}
-	            }
-		    case NodeConstants.Types.DUP_REMOVE:
-		    	if (root.getType() == NodeConstants.Types.DUP_REMOVE) {
-		    		//TODO there's an analog here for a non-partitioned union, but it would mean checking projections from each branch
-		    		boolean allConstants = true;
-		    		for (Expression ex : outputElements) {
-		    			if (!(SymbolMap.getExpression(ex) instanceof Constant)) {
-		    				allConstants = false;
-		    				break;
-		    			}
-		    		}
-		    		if (allConstants && addLimit(rules, root, metadata, capFinder)) {
-		    			//TODO we could more gracefully handle the !addLimit case
-			    		PlanNode parent = root.getParent();
-			    		if (parent != null) {
-			    			NodeEditor.removeChildNode(root.getParent(), root);
-				    		execute(parent, metadata, capFinder, rules, analysisRecord, context);
-				    		return;
-			    		}
-		    		}
+	            } else {
+	            	ProcessorPlan plan = FrameUtil.getNestedPlan(root);
+	            	if (plan != null && (command == null || !RelationalNodeUtil.isUpdate(command))) {
+	            		//nested with clauses are handled as sub plans, which have a fixed set of output symbols
+	            		root.setProperty(NodeConstants.Info.OUTPUT_COLS, ResolverUtil.resolveElementsInGroup(root.getGroups().iterator().next(), metadata));
+	            	} if (checkSymbols) {
+		            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
+		            	for (Expression symbol : outputElements) {
+		                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
+		                    	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
+		                    } 
+						}
+	            	}
 		    	}
-		    case NodeConstants.Types.TUPLE_LIMIT:
+		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
+		        break;
+		    case NodeConstants.Types.DUP_REMOVE:
+		    	//targeted optimization based upon swapping the dup remove for a limit 1
+		    	//TODO: may need to also check for grouping over constants
+	    		boolean allConstants = true;
+	    		for (Expression ex : outputElements) {
+	    			if (!(EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(ex)))) {
+	    				allConstants = false;
+	    				break;
+	    			}
+	    		}
+	    		if (allConstants && addLimit(rules, root, metadata, capFinder)) {
+	    			//TODO we could more gracefully handle the !addLimit case
+		    		PlanNode parent = root.getParent();
+		    		if (parent != null) {
+		    			NodeEditor.removeChildNode(root.getParent(), root);
+			    		execute(parent, metadata, capFinder, rules, analysisRecord, context);
+			    		return;
+		    		}
+	    		}
 		    case NodeConstants.Types.SORT:
-		    	if (root.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
-		    		//add missing sort columns
-			    	OrderBy elements = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
+	    		//correct expression positions and update the unrelated flag
+		    	OrderBy order = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
+		    	if (order != null && (oldOutput == null || !oldOutput.equals(outputElements))) {
 			    	outputElements = new ArrayList<Expression>(outputElements);
 			    	boolean hasUnrelated = false;
-			    	for (OrderByItem item : elements.getOrderByItems()) {
-			    		if (item.getExpressionPosition() == -1) {
-			    			int index = outputElements.indexOf(item.getSymbol());
-			    			if (index != -1) {
-			    				item.setExpressionPosition(index);
-			    			} else {
-			    				hasUnrelated = true;
-			    				outputElements.add(item.getSymbol());
-			    			}
-						}
+			    	for (OrderByItem item : order.getOrderByItems()) {
+			    		int index = outputElements.indexOf(item.getSymbol());
+		    			if (index != -1) {
+		    				item.setExpressionPosition(index);
+		    			} else {
+		    				hasUnrelated = true;
+		    				outputElements.add(item.getSymbol());
+		    			}
 					}
 			    	if (!hasUnrelated) {
 			    		root.setProperty(NodeConstants.Info.UNRELATED_SORT, false);
+			    	} else {
+			    		root.setProperty(NodeConstants.Info.UNRELATED_SORT, true);
 			    	}
 		    	}
+		    	assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
+		        break;
+		    case NodeConstants.Types.TUPLE_LIMIT:
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.SOURCE: {
@@ -221,6 +248,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            break;
 		    }
 		    default: {
+		    	PlanNode sortNode = null;
 		    	if (root.getType() == NodeConstants.Types.PROJECT) {
 		    		GroupSymbol intoGroup = (GroupSymbol)root.getProperty(NodeConstants.Info.INTO_GROUP);
 		            if (intoGroup != null) { //if this is a project into, treat the nodes under the source as a new plan root
@@ -229,28 +257,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		                return;
 		            }
 	            	List<Expression> projectCols = outputElements;
-	            	boolean modifiedProject = false;
-	            	PlanNode sortNode = NodeEditor.findParent(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
-	            	if (sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
-	            		//if this is the initial rule run, remove unrelated order before changing the project cols
-			            if (!finalRun) {
-		            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
-		            		projectCols = new ArrayList<Expression>(projectCols);
-		            		for (OrderByItem item : elements.getOrderByItems()) {
-		            			if (item.getExpressionPosition() == -1) {
-		            				projectCols.remove(item.getSymbol());
-		            			}
-		            		}
-	            		} else {
-	            			modifiedProject = true;
-	            		}
-		            }
-		            root.setProperty(NodeConstants.Info.PROJECT_COLS, projectCols);
-	            	if (modifiedProject) {
-		            	root.getGroups().clear();
+	            	sortNode = NodeEditor.findParent(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+	            	if (finalRun && sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+            			root.getGroups().clear();
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(projectCols));
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(root.getCorrelatedReferenceElements()));
-	            	}
+		            }
+		            root.setProperty(NodeConstants.Info.PROJECT_COLS, projectCols);
 	            	if (root.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
 	            		Set<WindowFunction> windowFunctions = getWindowFunctions(projectCols);
 	            		if (windowFunctions.isEmpty()) {
@@ -259,7 +272,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	}
 		    	}
 	            
-	            List<Expression> requiredInput = collectRequiredInputSymbols(root);
+	            List<Expression> requiredInput = collectRequiredInputSymbols(root, metadata, capFinder);
 	            //targeted optimization for unnecessary aggregation
 	            if (root.getType() == NodeConstants.Types.GROUP && root.hasBooleanProperty(Info.IS_OPTIONAL) && NodeEditor.findParent(root, NodeConstants.Types.ACCESS) == null) {
 	            	PlanNode parent = removeGroupBy(root, metadata);
@@ -277,6 +290,17 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            // Call children recursively
 	            if(root.getChildCount() == 1) {
 	                assignOutputElements(root.getLastChild(), requiredInput, metadata, capFinder, rules, analysisRecord, context);
+	                if (!finalRun && root.getType() == NodeConstants.Types.PROJECT && sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+                		//if this is the initial rule run, remove unrelated order to preserve the original projection
+	            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
+	            		outputElements = new ArrayList<Expression>(outputElements);
+	            		for (OrderByItem item : elements.getOrderByItems()) {
+	            			if (item.getExpressionPosition() == -1) {
+	            				outputElements.remove(item.getSymbol());
+	            			}
+	            		}
+	            		root.setProperty(NodeConstants.Info.PROJECT_COLS, outputElements);
+	                }
 	            } else {
 	                //determine which elements go to each side of the join
 	                for (PlanNode childNode : root.getChildren()) {
@@ -300,10 +324,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				if (NodeEditor.findParent(parent, NodeConstants.Types.SET_OP | NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS) != null) {
 					return false; //access node is too high
 				}
-				parent = accessNode.getParent();
-				if (parent == null) {
-					return false; //cannot modify the root - TODO could move this logic to another rule
-				}
+				parent = accessNode;
 			}
 		}
 		
@@ -314,7 +335,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			rules.push(RuleConstants.PUSH_LIMIT);
 		}
 		
-		parent.getFirstChild().addAsParent(limit);
+		if (parent.getParent() == null) {
+			if (parent.getType() == NodeConstants.Types.ACCESS) {
+				return false;
+			}
+			parent = parent.getFirstChild();
+		} 
+		parent.addAsParent(limit);
 		return true;
 	}
 
@@ -452,7 +479,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         boolean updateGroups = outputColumns.size() != originalOrder.size();
         boolean[] seenIndex = new boolean[outputColumns.size()];
         boolean newSymbols = false;
-        
+        int newSymbolIndex = 0;
         for (int i = 0; i < outputColumns.size(); i++) {
             Expression expr = outputColumns.get(i);
             filteredIndex[i] = originalOrder.indexOf(expr);
@@ -460,6 +487,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             	updateGroups = true;
             	//we're adding this symbol, which needs to be updated against respective symbol maps
             	newSymbols = true;
+            } else {
+            	newSymbolIndex++;
             }
             if (!updateGroups) {
             	seenIndex[filteredIndex[i]] = true;
@@ -491,7 +520,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					Expression ex = (Expression) outputColumns.get(j).clone();
 					ExpressionMappingVisitor.mapExpressions(ex, childMap.asMap());
 					newCols.set(j, ex);
-					filteredIndex[j] = j;
+					if (i == 0) {
+						filteredIndex[j] = newSymbolIndex++;
+					}
 				}
             }
             
@@ -517,7 +548,10 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             List<Expression> originalExpressionOrder = symbolMap.getValues();
 
         	for (int i = 0; i < filteredIndex.length; i++) {
-        		newMap.addMapping(originalOrder.get(filteredIndex[i]), originalExpressionOrder.get(filteredIndex[i]));
+        		if (filteredIndex[i] < originalOrder.size()) {
+        			newMap.addMapping(originalOrder.get(filteredIndex[i]), originalExpressionOrder.get(filteredIndex[i]));
+        		}
+        		//else TODO: we may need to create a fake symbol
 			}
         	sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, newMap);
         }
@@ -551,8 +585,12 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * are any symbols that are required in the processing of this node,
      * for instance to create a new element symbol or sort on it, etc.
      * @param node Node to collect for
+     * @param metadata 
+     * @param capFinder 
+     * @throws TeiidComponentException 
+     * @throws QueryMetadataException 
      */
-	private List<Expression> collectRequiredInputSymbols(PlanNode node) {
+	private List<Expression> collectRequiredInputSymbols(PlanNode node, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
 
         Set<Expression> requiredSymbols = new LinkedHashSet<Expression>();
         Set<Expression> createdSymbols = new HashSet<Expression>();
@@ -563,6 +601,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			case NodeConstants.Types.PROJECT:
             {
                 List<Expression> projectCols = (List<Expression>) node.getProperty(NodeConstants.Info.PROJECT_COLS);
+                PlanNode accessParent = NodeEditor.findParent(node, NodeConstants.Types.ACCESS);
+                PlanNode accessNode = null;
+                if (accessParent == null) {
+                	//find the direct access node
+                	accessNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE 
+                			| NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP);
+                }
                 for (Expression ss : projectCols) {
                     if(ss instanceof AliasSymbol) {
                         createdSymbols.add(ss);
@@ -573,24 +618,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                     if (ss instanceof WindowFunction || ss instanceof ExpressionSymbol) {
                         createdSymbols.add(ss);
                     }
-                    boolean symbolRequired = false;
-                    if (finalRun && !(ss instanceof ElementSymbol) && NodeEditor.findParent(node, NodeConstants.Types.ACCESS) == null) {
-                    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
-                    	for (Function function : functions) {
-							if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
-								continue;
-							}
-							if (!getWindowFunctions(Arrays.asList(ss)).isEmpty()) {
-								break; //TODO: support subexpression pushing
-							}
-							//assume we need the whole thing
-							requiredSymbols.add(ss);
-							symbolRequired = true;
-							checkSymbols = true;
-							break;
-						}
-                    }
-                    if (!symbolRequired) {
+                    if (!pushProjection(node, metadata, capFinder,
+							requiredSymbols, accessParent, accessNode, ss)) {
                     	ElementCollectorVisitor.getElements(ss, requiredSymbols);
                     }
                 }
@@ -610,9 +639,19 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				break;
 			case NodeConstants.Types.GROUP:
 				List<Expression> groupCols = (List<Expression>) node.getProperty(NodeConstants.Info.GROUP_COLS);
+				PlanNode accessParent = NodeEditor.findParent(node, NodeConstants.Types.ACCESS);
+                PlanNode accessNode = null;
+                if (accessParent == null) {
+                	//find the direct access node
+                	accessNode = NodeEditor.findNodePreOrder(node.getFirstChild(), NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE 
+                			| NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP);
+                }
 				if(groupCols != null) {
 				    for (Expression expression : groupCols) {
-				    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+				    	if (!pushProjection(node, metadata, capFinder,
+								requiredSymbols, accessParent, accessNode, expression)) {
+	                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+	                    }
                     }
 				}
 				SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
@@ -629,7 +668,10 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					    AggregateSymbol agg = (AggregateSymbol)ex;
 	                    Expression[] aggExprs = agg.getArgs();
 	                    for (Expression expression : aggExprs) {
-	                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+	                    	if (!pushProjection(node, metadata, capFinder,
+									requiredSymbols, accessParent, accessNode, expression)) {
+		                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
+		                    }	
 	                    }
 	                    OrderBy orderBy = agg.getOrderBy();
 	                    if(orderBy != null) {
@@ -668,7 +710,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 */        
         // Add any columns to required that are in this node's output but were not created here
         for (Expression currentOutputSymbol : outputCols) {
-            if(!(createdSymbols.contains(currentOutputSymbol)) ) {
+			if (!createdSymbols.contains(currentOutputSymbol) && (finalRun || node.getType() != NodeConstants.Types.PROJECT || currentOutputSymbol instanceof ElementSymbol)) {
                 requiredSymbols.add(currentOutputSymbol);
             }
         }
@@ -686,6 +728,40 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         }
         
         return new ArrayList<Expression>(requiredSymbols);
+	}
+
+	private boolean pushProjection(PlanNode node,
+			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+			Set<Expression> requiredSymbols, PlanNode accessParent,
+			PlanNode accessNode, Expression ss)
+			throws QueryMetadataException, TeiidComponentException {
+		if (finalRun && accessParent == null && !node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+			Expression ex = SymbolMap.getExpression(ss);
+			if (ex instanceof ElementSymbol || ex instanceof Constant) {
+				return false;
+			}
+			if (accessNode != null) {
+				//narrow check for projection pushing
+				Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+		        if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
+		        	requiredSymbols.add(ss);
+					return true;
+		        }
+			}
+			if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
+		    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
+		    	for (Function function : functions) {
+					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
+						continue;
+					}
+					//assume we need the whole thing
+					requiredSymbols.add(ss);
+					checkSymbols = true;
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
     /**

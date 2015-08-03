@@ -45,6 +45,10 @@ public class CompareCriteria extends AbstractCompareCriteria {
 
 	/** The right-hand expression. */
 	private Expression rightExpression;
+	
+	//null means existing, but implied
+	//true means completely derived
+	//false means required
 	private Boolean isOptional = Boolean.FALSE;
     
     /**
@@ -103,7 +107,10 @@ public class CompareCriteria extends AbstractCompareCriteria {
      * @param isOptional
      */
     public void setOptional(Boolean isOptional) {
-		this.isOptional = isOptional;
+    	if (isOptional == null && Boolean.TRUE.equals(this.isOptional)) {
+    		return;
+    	}
+    	this.isOptional = isOptional;
 	}
     
     /**
@@ -132,8 +139,9 @@ public class CompareCriteria extends AbstractCompareCriteria {
 	public int hashCode() {
 		int hc = 0;
 		hc = HashCodeUtil.hashCode(hc, getOperator());
-		hc = HashCodeUtil.hashCode(hc, getLeftExpression());
-		hc = HashCodeUtil.hashCode(hc, getRightExpression());
+		//allow for semantic equivalence
+		hc += HashCodeUtil.hashCode(0, getLeftExpression());
+		hc += HashCodeUtil.hashCode(0, getRightExpression());
 		return hc;
 	}
 
@@ -152,10 +160,12 @@ public class CompareCriteria extends AbstractCompareCriteria {
     		return false;
 		}
 
+		//also allow for semantic equivalence on equality
         CompareCriteria cc = (CompareCriteria)obj;
         return getOperator() == cc.getOperator() &&
-               EquivalenceUtil.areEqual(getLeftExpression(), cc.getLeftExpression()) &&
-               EquivalenceUtil.areEqual(getRightExpression(), cc.getRightExpression());
+               (EquivalenceUtil.areEqual(getLeftExpression(), cc.getLeftExpression()) &&
+               EquivalenceUtil.areEqual(getRightExpression(), cc.getRightExpression())) || (getOperator() == EQ && EquivalenceUtil.areEqual(getLeftExpression(), cc.getRightExpression()) &&
+                       EquivalenceUtil.areEqual(getRightExpression(), cc.getLeftExpression()));
 	}
 	
 	/**

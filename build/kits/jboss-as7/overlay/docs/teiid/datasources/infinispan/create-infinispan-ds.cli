@@ -1,0 +1,6 @@
+/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan)
+/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS/config-properties=CacheTypeMap:add(value="${cache.type.map}")
+/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS/config-properties=Module:add(value="${module.name}")
+/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS/config-properties=RemoteServerList:add(value="${remote.server.list}")
+/subsystem=resource-adapters/resource-adapter=infinispan:activate

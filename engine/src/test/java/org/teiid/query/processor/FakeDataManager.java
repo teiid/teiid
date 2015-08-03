@@ -22,7 +22,12 @@
 
 package org.teiid.query.processor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -106,7 +111,7 @@ public class FakeDataManager implements ProcessorDataManager {
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject)
 		throws TeiidComponentException {
         
-        LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", context.getProcessorID(), ",model name:", modelName,",TupleSourceID nodeID:",new Integer(parameterObject.nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", context.getRequestId(), ",model name:", modelName,",TupleSourceID nodeID:",new Integer(parameterObject.nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         if (this.recordingCommands) {
             if (! (command instanceof BatchedUpdateCommand) ) {
@@ -205,8 +210,8 @@ public class FakeDataManager implements ProcessorDataManager {
 		    List<List<Integer>> filteredTuples = new ArrayList<List<Integer>>();
 			for ( int c = 0; c < updateCommands.size(); c++ ) {
 				Command cmd = updateCommands.get(c);
-				if (cmd instanceof TranslatableProcedureContainer) {
-					TranslatableProcedureContainer update = (TranslatableProcedureContainer)cmd;
+				if (cmd instanceof FilteredCommand) {
+					FilteredCommand update = (FilteredCommand)cmd;
 					if ( update.getCriteria() != null ) {
 					    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
 			            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();

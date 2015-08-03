@@ -33,9 +33,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p> This class represents a statement used to declare variables in the 
- * storedprocedure language. It extends the <code>Statement</code> that
- * could part of a <code>Block</code>.  This this object holds variable and
- * it's type.</p>
+ * storedprocedure language.</p>
  */
 public class DeclareStatement extends AssignmentStatement {
 

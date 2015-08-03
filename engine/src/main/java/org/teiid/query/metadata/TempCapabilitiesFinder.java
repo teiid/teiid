@@ -39,6 +39,7 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
@@ -46,6 +47,7 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
 		tempCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+		tempCaps.setCapabilitySupport(Capability.ARRAY_TYPE, true);
 		tempCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
 		tempCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
 		tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LOW);
@@ -64,6 +66,14 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
     		return tempCaps;
     	}
 		return delegate.findCapabilities(modelName);
+	}
+	
+	@Override
+	public boolean isValid(String modelName) {
+		if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
+			return true;
+		}
+		return delegate.isValid(modelName);
 	}
 
 }

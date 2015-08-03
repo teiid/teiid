@@ -22,10 +22,12 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 /**
  * This class can be used for comparing lists of elements, when the fields to
@@ -57,7 +59,7 @@ import org.teiid.query.sql.symbol.Constant;
  * </pre>
  */
 public class ListNestedSortComparator<T extends Comparable<? super T>> implements java.util.Comparator<List<T>> {
-
+	
     /**
      * Specifies which fields to sort on.
      */
@@ -78,6 +80,11 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
     private int distinctIndex;
     
     private List<NullOrdering> nullOrdering;
+    
+    private boolean init;
+    private int nullValue = -1;
+    
+    private NullOrder defaultNullOrder = NullOrder.LOW;
 
     /**
      * Constructs an instance of this class given the indicies of the parameters
@@ -106,6 +113,11 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
     public ListNestedSortComparator( int[] sortParameters, List<Boolean> orderTypes ) {
         this.sortParameters = sortParameters;
         this.orderTypes = orderTypes;
+    }
+    
+    public ListNestedSortComparator<T> defaultNullOrder(NullOrder order) {
+    	this.defaultNullOrder = order;
+    	return this;
     }
     
     public boolean isDistinct() {
@@ -137,6 +149,24 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
      */
     
     public int compare(java.util.List<T> list1, java.util.List<T> list2) {
+    	if (!init) {
+    		if (nullOrdering == null) {
+    			nullOrdering = Collections.nCopies(sortParameters.length, null);
+    		}
+    		for (int i = 0; i < sortParameters.length; i++) {
+    			if (nullOrdering.get(i) == null) {
+    				if (defaultNullOrder == NullOrder.FIRST) {
+    					nullOrdering.set(i, NullOrdering.FIRST);
+    				} else if (defaultNullOrder == NullOrder.LAST) {
+    					nullOrdering.set(i, NullOrdering.LAST);
+    				}
+    			}
+    		}
+    		if (defaultNullOrder == NullOrder.HIGH) {
+    			nullValue = 1;
+    		}
+    		init = true;
+    	}
         int compare = 0;
         for (int k = 0; k < sortParameters.length; k++) {
         	if (list1.size() <= sortParameters[k]) {
@@ -154,7 +184,7 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 					compare = 0;
 				} else {
 					// param1 = null, so is less than a non-null
-					compare = -1;
+					compare = nullValue;
 					NullOrdering no = getNullOrdering(k);
 					if (no == NullOrdering.FIRST) {
 						return -1;
@@ -165,7 +195,7 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 				}
             } else if( param2 == null ) {
 				// param1 != null, param2 == null
-				compare = 1;
+				compare = -nullValue;
 				NullOrdering no = getNullOrdering(k);
 				if (no == NullOrdering.FIRST) {
 					return 1;
@@ -187,10 +217,7 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
     }
     
     private NullOrdering getNullOrdering(int index) {
-    	if (nullOrdering != null) {
-    		return nullOrdering.get(index);
-    	}
-    	return null;	
+		return nullOrdering.get(index);
     }
     
     public int[] getSortParameters() {
@@ -199,6 +226,14 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
     
     public void setSortParameters(int[] sortParameters) {
 		this.sortParameters = sortParameters;
+	}
+    
+    public List<Boolean> getOrderTypes() {
+		return orderTypes;
+	}
+    
+    public void setOrderTypes(List<Boolean> orderTypes) {
+		this.orderTypes = orderTypes;
 	}
     
 } // END CLASS    

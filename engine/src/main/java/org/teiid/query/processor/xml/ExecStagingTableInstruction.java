@@ -29,6 +29,11 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.mapping.xml.ResultSetInfo;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.optimizer.xml.XMLQueryPlanner;
+import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.tempdata.AlterTempTable;
 
 
 
@@ -55,6 +60,14 @@ public class ExecStagingTableInstruction extends ExecSqlInstruction {
         	super.execute(env, context);
             
             env.markStagingTableAsLoaded(this.resultSetName);
+            
+            if (!info.isAutoStaged() && info.getTempTable() == null && info.getCommand() instanceof Insert) {
+	            //TODO: should consolidate with the other temp logic in RelationalPlanExecutor
+	            AlterTempTable att = new AlterTempTable(XMLQueryPlanner.getTempTableName(this.resultSetName));
+				att.setIndexColumns(this.info.getFkColumns());
+				//mark the temp table as non-updatable
+				env.getDataManager().registerRequest(env.getProcessorContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
+            }
             
             // now that we done executing the plan; remove the plan from context
             context.removeResultExecutor(resultSetName);

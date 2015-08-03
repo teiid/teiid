@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="nothwind" version="1">
+    <model name="northwind">
+        <source name="local" translator-name="translator-mongodb" connection-jndi-name="java:/mongoDS"/>
+            <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE Employee (
+                    employee_id integer,
+                    FirstName varchar(25),
+                    LastName varchar(25)
+                ) OPTIONS(UPDATABLE 'TRUE');
+            ]]> </metadata>
+    </model>
+</vdb>

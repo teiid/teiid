@@ -36,7 +36,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * "DELETE FROM <group> [WHERE <criteria>]".
  * Implements Command interface.
  */
-public class Delete extends TranslatableProcedureContainer {
+public class Delete extends ProcedureContainer implements FilteredCommand {
 
     /** Identifies the group to delete data from. */
     private GroupSymbol group;

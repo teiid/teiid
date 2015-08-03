@@ -24,7 +24,11 @@
  */
 package org.teiid.translator.jdbc.sqlserver;
 
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,15 +36,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
 import org.teiid.language.Function;
+import org.teiid.language.Insert;
 import org.teiid.language.LanguageObject;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.With;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 /**
@@ -49,14 +66,33 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 @Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
+	public static final String V_2000 = "2000"; //$NON-NLS-1$
 	public static final String V_2005 = "2005"; //$NON-NLS-1$
 	public static final String V_2008 = "2008"; //$NON-NLS-1$
+	public static final String V_2012 = "2012"; //$NON-NLS-1$
+	
+	public static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
+	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
+	public static final Version ELEVEN_0 = Version.getVersion("11.0"); //$NON-NLS-1$
+	
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
-		setDatabaseVersion(V_2005);
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentInPredicates(JDBCExecutionFactory.DEFAULT_MAX_DEPENDENT_PREDICATES);
+		setMaxDependentInPredicates(2);
+	}
+	
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
+		registerFunctionModifier(SourceSystemFunctions.WEEK, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList("DATEPART(ISO_WEEK, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
 	}
 
 	@Override
@@ -235,9 +271,32 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return true;
     }
     
+    /**
+     * Overriden to allow for year based versions
+     */
+    @Override
+    public void setDatabaseVersion(String version) {
+    	if (version != null) {
+    		if (version.equals(V_2000)) {
+    			setDatabaseVersion(SEVEN_0);
+    			return;
+    		} else if (version.equals(V_2005)) {
+    			setDatabaseVersion(NINE_0);
+    			return;
+    		} else if (version.equals(V_2008)) {
+    			setDatabaseVersion(TEN_0);
+    			return;
+    		} else if (version.equals(V_2012)) {
+    			setDatabaseVersion(ELEVEN_0);
+    			return;
+    		}
+    	}
+    	super.setDatabaseVersion(version);
+    }
+    
     @Override
     public String translateLiteralDate(Date dateValue) {
-    	if (getDatabaseVersion().compareTo(V_2008) >= 0) {
+    	if (getVersion().compareTo(TEN_0) >= 0) {
     		return super.translateLiteralDate(dateValue);
     	}
     	return super.translateLiteralTimestamp(new Timestamp(dateValue.getTime()));
@@ -245,12 +304,31 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     
     @Override
     public boolean hasTimeType() {
-    	return getDatabaseVersion().compareTo(V_2008) >= 0;
+    	return getVersion().compareTo(TEN_0) >= 0;
+    }
+    
+    /**
+     * The SQL Server driver maps the time escape to a timestamp/datetime, so
+     * use a cast of the string literal instead.
+     */
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+    	return "cast('" +  formatDateValue(timeValue) + "' as time)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Override
     public boolean supportsCommonTableExpressions() {
     	return true;
+    }
+    
+    @Override
+    public boolean supportsSubqueryCommonTableExpressions() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return getVersion().compareTo(TEN_0) >= 0;
     }
     
     @Override
@@ -288,8 +366,97 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
-    protected boolean setFetchSizeOnCallableStatements() {
+    protected boolean setFetchSize() {
     	return true;
+    }
+    
+    @Override
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
+    }
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetdataProcessor() {
+            @Override
+            protected Column addColumn(ResultSet columns, Table table,
+                    MetadataFactory metadataFactory, int rsColumns)
+                    throws SQLException {
+                Column c = super.addColumn(columns, table, metadataFactory, rsColumns);
+                //The ms jdbc driver does not correctly report the auto incremented column
+                if (!c.isAutoIncremented() && c.getNativeType() != null && StringUtil.endsWithIgnoreCase(c.getNativeType(), " identity")) { //$NON-NLS-1$
+                    c.setAutoIncremented(true);
+                }
+                return c;
+            }
+        };
+    }
+    
+    
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
+	
+	@Override
+	public boolean useStreamsForLobs() {
+		return true;
+	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	if (getVersion().compareTo(NINE_0) >= 0) {
+    		if (getVersion().compareTo(TEN_0) >= 0) {
+    			return "org.hibernate.dialect.SQLServer2008Dialect"; //$NON-NLS-1$
+    		}
+    		return "org.hibernate.dialect.SQLServer2005Dialect"; //$NON-NLS-1$
+    	}
+    	return "org.hibernate.dialect.SQLServerDialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return getVersion().compareTo(NINE_0) >= 0;
+    }
+    
+    @Override
+    public boolean useWithRollup() {
+    	return getVersion().compareTo(TEN_0) < 0;
+    }
+    
+    @Override
+    public boolean supportsConvert(int fromType, int toType) {
+    	if (fromType == TypeFacility.RUNTIME_CODES.OBJECT && this.convertModifier.hasTypeMapping(toType)) {
+			return true;
+    	}
+    	return super.supportsConvert(fromType, toType);
+    }
+    
+    @Override
+    public boolean supportsLiteralOnlyWithGrouping() {
+    	return true;
+    }
+    
+    @Override
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (command instanceof Insert) {
+    		Insert insert = (Insert)command;
+    		if (insert.getValueSource() instanceof QueryExpression) {
+    			QueryExpression qe = (QueryExpression)insert.getValueSource();
+    			if (qe.getWith() != null) {
+    				With with = qe.getWith();
+    				qe.setWith(null);
+    				return Arrays.asList(with, insert);
+    			}
+    		}
+    	}
+    	return super.translateCommand(command, context);
     }
     
 }

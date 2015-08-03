@@ -38,10 +38,14 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.Version;
 
 @Translator(name="mysql5", description="A translator for open source MySQL5 Database")
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
+	
+	public static final Version FIVE_6 = Version.getVersion("5.6"); //$NON-NLS-1$
 	
 	@Override
     public void start() throws TranslatorException {
@@ -68,7 +72,9 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 			}
 		}); 
 		
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() {
+		addPushDownFunction("mysql", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() { 
 			
 			@Override
 			public List<?> translate(Function function) {
@@ -81,6 +87,8 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 				return null;
 			}
 		}); 
+		
+		registerFunctionModifier(SourceSystemFunctions.ST_SRID, new AliasModifier("SRID")); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -88,8 +96,25 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
-        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        //mysql rounds down even when crossing a date part
+        //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        if (getVersion().compareTo(FIVE_6) >= 0) {
+	        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+	        supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+	        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+	        supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+	        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+	        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+	        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+	        supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
+        }
+        supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         return supportedFunctions;
+    }
+    
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
     }
     
     @Override
@@ -130,6 +155,31 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     		return results.getString(parameterIndex);
     	}
     	return result;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	return "org.hibernate.dialect.MySQL5Dialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return true;
+    }
+    
+    @Override
+    public boolean useWithRollup() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsOrderByWithExtendedGrouping() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsFunctionsInGroupBy() {
+    	return true;
     }
     
 }

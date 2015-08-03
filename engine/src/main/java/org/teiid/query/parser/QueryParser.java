@@ -159,7 +159,7 @@ public class QueryParser implements Parser {
             result.setCacheHint(SQLParserUtil.getQueryCacheOption(sql));
         } catch(ParseException pe) {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, pe, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
+            	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, convertParserException(pe), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
             }
             throw convertParserException(pe);
         } finally {
@@ -223,7 +223,7 @@ public class QueryParser implements Parser {
      * @return
      */
     public String getMessage(ParseException pe, int maxExpansions) {
-		if (!pe.specialConstructor) {
+		if (pe.expectedTokenSequences == null) {
 			if (pe.currentToken == null) {
 				return pe.getMessage();
 			}
@@ -319,7 +319,7 @@ public class QueryParser implements Parser {
 			currentToken = currentToken.next; //move to the error token
 		}
 		retval.append("\" at line ").append(currentToken.beginLine).append(", column ").append(currentToken.beginColumn); //$NON-NLS-1$ //$NON-NLS-2$
-		retval.append(".").append(pe.eol); //$NON-NLS-1$
+		retval.append(".\n"); //$NON-NLS-1$
 		return retval;
 	}
 

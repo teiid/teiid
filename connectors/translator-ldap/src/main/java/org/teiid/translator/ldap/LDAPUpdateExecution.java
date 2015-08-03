@@ -32,23 +32,15 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.LdapContext;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.SetClause;
-import org.teiid.language.Update;
+import org.teiid.core.util.StringUtil;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.translator.TranslatorException;
+import org.teiid.metadata.Column;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 
@@ -148,9 +140,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// specified then all of the other required attributes for that
 	// objectClass will of course also be required.
 	//
-	// Just as with the read support in the LDAPSyncQueryExecution class,
-	// multi-value attributes are not supported by this implementation.
-	// 
 	// TODO - maybe automatically specify objectClass based off of
 	// Name/NameInSource RESTRICT property settings, like with read support
 	private void executeInsert()
@@ -161,10 +150,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// create a new attribute list with case ignored in attribute
 		// names
 		Attributes insertAttrs = new BasicAttributes(true);
-		Attribute insertAttr; // what we will use to populate the attribute list
-		ColumnReference insertElement;
-		String nameInsertElement;
-		Object insertValue;
 		String distinguishedName = null;
 		// The IInsert interface uses separate List objects for
 		// the element names and values to be inserted, limiting
@@ -172,13 +157,14 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// other interfaces use ICriteria-based mechanisms for such
 		// input).
 		for (int i=0; i < insertElementList.size(); i++) {
-			insertElement = insertElementList.get(i);
+			ColumnReference insertElement = insertElementList.get(i);
 			// call utility class to get NameInSource/Name of element
-			nameInsertElement = getNameFromElement(insertElement);
+			String nameInsertElement = getNameFromElement(insertElement);
 			// special handling for DN attribute - use it to set
 			// distinguishedName value.
+			Expression literal = insertValueList.get(i);
 			if (nameInsertElement.toUpperCase().equals("DN")) {  //$NON-NLS-1$
-				insertValue = ((Literal)insertValueList.get(i)).getValue();
+				Object insertValue = ((Literal)literal).getValue();
 				if (insertValue == null) { 
 		            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.columnSourceNameDNNullError"); //$NON-NLS-1$
 					throw new TranslatorException(msg);
@@ -192,9 +178,8 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// for other attributes specified in the insert command,
 			// create a new 
 			else {
-				insertAttr = new BasicAttribute(nameInsertElement);
-				insertValue = ((Literal)insertValueList.get(i)).getValue();
-				insertAttr.add(insertValue);
+				Attribute insertAttr = createBasicAttribute(nameInsertElement,
+						literal, insertElement.getMetadataObject());
 				insertAttrs.put(insertAttr);
 			}
 		}
@@ -217,6 +202,35 @@ public class LDAPUpdateExecution implements UpdateExecution {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailedUnexpected",distinguishedName); //$NON-NLS-1$
 			throw new TranslatorException(e, msg);
 		}
+	}
+
+	static Attribute createBasicAttribute(String id,
+			Expression expr, Column col) {
+		Attribute attr = new BasicAttribute(id);
+		if (expr instanceof org.teiid.language.Array) {
+			List<Expression> exprs = ((org.teiid.language.Array)expr).getExpressions();
+			for (Expression val : exprs) {
+				Literal l = (Literal)val;
+				if (l.getValue() != null) {
+					attr.add(IQueryToLdapSearchParser.getLiteralString(l));
+				}
+			}
+		} else {
+			Literal l = (Literal)expr;
+			Object insertValue = null;
+			if (l.getValue() != null) {
+				if (LDAPQueryExecution.MULTIVALUED_CONCAT.equalsIgnoreCase(col.getDefaultValue())) {
+					List<String> vals = StringUtil.split(l.getValue().toString(), "?"); //$NON-NLS-1$
+					for (String val : vals) {
+						attr.add(val);
+					}
+					return attr;
+				}
+				insertValue = IQueryToLdapSearchParser.getLiteralString(l);
+			}
+			attr.add(insertValue);
+		}
+		return attr;
 	}
 
 	// Private method to actually do a delete operation.  Per JNDI doc at
@@ -294,10 +308,6 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// be performed separately using Context.rename()), we will
 		// need to account for this in determining this list size. 
 		ModificationItem[] updateMods = new ModificationItem[updateList.size()];
-		ColumnReference leftElement;
-		Expression rightExpr;
-		String nameLeftElement;
-		Object valueRightExpr;
 		// iterate through the supplied list of updates (each of
 		// which is an ICompareCriteria with an IElement on the left
 		// side and an IExpression on the right, per the Connector
@@ -306,17 +316,16 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			SetClause setClause = updateList.get(i);
 			// trust that connector API is right and left side
 			// will always be an IElement
-			leftElement = setClause.getSymbol();
+			ColumnReference leftElement = setClause.getSymbol();
 			// call utility method to get NameInSource/Name for element
-			nameLeftElement = getNameFromElement(leftElement);
+			String nameLeftElement = getNameFromElement(leftElement);
 			// get right expression - if it is not a literal we
 			// can't handle that so throw an exception
-			rightExpr = setClause.getValue();
-			if (!(rightExpr instanceof Literal)) { 
+			Expression rightExpr = setClause.getValue();
+			if (!(rightExpr instanceof Literal) && !(rightExpr instanceof org.teiid.language.Array)) { 
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
 				throw new TranslatorException(msg);
-		}
-			valueRightExpr = ((Literal)rightExpr).getValue();
+			}
 			// add in the modification as a replacement - meaning
 			// any existing value(s) for this attribute will
 			// be replaced by the new value.  If the attribute
@@ -325,7 +334,8 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// value, we don't do any special handling of it right
 			// now.  But maybe null should mean to delete an
 			// attribute?
-		        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, new BasicAttribute(nameLeftElement, valueRightExpr));
+			Attribute attribute = createBasicAttribute(nameLeftElement, rightExpr, leftElement.getMetadataObject());
+	        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, attribute);
 		}
 		// just try to update an LDAP entry using the DN and
 		// attributes specified in the UPDATE operation.  If it isn't
@@ -393,21 +403,11 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// This is an exact copy of the method with the same name in
 	// IQueryToLdapSearchParser - really should be in a utility class
 	private String getNameFromElement(ColumnReference e) {
-		String ldapAttributeName = null;
-		String elementNameDirect = e.getName();
-		if (elementNameDirect == null) {
-		} else {
-		}
 		AbstractMetadataRecord mdObject = e.getMetadataObject();
 		if (mdObject == null) {
 			return "";  //$NON-NLS-1$
 		}
-		ldapAttributeName = mdObject.getNameInSource();
-		if(ldapAttributeName == null || ldapAttributeName.equals("")) {	   //$NON-NLS-1$	
-			ldapAttributeName = mdObject.getName();
-			//	If name in source is not set, then fall back to the column name.
-		}
-		return ldapAttributeName;
+		return mdObject.getSourceName();
 	}
 
 

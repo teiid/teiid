@@ -1,8 +1,32 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 package org.teiid.translator.hive;
 
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,10 +39,7 @@ import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -72,7 +93,20 @@ public class TestHiveExecutionFactory {
     	helpTest(LANG_FACTORY.createLiteral(new BigInteger("123451266182"), BigInteger.class), TypeFacility.RUNTIME_NAMES.BIG_INTEGER, "cast(123451266182 AS bigint)");
     	helpTest(LANG_FACTORY.createLiteral(new String("foo-bar"), String.class), TypeFacility.RUNTIME_NAMES.STRING, "cast('foo-bar' AS string)");
     	helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), TypeFacility.RUNTIME_NAMES.STRING, "cast(true AS string)");
-    	//helpTest(LANG_FACTORY.createLiteral(new Timestamp(1320883518391L), Timestamp.class), TypeFacility.RUNTIME_NAMES.STRING, "cast('2011-11-09 18:05:18.391' AS string)");
+    	helpTest(LANG_FACTORY.createLiteral(new Integer(12345), Integer.class), TypeFacility.RUNTIME_NAMES.BOOLEAN, "cast(12345 AS boolean)");
+    }
+    
+    @Test
+    public void testFunction() throws Exception {
+        String input = "SELECT MOD(A.intkey,2) FROM BQT1.SMALLA A"; 
+        String output = "SELECT (A.IntKey % 2) FROM SmallA A"; 
+        helpTestVisitor(bqt, input, output);
+    }
+    
+    @Test public void testTimeLiterals() throws Exception {
+        String input = "SELECT {ts '1999-01-01 11:11:11'}, {d '2000-02-02'}, {t '00:00:00'} FROM BQT1.SMALLA A"; 
+        String output = "SELECT '1999-01-01 11:11:11.0', '2000-02-02', '1970-01-01 00:00:00.0' FROM SmallA A"; 
+        helpTestVisitor(bqt, input, output);
     }
     
     @Test
@@ -85,7 +119,7 @@ public class TestHiveExecutionFactory {
     @Test
     public void testCrossJoinCriteria() throws Exception {
         String input = "SELECT A.intkey FROM BQT1.SMALLA A Cross join BQT1.SmallB B"; 
-        String output = "SELECT A.IntKey FROM SmallA A  JOIN SmallB B"; 
+        String output = "SELECT A.IntKey FROM SmallA A CROSS JOIN SmallB B"; 
         helpTestVisitor(bqt, input, output);
     }
     
@@ -118,6 +152,12 @@ public class TestHiveExecutionFactory {
         helpTestVisitor(bqt, input, output);    	
     }
     
+    @Test
+    public void testGroupByOrderBy() throws Exception {
+        String input = "SELECT intkey FROM BQT1.SmallA group by intkey order by intkey"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA GROUP BY SmallA.IntKey ORDER BY IntKey"; 
+        helpTestVisitor(bqt, input, output);    	
+    }
     
     public static TransformationMetadata exampleBQT() {
     	MetadataStore metadataStore = new MetadataStore();
@@ -164,5 +204,21 @@ public class TestHiveExecutionFactory {
            RealMetadataFactory.createElements(vqtg1, elemNames, runtimeTypes); 
            
            return RealMetadataFactory.createTransformationMetadata(metadataStore, "bqt");//$NON-NLS-1$
+    }
+    
+    @Test public void testExcludeTables() throws Exception {
+    	HiveMetadataProcessor hmp = new HiveMetadataProcessor();
+    	hmp.setExcludeTables("x");
+    	Connection c = Mockito.mock(Connection.class);
+    	MetadataFactory mf = Mockito.mock(MetadataFactory.class);
+    	Statement stmt = Mockito.mock(Statement.class);
+    	Mockito.stub(c.createStatement()).toReturn(stmt);
+    	ResultSet rs = Mockito.mock(ResultSet.class);
+    	Mockito.stub(stmt.executeQuery("SHOW TABLES")).toReturn(rs);
+    	Mockito.stub(rs.next()).toReturn(true).toReturn(false);
+    	Mockito.stub(rs.getString(1)).toReturn("x");
+    	
+    	hmp.process(mf, c);
+    	Mockito.verify(mf, Mockito.times(0)).addTable("x");
     }
 }

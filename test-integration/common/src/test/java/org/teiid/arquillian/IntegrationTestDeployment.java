@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -47,10 +48,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.postgresql.Driver;
 import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
 
@@ -110,6 +114,7 @@ public class IntegrationTestDeployment {
 		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
 		props.setProperty("user-name", "sa");
 		props.setProperty("password", "sa");
+		props.setProperty("connection-properties", "foo=bar,blah=blah");
 		
 		admin.createDataSource("Oracle11_PushDS", "h2", props);
 		
@@ -123,12 +128,66 @@ public class IntegrationTestDeployment {
 		admin.deleteDataSource("Oracle11_PushDS");
 		vdb = admin.getVDB("bqt", 1);
 		assertFalse(vdb.isValid());
+		
+		admin.deploy("bqt.2.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
+		vdb = admin.getVDB("bqt", 2);
+		assertEquals(2, vdb.getVersion());
+	}
+	
+	@Test
+	public void testGetDatasourceProperties() throws Exception {
+	    // jdbc data source
+	    String jdbcSource = "jdbc-source";
+	    assertFalse(admin.getDataSourceNames().contains(jdbcSource));
+	    
+		Properties props = new Properties();
+		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
+		props.setProperty("user-name", "sa");
+		props.setProperty("password", "sa");
+		props.setProperty("connection-properties", "foo=bar,blah=blah");
+		props.setProperty("max-pool-size", "4");
+		
+		admin.createDataSource(jdbcSource, "h2", props);	
+		
+		assertTrue(admin.getDataSourceNames().contains(jdbcSource));
+		
+		Properties p = admin.getDataSource(jdbcSource);
+		assertEquals("4", p.getProperty("max-pool-size"));
+		assertEquals("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", p.getProperty("connection-url"));
+		assertEquals("h2", p.getProperty("driver-name"));
+		
+		admin.deleteDataSource("jdbc-source");
+		assertFalse(admin.getDataSourceNames().contains(jdbcSource));
+		
+		// resource -adapter
+		assertTrue(admin.getDataSourceTemplateNames().contains("webservice"));
+		
+		String raSource = "ra-source";
+		assertFalse(admin.getDataSourceNames().contains(raSource));
+		
+		p = new Properties();
+		p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
+		p.setProperty("EndPoint", "{endpoint}");
+		
+		admin.createDataSource(raSource, "webservice", p);		
+		
+		assertTrue(admin.getDataSourceNames().contains(raSource));
+		
+		p = admin.getDataSource(raSource);
+		
+		assertEquals("org.teiid.resource.adapter.ws.WSManagedConnectionFactory", p.getProperty("class-name"));
+		assertEquals("{endpoint}", p.getProperty("EndPoint"));
+		assertEquals("webservice", p.getProperty("driver-name"));
+		
+		admin.deleteDataSource(raSource);		
+		assertFalse(admin.getDataSourceNames().contains(raSource));
+		assertTrue(admin.getDataSourceTemplateNames().contains("webservice"));
 	}
 
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(32, translators.size());
+		assertEquals(translators.toString(), 50, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -146,6 +205,28 @@ public class IntegrationTestDeployment {
 		VDBTranslatorMetaData t = (VDBTranslatorMetaData)admin.getTranslator("orcl");
 		assertNull(t);
 	}
+	
+    @Test
+    public void testTraslatorProperties() throws Exception {
+        Collection<? extends PropertyDefinition> props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.OVERRIDE);
+        assertEquals(19, props.size());
+        
+        props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.EXTENSION_METADATA);
+        assertEquals(3, props.size());
+        for (PropertyDefinition p: props) {
+            if (p.getName().equals("{http://www.teiid.org/translator/accumulo/2013}CF")) {
+                assertEquals("org.teiid.metadata.Column", p.getPropertyValue("owner"));
+            }
+        }
+
+        props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.IMPORT);
+        assertEquals(2, props.size());
+        for (PropertyDefinition p: props) {
+            if (p.getName().equals("importer.ColumnNamePattern")) {
+                assertEquals("java.lang.String", p.getPropertyTypeClassName());
+            }
+        }        
+    }	
 
 	private JavaArchive getLoopyArchive() {
 		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "loopy.jar")
@@ -159,19 +240,26 @@ public class IntegrationTestDeployment {
 
 	@Test
 	public void testVDBConnectionType() throws Exception {
-		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));			
+		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));	
+		
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);	
 		
 		VDB vdb = admin.getVDB("bqt", 1);
 		Model model = vdb.getModels().get(0);
-		admin.assignToModel("bqt", 1, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
-		assertEquals(ConnectionType.BY_VERSION, vdb.getConnectionType());
+		admin.updateSource("bqt", 1, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		
 		try {
-			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
-			conn.close();
-		} catch (Exception e) {
-			fail("must have succeeded in connection");
+			//should not be able to remove from non-multisource
+			admin.removeSource("bqt", 1, model.getName(), "Source");
+			fail();
+		} catch (AdminException e) {
+			
 		}
+		
+		assertEquals(ConnectionType.BY_VERSION, vdb.getConnectionType());
+		
+		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
+		conn.close();
 		
 		admin.changeVDBConnectionType("bqt", 1, ConnectionType.NONE);
 
@@ -183,22 +271,16 @@ public class IntegrationTestDeployment {
 		}
 
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));
-		admin.assignToModel("bqt", 2, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);	
+
+		admin.updateSource("bqt", 2, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		
-		try {
-			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
-			conn.close();
-		} catch (Exception e) {
-			fail("should not have failed to connect");
-		}
+		conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
+		conn.close();
 		
 		admin.changeVDBConnectionType("bqt", 2, ConnectionType.ANY);
-		try {
-			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
-			conn.close();
-		} catch (Exception e) {
-			fail("should have connected to the second vdb");
-		}
+		conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
+		conn.close();
 		
 		vdb = admin.getVDB("bqt", 2);
 		model = vdb.getModels().get(0);
@@ -240,6 +322,7 @@ public class IntegrationTestDeployment {
 		s = sessions.iterator().next();
 
 		admin.terminateSession(s.getSessionId());
+		Thread.sleep(2000);
 		sessions = admin.getSessions();
 		assertEquals (0, sessions.size());			
 		conn.close();
@@ -247,7 +330,8 @@ public class IntegrationTestDeployment {
 
 	private boolean deployVdb() throws AdminException, FileNotFoundException {
 		boolean vdbOneDeployed;
-		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));			
+		admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
+		AdminUtil.waitForVDBLoad(admin, "bqt", 1, 3);
 		vdbOneDeployed = true;
 		
 		VDB vdb = admin.getVDB("bqt", 1);
@@ -263,12 +347,10 @@ public class IntegrationTestDeployment {
 		try {
 			admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
 			deployVdb();
-			VDB vdb = admin.getVDB("bqt", 1);
-			Model model = vdb.getModels().get(0);
 			Translator t = admin.getTranslator("loopy");
 			assertNotNull(t);
 			
-			admin.assignToModel("bqt", 1, model.getName(), "Source", "loopy", "java:jboss/datasources/ExampleDS");
+			admin.updateSource("bqt", 1, "Source", "loopy", "java:jboss/datasources/ExampleDS");
 			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
 			Collection<? extends Session> sessions = admin.getSessions();
 			assertEquals (1, sessions.size());
@@ -311,10 +393,11 @@ public class IntegrationTestDeployment {
 	
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
-		String[] array  = {"teiid-connector-file.rar", "teiid-local", "teiid", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"};
+		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
+				"accumulo", "file", "cassandra", "salesforce", "mongodb", "solr", "webservice", "simpledb", "h2"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
-		assertArrayEquals(array, templates.toArray(new String[templates.size()]));
+		assertEquals(vals, templates);
 	}
 	
 	@Test
@@ -331,10 +414,12 @@ public class IntegrationTestDeployment {
 		assertTrue(props.contains("user-name"));
 		assertTrue(props.contains("password"));
 		assertTrue(props.contains("check-valid-connection-sql"));
-		
+		assertTrue(props.contains("max-pool-size"));
+		assertTrue(props.contains("connection-properties"));
+		assertTrue(props.contains("max-pool-size"));
 		
 		HashSet<String> rar_props = new HashSet<String>();
-		pds = admin.getTemplatePropertyDefinitions("teiid-connector-file.rar");
+		pds = admin.getTemplatePropertyDefinitions("file");
 		for(PropertyDefinition pd:pds) {
 			rar_props.add(pd.getName());
 		}
@@ -342,7 +427,37 @@ public class IntegrationTestDeployment {
 		assertTrue(rar_props.contains("ParentDirectory"));
 		assertTrue(rar_props.contains("FileMapping"));
 		assertTrue(rar_props.contains("AllowParentPaths"));
+		assertTrue(rar_props.contains("resourceadapter-class"));
+		assertTrue(rar_props.contains("managedconnectionfactory-class"));
+		assertTrue(rar_props.contains("max-pool-size"));
 	}
+	
+	@Test
+	public void getTranslatorPropertyDefinitions() throws Exception{
+		HashSet<String> props = new HashSet<String>();			
+		
+		Collection<? extends PropertyDefinition> pds = admin.getTranslatorPropertyDefinitions("ws");
+		for(PropertyDefinition pd:pds) {
+			props.add(pd.getName());
+		}
+		assertTrue(props.contains("DefaultBinding"));
+		assertTrue(props.contains("DefaultServiceMode"));
+		assertTrue(props.contains("MaxDependentInPredicates"));
+		
+		for(PropertyDefinition pd:pds) {
+			if (pd.getName().equals("DefaultBinding")) {
+				assertEquals("java.lang.String", pd.getPropertyTypeClassName());
+				assertFalse(pd.isRequired());
+				assertEquals("Contols what SOAP or HTTP type of invocation will be used if none is specified.", pd.getDescription());
+				assertEquals("Default Binding", pd.getDisplayName());
+				assertTrue(pd.isModifiable());
+				assertFalse(pd.isAdvanced());
+				assertFalse(pd.isMasked());
+				assertEquals("SOAP12", pd.getDefaultValue());
+				assertNotNull(pd.getAllowedValues());
+			}
+		}
+	}	
 	
 	@Test
 	public void getWorkerPoolStats() throws Exception{
@@ -353,7 +468,8 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testDataRoleMapping() throws Exception{
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
-		
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
+
 		VDB vdb = admin.getVDB("bqt", 2);
 		Model model = vdb.getModels().get(0);
 		admin.assignToModel("bqt", 2, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
@@ -408,7 +524,7 @@ public class IntegrationTestDeployment {
 		Properties p = new Properties();
 		p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
 		p.setProperty("EndPoint", "{endpoint}");
-		admin.createDataSource(deployedName, "teiid-connector-ws.rar", p);
+		admin.createDataSource(deployedName, "webservice", p);
 		
 		assertTrue(admin.getDataSourceNames().contains(deployedName));
 		
@@ -416,7 +532,7 @@ public class IntegrationTestDeployment {
 		
 		assertFalse(admin.getDataSourceNames().contains(deployedName));
 		
-		admin.createDataSource(deployedName, "teiid-connector-ws.rar", p);
+		admin.createDataSource(deployedName, "webservice", p);
 		
 		assertTrue(admin.getDataSourceNames().contains(deployedName));
 		
@@ -516,4 +632,59 @@ public class IntegrationTestDeployment {
 		assertEquals(Status.FAILED, vdb.getStatus());
 	}
 
+	@Test
+	public void testODBCConnectionSuccess() throws Exception {
+		admin.deploy("bqt.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
+		Driver d = new Driver();
+		Properties p = new Properties();
+		p.setProperty("user", "user");
+		p.setProperty("password", "user");
+		Connection c = d.connect("jdbc:postgresql://127.0.0.1:35432/bqt", p);
+		c.close();
+	}
+	
+	@Test
+	public void testODBCConnectionFailure() throws Exception {
+		admin.deploy("bqt.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
+		Driver d = new Driver();
+		Properties p = new Properties();
+		p.setProperty("user", "user");
+		p.setProperty("password", "notpassword");
+		try {
+			d.connect("jdbc:postgresql://127.0.0.1:35432/bqt", p);
+			fail("failed due to bad credentials");
+		} catch (SQLException e) {
+		}
+	}
+
+	@Test
+	public void testSystemPropertiesInVDBXML() throws Exception{
+		String vdbName = "test";
+		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+				"<vdb name=\"test\" version=\"1\">\n" + 
+				"    <property name=\"UseConnectorMetadata\" value=\"${teiid.vdb.UseConnectorMetadata:none}\" />\n" + 
+				"    <model name=\"loopy\">\n" + 
+				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
+				"    </model>\n" + 
+				"</vdb>";
+		
+		Collection<?> vdbs = admin.getVDBs();
+		assertTrue(vdbs.isEmpty());
+		
+		JavaArchive jar = getLoopyArchive();
+		admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
+		
+		// normal load
+		admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		
+		VDB vdb = admin.getVDB(vdbName, 1);
+		String value = vdb.getPropertyValue("UseConnectorMetadata");
+
+		// see the arquillian.zml file in resources in the JVM proeprties section for the expected value
+		assertEquals("custom", value);
+		
+		admin.undeploy("loopy.jar");
+		admin.undeploy("test-vdb.xml");
+	}
 }

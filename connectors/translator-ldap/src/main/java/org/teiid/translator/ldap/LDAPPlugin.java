@@ -47,6 +47,7 @@ public class LDAPPlugin {
     	TEIID12010,
     	TEIID12011,
     	TEIID12012, 
-    	TEIID12013,
+    	TEIID12013, 
+    	TEIID12014,
     }
 }

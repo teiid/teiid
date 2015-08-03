@@ -34,7 +34,7 @@ import org.teiid.jdbc.FakeServer;
 
 @SuppressWarnings("nls")
 public class TestResultSetMetadata extends AbstractMMQueryTestCase {
-
+	FakeServer server;
     private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
     
 	public TestResultSetMetadata() {
@@ -44,13 +44,14 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
 	}
     
     @Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	    	
     }
     
     @After public void tearDown() throws SQLException {
     	closeConnection();
+    	server.stop();
     }
     
     private void executeTest(String sql, String[] expected) throws Exception {

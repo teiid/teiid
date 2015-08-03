@@ -60,15 +60,15 @@ public class TestPreparedStatement {
 	
 	private static final int SESSION_ID = 6;
 	
-    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, VDBMetaData vdb) throws Exception { 
+    static void helpTestProcessing(String preparedSql, List<?> values, List<?>[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, VDBMetaData vdb) throws Exception { 
     	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false, vdb);
     }
 
-    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean isSessionSpecific, VDBMetaData vdb) throws Exception { 
+    static void helpTestProcessing(String preparedSql, List<?> values, List<?>[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean isSessionSpecific, VDBMetaData vdb) throws Exception { 
         helpTestProcessing(preparedSql, values, expected, dataManager, (CapabilitiesFinder)null, metadata, null, callableStatement, isSessionSpecific, /* isAlreadyCached */false, vdb); 
     }
     
-    static public void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached, VDBMetaData vdb) throws Exception { 
+    static public void helpTestProcessing(String preparedSql, List<?> values, List<?>[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached, VDBMetaData vdb) throws Exception { 
         if ( dataManager == null ) {
             // Construct data manager with data
         	dataManager = new FakeDataManager();
@@ -143,7 +143,7 @@ public class TestPreparedStatement {
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
         
         // Create expected results
-        List[] expected = new List[] { 
+        List<?>[] expected = new List<?>[] { 
             Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }) //$NON-NLS-1$
         };    
@@ -154,12 +154,29 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
 	}
     
+    @Test public void testObjectCast() throws Exception { 
+        // Create query 
+        String preparedSql = "SELECT array_length(cast(? as object))"; //$NON-NLS-1$
+        
+        // Create expected results
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList(1), //$NON-NLS-1$
+        };    
+    
+		List<?> values = Arrays.asList(new double[] {1.0});
+		FakeDataManager dataManager = new FakeDataManager();
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
+		
+		values = Arrays.asList(new Object[] {new Double[] {1.0}});
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
+	}
+    
     @Test public void testSessionSpecificFunction() throws Exception { 
         // Create query 
         String preparedSql = "SELECT session_id(), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
         
         // Create expected results
-        List[] expected = new List[] { 
+        List<?>[] expected = new List<?>[] { 
             Arrays.asList(new Object[] { "6",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "6",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }) //$NON-NLS-1$
         };    
@@ -193,19 +210,19 @@ public class TestPreparedStatement {
         
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
-        List values = Arrays.asList(0);
+        List<?> values = Arrays.asList(0);
 
         PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0), SESSION_ID, false, false,RealMetadataFactory.example1VDB());
         
         TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);  
     }
     
-	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, SessionAwareCache<PreparedPlan> prepPlanCache)
+	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List<?> values, SessionAwareCache<PreparedPlan> prepPlanCache)
 			throws TeiidComponentException, TeiidProcessingException {    	
 		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false, RealMetadataFactory.example1VDB());
     }
 	
-	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
+	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List<?> values,
 			SessionAwareCache<PreparedPlan> prepPlanCache, int conn)
 			throws TeiidComponentException, TeiidProcessingException {
 		return helpGetProcessorPlan(preparedSql, values,
@@ -213,7 +230,7 @@ public class TestPreparedStatement {
 						.example1Cached(), prepPlanCache, conn, false, false, RealMetadataFactory.example1VDB());
 	}
 
-	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
+	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List<?> values,
 			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, SessionAwareCache<PreparedPlan> prepPlanCache, int conn, boolean callableStatement, boolean limitResults, VDBMetaData vdb)
 			throws TeiidComponentException, TeiidProcessingException {
         
@@ -241,7 +258,7 @@ public class TestPreparedStatement {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, workContext, prepPlanCache);
-        serverRequest.setMetadata(capFinder, metadata, null);
+        serverRequest.setMetadata(capFinder, metadata);
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
         serverRequest.setAuthorizationValidator(drav);
         serverRequest.processRequest();
@@ -254,7 +271,7 @@ public class TestPreparedStatement {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e1=?"; //$NON-NLS-1$
         
-        List values = Arrays.asList("a"); //$NON-NLS-1$
+        List<?> values = Arrays.asList("a"); //$NON-NLS-1$
 		
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
@@ -265,7 +282,7 @@ public class TestPreparedStatement {
 		// Create query 
 		String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
         
-		List values = Arrays.asList("a"); //$NON-NLS-1$
+		List<?> values = Arrays.asList("a"); //$NON-NLS-1$
 		
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
@@ -276,7 +293,7 @@ public class TestPreparedStatement {
 		// Create query 
 		String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = ? AND pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
                 
-		List values = Arrays.asList("d", "c"); //$NON-NLS-1$ //$NON-NLS-2$
+		List<?> values = Arrays.asList("d", "c"); //$NON-NLS-1$ //$NON-NLS-2$
 				
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
@@ -288,7 +305,7 @@ public class TestPreparedStatement {
 		String preparedSql = "SELECT X.e1 FROM (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = ?) as X"; //$NON-NLS-1$
         
 		//Create Request
-		List values = Arrays.asList("d"); //$NON-NLS-1$
+		List<?> values = Arrays.asList("d"); //$NON-NLS-1$
 		
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
@@ -301,19 +318,19 @@ public class TestPreparedStatement {
 
 	    //wrong type
 		try{         	        
-			List values = Arrays.asList("x"); //$NON-NLS-1$
+			List<?> values = Arrays.asList("x"); //$NON-NLS-1$
 			
 	        //Create plan
 	        helpGetProcessorPlan(preparedSql, values, prepCache, SESSION_ID);
 	        fail();
 		}catch(QueryResolverException qe){
-            assertEquals("TEIID30558 Error converting parameter number 1 with value \"x\" to expected type integer.", qe.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30558 Error converting parameter number 1 with value \"x\" of class java.lang.String to expected type integer.", qe.getMessage()); //$NON-NLS-1$
     	}    	
     	assertEquals(0, prepCache.getCacheHitCount());
     	
     	//test cached plan
     	try{	        
-			List values = new ArrayList();
+			List<Object> values = new ArrayList<Object>();
 			values.add("a"); //$NON-NLS-1$
 			values.add("b"); //$NON-NLS-1$			
 			helpGetProcessorPlan(preparedSql, values, prepCache, SESSION_ID);
@@ -326,7 +343,7 @@ public class TestPreparedStatement {
     	
     	//wrong number of values
 		try{         
-			List values = new ArrayList();
+			List<Object> values = new ArrayList<Object>();
 			values.add("a"); //$NON-NLS-1$
 			values.add(new Integer(0));
 			helpGetProcessorPlan(preparedSql, values, prepCache);
@@ -341,7 +358,7 @@ public class TestPreparedStatement {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
-        List values = Arrays.asList("0"); //$NON-NLS-1$
+        List<?> values = Arrays.asList("0"); //$NON-NLS-1$
         
 		helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
     }
@@ -350,7 +367,7 @@ public class TestPreparedStatement {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
-        List values = Arrays.asList("0"); //$NON-NLS-1$
+        List<?> values = Arrays.asList("0"); //$NON-NLS-1$
         
         SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
         
@@ -364,7 +381,7 @@ public class TestPreparedStatement {
     @Test public void testUpdateProcedureCriteria() throws Exception {
         String preparedSql = "delete from vm1.g37 where e1=?"; //$NON-NLS-1$
         
-        List[] expected = new List[] { 
+        List<?>[] expected = new List<?>[] { 
             Arrays.asList(1),
         };    
     
@@ -377,7 +394,7 @@ public class TestPreparedStatement {
     @Test(expected=QueryValidatorException.class) public void testLimitValidation() throws Exception {
         String preparedSql = "select pm1.g1.e1 from pm1.g1 limit ?"; //$NON-NLS-1$
         
-		List values = Arrays.asList(-1);
+		List<?> values = Arrays.asList(-1);
         FakeDataManager dataManager = new FakeDataManager();
 		helpTestProcessing(preparedSql, values, null, dataManager, RealMetadataFactory.example1Cached(), false, false, RealMetadataFactory.example1VDB());
     }
@@ -386,7 +403,7 @@ public class TestPreparedStatement {
         String preparedSql = "exec pm1.sq2(?)"; //$NON-NLS-1$
         
 		List<String> values = Arrays.asList("c"); //$NON-NLS-1$
-        List[] expected = new List[] { 
+        List<?>[] expected = new List<?>[] { 
                 Arrays.asList("c", 1),
             };    
         
@@ -399,7 +416,7 @@ public class TestPreparedStatement {
         String preparedSql = "select e1 from pm1.g1 order by e1 desc limit ?"; //$NON-NLS-1$
         
 		List<?> values = Arrays.asList(1); 
-        List[] expected = new List[] { 
+        List<?>[] expected = new List<?>[] { 
                 Arrays.asList("c"), //$NON-NLS-1$s
             };    
         
@@ -409,20 +426,73 @@ public class TestPreparedStatement {
     }
     
     @Test public void testWithSubqueryPushdown() throws Exception {
-    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
+    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN /*+ no_unnest */ (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
                 
-        List[] expected = new List[] { 
+        List<?>[] expected = new List<?>[] { 
             Arrays.asList("a"),
         };    
     
-		List values = Arrays.asList("a"); //$NON-NLS-1$
+		List<?> values = Arrays.asList("a"); //$NON-NLS-1$
 		
 		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
-        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (SELECT g_1.e2 FROM g2 AS g_1 WHERE g_1.e1 = 'a')", new List[] {Arrays.asList("a")});
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (SELECT g_1.e2 FROM g2 AS g_1 WHERE g_1.e1 = 'a')", new List<?>[] {Arrays.asList("a")});
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
 	    caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        
+		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
+    @Test public void testInherentlyUpdatableViewCompensation() throws Exception {
+    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN /*+ no_unnest */ (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList("a"),
+        };    
+    
+		List<?> values = Arrays.asList("a"); //$NON-NLS-1$
+		
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (SELECT g_1.e2 FROM g2 AS g_1 WHERE g_1.e1 = 'a')", new List<?>[] {Arrays.asList("a")});
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+	    caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        
+		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
+    @Test public void testInsertWithSimpleSelect() throws Exception {
+    	String preparedSql = "insert into pm1.g1 (e1, e2) select ?, ?"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList(1),
+        };    
+    
+		List<?> values = Arrays.asList("a", "1"); //$NON-NLS-1$
+		
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("INSERT INTO g1 (e1, e2) VALUES ('a', 1)", new List<?>[] {Arrays.asList(1)});
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        
+		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
+    @Test public void testAnonBlockIn() throws Exception {
+    	String preparedSql = "begin insert into pm1.g1 (e1, e2) select ?, ?; select rowcount; end;"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList(1),
+        };    
+    
+		List<?> values = Arrays.asList("a", "1"); //$NON-NLS-1$
+		
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("INSERT INTO g1 (e1, e2) VALUES ('a', 1)", new List<?>[] {Arrays.asList(1)});
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         
 		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }

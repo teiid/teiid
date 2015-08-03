@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
@@ -43,7 +44,9 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 /**
  * Accumulates information about index usage.
@@ -97,25 +100,29 @@ public class BaseIndexInfo<T extends SearchableTable> {
 				Criteria criteria = critIter.next();
 				if (criteria instanceof CompareCriteria) {
 					CompareCriteria cc = (CompareCriteria)criteria;
-					if (!table.matchesPkColumn(i, cc.getLeftExpression())) {
+					Object matchResult = table.matchesPkColumn(i, cc.getLeftExpression());
+					if (Boolean.FALSE.equals(matchResult)) {
 						continue;
 					}
-					if (!table.supportsOrdering(i, cc.getLeftExpression()) && cc.getOperator() != CompareCriteria.EQ) {
+					if (cc.getOperator() != CompareCriteria.EQ && !table.supportsOrdering(i, cc.getLeftExpression())) {
 						critIter.remove();
 						continue;
 					}
-					this.addCondition(i, (Constant)cc.getRightExpression(), cc.getOperator());
+					this.addCondition(i, matchResult, (Constant)cc.getRightExpression(), cc.getOperator());
 					critIter.remove();
 				} else if (criteria instanceof IsNullCriteria) {
 					IsNullCriteria inc = (IsNullCriteria)criteria;
-					if (!table.matchesPkColumn(i, inc.getExpression())) {
+					Object matchResult = table.matchesPkColumn(i, inc.getExpression());
+					if (Boolean.FALSE.equals(matchResult)) {
 						continue;
 					}
-					this.addCondition(i, new Constant(null), CompareCriteria.EQ);
+
+					this.addCondition(i, matchResult, new Constant(null), CompareCriteria.EQ);
 					critIter.remove();
 				} else if (criteria instanceof MatchCriteria) {
 					MatchCriteria matchCriteria = (MatchCriteria)criteria;
-					if (!table.matchesPkColumn(i, matchCriteria.getLeftExpression())) {
+					Object matchResult = table.matchesPkColumn(i, matchCriteria.getLeftExpression());
+					if (Boolean.FALSE.equals(matchResult)) {
 						continue;
 					}
 					Constant value = (Constant)matchCriteria.getRightExpression();
@@ -162,18 +169,24 @@ public class BaseIndexInfo<T extends SearchableTable> {
 			            prefix.append(character);
 					}
 					if (prefix.length() > 0) {
-						this.addCondition(i, new Constant(prefix.toString()), CompareCriteria.GE);
-						this.addCondition(i, new Constant(prefix.substring(0, prefix.length() -1) + (char) (prefix.charAt(prefix.length()-1)+1)), CompareCriteria.LE);
+						this.addCondition(i, matchResult, new Constant(prefix.toString()), CompareCriteria.GE);
+						if (matchCriteria.getLeftExpression() instanceof Function && table.supportsOrdering(i, matchCriteria.getLeftExpression())) {
+							//this comparison needs to be aware of case
+							this.addCondition(i, matchResult, new Constant(prefix.substring(0, prefix.length() -1) + (char) (Character.toLowerCase(prefix.charAt(prefix.length()-1))+1)), CompareCriteria.LE);
+						} else {
+							this.addCondition(i, matchResult, new Constant(prefix.substring(0, prefix.length() -1) + (char) (prefix.charAt(prefix.length()-1)+1)), CompareCriteria.LE);
+						}
 					} else {
 						critIter.remove();
 					}
 				} else if (criteria instanceof SetCriteria) {
 					SetCriteria setCriteria = (SetCriteria)criteria;
-					if (!table.matchesPkColumn(i, setCriteria.getExpression())) {
+					Object matchResult = table.matchesPkColumn(i, setCriteria.getExpression());
+					if (Boolean.FALSE.equals(matchResult)) {
 						continue;
 					}
 					Collection<Constant> values = (Collection<Constant>) setCriteria.getValues();
-					this.addSet(i, values);
+					this.addSet(i, matchResult, values);
 					critIter.remove();
 				}
 			}
@@ -206,7 +219,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 		}
 	}
 	
-	void addCondition(int i, Constant value, int comparisionMode) {
+	void addCondition(int i, Object match, Constant value, int comparisionMode) {
 		Object value2 = value.getValue();
 		switch (comparisionMode) {
 		case CompareCriteria.EQ:
@@ -215,19 +228,20 @@ public class BaseIndexInfo<T extends SearchableTable> {
 				valueSet.add(new ArrayList<Object>(table.getPkLength()));
 			} 
 			if (valueSet.size() == 1) {
-				valueSet.get(0).add(value2);
+				List<Object> toSearch = valueSet.get(0);
+				buildSearchRow(i, match, value2, toSearch);
+				lower = null;
+				upper = null;
 			}
-			lower = null;
-			upper = null;
 			break;
 		case CompareCriteria.GE:
 		case CompareCriteria.GT:
 			if (valueSet.isEmpty()) {
 				if (i == 0) {
 					lower = new ArrayList<Object>(table.getPkLength());
-					lower.add(value2);
-				} if (lower != null && lower.size() == i) {
-					lower.add(value2);
+				}
+				if (lower != null) {
+					buildSearchRow(i, match, value2, lower);
 				}
 			} 
 			break;
@@ -236,16 +250,37 @@ public class BaseIndexInfo<T extends SearchableTable> {
 			if (valueSet.isEmpty()) {
 				if (i == 0) {
 					upper = new ArrayList<Object>(table.getPkLength());
-					upper.add(value2);
-				} else if (upper != null && upper.size() == i) {
-					upper.add(value2);
+				} 
+				if (upper != null) {
+					buildSearchRow(i, match, value2, upper);
 				}
 			}
 			break;
 		}
 	}
+
+	private void buildSearchRow(int i, Object match, Object value2,
+			List<Object> toSearch) {
+		if (toSearch.size() != i) {
+			return;
+		}
+		if (value2 instanceof ArrayImpl && match instanceof int[]) {
+			int[] indexes = (int[])match;
+			ArrayImpl array = (ArrayImpl)value2;
+			Object[] arrayVals = array.getValues();
+			for (int j = 0; j < indexes.length; j++) {
+				int index = indexes[j];
+				if (index == -1) {
+					break;
+				}
+				toSearch.add(arrayVals[index]);
+			}
+		} else {
+			toSearch.add(value2);
+		}
+	}
 	
-	void addSet(int i, Collection<Constant> values) {
+	void addSet(int i, Object match, Collection<Constant> values) {
 		if (!valueSet.isEmpty()) {
 			return;
 		}
@@ -253,7 +288,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 			for (Constant constant : values) {
 				List<Object> value = new ArrayList<Object>(table.getPkLength());
 				Object value2 = constant.getValue();
-				value.add(value2);
+				buildSearchRow(i, match, value2, value);
 				valueSet.add(value);
 			}
 			lower = null;
@@ -275,7 +310,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 		for (int i = 0; i < size; i++) {
 			OrderByItem item = orderBy.getOrderByItems().get(i);
 
-			if (!table.matchesPkColumn(i, item.getSymbol()) || !table.supportsOrdering(i, item.getSymbol())) {
+			if (!Boolean.TRUE.equals(table.matchesPkColumn(i, item.getSymbol())) || !table.supportsOrdering(i, item.getSymbol())) {
 				return null;
 			}
 			
@@ -311,13 +346,13 @@ public class BaseIndexInfo<T extends SearchableTable> {
 		return valueSet;
 	}
 	
-	public void sortValueSet(boolean direction) {
+	public void sortValueSet(boolean direction, NullOrder nullOrder) {
 		int size = getValueSet().get(0).size();
 		int[] sortOn = new int[size];
 		for (int i = 0; i <sortOn.length; i++) {
 			sortOn[i] = i;
 		}
-		Collections.sort(getValueSet(), new ListNestedSortComparator(sortOn, direction));
+		Collections.sort(getValueSet(), new ListNestedSortComparator(sortOn, direction).defaultNullOrder(nullOrder));
 	}
 	
 	public Criteria getCoveredCriteria() {

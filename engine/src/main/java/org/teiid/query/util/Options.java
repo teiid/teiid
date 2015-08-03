@@ -24,17 +24,29 @@ package org.teiid.query.util;
 
 import java.util.Properties;
 
+import org.teiid.translator.ExecutionFactory.NullOrder;
+
 /**
  * A holder for options
  */
 public class Options {
 
 	public static final String UNNEST_DEFAULT = "org.teiid.subqueryUnnestDefault"; //$NON-NLS-1$
-	public static final String PUSHDOWN_DEFAULT_NULL_ORDER = "org.teiid.pushdownDefaultNullOrder"; //$NON-NLS-1$ 
+	public static final String PUSHDOWN_DEFAULT_NULL_ORDER = "org.teiid.pushdownDefaultNullOrder"; //$NON-NLS-1$
+	public static final String IMPLICIT_MULTISOURCE_JOIN = "org.teiid.implicitMultiSourceJoin"; //$NON-NLS-1$
+	public static final String JOIN_PREFETCH_BATCHES = "org.teiid.joinPrefetchBatches"; //$NON-NLS-1$
+	public static final String SANITIZE_MESSAGES = "org.teiid.sanitizeMessages"; //$NON-NLS-1$
+	public static final String REQUIRE_COLLATION = "org.teiid.requireTeiidCollation"; //$NON-NLS-1$
+	public static final String DEFAULT_NULL_ORDER = "org.teiid.defaultNullOrder"; //$NON-NLS-1$
 
 	private Properties properties;
-	private boolean subqueryUnnestDefault;
+	private boolean subqueryUnnestDefault = false;
 	private boolean pushdownDefaultNullOrder;
+	private boolean implicitMultiSourceJoin = true;
+	private int joinPrefetchBatches = 10;
+	private boolean sanitizeMessages;
+	private boolean requireTeiidCollation;
+	private NullOrder defaultNullOrder = NullOrder.LOW;
 	
 	public Properties getProperties() {
 		return properties;
@@ -67,6 +79,71 @@ public class Options {
 	
 	public Options pushdownDefaultNullOrder(boolean p) {
 		this.pushdownDefaultNullOrder = p;
+		return this;
+	}
+	
+	public void setImplicitMultiSourceJoin(boolean implicitMultiSourceJoin) {
+		this.implicitMultiSourceJoin = implicitMultiSourceJoin;
+	}
+	
+	public boolean isImplicitMultiSourceJoin() {
+		return implicitMultiSourceJoin;
+	}
+	
+	public Options implicitMultiSourceJoin(boolean b) {
+		this.implicitMultiSourceJoin = b;
+		return this;
+	}
+	
+	public void setJoinPrefetchBatches(int joinPrefetchBatches) {
+		this.joinPrefetchBatches = joinPrefetchBatches;
+	}
+	
+	public int getJoinPrefetchBatches() {
+		return joinPrefetchBatches;
+	}
+	
+	public Options joinPrefetchBatches(int i) {
+		this.joinPrefetchBatches = i;
+		return this;
+	}
+	
+	public void setSanitizeMessages(boolean sanitizeMessages) {
+		this.sanitizeMessages = sanitizeMessages;
+	}
+	
+	public boolean isSanitizeMessages() {
+		return sanitizeMessages;
+	}
+	
+	public Options sanitizeMessages(boolean b) {
+		this.sanitizeMessages = b;
+		return this;
+	}
+	
+	public boolean isRequireTeiidCollation() {
+		return requireTeiidCollation;
+	}
+	
+	public void setRequireTeiidCollation(boolean requireTeiidCollation) {
+		this.requireTeiidCollation = requireTeiidCollation;
+	}
+	
+	public Options requireTeiidCollation(boolean b) {
+		this.requireTeiidCollation = b;
+		return this;
+	}
+	
+	public NullOrder getDefaultNullOrder() {
+		return defaultNullOrder;
+	}
+	
+	public void setDefaultNullOrder(NullOrder defaultNullOrder) {
+		this.defaultNullOrder = defaultNullOrder;
+	}
+	
+	public Options defaultNullOrder(NullOrder b) {
+		this.defaultNullOrder = b;
 		return this;
 	}
 

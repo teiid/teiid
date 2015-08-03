@@ -24,33 +24,38 @@ package org.teiid.common.queue;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.resource.spi.work.Work;
 
+import org.junit.After;
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.dqp.internal.process.TeiidExecutor;
+import org.teiid.dqp.internal.process.FutureWork;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
-import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 
 /**
  */
 public class TestThreadReuseExecutor {
+	
+	ThreadReuseExecutor pool = null;
+	
+	@After public void tearDown() {
+		if (pool != null) {
+			pool.shutdownNow();
+		}
+	}
 	
     @Test public void testQueuing() throws Exception {
         final long SINGLE_WAIT = 50;
         final int WORK_ITEMS = 10;
         final int MAX_THREADS = 5;
 
-        final ThreadReuseExecutor pool = new ThreadReuseExecutor("test", MAX_THREADS); //$NON-NLS-1$
+        pool = new ThreadReuseExecutor("test", MAX_THREADS); //$NON-NLS-1$
         
         for(int i=0; i<WORK_ITEMS; i++) {
             pool.execute(new FakeWorkItem(SINGLE_WAIT));
@@ -68,7 +73,7 @@ public class TestThreadReuseExecutor {
         final long SINGLE_WAIT = 50;
         final long NUM_THREADS = 5;
 
-        ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+        pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         
         for(int i=0; i<NUM_THREADS; i++) {            
         	pool.execute(new FakeWorkItem(SINGLE_WAIT));
@@ -88,83 +93,18 @@ public class TestThreadReuseExecutor {
     }
     
     @Test(expected=RejectedExecutionException.class) public void testShutdown() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+    	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         pool.shutdown();
     	pool.execute(new FakeWorkItem(1));
     }
     
-    @Test public void testScheduleCancel() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-    	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
-    		@Override
-    		public void run() {
-    		}
-    	}, 0, 5, TimeUnit.MILLISECONDS);
-    	future.cancel(true);
-    	assertFalse(future.cancel(true));    	
-    }
-    
-    @Test public void testSchedule() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-        final ArrayList<String> result = new ArrayList<String>(); 
-    	pool.schedule(new Work() {
-			
-			@Override
-			public void run() {
-    			result.add("hello"); //$NON-NLS-1$
-			}
-			
-			@Override
-			public void release() {
-				
-			}
-		}, 5, TimeUnit.MILLISECONDS);
-    	Thread.sleep(100);
-    	pool.shutdown();
-    	pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
-    	assertEquals(1, result.size());
-    }
-    
-    @Test(expected=ExecutionException.class) public void testScheduleException() throws Exception {
-    	TeiidExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-    	ScheduledFuture<?> future = pool.schedule(new Runnable() {
-    		@Override
-    		public void run() {
-    			throw new RuntimeException();
-    		}
-    	}, 0, TimeUnit.MILLISECONDS);
-    	future.get();
-    }
-    
-    /**
-     * Here each execution exceeds the period
-     */
-    @Test public void testScheduleRepeated() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-    	final ArrayList<String> result = new ArrayList<String>();
-    	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
-    		@Override
-    		public void run() {
-    			result.add("hello"); //$NON-NLS-1$
-    			try {
-					Thread.sleep(70);
-				} catch (InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-    		}
-    	}, 0, 30, TimeUnit.MILLISECONDS);
-    	Thread.sleep(120);
-    	future.cancel(true);
-    	assertTrue(result.size() < 3);
-    }
-    
     @Test public void testFailingWork() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-    	final AtomicInteger count = new AtomicInteger();
+    	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+    	final Semaphore signal = new Semaphore(1);
     	pool.execute(new Work() {
     		@Override
     		public void run() {
-    			count.getAndIncrement();
+    			signal.release();
     			throw new RuntimeException();
     		}
     		
@@ -173,12 +113,11 @@ public class TestThreadReuseExecutor {
     			
     		}
     	});
-    	Thread.sleep(100);
-    	assertEquals(1, count.get());
+    	assertTrue(signal.tryAcquire(2, TimeUnit.SECONDS));
     }
     
     @Test public void testPriorities() throws Exception {
-    	final ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
+    	pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
     	FutureWork<Boolean> work1 = new FutureWork<Boolean>(new Callable<Boolean>() {
     		public Boolean call() throws Exception {
     			synchronized (pool) {

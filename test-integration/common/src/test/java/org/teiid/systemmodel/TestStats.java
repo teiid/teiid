@@ -38,17 +38,18 @@ import org.teiid.jdbc.FakeServer;
 public class TestStats {
 	
     static Connection connection;
-    
+    private static FakeServer server;
     static final String VDB = "PartsSupplier";
     
 	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
     }
     
     @AfterClass public static void tearDown() throws SQLException {
     	connection.close();
+    	server.stop();
     }
 
     @Test public void testSetTableStats() throws Exception {
@@ -60,6 +61,10 @@ public class TestStats {
     	rs = s.executeQuery("select cardinality from tables where name = 'PARTSSUPPLIER.PARTS'");
     	rs.next();
     	assertEquals(32, rs.getInt(1));
+    	s.execute("call setTableStats(tableName=>'partssupplier.partssupplier.parts', cardinality=>321100000000)");
+    	rs = s.executeQuery("select cardinality from tables where name = 'PARTSSUPPLIER.PARTS'");
+    	rs.next();
+    	assertEquals(Integer.MAX_VALUE, rs.getInt(1));
     }
     
     @Test public void testSetColumnStats() throws Exception {

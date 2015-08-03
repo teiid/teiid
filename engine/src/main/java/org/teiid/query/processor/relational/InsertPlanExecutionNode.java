@@ -103,6 +103,7 @@ public class InsertPlanExecutionNode extends PlanExecutionNode {
 	
 	@Override
 	public void closeDirect() {
+		super.closeDirect();
 		this.currentBatch = null;
 	}
 	

@@ -25,6 +25,8 @@ package org.teiid.query.eval;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import org.junit.After;
 import org.junit.Before;
@@ -33,11 +35,11 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.jdbc.AbstractQueryTest;
-import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings({"nls"})
@@ -53,7 +55,7 @@ public class TestSystemPerformance extends AbstractQueryTest {
 		ModelMetaData mmm = new ModelMetaData();
 		mmm.setName("test");
 		mmm.setSchemaSourceType("native");
-		mmm.addSourceMapping("x", "hardcoded", null);
+		mmm.addSourceMapping("x", "hc", null);
 		HardCodedExecutionFactory hardCodedExecutionFactory = new HardCodedExecutionFactory() {
 			@Override
 			public void getMetadata(MetadataFactory metadataFactory, Object conn)
@@ -75,7 +77,7 @@ public class TestSystemPerformance extends AbstractQueryTest {
 				return false;
 			}
 		};
-		es.addTranslator(hardCodedExecutionFactory);
+		es.addTranslator("hc", hardCodedExecutionFactory);
 		es.deployVDB("test", mmm);
 	}
 	
@@ -87,12 +89,25 @@ public class TestSystemPerformance extends AbstractQueryTest {
 		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
 		setConnection(c);
 		DatabaseMetaData metadata = c.getMetaData();
-		System.out.println("starting");
 		for (int i = 0; i < TABLES; i++) {
 			internalResultSet = metadata.getColumns(null, "test", "x" + i, null);
 			assertRowCount(COLS);
 			internalResultSet.close();
 		}
+	}
+	
+	@Test public void testSQLXML() throws Exception {
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		String sql = "select xmlelement(root, xmlelement(root1, xmlagg(x))) from (select xmlelement(x, tablename, xmlagg(xmlforest(name)), '\n') as x from sys.columns group by tablename) as y"; //$NON-NLS-1$
+		PreparedStatement s = c.prepareStatement(sql);
+		for (int i = 0; i < 100; i++) {
+			s.execute();
+			ResultSet rs = s.getResultSet();
+			rs.next();
+			rs.getString(1);
+			rs.close();
+		}
+		c.close();
 	}
 	
 }

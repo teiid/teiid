@@ -25,37 +25,52 @@ package org.teiid.core.util;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MixinProxy implements InvocationHandler {
 	        
+	private static class Target {
+		Object obj;
+		Method m;
+	}
+	
     private Object[] delegates;
+    private Map<Method, Target> methodMap = new HashMap<Method, Target>();
     
-    public MixinProxy(Object[] delegates) {
+    public MixinProxy(Object... delegates) {
         this.delegates = delegates;
     }
     
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
-        for (int i = 0; i < delegates.length; i++) {
-            Object object = delegates[i];
-            Method m = null;
-            try {
-				m = object.getClass().getDeclaredMethod(method.getName(), method.getParameterTypes());
-			} catch (NoSuchMethodException e) {
+    	Target t = methodMap.get(method);
+    	if (t == null) {
+            for (int i = 0; i < delegates.length; i++) {
+                Object object = delegates[i];
+                try {
+    				Method m = object.getClass().getMethod(method.getName(), method.getParameterTypes());
+    				t = new Target();
+    				t.m = m;
+    				t.obj = object;
+    				methodMap.put(method, t);
+    				break;
+    			} catch (NoSuchMethodException e) {
+    			}
+            }
+    	}
+		if (t != null) {
+			try {
+				return t.m.invoke(t.obj, args);
+			} catch (InvocationTargetException e) {
+				throw e.getTargetException();
 			}
-			if (m != null) {
-				try {
-					return m.invoke(object, args);
-				} catch (InvocationTargetException e) {
-					throw e.getTargetException();
-				}
-			}
-        }
+		}
         return noSuchMethodFound(proxy, method, args);
     }
     
     protected Object noSuchMethodFound(Object proxy, Method method, Object[] args) throws Throwable {
-        throw new RuntimeException("Could not determine target delegate"); //$NON-NLS-1$ 
+        throw new RuntimeException("Could not determine target delegate for method " + method); //$NON-NLS-1$ 
     }
 
 }

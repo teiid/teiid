@@ -31,6 +31,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -52,6 +53,8 @@ public class CreateProcedureCommand extends Command {
     private GroupSymbol virtualGroup;
 
 	private int updateType = Command.TYPE_UNKNOWN;
+
+	private ElementSymbol returnVariable;
 
 	/**
 	 * Constructor for CreateUpdateProcedureCommand.
@@ -120,6 +123,9 @@ public class CreateProcedureCommand extends Command {
         }
         if (this.virtualGroup != null) {
         	copy.virtualGroup = this.virtualGroup.clone();
+        }
+        if (this.returnVariable != null) {
+        	copy.returnVariable = this.returnVariable;
         }
         copy.updateType = this.updateType; 
         this.copyMetadataState(copy);
@@ -219,12 +225,26 @@ public class CreateProcedureCommand extends Command {
     }
 
 	public void setUpdateType(int type) {
-		this.resultSetColumns = Collections.emptyList();
+		//we select the count as the last operation
+		this.resultSetColumns = Command.getUpdateCommandSymbol();
 		this.updateType = type;
 	}
 	
 	public int getUpdateType() {
 		return updateType;
+	}
+
+	public void setReturnVariable(ElementSymbol symbol) {
+		this.returnVariable = symbol;
+	}
+	
+	public ElementSymbol getReturnVariable() {
+		return returnVariable;
+	}
+	
+	@Override
+	public boolean returnsResultSet() {
+		return this.resultSetColumns != null && !this.resultSetColumns.isEmpty();
 	}
 
 } // END CLASS

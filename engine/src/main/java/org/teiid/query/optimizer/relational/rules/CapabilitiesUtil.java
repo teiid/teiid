@@ -22,8 +22,6 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,8 +29,9 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
-import org.teiid.metadata.Schema;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -43,14 +42,14 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
-import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -98,7 +97,7 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
         if (!joinType.isOuter()) {
-        	return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER);
+        	return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER) || caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER);
         }
         
         if(! caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER)) {
@@ -188,10 +187,20 @@ public class CapabilitiesUtil {
                 return false;
             }
             break;
+        case STRING_AGG:
+        	if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_STRING)) {
+                return false;
+            }
+            break;
         case RANK:
         case DENSE_RANK:
         case ROW_NUMBER:
         	if (!caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
+        		return false;
+        	}
+        	break;
+        case USER_DEFINED:
+        	if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
         		return false;
         	}
         	break;
@@ -222,7 +231,8 @@ public class CapabilitiesUtil {
     public static boolean supportsScalarFunction(Object modelID, Function function, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
         
-        if (metadata.isVirtualModel(modelID) || function.getFunctionDescriptor().getMethod().getPushdown() == PushDown.CANNOT_PUSHDOWN){
+		FunctionMethod method = function.getFunctionDescriptor().getMethod();
+		if (metadata.isVirtualModel(modelID) || method.getPushdown() == PushDown.CANNOT_PUSHDOWN){
             return false;
         }
 
@@ -231,8 +241,9 @@ public class CapabilitiesUtil {
         //capabilities check is only valid for non-schema scoped functions
         //technically the other functions are scoped to SYS or their function model, but that's 
         //not formally part of their metadata yet
-        Schema schema = function.getFunctionDescriptor().getMethod().getParent();
-        String fullName = function.getFunctionDescriptor().getMethod().getFullName();
+        Schema schema = method.getParent();
+        //TODO: this call should be functionDescriptor.getFullName - but legacy function models are parsed without setting the parent model as the schema
+        String fullName = method.getFullName();
         if (schema == null || !schema.isPhysical()) {
             // Find capabilities
         	
@@ -312,22 +323,37 @@ public class CapabilitiesUtil {
 
     public static int getMaxInCriteriaSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
-    	return getProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
+    	return getIntProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
     }
-    	
-    private static int getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    
+    public static Object getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
 
         if (metadata.isVirtualModel(modelID)){
-            return -1;
+            return null;
         }
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        Object maxInCriteriaSize = caps.getSourceProperty(cap);
+        return caps.getSourceProperty(cap);
+    }
+    	
+    /**
+     * Values are expected to be non-negative except for unknown/invalid = -1 
+     * @param cap
+     * @param modelID
+     * @param metadata
+     * @param capFinder
+     * @return
+     * @throws QueryMetadataException
+     * @throws TeiidComponentException
+     */
+    public static int getIntProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    throws QueryMetadataException, TeiidComponentException {
+        Object i = getProperty(cap, modelID, metadata, capFinder);
         int value = -1;
-        if(maxInCriteriaSize != null) {
-            value = ((Integer)maxInCriteriaSize).intValue();
+        if(i != null) {
+            value = ((Integer)i).intValue();
         }
         
         // Check for invalid values and send back code for UNKNOWN
@@ -339,29 +365,12 @@ public class CapabilitiesUtil {
     
     public static int getMaxDependentPredicates(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
-    	return getProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
+    	return getIntProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
     }
     
     public static int getMaxFromGroups(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return -1;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        Object maxGroups = caps.getSourceProperty(Capability.MAX_QUERY_FROM_GROUPS);
-        int value = -1;
-        if(maxGroups != null) {
-            value = ((Integer)maxGroups).intValue();
-        }
-        
-        // Check for invalid values and send back code for UNKNOWN
-        if(value <= 0) {
-            value = -1;
-        }
-        return value;
+    	return getIntProperty(Capability.MAX_QUERY_FROM_GROUPS, modelID, metadata, capFinder);
     }
 
     public static SupportedJoinCriteria getSupportedJoinCriteria(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
@@ -407,6 +416,10 @@ public class CapabilitiesUtil {
         
         if (modelID.equals(modelID1)) {
             return true;
+        }
+        
+        if (capFinder == null) {
+        	return false;
         }
 
         // Find capabilities
@@ -454,13 +467,23 @@ public class CapabilitiesUtil {
 	 */
 	static boolean checkElementsAreSearchable(List<? extends LanguageObject> objs, QueryMetadataInterface metadata, int searchableType) 
 	throws QueryMetadataException, TeiidComponentException {
-	    Collection<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-	    ElementCollectorVisitor.getElements(objs, elements);
-	    for (ElementSymbol elementSymbol : elements) {
-	        if (!metadata.elementSupports(elementSymbol.getMetadataID(), searchableType)) {
-	        	return false;
-	        }                
-	    }
+		if (objs != null) {
+		    for (LanguageObject lo : objs) {
+		    	if (lo instanceof OrderByItem) {
+		    		lo = ((OrderByItem)lo).getSymbol();
+		    	}
+		    	if (!(lo instanceof Expression)) {
+		    		continue;
+		    	}
+	    		lo = SymbolMap.getExpression((Expression)lo);
+		    	if (!(lo instanceof ElementSymbol)) {
+		    		continue;
+		    	}
+		        if (!metadata.elementSupports(((ElementSymbol)lo).getMetadataID(), searchableType)) {
+		        	return false;
+		        }                
+		    }
+		}
 	    return true;
 	}
 	

@@ -194,7 +194,7 @@ public class UpdateValidator {
 						if (partition == -1) {
 							partition = i;
 						} else if (partition != i) {
-							 throw new QueryValidatorException(QueryPlugin.Event.TEIID30240, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30240, insert.getGroup(), insert.getVariables()));
+							throw new QueryValidatorException(QueryPlugin.Event.TEIID30240, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30240, insert.getGroup(), insert.getVariables()));
 						}
 					}
 				}
@@ -206,15 +206,22 @@ public class UpdateValidator {
 			if (partition > 0) {
 				info = info.getUnionBranches().get(partition - 1);
 			}
-			List<ElementSymbol> variables = rewrite?insert.getVariables():new ArrayList<ElementSymbol>(insert.getVariables());
-			for (ElementSymbol elementSymbol : filteredColumns) {
-				int index = insert.getVariables().indexOf(elementSymbol);
-				variables.remove(index);
-				if (rewrite) {
-					insert.getValues().remove(index);
+			List<ElementSymbol> variables = new ArrayList<ElementSymbol>(insert.getVariables());
+			variables.removeAll(filteredColumns);
+			UpdateMapping mapping = info.findUpdateMapping(variables, true);
+			if (rewrite && mapping != null && !filteredColumns.isEmpty()) {
+				for (ElementSymbol elementSymbol : filteredColumns) {
+					if (mapping.getUpdatableViewSymbols().containsKey(elementSymbol)) {
+						continue;
+					}
+					int index = insert.getVariables().indexOf(elementSymbol);
+					insert.getVariables().remove(index);
+					if (rewrite) {
+						insert.getValues().remove(index);
+					}
 				}
 			}
-			return info.findUpdateMapping(variables, true);
+			return mapping;
 		}
 		
 		public Query getViewDefinition() {

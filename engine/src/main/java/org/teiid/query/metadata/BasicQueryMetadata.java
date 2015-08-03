@@ -129,7 +129,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return null;
     }
 
-    public Object getDefaultValue(Object elementID)
+    public String getDefaultValue(Object elementID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
 	}    
@@ -146,7 +146,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
      * @see org.teiid.query.metadata.QueryMetadataInterface#getDistinctValues(java.lang.Object)
      * @since 4.3
      */
-    public int getDistinctValues(Object elementID) throws TeiidComponentException,
+    public float getDistinctValues(Object elementID) throws TeiidComponentException,
                                                   QueryMetadataException {
         return -1;
     }
@@ -154,7 +154,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
      * @see org.teiid.query.metadata.QueryMetadataInterface#getNullValues(java.lang.Object)
      * @since 4.3
      */
-    public int getNullValues(Object elementID) throws TeiidComponentException,
+    public float getNullValues(Object elementID) throws TeiidComponentException,
                                               QueryMetadataException {
         return -1;
     }
@@ -390,7 +390,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     	return Collections.EMPTY_SET;    	
     }
     
-    public int getCardinality(Object groupID) 
+    public float getCardinality(Object groupID) 
     	throws TeiidComponentException, QueryMetadataException{
     		
     	return QueryMetadataInterface.UNKNOWN_CARDINALITY;
@@ -553,6 +553,33 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	@Override
 	public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
 		return null;
+	}
+
+	@Override
+	public boolean isPseudo(Object elementId) {
+		return false;
+	}
+	
+	@Override
+	public Object getModelID(String modelName) throws TeiidComponentException,
+			QueryMetadataException {
+		return null;
+	}
+	
+	@Override
+	public String getExtensionProperty(Object metadataID, String key,
+			boolean checkUnqualified) {
+		return null;
+	}
+	
+	@Override
+	public boolean findShortName() {
+		return false;
+	}
+	
+	@Override
+	public boolean useOutputName() {
+		return true;
 	}
 	
 }

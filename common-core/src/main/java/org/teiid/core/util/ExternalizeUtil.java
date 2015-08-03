@@ -163,12 +163,16 @@ public class ExternalizeUtil {
     	}
     }
     
-    public static <T extends Enum<T>> T readEnum(ObjectInput in, Class<T> clazz) throws IOException {
+    public static <T extends Enum<T>> T readEnum(ObjectInput in, Class<T> clazz, T defaultVal) throws IOException {
     	String name = in.readUTF();
     	if (name == null) {
     		return null;
     	}
-		return Enum.valueOf(clazz, name);
+    	try {
+    		return Enum.valueOf(clazz, name);
+    	} catch (IllegalArgumentException e) {
+    		return defaultVal;
+    	}
     }
     
 }

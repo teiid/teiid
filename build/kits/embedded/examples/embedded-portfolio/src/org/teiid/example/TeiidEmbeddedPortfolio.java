@@ -23,29 +23,25 @@
 package org.teiid.example;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.StringTokenizer;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.ConnectionFactory;
 import javax.sql.DataSource;
 
-import org.h2.jdbcx.JdbcDataSource;
-import org.teiid.adminapi.Model.Type;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.jdbc.TeiidDriver;
-import org.teiid.resource.adapter.file.FileConnectionImpl;
-import org.teiid.resource.spi.BasicConnectionFactory;
+import org.h2.tools.RunScript;
+import org.h2.tools.Server;
+import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.file.FileExecutionFactory;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
+
 
 /**
  * This example is same as "Teiid Quick Start Example", you can find at http://jboss.org/teiid/quickstart
@@ -63,53 +59,7 @@ import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
  */
 @SuppressWarnings("nls")
 public class TeiidEmbeddedPortfolio {
-	
-	/**
-	 * If you are trying to use per-built translators in Teiid framework, then the connection semantics for that
-	 * source already defined in a interface. The below examples show how you use the connection interface that translator
-	 * understands, in this case by using the default implementation with default values. If you are writing a custom translator
-	 *  then can you define the connection interface and connection provider based on that.  
-	 */
-	@SuppressWarnings("serial")
-	private static final class FileConnectionFactory extends
-			BasicConnectionFactory<FileConnectionImpl> {
-		@Override
-		public FileConnectionImpl getConnection() throws ResourceException {
-			return new FileConnectionImpl(".", null, false);
-		}
-	}
-	
-	/**
-	 * VDB = Virtual Database, in Teiid a VDB contains one or more models which define the source characteristics, like
-	 * connection to source, what translator need to be used, how to read/fetch metadata about the source. The 
-	 */
-	private static void buildDeployVDB(EmbeddedServer teiidServer) throws Exception {
-		// model for the file source
-		ModelMetaData fileModel = new ModelMetaData();
-		fileModel.setName("MarketData");
-		// ddl, native are two pre-built metadata repos types, you can build your own, 
-		// then register it using "addMetadataRepository"
-		fileModel.setSchemaSourceType("native");
-		fileModel.addSourceMapping("text-connector", "file", "source-file");
 
-		// model for the h2 database
-		ModelMetaData jdbcModel = new ModelMetaData();
-		jdbcModel.setName("Accounts");
-		jdbcModel.setSchemaSourceType("native");
-		jdbcModel.addSourceMapping("h2-connector", "h2", "source-jdbc");
-		
-		// creating a virtual (logical) view model
-		ModelMetaData portfolioModel = new ModelMetaData();
-		portfolioModel.setName("MyView");
-		portfolioModel.setModelType(Type.VIRTUAL);
-		portfolioModel.setSchemaSourceType("ddl");
-		// For defining the view in DDL take a look at https://docs.jboss.org/author/display/TEIID/DDL+Metadata
-		portfolioModel.setSchemaText("create view \"portfolio\" OPTIONS (UPDATABLE 'true') as select product.symbol as symbol, stock.price as price, company_name from product, (call MarketData.getTextFiles('data/marketdata-price.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock where product.symbol=stock.symbol");
-
-		// deploy the VDB to the embedded server
-		teiidServer.deployVDB("example", fileModel, jdbcModel, portfolioModel);
-	}	
-	
 	private static void execute(Connection connection, String sql, boolean closeConn) throws Exception {
 		try {
 			Statement statement = connection.createStatement();
@@ -142,58 +92,60 @@ public class TeiidEmbeddedPortfolio {
 		}		
 	}
 	
+	private static Server h2Server = null;
+	
 	public static void main(String[] args) throws Exception {
+				
 		// setup accounts database (if you already have external database this is not needed)
 		// for schema take look at "data/customer-schema.sql" file.
-		final JdbcDataSource h2ds = new JdbcDataSource();
-    	h2ds.setURL("jdbc:h2:accounts");
-
-		EmbeddedServer.ConnectionFactoryProvider<DataSource> jdbcProvider = new EmbeddedServer.ConnectionFactoryProvider<DataSource>() {
-			@Override
-			public DataSource getConnectionFactory() throws TranslatorException {
-				return h2ds;
-			}
-		};
-		Connection conn = jdbcProvider.getConnectionFactory().getConnection();
-		String schema = ObjectConverterUtil.convertFileToString(new File("data/customer-schema.sql"));
-		StringTokenizer st = new StringTokenizer(schema, ";");
-		while (st.hasMoreTokens()) {
-			String sql = st.nextToken();
-			execute(conn, sql.trim(), false);
-		}
-		conn.close();
+		startH2Server();
 		
+		DataSource ds = EmbeddedHelper.newDataSource("org.h2.Driver", "jdbc:h2:mem://localhost/~/account", "sa", "sa");
+		initSamplesData(ds);
 		
-		// now start Teiid in embedded mode
-		EmbeddedConfiguration ec = new EmbeddedConfiguration();
-		ec.setUseDisk(true);
-				
-		EmbeddedServer teiidServer = new EmbeddedServer();
-		teiidServer.start(ec);
+		EmbeddedServer server = new EmbeddedServer();
 		
-		// configure the connection provider and translator for file based source. 
-		// NOTE: every source that is being integrated, needs its connection provider and its translator 
-		// check out https://docs.jboss.org/author/display/TEIID/Built-in+Translators prebuit translators
-		final ConnectionFactory cf = new FileConnectionFactory();
-		teiidServer.addConnectionFactoryProvider("source-file", new EmbeddedServer.ConnectionFactoryProvider<ConnectionFactory>() {
-			@Override
-			public ConnectionFactory getConnectionFactory() throws TranslatorException {
-				return cf;
-			}
-		});
-		teiidServer.addTranslator(new FileExecutionFactory());
-
-		// configure the connection provider and translator for jdbc based source
-		teiidServer.addConnectionFactoryProvider("source-jdbc", jdbcProvider);
-		teiidServer.addTranslator(new H2ExecutionFactory());
+		H2ExecutionFactory executionFactory = new H2ExecutionFactory() ;
+		executionFactory.setSupportsDirectQueryProcedure(true);
+		executionFactory.start();
+		server.addTranslator("translator-h2", executionFactory);
 		
-		buildDeployVDB(teiidServer);
+		server.addConnectionFactory("java:/accounts-ds", ds);
 		
-		// Now query the VDB
-		TeiidDriver td = teiidServer.getDriver();
-		Connection c = td.connect("jdbc:teiid:example", null);
+    	FileExecutionFactory fileExecutionFactory = new FileExecutionFactory();
+    	fileExecutionFactory.start();
+    	server.addTranslator("file", fileExecutionFactory);
+    	
+    	FileManagedConnectionFactory managedconnectionFactory = new FileManagedConnectionFactory();
+		managedconnectionFactory.setParentDirectory("data");
+		server.addConnectionFactory("java:/marketdata-file", managedconnectionFactory.createConnectionFactory());
+	
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.setTransactionManager(EmbeddedHelper.getTransactionManager());	
+		server.start(config);
+    	
+		server.deployVDB(new FileInputStream(new File("portfolio-vdb.xml")));
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:Portfolio", null);
+		
 		execute(c, "select * from Product", false);
-		execute(c, "select * from MyView.portfolio", true);
+		execute(c, "select * from StockPrices", false);
+		execute(c, "select * from Stock", true);
+		
+		stopH2Server();
+	}
+
+	private static void stopH2Server() {
+		h2Server.stop();
+	}
+
+	private static void initSamplesData(DataSource ds) throws FileNotFoundException, SQLException {
+		RunScript.execute(ds.getConnection(), new FileReader("data/customer-schema.sql"));
+	}
+
+
+	private static void startH2Server() throws SQLException {
+		h2Server = Server.createTcpServer().start();	
 	}	
 
 }

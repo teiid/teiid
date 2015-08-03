@@ -26,23 +26,47 @@ import java.util.Map;
 import org.teiid.translator.TranslatorException;
 
 /**
- * Each ObjectConnection implementation represents a connection to a set of maps or caches
+ * Each ObjectConnection implementation represents a connection to maps or caches to be searched
  * 
  * @author vhalbert
  *
  */
 public interface ObjectConnection  {
 	
+	CacheContainerWrapper getCacheContainer() throws TranslatorException;
+		
 	/**
-	 * Return the map containing the desired objects
+	 * Return the root class type stored in the specified cache
+	 * @param cacheName 
+	 * @return Class
 	 * @throws TranslatorException
 	 */
-	public Map<?, ?> getMap(String name) throws TranslatorException;
+	Class<?> getType(String cacheName) throws TranslatorException;
 	
 	/**
-	 * Return the type of the desired objects
-	 * @throws TranslatorException
+	 * Returns the name of the primary key to the cache
+	 * @param cacheName
+	 * @return String key name
 	 */
-	public Class<?> getType(String name) throws TranslatorException;
+	String getPkField(String cacheName);
+		
+	/**
+	 * Returns a map of all defined caches, and their respective root object class type,
+	 * that are accessible using this connection.
+	 * @return Map<String, Class>  --> CacheName, ClassType
+	 */
+	Map<String, Class<?>> getCacheNameClassTypeMapping();
+	
+	/**
+	 * Return the ClassRegistry that contains which classes and their methods.
+	 * @return ClassRegistry
+	 */
+	ClassRegistry getClassRegistry();	
 
+	
+	/** 
+	 * Called to enable the connection to cleanup after use
+	 */
+	public void cleanUp();
+	
 }

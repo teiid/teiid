@@ -1,10 +1,38 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.jboss;
 
-import static junit.framework.Assert.*;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILD_TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
@@ -19,15 +47,13 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
-import junit.framework.Assert;
-
 import org.jboss.as.cli.Util;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
-import org.jboss.as.subsystem.test.AbstractSubsystemTest;
-import org.jboss.as.subsystem.test.AdditionalInitialization;
+import org.jboss.as.subsystem.test.AbstractSubsystemBaseTest;
 import org.jboss.as.subsystem.test.KernelServices;
 import org.jboss.dmr.ModelNode;
+import org.junit.Assert;
 import org.junit.Test;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.xml.sax.ErrorHandler;
@@ -35,54 +61,47 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 @SuppressWarnings("nls")
-public class TestTeiidConfiguration extends AbstractSubsystemTest {
+public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
 	public TestTeiidConfiguration() {
 		super(TeiidExtension.TEIID_SUBSYSTEM, new TeiidExtension());
 	}
 
+	@Override
+	protected String getSubsystemXml() throws IOException {
+		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));		
+		return subsystemXml;
+	} 
+	
     @Test
     public void testDescribeHandler() throws Exception {
-    	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
-        KernelServices servicesA = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
+    	standardSubsystemTest(null, true);
+    }
+    
+    @Override
+	protected String readResource(final String name) throws IOException {
+    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.0\"> \n" + 
+    			"   <async-thread-pool>teiid-async</async-thread-pool>\n" + 
+    			"</subsystem>";
         
-        
-        //Get the model and the describe operations from the first controller
-        ModelNode modelA = servicesA.readWholeModel();
-        String marshalled = servicesA.getPersistedSubsystemXml();
-        
-        ModelNode describeOp = new ModelNode();
-        describeOp.get(OP).set(DESCRIBE);
-        describeOp.get(OP_ADDR).set(PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM)).toModelNode());
-        List<ModelNode> operations = super.checkResultAndGetContents(servicesA.executeOperation(describeOp)).asList();
-
-
-        //Install the describe options from the first controller into a second controller
-        KernelServices servicesB = super.installInController(operations);
-        ModelNode modelB = servicesB.readWholeModel();
-
-        //Make sure the models from the two controllers are identical
-        super.compare(modelA, modelB);
+    	if (name.equals("minimum")) {
+        	return minimum;
+        }
+    	return null;
     }
     
     @Test
     public void testMinimumConfiguration() throws Exception {
-    	String subsystemXml = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.0\">\n" + 
-    						  "    <async-thread-pool>teiid-async</async-thread-pool>"+
-    						  "</subsystem>";
-        KernelServices services = super.installInController(subsystemXml);
-        services.readWholeModel();
+    	standardSubsystemTest("minimum");
     }
 
     @Test
     public void testOutputPerisitence() throws Exception {
-    	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
-
     	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json.txt"));
     	ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
-        KernelServices services = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
+        KernelServices services = standardSubsystemTest(null, true);
         //Get the model and the persisted xml from the controller
         ModelNode model = services.readWholeModel();
         String marshalled = services.getPersistedSubsystemXml();
@@ -95,13 +114,11 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     
     @Test
     public void testOutputModel() throws Exception {
-    	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
-
     	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json.txt"));
     	ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
-        KernelServices services = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
+        KernelServices services = standardSubsystemTest(null, false);
         //Get the model and the persisted xml from the controller
         ModelNode model = services.readWholeModel();
         String marshalled = services.getPersistedSubsystemXml();
@@ -115,8 +132,8 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
     	validate(subsystemXml);
     	
-        KernelServices services = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
-        ;
+        KernelServices services = standardSubsystemTest(null, false);
+
         //Get the model and the persisted xml from the controller
         ModelNode model = services.readWholeModel();
         String marshalled = services.getPersistedSubsystemXml();
@@ -146,27 +163,14 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
 			
 			@Override
 			public void error(SAXParseException exception) throws SAXException {
-				if (!exception.getMessage().contains("cvc-enumeration-valid") && !exception.getMessage().contains("cvc-type"))
+				if (!exception.getMessage().contains("cvc-enumeration-valid") && !exception.getMessage().contains("cvc-type")) {
 					fail(exception.getMessage());
+				}
 			}
 		});
 		
 		validator.validate(source);
 	}
-    
-    @Test
-    public void testSubSystemDescription() throws IOException {
-    	ModelNode node = new ModelNode();
-    	TeiidAdd.describeTeiid(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
-    	assertEquals(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-config.txt")), node.toString());
-    }
-    
-    @Test
-    public void testtransportDescription() throws IOException {
-    	ModelNode node = new ModelNode();
-    	TransportAdd.describeTransport(node, ATTRIBUTES, IntegrationPlugin.getResourceBundle(null));
-    	assertEquals(ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-transport-config.txt")), node.toString());
-    }    
     
     @Test
     public void testParseSubsystem() throws Exception {
@@ -189,7 +193,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     
     @Test
     public void testQueryOperations() throws Exception {
-    	KernelServices services = buildSubsystem();
+    	KernelServices services = standardSubsystemTest(null, true);
         
         PathAddress addr = PathAddress.pathAddress(
                 PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
@@ -201,24 +205,23 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
         List<String> opNames = getList(result);
-        assertEquals(40, opNames.size());
-		String[] ops = { "add","add-anyauthenticated-role","add-data-role","assign-datasource",
+		String[] ops = { "add","add-anyauthenticated-role","add-data-role","add-source","assign-datasource",
 				"cache-statistics","cache-types","cancel-request","change-vdb-connection-type",
-				"clear-cache","describe","execute-query","get-query-plan","get-schema", "get-translator","get-vdb",
+				"clear-cache","engine-statistics","execute-query","get-query-plan","get-schema", "get-translator","get-vdb",
 				"list-long-running-requests","list-requests","list-requests-per-session",
 				"list-requests-per-vdb","list-sessions","list-transactions","list-translators",
 				"list-vdbs","mark-datasource-available","read-attribute",
 				"read-children-names","read-children-resources","read-children-types",
 				"read-operation-description","read-operation-names","read-rar-description",
-				"read-resource","read-resource-description","remove-anyauthenticated-role",
-				"remove-data-role","restart-vdb","terminate-session","terminate-transaction",
-				"workerpool-statistics","write-attribute", };
-        assertEquals(Arrays.asList(ops), opNames);
+				"read-resource","read-resource-description","read-translator-properties", "remove","remove-anyauthenticated-role",
+				"remove-data-role","remove-source","restart-vdb","terminate-session","terminate-transaction",
+				"undefine-attribute","update-source","workerpool-statistics","write-attribute"};
+		Assert.assertArrayEquals(ops, opNames.toArray(new String[opNames.size()]));
     }
     
     @Test
     public void testAddRemoveTransport() throws Exception {
-    	KernelServices services = buildSubsystem();
+    	KernelServices services = standardSubsystemTest(null, true);
         
         PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
         
@@ -269,21 +272,15 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
         assertEquals(Arrays.asList(ops3), opNames); 
     }    
 
-	private KernelServices buildSubsystem() throws IOException,
-			FileNotFoundException, Exception {
-		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
-
-        KernelServices services = super.installInController(subsystemXml);
-		return services;
-	}
-    
     private static List<String> getList(ModelNode operationResult) {
-        if(!operationResult.hasDefined("result"))
-            return Collections.emptyList();
+        if(!operationResult.hasDefined("result")) {
+			return Collections.emptyList();
+		}
 
         List<ModelNode> nodeList = operationResult.get("result").asList();
-        if(nodeList.isEmpty())
-            return Collections.emptyList();
+        if(nodeList.isEmpty()) {
+			return Collections.emptyList();
+		}
 
         List<String> list = new ArrayList<String>(nodeList.size());
         for(ModelNode node : nodeList) {
@@ -301,7 +298,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     
     @Test
     public void testTranslator() throws Exception {
-    	KernelServices services = buildSubsystem();
+    	KernelServices services = standardSubsystemTest(null, true);
         
         PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
         
@@ -352,5 +349,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
 //        oracle.get("children", "properties").add(buildProperty("MaxDependentInPredicates","50"));
 //        
 //        super.compare(oracleNode, oracle);
-    }    
+    }
+
+   
 }

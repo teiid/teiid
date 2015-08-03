@@ -119,32 +119,19 @@ public final class StringUtil {
 	 * @param delimiter Delimiter to put between string pieces
 	 * @return One merged string
 	 */
-	public static String join(List<String> strings, String delimiter) {
+	public static String join(Collection<String> strings, String delimiter) {
 		if(strings == null || delimiter == null) {
 			return null;
 		}
 
 		StringBuffer str = new StringBuffer();
 
-		// This is the standard problem of not putting a delimiter after the last
-		// string piece but still handling the special cases.  A typical way is to check every
-		// iteration if it is the last one and skip the delimiter - this is avoided by
-		// looping up to the last one, then appending just the last one.  
-
-		// First we loop through all but the last one (if there are at least 2) and
-		// put the piece and a delimiter after it.  An iterator is used to walk the list.
-		int most = strings.size()-1;
-		if(strings.size() > 1) {
-			Iterator<String> iter = strings.iterator();
-			for(int i=0; i<most; i++) {            
-				str.append(iter.next());
+		Iterator<String> iter = strings.iterator();
+		while (iter.hasNext()) {            
+			str.append(iter.next());
+			if (iter.hasNext()) {
 				str.append(delimiter);
 			}
-		}
-
-		// If there is at least one element, put the last one on with no delimiter after.
-		if(strings.size() > 0) {
-			str.append(strings.get(most));
 		}
 		
 		return str.toString();
@@ -157,23 +144,35 @@ public final class StringUtil {
      * @return the string form of the array
      */
     public static String toString( final Object[] array, final String delim ) {
+    	return toString(array, delim, true);
+    }
+    
+    /**
+     * Return a stringified version of the array.
+     * @param array the array
+     * @param delim the delimiter to use between array components
+     * @return the string form of the array
+     */
+    public static String toString( final Object[] array, final String delim, boolean includeBrackets) {
         if ( array == null ) {
             return ""; //$NON-NLS-1$
         }
-        if ( array.length == 0 ) {
-            return "[]"; //$NON-NLS-1$
-        }
         final StringBuffer sb = new StringBuffer();
-        sb.append('[');
+        if (includeBrackets) {
+        	sb.append('[');
+        }
         for (int i = 0; i < array.length; ++i) {
             if ( i != 0 ) {
                 sb.append(delim);
             }
             sb.append(array[i]);
         }
-        sb.append(']');
+        if (includeBrackets) {
+        	sb.append(']');
+        }
         return sb.toString();
     }
+
     
     /**
      * Return a stringified version of the array, using a ',' as a delimiter
@@ -182,7 +181,7 @@ public final class StringUtil {
      * @see #toString(Object[], String)
      */
     public static String toString( final Object[] array ) {
-        return toString(array,","); //$NON-NLS-1$
+        return toString(array, ",", true); //$NON-NLS-1$
     }
     
 	/**
@@ -863,6 +862,90 @@ public final class StringUtil {
 			result.add(current.toString());
 		}
 		return result;
+	}
+	
+	/**
+	 * Unescape the given string
+	 * @param string
+	 * @param quoteChar
+	 * @param useAsciiExcapes
+	 * @param sb a scratch buffer to use
+	 * @return
+	 */
+    public static String unescape(CharSequence string, int quoteChar, boolean useAsciiEscapes, StringBuilder sb) {
+    	boolean escaped = false;
+    	
+    	for (int i = 0; i < string.length(); i++) {
+    		char c = string.charAt(i);
+    		if (escaped) {
+	    		switch (c) {
+	    		case 'b':
+	    			sb.append('\b');
+	    			break;
+	    		case 't':
+	    			sb.append('\t');
+	    			break;
+	    		case 'n':
+	    			sb.append('\n');
+	    			break;
+	    		case 'f':
+	    			sb.append('\f');
+	    			break;
+	    		case 'r':
+	    			sb.append('\r');
+	    			break;
+	    		case 'u':
+					i = parseNumericValue(string, sb, i, 0, 4, 4);
+					//TODO: this should probably be strict about needing 4 digits
+	    			break;
+    			default:
+    				if (c == quoteChar) {
+    					sb.append(quoteChar);
+    				} else if (useAsciiEscapes) {
+	    				int value = Character.digit(c, 8);
+						if (value == -1) {
+							sb.append(c);
+						} else {
+							int possibleDigits = value < 3 ? 2:1;
+							int radixExp = 3;
+	    					i = parseNumericValue(string, sb, i, value, possibleDigits, radixExp);
+	    				}
+    				}
+	    		}
+	    		escaped = false;
+    		} else {
+    			if (c == '\\') {
+    				escaped = true;
+    			} else if (c == quoteChar) {
+    				break;
+    			} else {
+					sb.append(c);
+    			}
+    		}
+    	}
+    	//TODO: should this be strict?
+    	//if (escaped) {
+    		//throw new FunctionExecutionException();
+    	//}
+    	return sb.toString();
+    }
+
+	private static int parseNumericValue(CharSequence string, StringBuilder sb,
+			int i, int value, int possibleDigits, int radixExp) {
+		for (int j = 0; j < possibleDigits; j++) {
+			if (i + 1 == string.length()) {
+				break;
+			}
+			char digit = string.charAt(i + 1);
+			int val = Character.digit(digit, 1 << radixExp);
+			if (val == -1) {
+				break;
+			}
+			i++;
+			value = (value << radixExp) + val;
+		}
+		sb.append((char)value);
+		return i;
 	}
 	
 }

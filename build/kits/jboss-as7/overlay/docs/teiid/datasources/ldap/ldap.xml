@@ -1,0 +1,30 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="ldap">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.ldap"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory" 
+                        jndi-name="java:/ldapDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="ldap-ds">
+                        
+                   <!-- LDAP Directroy URL (required)-->
+                  <config-property name="LdapUrl">ldap://ldapServer:389</config-property>
+                  
+                  <!-- Ldap Admin User DN (required)-->
+                  <config-property name="LdapAdminUserDN">cn=???,ou=???,dc=???</config-property>
+                 
+                  <!-- Ldap Admin Password (required)-->
+                  <config-property name="LdapAdminUserPassword">pass</config-property>
+                 
+                  <!-- Ldap Transaction Timeout (ms) -1 = no time out (optional) -->
+                  <config-property name="LdapTxnTimeoutInMillis">-1</config-property>
+      
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

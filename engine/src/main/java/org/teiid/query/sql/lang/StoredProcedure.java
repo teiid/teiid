@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -190,7 +189,7 @@ public class StoredProcedure extends ProcedureContainer {
     public List<ElementSymbol> getResultSetColumns(){
         SPParameter resultSetParameter = getResultSetParameter();
         if(resultSetParameter != null){
-            List<ElementSymbol> result = new LinkedList<ElementSymbol>();
+            List<ElementSymbol> result = new ArrayList<ElementSymbol>(resultSetParameter.getResultSetColumns().size());
             for (Iterator<ElementSymbol> i = resultSetParameter.getResultSetColumns().iterator(); i.hasNext();) {
                 ElementSymbol symbol = i.next().clone();
                 symbol.setGroupSymbol(getGroup());
@@ -227,7 +226,8 @@ public class StoredProcedure extends ProcedureContainer {
     }
 
     public boolean returnsResultSet(){
-        return !getResultSetColumns().isEmpty();
+        SPParameter param = getResultSetParameter();
+        return param != null && !param.getResultSetColumns().isEmpty();
     }
 
     public boolean returnsScalarValue(){
@@ -247,7 +247,7 @@ public class StoredProcedure extends ProcedureContainer {
 	 * Get the ordered list of all elements returned by this query.  These elements
 	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
-	 * @return Ordered list of SingleElementSymbol
+	 * @return Ordered list of ElementSymbol
 	 */
 	public List getProjectedSymbols(){
 		if (!returnParameters()) {

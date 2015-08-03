@@ -48,17 +48,6 @@ public class FileListBlock extends Block {
 		prevPath= path;
 		return true;
 	}
-	public void clear() {
-		reset();
-		super.clear();
-	}
-	public void flush() {
-		if (offset > 0) {
-			field.putInt2(offset, 0);
-			field.putInt2(offset + 2, 0);
-			offset= 0;
-		}
-	}
 	public IndexedFile getFile(int fileNum) throws IOException {
 		IndexedFile resp= null;
 		try {

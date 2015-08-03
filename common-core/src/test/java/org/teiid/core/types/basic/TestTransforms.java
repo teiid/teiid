@@ -32,14 +32,7 @@ import java.sql.Timestamp;
 
 import org.junit.Test;
 import org.teiid.core.CorePlugin;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.TestDataTypeManager;
-import org.teiid.core.types.Transform;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.query.unittest.TimestampUtil;
@@ -53,14 +46,14 @@ public class TestTransforms {
     
     private static void helpTestTransform(Object value, Object expectedValue) throws TransformationException {
         Transform transform = DataTypeManager.getTransform(value.getClass(), expectedValue.getClass());
-        Object result = transform.transform(value);
+        Object result = transform.transform(value, expectedValue.getClass());
         assertEquals(expectedValue, result);
     }
     
     private static void validateTransform(String src, Object value, String target, Object expectedValue) throws TransformationException {
         try {                        
             Transform transform = DataTypeManager.getTransform(DataTypeManager.getDataTypeClass(src), expectedValue.getClass());
-            Object result = transform.transform(value);
+            Object result = transform.transform(value, expectedValue.getClass());
         	assertTrue(expectedValue.getClass().isAssignableFrom(result.getClass()));
             assertFalse("Expected exception for " +src+ " to " + target, //$NON-NLS-1$ //$NON-NLS-2$            
             		isException(DataTypeManager.getDataTypeName(value.getClass()), target,value));
@@ -74,7 +67,7 @@ public class TestTransforms {
     private static void helpTransformException(Object value, Class<?> target, String msg) {
         try {
             Transform transform = DataTypeManager.getTransform(value.getClass(), target);
-            transform.transform(value);
+            transform.transform(value, target);
             fail("Expected to get an exception during the transformation"); //$NON-NLS-1$
         } catch (TransformationException e) {
         	if (msg != null) {
@@ -201,7 +194,7 @@ public class TestTransforms {
     @Test public void testObjectToAnyTransformFailure() {
         Transform transform = DataTypeManager.getTransform(DefaultDataClasses.OBJECT, DefaultDataClasses.TIME);
         try {
-            transform.transform("1"); //$NON-NLS-1$
+            transform.transform("1", DefaultDataClasses.TIME); //$NON-NLS-1$
             fail("expected exception"); //$NON-NLS-1$
         } catch (TransformationException e) {
             assertEquals("TEIID10076 Invalid conversion from type class java.lang.Object with value '1' to type class java.sql.Time", e.getMessage()); //$NON-NLS-1$
@@ -254,6 +247,9 @@ public class TestTransforms {
 		helpTransformException(value, DataTypeManager.DefaultDataClasses.INTEGER, CorePlugin.Util.gs(CorePlugin.Event.TEIID10058, value, Double.class.getSimpleName(), Integer.class.getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$  
     }
 
-
+    @Test public void testPrimitiveArrayConversion() throws Exception {
+    	Object val = DataTypeManager.transformValue(new long[] {1}, DataTypeManager.DefaultDataClasses.OBJECT, Long[].class);
+    	assertEquals(new ArrayImpl(new Long[]{Long.valueOf(1)}), val); 
+    }
     
 }

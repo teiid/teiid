@@ -36,6 +36,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stax.StAXSource;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.StandardXMLTranslator;
 import org.teiid.core.types.Streamable;
@@ -60,7 +61,7 @@ public class StAXSQLXML extends SQLXMLImpl {
 		@Override
 		public StAXSource getStaxSource() throws SQLException {
 			if (source == null) {
-				throw new SQLException("Already Freed"); //$NON-NLS-1$
+				throw new SQLException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60019));
 			}
 			StAXSource result = source;
 			source = null;

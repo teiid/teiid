@@ -146,7 +146,7 @@ public abstract class Symbol implements LanguageObject {
     }
 
     public void setOutputName(String outputName) {
-        this.outputName = DataTypeManager.getCanonicalString(outputName);
+        this.outputName = outputName;
     }
     
     /**
@@ -185,5 +185,5 @@ public abstract class Symbol implements LanguageObject {
 	    }
 	    return name;
 	}
-
+	
 }

@@ -28,14 +28,37 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 
 
 public class CollectionTupleSource implements TupleSource {
 	
+	public static final List<Integer> UPDATE_ROW = Arrays.asList(1);
 	private Iterator<? extends List<?>> tuples;
 
 	public static CollectionTupleSource createUpdateCountTupleSource(int count) {
 		return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator());
+	}
+	
+	public static TupleSource createUpdateCountArrayTupleSource(final int count) {
+		return new TupleSource() {
+			int index = 0;
+			
+			@Override
+			public List<?> nextTuple() throws TeiidComponentException,
+					TeiidProcessingException {
+				if (index++ < count) {
+					return UPDATE_ROW;
+				}
+				return null;
+			}
+			
+			@Override
+			public void closeSource() {
+				
+			}
+		};
 	}
 	
 	public static CollectionTupleSource createNullTupleSource() {

@@ -1,0 +1,9 @@
+# The value of 'driver-module-name' match to the ucanaccess driver module added in JBoss server
+/subsystem=datasources/jdbc-driver=ucanaccess:add(driver-name=ucanaccess,driver-module-name=net.ucanaccess,driver-class-name=net.ucanaccess.jdbc.UcanaccessDriver)
+
+/subsystem=datasources/data-source=ucanaccessDS:add(jndi-name=java:/ucanaccessDS, driver-name=ucanaccess, enabled=true,use-java-context=true, connection-url=jdbc:ucanaccess://{<mdb or accdb file path>},user-name={user}, password={password})
+
+/subsystem=datasources/data-source=ucanaccessDS:test-connection-in-pool()
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
+

@@ -2,32 +2,74 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
+  
   <artifactId>teiid</artifactId>
   <name>Build</name>
   <description>Teiid Build</description>
+  
+  <properties>
+      <!-- Directory name from upstream JBoss server dist. -->
+      <dir.jboss-orig>${jbossas-test-version}</dir.jboss-orig>
+      <!-- Teiid server directory name. -->
+      <dir.server>teiid-${project.version}</dir.server>
+  </properties>
+  
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client-jdk15</artifactId>
-            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.sf.retrotranslator</groupId>
             <artifactId>retrotranslator-runtime</artifactId>
-            <version>1.2.9</version>
+            <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>net.sf.retrotranslator</groupId>
             <artifactId>retrotranslator-transformer</artifactId>
-            <version>1.2.9</version>
-        </dependency>        
-    </dependencies>     
+            <scope>provided</scope>
+        </dependency>
+    	<dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency> 
+       
+	<dependency>
+	    <groupId>org.jboss.narayana.jta</groupId>
+	    <artifactId>narayana-jta</artifactId>
+	    <scope>provided</scope>
+	</dependency> 
+	<dependency>
+	    <groupId>org.jboss.ironjacamar</groupId>
+	    <artifactId>ironjacamar-jdbc</artifactId>
+	    <scope>provided</scope>
+	</dependency>
+	<dependency>
+	    <groupId>org.jboss.ironjacamar</groupId>
+	    <artifactId>ironjacamar-core-api</artifactId>
+	    <scope>provided</scope>
+	</dependency>
+	<dependency>
+	    <groupId>org.jboss.ironjacamar</groupId>
+	    <artifactId>ironjacamar-core-impl</artifactId>
+	    <scope>provided</scope>
+	</dependency>
+
+    </dependencies>   
+      
     <build>
         <outputDirectory>target/kits</outputDirectory>
+        
         <resources>
             <resource>
                 <directory>kits</directory>
@@ -38,6 +80,8 @@
                     <include>**/*.sh</include>
                     <include>**/*.bat</include>
                     <include>**/*.html</include>
+                    <include>**/*.cli</include>
+                    <include>**/Dockerfile</include>
                 </includes>
             </resource>
             <resource>
@@ -49,40 +93,87 @@
                     <exclude>**/*.sh</exclude>
                     <exclude>**/*.bat</exclude>
                     <exclude>**/*.html</exclude>
+                    <exclude>**/*.cli</exclude>
+                    <exclude>**/Dockerfile</exclude>
                 </excludes>
             </resource>
         </resources>
+        
         <pluginManagement>
           <plugins>
             <plugin>
               <artifactId>maven-assembly-plugin</artifactId>
+              <configuration>
+                  <archiverConfig>
+                      <fileMode>0644</fileMode>
+                      <directoryMode>0755</directoryMode>
+                      <defaultDirectoryMode>0755</defaultDirectoryMode>
+                  </archiverConfig>
+              </configuration>
             </plugin>
           </plugins>
         </pluginManagement>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-
-            <configuration>
-              <descriptors>
-                <descriptor>assembly/client-jar.xml</descriptor>
-                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
-                <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
-                <descriptor>assembly/embedded-dist.xml</descriptor>
-              </descriptors>
-            </configuration>
-
-            <executions>
-              <execution>
-                <id>create-assemblies</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-
+        
+        <plugins>                        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-server-deps</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.jboss.as</groupId>
+                                    <artifactId>jboss-as-dist</artifactId>
+                                    <version>${version.org.jboss.as}</version>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.teiid.web-console</groupId>
+                                    <artifactId>teiid-console-dist</artifactId>
+                                    <version>${version.teiid.console}</version>
+                                    <classifier>jboss-as7</classifier>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}/${dir.jboss-orig}</outputDirectory>
+                                    <overWrite>true</overWrite>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>assembly/src.xml</descriptor>
+                        <descriptor>assembly/client-jar.xml</descriptor>
+                        <descriptor>assembly/console-jar.xml</descriptor>    
+                        <descriptor>assembly/jboss-as7/dist.xml</descriptor>
+                        <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                        <descriptor>assembly/embedded-dist.xml</descriptor>
+                        <descriptor>assembly/server.xml</descriptor>
+                        <descriptor>assembly/docker.xml</descriptor>            
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-assemblies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -129,61 +220,68 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>          
-          <plugin>
-                  <groupId>org.codehaus.mojo</groupId>
-                  <artifactId>build-helper-maven-plugin</artifactId>
-                  <version>1.5</version>
-                  <executions>
-                      <execution>
-                          <phase>package</phase>
-                          <goals>
-                              <goal>attach-artifact</goal>
-                          </goals>
-                          <configuration>
-                              <artifacts>
-                                  <artifact>
-                                      <file>target/teiid-${project.version}-jdbc-jdk15.jar</file>
-                                      <type>jar</type>
-                                      <classifier>jdbc-jdk15</classifier>
-                                  </artifact>
-                                  <artifact>
-                                      <file>target/teiid-${project.version}-jdbc-jdk14.jar</file>
-                                      <type>jar</type>
-                                      <classifier>jdbc-jdk14</classifier>
-                                  </artifact>
-                          </artifacts>
-                      </configuration>
-                  </execution>
-              </executions>
             </plugin>
+                        
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>target/teiid-${project.version}-jdbc-jdk15.jar</file>
+                                    <type>jar</type>
+                                    <classifier>jdbc-jdk15</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>target/teiid-${project.version}-jdbc-jdk14.jar</file>
+                                    <type>jar</type>
+                                    <classifier>jdbc-jdk14</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>target/kits/karaf/teiid-karaf-features.xml</file>
+                                    <type>xml</type>
+                                    <classifier>karaf-features</classifier>
+                                </artifact>                                
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
     
     <profiles>
-      <profile>
-        <!-- 
+        <profile>
+            <!--
             This profile is activated manually, as in "mvn ... -P release ..."
-  		  -->
-        <id>release</id>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-assembly-plugin</artifactId>
-              <configuration>
-                <descriptors>
-                  <descriptor>assembly/src.xml</descriptor>
-                  <descriptor>assembly/client-jar.xml</descriptor>
-                  <descriptor>assembly/console-jar.xml</descriptor>    
-                  <descriptor>assembly/jboss-as7/dist.xml</descriptor>
-                  <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
-                  <descriptor>assembly/embedded-dist.xml</descriptor>
-                </descriptors>
-              </configuration>
-            </plugin>
-
-          </plugins>
-        </build>
-      </profile>
-    </profiles>
+            -->
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>assembly/src.xml</descriptor>
+                                <descriptor>assembly/client-jar.xml</descriptor>
+                                <descriptor>assembly/console-jar.xml</descriptor>
+                                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
+                                <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                                <descriptor>assembly/embedded-dist.xml</descriptor>
+                                <descriptor>assembly/server.xml</descriptor>
+                                <descriptor>assembly/docker.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>    
 </project>

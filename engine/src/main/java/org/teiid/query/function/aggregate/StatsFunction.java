@@ -22,6 +22,7 @@
 
 package org.teiid.query.function.aggregate;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -84,6 +85,26 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 			break;
 		}
 		return result;
+	}
+	
+	@Override
+	public void getState(List<Object> state) {
+		state.add(count);
+		state.add(sum);
+		state.add(sumSq);
+	}
+	
+	@Override
+	public List<? extends Class<?>> getStateTypes() {
+		return Arrays.asList(Integer.class, Double.class, Double.class);
+	}
+	
+	@Override
+	public int setState(List<?> state, int index) {
+		count = (Integer) state.get(index++);
+		sum = (Double) state.get(index++);
+		sumSq = (Double) state.get(index++);
+		return index;
 	}
 
 }

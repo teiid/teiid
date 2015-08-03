@@ -28,6 +28,8 @@ import org.teiid.core.types.TransformationException;
 
 public class AnyToObjectTransform extends Transform {
 	
+	public static final AnyToObjectTransform INSTANCE = new AnyToObjectTransform(Object.class);
+	
 	private Class<?> sourceType;
 	
 	public AnyToObjectTransform(Class<?> sourceType) {

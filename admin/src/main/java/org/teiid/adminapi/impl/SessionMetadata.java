@@ -21,7 +21,10 @@
  */
 package org.teiid.adminapi.impl;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.security.auth.Subject;
 
@@ -57,6 +60,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private transient Subject subject;
     private transient Object securityContext;
     private transient boolean embedded;
+    private transient Map<String, Object> sessionVariables = Collections.synchronizedMap(new HashMap<String, Object>(2));
 
 	@Override
 	public String getApplicationName() {
@@ -212,6 +216,10 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	
 	public void setClientHardwareAddress(String clientHardwareAddress) {
 		this.clientHardwareAddress = clientHardwareAddress;
+	}
+	
+	public Map<String, Object> getSessionVariables() {
+		return sessionVariables;
 	}
 	
 }

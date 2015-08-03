@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.SortedMap;
+import java.util.TreeSet;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
@@ -36,6 +37,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
@@ -45,6 +47,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.tempdata.BaseIndexInfo;
 import org.teiid.query.tempdata.SearchableTable;
+import org.teiid.query.util.CommandContext;
 
 abstract class RecordTable<T extends AbstractMetadataRecord> implements SearchableTable {
 	
@@ -149,7 +152,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 	}
 	
 	@Override
-	public boolean matchesPkColumn(int pkIndex, Expression ex) {
+	public Boolean matchesPkColumn(int pkIndex, Expression ex) {
 		if (ex instanceof Function) {
 			Function f = (Function)ex;
 			ex = f.getArg(0);
@@ -162,7 +165,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		return !(ex instanceof ElementSymbol);
 	}
 	
-	public abstract SimpleIterator<T> processQuery(final VDBMetaData vdb, CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii);
+	public abstract SimpleIterator<T> processQuery(final VDBMetaData vdb, CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata);
 	
 	public SimpleIterator<T> processQuery(final VDBMetaData vdb, NavigableMap<String, ?> map, BaseIndexInfo<?> ii) {
 		final Criteria crit = ii.getCoveredCriteria();
@@ -172,10 +175,16 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 			final SortedMap<String, ?> fMap = map;
 			return new SimpleIterator<T>() {
 				int i = 0;
+				TreeSet<String> seen = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 				@Override
 				public T next() throws TeiidProcessingException, TeiidComponentException {
 					while (i < vals.size()) {
-						T s = extractRecord(fMap.get(vals.get(i++).get(0)));
+						String key = (String)vals.get(i++).get(0);
+						if (!seen.add(key)) {
+							//filter to only a single match 
+							continue;
+						}
+						T s = extractRecord(fMap.get(key));
 						if (isValid(s, vdb, rowBuffer, crit)) {
 							return s;
 						}
@@ -184,38 +193,43 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 				}
 			};
 		}
-		if (ii.getLower() != null) {
-			if (ii.getUpper() != null) {
-				map = map.subMap((String) ii.getLower().get(0), true, (String) ii.getUpper().get(0), true);
-			} else {
-				map = map.tailMap((String) ii.getLower().get(0), true);
-			}
-		} else if (ii.getUpper() != null) {
-			map = map.headMap((String) ii.getUpper().get(0), true);
-		}
-		final Iterator<?> iter = map.values().iterator();
-		return new SimpleIterator<T>() {
-			@Override
-			public T next() throws TeiidProcessingException, TeiidComponentException {
-				while (iter.hasNext()) {
-					T s = extractRecord(iter.next());
-					if (isValid(s, vdb, rowBuffer, crit)) {
-						return s;
-					}
+		try {
+			if (ii.getLower() != null) {
+				if (ii.getUpper() != null) {
+					map = map.subMap((String) ii.getLower().get(0), true, (String) ii.getUpper().get(0), true);
+				} else {
+					map = map.tailMap((String) ii.getLower().get(0), true);
 				}
-				return null;
+			} else if (ii.getUpper() != null) {
+				map = map.headMap((String) ii.getUpper().get(0), true);
 			}
-		};
+			final Iterator<?> iter = map.values().iterator();
+			return new SimpleIterator<T>() {
+				@Override
+				public T next() throws TeiidProcessingException, TeiidComponentException {
+					while (iter.hasNext()) {
+						T s = extractRecord(iter.next());
+						if (isValid(s, vdb, rowBuffer, crit)) {
+							return s;
+						}
+					}
+					return null;
+				}
+			};
+		} catch (IllegalArgumentException e) {
+			//this is a map bound issue or lower is greater than upper
+			return emptyIterator();
+		}
 	}
 	
 	protected T extractRecord(Object val) {
 		return (T) val;
 	}
 
-	public BaseIndexInfo<RecordTable<?>> planQuery(Query query, Criteria condition) {
+	public BaseIndexInfo<RecordTable<?>> planQuery(Query query, Criteria condition, CommandContext context) {
 		BaseIndexInfo<RecordTable<?>> info = new BaseIndexInfo<RecordTable<?>>(this, Collections.EMPTY_LIST, condition, null, false);
 		if (!info.getValueSet().isEmpty()) {
-			info.sortValueSet(OrderBy.ASC);
+			info.sortValueSet(OrderBy.ASC, context.getBufferManager().getOptions().getDefaultNullOrder());
 		}
 		return info;
 	}

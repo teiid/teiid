@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.aggregate.AggregateFunction;
@@ -92,9 +92,12 @@ public class SortingFilter extends AggregateFunction {
 	private void close() {
 		if (this.collectionBuffer != null) {
         	collectionBuffer.remove();
+            this.collectionBuffer = null;
         }
-        this.collectionBuffer = null;
-        this.sortUtility = null;
+		if (this.sortUtility != null) {
+			sortUtility.remove();
+	        this.sortUtility = null;
+		}
 	}
 	
 	@Override
@@ -102,7 +105,6 @@ public class SortingFilter extends AggregateFunction {
 			throws TeiidComponentException, TeiidProcessingException {
         if(collectionBuffer == null) {
             collectionBuffer = mgr.createTupleBuffer(elements, groupName, TupleSourceType.PROCESSOR);
-            collectionBuffer.setForwardOnly(true);
         }
         List<Object> row = new ArrayList<Object>(argIndexes.length);
         //TODO remove overlap
@@ -126,7 +128,9 @@ public class SortingFilter extends AggregateFunction {
 
             // Sort
             if (sortUtility == null) {
-            	sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), sortItems, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName, collectionBuffer.getSchema());
+            	sortUtility = new SortUtility(null, sortItems, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName, collectionBuffer.getSchema());
+            	collectionBuffer.setForwardOnly(true);
+            	this.sortUtility.setWorkingBuffer(collectionBuffer);
             }
             TupleBuffer sorted = sortUtility.sort();
             sorted.setForwardOnly(true);

@@ -32,8 +32,11 @@ import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.translator.ExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -139,7 +142,7 @@ public class TestAdminObjectBuilder {
 		
 		assertTrue(roles.size() == 1);
 		
-		DataPolicyMetadata role = vdb.getDataPolicy("roleOne"); 
+		DataPolicyMetadata role = vdb.getDataPolicyMap().get("roleOne"); 
 		assertEquals("roleOne described", role.getDescription()); 
 		assertNotNull(role.getMappedRoleNames());
 		assertTrue(role.getMappedRoleNames().contains("ROLE1")); 

@@ -22,9 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,11 +30,16 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.common.buffer.*;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.events.EventDistributor;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.FakeTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
@@ -77,7 +80,6 @@ public class TestProjectIntoNode {
         node.setModelName("myModel"); //$NON-NLS-1$
         
         CommandContext context = new CommandContext();
-        context.setProcessorID("processorID"); //$NON-NLS-1$
         BufferManager bm = BufferManagerFactory.getTestBufferManager(tupleBatchSize, tupleBatchSize);
         ProcessorDataManager dataManager = new FakePDM(tupleBatchSize);
         
@@ -136,7 +138,7 @@ public class TestProjectIntoNode {
             // ensure that we have the right kind of insert, and that the data for this row is valid
             if (command instanceof Insert) {
             	Insert insert = (Insert)command;
-            	if (insert.isBulk()) {
+            	if (isBulk(insert)) {
                     List batch = getBulkRows(insert, insert.getVariables());
                     batchSize = batch.size();
                     assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
@@ -163,6 +165,9 @@ public class TestProjectIntoNode {
                 assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
             } else {
                 fail("Unexpected command type"); //$NON-NLS-1$
+            }
+            if (batchSize > 1) {
+            	return CollectionTupleSource.createUpdateCountArrayTupleSource(batchSize);
             }
             List counts = Arrays.asList(new Object[] { new Integer(batchSize)});
             FakeTupleSource fakeTupleSource = new FakeTupleSource(null, new List[] {counts});
@@ -210,7 +215,7 @@ public class TestProjectIntoNode {
     
 	public static List<List<Object>> getBulkRows(Insert insert, List<ElementSymbol> elements) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 		int bulkRowCount = 1;
-		if (insert.isBulk()) {
+		if (isBulk(insert)) {
 			Constant c = (Constant)insert.getValues().get(0);
 			bulkRowCount = ((List<?>)c.getValue()).size();
 		}
@@ -223,7 +228,7 @@ public class TestProjectIntoNode {
                 int index = insert.getVariables().indexOf(symbol);
                 Object value = null;
                 if (index != -1) {
-                	if (insert.isBulk()) {
+                	if (isBulk(insert)) {
 	                	Constant multiValue = (Constant)insert.getValues().get(index);
 	    		    	value = ((List<?>)multiValue.getValue()).get(row);
                 	} else {
@@ -237,5 +242,15 @@ public class TestProjectIntoNode {
 		}
 		return tuples;
 	}
+	
+    public static boolean isBulk(Insert insert) {
+    	if (insert.getValues() == null) {
+    		return false;
+    	}
+    	if (!(insert.getValues().get(0) instanceof Constant)) {
+    		return false;
+    	}
+    	return ((Constant)insert.getValues().get(0)).isMultiValued();
+    }
 	
 }

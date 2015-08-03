@@ -51,6 +51,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.net.CommunicationException;
@@ -109,10 +110,11 @@ public class TestSocketRemoting {
 		private ResultsReceiver<Object> listener;
 
 		public FakeClientServerInstance(ClientServiceRegistryImpl server) throws UnknownHostException {
-			super(new HostInfo("foo", new InetSocketAddress(InetAddress.getLocalHost(), 1)), 1000);
+			super(new HostInfo("foo", new InetSocketAddress(InetAddress.getLocalHost(), 1)), 1000, 1000);
 			this.server = server;
 		}
 		
+		@Override
 		public boolean isOpen() {
 			return true;
 		}
@@ -126,10 +128,12 @@ public class TestSocketRemoting {
 			workItem.run();
 		}
 
+		@Override
 		public void shutdown() {
 			
 		}
 
+		@Override
 		public Cryptor getCryptor() {
 			return new NullCryptor();
 		}
@@ -140,6 +144,11 @@ public class TestSocketRemoting {
 
 		public void send(Message message, Serializable messageKey) {
 			this.listener.receiveResults(message.getContents());
+		}
+		
+		@Override
+		public String getServerVersion() {
+			return ApplicationInfo.getInstance().getReleaseNumber();
 		}
 		
 	}
@@ -155,6 +164,7 @@ public class TestSocketRemoting {
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
 			assertEquals("TEIID20018 Unable to find a component used authenticate on to Teiid", e.getMessage()); //$NON-NLS-1$
+		} catch(NullPointerException npe) {
 		}
 	}
 	
@@ -204,7 +214,6 @@ public class TestSocketRemoting {
 						throws LogonException {
 					return null;
 				}
-
 			}, "foo"); //$NON-NLS-1$
 		csr.registerClientService(FakeService.class, new FakeServiceImpl(), "foo"); //$NON-NLS-1$
 		final FakeClientServerInstance serverInstance = new FakeClientServerInstance(csr);

@@ -3,17 +3,15 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-jpa</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>JPA2 Translator</name>
     <description>This translator provides access to any JPA based entities</description>
-    <properties>
-        <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>1.0.1.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
-    </properties>
-
+    <packaging>bundle</packaging>
+    
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -28,13 +26,11 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>   
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>translator-jdbc</artifactId>
-            <version>${project.version}</version>        
+            <artifactId>translator-jdbc</artifactId>       
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -46,7 +42,6 @@
         <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.0-api</artifactId>
-            <version>${version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -71,5 +66,25 @@
                 </excludes>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                  <execution>
+                    <id>create-assemblies</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>single</goal>
+                    </goals>
+                  </execution>
+                </executions>
+            </plugin>   
+        </plugins>         
     </build>
 </project>

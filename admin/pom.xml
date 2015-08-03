@@ -3,12 +3,28 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-admin</artifactId>
 	<name>admin</name>
 	<description>Admin API for Teiid</description>
+    <packaging>bundle</packaging>
+    
+    <build>
+        <plugins>
+            <plugin>   
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <configuration>
+               <instructions>
+                <Import-Package>!org.jboss.*,*</Import-Package>
+               </instructions>
+              </configuration>
+            </plugin>            
+        </plugins>   
+    </build>    
+    
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -24,18 +40,6 @@
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
 			<scope>provided</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jboss-dmr</artifactId>    
-        </dependency>    
-        <dependency>
-            <groupId>org.jboss.as</groupId>
-            <artifactId>jboss-as-cli</artifactId>
-        </dependency> 
-        <dependency>
-            <groupId>org.jboss.as</groupId>
-            <artifactId>jboss-as-controller-client</artifactId>   
-        </dependency>    
+		</dependency>   
 	</dependencies>
 </project>

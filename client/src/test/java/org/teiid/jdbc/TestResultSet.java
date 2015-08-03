@@ -23,18 +23,15 @@
 package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
 
 import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -677,12 +674,31 @@ public class TestResultSet {
     }
  
     @Test public void testForwardOnly() throws Exception {
-        ResultSetImpl cs = helpExecuteQuery(400, 1000, ResultSet.TYPE_FORWARD_ONLY);
-        
+        ResultSetImpl cs = helpExecuteQuery(400, 1300, ResultSet.TYPE_FORWARD_ONLY);
+        int i = 0;
         while (cs.next()) {
+        	i++;
+        	if (i <= 1200) {
+        		assertNotNull(cs.getPrefetch());
+        	} else {
+        		assertNull(cs.getPrefetch());
+        	}
             cs.getObject(1);
         }
         
+        assertTrue(cs.isAfterLast());
+        cs.close();      
+    }
+    
+    @Test public void testForwardOnlyPrefetchSmallFetchSize() throws Exception {
+    	StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
+    	ResultSetImpl cs = TestAllResultsImpl.helpTestBatching(statement, 10, 128, 256, true);
+		for (int i = 0; i < 256; i++) {
+			cs.next();
+            cs.getObject(1);
+        }
+        Mockito.verify(statement.getDQP(), Mockito.atMost(1)).processCursorRequest(TestAllResultsImpl.REQUEST_ID, 11, 10);
+        assertFalse(cs.next());
         assertTrue(cs.isAfterLast());
         cs.close();      
     }
@@ -745,7 +761,8 @@ public class TestResultSet {
 
 	static StatementImpl createMockStatement(int cursorType) throws SQLException {
 		StatementImpl statement = mock(StatementImpl.class);
-		stub(statement.getDQP()).toReturn(mock(DQP.class));
+		DQP dqp = mock(DQP.class);
+		stub(statement.getDQP()).toReturn(dqp);
 		stub(statement.getResultSetType()).toReturn(cursorType);
 		TimeZone tz = TimeZone.getTimeZone("GMT-06:00"); //$NON-NLS-1$
 		TimeZone serverTz = TimeZone.getTimeZone("GMT-05:00"); //$NON-NLS-1$

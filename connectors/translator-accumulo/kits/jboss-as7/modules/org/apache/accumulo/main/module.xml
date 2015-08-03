@@ -1,0 +1,23 @@
+<module xmlns="urn:jboss:module:1.1" name="org.apache.accumulo">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <resource-root path="accumulo-core-${version.accumulo}.jar"/>
+        <resource-root path="accumulo-fate-${version.accumulo}.jar"/>
+        <resource-root path="accumulo-trace-${version.accumulo}.jar"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="org.slf4j"/>
+        <module name="org.apache.log4j"/>
+        <module name="org.apache.commons.io"/>
+        <module name="org.apache.commons.configuration"/>
+        <module name="org.apache.commons.logging"/>
+        <module name="org.apache.zookeeper" />
+        <module name="org.apache.thrift" />
+        <module name="org.apache.hadoop.core" />
+    </dependencies>
+</module>

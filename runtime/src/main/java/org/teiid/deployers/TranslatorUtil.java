@@ -22,55 +22,65 @@
 package org.teiid.deployers;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Map;
-import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 
 public class TranslatorUtil {
 	
     public static final String DEPLOYMENT_NAME = "deployment-name"; //$NON-NLS-1$
 	
-	public static Map<Method, TranslatorProperty> getTranslatorProperties(Class<?> attachmentClass) {
-		Map<Method, TranslatorProperty> props = new HashMap<Method,  TranslatorProperty>();
+	static Map<Method, TranslatorProperty> getTranslatorProperties(Class<?> attachmentClass) {
+		Map<Method, TranslatorProperty> props = new TreeMap<Method,  TranslatorProperty>(new Comparator<Method>() {
+			@Override
+			public int compare(Method o1, Method o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
 		buildTranslatorProperties(attachmentClass, props);
 		return props;
 	}
-
-	public static Properties getTranslatorPropertiesAsProperties(Class<?> attachmentClass) {
-		Properties props = new Properties();
-		try {
-			Object instance = attachmentClass.newInstance();
-			Map<Method, TranslatorProperty> tps = TranslatorUtil.getTranslatorProperties(attachmentClass);
-			for (Method m:tps.keySet()) {
-				Object defaultValue = getDefaultValue(instance, m, tps.get(m));
-				if (defaultValue != null) {
-					props.setProperty(getPropertyName(m), defaultValue.toString());
-				}
-			}
-		} catch (InstantiationException e) {
-			// ignore
-		} catch (IllegalAccessException e) {
-			// ignore
-		}
-		return props;
-	}
 	
+    static Map<Field, ExtensionMetadataProperty> getExtensionMetadataProperties(Class<?> attachmentClass) {
+        Map<Field, ExtensionMetadataProperty> props = new TreeMap<Field,  ExtensionMetadataProperty>(new Comparator<Field>() {
+            @Override
+            public int compare(Field o1, Field o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        buildExtensionMetadataProperties(attachmentClass, props);
+        return props;
+    }	
+
 	private static void buildTranslatorProperties(Class<?> attachmentClass, Map<Method, TranslatorProperty> props){
+		Class<?>[] baseInterfaces = attachmentClass.getInterfaces();
+		for (Class<?> clazz:baseInterfaces) {
+			buildTranslatorProperties(clazz, props);
+		}
+		Class<?> superClass = attachmentClass.getSuperclass();
+		if (superClass != null) {
+			buildTranslatorProperties(superClass, props);
+		}
 		Method[] methods = attachmentClass.getMethods();
 		for (Method m:methods) {
 			TranslatorProperty tp = m.getAnnotation(TranslatorProperty.class);
@@ -78,41 +88,75 @@ public class TranslatorUtil {
 				props.put(m, tp);
 			}
 		}
-		// Now look at the base interfaces
-		Class[] baseInterfaces = attachmentClass.getInterfaces();
-		for (Class clazz:baseInterfaces) {
-			buildTranslatorProperties(clazz, props);
-		}
-		Class superClass = attachmentClass.getSuperclass();
-		if (superClass != null) {
-			buildTranslatorProperties(superClass, props);
-		}
 	}	
 	
-	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data, ClassLoader classLoader) throws TeiidException {
+    private static void buildExtensionMetadataProperties(Class<?> attachmentClass, Map<Field, ExtensionMetadataProperty> props){
+        Class<?>[] baseInterfaces = attachmentClass.getInterfaces();
+        for (Class<?> clazz:baseInterfaces) {
+            buildExtensionMetadataProperties(clazz, props);
+        }
+        Class<?> superClass = attachmentClass.getSuperclass();
+        if (superClass != null) {
+            buildExtensionMetadataProperties(superClass, props);
+        }
+        
+        Field[] fields = attachmentClass.getDeclaredFields();
+        for (Field f:fields) {
+            ExtensionMetadataProperty tp = f.getAnnotation(ExtensionMetadataProperty.class);
+            if (tp != null) {
+                f.setAccessible(true);
+                props.put(f, tp);
+            }
+        }
+    }   	
+	
+	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data) throws TeiidException {
 		ExecutionFactory executionFactory;
 		try {
-			String executionClass = data.getPropertyValue(VDBTranslatorMetaData.EXECUTION_FACTORY_CLASS);
-			Object o = ReflectionHelper.create(executionClass, null, classLoader);
+			Class<?> executionClass = data.getExecutionFactoryClass();
+			Object o = executionClass.newInstance();
 			if(!(o instanceof ExecutionFactory)) {
 				 throw new TeiidException(RuntimePlugin.Event.TEIID40024, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40024, executionClass));
 			}
 			executionFactory = (ExecutionFactory)o;
-			injectProperties(executionFactory, data);
-			executionFactory.start();
+			synchronized (executionFactory) {
+				injectProperties(executionFactory, data);
+				ClassLoader orginalCL = Thread.currentThread().getContextClassLoader();
+				try {
+				    Thread.currentThread().setContextClassLoader(executionFactory.getClass().getClassLoader());
+				    executionFactory.start();
+				} finally {
+				    Thread.currentThread().setContextClassLoader(orginalCL);
+				}
+			}
 			return executionFactory;
 		} catch (InvocationTargetException e) {
-			 throw new TeiidException(RuntimePlugin.Event.TEIID40025, e);
+			throw new TeiidException(RuntimePlugin.Event.TEIID40025, e);
 		} catch (IllegalAccessException e) {
-			 throw new TeiidException(RuntimePlugin.Event.TEIID40026, e);
+			throw new TeiidException(RuntimePlugin.Event.TEIID40026, e);
+		} catch (InstantiationException e) {
+			throw new TeiidException(CorePlugin.Event.TEIID10036, e);
 		}
 	}
 	
-	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, TeiidException{
+	private static void injectProperties(ExecutionFactory ef, final VDBTranslatorMetaData data) throws InvocationTargetException, IllegalAccessException, TeiidException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
-		Map p = data.getProperties();
+		Map p = data.getPropertiesMap();
 		TreeMap<String, String> caseInsensitiveProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		caseInsensitiveProps.putAll(p);
+		/*
+		VDBTranslatorMetaData parent = data.getParent();
+		while (parent != null) {
+			for (Map.Entry<String, String> entry : parent.getPropertiesMap().entrySet()) {
+				if (!caseInsensitiveProps.containsKey(entry.getKey()) && entry.getValue() != null) {
+					caseInsensitiveProps.put(entry.getKey(), entry.getValue());
+				}
+			}
+			parent = parent.getParent();
+		}
+		*/
+		synchronized (p) {
+			caseInsensitiveProps.putAll(p);
+		}
 		caseInsensitiveProps.remove(DEPLOYMENT_NAME);
 		for (Method method:props.keySet()) {
 			TranslatorProperty tp = props.get(method);
@@ -193,18 +237,135 @@ public class TranslatorUtil {
 		}
 		
 		VDBTranslatorMetaData metadata = new VDBTranslatorMetaData();
+		String see = translator.deprecated();
+		if (see != null && see.length() > 0) {
+			metadata.addProperty("deprecated", see); //$NON-NLS-1$ 
+		}
 		metadata.setName(translator.name());
 		metadata.setDescription(translator.description());
 		metadata.setExecutionFactoryClass(factory.getClass());
 		metadata.setModuleName(moduleName);
+		ExtendedPropertyMetadataList propertyDefns = new ExtendedPropertyMetadataList();
 		
-		Properties props = getTranslatorPropertiesAsProperties(factory.getClass());
-		for (String key:props.stringPropertyNames()) {
-			metadata.addProperty(key, props.getProperty(key));
+		try {
+			Object instance = factory.getClass().newInstance();
+			buildTranslatorProperties(factory, metadata, propertyDefns, instance);
+			buildExtensionMetadataProperties(factory, metadata, propertyDefns, instance);
+		} catch (InstantiationException e) {
+			// ignore
+		} catch (IllegalAccessException e) {
+			// ignore
 		}
+		
+		metadata.addAttchment(ExtendedPropertyMetadataList.class, propertyDefns);
 		return metadata;
 	}
-	
+
+    private static void buildExtensionMetadataProperties(ExecutionFactory factory, VDBTranslatorMetaData metadata, ExtendedPropertyMetadataList propertyDefns, Object instance) {
+        Class clazz = factory.getClass();
+        readExtensionPropertyMetadataAsExtendedMetadataProperties(propertyDefns, clazz);
+
+        MetadataProcessor metadataProcessor = factory.getMetadataProcessor();
+        if (metadataProcessor != null) {
+            clazz = metadataProcessor.getClass();
+            readExtensionPropertyMetadataAsExtendedMetadataProperties(propertyDefns, clazz);
+        }
+        
+    }
+        
+    private static void buildTranslatorProperties(ExecutionFactory factory, VDBTranslatorMetaData metadata, ExtendedPropertyMetadataList propertyDefns, Object instance) {
+        Class clazz = factory.getClass();
+        readTranslatorPropertyAsExtendedMetadataProperties(metadata, propertyDefns, instance, clazz);
+
+        MetadataProcessor metadataProcessor = factory.getMetadataProcessor();
+        if (metadataProcessor != null) {
+            clazz = metadataProcessor.getClass();
+            readTranslatorPropertyAsExtendedMetadataProperties(metadata, propertyDefns, metadataProcessor, clazz);
+        }
+    }    
+    
+    private static void readExtensionPropertyMetadataAsExtendedMetadataProperties(
+            ExtendedPropertyMetadataList propertyDefns, Class clazz) {
+        Map<Field, ExtensionMetadataProperty> tps = TranslatorUtil.getExtensionMetadataProperties(clazz);
+        for (Field f:tps.keySet()) {
+            
+            ExtensionMetadataProperty tp = tps.get(f);
+            ExtendedPropertyMetadata epm = new ExtendedPropertyMetadata();
+            epm.category = PropertyType.EXTENSION_METADATA.name();
+            
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < tp.applicable().length; i++) {
+                sb.append(tp.applicable()[i].getName());
+                if (tp.applicable().length-1 > i) {
+                    sb.append(","); //$NON-NLS-1$
+                }
+            }
+            epm.owner = sb.toString();
+            try {
+                epm.name = (String)f.get(null);
+            } catch (IllegalArgumentException e) {
+                continue;
+            } catch (IllegalAccessException e) {
+                continue;
+            }
+            epm.description = tp.description();
+            epm.displayName = tp.display();
+            epm.required = tp.required();
+            epm.dataType = tp.datatype().getName();
+            
+            // allowed values
+            if (tp.allowed() != null && !tp.allowed().isEmpty()) {
+                epm.allowed = new ArrayList<String>();
+                StringTokenizer st = new StringTokenizer(tp.allowed(), ","); //$NON-NLS-1$
+                while (st.hasMoreTokens()) {
+                    epm.allowed.add(st.nextToken());
+                }
+            }
+            propertyDefns.add(epm);
+        }
+    }
+
+    private static void readTranslatorPropertyAsExtendedMetadataProperties(
+            VDBTranslatorMetaData metadata,
+            ExtendedPropertyMetadataList propertyDefns, Object instance,
+            Class clazz) {
+        Map<Method, TranslatorProperty> tps = TranslatorUtil.getTranslatorProperties(clazz);
+        for (Method m:tps.keySet()) {
+            
+        	Object defaultValue = getDefaultValue(instance, m, tps.get(m));
+        	
+        	TranslatorProperty tp = tps.get(m);
+        	boolean importProperty = tp.category()==TranslatorProperty.PropertyType.IMPORT;
+            if (defaultValue != null && !importProperty) {
+                metadata.addProperty(getPropertyName(m), defaultValue.toString());
+            }
+        	
+        	ExtendedPropertyMetadata epm = new ExtendedPropertyMetadata();
+        	epm.category = tp.category().name();
+        	epm.name = importProperty?"importer."+getPropertyName(m):getPropertyName(m); //$NON-NLS-1$
+        	epm.description = tp.description();
+        	epm.advanced = tp.advanced();
+        	if (defaultValue != null) {
+        		epm.defaultValue = defaultValue.toString();
+        	}
+        	epm.displayName = tp.display();
+        	epm.masked = tp.masked();
+        	epm.required = tp.required();
+        	epm.dataType = m.getReturnType().getCanonicalName();
+        	
+        	// allowed values
+        	if (m.getReturnType().isEnum()) {
+        		epm.allowed = new ArrayList<String>();
+        		Object[] constants = m.getReturnType().getEnumConstants();
+        		for( int i=0; i<constants.length; i++ ) {
+                    epm.allowed.add(((Enum<?>)constants[i]).name());
+                }
+        		epm.dataType = "java.lang.String"; //$NON-NLS-1$
+        	}
+        	propertyDefns.add(epm);
+        }
+    }
+    	
 	private static Object convert(Object instance, Method method, TranslatorProperty prop) {
 		Class<?> type = method.getReturnType();
 		String[] allowedValues = null;

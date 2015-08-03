@@ -24,20 +24,20 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +48,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.util.ResultSetUtil;
 
@@ -75,43 +76,31 @@ public class TestMMDatabaseMetaData {
 	public static void compareResultSet(String testName, ResultSet... rs)
 			throws FileNotFoundException, SQLException, IOException {
 		FileOutputStream actualOut = null;
-        BufferedReader expectedIn = null;
-        PrintStream stream = null;
         try {
+	        StringWriter ps = new StringWriter();
+	        for (int i = 0; i < rs.length; i++) {
+	        	ResultSetUtil.printResultSet(rs[i], MAX_COL_WIDTH, true, ps);
+	        }
+	        if (PRINT_RESULTSETS_TO_CONSOLE) {
+	           System.out.println(ps.toString());
+	        }
 	        if (REPLACE_EXPECTED) {
 	            File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
 	            actualOut = new FileOutputStream(actual);
+	            actualOut.write(ps.toString().getBytes("UTF-8"));
 	        } else {
 	            if (WRITE_ACTUAL_RESULTS_TO_FILE) {
 	                File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".actual"); //$NON-NLS-1$ //$NON-NLS-2$
 	                actualOut = new FileOutputStream(actual);
 	            }
-	            File expected = new File(UnitTestUtil.getTestDataPath() + "/"+testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
-	            expectedIn = new BufferedReader(new FileReader(expected));
+	            InputStreamReader isr = new InputStreamReader(new BufferedInputStream(new FileInputStream(UnitTestUtil.getTestDataPath() + "/"+testName+".expected"))); //$NON-NLS-1$ //$NON-NLS-2$
+		        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+	                    ObjectConverterUtil.convertToString(isr),
+	                    ps.toString());
 	        }
-	        PrintStream defaultStream = null;
-	        if (PRINT_RESULTSETS_TO_CONSOLE) {
-	            defaultStream = new PrintStream(System.out) {
-	                // SYS.out should be protected from being closed.
-	                public void close() {}
-	            };
-	        }
-	        stream = ResultSetUtil.getPrintStream(actualOut, expectedIn, defaultStream);
-	        for (int i = 0; i < rs.length; i++) {
-	        	ResultSetUtil.printResultSet(rs[i], MAX_COL_WIDTH, true, stream);
-	        }
-	        assertEquals("Actual data did not match expected", //$NON-NLS-1$
-                    Collections.EMPTY_LIST,
-                    ResultSetUtil.getUnequalLines(stream));
         } finally {
-	        if (stream != null) {
-	        	stream.close();
-	        }
 	        if (actualOut != null) {
 	            actualOut.close();
-	        }
-	        if (expectedIn != null) {
-	            expectedIn.close();
 	        }
         }
 	}
@@ -131,7 +120,8 @@ public class TestMMDatabaseMetaData {
     //==============================================================================
     private static final int ResultSet_HOLD_CURSORS_OVER_COMMIT = 1; // ResultSet.HOLD_CURSORS_OVER_COMMIT == 1
     private static final int ResultSet_CLOSE_CURSORS_AT_COMMIT = 2; // ResultSet.CLOSE_CURSORS_AT_COMMIT  == 2
-
+    private static FakeServer server;
+    
     @Before
     public void setUp() throws Exception {
         dbmd = new DatabaseMetaDataImpl((ConnectionImpl) conn);
@@ -142,11 +132,12 @@ public class TestMMDatabaseMetaData {
     	if (conn != null) {
             conn.close();
         }
+    	server.stop();
     }    
     
     @BeforeClass
     public static void oneTimeSetUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    	server = new FakeServer(true);
     	server.setThrowMetadataErrors(false); //there are invalid views due to aggregate datatype changes
     	server.deployVDB("QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
         conn = server.createConnection("jdbc:teiid:QT_Ora9DS"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -481,7 +472,7 @@ public class TestMMDatabaseMetaData {
             while(rs.next()) {
                 count++;
             }
-            assertEquals(11, count);
+            assertEquals(15, count);
         } finally {
             if(rs != null) {
                 rs.close();
@@ -761,6 +752,20 @@ public class TestMMDatabaseMetaData {
         ResultSet rs2 = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$ 
     	compareResultSet(rs, rs1, rs2);
     }
+    
+    @Test
+    public void testGetFunctions() throws Exception {
+    	ResultSet rs = dbmd.getFunctions(null, null, null); //$NON-NLS-1$
+    	ResultSet rs1 = dbmd.getFunctions(null, "pg%", "%pg%"); //$NON-NLS-1$
+    	compareResultSet(rs, rs1);
+    }
+    
+    @Test
+    public void testGetFunctionColumns() throws Exception {
+    	ResultSet rs = dbmd.getFunctionColumns(null, null, null, null); //$NON-NLS-1$
+    	ResultSet rs1 = dbmd.getFunctionColumns(null, "pg%", "%pg%", null); //$NON-NLS-1$
+    	compareResultSet(rs, rs1);
+    }
     ///////////////////////////Helper Method//////////////////////////////
 
     private void helpTestSupportsConverts(int from, int to, boolean result) throws Exception {
@@ -823,7 +828,7 @@ public class TestMMDatabaseMetaData {
         expected.put("supportsExpressionsInOrderBy", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsExtendedSQLGrammar", Boolean.FALSE); //$NON-NLS-1$
         expected.put("supportsFullOuterJoins", Boolean.TRUE); //$NON-NLS-1$
-        expected.put("supportsGetGeneratedKeys", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsGetGeneratedKeys", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsGroupBy", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsGroupByBeyondSelect", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsGroupByUnrelated", Boolean.TRUE); //$NON-NLS-1$
@@ -899,7 +904,7 @@ public class TestMMDatabaseMetaData {
         expected.put("getSQLStateType", new Integer(2)); //$NON-NLS-1$
 
         // return type -- String
-        expected.put("getCatalogSeparator", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getCatalogSeparator", "."); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getCatalogTerm", "VirtualDatabase"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDatabaseProductName", "Teiid Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDatabaseProductVersion", ApplicationInfo.getInstance().getMajorReleaseVersion()+"."+ApplicationInfo.getInstance().getMinorReleaseVersion()); //$NON-NLS-1$ //$NON-NLS-2$

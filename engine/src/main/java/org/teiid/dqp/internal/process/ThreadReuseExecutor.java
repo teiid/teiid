@@ -30,11 +30,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -136,85 +132,6 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	
 	private final ThreadPoolExecutor tpe; 
 	
-	private ScheduledThreadPoolExecutor stpe = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("Scheduler")); //$NON-NLS-1$
-	
-	class ScheduledFutureTask extends FutureTask<Void> implements ScheduledFuture<Void>, PrioritizedRunnable {
-		private ScheduledFuture<?> scheduledFuture;
-		private boolean periodic;
-		private volatile boolean running;
-		private PrioritizedRunnable runnable;
-		
-		public ScheduledFutureTask(PrioritizedRunnable runnable, boolean periodic) {
-			super(runnable, null);
-			this.periodic = periodic;
-			this.runnable = runnable;
-		}
-		
-		public void setScheduledFuture(ScheduledFuture<?> scheduledFuture) {
-			scheduledTasks.add(this);
-			this.scheduledFuture = scheduledFuture;
-		}
-		
-		@Override
-		public long getDelay(TimeUnit unit) {
-			return this.scheduledFuture.getDelay(unit);
-		}
-
-		@Override
-		public int compareTo(Delayed o) {
-			return this.scheduledFuture.compareTo(o);
-		}
-		
-		@Override
-		public boolean cancel(boolean mayInterruptIfRunning) {
-			this.scheduledFuture.cancel(false);
-			scheduledTasks.remove(this);
-			return super.cancel(mayInterruptIfRunning);
-		}
-		
-		public Runnable getParent() {
-			return new Runnable() {
-				@Override
-				public void run() {
-					if (running || terminated) {
-						return;
-					}
-					running = periodic;
-					executeDirect(ScheduledFutureTask.this);
-				}
-			};
-		}
-		
-		@Override
-		public void run() {
-			if (periodic) {
-				if (!this.runAndReset()) {
-					this.scheduledFuture.cancel(false);
-					scheduledTasks.remove(this);
-				}
-				running = false;
-			} else {
-				scheduledTasks.remove(this);
-				super.run();
-			}
-		}
-
-		@Override
-		public long getCreationTime() {
-			return runnable.getCreationTime();
-		}
-
-		@Override
-		public int getPriority() {
-			return runnable.getPriority();
-		}
-		
-		@Override
-		public DQPWorkContext getDqpWorkContext() {
-			return runnable.getDqpWorkContext();
-		}
-	}
-	
 	private volatile int activeCount;
 	private volatile int highestActiveCount;
 	private volatile int highestQueueSize;
@@ -224,7 +141,6 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	private Object poolLock = new Object();
 	private AtomicInteger threadCounter = new AtomicInteger();
 	private Set<Thread> threads = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<Thread, Boolean>()));
-	private Set<ScheduledFutureTask> scheduledTasks = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<ScheduledFutureTask, Boolean>()));
 	
 	private String poolName;
 	private int maximumPoolSize;
@@ -245,7 +161,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		this.poolName = name;
 		
 		tpe = new ThreadPoolExecutor(0,
-				maximumPoolSize, 2, TimeUnit.MINUTES,
+				Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
 				new SynchronousQueue<Runnable>(), new NamedThreadFactory("Worker")) { //$NON-NLS-1$ 
 			@Override
 			protected void afterExecute(Runnable r, Throwable t) {
@@ -262,24 +178,20 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	}
 
 	private void executeDirect(final PrioritizedRunnable command) {
-		boolean atMaxThreads = false;
 		synchronized (poolLock) {
 			checkForTermination();
 			submittedCount++;
-			atMaxThreads = activeCount == maximumPoolSize;
+			boolean atMaxThreads = activeCount == maximumPoolSize;
 			if (atMaxThreads) {
 				queue.add(command);
 				int queueSize = queue.size();
 				if (queueSize > highestQueueSize) {
 					highestQueueSize = queueSize;
 				}
-			} else {
-				activeCount++;
-				highestActiveCount = Math.max(activeCount, highestActiveCount);
+				return;
 			}
-		}
-		if (atMaxThreads) {
-			return;
+			activeCount++;
+			highestActiveCount = Math.max(activeCount, highestActiveCount);
 		}
 		tpe.execute(new Runnable() {
 			@Override
@@ -354,12 +266,6 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	
 	public void shutdown() {
 		this.terminated = true;
-		synchronized (scheduledTasks) {
-			for (ScheduledFuture<?> future : new ArrayList<ScheduledFuture<?>>(scheduledTasks)) {
-				future.cancel(false);
-			}
-			scheduledTasks.clear();
-		}
 	}
 	
 	public int getLargestPoolSize() {
@@ -395,6 +301,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			}
 			List<Runnable> result = new ArrayList<Runnable>(queue);
 			queue.clear();
+			result.addAll(this.tpe.shutdownNow());
 			return result;
 		}
 	}
@@ -415,26 +322,4 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		return true;
 	}
 
-	public ScheduledFuture<?> schedule(final Runnable command, long delay,
-			TimeUnit unit) {
-		checkForTermination();
-		ScheduledFutureTask sft = new ScheduledFutureTask(new RunnableWrapper(command), false);
-		synchronized (scheduledTasks) {
-			ScheduledFuture<?> future = stpe.schedule(sft.getParent(), delay, unit);
-			sft.setScheduledFuture(future);
-			return sft;
-		}
-	}
-
-	public ScheduledFuture<?> scheduleAtFixedRate(final Runnable command,
-			long initialDelay, long period, TimeUnit unit) {
-		checkForTermination();
-		ScheduledFutureTask sft = new ScheduledFutureTask(new RunnableWrapper(command), true);
-		synchronized (scheduledTasks) {
-			ScheduledFuture<?> future = stpe.scheduleAtFixedRate(sft.getParent(), initialDelay, period, unit);
-			sft.setScheduledFuture(future);
-			return sft;
-		}		
-	}
-			
 }

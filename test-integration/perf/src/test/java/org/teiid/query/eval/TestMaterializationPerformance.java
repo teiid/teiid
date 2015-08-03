@@ -32,9 +32,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.jdbc.AbstractQueryTest;
-import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.runtime.HardCodedExecutionFactory;
 
 @SuppressWarnings({"nls"})
 public class TestMaterializationPerformance extends AbstractQueryTest {
@@ -56,10 +56,10 @@ public class TestMaterializationPerformance extends AbstractQueryTest {
 		mmm.setSchemaSourceType("ddl");
 		mmm.setSchemaText("create foreign table x (col1 integer, col2 string); " +
 				"create view matx (col1 integer, col2 string, constraint idx index (col2)) options (materialized true) as select * from x;");
-		mmm.addSourceMapping("x", "hardcoded", null);
+		mmm.addSourceMapping("x", "hc", null);
 		HardCodedExecutionFactory hardCodedExecutionFactory = new HardCodedExecutionFactory();
 		hardCodedExecutionFactory.addData("SELECT x.col1, x.col2 FROM x", Arrays.asList(TestEnginePerformance.sampleData(10000)));
-		es.addTranslator(hardCodedExecutionFactory);
+		es.addTranslator("hc", hardCodedExecutionFactory);
 		es.deployVDB("test", mmm);
 		setConnection(es.getDriver().connect("jdbc:teiid:test", null));
 		for (int i = 0; i < 10000; i++) {
@@ -74,10 +74,10 @@ public class TestMaterializationPerformance extends AbstractQueryTest {
 		mmm.setSchemaSourceType("ddl");
 		mmm.setSchemaText("create foreign table x (col1 integer, col2 string); " +
 				"create view matx (col1 integer, col2 string, constraint idx index (upper(col2))) options (materialized true) as select * from x;");
-		mmm.addSourceMapping("x", "hardcoded", null);
+		mmm.addSourceMapping("x", "hc", null);
 		HardCodedExecutionFactory hardCodedExecutionFactory = new HardCodedExecutionFactory();
 		hardCodedExecutionFactory.addData("SELECT x.col1, x.col2 FROM x", Arrays.asList(TestEnginePerformance.sampleData(10000)));
-		es.addTranslator(hardCodedExecutionFactory);
+		es.addTranslator("hc", hardCodedExecutionFactory);
 		es.deployVDB("test", mmm);
 		setConnection(es.getDriver().connect("jdbc:teiid:test", null));
 		for (int i = 0; i < 10000; i++) {

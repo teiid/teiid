@@ -22,18 +22,17 @@
 
 package org.teiid.query.optimizer.relational;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.util.Assertion;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -46,10 +45,12 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
-import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.processor.ProcessorPlan;
@@ -62,16 +63,20 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.util.CommandContext;
 
 
 public class PlanToProcessConverter {
@@ -82,6 +87,7 @@ public class PlanToProcessConverter {
 	
 	//state for detecting and reusing source queries
 	private Map<Command, AccessNode> sharedCommands = new HashMap<Command, AccessNode>();
+	private CommandContext context;
 	private static AtomicInteger sharedId = new AtomicInteger();
 	
 	public static class SharedStateKey {
@@ -89,11 +95,12 @@ public class PlanToProcessConverter {
 		int expectedReaders;
 	}
 	
-	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder) {
+	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder, CommandContext context) {
 		this.metadata = metadata;
 		this.idGenerator = idGenerator;
 		this.analysisRecord = analysisRecord;
 		this.capFinder = capFinder;
+		this.context = context;
 	}
 	
     public RelationalPlan convert(PlanNode planNode)
@@ -106,7 +113,15 @@ public class PlanToProcessConverter {
 	        }
 	
 	        // Convert plan tree nodes into process tree nodes
-	        RelationalNode processNode = convertPlan(planNode);
+	        RelationalNode processNode;
+			try {
+				processNode = convertPlan(planNode);
+			} catch (TeiidProcessingException e) {
+				if (e instanceof QueryPlannerException) {
+					throw (QueryPlannerException)e;
+				}
+				throw new QueryPlannerException(e);
+			}
 	        if(debug) {
 	            analysisRecord.println("\nPROCESS PLAN = \n" + processNode); //$NON-NLS-1$
 	            analysisRecord.println("============================================================================"); //$NON-NLS-1$
@@ -120,7 +135,7 @@ public class PlanToProcessConverter {
     }
 
 	private RelationalNode convertPlan(PlanNode planNode)
-		throws QueryPlannerException, TeiidComponentException {
+		throws TeiidComponentException, TeiidProcessingException {
 
 		// Convert current node in planTree
 		RelationalNode convertedNode = convertNode(planNode);
@@ -140,7 +155,9 @@ public class PlanToProcessConverter {
 		// Call convertPlan recursively on children
 		for (PlanNode childNode : planNode.getChildren()) {
 			RelationalNode child = convertPlan(childNode);
-			if (planNode.getType() == NodeConstants.Types.SET_OP && childNode.getType() == NodeConstants.Types.SET_OP && childNode.hasBooleanProperty(Info.USE_ALL)) {
+			if (planNode.getType() == NodeConstants.Types.SET_OP && nextParent instanceof UnionAllNode
+					&& childNode.getProperty(Info.SET_OPERATION) == childNode.getProperty(Info.SET_OPERATION)
+					&& childNode.getType() == NodeConstants.Types.SET_OP && childNode.hasBooleanProperty(Info.USE_ALL)) {
 				for (RelationalNode grandChild : child.getChildren()) {
 					if (grandChild != null) {
 						nextParent.addChild(grandChild);
@@ -160,7 +177,7 @@ public class PlanToProcessConverter {
     }
     
 	protected RelationalNode convertNode(PlanNode node)
-		throws QueryPlannerException, TeiidComponentException {
+		throws TeiidComponentException, TeiidProcessingException {
 
 		RelationalNode processNode = null;
 
@@ -185,6 +202,7 @@ public class PlanToProcessConverter {
 	                        pinode.setIntoGroup(intoGroup);
 	                        pinode.setIntoElements(allIntoElements);
 	                        pinode.setModelName(modelName);
+	                        pinode.setConstraint((Criteria) node.getProperty(Info.CONSTRAINT));
 	                        processNode = pinode;
                             SourceCapabilities caps = capFinder.findCapabilities(modelName);
                             if (caps.supportsCapability(Capability.INSERT_WITH_ITERATOR)) {
@@ -291,6 +309,21 @@ public class PlanToProcessConverter {
                     AccessNode aNode = null;
                     Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
                     Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
+					if (modelID != null) {
+						String fullName = metadata.getFullName(modelID);
+						if (!capFinder.isValid(fullName)) {
+	                    	//TODO: we ideally want to handle the partial resutls case here differently
+	                    	//      by adding a null node / and a source warning
+	                    	//      for now it's just as easy to say that the user needs to take steps to
+	                    	//      return static capabilities
+							SourceCapabilities caps = capFinder.findCapabilities(fullName);
+							Exception cause = null;
+							if (caps != null) {
+								cause = (Exception) caps.getSourceProperty(Capability.INVALID_EXCEPTION);
+							}
+	                    	throw new QueryPlannerException(QueryPlugin.Event.TEIID30498, cause, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30498, fullName));
+						}
+                    }
                     EvaluatableVisitor ev = null;
                     if(node.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
                         if (command instanceof StoredProcedure) {
@@ -309,6 +342,32 @@ public class PlanToProcessConverter {
                             	depAccessNode.setPushdown(CapabilitiesUtil.supports(Capability.DEPENDENT_JOIN, modelID, metadata, capFinder));
                                 depAccessNode.setMaxSetSize(CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder));
                                 depAccessNode.setMaxPredicates(CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder));   
+                                depAccessNode.setUseBindings(CapabilitiesUtil.supports(Capability.DEPENDENT_JOIN_BINDINGS, modelID, metadata, capFinder));
+                                //TODO: allow the translator to drive this property
+                                //simplistic check of whether this query is complex to re-execute
+                                Query query = (Query)command;
+                                if (query.getGroupBy() != null 
+                                		|| query.getFrom().getClauses().size() > 1 
+                                		|| !(query.getFrom().getClauses().get(0) instanceof UnaryFromClause) 
+                                		|| query.getWith() != null) {
+                                    depAccessNode.setComplexQuery(true);
+                                } else {
+                                	//check to see if there in an index on at least one of the dependent sets
+                                	Set<GroupSymbol> groups = new HashSet<GroupSymbol>(query.getFrom().getGroups());
+                                	boolean found = false;
+                                	for (Criteria crit : Criteria.separateCriteriaByAnd(query.getCriteria())) {
+                                		if (crit instanceof DependentSetCriteria) {
+                                			DependentSetCriteria dsc = (DependentSetCriteria)crit;
+                                			if (NewCalculateCostUtil.getKeyUsed(ElementCollectorVisitor.getElements(dsc.getExpression(), true), groups, metadata, null) != null) {
+                                				found = true;
+                                				break;
+                                			}
+                                		}
+                                	}
+                                	if (!found) {
+                        				depAccessNode.setComplexQuery(true);
+                                	}
+                                }
                             }
                             processNode = depAccessNode;
                             aNode = depAccessNode;
@@ -320,46 +379,90 @@ public class PlanToProcessConverter {
                         aNode = new AccessNode(getID());
                         processNode = aNode;
                                                 
-                        //-- special handling for temp tables. currently they cannot perform projection
-                        try {
-                            if (command instanceof Query) {
-                                processNode = correctProjectionInternalTables(node, aNode);
-                            }
-                        } catch (QueryMetadataException err) {
-                             throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
-                        }
-                        ev = EvaluatableVisitor.needsEvaluation(command);
-                        aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     }
+                    //-- special handling for system tables. currently they cannot perform projection
+                    try {
+                    	if (command instanceof Query) {
+                            processNode = correctProjectionInternalTables(node, aNode);
+                        }
+                    } catch (QueryMetadataException err) {
+                        throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
+                    }
+                    setRoutingName(aNode, node, command);
+                    boolean shouldEval = false;
+                    if (command instanceof Insert) {
+                    	Insert insert = (Insert)command;
+                    	if (insert.getQueryExpression() != null) {
+                    		insert.setQueryExpression((QueryCommand)aliasCommand(aNode, insert.getQueryExpression(), modelID));
+                    	} else {
+                    		for (int i = 0; i < insert.getValues().size(); i++) {
+                    			Expression ex = (Expression)insert.getValues().get(i);
+                    			if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(ex, modelID, metadata, capFinder, analysisRecord)) {
+                    				//replace with an expression symbol to let the rewriter know that it should be replaced
+                    				insert.getValues().set(i, new ExpressionSymbol("x", ex));
+                    				shouldEval = true;
+                    			}
+                    		}
+                    	}
+                    } else if (command instanceof QueryCommand) {
+	                    command = aliasCommand(aNode, command, modelID);
+                    }
+                    ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
+                    aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING) || shouldEval);
+                    aNode.setCommand(command);
+                    Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);
                     
-                    if (command instanceof QueryCommand) {
-	                    try {
-	                        command = (Command)command.clone();
-	                        boolean aliasGroups = modelID != null && (CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder) 
-	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
-	                        boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
-	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
-	                        command.acceptVisitor(new AliasGenerator(aliasGroups, !aliasColumns));
-	                    } catch (QueryMetadataException err) {
-	                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);
+                    //it makes more sense to allow the multisource affect to be elevated above just access nodes
+                    if (aNode.getModelId() != null && metadata.isMultiSource(aNode.getModelId())) {
+                		VDBMetaData vdb = context.getVdb();
+                        aNode.setShouldEvaluateExpressions(true); //forces a rewrite
+                        aNode.setElements( (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS) );
+                    	if (node.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+                    		Expression ex = rewriteMultiSourceCommand(aNode.getCommand());
+                    		aNode.setConnectorBindingExpression(ex);
+                    		aNode.setMultiSource(true);
+                    	} else {
+                    		String sourceName = (String)node.getProperty(Info.SOURCE_NAME);
+                    		aNode.setConnectorBindingExpression(new Constant(sourceName));
+                    	}
+                    } else if (subPlans == null){
+	                    if (!aNode.isShouldEvaluate()) {
+	                    	aNode.minimizeProject(command);
+	                    }
+	                    //check if valid to share this with other nodes
+	                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.areResultsCachable()) {
+	                    	checkForSharedSourceCommand(aNode);
 	                    }
                     }
-                    aNode.setCommand(command);
-                    if (minimizeProject() && !aNode.isShouldEvaluate()) {
-                    	aNode.minimizeProject(command);
-                    }
-                    setRoutingName(aNode, node);
-                    //check if valid to share this with other nodes
-                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.areResultsCachable()) {
-                    	checkForSharedSourceCommand(aNode);
-                    }
+    				if (subPlans != null) {
+    					QueryCommand qc = (QueryCommand)command;
+    					if (qc.getWith() == null) {
+    						qc.setWith(new ArrayList<WithQueryCommand>(subPlans.size()));
+    					}
+    					Map<GroupSymbol, RelationalPlan> plans = new LinkedHashMap<GroupSymbol, RelationalPlan>();
+    					for (Map.Entry<GroupSymbol, PlanNode> entry : subPlans.entrySet()) {
+    						RelationalPlan subPlan = convert(entry.getValue());
+    						List<ElementSymbol> elems = ResolverUtil.resolveElementsInGroup(entry.getKey(), metadata);
+    						subPlan.setOutputElements(elems);
+    						plans.put(entry.getKey(), subPlan);
+    						WithQueryCommand withQueryCommand = new WithQueryCommand(entry.getKey(), elems, null);
+							qc.getWith().add(withQueryCommand);
+    					}
+    					aNode.setSubPlans(plans);
+    				}
                 }
                 break;
 
 			case NodeConstants.Types.SELECT:
 
 				Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-
+				if (!node.hasCollectionProperty(Info.OUTPUT_COLS)) {
+					//the late optimization to create a dependent join from a subquery introduces
+					//criteria that have no output elements set
+					//TODO that should be cleaner, but the logic currently expects to be run after join implementation
+					//and rerunning assign output elements seems excessive
+					node.setProperty(Info.OUTPUT_COLS, node.getFirstChild().getProperty(Info.OUTPUT_COLS));
+				}
 				SelectNode selnode = new SelectNode(getID());
 				selnode.setCriteria(crit);
 				//in case the parent was a source
@@ -370,35 +473,46 @@ public class PlanToProcessConverter {
 
 			case NodeConstants.Types.SORT:
 			case NodeConstants.Types.DUP_REMOVE:
-                SortNode sortNode = new SortNode(getID());
-                OrderBy orderBy = (OrderBy) node.getProperty(NodeConstants.Info.SORT_ORDER);
-				if (orderBy != null) {
-					sortNode.setSortElements(orderBy.getOrderByItems());
-				}
 				if (node.getType() == NodeConstants.Types.DUP_REMOVE) {
-					sortNode.setMode(Mode.DUP_REMOVE);
-				} else if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
-					sortNode.setMode(Mode.DUP_REMOVE_SORT);
+					processNode = new DupRemoveNode(getID());
+				} else {
+	                SortNode sortNode = new SortNode(getID());
+	                OrderBy orderBy = (OrderBy) node.getProperty(NodeConstants.Info.SORT_ORDER);
+					if (orderBy != null) {
+						sortNode.setSortElements(orderBy.getOrderByItems());
+					}
+					if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
+						sortNode.setMode(Mode.DUP_REMOVE_SORT);
+					}
+	
+					processNode = sortNode;
 				}
-
-				processNode = sortNode;
 				break;
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
+				gnode.setRollup(node.hasBooleanProperty(Info.ROLLUP));
 				SymbolMap groupingMap = (SymbolMap)node.getProperty(NodeConstants.Info.SYMBOL_MAP);
 				gnode.setOutputMapping(groupingMap);
 				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
 				List<Expression> gCols = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
-				orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
+				OrderBy orderBy = (OrderBy) node.getProperty(Info.SORT_ORDER);
 				if (orderBy == null) {
 			        if (gCols != null) {
-		                orderBy = new OrderBy(RuleChooseJoinStrategy.createExpressionSymbols(gCols));
+			        	LinkedHashSet<Expression> exprs = new LinkedHashSet<Expression>();
+			        	for (Expression ex : gCols) {
+			        		exprs.add(SymbolMap.getExpression(ex));
+			        	}
+		                orderBy = new OrderBy(RuleChooseJoinStrategy.createExpressionSymbols(new ArrayList<Expression>(exprs)));
 			        }
 				} else {
+					HashSet<Expression> seen = new HashSet<Expression>();
 			        for (int i = 0; i < gCols.size(); i++) {
 			        	if (i < orderBy.getOrderByItems().size()) {
 			        		OrderByItem orderByItem = orderBy.getOrderByItems().get(i);
 							Expression ex = SymbolMap.getExpression(orderByItem.getSymbol());
+							if (!seen.add(ex)) {
+								continue;
+							}
 				        	if (ex instanceof ElementSymbol) {
 			            		ex = groupingMap.getMappedExpression((ElementSymbol) ex);
 			            		orderByItem.setSymbol(new ExpressionSymbol("expr", ex)); //$NON-NLS-1$
@@ -490,10 +604,14 @@ public class PlanToProcessConverter {
                     if(useAll) {
                         processNode = unionAllNode;
                     } else {
-                    	SortNode sNode = new SortNode(getID());
                     	boolean onlyDupRemoval = node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL);
-                    	sNode.setMode(onlyDupRemoval?Mode.DUP_REMOVE:Mode.DUP_REMOVE_SORT);
-                        processNode = sNode;
+                    	if (onlyDupRemoval) {
+                    		processNode = new DupRemoveNode(getID());
+                    	} else {
+                        	SortNode sNode = new SortNode(getID());
+                        	sNode.setMode(Mode.DUP_REMOVE_SORT);
+                            processNode = sNode;
+                    	}
                         
                         unionAllNode.setElements( (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS) );
                         processNode.addChild(unionAllNode);
@@ -532,6 +650,41 @@ public class PlanToProcessConverter {
 		}
 
 		return processNode;
+	}
+
+	private Command aliasCommand(AccessNode aNode, Command command,
+			Object modelID) throws TeiidComponentException,
+			QueryPlannerException {
+		try {
+		    command = (Command)command.clone();
+		    boolean aliasGroups = modelID != null && (CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder) 
+		    		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
+		    boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
+		    		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
+		    AliasGenerator visitor = new AliasGenerator(aliasGroups, !aliasColumns);
+		    SourceHint sh = command.getSourceHint();
+			if (sh != null && aliasGroups) {
+				VDBMetaData vdb = context.getDQPWorkContext().getVDB();
+		    	ModelMetaData model = vdb.getModel(aNode.getModelName());
+		    	List<String> sourceNames = model.getSourceNames();
+		    	SpecificHint sp = null;
+		    	if (sourceNames.size() == 1) {
+		    		sp = sh.getSpecificHint(sourceNames.get(0));
+		    	}
+		    	if (sh.isUseAliases() || (sp != null && sp.isUseAliases())) {
+		    		visitor.setAliasMapping(context.getAliasMapping());
+		    	}
+		    }
+			command.acceptVisitor(visitor);
+		} catch (QueryMetadataException err) {
+		     throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);
+		} catch (TeiidRuntimeException e) {
+			if (e.getCause() instanceof QueryPlannerException) {
+				throw (QueryPlannerException)e.getCause();
+			}
+			throw e;
+		}
+		return command;
 	}
 	
 	private void checkForSharedSourceCommand(AccessNode aNode) {
@@ -597,7 +750,6 @@ public class PlanToProcessConverter {
         ProjectNode pnode = new ProjectNode(getID());
   
         pnode.setSelectSymbols(projectSymbols);
-        //if the following cast fails it means that we have a dependent temp table - that is not yet possible
         aNode = (AccessNode)prepareToAdd(node, aNode);
         node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectSymbols);
         pnode.addChild(aNode);
@@ -626,17 +778,16 @@ public class PlanToProcessConverter {
         return processNode;
     }
 
-	private void setRoutingName(AccessNode accessNode, PlanNode node)
+	private void setRoutingName(AccessNode accessNode, PlanNode node, Command command)
 		throws QueryPlannerException, TeiidComponentException {
 
 		// Look up connector binding name
 		try {
 			Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
 			if(modelID == null || modelID instanceof TempMetadataID) {
-				Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
 				if(command instanceof StoredProcedure){
 					modelID = ((StoredProcedure)command).getModelID();
-				}else{
+				}else if (!(command instanceof Create || command instanceof Drop)){
 					Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
 					GroupSymbol group = groups.iterator().next();
 
@@ -646,13 +797,62 @@ public class PlanToProcessConverter {
 			String cbName = metadata.getFullName(modelID);
 			accessNode.setModelName(cbName);
 			accessNode.setModelId(modelID);
+			accessNode.setConformedTo((Set<Object>) node.getProperty(Info.CONFORMED_SOURCES));
 		} catch(QueryMetadataException e) {
              throw new QueryPlannerException(QueryPlugin.Event.TEIID30251, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30251));
 		}
 	}
 	
-	protected boolean minimizeProject() {
-		return true;
+	private Expression rewriteMultiSourceCommand(Command command) throws TeiidComponentException {
+		Expression result = null;
+		if (command instanceof StoredProcedure) {
+			StoredProcedure obj = (StoredProcedure)command;
+			for (Iterator<SPParameter> params = obj.getMapOfParameters().values().iterator(); params.hasNext();) {
+				SPParameter param = params.next();
+				if (param.getParameterType() != SPParameter.IN) {
+					continue;
+				}
+			    if(metadata.isMultiSourceElement(param.getMetadataID())) {
+		        	Expression source = param.getExpression();
+		    		params.remove();
+		    		if (param.isUsingDefault() && source instanceof Constant && ((Constant)source).isNull()) {
+		    			continue;
+		    		}
+		    		result = source;
+		    		break;
+		        }
+			}
+		} if (command instanceof Insert) {
+			Insert obj = (Insert)command;
+			for (int i = 0; i < obj.getVariables().size(); i++) {
+				ElementSymbol elem = obj.getVariables().get(i);
+		        Object metadataID = elem.getMetadataID();            
+		        if(metadata.isMultiSourceElement(metadataID)) {
+		        	Expression source = (Expression)obj.getValues().get(i);
+		    		obj.getVariables().remove(i);
+		    		obj.getValues().remove(i);
+		    		result = source;
+		    		break;
+		        }
+			}
+		} else if (command instanceof FilteredCommand) {
+			for (Criteria c : Criteria.separateCriteriaByAnd(((FilteredCommand) command).getCriteria())) {
+				if (!(c instanceof CompareCriteria)) {
+					continue;
+				}
+				CompareCriteria cc = (CompareCriteria)c;
+	        	if (cc.getLeftExpression() instanceof ElementSymbol) {
+	        		ElementSymbol es = (ElementSymbol)cc.getLeftExpression();
+	        		if (metadata.isMultiSourceElement(es.getMetadataID()) && EvaluatableVisitor.willBecomeConstant(cc.getRightExpression())) {
+	        			if (result != null && !result.equals(cc.getRightExpression())) {
+	        				return Constant.NULL_CONSTANT;
+			    		}
+	        			result = cc.getRightExpression();
+	        		}
+	        	}
+			}
+		}
+		return result;
 	}
-
+	
 }

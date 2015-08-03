@@ -60,28 +60,18 @@ import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
+import com.sforce.ws.bind.XmlObject;
 
 public class QueryExecutionImpl implements ResultSetExecution {
+
+	private static final String TYPE = "type"; //$NON-NLS-1$
 
 	private static final String AGGREGATE_RESULT = "AggregateResult"; //$NON-NLS-1$
 
 	private static final Pattern dateTimePattern = Pattern.compile("^(?:(\\d{4}-\\d{2}-\\d{2})T)?(\\d{2}:\\d{2}:\\d{2}(?:.\\d+)?)(.*)"); //$NON-NLS-1$
-	
-	private static final String SF_ID = "sf:Id"; //$NON-NLS-1$
-
-	private static final String SF_TYPE = "sf:type"; //$NON-NLS-1$
-
-	private static final String SF_S_OBJECT = "sf:sObject"; //$NON-NLS-1$
-
-	private static final String XSI_TYPE = "xsi:type"; //$NON-NLS-1$
-	
-	private static final String XSI_NIL = "xsi:nil"; //$NON-NLS-1$
 	
 	private SalesforceConnection connection;
 
@@ -163,9 +153,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public List next() throws TranslatorException, DataNotAvailableException {
+	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		List<?> result = getRow(results);
 		return result;
 	}
@@ -209,62 +198,48 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 
 		private List<Object[]> getObjectData(SObject sObject) throws TranslatorException {
-			List<Object> topFields = sObject.getAny();
-			logAndMapFields(sObject.getType(), topFields);
+			Iterator<XmlObject> topFields = sObject.getChildren();
+			ArrayList<XmlObject> children = new ArrayList<XmlObject>();
+			while (topFields.hasNext()) {
+				children.add(topFields.next());
+			}
+			logAndMapFields(sObject.getType(), children);
 			List<Object[]> result = new ArrayList<Object[]>();
 			if(visitor instanceof JoinQueryVisitor) {
-				for(int i = 0; i < topFields.size(); i++) {
-					Element element = (Element) topFields.get(i);
+				for(int i = 0; i < children.size(); i++) {
+					XmlObject element = children.get(i);
 					extactJoinResults(element, result);
 				}
 			}
-			return extractDataFromFields(sObject, topFields, result);
+			return extractDataFromFields(sObject, children, result);
 
 		}
 
-		private void extactJoinResults(Element node, List<Object[]> result) throws TranslatorException {
-			if(isSObject(node)) {
-				extractValuesFromElement(node, result);
-			} else {
-				NodeList children = node.getChildNodes();
-				if(null != children && children.getLength() > 0) {
-					for( int i = 0; i < children.getLength(); i++) {
-						Node item = children.item(i);
-						if(item instanceof Element) {
-							Element childElement = (Element)item;
-							if(isSObject(childElement)) {
-								extractValuesFromElement(childElement, result);
-							} else if(item.getChildNodes().getLength() > 0) {
-								extactJoinResults(childElement, result);
-							}
-						}
-					}
+		private void extactJoinResults(XmlObject node, List<Object[]> result) throws TranslatorException {
+			Object val = node.getField(TYPE); 
+			if(val instanceof String) {
+				extractValuesFromElement(node, result, (String)val);
+			} else if (node.hasChildren()) {
+				Iterator<XmlObject> children = node.getChildren();
+				while (children.hasNext()) {
+					XmlObject item = children.next();
+					extactJoinResults(item, result);
 				}
 			}
 		}
 		
-		private List<Object[]> extractValuesFromElement(Element sObject,
-				List<Object[]> result) throws TranslatorException {
-			Element typeElement = (Element) sObject.getElementsByTagName(SF_TYPE).item(0);
-			String sObjectName = typeElement.getFirstChild().getNodeValue();
+		//TODO: this looks inefficient as getChild is linear
+		private List<Object[]> extractValuesFromElement(XmlObject sObject,
+				List<Object[]> result, String sObjectName) throws TranslatorException {
 			Object[] row = new Object[visitor.getSelectSymbolCount()];
 			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
+				//must be a column reference as we won't allow an agg over a join
 				Column element = ((ColumnReference)visitor.getSelectSymbolMetadata(j)).getMetadataObject();
 				AbstractMetadataRecord table = element.getParent();
-				if(table.getNameInSource().equals(sObjectName)) {
-					Integer index = visitor.getSelectSymbolIndex(sObjectName + ':' + element.getNameInSource());
-					// id gets dropped from the result if it is not the
-					// first field in the querystring. Add it back in.
-					if (null == index) {
-						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
-							setElementValueInColumn(j, sObject.getElementsByTagName(SF_ID), row);
-						} else {
-							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
-						}
-					} else {
-						Object cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0); //$NON-NLS-1$
-						setElementValueInColumn(j, cell, row);
-					}
+				if(table.getSourceName().equals(sObjectName)) {
+					XmlObject child = sObject.getChild(element.getSourceName());
+					Object cell = getCellDatum(element.getSourceName(), element.getJavaType(), child);
+					setElementValueInColumn(j, cell, row);
 				}
 			}
 			result.add(row);
@@ -272,7 +247,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 
 	private List<Object[]> extractDataFromFields(SObject sObject,
-		List<Object> fields, List<Object[]> result) throws TranslatorException {
+		List<XmlObject> fields, List<Object[]> result) throws TranslatorException {
 		Map<String,Integer> fieldToIndexMap = sObjectToResponseField.get(sObject.getType());
 		int aggCount = 0;
 		for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
@@ -280,20 +255,13 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			if (ex instanceof ColumnReference) {
 				Column element = ((ColumnReference)ex).getMetadataObject();
 				Table table = (Table)element.getParent();
-				if(table.getNameInSource().equals(sObject.getType()) || AGGREGATE_RESULT.equalsIgnoreCase(sObject.getType())) {
-					Integer index = fieldToIndexMap.get(element.getNameInSource());
-					// id gets dropped from the result if it is not the
-					// first field in the querystring. Add it back in.
+				if(table.getSourceName().equals(sObject.getType()) || AGGREGATE_RESULT.equalsIgnoreCase(sObject.getType())) {
+					Integer index = fieldToIndexMap.get(element.getSourceName());
 					if (null == index) {
-						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
-							setValueInColumn(j, sObject.getId(), result);
-						} else {
-							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
-						}
-					} else {
-						Object cell = getCellDatum(element.getNameInSource(), element.getJavaType(), (Element)fields.get(index));
-						setValueInColumn(j, cell, result);
+						throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getSourceName()); //$NON-NLS-1$
 					}
+					Object cell = getCellDatum(element.getSourceName(), element.getJavaType(), fields.get(index));
+					setValueInColumn(j, cell, result);
 				}
 			} else if (ex instanceof AggregateFunction) {
 				String name = SelectVisitor.AGG_PREFIX + (aggCount++);
@@ -301,7 +269,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				if (null == index) {
 					throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ ex); //$NON-NLS-1$
 				}
-				Object cell = getCellDatum(name, ex.getType(), (Element)fields.get(index));
+				Object cell = getCellDatum(name, ex.getType(), fields.get(index));
 				setValueInColumn(j, cell, result);
 			}
 		}
@@ -309,14 +277,12 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	}
 		
 	private void setElementValueInColumn(int columnIndex, Object value, Object[] row) {
-		if(value instanceof Element) {
-			Element element = (Element)value;
-			if (!Boolean.parseBoolean(element.getAttribute(XSI_NIL))) {
-				if (element.getFirstChild() != null) {
-					row[columnIndex] = element.getFirstChild().getNodeValue();
-				} else {
-					row[columnIndex] = ""; //$NON-NLS-1$
-				}
+		if(value instanceof XmlObject) {
+			XmlObject element = (XmlObject)value;
+			if (element.hasChildren()) {
+				row[columnIndex] = element.getChildren().next().getValue();
+			} else {
+				row[columnIndex] = element.getValue();
 			}
 		} else {
 			row[columnIndex] = value;
@@ -341,28 +307,27 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	 * @throws TranslatorException 
 	 */
 	private void logAndMapFields(String sObjectName,
-			List<Object> fields) throws TranslatorException {
+			List<XmlObject> fields) throws TranslatorException {
 		if (!sObjectToResponseField.containsKey(sObjectName)) {
 			logFields(sObjectName, fields);
 			Map<String, Integer> responseFieldToIndexMap = new HashMap<String, Integer>();
 			for (int x = 0; x < fields.size(); x++) {
-				Element element = (Element) fields.get(x);
-				responseFieldToIndexMap.put(element.getLocalName(), x);
+				XmlObject element = fields.get(x);
+				responseFieldToIndexMap.put(element.getName().getLocalPart(), x);
 			}
 			sObjectToResponseField.put(sObjectName, responseFieldToIndexMap);
 		}
 	}
 
-	private void logFields(String sObjectName, List<Object> fields) {
+	private void logFields(String sObjectName, List<XmlObject> fields) {
 		if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
 			return;
 		}
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SalesForce Object Name = " + sObjectName); //$NON-NLS-1$
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "FieldCount = " + fields.size()); //$NON-NLS-1$
 		for(int i = 0; i < fields.size(); i++) {
-			Element element;
-			element = (Element) fields.get(i);
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Field # " + i + " is " + element.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
+			XmlObject element = fields.get(i);
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Field # " + i + " is " + element.getName().getLocalPart()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 	}
@@ -371,27 +336,24 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	 * TODO: the logic here should be aware of xsi:type information and use a standard conversion
 	 * library.  Conversion to teiid types should then be a secondary effort - and will be automatically handled above here.
 	 */
-	private Object getCellDatum(String name, Class<?> type, Element elem) throws TranslatorException {
-		if(!name.equals(elem.getLocalName())) {
-			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + name + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
+	private Object getCellDatum(String name, Class<?> type, XmlObject elem) throws TranslatorException {
+		if(!name.equals(elem.getName().getLocalPart())) {
+			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + name + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getName().getLocalPart()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		if (Boolean.parseBoolean(elem.getAttribute(XSI_NIL))) {
-			return null;
-		}
-		String value = elem.getTextContent();
+		Object value = elem.getValue();
 		if (value == null) {
 			return null;
 		}
-		if (value.isEmpty()) {
+		if (value instanceof String && (((String) value).isEmpty())) {
 			if (type == String.class) {
 				return value;
 			}
 			return null;
-		} else if (type.equals(java.sql.Timestamp.class) || type.equals(java.sql.Time.class)) {
+		} else if (type.equals(java.sql.Timestamp.class) || type.equals(java.sql.Time.class) && !(value instanceof Date)) {
 			if (cal == null) {
 				cal = Calendar.getInstance();
 			}
-			return parseDateTime(value, type, cal);
+			return parseDateTime(value.toString(), type, cal);
 		}
 		return value;
 	}
@@ -437,11 +399,6 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 	}
 	
-	private boolean isSObject(Element element) {
-		String type = element.getAttribute(XSI_TYPE);
-		return type != null && type.equals(SF_S_OBJECT);	
-	}
-
 	private String getLogPreamble() {
 		if (null == logPreamble) {
 			StringBuffer preamble = new StringBuffer();

@@ -24,25 +24,30 @@ package org.teiid.translator.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.TestDeleteImpl;
 import org.teiid.dqp.internal.datamgr.TestInsertImpl;
 import org.teiid.dqp.internal.datamgr.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.TestQueryImpl;
 import org.teiid.dqp.internal.datamgr.TestUpdateImpl;
-import org.teiid.dqp.internal.datamgr.TstLanguageBridgeFactory;
 import org.teiid.language.LanguageObject;
-import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestSQLConversionVisitor {
 
-    public static final ExecutionContext context = new ExecutionContextImpl("VDB",  //$NON-NLS-1$
+    public static final ExecutionContextImpl context = new ExecutionContextImpl("VDB",  //$NON-NLS-1$
                                                                             1, 
                                                                             "Payload",  //$NON-NLS-1$
                                                                             "ConnectionID",   //$NON-NLS-1$
@@ -50,6 +55,10 @@ public class TestSQLConversionVisitor {
                                                                             1, 
                                                                             "PartID",  //$NON-NLS-1$ 
                                                                             "ExecCount");     //$NON-NLS-1$ 
+    
+    static {
+    	context.setSession(new SessionMetadata());
+    }
     
     private static JDBCExecutionFactory TRANSLATOR; 
     
@@ -68,23 +77,28 @@ public class TestSQLConversionVisitor {
         helpTestVisitor(vdb, input, expectedOutput, false);
     }
     
-    public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
+    public TranslatedCommand helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
     	JDBCExecutionFactory trans = new JDBCExecutionFactory();
     	trans.setUseBindVariables(usePreparedStatement);
         try {
 			trans.start();
-	        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
+	        return TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
 		} catch (TranslatorException e) {
 			throw new RuntimeException(e);
 		}
     }
-    
-    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
 
     private String getStringWithContext(LanguageObject obj) throws TranslatorException {
+    	return getStringWithContext(obj, null);
+    }
+    
+    private String getStringWithContext(LanguageObject obj, String comment) throws TranslatorException {
     	JDBCExecutionFactory env = new JDBCExecutionFactory();
     	env.setUseCommentsInSourceQuery(true);
     	env.setUseBindVariables(false);
+    	if (comment != null) {
+    		env.setCommentFormat(comment);
+    	}
         env.start();
         
         SQLConversionVisitor visitor = env.getSQLConversionVisitor();
@@ -383,13 +397,18 @@ public class TestSQLConversionVisitor {
         assertEquals(expected, getStringWithContext(TestQueryImpl.example(true)));
     }
     
+    @Test public void testVisitSelectWithCustomComment() throws Exception {
+        String expected = "SELECT /* foo ConnectionID ConnectionID.1 PartID ExecCount null VDB 1 false */g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC"; //$NON-NLS-1$
+        assertEquals(expected, getStringWithContext(TestQueryImpl.example(false), "/* foo {0} {1} {2} {3} {4} {5} {6} {7} */"));
+    }
+    
     @Test public void testVisitIUpdateWithComment() throws Exception {
         String expected = "UPDATE /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ g1 SET e1 = 1, e2 = 1, e3 = 1, e4 = 1 WHERE 1 = 1"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestUpdateImpl.example()));
     }    
     
     @Test public void testVisitIProcedureWithComment() throws Exception {
-        String expected = "{ /*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/  call sq3(?,?)}"; //$NON-NLS-1$
+        String expected = "/*teiid sessionid:ConnectionID, requestid:ConnectionID.1.PartID*/ {call sq3(?,?)}"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestProcedureImpl.example()));
     }  
     
@@ -433,9 +452,34 @@ public class TestSQLConversionVisitor {
             output, TRANSLATOR);
     }
     
+    @Test public void testUpdateTrimStrings() throws Exception {
+    	String input = "UPDATE PARTS SET PART_ID = NULL WHERE PARTS.PART_COLOR = 'b'"; //$NON-NLS-1$
+        String output = "UPDATE PARTS SET PART_ID = NULL WHERE PARTS.PART_COLOR = 'b'"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+        
+        input = "insert into parts (part_id) values ('a')"; //$NON-NLS-1$
+        output = "INSERT INTO PARTS (PART_ID) VALUES ('a')"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
     @Test public void testOrderByUnrelated() throws Exception {
     	String input = "select part_id id FROM parts order by part_name"; //$NON-NLS-1$
         String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS ORDER BY PARTS.PART_NAME"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
+    @Test public void testVarbinary() throws Exception {
+    	String input = "select X'AB' FROM parts"; //$NON-NLS-1$
+        String output = "SELECT X'AB' FROM PARTS"; //$NON-NLS-1$
           
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
             input, 
@@ -448,5 +492,50 @@ public class TestSQLConversionVisitor {
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE concat(ifnull(PARTS.PART_NAME, ''), 'x') = CASE WHEN PARTS.PART_WEIGHT IS NULL AND PARTS.PART_ID IS NULL THEN NULL ELSE concat(ifnull(PARTS.PART_WEIGHT, ''), ifnull(PARTS.PART_ID, '')) END", //$NON-NLS-1$
                         true); 
     }
-
+    
+    @Test public void testSelectWithoutFrom() {
+        helpTestVisitor(getTestVDB(),
+                        "select 1", //$NON-NLS-1$
+                        "SELECT 1", //$NON-NLS-1$
+                        true); 
+    }
+    
+    @Test public void testFunctionNativeQuery() throws SQLException {
+    	String ddl = "create foreign table t (x integer, y integer); create foreign function bsl (arg1 integer, arg2 integer) returns integer OPTIONS (\"teiid_rel:native-query\" '$1 << $2');";
+    	
+        helpTestVisitor(ddl,
+                        "select bsl(x, y) from t", //$NON-NLS-1$
+                        "SELECT t.x << t.y FROM t", //$NON-NLS-1$
+                        true); 
+        //make sure we don't treat arguments as bind values
+        helpTestVisitor(ddl,
+                "select bsl(x, y) from t where x = 1 + 1", //$NON-NLS-1$
+                "SELECT t.x << t.y FROM t WHERE t.x = ?", //$NON-NLS-1$
+                true);
+        
+        TranslatedCommand tc = helpTestVisitor(ddl,
+                "select bsl(1, y) from t where x = y", //$NON-NLS-1$
+                "SELECT ? << t.y FROM t WHERE t.x = t.y", //$NON-NLS-1$
+                true);
+        JDBCQueryExecution qe = new JDBCQueryExecution(null, null, Mockito.mock(ExecutionContext.class), TRANSLATOR);
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        qe.bind(ps, tc.getPreparedValues(), null);
+        Mockito.verify(ps, Mockito.times(1)).setObject(1, 1, Types.INTEGER);
+    }
+    
+    @Test public void testGroupByRollup() {
+        helpTestVisitor(getTestVDB(),
+                        "select part_name, max(part_weight) from parts group by rollup(part_name)", //$NON-NLS-1$
+                        "SELECT PARTS.PART_NAME, MAX(PARTS.PART_WEIGHT) FROM PARTS GROUP BY ROLLUP(PARTS.PART_NAME)", //$NON-NLS-1$
+                        true); 
+    }
+    
+    //previously would have failed in other locales
+    @Test public void testDoubleFormat() {
+        helpTestVisitor(getTestVDB(),
+                        "select 1.0e10, -1.0e2", //$NON-NLS-1$
+                        "SELECT 10000000000.0, -100.0", //$NON-NLS-1$
+                        true);
+    }
+    
 }

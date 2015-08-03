@@ -34,12 +34,16 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
+import org.teiid.language.Call;
 import org.teiid.metadata.Table;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
@@ -56,6 +60,7 @@ import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -1086,6 +1091,69 @@ public class TestProcedureResolving {
         sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
         assertEquals("EXEC proc(1)", sp.toString());
         assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, new ArrayList<Expression>(0)), sp.getParameter(2).getExpression());
+               
+        sp = (StoredProcedure) QueryRewriter.evaluateAndRewrite(sp, new Evaluator(null, null, null), null, tm);
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(tm);
+        Call call = (Call)lbf.translate(sp);
+        assertEquals("EXEC proc(1)", call.toString());
+        
+        sql = "call proc (1, (2, 3))"; //$NON-NLS-1$
+        sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc(1, (2, 3))", sp.toString());
+        assertEquals(new Constant(1), sp.getParameter(1).getExpression());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(2), new Constant(3))), sp.getParameter(2).getExpression());
+        assertEquals(SPParameter.RESULT_SET, sp.getParameter(3).getParameterType());
+    }    
+    
+    @Test public void testVarArgs1() throws Exception {
+    	String ddl = "create foreign procedure proc (VARIADIC z integer) returns (x string);\n";
+    	TransformationMetadata tm = createMetadata(ddl);    	
+
+    	String sql = "call proc ()"; //$NON-NLS-1$
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc()", sp.toString());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, new ArrayList<Expression>(0)), sp.getParameter(1).getExpression());
+               
+        sp = (StoredProcedure) QueryRewriter.evaluateAndRewrite(sp, new Evaluator(null, null, null), null, tm);
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(tm);
+        Call call = (Call)lbf.translate(sp);
+        assertEquals("EXEC proc()", call.toString());
+        //we pass to the translator level flattened, so no argument
+        assertEquals(0, call.getArguments().size());
+    }
+    
+    @Test public void testVarArgs2() throws Exception {
+    	String ddl = "create foreign procedure proc (VARIADIC z object) returns (x string);\n";
+    	TransformationMetadata tm = createMetadata(ddl);    	
+
+    	String sql = "call proc ()"; //$NON-NLS-1$
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc()", sp.toString());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.OBJECT, new ArrayList<Expression>(0)), sp.getParameter(1).getExpression());
+               
+        sql = "call proc (1, (2, 3))"; //$NON-NLS-1$
+        sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc(1, (2, 3))", sp.toString());
+        ArrayList<Expression> expressions = new ArrayList<Expression>();
+        expressions.add(new Constant(1));
+        expressions.add(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(2), new Constant(3))));
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.OBJECT, expressions), sp.getParameter(1).getExpression());
+    }
+    
+    @Test public void testAnonBlock() throws Exception {
+    	String sql = "begin select 1 as something; end"; //$NON-NLS-1$
+        CreateProcedureCommand sp = (CreateProcedureCommand) TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
+        assertEquals(1, sp.getResultSetColumns().size());
+        assertEquals("something", Symbol.getName(sp.getResultSetColumns().get(0)));
+        assertEquals(1, sp.getProjectedSymbols().size());
+        assertTrue(sp.returnsResultSet());
+    }
+    
+    @Test public void testAnonBlockNoResult() throws Exception {
+    	String sql = "begin select 1 as something without return; end"; //$NON-NLS-1$
+        CreateProcedureCommand sp = (CreateProcedureCommand) TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
+        assertEquals(0, sp.getProjectedSymbols().size());
+        assertFalse(sp.returnsResultSet());
     }
     
 }

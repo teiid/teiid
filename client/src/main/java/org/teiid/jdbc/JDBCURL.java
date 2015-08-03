@@ -24,6 +24,7 @@ package org.teiid.jdbc;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -85,7 +86,10 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
     	        TeiidURL.CONNECTION.JAAS_NAME,
     	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
-    	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS));
+    	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS,
+    	        TeiidURL.CONNECTION.LOGIN_TIMEOUT,
+    	        DatabaseMetaDataImpl.REPORT_AS_VIEWS,
+    	        ResultSetImpl.DISABLE_FETCH_SIZE));
     	props.addAll(EXECUTION_PROPERTIES.keySet());
     	Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     	for (String string : props) {
@@ -209,10 +213,14 @@ public class JDBCURL {
                 Map.Entry entry = (Map.Entry)i.next();
                 if (entry.getValue() instanceof String) {
                     // get only the string properties, because a non-string property could not have been set on the url.
-                    buf.append(';')
-                       .append(entry.getKey())
-                       .append('=')
-                       .append(entry.getValue());
+                    try {
+						buf.append(';')
+						   .append(entry.getKey())
+						   .append('=')
+						   .append(URLEncoder.encode((String)entry.getValue(), "UTF-8")); //$NON-NLS-1$
+					} catch (UnsupportedEncodingException e) {
+						buf.append(entry.getValue());
+					}
                 }
             }
             urlString = buf.toString();

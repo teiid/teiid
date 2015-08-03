@@ -23,7 +23,8 @@
 package org.teiid.metadata;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -38,13 +39,16 @@ public class Schema extends AbstractMetadataRecord {
     
     private NavigableMap<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
 	private NavigableMap<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
-	private Map<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+	private NavigableMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+	
+	private List<AbstractMetadataRecord> resolvingOrder = new ArrayList<AbstractMetadataRecord>();
 	
 	public void addTable(Table table) {
 		table.setParent(this);
 		if (this.tables.put(table.getName(), table) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName())); 
 		}
+		resolvingOrder.add(table);
 	}
 	
 	public void addProcedure(Procedure procedure) {
@@ -52,6 +56,7 @@ public class Schema extends AbstractMetadataRecord {
 		if (this.procedures.put(procedure.getName(), procedure) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60014, DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName())); 
 		}
+		resolvingOrder.add(procedure);
 	}
 	
 	public void addFunction(FunctionMethod function) {
@@ -60,6 +65,7 @@ public class Schema extends AbstractMetadataRecord {
 		if (this.functions.put(function.getUUID(), function) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
 		}
+		resolvingOrder.add(function);
 	}	
 
 	/**
@@ -90,17 +96,17 @@ public class Schema extends AbstractMetadataRecord {
 	 * Get the functions defined in this schema in a map of uuid to {@link FunctionMethod}
 	 * @return
 	 */
-	public Map<String, FunctionMethod> getFunctions() {
+	public NavigableMap<String, FunctionMethod> getFunctions() {
 		return functions;
 	}
 	
 	/**
-	 * Get a funciton by uuid
+	 * Get a function by uid
 	 * @param funcName
 	 * @return
 	 */
-	public FunctionMethod getFunction(String funcName) {
-		return functions.get(funcName);
+	public FunctionMethod getFunction(String uid) {
+		return functions.get(uid);
 	}	
 	
     public String getPrimaryMetamodelUri() {
@@ -131,6 +137,16 @@ public class Schema extends AbstractMetadataRecord {
     	if (this.functions == null) {
     		this.functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
     	}
+    	if (this.resolvingOrder == null) {
+    		this.resolvingOrder = new ArrayList<AbstractMetadataRecord>();
+    		this.resolvingOrder.addAll(this.tables.values());
+    		this.resolvingOrder.addAll(this.procedures.values());
+    		this.resolvingOrder.addAll(this.functions.values());
+    	}
     }
+    
+    public List<AbstractMetadataRecord> getResolvingOrder() {
+		return resolvingOrder;
+	}
     
 }

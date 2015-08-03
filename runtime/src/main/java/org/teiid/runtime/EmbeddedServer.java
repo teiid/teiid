@@ -23,33 +23,53 @@
 package org.teiid.runtime;
 
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.transaction.RollbackException;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+import javax.xml.stream.XMLStreamException;
 
+import org.jboss.vfs.VirtualFile;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.BundleUtil.Event;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.NamedThreadFactory;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
@@ -64,45 +84,47 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
-import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.ConnectionProfile;
+import org.teiid.jdbc.EmbeddedProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidPreparedStatement;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.net.CommunicationException;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
+import org.teiid.net.socket.ObjectChannel;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.GlobalTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.services.AbstractEventDistributorFactoryService;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LocalServerConnection;
-import org.teiid.transport.LogonImpl;
+import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
+import org.xml.sax.SAXException;
 
 /**
  * A simplified server environment for embedded use.
@@ -111,6 +133,42 @@ import org.teiid.vdb.runtime.VDBKey;
  */
 @SuppressWarnings("serial")
 public class EmbeddedServer extends AbstractVDBDeployer implements EventDistributorFactory, ExecutionFactoryProvider {
+
+	private EmbeddedProfile embeddedProfile = new EmbeddedProfile() {
+		@Override
+		public ConnectionImpl connect(String url, Properties info)
+				throws TeiidSQLException {
+			ServerConnection conn;
+			try {
+				conn = createServerConnection(info);
+			} catch (TeiidException e) {
+				throw TeiidSQLException.create(e);
+			}
+			return new EmbeddedConnectionImpl(conn, info, url);
+		}
+
+		@Override
+		public ServerConnection createServerConnection(Properties info)
+				throws TeiidException {
+			LocalServerConnection conn = new LocalServerConnection(info, useCallingThread) {
+				@Override
+				protected ClientServiceRegistry getClientServiceRegistry(String name) {
+					return services;
+				}
+				
+				@Override
+				public void addListener(VDBLifeCycleListener listener) {
+					EmbeddedServer.this.repo.addListener(listener);
+				}
+				@Override
+				public void removeListener(VDBLifeCycleListener listener) {
+					EmbeddedServer.this.repo.removeListener(listener);
+				}
+			};
+			conn.getWorkContext().setConnectionProfile(this);
+			return conn;
+		}
+	};
 
 	private final class EmbeddedConnectionImpl extends ConnectionImpl implements EmbeddedConnection {
 
@@ -137,50 +195,17 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		
 	}
 
-	protected final class TransactionDetectingTransactionServer extends
-			TransactionServerImpl {
-		
-		/**
-		 * Override to detect existing thread bound transactions.
-		 * This may be of interest for local connections as well, but
-		 * we assume there that a managed datasource will be used.
-		 * A managed datasource is not possible here.
-		 */
-		public TransactionContext getOrCreateTransactionContext(final String threadId) {
-			TransactionContext tc = super.getOrCreateTransactionContext(threadId);
-			if (useCallingThread && detectTransactions && tc.getTransaction() == null) {
-				try {
-					Transaction tx = transactionManager.getTransaction();
-					if (tx != null) {
-						tx.registerSynchronization(new Synchronization() {
-							
-							@Override
-							public void beforeCompletion() {
-							}
-							
-							@Override
-							public void afterCompletion(int status) {
-								transactions.removeTransactionContext(threadId);
-							}
-						});
-						tc.setTransaction(tx);
-						tc.setTransactionType(Scope.GLOBAL);
-					}
-				} catch (SystemException e) {
-				} catch (IllegalStateException e) {
-				} catch (RollbackException e) {
-				}
-			}
-			
-			return tc;
-		}
-	}
-
 	protected class ProviderAwareConnectorManagerRepository extends
 			ConnectorManagerRepository {
+		
+		public ProviderAwareConnectorManagerRepository() {
+			super(true);
+		}
+		
+		@Override
 		protected ConnectorManager createConnectorManager(
-				String translatorName, String connectionName) {
-			return new ConnectorManager(translatorName, connectionName) {
+				String translatorName, String connectionName, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {
+			return new ConnectorManager(translatorName, connectionName, ef) {
 				@Override
 				public Object getConnectionFactory() throws TranslatorException {
 					if (getConnectionName() == null) {
@@ -198,6 +223,21 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 	public interface ConnectionFactoryProvider<T> {
 		T getConnectionFactory() throws TranslatorException;
+	}
+	
+	public static class SimpleConnectionFactoryProvider<T> implements ConnectionFactoryProvider<T> {
+		
+		private T connectionFactory;
+		
+		public SimpleConnectionFactoryProvider(T connectionFactory) {
+			this.connectionFactory = connectionFactory;
+		}
+
+		@Override
+		public T getConnectionFactory() throws TranslatorException {
+			return connectionFactory;
+		}
+		
 	}
 	
 	private static class VDBValidationError extends TeiidRuntimeException {
@@ -228,9 +268,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected SessionServiceImpl sessionService = new SessionServiceImpl();
 	protected ObjectReplicator replicator;
 	protected BufferServiceImpl bufferService = new BufferServiceImpl();
-	protected TransactionDetectingTransactionServer transactionService = new TransactionDetectingTransactionServer();
+	protected TransactionServerImpl transactionService = new TransactionServerImpl();
 	protected boolean waitForLoad;
 	protected ClientServiceRegistryImpl services = new ClientServiceRegistryImpl() {
+		@Override
 		public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
 			if (waitForLoad) {
 				repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
@@ -258,31 +299,54 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 	};
 	protected boolean useCallingThread = true;
-	//TODO: allow for configurablity - in environments that support subtransations it would be fine
-	//to allow teiid to start a request transaction under an existing thread bound transaction
-	protected boolean detectTransactions = true;
 	private Boolean running;
 	private EmbeddedConfiguration config;
 	private SessionAwareCache<CachedResults> rs;
 	private SessionAwareCache<PreparedPlan> ppc;
-	
+	protected ArrayList<SocketListener> transports = new ArrayList<SocketListener>();
+	private ScheduledExecutorService scheduler;
+	private MaterializationManager materializationMgr = null;
+	private ShutDownListener shutdownListener = new ShutDownListener();
+	private SimpleChannelFactory channelFactory;
+
 	public EmbeddedServer() {
 
 	}
 
+	/**
+	 * Adds the {@link ConnectionFactoryProvider} with the given connection name to replace the default JNDI lookup strategy.
+	 * @param name
+	 * @param connectionFactoryProvider
+	 * @see SimpleConnectionFactoryProvider for a basic wrapper
+	 */
 	public void addConnectionFactoryProvider(String name,
 			ConnectionFactoryProvider<?> connectionFactoryProvider) {
 		this.connectionFactoryProviders.put(name, connectionFactoryProvider);
 	}
-
+	
+	/**
+	 * Adds the object as the named connection factory to replace the default JNDI lookup strategy.
+	 * @param name
+	 * @param connectionFactory
+	 */
+	public void addConnectionFactory(String name, Object connectionFactory) {
+		this.connectionFactoryProviders.put(name, new SimpleConnectionFactoryProvider<Object>(connectionFactory));
+	}
+	
 	public synchronized void start(@SuppressWarnings("hiding") EmbeddedConfiguration config) {
 		if (running != null) {
 			throw new IllegalStateException();
 		}
+		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
+		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$
 		this.replicator = config.getObjectReplicator();
+		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
+			channelFactory = new SimpleChannelFactory(config);
+			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);			
+		}
 		if (config.getTransactionManager() == null) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 			this.transactionService.setTransactionManager((TransactionManager) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {TransactionManager.class}, new InvocationHandler() {
@@ -293,8 +357,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 					throw new UnsupportedOperationException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 				}
 			}));
-			this.detectTransactions = false;
 		} else {
+			this.transactionService.setDetectTransactions(true);
 			this.transactionService.setTransactionManager(config.getTransactionManager());
 		}
 		if (config.getSecurityHelper() != null) {
@@ -302,20 +366,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		} else {
 			this.sessionService.setSecurityHelper(new DoNothingSecurityHelper());
 		}
-		if (config.getSecurityDomains() != null) {
-			this.sessionService.setSecurityDomains(config.getSecurityDomains());
+		if (config.getSecurityDomain() != null) {
+			this.sessionService.setSecurityDomain(config.getSecurityDomain());
 		} else {
-			this.sessionService.setSecurityDomains(Arrays.asList("teiid-security")); //$NON-NLS-1$
+			this.sessionService.setSecurityDomain("teiid-security"); //$NON-NLS-1$
 		}
 
 		this.sessionService.setVDBRepository(repo);
-		this.bufferService.setUseDisk(config.isUseDisk());
-		if (config.isUseDisk()) {
-			if (config.getBufferDirectory() == null) {
-				config.setBufferDirectory(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
-			}
-			this.bufferService.setDiskDirectory(config.getBufferDirectory());
-		}
+		setBufferManagerProperties(config);
 		BufferService bs = getBufferService();
 		this.dqp.setBufferManager(bs.getBufferManager());
 
@@ -334,42 +392,95 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.dqp.start(config);
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
+		this.services.setVDBRepository(this.repo);
+		this.materializationMgr = getMaterializationManager();
+		this.repo.addListener(this.materializationMgr);
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
 		initDriver();
+		List<SocketConfiguration> transports = config.getTransports();
+		if ( transports != null && !transports.isEmpty()) {
+			for (SocketConfiguration socketConfig:transports) {
+				SocketListener socketConnection = startTransport(socketConfig, bs.getBufferManager(), config.getMaxODBCLobSizeAllowed());
+				if (socketConnection != null) {
+					this.transports.add(socketConnection);
+				}
+			}
+		}
+		this.shutdownListener.setBootInProgress(false);
 		running = true;
 	}
 
-	private void initDriver() {
-		driver.setEmbeddedProfile(new ConnectionProfile() {
-
-			@Override
-			public ConnectionImpl connect(String url, Properties info)
-					throws TeiidSQLException {
-				LocalServerConnection conn;
-				try {
-					conn = new LocalServerConnection(info, useCallingThread) {
-						@Override
-						protected ClientServiceRegistry getClientServiceRegistry() {
-							return services;
-						}
-					};
-				} catch (CommunicationException e) {
-					throw TeiidSQLException.create(e);
-				} catch (ConnectionException e) {
-					throw TeiidSQLException.create(e);
-				}
-				return new EmbeddedConnectionImpl(conn, info, url);
+	private void setBufferManagerProperties(EmbeddedConfiguration config) {
+		
+		this.bufferService.setUseDisk(config.isUseDisk());
+		if (config.isUseDisk()) {
+			if (config.getBufferDirectory() == null) {
+				config.setBufferDirectory(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
 			}
-		});
+			this.bufferService.setDiskDirectory(config.getBufferDirectory());
+		}
+		
+		if(config.getProcessorBatchSize() != -1)
+			this.bufferService.setProcessorBatchSize(config.getProcessorBatchSize());
+		if(config.getMaxReserveKb() != -1)
+			this.bufferService.setMaxReserveKb(config.getMaxReserveKb());
+		if(config.getMaxProcessingKb() != -1)
+			this.bufferService.setMaxProcessingKb(config.getMaxProcessingKb());
+		this.bufferService.setInlineLobs(config.isInlineLobs());
+		if(config.getMaxOpenFiles() != -1)
+			this.bufferService.setMaxOpenFiles(config.getMaxOpenFiles());
+		
+		if(config.getMaxBufferSpace() != -1)
+			this.bufferService.setMaxBufferSpace(config.getMaxBufferSpace());
+		if(config.getMaxFileSize() != -1) 
+			this.bufferService.setMaxFileSize(config.getMaxFileSize());
+		this.bufferService.setEncryptFiles(config.isEncryptFiles());
+		if(config.getMaxStorageObjectSize() != -1) {
+			this.bufferService.setMaxStorageObjectSize(config.getMaxStorageObjectSize());
+		}
+		this.bufferService.setMemoryBufferOffHeap(config.isMemoryBufferOffHeap());
+		if(config.getMemoryBufferSpace() != -1)
+			this.bufferService.setMemoryBufferSpace(config.getMemoryBufferSpace());
+		
+	}
+
+	private void initDriver() {
+		driver.setEmbeddedProfile(embeddedProfile);
+	}
+	
+	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {
+		InetSocketAddress address = null;
+		try {
+			address = new InetSocketAddress(socketConfig.getResolvedHostAddress(), socketConfig.getPortNumber());
+		} catch (UnknownHostException e) {
+			throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
+		}
+		if (socketConfig.getProtocol() == WireProtocol.teiid) {
+			return new SocketListener(address, socketConfig, this.services, bm) {
+				@Override
+				public ChannelListener createChannelListener(ObjectChannel channel) {
+					//TODO: this is a little dirty, but allows us to inject the appropriate connection profile
+					SocketClientInstance instance = (SocketClientInstance) super.createChannelListener(channel);
+					instance.getWorkContext().setConnectionProfile(embeddedProfile);
+					return instance;
+				}
+			};
+		}
+		else if (socketConfig.getProtocol() == WireProtocol.pg) {
+    		this.repo.odbcEnabled();
+    		ODBCSocketListener odbc = new ODBCSocketListener(address, socketConfig, this.services, bm, maxODBCLobSize, this.logon, driver);
+    		return odbc;
+		}
+		return null;
 	}
 
 	private void startVDBRepository() {
 		this.repo.addListener(new VDBLifeCycleListener() {
 
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
 
 			}
 
@@ -380,20 +491,30 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				}
 				rs.clearForVDB(name, 1);
 				ppc.clearForVDB(name, 1);
+				try {
+					for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(name, version)) {
+						try {
+							sessionService.closeSession(session.getSessionId());
+						} catch (InvalidSessionException e) {
+						}
+					}
+				} catch (SessionServiceException e) {
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not terminate sessions for", name, version);  //$NON-NLS-1$
+				}
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version,
-					CompositeVDB vdb) {
-				GlobalTableStore gts = new GlobalTableStoreImpl(dqp.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
-				if (replicator != null) {
-					try {
-						gts = replicator.replicate(name + version, GlobalTableStore.class, gts, 300000);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
+			public void finishedDeployment(String name, int version, CompositeVDB vdb, boolean reloading) {
+				if (!vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
+					return;
 				}
+				GlobalTableStore gts = CompositeGlobalTableStore.createInstance(vdb, dqp.getBufferManager(), replicator);
+				
 				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
+			}
+
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB vdb) {
 			}
 		});
 		this.repo.setSystemFunctionManager(new SystemFunctionManager());
@@ -425,11 +546,57 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		return bufferService;
 	}
 
+	protected MaterializationManager getMaterializationManager() {
+	    return new MaterializationManager(this.shutdownListener) {
+	    	
+	    	@Override
+	    	public ScheduledExecutorService getScheduledExecutorService() {
+	    		return scheduler;
+	    	}
+
+            @Override
+            public ScheduledExecutorService getExecutor() {
+                return scheduler;
+            }
+            
+            @Override
+            public DQPCore getDQP() {
+            	return dqp;
+            }
+            
+        };
+	}
+
 	/**
-	 * Add an {@link ExecutionFactory}.  The {@link ExecutionFactory#start()} method
-	 * should have already been called.
+	 * Adds a default instance of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.  
 	 * @param ef
+	 * @throws TranslatorException 
 	 */
+	public void addTranslator(Class<? extends ExecutionFactory> clazz) throws TranslatorException {
+		Translator t = clazz.getAnnotation(Translator.class);
+		String name = clazz.getName();
+		if (t != null) {
+			name = t.name();
+		}
+		try {
+			ExecutionFactory<?, ?> instance = clazz.newInstance();
+			instance.start();
+			addTranslator(name, instance);
+		} catch (InstantiationException e) {
+			throw new TeiidRuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new TeiidRuntimeException(e);
+		}
+	}
+	
+	/**
+	 * Add an {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.
+	 * @param ef the already started ExecutionFactory
+	 * @deprecated
+	 * @see {@link #addTranslator(String, ExecutionFactory)} or {@link #addTranslator(Class)}
+	 * if the translator has overrides or multiple translators of a given type are needed.
+	 */
+	@Deprecated
 	public void addTranslator(ExecutionFactory<?, ?> ef) {
 		Translator t = ef.getClass().getAnnotation(Translator.class);
 		String name = ef.getClass().getName();
@@ -439,7 +606,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		addTranslator(name, ef);
 	}
 	
-	void addTranslator(String name, ExecutionFactory<?, ?> ef) {
+	/**
+	 * Add a named {@link ExecutionFactory}.
+	 * @param name
+	 * @param ef the already started ExecutionFactory
+	 */
+	public void addTranslator(String name, ExecutionFactory<?, ?> ef) {
 		translators.put(name, ef);
 	}
 
@@ -453,22 +625,115 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	public void deployVDB(String name, ModelMetaData... models)
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
-		checkStarted();
 		VDBMetaData vdb = new VDBMetaData();
-		vdb.setDynamic(true);
+		vdb.setXmlDeployment(true);
 		vdb.setName(name);
 		vdb.setModels(Arrays.asList(models));
+		//TODO: the api should be hardened to prevent the creation of invalid metadata
+		//missing source/translator names will cause issues
+		deployVDB(vdb, null);
+	}
+	
+	/**
+	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
+	 * @param is, which will be closed by this deployment
+	 * @throws TranslatorException 
+	 * @throws ConnectorManagerException 
+	 * @throws VirtualDatabaseException 
+	 * @throws IOException 
+	 */
+	public void deployVDB(InputStream is) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException {
+		if (is == null) {
+			return;
+		}
+		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
+		try {
+			//TODO: find a way to do this off of the stream
+			VDBMetadataParser.validate(new ByteArrayInputStream(bytes));
+		} catch (SAXException e) {
+			throw new VirtualDatabaseException(e);
+		}
+		VDBMetaData metadata;
+		try {
+			metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
+		} catch (XMLStreamException e) {
+			throw new VirtualDatabaseException(e);
+		}
+		metadata.setXmlDeployment(true);
+		deployVDB(metadata, null);
+	}
+	
+	/**
+	 * Deploy a vdb zip file.  The name and version will be derived from the xml.
+	 * @param url
+	 * @throws TranslatorException 
+	 * @throws ConnectorManagerException 
+	 * @throws VirtualDatabaseException 
+	 * @throws URISyntaxException 
+	 * @throws IOException 
+	 */
+	public void deployVDBZip(URL url) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
+		VirtualFile root = PureZipFileSystem.mount(url);
+		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+		try {
+			VDBMetadataParser.validate(vdbMetadata.openStream());
+		} catch (SAXException e) {
+			throw new VirtualDatabaseException(e);
+		}
+		InputStream is = vdbMetadata.openStream();
+		VDBMetaData metadata;
+		try {
+			metadata = VDBMetadataParser.unmarshell(is);
+		} catch (XMLStreamException e) {
+			throw new VirtualDatabaseException(e);
+		}
+		VDBResources resources = new VDBResources(root, metadata);
+		deployVDB(metadata, resources);
+	}
+	
+	protected void deployVDB(VDBMetaData vdb, VDBResources resources) 
+			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
+		checkStarted();
+		if (!vdb.getOverrideTranslators().isEmpty()) {
+			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
+		}
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();
 		udfMetaData.setFunctionClassLoader(Thread.currentThread().getContextClassLoader());
-		this.assignMetadataRepositories(vdb, null);
-		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, Resource>(), udfMetaData, cmr);
+		MetadataRepository<?, ?> defaultRepo = null;
+		LinkedHashMap<String, VDBResources.Resource> visibilityMap = null;
+		if (resources != null) {
+			//check to see if there is an index file.  if there is then we assume
+			//that index is the default metadata repo
+			for (String s : resources.getEntriesPlusVisibilities().keySet()) {
+				if (s.endsWith(VDBResources.INDEX_EXT)) {
+					defaultRepo = new IndexMetadataRepository();
+					break;
+				}
+			}
+			visibilityMap = resources.getEntriesPlusVisibilities();
+		} else {
+			visibilityMap = new LinkedHashMap<String, VDBResources.Resource>();
+		}
+		this.assignMetadataRepositories(vdb, defaultRepo);
+		repo.addVDB(vdb, metadataStore, visibilityMap, udfMetaData, cmr, false);
 		try {
-			this.loadMetadata(vdb, cmr, metadataStore);
+			this.loadMetadata(vdb, cmr, metadataStore, resources, false);
 		} catch (VDBValidationError e) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.valueOf(e.getCode()), e.getMessage());
 		}
+	}
+	
+	@Override
+	protected MetadataRepository<?, ?> getMetadataRepository(String repoType)
+			throws VirtualDatabaseException {
+		if ("index".equals(repoType)) { //$NON-NLS-1$
+			//return a new instance since the repos are globally scoped
+			//this does not support MMX style index files organized by type
+			return new IndexMetadataRepository(); 
+		}
+		return super.getMetadataRepository(repoType);
 	}
 	
 	/**
@@ -478,24 +743,49 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected void loadMetadata(VDBMetaData vdb, ModelMetaData model,
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
-			AtomicInteger loadCount) throws TranslatorException {
-		MetadataFactory factory = createMetadataFactory(vdb, model);
+			AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException {
+		MetadataFactory factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
 		
 		ExecutionFactory ef = null;
 		Object cf = null;
 		
-		try {
-			ConnectorManager cm = getConnectorManager(model, cmr);
-			if (cm != null) {
-				ef = cm.getExecutionFactory();
-				cf = cm.getConnectionFactory();
+		Exception te = null;
+		for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+			if (te != null) {
+				LogManager.logDetail(LogConstants.CTX_RUNTIME, te, "Failed to get metadata, trying next source."); //$NON-NLS-1$
+				te = null;
 			}
-		} catch (TranslatorException e) {
-			//cf not available
-		}
+			try {
+				if (cm != null) {
+					ef = cm.getExecutionFactory();
+					cf = cm.getConnectionFactory();
+				}
+			} catch (TranslatorException e) {
+				LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+			}
 		
-		metadataRepository.loadMetadata(factory, ef, cf);		
-		metadataLoaded(vdb, model, store, loadCount, factory, true);
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			
+			try {
+				metadataRepository.loadMetadata(factory, ef, cf);
+				break;
+			} catch (Exception e) {
+				te = e;
+				factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+			}
+		}
+		if (te != null) {
+			if (te instanceof TranslatorException) {
+				throw (TranslatorException)te;
+			}
+			if (te instanceof RuntimeException) {
+				throw (RuntimeException)te;
+			}
+			throw new TranslatorException(te);
+		}
+		metadataLoaded(vdb, model, store, loadCount, factory, true, false);
 	}
 	
 	public void undeployVDB(String vdbName) {
@@ -510,11 +800,31 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (config != null) {
 			config.stop();
 		}
+		if (running == null || !running) {
+			return;
+		}
+		if (this.channelFactory != null) {
+			this.channelFactory.stop();
+		}
+        this.shutdownListener.setShutdownInProgress(true);
+        this.repo.removeListener(this.materializationMgr);
+        this.scheduler.shutdownNow();
+		for (SocketListener socket:this.transports) {
+			socket.stop();
+		}
+		this.sessionService.stop();
+		this.transports.clear();
 		dqp.stop();
 		eventDistributorFactoryService.stop();
+		config.getCacheFactory().destroy();
+		config.setCacheFactory(null);
+		if (this.bufferService != null) {
+			this.bufferService.stop();
+		}
 		bufferService = null;
 		dqp = null;
 		running = false;
+		this.shutdownListener.setShutdownInProgress(false);
 	}
 
 	private synchronized void checkStarted() {
@@ -538,10 +848,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public ExecutionFactory<Object, Object> getExecutionFactory(String name)
 			throws ConnectorManagerException {
 		ExecutionFactory<?, ?> ef = translators.get(name);
-		if (ef == null) {
-			//TODO: consolidate this exception into the connectormanagerrepository
-			throw new ConnectorManagerException(name);
-		}
 		return (ExecutionFactory<Object, Object>) ef;
 	}
 	
@@ -550,4 +856,77 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		return this.repo;
 	}
 	
+	/**
+	 * Get the effective ddl text for the given schema 
+	 * @param vdbName
+	 * @param schemaName
+	 * @return the ddl or null if the vdb/schema does not exist
+	 */
+	public String getSchemaDdl(String vdbName, String schemaName) {
+		VDBMetaData vdb = repo.getVDB(vdbName, 1);
+		if (vdb == null) {
+			return null;
+		}
+		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+		if (metadata == null) {
+			return null;
+		}
+		Schema schema = metadata.getMetadataStore().getSchema(schemaName);
+		if (schema == null) {
+			return null;
+		}
+		return DDLStringVisitor.getDDLString(schema, null, null); 
+	}
+	
+	/**
+	 * Return the bound port for the transport number
+	 * @param transport
+	 * @return
+	 */
+	public int getPort(int transport) {
+		return this.transports.get(transport).getPort();
+	}
+	
+	protected ConcurrentHashMap<String, ExecutionFactory<?, ?>> getTranslators() {
+		return this.translators;
+	}
+	
+	protected SessionAwareCache<CachedResults> getRsCache() {
+		return this.rs;
+	}
+	
+	protected SessionAwareCache<PreparedPlan> getPpcCache() {
+		return this.ppc;
+	}
+	
+	public Admin getAdmin() {
+		return EmbeddedAdminFactory.getInstance().createAdmin(this);
+	}
+
+	static class ShutDownListener implements ContainerLifeCycleListener {
+	    private boolean shutdownInProgress = false;
+	    private boolean bootInProgress = false;
+
+        @Override
+        public boolean isShutdownInProgress() {
+            return shutdownInProgress;
+        }
+
+        @Override
+        public boolean isBootInProgress() {
+            return bootInProgress;
+        }
+
+        @Override
+        public void addListener(LifeCycleEventListener listener) {
+        }
+
+        public void setBootInProgress(boolean value) {
+            this.bootInProgress = value;
+        }
+
+        public void setShutdownInProgress(boolean value) {
+            this.shutdownInProgress = value;
+        }
+	}
 }

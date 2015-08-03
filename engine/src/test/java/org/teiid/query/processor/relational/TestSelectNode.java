@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -90,8 +91,6 @@ public class TestSelectNode {
 	        		assertEquals("Rows don't match at " + i, expected[i], iterator.nextTuple()); //$NON-NLS-1$
 	        		break;
 	        	} catch (BlockedException e) {
-	        		continue;
-	        	} catch (QueryProcessor.ExpiredTimeSliceException e) {
 	        		continue;
 	        	}
         	}
@@ -161,11 +160,19 @@ public class TestSelectNode {
         	
         	@Override
         	protected Evaluator getEvaluator(Map elementMap) {
-        		if (i++ == 1) {
-        			throw new QueryProcessor.ExpiredTimeSliceException();
-        		}
-        		return super.getEvaluator(elementMap);
+        		return new Evaluator(elementMap, getDataManager(), getContext()) {
+        			@Override
+        			public Boolean evaluateTVL(Criteria criteria, List<?> tuple)
+        					throws ExpressionEvaluationException,
+        					BlockedException, TeiidComponentException {
+        				if (i++ == 1) {
+                			throw new QueryProcessor.ExpiredTimeSliceException();
+                		}		
+        				return super.evaluateTVL(criteria, tuple);
+        			}
+        		};
         	}
+        	
         });
     }
     

@@ -28,11 +28,15 @@ import java.util.List;
 
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.language.Limit;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
@@ -48,6 +52,8 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	private static final String DATE_FORMAT = "YYYY-MM-DD";  //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT;  //$NON-NLS-1$
 	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".MS";   //$NON-NLS-1$
+	
+	private boolean sqlExtensionsInstalled;
 
 	public NetezzaExecutionFactory() {
 		setSupportsFullOuterJoins(true);
@@ -343,6 +349,20 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
     	}
         return null;
     }
+	
+	@Override
+	public List<?> translate(LanguageObject obj, ExecutionContext context) {
+		if (obj instanceof Like) {
+			Like like = (Like)obj;
+			if (like.getMode() == MatchMode.REGEX) {
+				if (like.isNegated()) {
+					return Arrays.asList("NOT(REGEXP_LIKE(", like.getLeftExpression(), ", ", like.getRightExpression(), "))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
+				return Arrays.asList("REGEXP_LIKE(", like.getLeftExpression(), ", ", like.getRightExpression(), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+			}
+		}
+		return super.translate(obj, context);
+	}
 
     @Override
     public boolean supportsCorrelatedSubqueries() {
@@ -377,6 +397,20 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public boolean supportsAggregatesEnhancedNumeric() {
 		return true;
+	}
+	
+	@Override
+	public boolean supportsLikeRegex() {
+		return sqlExtensionsInstalled;
+	}
+	
+	@TranslatorProperty(display="SQL Extensions Installed", description="True if SQL Extensions including support fo REGEXP_LIKE are installed",advanced=true)
+	public boolean isSqlExtensionsInstalled() {
+		return sqlExtensionsInstalled;
+	}
+	
+	public void setSqlExtensionsInstalled(boolean sqlExtensionsInstalled) {
+		this.sqlExtensionsInstalled = sqlExtensionsInstalled;
 	}
 	
 }

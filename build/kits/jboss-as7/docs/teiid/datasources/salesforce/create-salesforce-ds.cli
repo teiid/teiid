@@ -1,6 +1,0 @@
-/subsystem=resource-adapters/resource-adapter=sfDS:add(archive=teiid-connector-salesforce.rar, transaction-support=NoTransaction)
-/subsystem=resource-adapters/resource-adapter=sfDS/connection-definitions=sfDS:add(jndi-name=java:/sfDS, class-name=org.teiid.resource.adapter.salesforce.SalesForceManagedConnectionFactory, enabled=true, use-java-context=true)
-/subsystem=resource-adapters/resource-adapter=sfDS/connection-definitions=sfDS/config-properties=URL:add(value=https://www.salesforce.com/services/Soap/u/22.0)
-/subsystem=resource-adapters/resource-adapter=sfDS/connection-definitions=sfDS/config-properties=username:add(value={user})
-/subsystem=resource-adapters/resource-adapter=sfDS/connection-definitions=sfDS/config-properties=password:add(value={password})
-/subsystem=resource-adapters/resource-adapter=sfDS/connection-definitions=sfDS:enable

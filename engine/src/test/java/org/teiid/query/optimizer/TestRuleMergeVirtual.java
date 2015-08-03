@@ -431,5 +431,71 @@ public class TestRuleMergeVirtual {
                 1       // UnionAll
             });                                     
     }
+    
+    @Test public void testNoSourcesMerge() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1, (select 1 as a, 2, 3) as z where pm1.g1.e2 = z.a", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(),
+                                      new String[] {
+                                          "SELECT 3 FROM pm1.g1 AS g_0 WHERE g_0.e2 = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
 
+    /*
+     * TODO: should be able to remove the limit
+     */
+    @Test public void testNoSourcesMerge1() throws Exception {
+    	TestOptimizer.helpPlan("select z.* from pm1.g1, (select 1 as a, 2, 3 limit 2) as z where pm1.g1.e2 = z.a", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(),
+                                      new String[] {
+                                          "SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e2 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
+    @Test public void testNoSourcesMerge2() throws Exception {
+    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1, (select 1 as a, lookup('pm1.g2', 'e1', 'e1', 'a') as b, 3) as z where pm1.g1.e2 = z.a and z.b = 'a'", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(),
+                                      new String[] {
+                                          "SELECT 1, lookup('pm1.g2', 'e1', 'e1', 'a'), 3 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 1) AND (lookup('pm1.g2', 'e1', 'e1', 'a') = 'a')"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
+    @Test public void testNoSourcesMerge3() throws Exception {
+        TestOptimizer.helpPlan("select z.* from pm1.g1 left outer join (select 1 as a, 2, 3) as z on pm1.g1.e2 = z.a", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(),
+                                      new String[] {
+                                          "SELECT 3 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+    }
+    
+    @Test public void testNoSourcesMerge4() throws Exception {
+        TestOptimizer.helpPlan("select z.* from pm1.g1 right outer join (select 1 as a, 2, 3) as z on pm1.g1.e2 = z.a", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(),
+                                      new String[] {
+                                          "SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e2 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
+    @Test public void testNestedTableNoSourcesMerge() throws Exception {
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setFunctionSupport("convert", true); //$NON-NLS-1$
+    	caps.setFunctionSupport("array_get", true); //$NON-NLS-1$
+    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1, arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT convert(array_get(convert(g_0.e1, object), 1), integer), convert(array_get(convert(g_0.e1, object), 2), integer), convert(array_get(convert(g_0.e1, object), 3), integer) FROM pm1.g1 AS g_0 WHERE convert(g_0.e1, object) IS NOT NULL"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    	
+    	TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
+    @Test public void testNestedTableNoSourcesMerge1() throws Exception {
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setFunctionSupport("convert", true); //$NON-NLS-1$
+    	caps.setFunctionSupport("array_get", true); //$NON-NLS-1$
+    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1 left outer join arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z on (pm1.g1.e2 = z.one)", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT convert(array_get(convert(g_0.e1, object), 1), integer), convert(array_get(convert(g_0.e1, object), 2), integer), convert(array_get(convert(g_0.e1, object), 3), integer) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
 }

@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.resource.ResourceException;
-import javax.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
 
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -35,8 +33,9 @@ import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.UpdateVisitor;
@@ -44,38 +43,33 @@ import org.teiid.translator.salesforce.execution.visitors.UpdateVisitor;
 
 public class UpdateExecutionImpl extends AbstractUpdateExecution {
 
-	@SuppressWarnings("unchecked")
-	private static final Class stringClazz = new String().getClass();
-	
-	public UpdateExecutionImpl(Command command,
+	public UpdateExecutionImpl(SalesForceExecutionFactory ef, Command command,
 			SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context) {
-		super(command, salesforceConnection, metadata, context);
+		super(ef, command, salesforceConnection, metadata, context);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void execute() throws TranslatorException {
 		UpdateVisitor visitor = new UpdateVisitor(getMetadata());
 		visitor.visit((Update)command);
-		String[] Ids = getIDs(((Update)command).getWhere(), visitor);
+		String[] ids = getIDs(((Update)command).getWhere(), visitor);
 
-		if (null != Ids && Ids.length > 0) {
-			List<JAXBElement> elements = new ArrayList<JAXBElement>();
-			for (SetClause clause : ((Update)command).getChanges()) {
-				ColumnReference element = clause.getSymbol();
-				Column column = element.getMetadataObject();
-				String val = ((Literal) clause.getValue()).toString();
-				JAXBElement messageElem = new JAXBElement(new QName(column.getNameInSource()), stringClazz, Util.stripQutes(val));
-				elements.add(messageElem);
-			}
-
+		if (ids != null && ids.length > 0) {
 			List<DataPayload> updateDataList = new ArrayList<DataPayload>();
-			for (int i = 0; i < Ids.length; i++) {
+
+			for (int i = 0; i < ids.length; i++) {
 				DataPayload data = new DataPayload();
+
+				for (SetClause clause : ((Update)command).getChanges()) {
+					ColumnReference element = clause.getSymbol();
+					Column column = element.getMetadataObject();
+					String val = ((Literal) clause.getValue()).toString();
+					data.addField(column.getSourceName(), Util.stripQutes(val));
+				}
+	
 				data.setType(visitor.getTableName());
-				data.setID(Ids[i]);
-				data.setMessageElements(elements);
+				data.setID(ids[i]);
 				updateDataList.add(data);
 			}
 

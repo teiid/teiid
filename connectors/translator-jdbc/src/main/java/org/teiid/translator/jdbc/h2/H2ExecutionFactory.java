@@ -28,9 +28,14 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
+import org.teiid.language.Like.MatchMode;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -38,6 +43,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
+import org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory;
 
 @Translator(name="h2", description="A translator for open source H2 Database")
 public class H2ExecutionFactory extends JDBCExecutionFactory {
@@ -49,6 +55,7 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier("formatdatetime")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day_of_month")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("day_of_week")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier("iso_week")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("day_of_year")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UNESCAPE, new AliasModifier("stringdecode")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(SourceSystemFunctions.MOD, getLanguageFactory()));
@@ -74,6 +81,7 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
 		convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
+		addPushDownFunction("h2", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     @Override
@@ -158,7 +166,8 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.QUARTER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
-        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        //h2 rounds up
+        //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
         //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPCREATE);
         supportedFunctions.add(SourceSystemFunctions.WEEK);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
@@ -213,6 +222,42 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsArrayType() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
+    	return true;
+    }
+    
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof Like) {
+    		Like like = (Like)obj;
+    		if (like.getEscapeCharacter() == null && like.getMode() != MatchMode.REGEX) {
+    			return PostgreSQLExecutionFactory.addDefaultEscape(like);
+    		}
+    	}
+    	return super.translate(obj, context);
+    }
+    
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	return "org.hibernate.dialect.H2Dialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean tempTableRequiresTransaction() {
+    	return true;
+    }
+    
+    @Override
+    public boolean useParensForJoins() {
     	return true;
     }
 }

@@ -25,17 +25,7 @@ package org.teiid.core.crypto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.security.AlgorithmParameterGenerator;
-import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Properties;
@@ -104,7 +94,7 @@ public class DhKeyGenerator {
 		}
 	}
 
-	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes)
+	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes, boolean useSealedObject, ClassLoader classLoader)
 			throws CryptoException {
 		if (privateKey == null) {
 			throw new IllegalStateException(
@@ -120,12 +110,21 @@ public class DhKeyGenerator {
 			ka.init(privateKey);
 			ka.doPhase(publicKey, true);
 			byte[] secret = ka.generateSecret();
-
+			//we expect a 1024-bit DH key, but vms handle leading zeros differently
+			if (secret.length < 128) {
+				byte[] temp = new byte[128];
+				System.arraycopy(secret, 0, temp, 128-secret.length, secret.length);
+				secret = temp;
+			}
+			//convert to expected bit length for AES
 			MessageDigest sha = MessageDigest.getInstance(DIGEST);
 			byte[] hash = sha.digest(secret);
 			byte[] symKey = new byte[keySize / 8];
 			System.arraycopy(hash, 0, symKey, 0, symKey.length);
-			return SymmetricCryptor.getSymmectricCryptor(symKey);
+			SymmetricCryptor sc = SymmetricCryptor.getSymmectricCryptor(symKey);
+			sc.setUseSealedObject(useSealedObject);
+			sc.setClassLoader(classLoader);
+			return sc;
 		} catch (NoSuchAlgorithmException e) {
 			  throw new CryptoException(CorePlugin.Event.TEIID10003, e);
 		} catch (InvalidKeySpecException e) {

@@ -62,15 +62,6 @@ public class BufferManagerFactory {
 		return initBufferManager(new BufferManagerImpl());
 	}
 
-	public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize, int connectorBatchSize) {
-		BufferManagerImpl bufferManager = new BufferManagerImpl();
-		bufferManager.setProcessorBatchSize(procBatchSize);
-		bufferManager.setConnectorBatchSize(connectorBatchSize);
-		bufferManager.setMaxProcessingKB((int) (bytesAvailable/1024));
-		bufferManager.setMaxReserveKB((int) (bytesAvailable/1024));
-	    return initBufferManager(bufferManager);
-	}
-
 	public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize) {
 		BufferManagerImpl bufferManager = new BufferManagerImpl();
 		bufferManager.setProcessorBatchSize(procBatchSize);
@@ -82,10 +73,12 @@ public class BufferManagerFactory {
 	public static BufferManagerImpl initBufferManager(BufferManagerImpl bufferManager) {
 	    try {
 			bufferManager.initialize();
+			bufferManager.setUseWeakReferences(false);
 			MemoryStorageManager storageManager = new MemoryStorageManager();
 			SplittableStorageManager ssm = new SplittableStorageManager(storageManager);
 			ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
 			BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+			fsc.setBufferManager(bufferManager);
 			//use conservative allocations
 			fsc.setDirect(false); //allow the space to be GCed easily
 			fsc.setMaxStorageObjectSize(1<<20);

@@ -28,9 +28,14 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.teiid.language.*;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Function;
+import org.teiid.language.Join;
 import org.teiid.language.Join.JoinType;
+import org.teiid.language.NamedTable;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.Select;
+import org.teiid.language.TableReference;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -241,7 +246,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     
 	private boolean isParentOf(NamedTable parent, NamedTable child) {
 		for (ForeignKey fk:parent.getMetadataObject().getForeignKeys()){
-			if (fk.getReferenceTableName().equals(child.getMetadataObject().getName())) {
+			if (fk.getPrimaryKey().getParent().equals(child.getMetadataObject())) {
 				return true;
 			}
 		}
@@ -267,19 +272,19 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     		}
     		else {
 	    		for (ForeignKey fk:customer.getMetadataObject().getForeignKeys()){
-	    			if (fk.getReferenceTableName().equals(address.getMetadataObject().getName())) {
+	    			if (fk.getReferenceKey().getParent().equals(address.getMetadataObject())) {
 	    				this.parent = customer;
 	    				this.child = address;
-	    				this.childAttributeName = fk.getNameInSource();
+	    				this.childAttributeName = fk.getSourceName();
 	    				this.parentAttributeName = customer.getName();
 	    			}
 	    		}
 	    		if (this.parent == null) {
 	        		for (ForeignKey fk:address.getMetadataObject().getForeignKeys()){
-	        			if (fk.getReferenceTableName().equals(customer.getMetadataObject().getName())) {
+	        			if (fk.getReferenceKey().getParent().equals(customer.getMetadataObject())) {
 	            			this.parent = address;
 	            			this.child = customer;
-	        				this.childAttributeName = fk.getNameInSource();
+	        				this.childAttributeName = fk.getSourceName();
 	        				this.parentAttributeName = customer.getName();
 	        			}
 	        		}    			

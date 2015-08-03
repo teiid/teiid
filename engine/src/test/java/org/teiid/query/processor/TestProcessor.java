@@ -25,14 +25,16 @@ package org.teiid.query.processor;
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 
 import org.junit.Test;
-import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BlockedException;
@@ -45,6 +47,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
 import org.teiid.dqp.internal.process.CachedResults;
@@ -66,8 +69,8 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
-import org.teiid.query.optimizer.TestRuleRaiseNull;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.TestRuleRaiseNull;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -96,7 +99,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings({"nls", "unchecked"})
+@SuppressWarnings({"nls", "unchecked", "rawtypes"})
 public class TestProcessor {
 
 	// ################################## TEST HELPERS ################################
@@ -120,7 +123,7 @@ public class TestProcessor {
     }
 
 	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata) {
-		return helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder());
+		return helpGetPlan(sql, metadata, DefaultCapabilitiesFinder.INSTANCE);
     }
 	
 	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata, CapabilitiesFinder finder) { 
@@ -134,7 +137,7 @@ public class TestProcessor {
     }
 
     static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata) {
-        return helpGetPlan(command, metadata, new DefaultCapabilitiesFinder());
+        return helpGetPlan(command, metadata, DefaultCapabilitiesFinder.INSTANCE);
     }
     
 	static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
@@ -160,7 +163,7 @@ public class TestProcessor {
 	        Collection failures = new ArrayList();
 	        repo.collectInvalidObjects(failures);
 	        if (failures.size() > 0){
-	            fail("Exception during validation (" + repo); //$NON-NLS-1$
+	            throw new QueryValidatorException("Exception during validation:" + repo); //$NON-NLS-1$
 	        }        
 			command = QueryRewriter.rewrite(command, metadata, context);
 	        ProcessorPlan process = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, context);
@@ -232,7 +235,6 @@ public class TestProcessor {
     	if (bufferMgr == null) {
 	        BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
 	        bm.setProcessorBatchSize(context.getProcessorBatchSize());
-	        bm.setConnectorBatchSize(context.getProcessorBatchSize());
 	        context.setBufferManager(bm);
 	        bufferMgr = bm;
     	}
@@ -241,7 +243,7 @@ public class TestProcessor {
         	context.setTempTableStore(new TempTableStore(context.getConnectionId(), TransactionMode.ISOLATE_WRITES));
         }
         if (context.getGlobalTableStore() == null) {
-        	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(bufferMgr, context.getMetadata());
+        	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(bufferMgr, null, context.getMetadata());
         	context.setGlobalTableStore(gts);
         }
         if (!(dataManager instanceof TempTableDataManager)) {
@@ -270,6 +272,13 @@ public class TestProcessor {
             	fail("did not complete processing");
             }
             rowCount = id.getRowCount();
+    		if(DEBUG) {
+                System.out.println("\nResults:\n" + id.getSchema()); //$NON-NLS-1$
+                TupleSource ts2 = id.createIndexedTupleSource();
+                for(int j=0; j<rowCount; j++) {
+                    System.out.println("" + j + ": " + ts2.nextTuple());	 //$NON-NLS-1$ //$NON-NLS-2$
+                }
+            }
             if ( expectedResults != null ) {
             	examineResults(expectedResults, bufferMgr, id);
             }
@@ -287,24 +296,16 @@ public class TestProcessor {
      * @param tsID
      * @throws TeiidComponentException
      * @throws TeiidProcessingException 
+     * @throws IOException 
      * @since 4.3
      */
     static void examineResults(List[] expectedResults,BufferManager bufferMgr,TupleBuffer tsID) 
-        throws TeiidComponentException,SQLException, TeiidProcessingException {
+        throws TeiidComponentException,SQLException, TeiidProcessingException, IOException {
         
         // Create QueryResults from TupleSource
         TupleSource ts = tsID.createIndexedTupleSource();
         int count = tsID.getRowCount();   
 
-		if(DEBUG) {
-            System.out.println("\nResults:\n" + tsID.getSchema()); //$NON-NLS-1$
-            TupleSource ts2 = tsID.createIndexedTupleSource();
-            for(int j=0; j<count; j++) {
-                System.out.println("" + j + ": " + ts2.nextTuple());	 //$NON-NLS-1$ //$NON-NLS-2$
-            }    
-            ts2.closeSource();
-        }
-        
         // Compare actual to expected row count
         assertEquals("Did not get expected row count: ", expectedResults.length, count); //$NON-NLS-1$
      
@@ -318,6 +319,13 @@ public class TestProcessor {
             	if(cellValue instanceof XMLType){
                     XMLType id =  (XMLType)cellValue; 
                     String actualDoc = id.getString(); 
+                	if (expectedResults[i].size() == 1) {
+                		compareDocuments((String)expectedResults[i].get(0), actualDoc);
+                        continue;
+                	}
+            	} else if(cellValue instanceof Clob){
+                    Clob id =  (Clob)cellValue; 
+                    String actualDoc = ClobType.getString(id); 
                 	if (expectedResults[i].size() == 1) {
                 		compareDocuments((String)expectedResults[i].get(0), actualDoc);
                         continue;
@@ -336,13 +344,13 @@ public class TestProcessor {
 		while(tokens1.hasMoreTokens()){
 			String token1 = tokens1.nextToken().trim();
 			if(!tokens2.hasMoreTokens()){
-				fail("XML doc mismatch: expected=" + token1 + "\nactual=none");//$NON-NLS-1$ //$NON-NLS-2$
+				fail("doc mismatch: expected=" + token1 + "\nactual=none");//$NON-NLS-1$ //$NON-NLS-2$
 			}
 			String token2 = tokens2.nextToken().trim();
-			assertEquals("XML doc mismatch: ", token1, token2); //$NON-NLS-1$
+			assertEquals("doc mismatch: ", token1, token2); //$NON-NLS-1$
 		}
 		if(tokens2.hasMoreTokens()){
-			fail("XML doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
+			fail("doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
 		}
 	}
 
@@ -350,7 +358,7 @@ public class TestProcessor {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		CommandContext context = new CommandContext("test", "user", null, "myvdb", 1, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
@@ -986,10 +994,10 @@ public class TestProcessor {
         
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null,  null }),
             Arrays.asList(new Object[] { "a",   "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null,  null }),
+            Arrays.asList(new Object[] { "c",   "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "b",   "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "c",   "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
         
         // Construct data manager with data
@@ -2586,7 +2594,7 @@ public class TestProcessor {
     } 
 
     @Test public void testCorrelatedSubquery_defect10021() {
-        String sql = "Select e1, e2 from table1 X where e4 in (select max(Y.e4) FROM table1 Y WHERE X.e4 = Y.e4)"; //$NON-NLS-1$
+        String sql = "Select e1, e2 from table1 X where e4 in /*+ no_unnest */ (select max(Y.e4) FROM table1 Y WHERE X.e4 = Y.e4)"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[] {
@@ -2792,6 +2800,7 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] {
+            Arrays.asList(new Object[] { null }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$
@@ -2990,6 +2999,7 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[]{
+        	Arrays.asList(new Object[] { null }), //$NON-NLS-1$	
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$
@@ -3786,7 +3796,7 @@ public class TestProcessor {
 
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('MyString', 1)", new List[] {Arrays.asList(1)});
+        dataManager.addData("INSERT INTO pm1.g1 (e1, e2) VALUES ('MyString', 1)", new List[] {Arrays.asList(1)});
 
         // Plan query
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
@@ -4274,10 +4284,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { "C", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "B", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "C", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -4297,10 +4307,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "A", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { null, null }),
+    		Arrays.asList(new Object[] { "C", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "B", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "C", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -4320,10 +4330,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { "c", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "b", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "c", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -4368,10 +4378,10 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null, null }), 
-            Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+    		Arrays.asList(new Object[] { "a", "a" }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { "c", "c" }), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList(new Object[] { "b", "b" }), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList(new Object[] { "c", "c" }) //$NON-NLS-1$ //$NON-NLS-2$
         };    
     
         // Construct data manager with data
@@ -5251,6 +5261,9 @@ public class TestProcessor {
 		VariableContext vc = new VariableContext();
         Iterator<?> valIter = values.iterator();
         for (Reference ref : ReferenceCollectorVisitor.getReferences(command)) {
+        	if (!ref.isPositional()) {
+        		continue;
+        	}
             vc.setGlobalValue(ref.getContextSymbol(),  valIter.next()); //$NON-NLS-1$
 		}
         context.setVariableContext(vc);
@@ -6862,7 +6875,7 @@ public class TestProcessor {
         
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, TestOptimizer.getGenericFinder());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder());
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -6876,7 +6889,7 @@ public class TestProcessor {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            0,      // Select
+            1,      // Select
             0,      // Sort
             0       // UnionAll
        });     
@@ -7382,8 +7395,8 @@ public class TestProcessor {
         		Arrays.asList("a", "a"),
         		Arrays.asList("a", "a"),
         		Arrays.asList("a", "a"),
-        		Arrays.asList("b", "b"),
         		Arrays.asList("c", "c"),
+        		Arrays.asList("b", "b"),
         };    
     
         FakeDataManager dataManager = new FakeDataManager();
@@ -7588,15 +7601,20 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
-    @Test(expected=QueryPlannerException.class) public void testUpdateCompensationNotPossible() throws Exception {
-    	String sql = "update pm1.g1 set e4 = (select e4 from pm1.g2 where pm1.g2.e2 = pm1.g1.e2) where e1 = 'a'"; //$NON-NLS-1$
+    @Test public void testSetClauseUpdateCompensation() throws Exception {
+    	String sql = "update pm1.g1 set e4 = (select e4 from pm1.g2 where pm1.g2.e2 = pm1.g1.e2 limit 1) where e1 = 'a'"; //$NON-NLS-1$
     	
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
-        helpGetPlan(helpParse(sql), RealMetadataFactory.example4(), new DefaultCapabilitiesFinder(caps), createCommandContext());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example4(), new DefaultCapabilitiesFinder(caps), createCommandContext());
+        
+        List[] expected = new List[] {
+        		Arrays.asList(3),
+        };    
+        helpProcess(plan, dataManager, expected);
     }
     
     @Test public void testDupSelect() throws Exception {
@@ -7708,7 +7726,7 @@ public class TestProcessor {
     
         // Construct data manager with data
         HardcodedDataManager hdm = new HardcodedDataManager();
-        hdm.addData("SELECT RAND() FROM pm1.g1", expected);
+        hdm.addData("SELECT RAND() FROM pm1.g1", new List[] {Arrays.asList(.1), Arrays.asList(.2)});
         hdm.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList(1, "a")});
         BasicSourceCapabilities bsc = new BasicSourceCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -7717,6 +7735,23 @@ public class TestProcessor {
         CommandContext cc = createCommandContext();
         ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
 
+        helpProcess(plan, cc, hdm, expected);
+        
+        bsc.setFunctionSupport(SourceSystemFunctions.RAND, false);
+        
+        plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+
+        hdm = new HardcodedDataManager();
+        hdm.addData("SELECT 'a' FROM pm1.g1", new List[] {Arrays.asList("a"), Arrays.asList("a")});
+        hdm.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList(1, "a")});
+
+        Random r = new Random(0);
+        r.nextDouble();
+        expected = new List[] { 
+                Arrays.asList(r.nextDouble(), "a"),
+                Arrays.asList(r.nextDouble(), "a"),
+        };
+        
         helpProcess(plan, cc, hdm, expected);
     }
     
@@ -7746,6 +7781,40 @@ public class TestProcessor {
         FakeDataManager fdm = new FakeDataManager();
         sampleData1(fdm);
         helpProcess(plan, fdm, new List[] {Arrays.asList(11)});
+    }
+    
+    
+    @Test public void testNonDeterministicBlockingSubquery() {
+        String sql = "select count(distinct x) from (select (select rand() from pm1.g1 limit 1) as x from pm1.g1) as y"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        fdm.setBlockOnce();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[] {Arrays.asList(6)});
+    }
+    
+    @Test public void testRenaming() {
+        String sql = "Select (select e4 from pm1.g1 X__1), pm1.g1.e2 from pm1.g1, /*+ makeind */ (select e1 from pm2.g1) AS X__1, (select distinct e2, e3 from pm3.g1) X__2 where pm1.g1.e3 = X__1.e1 and pm1.g1.e2 = year(X__2.e3)"; //$NON-NLS-1$
+
+        // Create expected results
+        List[] expected = new List[] {
+        };
+
+        HardcodedDataManager hdm = new HardcodedDataManager(false);
+        // Plan query
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()));
+
+        // Run query
+        helpProcess(plan, hdm, expected);
+    } 
+
+    @Test public void testLateralJoinWithScalarView() {
+        String sql = "SELECT CAST(g1.col AS string), g0.a FROM (select 'a' as a, ('a',) as c) AS g0, TABLE(select array_get(g0.c, 1) as col) AS g1 WHERE ENDSWITH('a', CAST(g1.col AS string)) = TRUE ORDER BY g0.a"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        helpProcess(plan, fdm, new List[] {Arrays.asList("a", "a")});
     }
     
     private static final boolean DEBUG = false;

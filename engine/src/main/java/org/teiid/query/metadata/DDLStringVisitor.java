@@ -40,6 +40,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -72,6 +73,8 @@ public class DDLStringVisitor {
 	private boolean includeFunctions = true;
 	private Pattern filter;
 	private Map<String, String> prefixMap;
+	protected boolean usePrefixes = true;
+	protected boolean createNS = true;
 	
 	private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
 	static {
@@ -106,8 +109,8 @@ public class DDLStringVisitor {
 					first = false;
 				}
 				else {
-					buffer.append(NEWLINE);
-					buffer.append(NEWLINE);
+					append(NEWLINE);
+					append(NEWLINE);
 				}			
 				visit(t);
 			}
@@ -119,8 +122,8 @@ public class DDLStringVisitor {
 					first = false;
 				}
 				else {
-					buffer.append(NEWLINE);
-					buffer.append(NEWLINE);
+					append(NEWLINE);
+					append(NEWLINE);
 				}				
 				visit(p);
 			}
@@ -132,8 +135,8 @@ public class DDLStringVisitor {
 					first = false;
 				}
 				else {
-					buffer.append(NEWLINE);
-					buffer.append(NEWLINE);
+					append(NEWLINE);
+					append(NEWLINE);
 				}				
 				visit(f);
 			}
@@ -145,66 +148,82 @@ public class DDLStringVisitor {
 			return;
 		}
 		
-		buffer.append(CREATE).append(SPACE);
+		append(CREATE).append(SPACE);
 		if (table.isPhysical()) {
-			buffer.append(FOREIGN_TABLE);
+			append(FOREIGN_TABLE);
 		}
 		else {
-			buffer.append(VIEW);
+			if (table.getTableType() == Table.Type.TemporaryTable) {
+				append(GLOBAL).append(SPACE).append(TEMPORARY).append(SPACE).append(TABLE);
+			} else {
+				append(VIEW);
+			}
 		}
-		buffer.append(SPACE);
+		append(SPACE);
+		String name = addTableBody(table);
+		
+		if (table.getTableType() != Table.Type.TemporaryTable) {
+			if (table.isVirtual()) {
+				append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE).append(table.getSelectTransformation());
+			}
+			append(SQLConstants.Tokens.SEMICOLON);
+			
+			if (table.isInsertPlanEnabled()) {
+				buildTrigger(name, INSERT, table.getInsertPlan());
+			}
+			
+			if (table.isUpdatePlanEnabled()) {
+				buildTrigger(name, UPDATE, table.getUpdatePlan());
+			}	
+			
+			if (table.isDeletePlanEnabled()) {
+				buildTrigger(name, DELETE, table.getDeletePlan());
+			}			
+		}
+	}
+
+	public String addTableBody(Table table) {
 		String name = SQLStringVisitor.escapeSinglePart(table.getName());
-		buffer.append(name);
+		append(name);
 		
 		if (table.getColumns() != null) {
-			buffer.append(SPACE);
-			buffer.append(LPAREN);
+			append(SPACE);
+			append(LPAREN);
 			boolean first = true; 
 			for (Column c:table.getColumns()) {
 				if (first) {
 					first = false;
 				}
 				else {
-					buffer.append(COMMA);
+					append(COMMA);
 				}
-				visit(c);
+				visit(table, c);
 			}
 			buildContraints(table);
-			buffer.append(NEWLINE);
-			buffer.append(RPAREN);			
+			append(NEWLINE);
+			append(RPAREN);			
 		}
 		
 		// options
 		String options = buildTableOptions(table);		
 		if (!options.isEmpty()) {
-			buffer.append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}
-		
-		if (table.isVirtual()) {
-			buffer.append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE).append(table.getSelectTransformation());
-		}
-		buffer.append(SQLConstants.Tokens.SEMICOLON);
-		
-		if (table.isInsertPlanEnabled()) {
-			buildTrigger(name, INSERT, table.getInsertPlan());
-		}
-		
-		if (table.isUpdatePlanEnabled()) {
-			buildTrigger(name, UPDATE, table.getUpdatePlan());
-		}	
-		
-		if (table.isDeletePlanEnabled()) {
-			buildTrigger(name, DELETE, table.getDeletePlan());
-		}			
+		return name;
+	}
+	
+	protected DDLStringVisitor append(Object o) {
+		buffer.append(o);
+		return this;
 	}
 
 	private void buildTrigger(String name, String type, String plan) {
-		buffer.append(NEWLINE);
-		buffer.append(NEWLINE);
-		buffer.append(CREATE_TRIGGER_ON).append(SPACE);
-		buffer.append(name).append(SPACE).append(INSTEAD_OF).append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
-		buffer.append(plan);
-		buffer.append(SQLConstants.Tokens.SEMICOLON);
+		append(NEWLINE);
+		append(NEWLINE);
+		append(CREATE_TRIGGER_ON).append(SPACE);
+		append(name).append(SPACE).append(INSTEAD_OF).append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+		append(plan);
+		append(SQLConstants.Tokens.SEMICOLON);
 	}
 
 	private String buildTableOptions(Table table) {
@@ -221,7 +240,11 @@ public class DDLStringVisitor {
 			addOption(options, UPDATABLE, table.supportsUpdate());
 		}
 		if (table.getCardinality() != -1) {
-			addOption(options, CARDINALITY, table.getCardinality());
+			if (table.getCardinality() != table.getCardinalityAsFloat()) {
+				addOption(options, CARDINALITY, (long)table.getCardinalityAsFloat());
+			} else {
+				addOption(options, CARDINALITY, table.getCardinality());
+			}
 		}
 		if (!table.getProperties().isEmpty()) {
 			for (String key:table.getProperties().keySet()) {
@@ -238,7 +261,7 @@ public class DDLStringVisitor {
 		if (record.getAnnotation() != null) {
 			addOption(sb, ANNOTATION, record.getAnnotation());
 		}
-		if (record.getNameInSource() != null && !record.getNameInSource().equals(record.getName())) {
+		if (record.getNameInSource() != null) {
 			addOption(sb, NAMEINSOURCE, record.getNameInSource());
 		}
 	}
@@ -258,12 +281,18 @@ public class DDLStringVisitor {
 		for (int i = 0; i < table.getForeignKeys().size(); i++) {
 			ForeignKey key = table.getForeignKeys().get(i);
 			addConstraint("FK" + i, FOREIGN_KEY, key, false); //$NON-NLS-1$
-			buffer.append(SPACE).append(REFERENCES);
-			if (key.getReferenceTableName() != null) {
-				buffer.append(SPACE).append(new GroupSymbol(key.getReferenceTableName()).getName());
+			append(SPACE).append(REFERENCES);
+			if (key.getReferenceKey() != null) {
+				if (key.getReferenceKey().getParent().getParent().equals(key.getParent().getParent())) {
+					append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getName()));
+				} else {
+					append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getFullName()));
+				}
+			} else if (key.getReferenceTableName() != null) {
+				append(SPACE).append(new GroupSymbol(key.getReferenceTableName()));
 			}
-			buffer.append(SPACE);
-			addNames(buffer, key.getReferenceColumns());
+			append(SPACE);
+			addNames(key.getReferenceColumns());
 			appendOptions(key);
 		}
 	}
@@ -277,107 +306,116 @@ public class DDLStringVisitor {
 
 	private void addConstraint(String defaultName, String type,
 			KeyRecord constraint, boolean addOptions) {
-		buffer.append(COMMA).append(NEWLINE).append(TAB);
+		append(COMMA).append(NEWLINE).append(TAB);
 		boolean nameMatches = defaultName.equals(constraint.getName());
 		if (!nameMatches) {
-			buffer.append(CONSTRAINT).append(SPACE).append(SQLStringVisitor.escapeSinglePart(constraint.getName())).append(SPACE);	
+			append(CONSTRAINT).append(SPACE).append(SQLStringVisitor.escapeSinglePart(constraint.getName())).append(SPACE);	
 		}
-		buffer.append(type);
-		addColumns(buffer, constraint.getColumns(), false);
+		append(type);
+		addColumns(constraint.getColumns(), false);
 		if (addOptions) {
 			appendOptions(constraint);
 		}
 	}
 
-	private void addColumns(StringBuilder builder, List<Column> columns, boolean includeType) {
-		builder.append(LPAREN);
+	private void addColumns(List<Column> columns, boolean includeType) {
+		append(LPAREN);
 		boolean first = true;
 		for (Column c:columns) {
 			if (first) {
 				first = false;
 			}
 			else {
-				builder.append(COMMA).append(SPACE);
+				append(COMMA).append(SPACE);
 			}
 			if (includeType) {
-				appendColumn(builder, c, true, includeType);
-				appendColumnOptions(builder, c);
+				appendColumn(c, true, includeType);
+				appendColumnOptions(c);
 			} else if (c.getParent() instanceof KeyRecord) {
 				//function based column
-				builder.append(c.getNameInSource());
+				append(c.getNameInSource());
 			} else {
-				builder.append(SQLStringVisitor.escapeSinglePart(c.getName()));
+				append(SQLStringVisitor.escapeSinglePart(c.getName()));
 			}
 		}
-		builder.append(RPAREN);
+		append(RPAREN);
 	}
 
-	private void addNames(StringBuilder builder, List<String> columns) {
+	private void addNames(List<String> columns) {
 		if (columns != null) {
-			builder.append(LPAREN);
+			append(LPAREN);
 			boolean first = true;
 			for (String c:columns) {
 				if (first) {
 					first = false;
 				}
 				else {
-					builder.append(COMMA).append(SPACE);
+					append(COMMA).append(SPACE);
 				}
-				builder.append(SQLStringVisitor.escapeSinglePart(c));
+				append(SQLStringVisitor.escapeSinglePart(c));
 			}
-			builder.append(RPAREN);
+			append(RPAREN);
 		}
 	}	
 	
-	private void visit(Column column) {
-		buffer.append(NEWLINE).append(TAB);
-		appendColumn(buffer, column, true, true);
-		
-		if (column.isAutoIncremented()) {
-			buffer.append(SPACE).append(AUTO_INCREMENT);
+	private void visit(Table table, Column column) {
+		append(NEWLINE).append(TAB);
+		if (table.getTableType() == Table.Type.TemporaryTable && column.isAutoIncremented() && column.getNullType() == NullType.No_Nulls && column.getJavaType() == DataTypeManager.DefaultDataClasses.INTEGER) {
+			append(SQLStringVisitor.escapeSinglePart(column.getName()));
+			append(SPACE);
+			append(SERIAL);
+		} else {
+			appendColumn(column, true, true);
+			
+			if (column.isAutoIncremented()) {
+				append(SPACE).append(AUTO_INCREMENT);
+			}
 		}
 		
 		appendDefault(column);
 		
 		// options
-		appendColumnOptions(buffer, column);
+		appendColumnOptions(column);
 	}
 
 	private void appendDefault(BaseColumn column) {
 		if (column.getDefaultValue() != null) {
-			buffer.append(SPACE).append(DEFAULT).append(SPACE).append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
+			append(SPACE).append(DEFAULT).append(SPACE).append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
 		}
 	}
 
-	private void appendColumn(StringBuilder builder, BaseColumn column, boolean includeName, boolean includeType) {
+	private void appendColumn(BaseColumn column, boolean includeName, boolean includeType) {
 		if (includeName) {
-			builder.append(SQLStringVisitor.escapeSinglePart(column.getName()));
+			append(SQLStringVisitor.escapeSinglePart(column.getName()));
 		}
 		if (includeType) {
 			String runtimeTypeName = column.getDatatype().getRuntimeTypeName();
 			if (includeName) {
-				builder.append(SPACE);
+				append(SPACE);
 			}
-			builder.append(runtimeTypeName);
+			append(runtimeTypeName);
 			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
 				if (column.getLength() != 0 && column.getLength() != column.getDatatype().getLength()) {
-					builder.append(LPAREN).append(column.getLength()).append(RPAREN);
+					append(LPAREN).append(column.getLength()).append(RPAREN);
 				}
 			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
 					&& (column.getPrecision() != column.getDatatype().getPrecision() || column.getScale() != column.getDatatype().getScale())) {
-				builder.append(LPAREN).append(column.getPrecision());
+				append(LPAREN).append(column.getPrecision());
 				if (column.getScale() != 0) {
-					builder.append(COMMA).append(column.getScale());
+					append(COMMA).append(column.getScale());
 				}
-				builder.append(RPAREN);
+				append(RPAREN);
+			}
+			for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
+				append(Tokens.LSBRACE).append(Tokens.RSBRACE);
 			}
 			if (column.getNullType() == NullType.No_Nulls) {
-				builder.append(SPACE).append(NOT_NULL);
+				append(SPACE).append(NOT_NULL);
 			}
 		}
 	}	
 	
-	private void appendColumnOptions(StringBuilder builder, BaseColumn column) {
+	private void appendColumnOptions(BaseColumn column) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, column);
 		
@@ -393,7 +431,7 @@ public class DDLStringVisitor {
 			buildColumnOptions((Column)column, options);
 		}
 		if (options.length() != 0) {
-			builder.append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}
 	}
 
@@ -459,9 +497,10 @@ public class DDLStringVisitor {
 	
 	private void appendOptions(AbstractMetadataRecord record) {
 		StringBuilder options = new StringBuilder();
+		addCommonOptions(options, record);
 		buildOptions(record, options);
 		if (options.length() != 0) {
-			buffer.append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}
 	}
 
@@ -483,23 +522,28 @@ public class DDLStringVisitor {
 			value = Constant.NULL_CONSTANT;
 		}
 		if (key != null && key.length() > 2 && key.charAt(0) == '{') { 
+			String origKey = key;
 			int index = key.indexOf('}');
 			if (index > 1) {
 				String uri = key.substring(1, index);
 				key = key.substring(index + 1, key.length());
 				String prefix = BUILTIN_PREFIXES.get(uri);
-				if (prefix == null) {
+				if ((prefix == null && usePrefixes) || createNS) {
 					if (prefixMap == null) {
 						prefixMap = new LinkedHashMap<String, String>();
 					} else {
 						prefix = this.prefixMap.get(uri);
 					}
 					if (prefix == null) {
-						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$
-						this.prefixMap.put(uri, prefix); 
+						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$						
 					}
+					this.prefixMap.put(uri, prefix);
+				} 
+				if (prefix != null) {
+					key = prefix + ":" + key; //$NON-NLS-1$
+				} else {
+					key = origKey;
 				}
-				key = prefix + ":" + key; //$NON-NLS-1$
 			}
 		}
 		sb.append(SQLStringVisitor.escapeSinglePart(key)).append(SPACE).append(value);
@@ -510,15 +554,15 @@ public class DDLStringVisitor {
 			return;
 		}
 		
-		buffer.append(CREATE).append(SPACE);
+		append(CREATE).append(SPACE);
 		if (procedure.isVirtual()) {
-			buffer.append(VIRTUAL);
+			append(VIRTUAL);
 		}
 		else {
-			buffer.append(FOREIGN);
+			append(FOREIGN);
 		}
-		buffer.append(SPACE).append(PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
-		buffer.append(LPAREN);
+		append(SPACE).append(procedure.isFunction()?FUNCTION:PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
+		append(LPAREN);
 		
 		boolean first = true;
 		for (ProcedureParameter pp:procedure.getParameters()) {
@@ -526,20 +570,20 @@ public class DDLStringVisitor {
 				first = false;
 			}
 			else {
-				buffer.append(COMMA).append(SPACE);
+				append(COMMA).append(SPACE);
 			}
 			visit(pp);
 		}
-		buffer.append(RPAREN);
+		append(RPAREN);
 		
 		if (procedure.getResultSet() != null) {
-			buffer.append(SPACE).append(RETURNS).append(SPACE).append(TABLE).append(SPACE);
-			addColumns(buffer, procedure.getResultSet().getColumns(), true);
+			append(SPACE).append(RETURNS).append(SPACE).append(TABLE).append(SPACE);
+			addColumns(procedure.getResultSet().getColumns(), true);
 		}
 		/* The parser treats the RETURN clause as optional for a procedure if using the RESULT param
 		  for (ProcedureParameter pp: procedure.getParameters()) {
 			if (pp.getType().equals(Type.ReturnValue)) {
-				buffer.append(SPACE).append(RETURNS).append(SPACE);
+				append(SPACE).append(RETURNS).append(SPACE);
 				appendColumn(buffer, pp, false, true);
 				break;
 			}
@@ -548,13 +592,13 @@ public class DDLStringVisitor {
 		//options
 		String options = buildProcedureOptions(procedure);		
 		if (!options.isEmpty()) {
-			buffer.append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}		
 		//block
 		if (procedure.isVirtual()) {
-			buffer.append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 			String plan = procedure.getQueryPlan();
-			buffer.append(plan);
+			append(plan);
 		}
 	}
 
@@ -594,28 +638,28 @@ public class DDLStringVisitor {
 			}
 			break;
 		}
-		buffer.append(typeStr).append(SPACE);
-		appendColumn(buffer, param, true, true);
+		append(typeStr).append(SPACE);
+		appendColumn(param, true, true);
 		if (type == Type.ReturnValue) {
-			buffer.append(SPACE).append(NonReserved.RESULT);
+			append(SPACE).append(NonReserved.RESULT);
 		}
 		appendDefault(param);
-		appendColumnOptions(buffer, param);
+		appendColumnOptions(param);
 	}	
 
 	private void visit(FunctionMethod function) {
 		if (this.filter != null && !filter.matcher(function.getName()).matches()) {
 			return;
 		}		
-		buffer.append(CREATE).append(SPACE);
+		append(CREATE).append(SPACE);
 		if (function.getPushdown().equals(FunctionMethod.PushDown.MUST_PUSHDOWN)) {
-			buffer.append(FOREIGN);
+			append(FOREIGN);
 		}
 		else {
-			buffer.append(VIRTUAL);
+			append(VIRTUAL);
 		}
-		buffer.append(SPACE).append(FUNCTION).append(SPACE).append(SQLStringVisitor.escapeSinglePart(function.getName()));
-		buffer.append(LPAREN);
+		append(SPACE).append(FUNCTION).append(SPACE).append(SQLStringVisitor.escapeSinglePart(function.getName()));
+		append(LPAREN);
 		
 		boolean first = true;
 		for (FunctionParameter fp:function.getInputParameters()) {
@@ -623,21 +667,27 @@ public class DDLStringVisitor {
 				first = false;
 			}
 			else {
-				buffer.append(COMMA).append(SPACE);
+				append(COMMA).append(SPACE);
 			}
 			visit(fp);
 		}
-		buffer.append(RPAREN);
+		append(RPAREN);
 		
-		buffer.append(SPACE).append(RETURNS).append(SPACE);
-		buffer.append(function.getOutputParameter().getType());
+		append(SPACE).append(RETURNS).append(SPACE);
+		append(function.getOutputParameter().getType());
 		
 		//options
 		String options = buildFunctionOptions(function);		
 		if (!options.isEmpty()) {
-			buffer.append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}		
-		buffer.append(SQLConstants.Tokens.SEMICOLON);		
+		
+		/*if (function.getDefinition() != null) {
+			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+			append(function.getDefinition());
+		}*/
+		
+		append(SQLConstants.Tokens.SEMICOLON);		
 	}
 
 	private String buildFunctionOptions(FunctionMethod function) {
@@ -671,11 +721,12 @@ public class DDLStringVisitor {
 
 	private void visit(FunctionParameter param) {
 		if (param.isVarArg()) {
-			buffer.append(NonReserved.VARIADIC).append(SPACE);
+			append(NonReserved.VARIADIC).append(SPACE);
 		}
-		buffer.append(SQLStringVisitor.escapeSinglePart(param.getName())).append(SPACE).append(param.getType());
+		appendColumn(param, true, true);
 	}
 
+    @Override
     public String toString() {
     	if (this.prefixMap != null) {
     		StringBuilder sb = new StringBuilder();

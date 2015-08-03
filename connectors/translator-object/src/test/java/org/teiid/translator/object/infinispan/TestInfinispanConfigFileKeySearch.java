@@ -23,10 +23,8 @@ package org.teiid.translator.object.infinispan;
 
 import static org.mockito.Mockito.*;
 
-import java.util.Map;
-
-import org.infinispan.manager.CacheContainer;
-import org.infinispan.manager.DefaultCacheManager;
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
@@ -34,56 +32,38 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
-    
-	static final class InfinispanConnection implements ObjectConnection {
-		private final CacheContainer container;
-
-		InfinispanConnection(CacheContainer container) {
-			this.container = container;
-		}
-
-		@Override
-		public Class<?> getType(String name) throws TranslatorException {
-			return Trade.class;
-		}
-
-		@Override
-		public Map<?, ?> getMap(String name) throws TranslatorException {
-			//the real connection should use the name in source to get the cache
-			return container.getCache(TradesCacheSource.TRADES_CACHE_NAME);
-		}
-	}
 
 	private static ExecutionContext context;
 
-    
     private static InfinispanExecutionFactory factory = null;
     
     private static ObjectConnection conn;
 		
 
 	@BeforeClass
-    public static void beforeEachClass() throws Exception {  
+    public static void beforeClass() throws Exception {  
         // Set up the mock JNDI ...
-        
-		context = mock(ExecutionContext.class);
+   		context = mock(ExecutionContext.class);
 		
+		conn = TestInfinispanConnection.createConnection("./src/test/resources/infinispan_persistent_config.xml");
+
+	}
+	
+	@AfterClass
+	public static void afterClass() {
+		
+		((TestInfinispanConnection) conn).cleanUp();
+	}	
+	
+	@Before public void beforeEachTest() throws Exception{	
 		factory = new InfinispanExecutionFactory();
 
-		final DefaultCacheManager container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml");
-
 		factory.start();
-		
-		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
-
-		conn = new InfinispanConnection(container);
-	}
+    }
 	
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {

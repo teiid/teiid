@@ -23,336 +23,157 @@
 package org.teiid.dqp.internal.process.multisource;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.StringUtil;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.Table;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.BasicQueryMetadataWrapper;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.SupportConstants;
-import org.teiid.query.sql.symbol.Symbol;
 
 
 /**
- * This classs is a proxy to QueryMetadataInterface. It knows VDBService
- * and VNB name.
+ * This class is a proxy to QueryMetadataInterface. 
  */
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	
-    private static final String SUFFIX = Symbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
-	private Set<String> multiSourceModels;
-    
-    public MultiSourceMetadataWrapper(QueryMetadataInterface actualMetadata, Set<String> multiSourceModels){
+	public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName"; //$NON-NLS-1$
+	
+	private static class MultiSourceGroup {
+		Object multiSourceElement;
+		List<?> columns;
+	}
+	
+	private Map<String, String> multiSourceModels;
+	private Map<Object, MultiSourceGroup> groups = new ConcurrentHashMap<Object, MultiSourceGroup>();
+	
+    public static Map<String, String> getMultiSourceModels(VDBMetaData vdb) {
+    	HashMap<String, String> result = new HashMap<String, String>();
+    	for (ModelMetaData mmd : vdb.getModelMetaDatas().values()) {
+    		if (!mmd.isSupportsMultiSourceBindings()) {
+    			continue;
+    		}
+    		String columnName = mmd.getPropertyValue(MULTISOURCE_COLUMN_NAME);
+    		if (columnName == null) {
+    			columnName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME; 
+    		}
+    		result.put(mmd.getName(), columnName);
+    	}
+    	return result;
+    }
+
+    public MultiSourceMetadataWrapper(final QueryMetadataInterface actualMetadata, Map<String, String> multiSourceModels){
     	super(actualMetadata);
         this.multiSourceModels = multiSourceModels;
     }	
-
-    public static String getGroupName(final String fullElementName) {
-        int index = fullElementName.lastIndexOf('.');
-        if(index >= 0) { 
-            return fullElementName.substring(0, index);
-        }
-        return null;
-    }
     
-    /**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementID(java.lang.String)
-	 */
-	public Object getElementID(String elementName) throws TeiidComponentException, QueryMetadataException {
-        if(StringUtil.endsWithIgnoreCase(elementName, SUFFIX)) {
-            try {
-                String groupName = getGroupName(elementName);
-                Object groupID = getGroupID(groupName);
-                List elements = getElementIDsInGroupID(groupID);
-                
-                Iterator iter = elements.iterator();
-                while(iter.hasNext()) {
-                    Object id = iter.next();
-                    if(id instanceof MultiSourceElement) {
-                        return id;
-                    }
-                }
-                
-            } catch(Exception e) {
-                // ignore and try the real metadata below
+    public MultiSourceMetadataWrapper(QueryMetadataInterface metadata,
+    		Set<String> multiSourceModels) {
+    	this(metadata, new HashMap<String, String>());
+    	for (String string : multiSourceModels) {
+			this.multiSourceModels.put(string, MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME);
+		}
+	}
+    
+	@Override
+	public List<?> getElementIDsInGroupID(Object groupID)
+			throws TeiidComponentException, QueryMetadataException {
+		MultiSourceGroup msg = getMultiSourceGroup(groupID);
+		if (msg != null) {
+			return msg.columns;
+		}
+		return actualMetadata.getElementIDsInGroupID(groupID);
+	}
+
+	public MultiSourceGroup getMultiSourceGroup(Object groupID)
+			throws TeiidComponentException, QueryMetadataException {
+		MultiSourceGroup msg = groups.get(groupID);
+		if (msg != null) {
+			return msg;
+		}
+		if (isVirtualGroup(groupID)) {
+			return null;
+		}
+		Object modelId = getModelID(groupID);
+		String multiSourceElementName = this.multiSourceModels.get(getFullName(modelId));
+		if (multiSourceElementName == null) {
+			return null;
+		}
+		List<?> elements = actualMetadata.getElementIDsInGroupID(groupID);
+        // Check whether a source_name column was modeled in the group already
+        Object mse = null;
+        for(int i = 0; i<elements.size() && mse == null; i++) {
+            Object elemID = elements.get(i);
+            if(actualMetadata.getName(elemID).equalsIgnoreCase(multiSourceElementName)) {
+            	if (!actualMetadata.getElementType(elemID).equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)) {
+            		throw new QueryMetadataException(QueryPlugin.Event.TEIID31128, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31128, multiSourceElementName, groupID));
+            	}
+            	mse = elemID;
             }
         }
         
-		return actualMetadata.getElementID(elementName);
+        if (mse == null) {
+        	List<Object> result = new ArrayList<Object>(elements);	        	
+    		MultiSourceElement e = new MultiSourceElement();
+            e.setName(multiSourceElementName);
+            e.setParent((Table)groupID);
+        	e.setPosition(elements.size()+1);
+        	e.setRuntimeType(DataTypeManager.DefaultDataTypes.STRING);
+        	setMultiSourceElementMetadata(e);
+    		result.add(e);
+    		mse = e;
+    		elements = result;
+        }
+        msg = new MultiSourceGroup();
+        msg.columns = elements;
+        msg.multiSourceElement = mse;
+        this.groups.put(groupID, msg);
+        return msg;
 	}
 
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getModelID(java.lang.Object)
-	 */
-	public Object getModelID(Object groupOrElementID) throws TeiidComponentException, QueryMetadataException {
-        if(groupOrElementID instanceof MultiSourceElement) {
-            Object groupID = ((MultiSourceElement)groupOrElementID).groupID;
-            return this.getModelID(groupID);
-        } 
-        
-        return actualMetadata.getModelID(groupOrElementID);            
-    }
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getFullName(java.lang.Object)
-	 */
-	public String getFullName(Object metadataID) throws TeiidComponentException, QueryMetadataException {
-        if(metadataID instanceof MultiSourceElement) {
-            return ((MultiSourceElement)metadataID).fullName;
-        }
-		return actualMetadata.getFullName(metadataID);
+	public static void setMultiSourceElementMetadata(Column e) {
+		e.setNullValues(0);
+		e.setNullType(NullType.No_Nulls);
+		e.setSearchType(SearchType.Searchable);
+		e.setUpdatable(true);
+		e.setLength(255);
 	}
 	
 	@Override
-	public String getName(Object metadataID) throws TeiidComponentException,
-			QueryMetadataException {
-		if(metadataID instanceof MultiSourceElement) {
-            return MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
-        }
-		return actualMetadata.getName(metadataID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementIDsInGroupID(java.lang.Object)
-	 */
-	public List getElementIDsInGroupID(Object groupID) throws TeiidComponentException, QueryMetadataException {
-        List elements = actualMetadata.getElementIDsInGroupID(groupID);
-        
-        Object modelID = this.getModelID(groupID);
-        String modelName = this.getFullName(modelID);
-        if(multiSourceModels.contains(modelName)) {
-            elements = new ArrayList(elements);       
-            
-            String fullName = this.getFullName(groupID) + "." + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME; //$NON-NLS-1$
-
-            // Check whether a source_name column was modeled in the group already
-            boolean elementExists = false;
-            for(int i=0; i<elements.size(); i++) {
-                Object elemID = elements.get(i);
-                if(actualMetadata.getName(elemID).equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) { 
-                    // Replace the element with a MultiSourceElement
-                    elements.set(i, new MultiSourceElement(groupID, i+1, fullName));
-                    elementExists = true;
-                    break;
-                }
-            }
-            
-            // Append a new pseudo-column to the end
-            if(!elementExists) {
-                int position = elements.size()+1;
-                elements.add(new MultiSourceElement(groupID, position, fullName));
-            }
-        }
-
-		return elements;
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getGroupIDForElementID(java.lang.Object)
-	 */
-	public Object getGroupIDForElementID(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return ((MultiSourceElement)elementID).groupID;
-        } 
-        
-		return actualMetadata.getGroupIDForElementID(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementType(java.lang.Object)
-	 */
-	public String getElementType(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return DataTypeManager.DefaultDataTypes.STRING;
-        } 
-        
-		return actualMetadata.getElementType(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getDefaultValue(java.lang.Object)
-	 */
-	public Object getDefaultValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return null;
-        } 
-        
-		return actualMetadata.getDefaultValue(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getMinimumValue(java.lang.Object)
-	 */
-	public Object getMinimumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return null;
-        } 
-        
-		return actualMetadata.getMinimumValue(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getMaximumValue(java.lang.Object)
-	 */
-	public Object getMaximumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return null;
-        } 
-        
-		return actualMetadata.getMaximumValue(elementID);
-	}
-
-    /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getDistinctValues(java.lang.Object)
-     */
-    public int getDistinctValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return ((MultiSourceElement)elementID).position;
-        } 
-        
-        return actualMetadata.getDistinctValues(elementID);
-    }
-
-    /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getNullValues(java.lang.Object)
-     */
-    public int getNullValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return ((MultiSourceElement)elementID).position;
-        } 
-        
-        return actualMetadata.getNullValues(elementID);
-    }
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getPosition(java.lang.Object)
-	 */
-	public int getPosition(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return ((MultiSourceElement)elementID).position;
-        } 
-        
-		return actualMetadata.getPosition(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getPrecision(java.lang.Object)
-	 */
-	public int getPrecision(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return 0;
-        } 
-        
-		return actualMetadata.getPrecision(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getScale(java.lang.Object)
-	 */
-	public int getScale(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return 0;
-        } 
-        
-		return actualMetadata.getScale(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getRadix(java.lang.Object)
-	 */
-	public int getRadix(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return 0;
-        } 
-        
-		return actualMetadata.getRadix(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#elementSupports(java.lang.Object, int)
-	 */
-	public boolean elementSupports(Object elementID, int elementConstant) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            switch(elementConstant) {
-                case SupportConstants.Element.NULL:
-                    return false;
-                case SupportConstants.Element.NULL_UNKNOWN:
-                    return false;
-                case SupportConstants.Element.SEARCHABLE_COMPARE:
-                    return true;
-                case SupportConstants.Element.SEARCHABLE_LIKE:
-                    return true;
-                case SupportConstants.Element.SELECT:
-                    return true;
-                case SupportConstants.Element.UPDATE:
-                    return true;
-                case SupportConstants.Element.DEFAULT_VALUE:
-                    return false;
-                case SupportConstants.Element.AUTO_INCREMENT:
-                    return false;
-                case SupportConstants.Element.CASE_SENSITIVE:
-                    return false;
-                case SupportConstants.Element.SIGNED:
-                    return false;
-                default:
-                    throw new UnsupportedOperationException("Attempt to check support for unknown constant: " + elementConstant); //$NON-NLS-1$
-            }
-        } 
-        
-		return actualMetadata.elementSupports(elementID, elementConstant);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getExtensionProperties(java.lang.Object)
-	 */
-	public Properties getExtensionProperties(Object metadataID) throws TeiidComponentException, QueryMetadataException {
-        if(metadataID instanceof MultiSourceElement) {
-            return new Properties();
-        }
-		return actualMetadata.getExtensionProperties(metadataID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getNameInSource(java.lang.Object)
-	 */
-	public String getNameInSource(Object metadataID) throws TeiidComponentException, QueryMetadataException {
-        if(metadataID instanceof MultiSourceElement) {
-            return null;
-        } 
-        
-		return actualMetadata.getNameInSource(metadataID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementLength(java.lang.Object)
-	 */
-	public int getElementLength(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return 255;
-        } 
-        
-		return actualMetadata.getElementLength(elementID);
-	}
-
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getNativeType(java.lang.Object)
-	 */
-	public String getNativeType(Object elementID) throws TeiidComponentException, QueryMetadataException {
-        if(elementID instanceof MultiSourceElement) {
-            return null;
-        } 
-        
-		return actualMetadata.getNativeType(elementID);
+	public Object getElementID(String elementName)
+			throws TeiidComponentException, QueryMetadataException {
+		try {
+			return super.getElementID(elementName);
+		} catch (QueryMetadataException e) {
+			//could be pseudo-column
+			int index = elementName.lastIndexOf('.');
+	        if(index <= 0 || elementName.length() <= index) {
+	        	throw e;
+	        }
+            String group = elementName.substring(0, index);
+            elementName = elementName.substring(index + 1, elementName.length());
+			MultiSourceGroup msg = getMultiSourceGroup(getGroupID(group));
+			if (msg != null && elementName.equalsIgnoreCase(getName(msg.multiSourceElement))) {
+				return msg.multiSourceElement;
+			}
+			throw e;
+		}
 	}
 	
 	@Override
 	public boolean isMultiSource(Object modelId) throws QueryMetadataException, TeiidComponentException {
-		return multiSourceModels.contains(getFullName(modelId));
+		return multiSourceModels.containsKey(getFullName(modelId));
 	}
 	
 	@Override
@@ -361,20 +182,29 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 			return true;
 		}
 		Object gid = getGroupIDForElementID(elementId);
-		if (isProcedure(gid)) {
-			Object modelID = this.getModelID(gid);
-	        String modelName = this.getFullName(modelID);
-	        if(multiSourceModels.contains(modelName)) {
-				String shortName = getName(elementId);        
-		        return shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME);
-	        }
+		if (isVirtualGroup(gid)) {
+			return false;
 		}
-		return false;
+		Object modelID = this.getModelID(gid);
+        String modelName = this.getFullName(modelID);
+        String multiSourceColumnName = multiSourceModels.get(modelName);
+        if(multiSourceColumnName == null) {
+        	return false;
+        }
+		return multiSourceColumnName.equalsIgnoreCase(getName(elementId));        
 	}
 	
 	@Override
 	protected QueryMetadataInterface createDesignTimeMetadata() {
 		return new MultiSourceMetadataWrapper(actualMetadata.getDesignTimeMetadata(), multiSourceModels);
+	}
+	
+	@Override
+	public boolean isPseudo(Object elementId) {
+		if (elementId instanceof MultiSourceElement) {
+			return true;
+		}
+		return actualMetadata.isPseudo(elementId);
 	}
 
 }

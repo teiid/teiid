@@ -23,6 +23,7 @@ package org.teiid.translator.object;
 
 import static org.junit.Assert.*;
 
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -30,13 +31,20 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.teiid.language.Select;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.object.testdata.Trade;
+import org.teiid.translator.object.testdata.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestObjectExecutionFactory {
+	
+	protected static ObjectConnection conn = TradesCacheSource.createConnection();
 	
 	public class TestFactory extends ObjectExecutionFactory {
 		public TestFactory() {
@@ -46,45 +54,61 @@ public class TestObjectExecutionFactory {
 	}
 	
 	@Mock
-	private ExecutionContext context;
+	protected ExecutionContext context;
 	
 	@Mock
-	private Select command;
+	protected Select command;
 	
-	private ObjectExecutionFactory factory;
+	protected ObjectExecutionFactory factory;
 
 	@Before public void beforeEach() throws Exception{	
  
 		MockitoAnnotations.initMocks(this);
 		
-		factory = new TestFactory();
+		factory = createFactory();
     }
+	
+	protected ObjectExecutionFactory createFactory() {
+		return new TestFactory();
+	}
 
 	@Test public void testFactory() throws Exception {
 		factory.start();
 			
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
 		
 		assertNotNull(exec);
-	}
-	
-	@Test public void testFactoryLoadingJarClassNames() throws Exception {
-		factory.start();
-			
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
-		
-		assertNotNull(exec);
-		
 	}	
 	
+	
 	@Test public void testGetMetadata() throws Exception {
-		
-		MetadataFactory mfactory = new MetadataFactory("TestVDB", 1, "Trade",  SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		
 		factory.start();
 		
-		factory.getMetadata(mfactory, null);
+		Map<String, Datatype> dts = SystemMetadata.getInstance().getSystemStore().getDatatypes();
 
-	}
+		MetadataFactory mfactory = new MetadataFactory("TestVDB", 1, "Trade",  dts, new Properties(), null);
+		
+		factory.getMetadata(mfactory, conn);
+		
+		assertEquals(mfactory.getSchema().getName(), "Trade");
+		
+		String clzName = Trade.class.getName();
+		clzName = clzName.substring(clzName.lastIndexOf(".") + 1);
+
+		Table physicalTable = mfactory.getSchema().getTable(clzName);
+		assertNotNull(physicalTable);
+		assertTrue(physicalTable.isPhysical());
+		assertTrue(!physicalTable.isVirtual());
+		assertEquals(5, physicalTable.getColumns().size());
+		//this
+		assertEquals("object", physicalTable.getColumns().get(0).getRuntimeType());
+		//trade id key
+		assertEquals("long", physicalTable.getColumns().get(1).getRuntimeType());
+		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(1).getNullType());
+		//name
+		assertEquals("string", physicalTable.getColumns().get(2).getRuntimeType());
+		
+		assertEquals(1, physicalTable.getAllKeys().size());
+	}	
 
 }

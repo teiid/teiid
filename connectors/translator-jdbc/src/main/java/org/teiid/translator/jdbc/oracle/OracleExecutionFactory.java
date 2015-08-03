@@ -24,19 +24,24 @@ package org.teiid.translator.jdbc.oracle;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.io.Reader;
 import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.GeometryInputSource;
 import org.teiid.language.*;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
@@ -45,25 +50,23 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.AliasModifier;
-import org.teiid.translator.jdbc.ConvertModifier;
-import org.teiid.translator.jdbc.ExtractFunctionModifier;
-import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCPlugin;
-import org.teiid.translator.jdbc.LocateFunctionModifier;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.TranslatedCommand;
+import org.teiid.translator.jdbc.*;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
+	
+	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
+	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
@@ -85,11 +88,25 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
 
+	private final class DateAwareExtract extends ExtractFunctionModifier {
+		@Override
+		public List<?> translate(Function function) {
+			Expression ex = function.getParameters().get(0);
+			if ((ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$ 
+					|| (!(ex instanceof ColumnReference) && !(ex instanceof Literal) && !(ex instanceof Function))) {
+				ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
+				function.getParameters().set(0, ex);
+			}
+			return super.translate(function);
+		}
+	}
+
 	/*
 	 * Handling for cursor return values
 	 */
 	static final class RefCursorType {}
 	static int CURSOR_TYPE = -10;
+	static final String REF_CURSOR = "REF CURSOR"; //$NON-NLS-1$
 	
 	/*
 	 * handling for char bindings
@@ -98,7 +115,22 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	static int FIXED_CHAR_TYPE = 999;
 
 	private boolean oracleSuppliedDriver = true;
+	
+	private OracleFormatFunctionModifier formatModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP("); //$NON-NLS-1$
+	
+	public OracleExecutionFactory() {
+		//older oracle instances seem to have issues with large numbers of bindings
+		setUseBindingsForDependentJoin(false);
+	}
+
     
+    private static class OracleRelateModifier extends TemplateFunctionModifier {
+        public OracleRelateModifier(String mask) {
+            super("SDO_RELATE(", 0, ", ", 1, ", 'mask=" + mask + "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        }
+    }
+    
+    @Override
     public void start() throws TranslatorException {
         super.start();
         
@@ -109,22 +141,21 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new DateAwareExtract());
         registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DateAwareExtract()); 
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new DateAwareExtract()); 
         registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier("WW"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier("IW"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier("Q"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier("D"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier("DDD"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "INSTR", true)); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
         registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
@@ -141,7 +172,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(OracleExecutionFactory.FILTER, new OracleSpatialFunctionModifier());
         registerFunctionModifier(OracleExecutionFactory.WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
         
-        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new OracleFormatFunctionModifier("TO_TIMESTAMP(")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, formatModifier);
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new OracleFormatFunctionModifier("TO_CHAR(")); //$NON-NLS-1$
         
         //add in type conversion
@@ -213,6 +244,49 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, STRING, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, OBJECT, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
+        
+    	registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
+    	registerFunctionModifier(SourceSystemFunctions.ST_ASGML, new AliasModifier("SDO_UTIL.TO_GMLGEOMETRY")); //$NON-NLS-1$
+
+        // Used instead of SDO_UTIL functions because it allows SRID to be specified.
+    	// we need to use to_blob and to_clob to disambiguate
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMWKB, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
+			
+			@Override
+			public List<?> translate(Function function) {
+				Expression ex = function.getParameters().get(0);
+				if (ex instanceof Parameter || ex instanceof Literal) {
+					function.getParameters().set(0, new Function("TO_BLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.BLOB)); //$NON-NLS-1$
+				}
+				return super.translate(function);
+			}
+		}); 
+    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
+			
+    		@Override
+			public List<?> translate(Function function) {
+				Expression ex = function.getParameters().get(0);
+				if (ex instanceof Parameter || ex instanceof Literal) {
+					function.getParameters().set(0, new Function("TO_CLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.CLOB)); //$NON-NLS-1$
+				}
+				return super.translate(function);
+			}
+    	}); 
+
+        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+
+        // Disjoint mask cannot be used with SDO_RELATE (says docs).
+        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+        registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new OracleRelateModifier("contains")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new OracleRelateModifier("anyinteract")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new OracleRelateModifier("touch")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new OracleRelateModifier("EQUAL")); //$NON-NLS-1$
+        //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -224,6 +298,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		return;
     	}
     	ExpressionValueSource values = (ExpressionValueSource)insert.getValueSource();
+    	if (insert.getTable().getMetadataObject() == null) {
+    		return;
+    	}
     	List<Column> allElements = insert.getTable().getMetadataObject().getColumns();
     	if (allElements.size() == values.getValues().size()) {
     		return;
@@ -304,6 +381,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		}
 		
     	List<Object> parts = new ArrayList<Object>();
+    	
+    	if (queryCommand.getWith() != null) {
+			With with = queryCommand.getWith();
+			queryCommand.setWith(null);
+			parts.add(with);
+		}
+    	
     	parts.add("SELECT "); //$NON-NLS-1$
     	/*
     	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
@@ -395,10 +479,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	
     	if (!usingPayloadComment && context != null) {
-    		String hint = null;
-    		hint = context.getSourceHint();
-    		if (hint == null) {
-    			hint = context.getGeneralHint();
+    		String hint = context.getSourceHint();
+    		if (context.getGeneralHint() != null) {
+    			if (hint != null) {
+    				hint += (" " + context.getGeneralHint()); //$NON-NLS-1$
+    			} else {
+    				hint = context.getGeneralHint();
+    			}
     		}
     		if (hint != null) {
     			//append a source hint
@@ -465,11 +552,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
        
     @Override
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
-    	if(param == null && Object.class.equals(paramType)){
-    		//Oracle drive does not support JAVA_OBJECT type
-    		stmt.setNull(i, Types.LONGVARBINARY);
-    		return;
-    	}
     	if (paramType == FixedCharType.class) {
     		stmt.setObject(i, param, FIXED_CHAR_TYPE);
     		return;
@@ -494,16 +576,26 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
-    	if (!oracleSuppliedDriver) {
-    		return super.getSQLConversionVisitor();
-    	}
     	return new SQLConversionVisitor(this) {
     		
     		@Override
+    		public void visit(Select select) {
+    			if (select.getFrom() == null || select.getFrom().isEmpty()) {
+    				select.setFrom(Arrays.asList((TableReference)new NamedTable(DUAL, null, null)));
+    			}
+    			super.visit(select);
+    		}
+    		
+    		@Override
     		public void visit(Comparison obj) {
-    			if (isChar(obj.getLeftExpression()) && obj.getRightExpression() instanceof Literal) {
-    				Literal l = (Literal)obj.getRightExpression();
-    				l.setType(FixedCharType.class);
+    			if (isFixedChar(obj.getLeftExpression())) {
+    				if (obj.getRightExpression() instanceof Literal) {
+	    				Literal l = (Literal)obj.getRightExpression();
+	    				l.setType(FixedCharType.class);
+    				} else if (obj.getRightExpression() instanceof Parameter) {
+    					Parameter p = (Parameter)obj.getRightExpression();
+	    				p.setType(FixedCharType.class);
+    				}
     			}
     			super.visit(obj);
     		}
@@ -520,27 +612,35 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     		}
 
-			private boolean isChar(Expression obj) {
-				if (!(obj instanceof ColumnReference)) {
+			private boolean isFixedChar(Expression obj) {
+				if (!isOracleSuppliedDriver() || !(obj instanceof ColumnReference)) {
 					return false;
 				}
 				ColumnReference cr = (ColumnReference)obj;
-				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING && cr.getMetadataObject() != null && "CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()); //$NON-NLS-1$
+				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING 
+						&& cr.getMetadataObject() != null 
+						&& ("CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()) //$NON-NLS-1$
+								|| "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
 			}
     		
-    		public void visit(In obj) {
-    			if (isChar(obj.getLeftExpression())) {
+    		@Override
+            public void visit(In obj) {
+    			if (isFixedChar(obj.getLeftExpression())) {
     				for (Expression exp : obj.getRightExpressions()) {
     					if (exp instanceof Literal) {
     						Literal l = (Literal)exp;
     	    				l.setType(FixedCharType.class);
+    					} else if (exp instanceof Parameter) {
+    						Parameter p = (Parameter)exp;
+    	    				p.setType(FixedCharType.class);
     					}
     				}
     			}
     			super.visit(obj);
     		}
     		
-    		public void visit(NamedTable table) {
+    		@Override
+            public void visit(NamedTable table) {
     			stripDualAlias(table);
     			super.visit(table);
     		}
@@ -559,6 +659,87 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     				stripDualAlias(obj.getTable());
     			}
     			super.visit(obj);
+    		}
+    		
+    		@Override
+    		public void visit(Call call) {
+        		if (oracleSuppliedDriver && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null) {
+        			if (call.getReturnType() == null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) {
+	        			//assume stored function handling
+        				if (!setOutCursorType(call)) {
+        					call.setReturnType(RefCursorType.class);
+        				}
+        			} else {
+        				//TODO we only will allow a single out cursor
+        				if (call.getMetadataObject() != null) {
+	        				ProcedureParameter param = call.getReturnParameter();
+	        				if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
+	    	        			call.setReturnType(RefCursorType.class);
+	        				}
+        				}
+        				setOutCursorType(call);
+        			}
+        		}
+        		super.visit(call);
+    		}
+
+			private boolean setOutCursorType(Call call) {
+				boolean set = false;
+				for (Argument arg : call.getArguments()) {
+					if (arg.getDirection() == Direction.OUT) {
+						ProcedureParameter param = arg.getMetadataObject();
+						if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
+							arg.setType(RefCursorType.class);
+							set = true;
+						}
+					}
+				}
+				return set;
+			}
+    		
+    		@Override
+    		public void visit(Like obj) {
+    			if (obj.getMode() == MatchMode.REGEX) {
+    				if (obj.isNegated()) {
+    					buffer.append("NOT("); //$NON-NLS-1$
+    				}
+    				buffer.append("REGEXP_LIKE(");  //$NON-NLS-1$
+    				append(obj.getLeftExpression());
+    				buffer.append(", ");  //$NON-NLS-1$
+    				append(obj.getRightExpression());
+    				buffer.append(")");  //$NON-NLS-1$
+    				if (obj.isNegated()) {
+    					buffer.append(")");  //$NON-NLS-1$
+    				}
+    			} else {
+    				super.visit(obj);
+    			}
+    		}
+    		
+    		@Override
+    		public void visit(WithItem obj) {
+    			if (obj.getColumns() != null) {
+    				List<ColumnReference> cols = obj.getColumns();
+    				obj.setColumns(null);
+    				Select select = obj.getSubquery().getProjectedQuery();
+    				List<DerivedColumn> selectClause = select.getDerivedColumns();
+    				for (int i = 0; i < cols.size(); i++) {
+    					selectClause.get(i).setAlias(cols.get(i).getName());
+    				}
+    			}
+    			super.visit(obj);
+    		}
+    		
+    		@Override
+    		protected void translateSQLType(Class<?> type, Object obj,
+    				StringBuilder valuesbuffer) {
+    			if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+    				valuesbuffer.append("HEXTORAW("); //$NON-NLS-1$
+    				super.translateSQLType(TypeFacility.RUNTIME_TYPES.STRING, obj, valuesbuffer);
+    				valuesbuffer.append(")"); //$NON-NLS-1$
+    			} else {
+    				super.translateSQLType(type, obj, valuesbuffer);
+    			}
     		}
     		
     	};
@@ -602,7 +783,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         supportedFunctions.add("RPAD"); //$NON-NLS-1$
-        supportedFunctions.add("RIGHT"); //$NON-NLS-1$
+        //supportedFunctions.add("RIGHT"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
         supportedFunctions.add("TRANSLATE"); //$NON-NLS-1$
@@ -635,6 +816,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(NEAREST_NEIGHBOR_DISTANCE);
         supportedFunctions.add(WITHIN_DISTANCE);
         supportedFunctions.add(FILTER);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
+        supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+        supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
+        supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+        supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+        supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
         return supportedFunctions;
     }
     
@@ -691,51 +886,48 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
-    @Override
-    public String getLikeRegexString() {
-    	return "REGEXP_LIKE"; //$NON-NLS-1$
-    }
-    
     public void setOracleSuppliedDriver(boolean oracleNative) {
 		this.oracleSuppliedDriver = oracleNative;
 	}
     
-	@TranslatorProperty(display="Oracle Native Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
+	@TranslatorProperty(display="Oracle Supplied Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
     public boolean isOracleSuppliedDriver() {
 		return oracleSuppliedDriver;
 	}
 		
     @Override
-    public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (oracleSuppliedDriver && obj instanceof Call) {
-    		Call call = (Call)obj;
-    		if (call.getReturnType() == null && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
-    			//oracle returns the resultset as a parameter
-    			call.setReturnType(RefCursorType.class);
-    		}
-    	}
-    	return super.translate(obj, context);
-    }
-    
-    @Override
     protected void registerSpecificTypeOfOutParameter(
     		CallableStatement statement, Class<?> runtimeType, int index)
     		throws SQLException {
-    	if (oracleSuppliedDriver && index == 1 && runtimeType == RefCursorType.class) {
-    		statement.registerOutParameter(1, CURSOR_TYPE);
-    	} else {
-    		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
+    	if (oracleSuppliedDriver) {
+    		if (runtimeType == RefCursorType.class) {
+    			statement.registerOutParameter(index, CURSOR_TYPE);
+    			return;
+    		} else if (runtimeType == TypeFacility.RUNTIME_TYPES.OBJECT) {
+    			//TODO: this is not currently handled and oracle will throw an exception.  
+    			//we need additional logic to handle sub types (possibly using the nativeType)
+    		}
     	}
+		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
     }
     
     @Override
     public ResultSet executeStoredProcedure(CallableStatement statement,
     		List<Argument> preparedValues, Class<?> returnType) throws SQLException {
     	ResultSet rs = super.executeStoredProcedure(statement, preparedValues, returnType);
-    	if (!oracleSuppliedDriver || returnType != RefCursorType.class) {
+    	if (!oracleSuppliedDriver || rs != null) {
     		return rs;
     	}
-    	return (ResultSet)statement.getObject(1);
+    	if (returnType == RefCursorType.class) {
+    		return (ResultSet)statement.getObject(1);
+    	}
+    	for (int i = 0; i < preparedValues.size(); i++) {
+    		Argument arg = preparedValues.get(i);
+    		if (arg.getType() == RefCursorType.class) {
+    			return (ResultSet)statement.getObject(i + (returnType == null?1:2));
+    		}
+    	}
+    	return null;
     }
     
     @Override
@@ -749,7 +941,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	if (format == Format.NUMBER) {
     		return false;
     	}
-    	return OracleFormatFunctionModifier.supportsLiteral(literal);
+    	return formatModifier.supportsLiteral(literal);
     }
     
     @Override
@@ -757,4 +949,131 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+    @Override
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+        return (JDBCMetdataProcessor)getMetadataProcessor();
+    }    
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+    	return new OracleMetadataProcessor();
+    }
+    
+    @Override
+    public boolean supportsCommonTableExpressions() {
+    	return getVersion().compareTo(NINE_2) >= 0;
+    }
+    
+    @Override
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return getVersion().compareTo(ELEVEN_2) >= 0;
+    }
+    
+    @Override
+    protected boolean supportsGeneratedKeys(ExecutionContext context,
+    		Command command) {
+    	if (command instanceof Insert) {
+    		Insert insert = (Insert)command;
+    		if (insert.getParameterValues() != null) {
+    			return false; //bulk inserts result in an exception if keys are flaged for return
+    		}
+    	}
+    	return super.supportsGeneratedKeys(context, command);
+    }
+    
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
+    
+    @Override
+    public String createTempTable(String string, List<ColumnReference> cols,
+    		ExecutionContext context, Connection connection) throws SQLException {
+    	SQLException e1 = null;
+    	for (int i = 0; i < 5; i++) {
+	    	try {
+	    		return super.createTempTable(string, cols, context, connection);
+	    	} catch (SQLException e) {
+	    		if (e.getErrorCode() == 955) {
+	    			e1 = e;
+	    			continue;
+	    		}
+	    		throw e;
+	    	}
+    	}
+    	throw e1;
+    }
+    
+    /**
+     * uses a random table name strategy with a
+     * retry in the {@link #createTempTable(String, List, ExecutionContext, Connection)} method
+     */
+    @Override
+    public String getTemporaryTableName(String prefix) {
+    	return prefix + (int)(Math.random() * 10000000);
+    }
+    
+    @Override
+    public String getCreateTemporaryTablePostfix(boolean inTransaction) {
+    	if (!inTransaction) {
+    		return "ON COMMIT PRESERVE ROWS"; //$NON-NLS-1$
+    	}
+    	return super.getCreateTemporaryTablePostfix(inTransaction) + "; END;"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public String getCreateTemporaryTableString(boolean inTransaction) {
+    	if (!inTransaction) {
+    		return super.getCreateTemporaryTableString(inTransaction);
+    	}
+    	return "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE '" + super.getCreateTemporaryTableString(inTransaction); //$NON-NLS-1$
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	if (getVersion().getMajorVersion() >= 10) {
+        	return "org.hibernate.dialect.Oracle10gDialect"; //$NON-NLS-1$
+    	}
+    	return "org.hibernate.dialect.Oracle9iDialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return true;
+    }
+
+    @Override
+    public Expression translateGeometrySelect(Expression expr) {
+        return new Function(SourceSystemFunctions.ST_ASGML, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.CLOB);
+    }
+
+    @Override
+    public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        final Clob clob = results.getClob(paramIndex);
+        if (clob != null) {
+        	return new GeometryInputSource() {
+				
+				@Override
+				public Reader getGml() throws SQLException {
+					return clob.getCharacterStream();
+				}
+				
+			};
+        }
+        return null;
+    }
+    
+    @Override
+    public void intializeConnectionAfterCancel(Connection c) throws SQLException {
+    	//Oracle JDBC has a timing bug with cancel during result set iteration
+    	//that can cause the next statement on the connection to throw an exception
+    	//doing an isvalid check seems to allow the connection to be safely reused
+    	c.isValid(1);
+    }
 }

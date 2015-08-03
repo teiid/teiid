@@ -25,7 +25,7 @@ package org.teiid.query.sql.visitor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.teiid.query.QueryPlugin;
@@ -145,7 +145,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
         }
         Collection<ElementSymbol> elements = null;
         if(removeDuplicates) {
-            elements = new HashSet<ElementSymbol>();
+            elements = new LinkedHashSet<ElementSymbol>();
         } else {
             elements = new ArrayList<ElementSymbol>();
         }

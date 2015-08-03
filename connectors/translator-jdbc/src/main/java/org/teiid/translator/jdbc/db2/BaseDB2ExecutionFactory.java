@@ -22,17 +22,11 @@
 
 package org.teiid.translator.jdbc.db2;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.Join;
-import org.teiid.language.LanguageFactory;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
 import org.teiid.translator.ExecutionContext;
@@ -103,7 +97,7 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("cast(double(", function.getParameters().get(0), ") as real)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
-    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("char"), FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("varchar"), FunctionModifier.STRING); //$NON-NLS-1$
     	convertModifier.addTypeConversion(new NullHandlingFormatModifier("smallint"), FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
     	convertModifier.addTypeConversion(new NullHandlingFormatModifier("integer"), FunctionModifier.INTEGER); //$NON-NLS-1$
     	convertModifier.addTypeConversion(new NullHandlingFormatModifier("bigint"), FunctionModifier.LONG); //$NON-NLS-1$
@@ -176,6 +170,33 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public boolean supportsSubqueryInOn() {
 		return false;
+	}
+	
+	@Override
+	public boolean supportsSelectWithoutFrom() {
+		return true;
+	}
+	
+	@Override
+	public List<?> translateCommand(Command command, ExecutionContext context) {
+		if (command instanceof Select) {
+			Select select = (Select)command;
+			if (select.getFrom() == null || select.getFrom().isEmpty()) {
+				List<Object> result = new ArrayList<Object>();
+				result.add("VALUES("); //$NON-NLS-1$
+				for (int i = 0; i < select.getDerivedColumns().size(); i++) {
+					DerivedColumn dc = select.getDerivedColumns().get(i);
+					if (i != 0) {
+						result.add(", "); //$NON-NLS-1$
+					}
+					result.add(dc.getExpression());
+					
+				}
+				result.add(")"); //$NON-NLS-1$
+				return result;
+			}
+		}
+		return super.translateCommand(command, context);
 	}
 	
 }

@@ -1,0 +1,52 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="webservice">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.ws.WSManagedConnectionFactory" 
+                        jndi-name="java:/wsDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-ws-ds">
+                        
+                      <!-- End point for the web service -->
+                      <config-property name="EndPoint">{endpoint_url}</config-property>
+                      
+                      <!-- 
+                        Uncomment for http basic security. See also the WSSecurity SecurityType
+
+                        <config-property name="SecurityType">HTTPBasic</config-property>
+                        <config-property name="AuthUserName">xxxxxxxxxxx</config-property>
+                        <config-property name="AuthPassword">xxxxxxxxxxx</config-property>
+                      -->
+                      
+                      <!-- 
+                        optional properties to set timeouts, which can also be done through the CXF config
+                        
+                        <config-property name="RequestTimeout">long value</config-property>
+                        <config-property name="ConnectTimeout">long value</config-property>
+                      -->
+                        
+                      <!-- 
+                        Uncomment these properties to supply specific CXF configuration for this service. This file
+                        must contain a configuration for the name defined on "EndPointName" property. 
+                        
+                        <config-property name="ConfigFile">path/to/jbossws-cxf.xml</config-property>
+                        <config-property name="EndPointName">webSVC</config-property>
+                      -->
+                      
+                      <!--
+                        Additional Properties typically used when a Wsdl is referenced.  See also the EndPointName.
+                      
+                        <config-property name="NamespaceUri"></config-property>
+                        <config-property name="ServiceName"></config-property>
+                        <config-property name="Wsdl"></config-property>
+                        
+                      -->
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

@@ -23,7 +23,6 @@ package org.teiid.translator.object.infinispan;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.lucene.search.Query;
 import org.hibernate.search.query.dsl.BooleanJunction;
@@ -37,36 +36,72 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectPlugin;
+import org.teiid.translator.object.SearchType;
+
+
 
 /**
  * LuceneSearch will parse the WHERE criteria and build the search query(s)
  * that's used to retrieve the results from an Infinispan cache.
  * 
- * Note:  As of Infinispan 5.x, it doesn't support fulltext searching the RemoteCache
- * 
  * @author vhalbert
  * 
  */
-public final class LuceneSearch   {
+public class LuceneSearch implements SearchType  {
+	
+	@Override
+	public Object performKeySearch(String cacheName, String columnNameInSource, Object value, ObjectConnection connection) throws TranslatorException {
+	   
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+				"Perform Lucene KeySearch."); //$NON-NLS-1$
+		
+		Cache<?,?> c = (Cache<?, ?>) connection.getCacheContainer().getCache(cacheName);
+		return c.get(String.valueOf(value));
+	}
+
+	@Override
+	public List<Object> performSearch(Update command, String cacheName, ObjectConnection connection)
+			throws TranslatorException {
+		return performSearch(command.getWhere(), cacheName, connection);
+	}
+	
+	@Override
+	public List<Object> performSearch(Delete command, String cacheName, ObjectConnection connection)
+			throws TranslatorException {	
+		return performSearch(command.getWhere(), cacheName, connection);
+	}
+
+	@Override
+	public List<Object> performSearch(Select command, String cacheName, ObjectConnection connection)
+			throws TranslatorException {	
+		return performSearch(command.getWhere(), cacheName, connection);
+	}
 
 
-	public static List<Object> performSearch(Select command, Map<?, ?> cache, Class<?> type)
+	private static List<Object> performSearch(Condition where, String cacheName, ObjectConnection connection)
 			throws TranslatorException {
 		
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+				"Using Lucene Searching."); //$NON-NLS-1$
+		
+		Class<?> type = connection.getType(cacheName);
+		
+		//Map<?, ?> cache, 
 		SearchManager searchManager = Search
-				.getSearchManager((Cache<?, ?>) cache );
+				.getSearchManager((Cache<?, ?>) connection.getCacheContainer().getCache(cacheName) );
 
 		QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(type).get();
 
 		BooleanJunction<BooleanJunction> junction = queryBuilder.bool();
-		boolean createdQueries = buildQueryFromWhereClause(command.getWhere(),
+		boolean createdQueries = buildQueryFromWhereClause(where,
 				junction, queryBuilder);
 
 		Query query = null;
 		if (createdQueries) {
 			query = junction.createQuery();
+			
 		} else {
 			query = queryBuilder.all().createQuery();
 		}
@@ -326,27 +361,45 @@ public final class LuceneSearch   {
 
 	private static Query createEqualsQuery(Column column, Object value, boolean and,
 			boolean not, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
+		String nis = column.getSourceName();
+		return createEqualsQuery( nis, value, and, not, junction, queryBuilder);
+		
+//		Query queryKey = queryBuilder.keyword()
+//				.onField(column.getNameInSource())
+//				.matching(value).createQuery();
+//
+//		if (not) {
+//			junction.must(queryKey).not();
+//		} else if (and) {
+//			junction.must(queryKey);
+//		} else if (junction != null) {
+//			junction.should(queryKey);
+//		}
+//		return queryKey;
+	}
+	
+	private static Query createEqualsQuery(String nameInSource, Object value, boolean and,
+			boolean not, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.keyword()
-				.onField(ObjectExecution.getNameInSource(column))
-				// .matching(value.toString() + "*")
-				.matching(value.toString()).createQuery();
+				.onField(nameInSource)
+				.matching(value).createQuery();
 
 		if (not) {
 			junction.must(queryKey).not();
 		} else if (and) {
 			junction.must(queryKey);
-		} else {
+		} else if (junction != null) {
 			junction.should(queryKey);
 		}
 		return queryKey;
-	}
+	}	
 
 	private static Query createRangeAboveQuery(Column column, Object value,
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(ObjectExecution.getNameInSource(column))
-				.above(value.toString()).excludeLimit().createQuery();
+				.onField(column.getNameInSource())
+				.above(value).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
 	}
@@ -355,8 +408,8 @@ public final class LuceneSearch   {
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(ObjectExecution.getNameInSource(column))
-				.below(value.toString()).excludeLimit().createQuery();
+				.onField(column.getNameInSource())
+				.below(value).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
 	}
@@ -364,7 +417,7 @@ public final class LuceneSearch   {
 	private static Query createLikeQuery(Column column, String value,
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.phrase()
-				.onField(ObjectExecution.getNameInSource(column)).sentence(value)
+				.onField(column.getNameInSource()).sentence(value)
 				.createQuery();
 		junction.should(queryKey);
 		return queryKey;

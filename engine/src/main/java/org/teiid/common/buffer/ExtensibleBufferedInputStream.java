@@ -65,5 +65,12 @@ public abstract class ExtensibleBufferedInputStream extends InputStream {
 			buf.rewind();
 		}
 	}
+		
+	public ByteBuffer getBuffer() throws IOException {
+		if (!ensureBytes()) {
+			return null;
+		}
+		return buf;
+	}
 	
 }

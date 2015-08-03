@@ -34,10 +34,12 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.util.AccessPattern;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -206,11 +208,17 @@ public class RulePlanJoins implements OptimizerRule {
                 continue;
             }
             
+            int secondPass = -1;
+            
             for (int i = accessNodes.size() - 1; i >= 0; i--) {
                 
                 PlanNode accessNode1 = accessNodes.get(i);
+                Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode1, metadata);
+                SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capFinder);
                 
-                for (int k = accessNodes.size() - 1; k >= 0; k--) {
+                int discoveredJoin = -1;
+                
+                for (int k = (secondPass==-1?accessNodes.size() - 1:secondPass); k >= 0; k--) {
                     if (k == i) {
                         continue;
                     }
@@ -230,8 +238,6 @@ public class RulePlanJoins implements OptimizerRule {
                      */
                     boolean hasJoinCriteria = false; 
                     LinkedList<Criteria> joinCriteria = new LinkedList<Criteria>();
-                    Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode1, metadata);
-                    SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capFinder);
                     for (PlanNode critNode : criteriaNodes) {
                         Set<PlanNode> sources = joinRegion.getCritieriaToSourceMap().get(critNode);
 
@@ -266,9 +272,19 @@ public class RulePlanJoins implements OptimizerRule {
                     JoinType joinType = joinCriteria.isEmpty()?JoinType.JOIN_CROSS:JoinType.JOIN_INNER;
                     
                     //try to push to the source
-                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null) == null) {
+                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null, context, secondPass != -1) == null) {
+                    	if (secondPass == - 1 && sjc != SupportedJoinCriteria.KEY && discoveredJoin == -1) {
+                			for (Criteria criteria : joinCriteria) {
+                				if (criteria instanceof CompareCriteria && ((CompareCriteria) criteria).isOptional()) {
+                					discoveredJoin = k;
+                				}
+                			}
+                		}
                         continue;
                     }
+                    
+                    secondPass = -1;
+                    discoveredJoin = -1;
                     
                     structureChanged = true;
                     
@@ -289,7 +305,7 @@ public class RulePlanJoins implements OptimizerRule {
                     joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, joinType);
                     joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
 
-                    PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, entry.getKey(), false);
+                    PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, joinNode.getFirstChild(), entry.getKey(), capFinder, metadata, false);
                     for (PlanNode critNode : joinCriteriaNodes) {
                         critNode.removeFromParent();
                         critNode.removeAllChildren();
@@ -308,6 +324,11 @@ public class RulePlanJoins implements OptimizerRule {
                     i = accessNodes.size();
                     k = accessNodes.size();
                     break;
+                }
+                
+                if (discoveredJoin != -1) {
+                	i++; //rerun with the discoveredJoin criteria
+                	secondPass = discoveredJoin;
                 }
             }
         }
@@ -459,7 +480,7 @@ public class RulePlanJoins implements OptimizerRule {
                 
                 boolean treatJoinAsSource = jt.isOuter() || root.getProperty(NodeConstants.Info.ACCESS_PATTERNS) != null 
                 || root.hasProperty(NodeConstants.Info.MAKE_DEP) || root.hasProperty(NodeConstants.Info.MAKE_IND)
-                || !root.getExportedCorrelatedReferences().isEmpty();
+                || !root.getExportedCorrelatedReferences().isEmpty() || root.hasBooleanProperty(Info.PRESERVE);
                 
                 if (treatJoinAsSource) {
                     currentRegion.addJoinSourceNode(root);

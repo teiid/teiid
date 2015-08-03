@@ -22,12 +22,15 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import org.teiid.common.buffer.*;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.processor.relational.RelationalNode;
 
 
 /**
@@ -52,6 +55,12 @@ public class FakeRelationalNode extends RelationalNode {
         super(nodeID);
         this.data = data;
         this.currentRow = 0;
+    }
+    
+    @Override
+    public void reset() {
+    	super.reset();
+    	this.currentRow = 0;
     }
 
     public FakeRelationalNode(int nodeID, List[] data, int batchSize) {

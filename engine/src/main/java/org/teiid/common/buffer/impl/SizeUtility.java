@@ -22,6 +22,11 @@
 
 package org.teiid.common.buffer.impl;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -30,9 +35,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.types.Streamable;
 
 
 /**
@@ -43,13 +54,33 @@ import org.teiid.core.types.DataTypeManager;
  * Actual object allocation efficiency can be quite poor.  
  */
 public final class SizeUtility {
+	private static final int UNKNOWN_SIZE_BYTES = 512;
+
+	private static final class DummyOutputStream extends OutputStream {
+		int bytes;
+
+		@Override
+		public void write(int arg0) throws IOException {
+			bytes++;
+		}
+		
+		@Override
+		public void write(byte[] b, int off, int len) throws IOException {
+			bytes+=len;
+		}
+		
+		public int getBytes() {
+			return bytes;
+		}
+	}
+
 	public static final int REFERENCE_SIZE = 8;
 	
 	private static Map<Class<?>, int[]> SIZE_ESTIMATES = new HashMap<Class<?>, int[]>(128);
 	private static Set<Class<?>> VARIABLE_SIZE_TYPES = new HashSet<Class<?>>();
 	static {
-		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, 256});
-		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.VARBINARY, new int[] {100, 256});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, Math.max(100, DataTypeManager.nextPowOf2(DataTypeManager.MAX_STRING_LENGTH/16))});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.VARBINARY, new int[] {100, Math.max(100, DataTypeManager.MAX_VARBINARY_BYTES/32)});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DATE, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIME, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, new int[] {20, 28});
@@ -75,6 +106,13 @@ public final class SizeUtility {
 	private long bigIntegerEstimate;
 	private long bigDecimalEstimate;
 	private Class<?>[] types;
+	
+	private static class ClassStats {
+		AtomicInteger samples = new AtomicInteger();
+		volatile int averageSize = UNKNOWN_SIZE_BYTES;
+	}
+	
+	private static ConcurrentHashMap<String, ClassStats> objectEstimates = new ConcurrentHashMap<String, ClassStats>();
 	
 	public SizeUtility(Class<?>[] types) {
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
@@ -112,7 +150,7 @@ public final class SizeUtility {
 			Class<?> type) {
     	int[] vals = SIZE_ESTIMATES.get(type);
     	if (vals == null) {
-			return 512; //this is is misleading for lobs
+			return UNKNOWN_SIZE_BYTES; //this is is misleading for lobs
 			//most references are not actually removed from memory
     	}
     	return vals[isValueCacheEnabled?0:1];
@@ -127,13 +165,13 @@ public final class SizeUtility {
             return 0;
         }
 
-        if(type == DataTypeManager.DefaultDataClasses.STRING) {
+        if(obj.getClass() == DataTypeManager.DefaultDataClasses.STRING) {
             int length = ((String)obj).length();
             if (length > 0) {
                 return alignMemory(40 + (2 * length));
             }
             return 40;
-        } else if(type == DataTypeManager.DefaultDataClasses.VARBINARY) {
+        } else if(obj.getClass() == DataTypeManager.DefaultDataClasses.VARBINARY) {
             int length = ((BinaryType)obj).getLength();
             if (length > 0) {
                 return alignMemory(16 + length);
@@ -146,9 +184,7 @@ public final class SizeUtility {
             int bitLength = ((BigDecimal)obj).unscaledValue().bitLength();
             //TODO: this does not account for the possibility of a cached string
             long result = 88 + alignMemory(4 + (bitLength >> 3));
-            if (updateEstimate) {
-            	bigDecimalEstimate = (bigDecimalEstimate + result)/2;
-            }
+        	bigDecimalEstimate = (bigDecimalEstimate + result)/2;
             return result;
         } else if(type == DataTypeManager.DefaultDataClasses.BIG_INTEGER) {
         	if (!updateEstimate) {
@@ -156,15 +192,13 @@ public final class SizeUtility {
         	}
             int bitLength = ((BigInteger)obj).bitLength();
             long result = 40 + alignMemory(4 + (bitLength >> 3));
-            if (updateEstimate) {
-            	bigIntegerEstimate = (bigIntegerEstimate + result)/2;
-            }
+        	bigIntegerEstimate = (bigIntegerEstimate + result)/2;
             return result;
         } else if(obj instanceof Iterable<?>) {
         	Iterable<?> i = (Iterable<?>)obj;
         	long total = 16;
         	for (Object object : i) {
-				total += getSize(object, DataTypeManager.determineDataTypeClass(object), true, false) + REFERENCE_SIZE;
+				total += getSize(object, DataTypeManager.determineDataTypeClass(object), updateEstimate, false) + REFERENCE_SIZE;
 			}
         	return total;
         } else if(obj.getClass().isArray()) {
@@ -173,7 +207,7 @@ public final class SizeUtility {
 	            Object[] rows = (Object[]) obj;
 	            long total = 16 + alignMemory(rows.length * REFERENCE_SIZE); // Array overhead
 	            for(int i=0; i<rows.length; i++) {
-	                total += getSize(rows[i], DataTypeManager.determineDataTypeClass(rows[i]), true, false);
+	                total += getSize(rows[i], DataTypeManager.determineDataTypeClass(rows[i]), updateEstimate, false);
 	            }
 	            return total;
         	}
@@ -189,7 +223,67 @@ public final class SizeUtility {
         		primitiveSize = 4;
         	}
         	return alignMemory(length * primitiveSize) + 16;
-        }        	
+        } else if (obj instanceof Streamable<?>) {
+			try {
+				Streamable<?> s = (Streamable)obj;
+				Object o = s.getReference();
+				if (o instanceof BaseLob) {
+					InputStreamFactory isf = ((BaseLob)o).getStreamFactory();
+					if (isf.getStorageMode() == StorageMode.MEMORY) {
+		    			long length = isf.getLength();
+		    			if (length >= 0) {
+		    				return 40 + alignMemory(length);
+		    			}
+					} else if (isf.getStorageMode() == StorageMode.PERSISTENT) {
+						long length = isf.getLength();
+	    				return 40 + alignMemory(Math.min(DataTypeManager.MAX_LOB_MEMORY_BYTES, length));
+					}
+	    		}
+			} catch (Exception e) {
+			}
+        } else if (type == DataTypeManager.DefaultDataClasses.OBJECT) {
+        	if (obj.getClass() != DataTypeManager.DefaultDataClasses.OBJECT && (SIZE_ESTIMATES.containsKey(obj.getClass()) || VARIABLE_SIZE_TYPES.contains(obj.getClass()))) {
+        		return getSize(obj, obj.getClass(), updateEstimate, accountForValueCache);
+        	}
+        	//assume we can get a plausable estimate from the serialized size
+        	if (obj instanceof Serializable) {
+            	ClassStats stats = objectEstimates.get(obj.getClass().getName()); //we're ignoring classloader differences here
+            	if (stats == null) {
+            		stats = new ClassStats();
+            		objectEstimates.put(obj.getClass().getName(), stats);
+            	}
+            	if (updateEstimate) {
+	            	int samples = stats.samples.getAndIncrement();
+	            	if (samples < 1000 || (samples&1023) == 1023) {
+	    	        	try {
+	    		        	DummyOutputStream os = new DummyOutputStream();
+	    		        	ObjectOutputStream oos = new ObjectOutputStream(os) {
+	    		        		@Override
+	    		        		protected void writeClassDescriptor(
+	    		        				ObjectStreamClass desc) throws IOException {
+	    		        		}
+	    		        		@Override
+	    		        		protected void writeStreamHeader()
+	    		        				throws IOException {
+	    		        		}
+	    		        	};
+	    		        	oos.writeObject(obj);
+	    		        	oos.close();
+	    		        	int result = (int)alignMemory(os.getBytes() * 3);
+	    		        	if (result > stats.averageSize) {
+	    		        		stats.averageSize = (stats.averageSize + result*2)/3;
+	    		        	} else {
+	    		        		stats.averageSize = (stats.averageSize + result)/2;
+	    		        	}
+	    		        	return result;
+	    	        	} catch (Exception e) {
+	    	        		
+	    	        	}            		
+	            	}
+            	}
+            	return stats.averageSize;
+        	}
+        }
 		return getSize(accountForValueCache, type);
     }
     

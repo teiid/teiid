@@ -22,23 +22,27 @@
 
 package org.teiid.query.processor;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.util.CommandContext;
 
@@ -47,7 +51,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class QueryProcessor implements BatchProducer {
 
-	public static class ExpiredTimeSliceException extends TeiidRuntimeException {
+	public static class ExpiredTimeSliceException extends BlockedException {
 		private static final long serialVersionUID = 4585044674826578060L;
 	}
 	
@@ -55,6 +59,10 @@ public class QueryProcessor implements BatchProducer {
 	
 	public interface ProcessorFactory {
 		QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException;
+		PreparedPlan getPreparedPlan(String query, String recursionGroup,
+				CommandContext commandContext, QueryMetadataInterface metadata)
+				throws TeiidProcessingException, TeiidComponentException;
+		CapabilitiesFinder getCapabiltiesFinder();
 	}
 	
     private CommandContext context;
@@ -70,6 +78,8 @@ public class QueryProcessor implements BatchProducer {
     private boolean processorClosed;
     
     private boolean continuous;
+    private String query; //used only in continuous mode
+    private PreparedPlan plan;
     private int rowOffset = 1;
     
     /**
@@ -92,17 +102,12 @@ public class QueryProcessor implements BatchProducer {
 		return context;
 	}
     
-	public Object getProcessID() {
-		return this.context.getProcessorID();
-	}
-	
     public ProcessorPlan getProcessorPlan() {
         return this.processPlan;
     }
 
 	public TupleBatch nextBatch()
 		throws BlockedException, TeiidProcessingException, TeiidComponentException {
-		
 	    while (true) {
 	    	long wait = DEFAULT_WAIT;
 	    	try {
@@ -111,6 +116,9 @@ public class QueryProcessor implements BatchProducer {
 	    		if (!this.context.isNonBlocking()) {
 	    			throw e;
 	    		}
+		    	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
+		    		continue; //TODO: pass the commandcontext into sortutility
+		    	}
 	    	}
     		try {
                 Thread.sleep(wait);
@@ -135,7 +143,7 @@ public class QueryProcessor implements BatchProducer {
 			
 	        while(currentTime < context.getTimeSliceEnd() || context.isNonBlocking()) {
 	        	if (requestCanceled) {
-	                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getProcessID()));
+	                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, this.context.getRequestId()));
 	            }
 	        	if (currentTime > context.getTimeoutEnd()) {
 	        		 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30161, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30161));
@@ -144,20 +152,25 @@ public class QueryProcessor implements BatchProducer {
 
 	            if (continuous) {
 	        		result.setRowOffset(rowOffset);
-	        		rowOffset = result.getEndRow() + 1;
-
+	        		
 	        		if (result.getTerminationFlag()) {
-	        			result.setTerminationFlag(false);
+	        			result.setTermination(TupleBatch.ITERATION_TERMINATED);
+	        			List<Object> terminationTuple = Arrays.asList(new Object[this.getOutputElements().size()]);
+	        			result.getTuples().add(terminationTuple);
 	        			this.context.getTupleSourceCache().close();
 		        		this.processPlan.close();
 		        		this.processPlan.reset();
 		        		this.context.incrementReuseCount();
 		        		this.open = false;	
 	        		}
+	        		
+	        		rowOffset = result.getEndRow() + 1;
 	            }
         		
-	        	if(result.getTerminationFlag()) {
-	        		done = true;
+	        	if(result.getTermination() != TupleBatch.NOT_TERMINATED) {
+	        		if (result.getTerminationFlag()) {
+	        			done = true;
+	        		}
 	        		break;
 	        	}
 	        	
@@ -182,20 +195,38 @@ public class QueryProcessor implements BatchProducer {
 			closeProcessing();
 		} 
 	    if (result == null) {
+	    	RequestWorkItem workItem = this.getContext().getWorkItem();
+	    	if (workItem != null) {
+	    		//if we have a workitem (non-test scenario) then before 
+	    		//throwing exprired time slice we need to indicate there's more work
+	    		workItem.moreWork();
+	    	}
 	    	throw EXPIRED_TIME_SLICE;
 	    }
 		return result;
 	}
 
 	public void init() throws TeiidComponentException, TeiidProcessingException {
-		// initialize if necessary
-		if(!initialized) {
-			reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
-			this.processPlan.initialize(context, dataMgr, bufferMgr);
-			initialized = true;
-		}
-		
 		if (!open) {
+			if (continuous && context.getReuseCount() > 0) {
+				//validate the plan prior to the next run
+	    		if (this.plan != null && !this.plan.validate()) {
+					this.plan = null;
+	    		}
+	    		if (this.plan == null) {
+	    			this.plan = context.getQueryProcessorFactory().getPreparedPlan(query, null, context, context.getMetadata());
+	    			this.processPlan = this.plan.getPlan().clone();
+	    			this.processPlan.initialize(context, dataMgr, bufferMgr);
+	    		}
+			}
+    		
+			// initialize if necessary
+			if(!initialized) {
+				reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
+				this.processPlan.initialize(context, dataMgr, bufferMgr);
+				initialized = true;
+			}
+		
 			// Open the top node for reading
 			processPlan.open();
 			open = true;
@@ -250,16 +281,19 @@ public class QueryProcessor implements BatchProducer {
 	}
 
 	@Override
-	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		while (true) {
 	    	long wait = DEFAULT_WAIT;
 	    	try {
 	    		init();
-	    		return this.processPlan.getFinalBuffer(maxRows);
+	    		return this.processPlan.getBuffer(maxRows);
 	    	} catch (BlockedException e) {
 	    		if (!this.context.isNonBlocking()) {
 	    			throw e;
 	    		}
+		    	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
+		    		continue; //TODO: pass the commandcontext into sortutility
+		    	}
 	    	} catch (TeiidComponentException e) {
 	    		closeProcessing();
 	    		throw e;
@@ -276,24 +310,28 @@ public class QueryProcessor implements BatchProducer {
 	}
 
 	@Override
-	public boolean hasFinalBuffer() {
-		return !continuous && this.processPlan.hasFinalBuffer();
+	public boolean hasBuffer(boolean requireFinal) {
+		return !continuous && this.processPlan.hasBuffer(false);
 	}
 	
 	public BufferManager getBufferManager() {
 		return bufferMgr;
 	}
 	
-	public void setContinuous(boolean continuous) {
-		this.continuous = continuous;
-		if (this.continuous) {
-			this.context.setContinuous();
-		}
+	public void setContinuous(PreparedPlan prepPlan, String query) {
+		this.continuous = true;
+		this.plan = prepPlan;
+		this.query = query;
+		this.context.setContinuous();
 	}
 	
 	@Override
 	public void close() throws TeiidComponentException {
 		closeProcessing();
+	}
+	
+	public ProcessorDataManager getProcessorDataManager() {
+		return dataMgr;
 	}
 
 }

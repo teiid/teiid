@@ -24,12 +24,15 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -39,6 +42,7 @@ import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.net.ServerConnection;
 
 @SuppressWarnings("nls")
 public class TestStatement {
@@ -73,7 +77,8 @@ public class TestStatement {
 		results.getResultsReceiver().receiveResults(rm);
 		Mockito.stub(conn.getDQP()).toReturn(dqp);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
-			protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
+			@Override
+            protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
 				return null;
 			}
 		};
@@ -90,8 +95,11 @@ public class TestStatement {
 		assertFalse(statement.execute("set foo bar")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "bar");
 		
-		assertFalse(statement.execute("set foo 'b''ar'")); //$NON-NLS-1$
+		assertFalse(statement.execute("set foo 'b''ar' ; ")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "b'ar");
+		
+		assertFalse(statement.execute("set \"foo\" 'b''a1r' ; ")); //$NON-NLS-1$
+		Mockito.verify(conn).setExecutionProperty("foo", "b'a1r");
 	}
 	
 	@Test public void testSetPayloadStatement() throws Exception {
@@ -135,6 +143,24 @@ public class TestStatement {
 		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
 		assertFalse(statement.execute("rollback")); //$NON-NLS-1$
 		Mockito.verify(conn).rollback(false);
+	}
+	
+	@Test public void testDisableLocalTransations() throws Exception {
+		ServerConnection mock = Mockito.mock(ServerConnection.class);
+		DQP dqp = Mockito.mock(DQP.class);
+		Mockito.stub(mock.getService(DQP.class)).toReturn(dqp);
+		ConnectionImpl conn = new ConnectionImpl(mock, new Properties(), "x");
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertTrue(conn.getAutoCommit());
+		statement.execute("set disablelocaltxn true");
+		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
+		conn.beginLocalTxnIfNeeded();
+		assertFalse(conn.isInLocalTxn());
+		
+		statement.execute("set disablelocaltxn false");
+		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
+		conn.beginLocalTxnIfNeeded();
+		assertTrue(conn.isInLocalTxn());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -206,5 +232,31 @@ public class TestStatement {
 		assertEquals(Boolean.FALSE.toString(), statement.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
 		
 	}	
+	
+	@Test public void testSet() {
+		Matcher m = StatementImpl.SET_STATEMENT.matcher("set foo to 1");
+		assertTrue(m.matches());
+	}
+	
+	@Test public void testQuotedSet() {
+		Matcher m = StatementImpl.SET_STATEMENT.matcher("set \"foo\"\"\" to 1");
+		assertTrue(m.matches());
+		assertEquals("\"foo\"\"\"", m.group(2));
+		m = StatementImpl.SHOW_STATEMENT.matcher("show \"foo\"");
+		assertTrue(m.matches());
+	}
+	
+	@Test public void testSetTxnIsolationLevel() throws SQLException {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertFalse(statement.execute("set session characteristics as transaction isolation level read committed")); //$NON-NLS-1$
+		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		assertFalse(statement.execute("set session characteristics as transaction isolation level read uncommitted")); //$NON-NLS-1$
+		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+		assertFalse(statement.execute("set session characteristics as transaction isolation level serializable")); //$NON-NLS-1$
+		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+		assertFalse(statement.execute("set session characteristics as transaction isolation level repeatable read")); //$NON-NLS-1$
+		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+	}
 	
 }

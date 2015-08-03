@@ -21,11 +21,13 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.teiid.jboss.TeiidConstants.TRANSLATOR_MODULE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSLATOR_SLOT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.asString;
+import static org.teiid.jboss.TeiidConstants.isDefined;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.ServiceLoader;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
@@ -33,7 +35,6 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -47,26 +48,13 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionFactory;
 
-class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvider {
-
-    @Override
-    public ModelNode getModelDescription(final Locale locale) {
-        final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-        final ModelNode operation = new ModelNode();
-        operation.get(OPERATION_NAME).set(ADD);
-        operation.get(DESCRIPTION).set(bundle.getString("translator.add")); //$NON-NLS-1$
-        
-        Element.TRANSLATOR_MODULE_ATTRIBUTE.describe(operation, REQUEST_PROPERTIES, bundle);
-        return operation;
-    }
+class TranslatorAdd extends AbstractAddStepHandler {
+	public static TranslatorAdd INSTANCE = new TranslatorAdd();
     
 	@Override
 	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException{
-        populate(operation, model);
-	}
-	
-	static void populate(ModelNode operation, ModelNode model) {
-		Element.TRANSLATOR_MODULE_ATTRIBUTE.populate(operation, model);
+		TRANSLATOR_MODULE_ATTRIBUTE.validateAndSet(operation, model);
+		TRANSLATOR_SLOT_ATTRIBUTE.validateAndSet(operation, model);
 	}
 	
 	@Override
@@ -79,9 +67,14 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
     	final String translatorName = pathAddress.getLastElement().getValue();
 		
     	String moduleName = null;
-    	if (Element.TRANSLATOR_MODULE_ATTRIBUTE.isDefined(operation)) {
-    		moduleName = Element.TRANSLATOR_MODULE_ATTRIBUTE.asString(operation);
+    	if (isDefined(TRANSLATOR_MODULE_ATTRIBUTE, operation, context)) {
+    		moduleName = asString(TRANSLATOR_MODULE_ATTRIBUTE, operation, context);
     	}
+    	
+        String slot = null;
+        if (isDefined(TRANSLATOR_SLOT_ATTRIBUTE, operation, context)) {
+            slot = asString(TRANSLATOR_SLOT_ATTRIBUTE, operation, context);
+        }    	
 		
         final ServiceTarget target = context.getServiceTarget();
 
@@ -90,7 +83,11 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         ModuleLoader ml = Module.getCallerModuleLoader();
         if (moduleName != null && ml != null) {
 	        try {
-            	module = ml.loadModule(ModuleIdentifier.create(moduleName));
+	            ModuleIdentifier id = ModuleIdentifier.create(moduleName);
+	            if (slot != null) {
+	                id = ModuleIdentifier.create(moduleName, slot);
+	            }
+            	module = ml.loadModule(id);
             	translatorLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
 	            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50007, moduleName, translatorName))); 

@@ -121,11 +121,13 @@ public class MemoryStorageManager implements Cache<Long> {
 	}
 	
 	@Override
-	public void addToCacheGroup(Long gid, Long oid) {
+	public boolean addToCacheGroup(Long gid, Long oid) {
 		Map<Long, CacheEntry> group = groups.get(gid);
 		if (group != null) {
 			group.put(oid, null);
+			return true;
 		}
+		return false;
 	}
 	
 	@Override
@@ -176,6 +178,11 @@ public class MemoryStorageManager implements Cache<Long> {
 		synchronized (group) {
 			return new ArrayList<Long>(group.keySet());
 		}
+	}
+
+	@Override
+	public void shutdown() {
+		
 	}
 	
 }

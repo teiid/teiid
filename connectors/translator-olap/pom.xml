@@ -3,13 +3,14 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-olap</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>OLAP Translator</name>
     <description>This translator provides access to Query Analysis Cubes</description>
+    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -29,9 +30,11 @@
          <dependency>
           <groupId>org.olap4j</groupId>
           <artifactId>olap4j</artifactId>
-          <version>0.9.8.343</version>
-          <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.olap4j</groupId>
+            <artifactId>olap4j-xmla</artifactId>
+        </dependency>        
     </dependencies>
     
     <build>
@@ -54,6 +57,26 @@
                 </excludes>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                  <execution>
+                    <id>create-assemblies</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>single</goal>
+                    </goals>
+                  </execution>
+                </executions>
+            </plugin>   
+        </plugins>         
     </build>  
 
 </project>

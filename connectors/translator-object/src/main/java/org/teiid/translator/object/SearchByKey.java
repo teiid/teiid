@@ -23,67 +23,105 @@
 package org.teiid.translator.object;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.infinispan.client.hotrod.RemoteCache;
 import org.teiid.core.util.Assertion;
 import org.teiid.language.Comparison;
+import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Condition;
+import org.teiid.language.Delete;
 import org.teiid.language.Expression;
 import org.teiid.language.In;
 import org.teiid.language.Literal;
-import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Select;
+import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.TranslatorException;
 
 /**
- * SearchByKey is a simple ObjectConnection that enables querying the cache by
+ * SearchByKey is simple search logic that enables querying the cache by
  * the key, using EQUI and IN clauses on the SELECT statement.
  */
-public final class SearchByKey  {
+public  class SearchByKey implements SearchType  {
 
-	public static List<Object> get(Condition criterion,
-			Map<?, ?> cache, Class<?> rootClass)
-			throws TranslatorException {
-		List<Object> results = null;
+	protected  void addAll(CacheContainerWrapper cache, String cacheName, Class<?> rootClass, List<Object> results) throws TranslatorException {
+		results.addAll(cache.getAll(cacheName));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performKeySearch(java.lang.String, java.lang.String, java.lang.Object, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public Object performKeySearch(String cacheName, String columnNameInSource,
+			Object value, ObjectConnection conn) throws TranslatorException {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.language.Update, java.lang.String, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public List<Object> performSearch(Update command, String cacheName,
+			ObjectConnection conn) throws TranslatorException {
+		throw new UnsupportedOperationException("Update is not supported at this time");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.language.Delete, java.lang.String, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public List<Object> performSearch(Delete command, String cacheName,
+			ObjectConnection conn) throws TranslatorException {
+		throw new UnsupportedOperationException("Delete is not supported at this time");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.language.Select, java.lang.String, org.teiid.translator.object.ObjectConnection)
+	 */
+	@Override
+	public List<Object> performSearch(Select command, String cacheName,
+			ObjectConnection conn) throws TranslatorException {
+
+		CacheContainerWrapper cache = conn.getCacheContainer();
+		Class<?> rootClass = conn.getType(cacheName);
+
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+				"Perform search by key."); //$NON-NLS-1$
+		
+		Condition criterion = command.getWhere();
+		List<Object> results = new ArrayList<Object>();
 
 		if (criterion == null) {
-			Map<?, ?> map = cache;
-			if (cache instanceof RemoteCache<?, ?>) {
-				RemoteCache<?, ?> rc = (RemoteCache<?, ?>) cache;
-		  		map = (Map<Object, Object>) rc.getBulk();
-			}
-			Set<?> keys = map.keySet();
-			results = new ArrayList<Object>();
-			for (Iterator<?> it = keys.iterator(); it.hasNext();) {
-				Object v = cache.get(it.next());
-				addValue(v, results, rootClass);
-			}
+			addAll(cache, cacheName, rootClass, results);
 			return results;
 		}
-
-		results = new ArrayList<Object>();
 	
-		if (criterion instanceof Comparison) {
+		if (criterion instanceof Comparison && ((Comparison)criterion).getOperator() == Operator.EQ) {
+			
 			Comparison obj = (Comparison)criterion;
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 			"Parsing Comparison criteria."); //$NON-NLS-1$
-			Comparison.Operator op = obj.getOperator();
 		
-			Assertion.assertTrue(op == Operator.EQ);
 			Expression rhs = obj.getRightExpression();
 		
 			Literal literal = (Literal)rhs;
 
-			Object v = cache.get(literal.getValue());
+			Object v = cache.get(cacheName, literal.getValue());
+			
 			if (v != null) {
-				addValue(v, results, rootClass);
+				results.add(v);
 			}
 		} else {
+
 			Assertion.assertTrue(criterion instanceof In, "unexpected condition " + criterion); //$NON-NLS-1$
 			In obj = (In)criterion;
 			Assertion.assertTrue(!obj.isNegated());
@@ -94,31 +132,15 @@ public final class SearchByKey  {
 			for (Expression expr : rhsList) {
 				Literal literal = (Literal) expr;
 
-				Object v = cache.get(literal.getValue());
+				Object v = cache.get(cacheName, literal.getValue());
 				if (v != null) {
-					addValue(v, results, rootClass);
+					results.add(v);
 				}
 			}
 		} 
 		return results;
-	}
 
-	private static void addValue(Object value, List<Object> results, Class<?> rootNodeType) throws TranslatorException {
-		if (value == null) {
-			return;
-		}
-		if (!rootNodeType.isAssignableFrom(value.getClass())) {
-			// the object obtained from the cache has to be of the same root
-			// class type, otherwise, the modeling
-			// structure won't correspond correctly
-			String msg = ObjectPlugin.Util.getString(
-					"MapCacheConnection.unexpectedObjectTypeInCache", //$NON-NLS-1$
-					new Object[] { value.getClass().getName(),
-							rootNodeType.getName() });
-
-			throw new TranslatorException(msg);			
-		}
-		results.add(value);
+		
 	}
 
 }

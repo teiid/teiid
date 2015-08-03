@@ -22,8 +22,10 @@
 package org.teiid.query.function;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.teiid.core.CoreConstants;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
@@ -36,6 +38,14 @@ public class SystemFunctionManager {
 	private FunctionTree systemFunctionTree;
 	private boolean allowEnvFunction = true;
 	private ClassLoader classLoader;
+	private Map<String, Datatype> types;
+	
+	public SystemFunctionManager() {
+	}
+	
+	public SystemFunctionManager(Map<String, Datatype> typeMap) {
+		this.types = typeMap;
+	}
 	
 	public FunctionTree getSystemFunctions() {
     	if(systemFunctionTree == null) { 
@@ -45,7 +55,7 @@ public class SystemFunctionManager {
 			// Validate the system source - should never fail
 	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
 	        Collection<FunctionMethod> functionMethods = systemSource.getFunctionMethods();
-	    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report);
+	    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report, types);
 			if(report.hasItems()) {
 			    // Should never happen as SystemSourcTe doesn't change
 			    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$

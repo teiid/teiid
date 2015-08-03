@@ -24,6 +24,7 @@ package org.teiid.query.function.aggregate;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.Array;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -31,8 +32,8 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
@@ -62,19 +63,26 @@ public class TextAgg extends SingleArgumentAggregateFunction {
 			FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, textLine.getEncoding()==null?Streamable.ENCODING:textLine.getEncoding());
 			Writer w = fisf.getWriter();
 			if (textLine.isIncludeHeader()) {
-				w.write(TextLine.evaluate(textLine.getExpressions(), new TextLine.ValueExtractor<DerivedColumn>() {
+				Object[] header = TextLine.evaluate(textLine.getExpressions(), new TextLine.ValueExtractor<DerivedColumn>() {
 					public Object getValue(DerivedColumn t) {
 						if (t.getAlias() == null && t.getExpression() instanceof ElementSymbol) {
 							return ((ElementSymbol)t.getExpression()).getShortName();
 						}
 						return t.getAlias();
 					}
-				}, textLine.getDelimiter(), textLine.getQuote()));
+				}, textLine);
+				writeList(w, header);
 			}
 			w.flush();
 			return fisf;
 		} catch (IOException e) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30420, e);
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30420, e);
+		}
+	}
+
+	private void writeList(Writer w, Object[] list) throws IOException {
+		for (int i = 0; i < list.length; i++) {
+			w.write(list[i].toString());
 		}
 	}
 
@@ -92,12 +100,14 @@ public class TextAgg extends SingleArgumentAggregateFunction {
     		if (this.result == null) {
     			this.result = buildResult(commandContext);
     		}
-    		String in = (String)input;
+    		Array in = (Array)input;
     		Writer w = result.getWriter();
-    		w.write(in);
+    		writeList(w, (Object[])in.getArray());
 			w.flush();
+		} catch (SQLException e) {
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
 		} catch (IOException e) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
 		}
     }
 
@@ -118,9 +128,9 @@ public class TextAgg extends SingleArgumentAggregateFunction {
 			}
 			return new BlobType(new SerialBlob(Arrays.copyOf(fs.getBuffer(), fs.getCount())));
 		} catch (IOException e) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
 		}  catch (SQLException e) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
 		}
     }
 }

@@ -1,0 +1,28 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="cassandra">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.cassandra"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.cassandra.CassandraManagedConnectionFactory" 
+                        jndi-name="java:/cassandraDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-cassandra-ds">
+                        
+                      <!-- Cassandra host address -->
+                      <config-property name="Address">some.host.com</config-property>
+                      
+                      <!-- Cassandra keyspace -->
+                      <config-property name="Keyspace">keyspace</config-property>
+                      <!--
+                      <config-property name="Username">user</config-property>
+                      <config-property name="Password">password</config-property>
+                      <config-property name="Port">7000</config-property>
+                      -->
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

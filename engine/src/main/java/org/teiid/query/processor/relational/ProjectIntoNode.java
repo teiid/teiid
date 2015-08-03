@@ -26,21 +26,26 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -71,9 +76,13 @@ public class ProjectIntoNode extends RelationalNode {
     private boolean sourceDone;
     
     private TupleBuffer buffer;
+    private TupleBuffer last;
     private TupleBatch currentBatch;
         	
     private TupleSource tupleSource;
+    
+    private Criteria constraint;
+    private Evaluator eval;
 
     protected ProjectIntoNode() {
         super();
@@ -119,8 +128,6 @@ public class ProjectIntoNode extends RelationalNode {
         
         while(phase == REQUEST_CREATION) {
             
-            checkExitConditions();
-            
             /* If we don't have a batch to work, get the next
              */
             if (currentBatch == null) {
@@ -139,7 +146,23 @@ public class ProjectIntoNode extends RelationalNode {
             		currentBatch = null;
             		continue;
                 }
+                if (this.constraint != null) {
+                	//row based security check
+	                if (eval == null) {
+	                	eval = new Evaluator(createLookupMap(this.intoElements), this.getDataManager(), getContext());
+	                }
+	                List<List<?>> tuples = this.currentBatch.getTuples();
+	                for (int i = 0; i < tuples.size(); i++) {
+	                	if (!eval.evaluate(constraint, tuples.get(i))) {
+	                		throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, new Insert(intoGroup, this.intoElements, convertValuesToConstants(tuples.get(i), intoElements))));
+	                	}
+	                }
+                }
             } 
+            
+            if (mode != Mode.ITERATOR) { //delay the check in the iterator case to accumulate batches
+            	checkExitConditions(); 
+            }
             
             int batchSize = currentBatch.getRowCount();
             int requests = 1;
@@ -148,13 +171,30 @@ public class ProjectIntoNode extends RelationalNode {
             	if (buffer == null) {
             		buffer = getBufferManager().createTupleBuffer(intoElements, getConnectionID(), TupleSourceType.PROCESSOR);
             	}
-            	buffer.addTupleBatch(currentBatch, true);
+            	
+            	if (sourceDone) {
+            		//if there is a pending request we can't process the last until it is done
+            		checkExitConditions(); 
+            	}
+            	
+            	for (List<?> tuple : currentBatch.getTuples()) {
+            		buffer.addTuple(tuple);
+            	}
+            	
+            	try {
+            		checkExitConditions();
+            	} catch (BlockedException e) {
+            		//move to the next batch
+                    this.batchRow += batchSize;
+                	currentBatch = null;
+            		continue;
+            	}
+            	
             	if (currentBatch.getTerminationFlag() && (buffer.getRowCount() != 0 || intoGroup.isImplicitTempGroupSymbol())) {
-            		Insert insert = new Insert(intoGroup, intoElements, null);
-            		buffer.close();
-            		insert.setTupleSource(buffer.createIndexedTupleSource(true));
-                    // Register insert command against source 
-                    registerRequest(insert);
+            		registerIteratorRequest();
+            	} else if (buffer.getRowCount() >= buffer.getBatchSize() * 4 && getContext().getTransactionContext() != null 
+            			&& (getContext().getTransactionContext().getTransaction() != null || getContext().getTransactionContext().isNoTxn())) {
+        			registerIteratorRequest();
             	} else {
             		requests = 0;
             	}
@@ -188,16 +228,43 @@ public class ProjectIntoNode extends RelationalNode {
         
         checkExitConditions();
         
+        if (this.buffer != null) {
+        	this.buffer.remove();
+        	this.buffer = null;
+        }
+        
         // End this node's work
         addBatchRow(Arrays.asList(insertCount));
         terminateBatches();
         return pullBatch();                                                           
     }
 
+	private void registerIteratorRequest() throws TeiidComponentException,
+			TeiidProcessingException {
+		Insert insert = new Insert(intoGroup, intoElements, null);
+		buffer.close();
+		insert.setTupleSource(buffer.createIndexedTupleSource(true));
+		// Register insert command against source 
+		registerRequest(insert);
+        //remove the old buffer when the insert is complete
+        last = buffer;
+        buffer = null;
+	}
+
     private void checkExitConditions()  throws TeiidComponentException, BlockedException, TeiidProcessingException {
     	if (tupleSource != null) {
-	    	Integer count = (Integer)tupleSource.nextTuple().get(0);
-	        insertCount += count.intValue();
+    		if (mode == Mode.BATCH || mode == Mode.ITERATOR) {
+    			List<?> tuple = null;
+    			while ((tuple = tupleSource.nextTuple()) != null) {
+        			Integer count = (Integer)tuple.get(0);
+        			if (count > 0 ||  count == Statement.SUCCESS_NO_INFO) {
+        				insertCount++;
+        			}
+    			}
+	    	} else {
+	    		Integer count = (Integer)tupleSource.nextTuple().get(0);
+	    		insertCount += count.intValue();
+	    	}
 	        closeRequest();
 	        // Mark as processed
 	        tupleSourcesProcessed++; // This should set tupleSourcesProcessed to be the same as requestsRegistered
@@ -214,9 +281,9 @@ public class ProjectIntoNode extends RelationalNode {
     }
     
     private void closeRequest() {
-    	if (this.buffer != null) {
-    		this.buffer.remove();
-    		this.buffer = null;
+    	if (this.last != null) {
+    		this.last.remove();
+    		this.last = null;
     	}
         if (this.tupleSource != null) {
             tupleSource.closeSource();
@@ -237,7 +304,7 @@ public class ProjectIntoNode extends RelationalNode {
         clonedNode.intoElements = intoElements;
         clonedNode.modelName = this.modelName;
         clonedNode.mode = this.mode;
-        
+        clonedNode.constraint = this.constraint;
         return clonedNode;
     }
 
@@ -276,6 +343,10 @@ public class ProjectIntoNode extends RelationalNode {
 	}
 
     public void closeDirect() {
+    	if (this.buffer != null) {
+    		this.buffer.remove();
+    		this.buffer = null;
+    	}
         closeRequest();
 	}
     
@@ -290,5 +361,9 @@ public class ProjectIntoNode extends RelationalNode {
 		}
 		return null;
     }
+    
+    public void setConstraint(Criteria constraint) {
+		this.constraint = constraint;
+	}
     
 }

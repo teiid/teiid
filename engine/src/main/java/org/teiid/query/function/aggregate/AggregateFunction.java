@@ -108,5 +108,17 @@ public abstract class AggregateFunction {
      */
     public abstract Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException;
+    
+    public List<? extends Class<?>> getStateTypes() {
+    	return null;
+    }
+    
+    public void getState(List<Object> state) {
+    	
+    }
+    
+    public int setState(List<?> state, int index) {
+    	return 0;
+    }
 
 }

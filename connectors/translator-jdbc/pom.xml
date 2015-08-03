@@ -3,13 +3,13 @@
   <parent>
     <artifactId>connectors</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>translator-jdbc</artifactId>
   <groupId>org.jboss.teiid.connectors</groupId>
   <name>JDBC Translator</name>
-  
+  <packaging>bundle</packaging>
   <description>This project contains translators for a JDBC source. Currently this is an aggregator for all the JDBC translators relational databases.</description>
     <dependencies>
         <dependency>
@@ -23,10 +23,20 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-admin</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
           <groupId>javax.resource</groupId>
           <artifactId>connector-api</artifactId>
           <scope>provided</scope>
-        </dependency>       
+        </dependency>
+        <dependency>
+          <groupId>org.hibernate</groupId>
+          <artifactId>hibernate-core</artifactId>
+          <scope>provided</scope>
+        </dependency>  
     </dependencies>
     
     <build>
@@ -49,6 +59,25 @@
                 </excludes>
             </resource>
         </resources>
-    </build>    
-    
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                  <execution>
+                    <id>create-assemblies</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>single</goal>
+                    </goals>
+                  </execution>
+                </executions>
+            </plugin>   
+        </plugins>         
+    </build>
 </project>

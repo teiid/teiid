@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid">
+    <properties>
+        <property name="jboss.api" value="UNSUPPORTED"/>
+    </properties>
+    
     <resources>
         <resource-root path="teiid-engine-${project.version}.jar" />
         <resource-root path="teiid-jboss-integration-${project.version}.jar" />
         <resource-root path="teiid-metadata-${project.version}.jar" />
-        <resource-root path="teiid-runtime-${project.version}.jar" />
-        <resource-root path="teiid-engine-${project.version}.jar" />
-        <resource-root path="saxonhe-9.2.1.5.jar" />
-        <resource-root path="json-simple-1.1.jar" />
-        <resource-root path="xom-1.2.jar" />
-        <resource-root path="nux-1.6.jar" />
+        <resource-root path="teiid-runtime-${project.version}.jar" /> 
+        <resource-root path="teiid-jboss-admin-${project.version}.jar" />       
+        <resource-root path="deployments" />
     </resources>
 
     <dependencies>
         <module name="javax.api" />
-        <module name="javax.xml.bind.api" />
-        <module name="javax.resource.api"/>   
+        <module name="javax.resource.api"/>         
+        <module name="sun.jdk" optional="true"/> <!-- Kerberos -->          
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.client" />
@@ -32,6 +33,7 @@
         <module name="org.jboss.as.security"/>
         <module name="org.jboss.as.server"/>
         <module name="org.jboss.as.naming"/>
+        <module name="org.jboss.security.negotiation"/> <!-- SPNEGO -->
         <module name="javax.xml.bind.api"/>
         <module name="javax.transaction.api"/>
         <module name="javax.activation.api"/>
@@ -40,12 +42,30 @@
         <module name="asm.asm"/>
         <module name="org.infinispan"/>
         <module name="org.jboss.marshalling"/>
-        <module name="org.jboss.marshalling.river"/>
+        <module name="org.jboss.marshalling.river"/> 
+        <module name="org.jboss.as.ee"/>
+        <module name="org.jboss.metadata"/>   
+        <module name="com.fasterxml.jackson"/>     
         <!-- These dependencies here for ra.xml description -->
         <module name="org.jboss.as.connector"/>
         <module name="org.jboss.ironjacamar.api"/>
         <module name="org.jboss.ironjacamar.impl"/>
         <module name="org.jgroups"/>
+        <module name="nu.xom"/>
+        <module name="nux.nux"/>
+        <module name="net.sf.saxon"/>
+        <module name="com.vividsolutions"/>
+        <module name="org.osgeo"/>
+        <module name="org.wololo"/>
+        <module name="org.jaxen" />
+        <module name="org.jboss.resteasy.resteasy-jaxrs"/> <!--  REST Web Service --> 
+        <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service -->
+        <module name="javax.ws.rs.api"/> <!--  REST Web Service -->
+        <module name="org.jboss.dmr" /> <!-- Admin -->        
+        <module name="org.jboss.as.cli"/> <!-- Admin -->
+        <module name="org.jboss.as.controller-client"/> <!-- Admin -->
+        <module name="org.jboss.as.controller"/> <!-- Admin -->
+        
     </dependencies>
 
 </module>

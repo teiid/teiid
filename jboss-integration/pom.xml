@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>teiid-jboss-integration</artifactId>
@@ -58,6 +58,12 @@
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-jboss-admin</artifactId>
+      <scope>provided</scope>
+    </dependency>  
+        
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-metadata</artifactId>
     </dependency>
         
@@ -97,6 +103,12 @@
         <scope>provided</scope>
     </dependency>
     
+    <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-multipart-provider</artifactId>
+        <scope>provided</scope>
+    </dependency>                             
+    
     <!-- This dependency is to read the ra.xml file details -->
     <dependency>
         <groupId>org.jboss.as</groupId>
@@ -110,15 +122,9 @@
         <scope>provided</scope>
     </dependency> 
     
-<!--     <dependency>
-        <groupId>org.picketbox</groupId>
-        <artifactId>jbosssx-client</artifactId>
-        <scope>provided</scope>
-    </dependency> -->
-      
     <dependency>
         <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-subsystem-test</artifactId>
+        <artifactId>jboss-as-subsystem-test-framework</artifactId>
         <scope>test</scope>
     </dependency>
     <dependency>
@@ -133,6 +139,13 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-runtime</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.jboss.teiid</groupId>
@@ -144,10 +157,8 @@
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-jdbc</artifactId>
-      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>    
-
   </dependencies>
   
 </project>

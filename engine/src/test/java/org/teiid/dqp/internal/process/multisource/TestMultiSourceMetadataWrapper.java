@@ -47,13 +47,12 @@ public class TestMultiSourceMetadataWrapper {
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(RealMetadataFactory.exampleBQTCached(), multiSourceModels);
         
         Object groupID = wrapper.getGroupID("BQT1.SmallA"); //$NON-NLS-1$
-        List elements = wrapper.getElementIDsInGroupID(groupID);
+        List<?> elements = wrapper.getElementIDsInGroupID(groupID);
         assertEquals(18, elements.size());
         
         Object instanceElementID = elements.get(elements.size()-1);
-        assertTrue(instanceElementID instanceof MultiSourceElement);
         String fullName = wrapper.getFullName(instanceElementID);
-        assertEquals("BQT1.SmallA." + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME, fullName); //$NON-NLS-1$
+        assertEquals("BQT1.SmallA." + MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME, fullName); //$NON-NLS-1$
         
         assertEquals(instanceElementID, wrapper.getElementID(fullName));
         
@@ -71,8 +70,8 @@ public class TestMultiSourceMetadataWrapper {
         assertEquals(0, wrapper.getPrecision(instanceElementID));
         assertEquals(0, wrapper.getScale(instanceElementID));
         assertEquals(0, wrapper.getRadix(instanceElementID));
-        assertEquals(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME, Symbol.getShortName(fullName));
-        assertEquals(fullName, wrapper.getFullName(groupID) + Symbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME);
+        assertEquals(MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME, Symbol.getShortName(fullName));
+        assertEquals(fullName, wrapper.getFullName(groupID) + Symbol.SEPARATOR + MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME);
         
         TempMetadataAdapter tma = new TempMetadataAdapter(wrapper, new TempMetadataStore());
         ElementSymbol elementSymbol = new ElementSymbol("y");
@@ -81,5 +80,9 @@ public class TestMultiSourceMetadataWrapper {
         
         assertFalse(tma.isMultiSourceElement(id.getElements().get(0)));
         assertTrue(tma.isMultiSourceElement(instanceElementID));
+        
+        assertTrue(tma.isPseudo(instanceElementID));
+        
+        assertEquals(17, tma.getElementIDsInGroupID(tma.getGroupID("VQT.Smalla")).size());
     }
 }

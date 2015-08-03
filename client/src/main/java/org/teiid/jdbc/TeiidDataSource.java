@@ -28,6 +28,8 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import javax.sql.XAConnection;
+
 import org.teiid.net.TeiidURL;
 
 
@@ -114,8 +116,17 @@ public class TeiidDataSource extends BaseDataSource {
      */
     private boolean encryptRequests;
     
+    private final TeiidDriver driver;
+
+	private boolean loadBalance = true;
+    
 	public TeiidDataSource() {
+		this.driver = new TeiidDriver();
     }
+	
+	TeiidDataSource(TeiidDriver driver) {
+		this.driver = driver;
+	}
 
     // --------------------------------------------------------------------------------------------
     //                             H E L P E R   M E T H O D S
@@ -131,11 +142,30 @@ public class TeiidDataSource extends BaseDataSource {
         if (this.getDiscoveryStrategy() != null) {
         	props.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, this.getDiscoveryStrategy());
         }
+        
+        if (this.encryptRequests) {
+        	props.setProperty(TeiidURL.CONNECTION.ENCRYPT_REQUESTS, Boolean.TRUE.toString());
+        }
+        
+        if (getLoginTimeout() > 0) {
+        	props.setProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT, String.valueOf(getLoginTimeout()));
+        }
+        
+        if (getJaasName() != null) {
+			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
+		}
+		if (getKerberosServicePrincipleName() != null) {
+			props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
+		}
 
         return props;
     }
     
     protected String buildServerURL() throws TeiidSQLException {
+    	if (serverName == null) {
+    		return null;
+    	}
+    	
     	if ( this.alternateServers == null || this.alternateServers.length() == 0) {
     		// Format:  "mm://server:port"
     		return new TeiidURL(this.serverName, this.portNumber, this.secure).getAppServerURL();
@@ -239,32 +269,24 @@ public class TeiidDataSource extends BaseDataSource {
      * @see javax.sql.DataSource#getConnection(java.lang.String, java.lang.String)
      */
     public Connection getConnection(String userName, String password) throws java.sql.SQLException {
-    	final TeiidDriver driver = new TeiidDriver();
-
+    	
     	// check if this is embedded connection 
     	if (getServerName() == null) {
     		super.validateProperties(userName, password);
 	        final Properties props = buildEmbeddedProperties(userName, password);	 
-	        String url = new JDBCURL(getDatabaseName(), null, props).getJDBCURL();
+	        String url = new JDBCURL(getDatabaseName(), null, null).getJDBCURL();
 	        return driver.connect(url, props);    		    		
     	}
     	
     	// if not proceed with socket connection.
         validateProperties(userName,password);
-        
-        return driver.connect(buildURL().getJDBCURL(), null);
+        final Properties props = buildProperties(userName, password);
+        return driver.connect(new JDBCURL(this.getDatabaseName(), buildServerURL(), null).getJDBCURL(), props);
     }
     
 	private Properties buildEmbeddedProperties(final String userName, final String password) {
 		Properties props = buildProperties(userName, password);
 		props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, Boolean.toString(this.passthroughAuthentication));
-		
-		if (getJaasName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
-		}
-		if (getKerberosServicePrincipleName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
-		}
 		return props;
 	}    
 	
@@ -539,5 +561,32 @@ public class TeiidDataSource extends BaseDataSource {
 	public boolean getEncryptRequests() {
 		return encryptRequests;
 	}
+	
+	public boolean isLoadBalance() {
+		return loadBalance;
+	}
+	
+	public boolean getLoadBalance() {
+		return loadBalance;
+	}
+	
+	public void setLoadBalance(boolean loadBalance) {
+		this.loadBalance = loadBalance;
+	}
+	
+	/**
+     * Attempt to establish a database connection that can be used with distributed transactions.
+     * @param userName the database user on whose behalf the XAConnection is being made
+     * @param password the user's password
+     * @return an XAConnection to the database
+     * @throws java.sql.SQLException if a database-access error occurs
+     * @see javax.sql.XADataSource#getXAConnection(java.lang.String, java.lang.String)
+     */
+    public XAConnection getXAConnection(final String userName, final String password) throws java.sql.SQLException {
+    	XAConnectionImpl result = new XAConnectionImpl((ConnectionImpl) getConnection(userName, password));
+    	result.setLoadBalance(loadBalance);
+    	return result;
+    }
+    
 }
 

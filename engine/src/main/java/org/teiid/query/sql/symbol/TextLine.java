@@ -21,6 +21,7 @@
  */
 package org.teiid.query.sql.symbol;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,6 +46,7 @@ public class TextLine implements Expression {
 	private boolean includeHeader;
 	private List<DerivedColumn> expressions;
 	private String encoding;
+	private String lineEnding = nl;
 	
 	public Character getDelimiter() {
 		return delimiter;
@@ -86,9 +88,17 @@ public class TextLine implements Expression {
 		this.expressions = expressions;
 	}	
 	
+	public String getLineEnding() {
+		return lineEnding;
+	}
+	
+	public void setLineEnding(String lineEnding) {
+		this.lineEnding = lineEnding;
+	}
+	
 	@Override
 	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.STRING;
+		return String[].class;
 	}
 
 	@Override
@@ -137,10 +147,13 @@ public class TextLine implements Expression {
 		Object getValue(T t);
 	}
 	
-	public static <T> String evaluate(final List<T> values, ValueExtractor<T> valueExtractor, Character delimeter, Character quote) throws TransformationException {
+	public static <T> String[] evaluate(final List<T> values, ValueExtractor<T> valueExtractor, TextLine textLine) throws TransformationException {
+		Character delimeter = textLine.getDelimiter();
 		if (delimeter == null) {
-			delimeter = new Character(',');
+			delimeter = Character.valueOf(',');
 		}
+		String delim = String.valueOf(delimeter.charValue());
+		Character quote = textLine.getQuote();
 		String quoteStr = null;		
 		if (quote == null) {
 			quoteStr = "\""; //$NON-NLS-1$
@@ -148,22 +161,22 @@ public class TextLine implements Expression {
 			quoteStr = String.valueOf(quote);
 		}
 		String doubleQuote = quoteStr + quoteStr;
-		StringBuilder sb = new StringBuilder();
+		ArrayList<String> result = new ArrayList<String>();
 		for (Iterator<T> iterator = values.iterator(); iterator.hasNext();) {
 			T t = iterator.next();
-			String text = DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
+			String text = (String)DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
 			if (text == null) {
 				continue;
 			}
-			sb.append(quoteStr);
-			sb.append(StringUtil.replaceAll(text, quoteStr, doubleQuote));
-			sb.append(quoteStr);
+			result.add(quoteStr);
+			result.add(StringUtil.replaceAll(text, quoteStr, doubleQuote));
+			result.add(quoteStr);
 			if (iterator.hasNext()) {
-				sb.append(delimeter);
+				result.add(delim);
 			}			
 		}
-		sb.append(nl);
-		return sb.toString();
+		result.add(textLine.getLineEnding());
+		return result.toArray(new String[result.size()]);
 	}
 	
 }

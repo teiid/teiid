@@ -24,27 +24,35 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.sql.Types;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.client.plan.PlanNode;
+import org.teiid.client.plan.PlanNode.Property;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.analysis.AnalysisRecord;
 
 
 @SuppressWarnings("nls")
 public class TestQueryPlans {
-
+	static FakeServer server;
 	private static Connection conn;
 	
 	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    	server = new FakeServer(true);
     	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$		
     }
 	
 	@AfterClass public static void tearDown() throws Exception {
 		conn.close();
+		server.stop();
 	}
 	
 	@Test public void testNoExec() throws Exception {
@@ -61,7 +69,6 @@ public class TestQueryPlans {
 		Statement s = conn.createStatement();
 		s.execute("set showplan on");
 		ResultSet rs = s.executeQuery("select * from all_tables");
-		assertNotNull(s.unwrap(TeiidStatement.class).getPlanDescription());
 		assertNull(s.unwrap(TeiidStatement.class).getDebugLog());
 		
 		rs = s.executeQuery("show plan");
@@ -76,6 +83,9 @@ public class TestQueryPlans {
 		s.execute("SET showplan debug");
 		rs = s.executeQuery("select * from all_tables");
 		assertNotNull(s.unwrap(TeiidStatement.class).getDebugLog());
+		PlanNode node = s.unwrap(TeiidStatement.class).getPlanDescription();
+		Property p = node.getProperty(AnalysisRecord.PROP_DATA_BYTES_SENT);
+		assertEquals("21", p.getValues().get(0));
 		
 		rs = s.executeQuery("show plan");
 		assertTrue(rs.next());

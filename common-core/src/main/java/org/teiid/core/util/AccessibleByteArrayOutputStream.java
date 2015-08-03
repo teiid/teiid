@@ -38,6 +38,10 @@ public class AccessibleByteArrayOutputStream extends ByteArrayOutputStream {
 		return this.buf;
 	}
 	
+	public void setBuffer(byte[] buffer) {
+		this.buf = buffer;
+	}
+	
 	public int getCount() {
 		return this.count;
 	}

@@ -3,19 +3,36 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>8.2.0.Beta1-SNAPSHOT</version>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-engine</artifactId>
 	<name>Engine</name>
 	<description>Relational, procedural, and xml core engine.</description>
-
+    <packaging>bundle</packaging>
     <build>
         <plugins>
-            <plugin>
+	        <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>process-sources</id>
+						<phase>process-sources</phase>
+						<configuration>
+							<target>
+								<replaceregexp file="target/generated-sources/javacc/org/teiid/query/parser/SQLParser.java" byline="true" match="jj_add_error_token\(int " replace="jj_add_error_token_broken\(int " />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+	        <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>javacc-maven-plugin</artifactId>
-                <version>2.4</version>
                 <executions>
                     <execution>
                         <id>javacc</id>
@@ -25,10 +42,24 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>   
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <version>2.3.7</version>
+              <configuration>
+               <instructions>
+                <Import-Package>!org.jboss.*,*</Import-Package>
+               </instructions>
+              </configuration>
+            </plugin>            
         </plugins>
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -79,25 +110,40 @@
         </dependency>
 
 		<dependency>
-			<groupId>net.sourceforge.saxon</groupId>
-			<artifactId>saxonhe</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode.json-simple</groupId>
-			<artifactId>json-simple</artifactId>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>Saxon-HE</artifactId>
 		</dependency>
 		
 		<dependency>
             <groupId>nux</groupId>
             <artifactId>nux</artifactId>
-            <version>1.6</version>
         </dependency>
 
         <dependency>
-            <groupId>xom</groupId>
-            <artifactId>xom</artifactId>
-            <version>1.2</version>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
         </dependency>
+                
+        <dependency>
+            <groupId>org.wololo</groupId>
+            <artifactId>jts2geojson</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.osgeo</groupId>
+            <artifactId>proj4j</artifactId>
+        </dependency>
+
+        <dependency>
+              <groupId>xom</groupId>
+              <artifactId>xom</artifactId>
+        </dependency>
+
+        <dependency>
+              <groupId>jaxen</groupId>
+              <artifactId>jaxen</artifactId>    
+        </dependency>
+                          
 	</dependencies>
 
 </project>

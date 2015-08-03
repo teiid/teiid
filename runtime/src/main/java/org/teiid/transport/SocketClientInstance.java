@@ -26,12 +26,17 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.SocketException;
+import java.nio.channels.ClosedChannelException;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.client.util.ExceptionHolder;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.DhKeyGenerator;
 import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.logging.LogConstants;
@@ -42,6 +47,7 @@ import org.teiid.net.socket.Handshake;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.transport.ObjectEncoder.FailedWriteException;
 
 
 /**
@@ -90,7 +96,58 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     }
 
 	public void exceptionOccurred(Throwable t) {
-		LogManager.log(t instanceof IOException?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_TRANSPORT, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		//Object encoding may fail, so send a specific type of message to indicate there was a problem
+		if (objectSocket.isOpen() && !isClosedException(t)) {
+			if (workContext.getClientVersion().compareTo(Version.EIGHT_4) >= 0 && t instanceof FailedWriteException) {
+				FailedWriteException fwe = (FailedWriteException)t;
+				if (fwe.getObject() instanceof Message) {
+					Message m = (Message)fwe.getObject();
+					if (!(m.getMessageKey() instanceof ExceptionHolder)) {
+						Message exception = new Message();
+						exception.setContents(m.getMessageKey());
+						exception.setMessageKey(new ExceptionHolder(fwe.getCause()));
+						objectSocket.write(exception);
+						LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113)); 
+						return;
+					}
+				}
+			}
+			if (workContext.getClientVersion().compareTo(Version.EIGHT_6) >= 0) {
+				Message exception = new Message();
+				exception.setMessageKey(new ExceptionHolder(t));
+				objectSocket.write(exception);
+				LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113)); 
+				return;
+			}
+		}
+		int level = getLevel(t);
+		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage())); 
+		objectSocket.close();
+	}
+
+	static int getLevel(Throwable t) {
+		if (!(t instanceof IOException)) {
+			return MessageLevel.ERROR;
+		}
+		if (ExceptionUtil.getExceptionOfType(t, ClosedChannelException.class) != null || ExceptionUtil.getExceptionOfType(t, SocketException.class) != null) {
+			return MessageLevel.DETAIL;
+		}
+		if (isClosedException(t)) {
+			return MessageLevel.DETAIL;
+		}
+		return MessageLevel.WARNING;
+	}
+
+	//netty notifies listeners before closing, so we try to detect close rather than writing to an invalid connection
+	private static boolean isClosedException(Throwable t) {
+		if (!(t instanceof IOException)) {
+			return false;
+		}
+		String message = t.getMessage();
+		if ((t.getCause() == null || t.getCause() == t) && message != null && (message.equals("Connection reset by peer") || message.equals("Broken pipe") || StringUtil.indexOfIgnoreCase(message, "closed") >= 0)) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			return true;
+		}
+		return false;
 	}
 
 	public void onConnection() throws CommunicationException {
@@ -137,7 +194,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             }
             
             try {
-				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey);
+				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader()); //$NON-NLS-1$
 			} catch (CryptoException e) {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40053, e);
 			}

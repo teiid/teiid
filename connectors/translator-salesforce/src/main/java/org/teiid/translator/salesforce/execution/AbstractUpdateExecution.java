@@ -33,6 +33,8 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.salesforce.SalesForceExecutionFactory;
+import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.IQueryProvidingVisitor;
@@ -48,16 +50,17 @@ import com.sforce.soap.partner.sobject.SObject;
  *
  */
 public abstract class AbstractUpdateExecution implements UpdateExecution {
-
+	protected SalesForceExecutionFactory executionFactory;
 	protected SalesforceConnection connection;
 	protected RuntimeMetadata metadata;
 	protected ExecutionContext context;
 	protected Command command;
 	protected int result;
 
-	public AbstractUpdateExecution(Command command,
+	public AbstractUpdateExecution(SalesForceExecutionFactory ef, Command command,
 			SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context) {
+		this.executionFactory = ef;
 		this.connection = salesforceConnection;
 		this.metadata = metadata;
 		this.context = context;
@@ -94,19 +97,17 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 				Id = Util.stripQutes(Id);
 				Ids = new String[] { Id };
 			} catch (ClassCastException cce) {
-				throw new RuntimeException(
-						"Error:  The delete criteria is not a CompareCriteria");
+				throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
 			}
 	
 		} else if (visitor.hasCriteria()) {
 			try {
 				String query = visitor.getQuery();
 				QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
-				if (null != results && results.getSize() > 0) {
-					ArrayList<String> idList = new ArrayList<String>(results
-							.getRecords().size());
-					for (int i = 0; i < results.getRecords().size(); i++) {
-						SObject sObject = results.getRecords().get(i);
+				if (results != null && results.getSize() > 0) {
+					ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
+					for (int i = 0; i < results.getRecords().length; i++) {
+						SObject sObject = results.getRecords()[i];
 						idList.add(sObject.getId());
 					}
 					Ids = idList.toArray(new String[0]);

@@ -24,11 +24,8 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
-import java.io.StringReader;
+import java.util.Arrays;
 import java.util.List;
-
-import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamSource;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,19 +36,9 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.XMLType;
-import org.teiid.core.types.InputStreamFactory.StorageMode;
-import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -63,10 +50,12 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
+import org.teiid.translator.CacheDirective.Invalidation;
 
 @SuppressWarnings("nls")
 public class TestDataTierManager {
@@ -115,12 +104,11 @@ public class TestDataTierManager {
         
         context = new CommandContext();
         context.setSession(workContext.getSession());
-        context.setProcessorID(requestID);
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion(1);
         context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(dtm.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
-        
+        context.setWorkItem(workItem);
         AtomicRequestMessage request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
@@ -145,33 +133,6 @@ public class TestDataTierManager {
         
         dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
 	}
-    
-    @Test public void testCopyLobs() throws Exception {
-    	connectorManager.copyLobs = true;
-    	DataTierTupleSource info = helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
-    	for (int i = 0; i < 10;) {
-	    	try {
-	    		List<?> tuple = info.nextTuple();
-	    		ClobType clob = (ClobType)tuple.get(0);
-	    		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
-	    		i++;
-	    	} catch (BlockedException e) {
-	    		Thread.sleep(50);
-	    	}
-    	}
-    	connectorManager.copyLobs = false;
-    	info = helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
-    	for (int i = 0; i < 10;) {
-	    	try {
-	    		List<?> tuple = info.nextTuple();
-	    		ClobType clob = (ClobType)tuple.get(0);
-	    		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
-	    		i++;
-	    	} catch (BlockedException e) {
-	    		Thread.sleep(50);
-	    	}
-    	}
-    }
     
     @Test public void testDataTierTupleSource() throws Exception {
     	DataTierTupleSource info = helpSetup(1);
@@ -350,26 +311,50 @@ public class TestDataTierManager {
     	
     	assertEquals(2, this.rm.getRsCache().getCachePutCount());
     	assertEquals(2, this.rm.getRsCache().getTotalCacheEntries());
+    	
+    	//proactive invalidation, removes immediately
+    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
+    	cd.setInvalidation(Invalidation.IMMEDIATE);
+    	rrp = new RegisterRequestParameter();
+    	rrp.connectorBindingId = "x";
+    	ts = dtm.registerRequest(context, command, "foo", rrp);
+    	assertTrue(ts instanceof CachingTupleSource);
+    	assertEquals(10, pullTuples(ts, -1));
+    	assertEquals(3, connectorManager.getExecuteCount().get());
+    	assertFalse(rrp.doNotCache);
     }
     
-    @Test public void testTypeConversion() throws Exception {
-    	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+    @Test public void testCancelWithCaching() throws Exception {
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+    	CacheDirective cd = new CacheDirective();
+    	this.connectorManager.cacheDirective = cd;
+    	helpSetupDataTierManager();
+    	Command command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
+    	this.context.getSession().setSessionId("different");
+    	RegisterRequestParameter rrp = new RegisterRequestParameter();
+    	rrp.connectorBindingId = "x";
+    	TupleSource ts = dtm.registerRequest(context, command, "foo", rrp);
+    	assertTrue(ts instanceof CachingTupleSource);
+    	assertEquals(4, pullTuples(ts, 4));
+    	((CachingTupleSource)ts).item.requestCancel();
+    	assertEquals(1, connectorManager.getExecuteCount().get());
+    	assertFalse(rrp.doNotCache);
+    	ts.closeSource(); //should force read all
+    	assertFalse(((CachingTupleSource)ts).dtts.errored);
+    	assertNull(((CachingTupleSource)ts).dtts.scope);
     	
-    	String str = "hello world";
-    	
-    	Object source = new StreamSource(new StringReader(str));
-    	XMLType xml = (XMLType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
-    	assertEquals(str, xml.getString());
-    	
-    	source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a/>")));
-    	xml = (XMLType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
-    	assertEquals("<?xml version=\"1.0\"?><a></a>", xml.getString());
-    	
-    	byte[] bytes = str.getBytes(Streamable.ENCODING);
-		source = new InputStreamFactory.BlobInputStreamFactory(BlobType.createBlob(bytes));
-    	BlobType blob = (BlobType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.BLOB);
-    	
-    	assertArrayEquals(bytes, ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()));
+    	assertEquals(0, this.rm.getRsCache().getCachePutCount());
+    }
+    
+    @Test public void testCheckForUpdatesWithBatched() throws Exception {
+    	helpSetupDataTierManager();
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        AtomicRequestMessage request = helpSetupRequest("delete from bqt1.smalla", 1, metadata);
+        Command command = helpGetCommand("insert into bqt1.smalla (stringkey) values ('1')", metadata);
+        BatchedUpdateCommand bac = new BatchedUpdateCommand(Arrays.asList(request.getCommand(), command));
+        request.setCommand(bac);
+        DataTierTupleSource dtts = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
+        pullTuples(dtts, 2);
     }
     
 }

@@ -216,5 +216,9 @@ public class ConvertModifier extends FunctionModifier {
 	public void setBooleanNullable(boolean booleanNullable) {
 		this.booleanNullable = booleanNullable;
 	}
+	
+	public boolean hasTypeMapping(int type) {
+		return this.typeMapping.containsKey(type);
+	}
 
 }

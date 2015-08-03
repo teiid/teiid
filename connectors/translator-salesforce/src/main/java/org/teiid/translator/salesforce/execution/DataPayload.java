@@ -21,9 +21,8 @@
  */
 package org.teiid.translator.salesforce.execution;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.bind.JAXBElement;
 
 /**
  * 
@@ -32,27 +31,26 @@ import javax.xml.bind.JAXBElement;
  */
 public class DataPayload {
 
+	public static class Field {
+		public String name;
+		public Object value;
+		
+		public Field(String name, Object value) {
+			this.name = name;
+			this.value = value;
+		}
+	}
+	
 	private String type;
-	@SuppressWarnings("unchecked")
-	private List<JAXBElement> messageElements;
+	private List<Field> messageElements = new ArrayList<DataPayload.Field>();
 	private String id;
 	
 	public void setType(String typeName) {
 		type = typeName;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void setMessageElements(List<JAXBElement> elements) {
-		this.messageElements = elements;
-	}
-
 	public String getType() {
 		return type;
-	}
-
-	@SuppressWarnings("unchecked")
-	public List<JAXBElement> getMessageElements() {
-		return messageElements;
 	}
 
 	public void setID(String id) {
@@ -62,4 +60,13 @@ public class DataPayload {
 	public String getID() {
 		return id;
 	}
+	
+	public List<Field> getMessageElements() {
+		return messageElements;
+	}
+	
+	public void addField(String name, Object value) {
+		this.messageElements.add(new Field(name, value));
+	}
+	
 }

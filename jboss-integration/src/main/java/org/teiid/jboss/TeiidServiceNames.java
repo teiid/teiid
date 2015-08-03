@@ -22,6 +22,8 @@
 package org.teiid.jboss;
 
 import org.jboss.msc.service.ServiceName;
+import org.teiid.core.BundleUtil;
+import org.teiid.core.TeiidException;
 import org.teiid.deployers.VDBStatusChecker;
 
 public class TeiidServiceNames {
@@ -36,6 +38,7 @@ public class TeiidServiceNames {
 	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TUPLE_BUFFER = ServiceName.JBOSS.append("teiid", "tuple_buffer");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName AUTHORIZATION_VALIDATOR = ServiceName.JBOSS.append("teiid", "authorization-validator");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName PREPARSER = ServiceName.JBOSS.append("teiid", "preparser");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_FINISHED_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb-finished"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SWITCH_SVC_BASE = ServiceName.JBOSS.append("teiid", "switch"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -46,6 +49,19 @@ public class TeiidServiceNames {
 	public static ServiceName VDB_STATUS_CHECKER = ServiceName.JBOSS.append("teiid", "vdb-status-checker"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName DS_LISTENER_BASE = ServiceName.JBOSS.append("teiid", "ds-listener"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName EVENT_DISTRIBUTOR_FACTORY = ServiceName.JBOSS.append("teiid", "event-distributor-factory");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName RESULTSET_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-rs-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName PREPAREDPLAN_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-pp-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName MATVIEW_SERVICE = ServiceName.JBOSS.append("teiid", "matview-service"); //$NON-NLS-1$ //$NON-NLS-2$
+	
+	public static class InvalidServiceNameException extends TeiidException {
+
+		private static final long serialVersionUID = 7555741825606486101L;
+		
+		public InvalidServiceNameException(BundleUtil.Event code, Throwable t, final String message) {
+			super(code, t, message);
+		}
+		
+	}
 	
 	public static ServiceName translatorServiceName(String name) {
 		return ServiceName.of(TRANSLATOR_BASE, name);
@@ -75,7 +91,11 @@ public class TeiidServiceNames {
 		return EMBEDDED_TRANSPORT_BASE.append(name);
 	}	
 	
-	public static ServiceName dsListenerServiceName(String vdbName, int version, String name) {
-		return ServiceName.of(DS_LISTENER_BASE, vdbName, String.valueOf(version), VDBStatusChecker.stripContext(name));
+	public static ServiceName dsListenerServiceName(String vdbName, int version, String name) throws InvalidServiceNameException {
+		try {
+			return ServiceName.of(DS_LISTENER_BASE, vdbName, String.valueOf(version), VDBStatusChecker.stripContext(name));
+		} catch (RuntimeException e) {
+			throw new InvalidServiceNameException(IntegrationPlugin.Event.TEIID50099, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50099, name, vdbName, version));
+		}
 	}
 }

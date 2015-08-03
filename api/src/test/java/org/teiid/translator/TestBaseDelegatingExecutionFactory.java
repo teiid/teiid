@@ -27,6 +27,10 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Method;
 
 import org.junit.Test;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.metadata.RuntimeMetadata;
 
 public class TestBaseDelegatingExecutionFactory {
 
@@ -34,7 +38,29 @@ public class TestBaseDelegatingExecutionFactory {
 		Method[] methods = ExecutionFactory.class.getDeclaredMethods();
 		Method[] proxyMethods = BaseDelegatingExecutionFactory.class.getDeclaredMethods();
 		//excluding the setter methods the counts should be equal
-		assertEquals(methods.length - 12, proxyMethods.length);
+		assertEquals(methods.length - 20, proxyMethods.length);
+	}
+	
+	@Test public void testExecution() throws TranslatorException {
+		BaseDelegatingExecutionFactory<Void, Void> ef = new BaseDelegatingExecutionFactory<Void, Void>() {
+			@Override
+			public ResultSetExecution createResultSetExecution(
+					QueryExpression command, ExecutionContext executionContext,
+					RuntimeMetadata metadata, Void connection)
+					throws TranslatorException {
+				return null;
+			}
+		};
+		ef.setDelegate(new ExecutionFactory<Void, Void>() {
+			@Override
+			public Execution createExecution(Command command,
+					ExecutionContext executionContext,
+					RuntimeMetadata metadata, Void connection)
+					throws TranslatorException {
+				throw new AssertionError();
+			}
+		});
+		ef.createExecution(new Select(null, false, null, null, null, null, null), null, null, null);
 	}
 	
 }

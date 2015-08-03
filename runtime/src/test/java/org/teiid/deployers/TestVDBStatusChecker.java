@@ -22,16 +22,24 @@
 
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.Executor;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestVDBStatusChecker {
@@ -53,6 +61,8 @@ public class TestVDBStatusChecker {
 				return null;
 			}
 		};
+		VDBTranslatorMetaData factory = new VDBTranslatorMetaData();
+		factory.setExecutionFactoryClass(ExecutionFactory.class);
 		
 		assertFalse(vsc.dataSourceReplaced("x", 1, "y", "z", "t", "dsName"));
 		
@@ -60,11 +70,30 @@ public class TestVDBStatusChecker {
 		VDBMetaData vdb = TestCompositeVDB.createVDBMetadata(metadataStore, "bqt");
 		
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
-		cmr.addConnectorManager("BQT1", new ConnectorManager("oracle", "dsName"));
-		repo.addVDB(vdb, metadataStore, null, null, cmr);
+		cmr.setProvider(new ExecutionFactoryProvider() {
+			
+			@Override
+			public ExecutionFactory<Object, Object> getExecutionFactory(String name)
+					throws ConnectorManagerException {
+				return new ExecutionFactory<Object, Object>();
+			}
+		});
+		ExecutionFactory ef1 = new ExecutionFactory();
+		ConnectorManager mgr = new ConnectorManager("oracle", "dsName", ef1);
+		cmr.addConnectorManager("BQT1", mgr);
+		repo.addVDB(vdb, metadataStore, null, null, cmr, false);
 		
 		assertTrue(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "oracle", "dsName1"));
-		assertFalse(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "oracle", "dsName1"));
+		ExecutionFactory ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
+		assertSame(ef, ef1);
+		assertFalse(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "sqlserver", "dsName1"));
+		ExecutionFactory ef2 = cmr.getConnectorManager("BQT1").getExecutionFactory();
+		assertNotNull(ef2);
+		assertNotSame(ef, ef2);
+		assertTrue(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "oracle", "dsName2"));
+		ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
+		assertNotNull(ef);
+		assertNotSame(ef, ef2);
 	}
 	
 }

@@ -33,8 +33,10 @@ import javax.transaction.xa.XAResource;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.internal.verification.VerificationModeFactory;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.net.ServerConnection;
 
 public class TestXAConnection {
 	
@@ -48,6 +50,9 @@ public class TestXAConnection {
 		StatementImpl stmt = (StatementImpl)conn.createStatement();
 		conn.setAutoCommit(false);
 		conn.close();
+		
+		ServerConnection sc = xaConn.getConnectionImpl().getServerConnection();
+		Mockito.verify(sc, VerificationModeFactory.times(1)).cleanUp();
 
 		assertTrue(stmt.isClosed());
 		assertTrue(conn.getAutoCommit());
@@ -60,6 +65,20 @@ public class TestXAConnection {
 		
 		assertTrue(stmt.isClosed());
 		assertTrue(conn.getAutoCommit());
+	}
+	
+	@Test public void testDisableLoadBalancing() throws Exception {
+
+		final ConnectionImpl mmConn = TestConnection.getMMConnection();
+
+		XAConnectionImpl xaConn = new XAConnectionImpl(mmConn);
+		xaConn.setLoadBalance(false);
+		
+		Connection conn = xaConn.getConnection();
+		conn.close();
+		
+		ServerConnection sc = xaConn.getConnectionImpl().getServerConnection();
+		Mockito.verify(sc, VerificationModeFactory.times(0)).cleanUp();
 	}
 	
 	@Test public void testNotification() throws Exception {

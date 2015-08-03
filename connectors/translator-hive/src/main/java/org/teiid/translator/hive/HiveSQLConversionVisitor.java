@@ -21,39 +21,22 @@
  */
 package org.teiid.translator.hive;
 
-import static org.teiid.language.SQLConstants.Reserved.ALL;
-import static org.teiid.language.SQLConstants.Reserved.DISTINCT;
-import static org.teiid.language.SQLConstants.Reserved.FROM;
-import static org.teiid.language.SQLConstants.Reserved.FULL;
-import static org.teiid.language.SQLConstants.Reserved.JOIN;
-import static org.teiid.language.SQLConstants.Reserved.LEFT;
-import static org.teiid.language.SQLConstants.Reserved.ON;
-import static org.teiid.language.SQLConstants.Reserved.OUTER;
-import static org.teiid.language.SQLConstants.Reserved.RIGHT;
-import static org.teiid.language.SQLConstants.Reserved.SELECT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.List;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Condition;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Join;
-import org.teiid.language.Limit;
-import org.teiid.language.OrderBy;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.language.Select;
-import org.teiid.language.SetQuery;
-import org.teiid.language.TableReference;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 
-	public HiveSQLConversionVisitor(HiveExecutionFactory hef) {
+	public HiveSQLConversionVisitor(BaseHiveExecutionFactory hef) {
 		super(hef);
 	}
 	
-    public void visit(Join obj) {
+    @Override
+	public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
         if(useParensForJoins() && leftItem instanceof Join) {
             buffer.append(Tokens.LPAREN);
@@ -67,7 +50,8 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         switch(obj.getJoinType()) {
             case CROSS_JOIN:
             	// Hive just works with "JOIN" keyword no inner or cross
-                //buffer.append(CROSS); 
+            	// fixed in - https://issues.apache.org/jira/browse/HIVE-2549
+                buffer.append(CROSS); 
                 break;
             case FULL_OUTER_JOIN:
                 buffer.append(FULL)
@@ -181,5 +165,20 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         buffer.append("X__"); //$NON-NLS-1$
-    }    
+    }
+    
+    @Override
+    public void visit(Select obj) {
+    	if (obj.getGroupBy() != null && obj.getOrderBy() != null) {
+    		//hive does not like order by with a group by using the full column references
+    		//this should be fine even with joins as the engine should alias the select columns 
+			for (SortSpecification spec : obj.getOrderBy().getSortSpecifications()) {
+				if (spec.getExpression() instanceof ColumnReference) {
+					ColumnReference cr = (ColumnReference)spec.getExpression();
+					cr.setTable(null);
+				}
+			}
+    	}
+    	super.visit(obj);
+    }
 }

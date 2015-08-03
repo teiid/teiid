@@ -72,6 +72,9 @@ public interface QueryMetadataInterface {
     Object getGroupID(String groupName)
         throws TeiidComponentException, QueryMetadataException;
        
+    Object getModelID(String modelName)
+            throws TeiidComponentException, QueryMetadataException;
+    
     /**
      * Get a collection of group names that match the partially qualified group name.
      * @param partialGroupName Partially qualified group name
@@ -162,7 +165,7 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-    Object getDefaultValue(Object elementID)
+    String getDefaultValue(Object elementID)
         throws TeiidComponentException, QueryMetadataException;        
 
     /**
@@ -243,7 +246,7 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-    int getDistinctValues(Object elementID)
+    float getDistinctValues(Object elementID)
         throws TeiidComponentException, QueryMetadataException;        
 
     /**
@@ -254,7 +257,7 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-    int getNullValues(Object elementID)
+    float getNullValues(Object elementID)
         throws TeiidComponentException, QueryMetadataException;        
 
 	/**
@@ -484,7 +487,7 @@ public interface QueryMetadataInterface {
     * @param groupID Metadata identifier specifying group
     * @return cardinality for the given group. If unknown, return UNKNOWN_CARDINALITY. 
     */ 
-   int getCardinality(Object groupID) 
+   float getCardinality(Object groupID) 
     	throws TeiidComponentException, QueryMetadataException;
         
    /**
@@ -663,4 +666,13 @@ public interface QueryMetadataInterface {
 	boolean isVariadic(Object metadataID);
 
 	Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID);
+
+	boolean isPseudo(Object elementId);
+
+	String getExtensionProperty(Object metadataID, String key,
+			boolean checkUnqualified);
+
+	boolean useOutputName();
+
+	boolean findShortName();
 }

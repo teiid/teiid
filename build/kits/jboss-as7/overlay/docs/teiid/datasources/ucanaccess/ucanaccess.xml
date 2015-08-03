@@ -1,0 +1,20 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<subsystem xmlns="urn:jboss:domain:datasources:1.2">
+    <datasources>
+	    <datasource jndi-name="java:jboss/datasources/ucanaccessDS" enabled="true" use-java-context="true" pool-name="ucanaccessDS">
+    		<connection-url>jdbc:ucanaccess://{<mdb or accdb file path>}</connection-url>
+        	<driver>ucanaccess</driver>
+       	        <security>
+            	    <user-name>{user}</user-name>
+            	    <password>{password}</password>
+       		</security>
+    	    </datasource>
+    	    <drivers>
+        	<driver name="ucanaccess" module="net.ucanaccess">
+            	    <driver-class>net.ucanaccess.jdbc.UcanaccessDriver</driver-class>
+        	</driver>
+    	    </drivers>
+    </datasources>
+</subsystem>
+
+

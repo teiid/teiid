@@ -31,6 +31,8 @@ public class WithItem extends BaseLanguageObject implements SubqueryContainer {
 	private NamedTable table;
 	private List<ColumnReference> columns;
 	private QueryExpression queryExpression;
+	private List<? extends List<?>> dependentValues;
+	private boolean recusive;
 
 	public NamedTable getTable() {
 		return table;
@@ -63,4 +65,20 @@ public class WithItem extends BaseLanguageObject implements SubqueryContainer {
 		visitor.visit(this);
 	}
 
+	public void setDependentValues(List<? extends List<?>> tupleBufferList) {
+		this.dependentValues = tupleBufferList;
+	}
+	
+	public List<? extends List<?>> getDependentValues() {
+		return dependentValues;
+	}
+	
+	public boolean isRecusive() {
+		return recusive;
+	}
+	
+	public void setRecusive(boolean recusive) {
+		this.recusive = recusive;
+	}
+	
 }

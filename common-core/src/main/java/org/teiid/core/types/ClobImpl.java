@@ -48,6 +48,30 @@ import org.teiid.core.util.SqlUtil;
  */
 public class ClobImpl extends BaseLob implements Clob {
     
+	private static final class StringInputStreamFactory extends
+			InputStreamFactory {
+		String str;
+
+		private StringInputStreamFactory(String str) {
+			this.str = str;
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			return new ByteArrayInputStream(str.getBytes(Streamable.CHARSET));
+		}
+
+		@Override
+		public Reader getCharacterStream() throws IOException {
+			return new StringReader(str);
+		}
+
+		@Override
+		public StorageMode getStorageMode() {
+			return StorageMode.MEMORY;
+		}
+	}
+
 	private final static class ClobStreamProvider implements
 			LobSearchUtil.StreamProvider {
 		private final Clob searchstr;
@@ -85,26 +109,11 @@ public class ClobImpl extends BaseLob implements Clob {
 	}
     
     public ClobImpl(final char[] chars) {
-    	this(new InputStreamFactory() {
-    		
-    		String str = new String(chars);
-
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ByteArrayInputStream(str.getBytes());
-			}
-			
-			@Override
-			public Reader getCharacterStream() throws IOException {
-				return new StringReader(str);
-			}
-			
-			@Override
-			public StorageMode getStorageMode() {
-				return StorageMode.MEMORY;
-			}
-    		
-    	}, chars.length);
+    	this(new StringInputStreamFactory(new String(chars)), chars.length);
+    }
+    
+    public ClobImpl(String str) {
+    	this(new StringInputStreamFactory(str), str.length());
     }
 
 	/**
@@ -225,7 +234,7 @@ public class ClobImpl extends BaseLob implements Clob {
     	if (searchstr == null) {
             return -1;
         }
-    	return position(new ClobImpl(searchstr.toCharArray()), start);
+    	return position(new ClobImpl(searchstr), start);
     }
     	    
 	public Reader getCharacterStream(long arg0, long arg1) throws SQLException {

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+    <display-name>odata</display-name>
+    <context-param>
+        <param-name>javax.ws.rs.Application</param-name>
+        <param-value>org.teiid.odata.TeiidODataApplication</param-value>
+    </context-param>   
+    <context-param>
+        <param-name>batch-size</param-name>
+        <param-value>256</param-value>
+    </context-param>  
+    <context-param>
+        <param-name>skiptoken-cache-time</param-name>
+        <param-value>300000</param-value>
+    </context-param>   
+    <context-param>
+        <param-name>local-transport-name</param-name>
+        <param-value>odata</param-value>
+    </context-param>
+    <context-param>
+        <param-name>resteasy.document.expand.entity.references</param-name>
+        <param-value>false</param-value>
+    </context-param>
+    
+    <!--
+    If you want to restrict access to single VDB, uncomment and provide the VDB name(must be in format vdbName.vdbVersion), 
+    and provide a context name in jboss-web.xml that is not "odata"
+    <context-param>
+        <param-name>allow-vdb</param-name>
+        <param-value>vdbName.1</param-value>
+    </context-param>
+    -->
+     
+    <!--   
+    In cloud environment or if under a proxy, update the below url with address of the proxy to generate 
+    odata links correctly.
+    <context-param>
+        <param-name>proxy-base-uri</param-name>
+        <param-value>http://{host}</param-value>
+    </context-param>  
+     -->
+    <listener>
+        <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>
+    </listener>    
+    <servlet>
+        <servlet-name>Resteasy</servlet-name>
+        <servlet-class>org.teiid.odata.ODataServlet</servlet-class>
+    </servlet>     
+    
+    <servlet-mapping>
+        <servlet-name>Resteasy</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+         
+         
+     <security-role>
+        <description>security role</description>
+        <role-name>odata</role-name>
+    </security-role>
+      
+    <security-constraint>
+        <display-name>require valid user</display-name>
+        <web-resource-collection>
+            <web-resource-name>Teiid Rest Application</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>odata</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>yourdomain.com</realm-name>
+    </login-config>
+</web-app>

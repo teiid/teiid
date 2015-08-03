@@ -30,6 +30,7 @@ public interface DataPolicy {
 		DROP,
 		QUERY,
 		INSERT,
+		MERGE,
 		UPDATE,
 		DELETE,
 		FUNCTION,
@@ -69,6 +70,12 @@ public interface DataPolicy {
 	 * @return
 	 */
 	boolean isAnyAuthenticated();
+	
+	/**
+	 * If the policy grants all permissions
+	 * @return
+	 */
+	boolean isGrantAll();
 	
 	/**
 	 * If the policy allows for temporary table usage
@@ -124,6 +131,26 @@ public interface DataPolicy {
 		 * @return
 		 */
 		Boolean getAllowLanguage();
+
+		/**
+		 * The condition string
+		 */
+		String getCondition();
+		
+		/**
+		 * The column mask string
+		 */
+		String getMask();
+
+		/**
+		 * The column mask order
+		 */
+		Integer getOrder();
+		
+		/**
+		 * If the condition acts as a constraint.
+		 */
+		Boolean getConstraint();
 		
 	}
 }

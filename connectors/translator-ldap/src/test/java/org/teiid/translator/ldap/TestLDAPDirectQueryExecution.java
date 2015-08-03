@@ -23,8 +23,6 @@ package org.teiid.translator.ldap;
 
 import static org.junit.Assert.*;
 
-import java.math.BigDecimal;
-
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.LdapContext;
@@ -49,7 +47,7 @@ public class TestLDAPDirectQueryExecution {
     @BeforeClass
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new LDAPExecutionFactory();
-        TRANSLATOR.setSupportsNativeQueries(true);
+        TRANSLATOR.setSupportsDirectQueryProcedure(true);
         TRANSLATOR.start();
     }	
     
@@ -156,9 +154,9 @@ public class TestLDAPDirectQueryExecution {
 		assertEquals("one", modificationItemArgument.getValue()[0].getAttribute().getID());
 		assertEquals("one", modificationItemArgument.getValue()[0].getAttribute().get());
 		assertEquals("two", modificationItemArgument.getValue()[1].getAttribute().getID());
-		assertEquals(2, modificationItemArgument.getValue()[1].getAttribute().get());
+		assertEquals("2", modificationItemArgument.getValue()[1].getAttribute().get());
 		assertEquals("three", modificationItemArgument.getValue()[2].getAttribute().getID());
-		assertEquals(new BigDecimal("3.0"), modificationItemArgument.getValue()[2].getAttribute().get());
+		assertEquals("3.0", modificationItemArgument.getValue()[2].getAttribute().get());
     } 
     
     @Test public void testCreate() throws Exception {
@@ -183,9 +181,9 @@ public class TestLDAPDirectQueryExecution {
 		assertEquals("one", createItemArgument.getValue().get("one").getID());
 		assertEquals("one", createItemArgument.getValue().get("one").get());
 		assertEquals("two", createItemArgument.getValue().get("two").getID());
-		assertEquals(2, createItemArgument.getValue().get("two").get());
+		assertEquals("2", createItemArgument.getValue().get("two").get());
 		assertEquals("three", createItemArgument.getValue().get("three").getID());
-		assertEquals(new BigDecimal("3.0"), createItemArgument.getValue().get("three").get());
+		assertEquals("3.0", createItemArgument.getValue().get("three").get());
     }
     
     @Test(expected=TranslatorException.class) public void testCreateFail() throws Exception {

@@ -23,6 +23,7 @@
 package org.teiid.net.socket;
 
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -53,6 +54,5 @@ public interface SocketServerInstance {
 
 	String getServerVersion();
 
-	AuthenticationType getAuthenticationType();
-
+	InetAddress getLocalAddress();
 }

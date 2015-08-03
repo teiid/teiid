@@ -1,0 +1,16 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:jboss/datasources/PhoenixDS" enabled="true" use-java-context="true" pool-name="PhoenixDS">
+        <connection-url>jdbc:phoenix:{zookeeper quorum server}</connection-url>
+        <driver>phoenix</driver>
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+        </security>
+    </datasource> 
+    <drivers>
+	<driver name="phoenix" module="org.apache.phoenix">
+	    <driver-class>org.apache.phoenix.jdbc.PhoenixDriver</driver-class>
+	</driver>
+    </drivers>                              
+</datasources>

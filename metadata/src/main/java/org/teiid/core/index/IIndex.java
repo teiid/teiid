@@ -13,26 +13,12 @@ package org.teiid.core.index;
 
 import java.io.IOException;
 
-import org.jboss.vfs.VirtualFile;
-
 /**
  * An IIndex is the interface used to generate an index file, and to make queries on
  * this index.
  */
 
 public interface IIndex {
-	/**
-	 * Adds the given document to the index.
-	 */
-	void add(IDocument document, IIndexer indexer) throws IOException;
-	/**
-	 * Empties the index.
-	 */
-	void empty() throws IOException;
-	/**
-	 * Returns the index file on the disk.
-	 */
-	VirtualFile getIndexFile();
 	/**
 	 * Returns the number of documents indexed.
 	 */
@@ -41,14 +27,6 @@ public interface IIndex {
 	 * Returns the number of unique words indexed.
 	 */
 	int getNumWords() throws IOException;
-	/**
-	 * Returns the path corresponding to a given document number
-	 */
-	String getPath(int documentNumber) throws IOException;
-	/**
-	 * Ansers true if has some changes to save.
-	 */
-	boolean hasChanged();
 	/**
 	 * Returns the paths of the documents containing the given word.
 	 */
@@ -65,14 +43,6 @@ public interface IIndex {
 	 * Returns the paths of the documents containing the given word prefix.
 	 */
 	IQueryResult[] queryPrefix(char[] prefix) throws IOException;
-	/**
-	 * Removes the corresponding document from the index.
-	 */
-	void remove(String documentName) throws IOException;
-	/**
-	 * Saves the index on the disk.
-	 */
-	void save() throws IOException;
     
     /**
      * Closes the index file if open 
@@ -80,13 +50,6 @@ public interface IIndex {
      * @since 5.0
      */
     void close();
-    
-    /**
-     * closes the index file then deletes it. 
-     * 
-     * @since 5.0
-     */
-    void dispose();
     
     /**
      * sets a boolean indicating the index file will be cached and should remain open and in-memory 

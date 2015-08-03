@@ -29,12 +29,13 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.parser.TestDDLParser;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestDDLStringVisitor {
@@ -128,7 +129,7 @@ public class TestDDLStringVisitor {
 	public void testFK() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(\"g1-e1\" integer, g1e2 varchar, PRIMARY KEY(\"g1-e1\", g1e2));\n" +
 				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, " +
-				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
+				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (\"g1-e1\", g1e2))";
 		
 		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
 				"	\"g1-e1\" integer,\n" + 
@@ -139,10 +140,13 @@ public class TestDDLStringVisitor {
 				"CREATE FOREIGN TABLE G2 (\n" + 
 				"	g2e1 integer,\n" + 
 				"	g2e2 string,\n" + 
-				"	FOREIGN KEY(g2e1, g2e2) REFERENCES G1 (g1e1, g1e2)\n" + 
+				"	FOREIGN KEY(g2e1, g2e2) REFERENCES G1 (\"g1-e1\", g1e2)\n" + 
 				");";
 		
-		helpTest(ddl, expected);
+		TransformationMetadata vdb = RealMetadataFactory.fromDDL(ddl, "x", "y");
+		Schema s = vdb.getModelID("y");
+		String metadataDDL = DDLStringVisitor.getDDLString(s, null, null);
+		assertEquals(expected, metadataDDL);
 	}	
 	
 	@Test
@@ -163,6 +167,25 @@ public class TestDDLStringVisitor {
 				");";
 		helpTest(ddl, expected);
 	}	
+
+	@Test
+	public void testFKWithOptions() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE \"G1+\"(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
+				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
+				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 OPTIONS (NAMEINSOURCE 'g1Relationship'))  ";
+		String expected = "CREATE FOREIGN TABLE \"G1+\" (\n" + 
+				"	g1e1 integer,\n" + 
+				"	g1e2 string,\n" + 
+				"	PRIMARY KEY(g1e1, g1e2)\n" + 
+				");\n" + 
+				"\n" + 
+				"CREATE FOREIGN TABLE G2 (\n" + 
+				"	g2e1 integer,\n" + 
+				"	g2e2 string,\n" + 
+				"	PRIMARY KEY(g2e1, g2e2),\n	FOREIGN KEY(g2e1, g2e2) REFERENCES G1  OPTIONS (NAMEINSOURCE 'g1Relationship')\n" + 
+				");";
+		helpTest(ddl, expected);
+	}		
 	
 	@Test
 	public void testMultipleCommands() throws Exception {
@@ -181,11 +204,11 @@ public class TestDDLStringVisitor {
 	
 	@Test 
 	public void testView() throws Exception {
-		String ddl = "CREATE View G1( e1 integer, e2 varchar) OPTIONS (CARDINALITY 12) AS select e1, e2 from foo.bar";
+		String ddl = "CREATE View G1( e1 integer, e2 varchar) OPTIONS (CARDINALITY 1234567890123) AS select e1, e2 from foo.bar";
 		String expected = "CREATE VIEW G1 (\n" + 
 				"	e1 integer,\n" + 
 				"	e2 string\n" + 
-				") OPTIONS (CARDINALITY 12)\n" + 
+				") OPTIONS (CARDINALITY 1234567954432)\n" + 
 				"AS\n" + 
 				"SELECT e1, e2 FROM foo.bar;";
 		helpTest(ddl, expected);
@@ -241,6 +264,14 @@ public class TestDDLStringVisitor {
 				"OPTIONS (JAVA_CLASS 'foo', JAVA_MEHTOD 'bar');";
 		helpTest(ddl, expected);
 	}
+	
+	@Test
+	public void testNonPushdownFunction1() throws Exception {
+		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(p1 integer, p2 string) RETURNS integer\n" + 
+				"as return repeat(p2, p1);";
+		String expected = "CREATE VIRTUAL FUNCTION SourceFunc(OUT \"return\" integer RESULT, IN p1 integer, IN p2 string)\nAS\nRETURN repeat(p2, p1);";
+		helpTest(ddl, expected);
+	}
 
 	private void helpTest(String ddl, String expected) {
 		Schema s = TestDDLParser.helpParse(ddl, "model").getSchema();
@@ -265,7 +296,29 @@ public class TestDDLStringVisitor {
 	
 	@Test public void testNamespaces() throws Exception {
 		String ddl = "set namespace 'some long thing' as x; CREATE View G1(a integer, b varchar) options (\"teiid_rel:x\" false, \"x:z\" 'stringval') AS select e1, e2 from foo.bar";
-		String expected = "SET NAMESPACE 'some long thing' AS n0;\n\nCREATE VIEW G1 (\n	a integer,\n	b string\n) OPTIONS (\"teiid_rel:x\" 'false', \"n0:z\" 'stringval')\nAS\nSELECT e1, e2 FROM foo.bar;";
+		String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\nSET NAMESPACE 'some long thing' AS n1;\n\nCREATE VIEW G1 (\n	a integer,\n	b string\n) OPTIONS (\"teiid_rel:x\" 'false', \"n1:z\" 'stringval')\nAS\nSELECT e1, e2 FROM foo.bar;";
 		helpTest(ddl, expected);
 	}
+	
+	@Test public void testGlobalTemporaryTable() throws Exception {
+		String ddl = "create global temporary table myTemp (x string, y serial, primary key (x))";
+		String expected = "CREATE GLOBAL TEMPORARY TABLE myTemp (\n	x string,\n	y SERIAL,\n	PRIMARY KEY(x)\n)";
+		helpTest(ddl, expected);
+	}
+	
+	@Test public void testArrayTypes() throws Exception {
+		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+				"RETURNS (r1 varchar(100)[], r2 decimal[][])";
+		
+		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, IN p2 string, INOUT p3 bigdecimal) RETURNS TABLE (r1 string(100)[], r2 bigdecimal[][])";
+		helpTest(ddl, expected);		
+	}
+	
+	@Test public void testGeometry() throws Exception {
+		String ddl = "CREATE foreign table G1( e1 geometry)";
+		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
+				"	e1 geometry\n" + 
+				");";
+		helpTest(ddl, expected);
+	}	
 }

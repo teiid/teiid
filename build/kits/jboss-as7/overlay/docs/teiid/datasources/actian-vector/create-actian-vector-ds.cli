@@ -1,0 +1,6 @@
+
+deploy iijdbc.jar
+
+/subsystem=datasources/jdbc-driver=vector:add(driver-name=vector, driver-module-name=iijdbc.jar, driver-class-name=com.ingres.jdbc.IngresDriver)
+
+/subsystem=datasources/data-source=vectorDS:add(jndi-name=java:/vectorDS, driver-name=vector, enabled=true, use-java-context=true, connection-url=jdbc:ingres://${host}:AH7/${db-name};, user-name="${user}", password="${password}")

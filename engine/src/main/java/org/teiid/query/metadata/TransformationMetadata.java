@@ -33,7 +33,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.jboss.vfs.VirtualFile;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -96,30 +96,20 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
 	private final class VirtualFileInputStreamFactory extends
 			InputStreamFactory {
-		private final VirtualFile f;
-		private InputStream is;
+		private final VDBResources.Resource r;
 
-		private VirtualFileInputStreamFactory(VirtualFile f) {
-			this.f = f;
+		private VirtualFileInputStreamFactory(VDBResources.Resource r) {
+			this.r = r;
 		}
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			this.is = f.openStream();
-			return is;
+			return r.openStream();
 		}
 		
 		@Override
 		public long getLength() {
-			return f.getSize();
-		}
-		
-		@Override
-		public void free() {
-			try {
-				this.is.close();
-			} catch (IOException e) {
-			}
+			return r.getSize();
 		}
 		
 		@Override
@@ -128,15 +118,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 	}
 
-	public static class Resource {
-		public Resource(VirtualFile file, boolean visible) {
-			this.file = file;
-			this.visible = visible;
-		}
-		VirtualFile file;
-		boolean visible;
-	}
-	
 	private static final long serialVersionUID = 1058627332954475287L;
 	
 	/** Delimiter character used when specifying fully qualified entity names */
@@ -146,16 +127,18 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     // error message cached to avoid i18n lookup each time
     public static String NOT_EXISTS_MESSAGE = StringUtil.Constants.SPACE+QueryPlugin.Util.getString("TransformationMetadata.does_not_exist._1"); //$NON-NLS-1$
 
-    private static Properties EMPTY_PROPS = new Properties();
+    public static Properties EMPTY_PROPS = new Properties();
     
     private final CompositeMetadataStore store;
-    private Map<String, Resource> vdbEntries;
+    private Map<String, VDBResources.Resource> vdbEntries;
     private FunctionLibrary functionLibrary;
     private VDBMetaData vdbMetaData;
     private ScriptEngineManager scriptEngineManager;
     private Map<String, ScriptEngineFactory> scriptEngineFactories = Collections.synchronizedMap(new HashMap<String, ScriptEngineFactory>());
     private Set<String> importedModels;
     private Set<String> allowedLanguages;
+    private Map<String, DataPolicyMetadata> policies = new TreeMap<String, DataPolicyMetadata>(String.CASE_INSENSITIVE_ORDER);
+    private boolean useOutputNames = true;
     
     /*
      * TODO: move caching to jboss cache structure
@@ -168,7 +151,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
      */
-    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
+    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, VDBResources.Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
     	ArgCheck.isNotNull(store);
     	this.vdbMetaData = vdbMetadata;
     	if (this.vdbMetaData !=null) {
@@ -178,6 +161,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     		if (this.allowedLanguages == null) {
     			this.allowedLanguages = Collections.emptySet();
     		}
+    		for (DataPolicyMetadata policy : vdbMetadata.getDataPolicyMap().values()) {
+    			policy = policy.clone();
+    			policies.put(policy.getName(), policy);
+    		}
+    		store.processGrants(policies);
     	} else {
     		this.importedModels = Collections.emptySet();
     	}
@@ -211,13 +199,17 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 		Table table = this.store.findGroup(elementName.substring(0, columnIndex));
 		String shortElementName = elementName.substring(columnIndex + 1);
-		for (Column column : getElementIDsInGroupID(table)) {
-			if (column.getName().equalsIgnoreCase(shortElementName)) {
-				return column;
-			}
-        }
-         throw new QueryMetadataException(QueryPlugin.Event.TEIID30356, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		return getColumn(elementName, table, shortElementName);
     }
+
+	public static Column getColumn(final String elementName, Table table,
+			String shortElementName) throws QueryMetadataException {
+		Column c = table.getColumnByName(shortElementName);
+		if (c != null) {
+			return c;
+		}
+         throw new QueryMetadataException(QueryPlugin.Event.TEIID30356, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+	}
 
     public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
         return getMetadataStore().findGroup(groupName);
@@ -249,7 +241,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public Object getModelID(final Object groupOrElementID) throws TeiidComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(AbstractMetadataRecord.class, groupOrElementID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) groupOrElementID;
         AbstractMetadataRecord parent = metadataRecord.getParent();
         if (parent instanceof Schema) {
@@ -266,21 +257,24 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public String getFullName(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
+        if (metadataRecord instanceof Column) {
+        	Column c = (Column)metadataRecord;
+        	if (c.getParent() != null && c.getParent().getParent() instanceof Procedure) {
+        		return c.getParent().getParent().getFullName() + '.' + c.getName();
+        	}
+        }
         return metadataRecord.getFullName();
     }
     
     @Override
     public String getName(Object metadataID) throws TeiidComponentException,
     		QueryMetadataException {
-    	ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         return metadataRecord.getName();
     }
 
     public List<Column> getElementIDsInGroupID(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(Table.class, groupID);
     	List<Column> columns = ((Table)groupID).getColumns();
     	if (columns == null || columns.isEmpty()) {
     		throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, ((Table)groupID).getName()));
@@ -294,6 +288,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             AbstractMetadataRecord parent = columnRecord.getParent();
             if (parent instanceof Table) {
             	return parent;
+            }
+            if (parent instanceof ColumnSet) {
+            	parent = ((ColumnSet<?>)parent).getParent();
+            	if (parent instanceof Procedure) {
+            		return parent;
+            	}
             }
         } 
         if(elementID instanceof ProcedureParameter) {
@@ -432,7 +432,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public Object getDefaultValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public String getDefaultValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getDefaultValue();            
         } else if(elementID instanceof ProcedureParameter){
@@ -463,14 +463,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public boolean isVirtualGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
-        return ((Table) groupID).isVirtual();
+    	if (groupID instanceof Table) {
+    		return ((Table) groupID).isVirtual();
+    	}
+    	if (groupID instanceof Procedure) {
+    		return ((Procedure) groupID).isVirtual();
+    	}
+    	throw createInvalidRecordTypeException(groupID);
     }
 
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#isProcedureInputElement(java.lang.Object)
-     * @since 4.2
-     */
     public boolean isProcedure(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	if(groupID instanceof Procedure) {
             return true;            
@@ -482,14 +483,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public boolean isVirtualModel(final Object modelID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Schema.class, modelID);
         Schema modelRecord = (Schema) modelID;
         return !modelRecord.isPhysical();
     }
 
     public QueryNode getVirtualPlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
-
         Table tableRecord = (Table) groupID;
         if (!tableRecord.isVirtual()) {
              throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecord.getFullName(), "Query")); //$NON-NLS-1$
@@ -508,7 +506,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public String getInsertPlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
              throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Insert")); //$NON-NLS-1$
@@ -517,7 +514,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public String getUpdatePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
         	throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Update")); //$NON-NLS-1$
@@ -526,7 +522,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public String getDeletePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
         	throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Delete")); //$NON-NLS-1$
@@ -536,8 +531,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public boolean modelSupports(final Object modelID, final int modelConstant)
         throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Schema.class, modelID);
-
         switch(modelConstant) {
             default:
                 throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + modelConstant); //$NON-NLS-1$
@@ -546,7 +539,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public boolean groupSupports(final Object groupID, final int groupConstant)
         throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
 
         switch(groupConstant) {
@@ -571,6 +563,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     return (columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.All_Except_Like);
                 case SupportConstants.Element.SEARCHABLE_LIKE:
                 	return (columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.Like_Only);
+                case SupportConstants.Element.SEARCHABLE_EQUALITY:
+                    return (columnRecord.getSearchType() == SearchType.Equality_Only || columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.All_Except_Like);
                 case SupportConstants.Element.SELECT:
                     return columnRecord.isSelectable();
                 case SupportConstants.Element.UPDATE:
@@ -626,22 +620,19 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     private IllegalArgumentException createInvalidRecordTypeException(Object elementID) {
-        return new IllegalArgumentException(QueryPlugin.Util.getString("TransformationMetadata.Invalid_type", elementID.getClass().getName()));         //$NON-NLS-1$
+        return new IllegalArgumentException(QueryPlugin.Util.getString("TransformationMetadata.Invalid_type", elementID!=null?elementID.getClass().getName():null));         //$NON-NLS-1$
     }
 
     public int getMaxSetSize(final Object modelID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Schema.class, modelID);
         return 0;
     }
 
     public Collection<KeyRecord> getIndexesInGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         return ((Table)groupID).getIndexes();
     }
 
     public Collection<KeyRecord> getUniqueKeysInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(Table.class, groupID);
     	Table tableRecordImpl = (Table)groupID;
     	ArrayList<KeyRecord> result = new ArrayList<KeyRecord>(tableRecordImpl.getUniqueKeys());
     	if (tableRecordImpl.getPrimaryKey() != null) {
@@ -657,42 +648,34 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public Collection<ForeignKey> getForeignKeysInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getForeignKeys();
     }
 
     public Object getPrimaryKeyIDForForeignKeyID(final Object foreignKeyID)
         throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ForeignKey.class, foreignKeyID);
         ForeignKey fkRecord = (ForeignKey) foreignKeyID;
         return fkRecord.getPrimaryKey();
     }
 
     public Collection<KeyRecord> getAccessPatternsInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getAccessPatterns();
     }
 
     public List<Column> getElementIDsInIndex(final Object index) throws TeiidComponentException, QueryMetadataException {
-    	ArgCheck.isInstanceOf(ColumnSet.class, index);
     	return ((ColumnSet<?>)index).getColumns();
     }
 
     public List<Column> getElementIDsInKey(final Object key) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ColumnSet.class, key);
         return ((ColumnSet<?>)key).getColumns();
     }
 
     public List<Column> getElementIDsInAccessPattern(final Object accessPattern)
         throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(ColumnSet.class, accessPattern);
         return ((ColumnSet<?>)accessPattern).getColumns();
     }
 
     public boolean isXMLGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
-
         Table tableRecord = (Table) groupID;
         return tableRecord.getTableType() == Table.Type.Document;
     }
@@ -703,7 +686,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      */
     public boolean hasMaterialization(final Object groupID) throws TeiidComponentException,
                                                       QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
         return tableRecord.isMaterialized();
     }
@@ -714,7 +696,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      */
     public Object getMaterialization(final Object groupID) throws TeiidComponentException,
                                                     QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
         if(tableRecord.isMaterialized()) {
 	        return tableRecord.getMaterializedTable();
@@ -728,7 +709,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      */
     public Object getMaterializationStage(final Object groupID) throws TeiidComponentException,
                                                          QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
         if(tableRecord.isMaterialized()) {
 	        return tableRecord.getMaterializedStageTable();
@@ -737,11 +717,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public MappingNode getMappingNode(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
-
         Table tableRecord = (Table) groupID;
         
-        MappingDocument mappingDoc = tableRecord.getAttachment(MappingDocument.class);
+        MappingDocument mappingDoc = (MappingDocument) getFromMetadataCache(groupID, "xml-doc"); //$NON-NLS-1$
         
         if (mappingDoc != null) {
         	return mappingDoc;
@@ -763,7 +741,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 					inputStream.close();
             	} catch(Exception e) {}
             }
-            tableRecord.addAttchment(MappingDocument.class, mappingDoc);
+            addToMetadataCache(groupID, "xml-doc", mappingDoc); //$NON-NLS-1$
             return mappingDoc;
         }
 
@@ -795,7 +773,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see org.teiid.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
      */
     public Collection<Table> getXMLTempGroups(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
 
         if(tableRecord.getTableType() == Table.Type.Document) {
@@ -804,14 +781,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return Collections.emptySet();
     }
 
-    public int getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
-        return ((Table) groupID).getCardinality();
+    @Override
+    public float getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
+        return ((Table) groupID).getCardinalityAsFloat();
     }
 
     public List<SQLXMLImpl> getXMLSchemas(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-
-        ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecord = (Table) groupID;
 
         // lookup transformation record for the group
@@ -867,7 +842,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	}
 
     public String getNameInSource(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         return ((AbstractMetadataRecord) metadataID).getNameInSource();
     }
 
@@ -928,9 +902,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public int getDistinctValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    @Override
+    public float getDistinctValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getDistinctValues();
+            return ((Column) elementID).getDistinctValuesAsFloat();
         } else if(elementID instanceof ProcedureParameter) {
             return -1;            
         } else {
@@ -938,9 +913,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public int getNullValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    @Override
+    public float getNullValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getNullValues();
+            return ((Column) elementID).getNullValuesAsFloat();
         } else if(elementID instanceof ProcedureParameter) {
             return -1;            
         } else {
@@ -959,7 +935,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public Properties getExtensionProperties(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         Map<String, String> result = metadataRecord.getProperties();
         if (result == null) {
@@ -969,13 +944,18 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         p.putAll(result);
         return p;
     }
+    
+    @Override
+    public String getExtensionProperty(Object metadataID, String key, boolean checkUnqualified) {
+        return ((AbstractMetadataRecord)metadataID).getProperty(key, checkUnqualified);
+    }
 
     /** 
      * @see org.teiid.query.metadata.BasicQueryMetadata#getBinaryVDBResource(java.lang.String)
      * @since 4.3
      */
     public byte[] getBinaryVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
@@ -987,7 +967,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     public ClobImpl getVDBResourceAsClob(String resourcePath) {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
@@ -995,7 +975,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     public SQLXMLImpl getVDBResourceAsSQLXML(String resourcePath) {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
@@ -1003,22 +983,18 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     public BlobImpl getVDBResourceAsBlob(String resourcePath) {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
     	return new BlobImpl(new VirtualFileInputStreamFactory(f));
     }
     
-    private VirtualFile getFile(String resourcePath) {
+    private VDBResources.Resource getFile(String resourcePath) {
     	if (resourcePath == null) {
     		return null;
     	}
-    	Resource r = this.vdbEntries.get(resourcePath);
-    	if (r != null) {
-    		return r.file;
-    	}
-    	return null;
+    	return this.vdbEntries.get(resourcePath);
     }
 
     /** 
@@ -1047,7 +1023,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      */
     public String[] getVDBResourcePaths() throws TeiidComponentException, QueryMetadataException {
     	LinkedList<String> paths = new LinkedList<String>();
-    	for (Map.Entry<String, Resource> entry : this.vdbEntries.entrySet()) {
+    	for (Map.Entry<String, VDBResources.Resource> entry : this.vdbEntries.entrySet()) {
 			paths.add(entry.getKey());
     	}
     	return paths.toArray(new String[paths.size()]);
@@ -1055,7 +1031,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     
 	@Override
 	public Object addToMetadataCache(Object metadataID, String key, Object value) {
-        ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
         if (groupInfo) {
@@ -1067,7 +1042,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	@Override
 	public Object getFromMetadataCache(Object metadataID, String key)
 			throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
         if (groupInfo) {
@@ -1087,7 +1061,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	
 	@Override
 	public Object getPrimaryKey(Object metadataID) {
-		ArgCheck.isInstanceOf(Table.class, metadataID);
 		Table table = (Table)metadataID;
 		return table.getPrimaryKey();
 	}
@@ -1157,6 +1130,29 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			return ((FunctionParameter)metadataID).isVarArg();
 		}
 		return false;
+	}
+	
+	@Override
+	public Schema getModelID(String modelName) throws TeiidComponentException,
+			QueryMetadataException {
+		Schema s = this.getMetadataStore().getSchema(modelName);
+		if (s == null) {
+			throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, modelName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		}
+		return s;
+	}
+	
+	public Map<String, DataPolicyMetadata> getPolicies() {
+		return policies;
+	}
+	
+	@Override
+	public boolean useOutputName() {
+		return useOutputNames;
+	}
+	
+	public void setUseOutputNames(boolean useOutputNames) {
+		this.useOutputNames = useOutputNames;
 	}
 	
 }

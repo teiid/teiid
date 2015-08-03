@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -21,9 +21,13 @@
  */
 package org.teiid.resource.adapter.ws;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import javax.resource.ResourceException;
+import javax.resource.spi.InvalidPropertyException;
 import javax.xml.namespace.QName;
 
 import org.apache.cxf.Bus;
@@ -32,45 +36,81 @@ import org.apache.cxf.configuration.Configurer;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
 import org.teiid.core.BundleUtil;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	private static final long serialVersionUID = -2998163922934555003L;
-	
+
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(WSManagedConnectionFactory.class);
 
-	public enum SecurityType {None,HTTPBasic,WSSecurity}
-	
+	public enum SecurityType {None,HTTPBasic,Digest,WSSecurity,Kerberos,OAuth}
+
+	//ws properties
 	private String endPoint;
+	//ws derived state
+	private List<? extends Interceptor> outInterceptors;
+
+	//wsdl properties
+	private String wsdl;
+	private String serviceName = WSManagedConnectionFactory.DEFAULT_LOCAL_NAME;
+	private URL wsdlUrl;
+	//shared properties
 	private String securityType = SecurityType.None.name(); // None, HTTPBasic, WS-Security
 	private String configFile; // path to the "jbossws-cxf.xml" file
-	private String configName; // config name in the above file
+	private String endPointName = WSManagedConnectionFactory.DEFAULT_LOCAL_NAME;
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
-
+	private Long requestTimeout;
+	private Long connectTimeout;
+	private String namespaceUri = WSManagedConnectionFactory.DEFAULT_NAMESPACE_URI;
+	//shared derived state
 	private Bus bus;
 	private QName portQName;
-	private List<? extends Interceptor> outInterceptors;
-	private Long requestTimeout = -1L;
+	private QName serviceQName;
+
+	static final String DEFAULT_NAMESPACE_URI = "http://teiid.org"; //$NON-NLS-1$
+
+	static final String DEFAULT_LOCAL_NAME = "teiid"; //$NON-NLS-1$
 
 	@SuppressWarnings("serial")
 	@Override
 	public BasicConnectionFactory<WSConnectionImpl> createConnectionFactory() throws ResourceException {
-		String configName = getConfigName();
-		if (configName == null) {
-			configName = WSConnectionImpl.DEFAULT_LOCAL_NAME; 
+		if (this.endPointName == null) {
+			this.endPointName = WSManagedConnectionFactory.DEFAULT_LOCAL_NAME;
 		}
-		this.portQName = new QName(WSConnectionImpl.DEFAULT_NAMESPACE_URI, configName);
-		if (configFile != null) {
-			bus = new SpringBusFactory().createBus(configFile);
+		if (this.serviceName == null) {
+			this.serviceName = WSManagedConnectionFactory.DEFAULT_LOCAL_NAME;
+		}
+		if (this.namespaceUri == null) {
+			this.namespaceUri = WSManagedConnectionFactory.DEFAULT_NAMESPACE_URI;
+		}
+		this.portQName = new QName(this.namespaceUri, this.endPointName);
+		this.serviceQName = new QName(this.namespaceUri, this.serviceName);
+		if (this.wsdl != null) {
+			try {
+				this.wsdlUrl = new URL(this.wsdl);
+			} catch (MalformedURLException e) {
+				File f = new File(this.wsdl);
+				try {
+					this.wsdlUrl = f.toURI().toURL();
+				} catch (MalformedURLException e1) {
+					throw new InvalidPropertyException(e1);
+				}
+			}
+		}
+		if (this.configFile != null) {
+			this.bus = new SpringBusFactory().createBus(this.configFile);
 			JaxWsClientFactoryBean instance = new JaxWsClientFactoryBean();
-			Configurer configurer = bus.getExtension(Configurer.class);
-	        if (null != configurer) {
-	            configurer.configureBean(portQName.toString() + ".jaxws-client.proxyFactory", instance); //$NON-NLS-1$
-	        }
-	        outInterceptors = instance.getOutInterceptors();
+			if (this.wsdl == null) {
+				Configurer configurer = this.bus.getExtension(Configurer.class);
+		        if (null != configurer) {
+		            configurer.configureBean(this.portQName.toString() + ".jaxws-client.proxyFactory", instance); //$NON-NLS-1$
+		        }
+		        this.outInterceptors = instance.getOutInterceptors();
+			}
 		}
 		return new BasicConnectionFactory<WSConnectionImpl>() {
 			@Override
@@ -79,7 +119,35 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 			}
 		};
 	}
-	
+
+	public QName getServiceQName() {
+		return this.serviceQName;
+	}
+
+	public String getNamespaceUri() {
+		return this.namespaceUri;
+	}
+
+	public void setNamespaceUri(String namespaceUri) {
+		this.namespaceUri = namespaceUri;
+	}
+
+	public String getServiceName() {
+		return this.serviceName;
+	}
+
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public String getEndPointName() {
+		return this.endPointName;
+	}
+
+	public void setEndPointName(String portName) {
+		this.endPointName = portName;
+	}
+
 	public String getAuthPassword() {
 		return this.authPassword;
 	}
@@ -103,15 +171,15 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	public void setEndPoint(String endPoint) {
 		this.endPoint = endPoint;
 	}
-	
+
 	public Long getRequestTimeout() {
 		return this.requestTimeout;
 	}
 
 	public void setRequestTimeout(Long timeout) {
 		this.requestTimeout = timeout;
-	}	
-	
+	}
+
 	public SecurityType getAsSecurityType() {
 		return SecurityType.valueOf(this.securityType);
 	}
@@ -122,54 +190,80 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	public void setSecurityType(String securityType) {
 		this.securityType = securityType;
-	}	
+	}
 
 	public String getConfigFile() {
-		return configFile;
+		return this.configFile;
 	}
 
 	public void setConfigFile(String config) {
 		this.configFile = config;
 	}
-	
+
 	public String getConfigName() {
-		return configName;
+		return this.endPointName;
 	}
 
 	public void setConfigName(String configName) {
-		this.configName = configName;
+		this.endPointName = configName;
 	}
-	
+
 	public Bus getBus() {
-		return bus;
+		return this.bus;
 	}
-	
+
 	public QName getPortQName() {
-		return portQName;
+		return this.portQName;
+	}
+
+	public String getWsdl() {
+		return this.wsdl;
+	}
+
+	public URL getWsdlUrl() {
+		return this.wsdlUrl;
+	}
+
+	public void setWsdl(String wsdl) {
+		this.wsdl = wsdl;
+	}
+
+	public List<? extends Interceptor> getOutInterceptors() {
+		return this.outInterceptors;
 	}
 	
-	public List<? extends Interceptor> getOutInterceptors() {
-		return outInterceptors;
+	public Long getConnectTimeout() {
+		return connectTimeout;
+	}
+	
+	public void setConnectTimeout(Long connectTimeout) {
+		this.connectTimeout = connectTimeout;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((authPassword == null) ? 0 : authPassword.hashCode());
-		result = prime * result + ((authUserName == null) ? 0 : authUserName.hashCode());
-		result = prime * result + ((configFile == null) ? 0 : configFile.hashCode());
-		result = prime * result + ((configName == null) ? 0 : configName.hashCode());
-		result = prime * result + ((endPoint == null) ? 0 : endPoint.hashCode());
-		result = prime * result + ((securityType == null) ? 0 : securityType.hashCode());
+		result = prime * result + ((this.authPassword == null) ? 0 : this.authPassword.hashCode());
+		result = prime * result + ((this.authUserName == null) ? 0 : this.authUserName.hashCode());
+		result = prime * result + ((this.configFile == null) ? 0 : this.configFile.hashCode());
+		result = prime * result + ((this.endPointName == null) ? 0 : this.endPointName.hashCode());
+		result = prime * result + ((this.endPoint == null) ? 0 : this.endPoint.hashCode());
+		result = prime * result + ((this.securityType == null) ? 0 : this.securityType.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
 		WSManagedConnectionFactory other = (WSManagedConnectionFactory) obj;
 		if (!checkEquals(this.authPassword, other.authPassword)) {
 			return false;
@@ -180,7 +274,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		if (!checkEquals(this.configFile, other.configFile)) {
 			return false;
 		}
-		if (!checkEquals(this.configName, other.configName)) {
+		if (!checkEquals(this.endPointName, other.endPointName)) {
 			return false;
 		}
 		if (!checkEquals(this.endPoint, other.endPoint)) {
@@ -189,7 +283,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		if (!checkEquals(this.securityType, other.securityType)) {
 			return false;
 		}
-		return true;
+		return EquivalenceUtil.areEqual(this.requestTimeout, other.requestTimeout)
+				&& EquivalenceUtil.areEqual(this.connectTimeout, other.connectTimeout);
 	}
-	
 }

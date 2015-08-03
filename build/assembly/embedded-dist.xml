@@ -18,7 +18,6 @@
           <include>**/*.sh</include>
         </includes>   
         <fileMode>755</fileMode>  
-        <directoryMode>0755</directoryMode>    
     </fileSet> 
           
     <fileSet>
@@ -27,10 +26,53 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>
     </fileSet>
   </fileSets>
+
+  <dependencySets>
+     <dependencySet>
+        <includes>
+          <include>org.slf4j:slf4j-api:jar</include>
+        </includes>
+        <outputDirectory>optional</outputDirectory>
+        <unpack>false</unpack>
+        <useTransitiveDependencies>true</useTransitiveDependencies>
+        <scope>provided</scope>
+     </dependencySet>
+      <dependencySet>
+        <includes>
+          <include>com.h2database:h2:jar</include>
+        </includes>
+        <outputDirectory>optional/jdbc/h2</outputDirectory>
+        <unpack>false</unpack>
+        <useTransitiveDependencies>false</useTransitiveDependencies>
+        <scope>provided</scope>
+      </dependencySet>
+      <dependencySet>
+          <includes>
+             <include>org.jboss.narayana.jta:narayana-jta:jar</include>
+          </includes>
+          <outputDirectory>lib</outputDirectory>
+          <unpack>false</unpack>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <scope>provided</scope>
+      </dependencySet>
+      <dependencySet>
+          <includes>
+              <include>org.jboss.ironjacamar:ironjacamar-jdbc:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-core-api:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-core-impl:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-api:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-impl:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-common-spi:jar</include>
+              <include>org.jboss.ironjacamar:ironjacamar-spec-api:jar</include>
+              <include>org.jboss:jboss-transaction-spi:jar</include>
+          </includes>
+          <outputDirectory>optional/jdbc/tm</outputDirectory>
+          <unpack>false</unpack>
+          <scope>provided</scope>
+       </dependencySet>
+   </dependencySets>
   
   <moduleSets>
     
@@ -60,72 +102,67 @@
             <unpack>false</unpack>
             <dependencySets>
                 <dependencySet>
+                    <excludes>
+                        <exclude>io.netty:netty</exclude>
+                    </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+                <dependencySet>
+                    <outputDirectory>optional</outputDirectory>
+                    <includes>
+                        <include>io.netty:netty</include>
+                    </includes>
+                    <useProjectArtifact>false</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
                 </dependencySet>
             </dependencySets>
             <outputDirectory>lib</outputDirectory>
-            <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
    
     <!-- **************************************************************************
                         These are built in translators  
          **************************************************************************-->
+    <!-- ******************************************************** 
+        These are built in resource-adapters  
+        *********************************************************-->
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
-
+        
         <includes>
-            <include>org.jboss.teiid.connectors:translator-jdbc</include>
-            <include>org.jboss.teiid.connectors:translator-loopback</include>
-            <include>org.jboss.teiid.connectors:translator-file</include>
-            <include>org.jboss.teiid.connectors:translator-ldap</include>
-            <include>org.jboss.teiid.connectors:translator-salesforce</include>
-            <include>org.jboss.teiid.connectors:salesforce-api</include>
-            <include>org.jboss.teiid.connectors:translator-ws</include>
-            <include>org.jboss.teiid.connectors:translator-olap</include>
-            <include>org.jboss.teiid.connectors:translator-hive</include>
-            <include>org.jboss.teiid.connectors:translator-jpa</include>
-            <include>org.jboss.teiid.connectors:translator-object</include>
+            <include>org.jboss.teiid.connectors:connector-*</include>
         </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>optional</outputDirectory>
-          <fileMode>0644</fileMode>
+                
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>embedded-dist</attachmentClassifier>
         </binaries>
+      
     </moduleSet>
     
+    
+    <!-- **************************************************************************
+                        These are built in translators  
+         **************************************************************************-->
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
-
+        
         <includes>
-            <include>org.jboss.teiid.connectors:connector-file</include>
-            <include>org.jboss.teiid.connectors:connector-ldap</include>
-            <include>org.jboss.teiid.connectors:connector-salesforce</include>
-            <include>org.jboss.teiid.connectors:connector-ws</include>
+            <include>org.jboss.teiid.connectors:translator-*</include>
         </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <attachmentClassifier>lib</attachmentClassifier>
-          <unpack>false</unpack>
-          <outputDirectory>optional</outputDirectory>
-          <fileMode>0644</fileMode>
+                
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>embedded-dist</attachmentClassifier>
         </binaries>
+      
     </moduleSet>
     
     </moduleSets>  

@@ -23,6 +23,7 @@
 package org.teiid.query.tempdata;
 
 import java.util.List;
+import java.util.Set;
 
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
@@ -32,7 +33,7 @@ import org.teiid.query.sql.symbol.Expression;
 public class AlterTempTable extends Command {
 	
 	private String tempTable;
-	private List<ElementSymbol> indexColumns;
+	private Set<List<ElementSymbol>> indexColumns;
 	
 	public AlterTempTable(String tempTable) {
 		this.tempTable = tempTable;
@@ -42,11 +43,11 @@ public class AlterTempTable extends Command {
 		return tempTable;
 	}
 	
-	public List<ElementSymbol> getIndexColumns() {
+	public Set<List<ElementSymbol>> getIndexColumns() {
 		return indexColumns;
 	}
 	
-	public void setIndexColumns(List<ElementSymbol> indexColumns) {
+	public void setIndexColumns(Set<List<ElementSymbol>> indexColumns) {
 		this.indexColumns = indexColumns;
 	}
 	

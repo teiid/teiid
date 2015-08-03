@@ -52,6 +52,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.AggregateAttributes;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
@@ -70,29 +71,30 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
+import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.WhileStatement;
-import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.Statement.Labeled;
+import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.Reference.Constraint;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class ValidationVisitor extends AbstractValidationVisitor {
 
-    private final class PositiveIntegerConstraint implements
+    private static final class PositiveIntegerConstraint implements
 			Reference.Constraint {
     	
     	private String msgKey;
@@ -103,11 +105,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	
 		@Override
 		public void validate(Object value) throws QueryValidatorException {
-			if (((Integer)value).intValue() < 0) {
+			if (value == null || ((Integer)value).intValue() < 0) {
 				 throw new QueryValidatorException(QueryPlugin.Event.TEIID30242, QueryPlugin.Util.getString(msgKey));
 			}
 		}
 	}
+    
+    public static final Constraint LIMIT_CONSTRAINT = new PositiveIntegerConstraint("ValidationVisitor.badlimit2"); //$NON-NLS-1$ 
 
 	// State during validation
     private boolean isXML = false;	// only used for Query commands
@@ -182,6 +186,27 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateGroupSupportsUpdate(obj.getGroup());
         validateInsert(obj);
         
+        try {
+			if (obj.isMerge()) {
+				Collection keys = getMetadata().getUniqueKeysInGroup(obj.getGroup().getMetadataID());
+				if (keys.isEmpty()) {
+					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31132, obj.getGroup()), obj);
+				} else {
+					Set<Object> keyCols = new LinkedHashSet<Object>(getMetadata().getElementIDsInKey(keys.iterator().next()));
+					for (ElementSymbol es : obj.getVariables()) {
+						keyCols.remove(es.getMetadataID());
+					}
+					if (!keyCols.isEmpty()) {
+						handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31133, obj.getGroup(), obj.getVariables()), obj);
+					}
+				}
+			}
+		} catch (QueryMetadataException e1) {
+			handleException(e1);
+		} catch (TeiidComponentException e1) {
+			handleException(e1);
+		}
+        
         if (obj.getQueryExpression() != null) {
         	validateMultisourceInsert(obj.getGroup());
         }
@@ -200,6 +225,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(OrderByItem obj) {
     	validateSortable(obj.getSymbol());
+    	if (obj.getExpressionPosition() < 0) {
+    		for (SubqueryContainer subquery : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(obj)) {
+    			for (ElementSymbol es : ElementCollectorVisitor.getElements(obj, true, true)) {
+    				if (es.isExternalReference()) {
+    					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31156, subquery), obj);
+    				}
+    			}
+    		}
+    	}
     }
     
     public void visit(Query obj) {
@@ -239,7 +273,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	public void visit(SubquerySetCriteria obj) {
 		validateSubquery(obj);
 		if (isNonComparable(obj.getExpression())) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj); //$NON-NLS-1$
+			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj); //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
         
@@ -304,7 +338,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		try {
 				ResolverUtil.ResolvedLookup resolvedLookup = ResolverUtil.resolveLookup(obj, getMetadata());
 				if(ValidationVisitor.isNonComparable(resolvedLookup.getKeyElement())) {
-		            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_lookup_key", resolvedLookup.getKeyElement()), resolvedLookup.getKeyElement()); //$NON-NLS-1$            
+		            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_lookup_key", resolvedLookup.getKeyElement(), DataTypeManager.getDataTypeName(resolvedLookup.getKeyElement().getType())), resolvedLookup.getKeyElement()); //$NON-NLS-1$            
 		        }
 			} catch (TeiidComponentException e) {
 				handleException(e, obj);
@@ -357,6 +391,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	}
         } else if (obj.isAggregate()) {
         	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.user_defined_aggregate_as_function", obj, obj.getName()), obj); //$NON-NLS-1$
+        } else if (FunctionLibrary.JSONARRAY.equalsIgnoreCase(obj.getName())) {
+        	Expression[] args = obj.getArgs();
+        	for (Expression expression : args) {
+        		validateJSONValue(obj, expression);
+			}
         }
     }
 
@@ -366,10 +405,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(StoredProcedure obj) {
 		for (SPParameter param : obj.getInputParameters()) {
 			try {
-				if (!(param.getExpression() instanceof Constant) && getMetadata().isMultiSourceElement(param.getMetadataID())) {
-	            	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
-	            	continue;
-	            }
                 if (!getMetadata().elementSupports(param.getMetadataID(), SupportConstants.Element.NULL) && EvaluatableVisitor.isFullyEvaluatable(param.getExpression(), true)) {
 	                try {
 	                    // If nextValue is an expression, evaluate it before checking for null
@@ -492,7 +527,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
 	private void validateSortable(Expression symbol) {
 		if (isNonComparable(symbol)) {
-		    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0026", symbol), symbol); //$NON-NLS-1$
+		    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0026", symbol, DataTypeManager.getDataTypeName(symbol.getType())), symbol); //$NON-NLS-1$
 		}
 	}
 
@@ -600,6 +635,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	AggregateSymbolCollectorVisitor.getAggregates(having, aggs, invalid, null, invalidWindowFunctions, groupSymbols);
         	hasAgg = true;
         }
+        if (groupBy != null && query.getOrderBy() != null) {
+        	Set<Expression> exanded = new HashSet<Expression>(groupSymbols);
+        	exanded.addAll(select.getProjectedSymbols());
+        	for (OrderByItem item : query.getOrderBy().getOrderByItems()) {
+        		if (item.isUnrelated()) {
+        			AggregateSymbolCollectorVisitor.getAggregates(item.getSymbol(), aggs, invalid, null, invalidWindowFunctions, exanded);
+        		}
+        	}
+        }
         for (Expression symbol : select.getProjectedSymbols()) {
         	if (hasAgg || !aggs.isEmpty()) {
         		validateCorrelatedReferences(query, correlationGroups, groupSymbols, symbol, invalid);
@@ -631,7 +675,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				}
 			}
 		};
-		AggregateStopNavigator asn = new AggregateStopNavigator(ecv);
+		AggregateStopNavigator asn = new AggregateStopNavigator(ecv, groupingSymbols);
 		object.acceptVisitor(asn);
 	}
 
@@ -652,14 +696,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Collection values = obj.getValues();
         Iterator valIter = values.iterator();
         GroupSymbol insertGroup = obj.getGroup();
-
         try {
+            boolean multiSource = getMetadata().isMultiSource(getMetadata().getModelID(insertGroup.getMetadataID()));
             // Validate that all elements in variable list are updatable
         	for (ElementSymbol insertElem : vars) {
                 if(! getMetadata().elementSupports(insertElem.getMetadataID(), SupportConstants.Element.UPDATE)) {
                     handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0052", insertElem), insertElem); //$NON-NLS-1$
                 }
+                if (multiSource && getMetadata().isMultiSourceElement(insertElem.getMetadataID())) {
+                	multiSource = false;
+                }
             }
+        	if (multiSource) {
+        		validateMultisourceInsert(insertGroup);
+        	}
 
             // Get elements in the group.
     		Collection<ElementSymbol> insertElmnts = new LinkedList<ElementSymbol>(ResolverUtil.resolveElementsInGroup(insertGroup, getMetadata()));
@@ -670,8 +720,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		for (ElementSymbol nextElmnt : insertElmnts) {
 				if(!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE) &&
 					!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.NULL) &&
-                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT) &&
-                     !getMetadata().isMultiSourceElement(nextElmnt.getMetadataID())) {
+                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
 		                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0053", new Object[] {insertGroup, nextElmnt}), nextElmnt); //$NON-NLS-1$
 				}
 			}
@@ -682,11 +731,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 Expression nextValue = (Expression) valIter.next();
                 ElementSymbol nextVar = varIter.next();
 
-                if (!(nextValue instanceof Constant) && getMetadata().isMultiSourceElement(nextVar.getMetadataID())) {
-                	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", nextVar), nextVar); //$NON-NLS-1$
-                	continue;
-                }
-                
                 if (EvaluatableVisitor.isFullyEvaluatable(nextValue, true)) {
                     try {
                         // If nextValue is an expression, evaluate it before checking for null
@@ -840,7 +884,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(BetweenCriteria obj) {
     	if (isNonComparable(obj.getExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -875,7 +919,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(SetCriteria obj) {
     	if (isNonComparable(obj.getExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -887,7 +931,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(SubqueryCompareCriteria obj) {
     	validateSubquery(obj);
     	if (isNonComparable(obj.getLeftExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getLeftExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -929,6 +973,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (!obj.getPrimaryKey().isEmpty()) {
     		validateSortable(obj.getPrimaryKey());
     	}
+    	if (obj.getTableMetadata() != null) {
+    		Table t = obj.getTableMetadata();
+    		if (!t.getForeignKeys().isEmpty()) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.temp_fk", obj.getTable()), obj); //$NON-NLS-1$
+    		}
+    	}
     }
     
     /** 
@@ -938,12 +988,21 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if (!drop.getTable().isTempTable()) {
             handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.drop_of_nontemptable", drop.getTable()), drop); //$NON-NLS-1$
         }
+        try {
+			if (getMetadata().isVirtualGroup(drop.getTable().getMetadataID())) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.drop_of_globaltemptable", drop.getTable()), drop); //$NON-NLS-1$
+			}
+		} catch (QueryMetadataException e) {
+			handleException(e);
+		} catch (TeiidComponentException e) {
+			handleException(e);
+		}
     }
     
     @Override
     public void visit(CompareCriteria obj) {
     	if (isNonComparable(obj.getLeftExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getLeftExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
     	
         // Validate use of 'rowlimit' and 'rowlimitexception' pseudo-functions - they cannot be nested within another
@@ -999,26 +1058,25 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     public void visit(Limit obj) {
-        Expression offsetExpr = obj.getOffset();
-        if (offsetExpr instanceof Constant) {
-            Integer offset = (Integer)((Constant)offsetExpr).getValue();
-            if (offset.intValue() < 0) {
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badoffset2"), obj); //$NON-NLS-1$
-            }
-        } else if (offsetExpr instanceof Reference) {
-        	((Reference)offsetExpr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.badoffset2")); //$NON-NLS-1$
-        }
-        Expression limitExpr = obj.getRowLimit();
-        if (limitExpr instanceof Constant) {
-            Integer limit = (Integer)((Constant)limitExpr).getValue();
-            if (limit.intValue() < 0) {
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badlimit2"), obj); //$NON-NLS-1$
-            }
-        } else if (limitExpr instanceof Reference) {
-        	((Reference)limitExpr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.badlimit2")); //$NON-NLS-1$
-        }
+        validateLimitExpression(obj, obj.getOffset());
+        validateLimitExpression(obj, obj.getRowLimit());
     }
-    
+
+	private void validateLimitExpression(Limit obj, Expression limitExpr) {
+		if (limitExpr != null) {
+	        if (limitExpr instanceof Constant) {
+	            Integer limit = (Integer)((Constant)limitExpr).getValue();
+	            if (limit.intValue() < 0) {
+	                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badlimit2"), obj); //$NON-NLS-1$
+	            }
+	        } else if (limitExpr instanceof Reference) {
+	        	((Reference)limitExpr).setConstraint(LIMIT_CONSTRAINT); 
+	        } else if (!EvaluatableVisitor.willBecomeConstant(limitExpr)) {
+	        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badlimit1"), obj); //$NON-NLS-1$
+	        }
+        }
+	}
+
     @Override
     public void visit(XMLForest obj) {
     	validateDerivedColumnNames(obj, obj.getArgs());
@@ -1028,6 +1086,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			}
 			validateQName(obj, dc.getAlias());
 			validateXMLContentTypes(dc.getExpression(), obj);
+		}
+    }
+    
+    public void visit(JSONObject obj) {
+    	for (DerivedColumn dc : obj.getArgs()) {
+    		validateJSONValue(obj, dc.getExpression());
 		}
     }
     
@@ -1044,6 +1108,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		break;
     	case TEXTAGG:
     	case ARRAY_AGG:
+    	case JSONARRAY_AGG:
+    	case XMLAGG:
+    	case STRING_AGG:
     		if (windowFunction.getWindowSpecification().getOrderBy() != null) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.window_order_by", windowFunction), windowFunction); //$NON-NLS-1$
             }
@@ -1097,6 +1164,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	} else if (obj.isBoolean() && aggExps[0].getType() != DataTypeManager.DefaultDataClasses.BOOLEAN) {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	} else if (aggregateFunction == Type.JSONARRAY_AGG) {
+				validateJSONValue(obj, aggExps[0]);
         	}
         }
         if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExps[0].getType()))) {
@@ -1120,7 +1189,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	for (DerivedColumn dc : tl.getExpressions()) {
 			validateXMLContentTypes(dc.getExpression(), obj);
 		}
-    	validateTextOptions(obj, tl.getDelimiter(), tl.getQuote());
+    	validateTextOptions(obj, tl.getDelimiter(), tl.getQuote(), '\n');
     	if (tl.getEncoding() != null) {
     		try {
     			Charset.forName(tl.getEncoding());
@@ -1129,6 +1198,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		}
     	}
     }
+
+	private void validateJSONValue(LanguageObject obj, Expression expr) {
+		if (expr.getType() != DataTypeManager.DefaultDataClasses.STRING && !DataTypeManager.isTransformable(expr.getType(), DataTypeManager.DefaultDataClasses.STRING)) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_json_value", expr, obj), obj); //$NON-NLS-1$
+		}
+	}
 
 	private void validateNoSubqueriesOrOuterReferences(Expression expr) {
 		if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty()) {
@@ -1271,6 +1346,18 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(XMLQuery obj) {
     	validatePassing(obj, obj.getXQueryExpression(), obj.getPassing());
     }
+    
+    @Override
+    public void visit(XMLExists obj) {
+    	validatePassing(obj, obj.getXmlQuery().getXQueryExpression(), obj.getXmlQuery().getPassing());
+    }
+    
+    @Override
+    public void visit(XMLCast obj) {
+    	if (obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.XML && obj.getType() != DataTypeManager.DefaultDataClasses.XML) {
+    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xmlcast_types", obj), obj); //$NON-NLS-1$
+    	}
+    }
 
 	private void validatePassing(LanguageObject obj, SaxonXQueryExpression xqe, List<DerivedColumn> passing) {
 		boolean context = false;
@@ -1329,6 +1416,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	Character quote = null;
     	boolean usingSelector = false;
     	for (TextTable.TextColumn column : obj.getColumns()) {
+    		if (column.isOrdinal()) {
+    			continue;
+    		}
 			if (column.getWidth() != null) {
 				widthSet = true;
 				if (column.getWidth() < 0) {
@@ -1348,7 +1438,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	    	}
 		}
     	if (widthSet) {
-    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null || obj.getSelector() != null || usingSelector) {
+    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null || usingSelector) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_width"), obj); //$NON-NLS-1$
     		}
     	} else {
@@ -1360,7 +1450,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	}
     		delimiter = obj.getDelimiter();
     		quote = obj.getQuote();
-			validateTextOptions(obj, delimiter, quote);
+			validateTextOptions(obj, delimiter, quote, obj.getRowDelimiter());
     	}
     	if (obj.getSkip() != null && obj.getSkip() < 0) {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
@@ -1371,18 +1461,21 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
 	private void validateTextOptions(LanguageObject obj, Character delimiter,
-			Character quote) {
+			Character quote, Character newLine) {
 		if (quote == null) {
 			quote = '"';
 		} 
 		if (delimiter == null) {
 			delimiter = ',';
 		}
+		if (newLine == null) {
+			newLine = '\n';
+		}
 		if (EquivalenceUtil.areEqual(quote, delimiter)) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_delimiter"), obj); //$NON-NLS-1$
 		}
-		if (EquivalenceUtil.areEqual(quote, '\n') 
-				|| EquivalenceUtil.areEqual(delimiter, '\n')) {
+		if (EquivalenceUtil.areEqual(quote, newLine) 
+				|| EquivalenceUtil.areEqual(delimiter, newLine)) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_newline"), obj); //$NON-NLS-1$
 		}
 	}
@@ -1391,7 +1484,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(XMLParse obj) {
     	if (obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.STRING && 
     			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.CLOB &&
-    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.BLOB) {
+    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.BLOB &&
+    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.VARBINARY) {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xmlparse_type"), obj); //$NON-NLS-1$
     	}
     }

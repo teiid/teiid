@@ -42,7 +42,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
-import org.teiid.dqp.internal.process.RequestWorkItem;
+import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -72,9 +72,9 @@ public class AutoGenDataService extends ConnectorManager{
     private final AtomicInteger closeCount = new AtomicInteger();
     private boolean useIntCounter;
 	public boolean addWarning;
-	public boolean copyLobs;
 	public CacheDirective cacheDirective;
 	public boolean dataAvailable;
+	public boolean threadBound;
 
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -105,7 +105,7 @@ public class AutoGenDataService extends ConnectorManager{
     public ConnectorWork registerRequest(AtomicRequestMessage message)
     		throws TeiidComponentException {
         List projectedSymbols = (message.getCommand()).getProjectedSymbols(); 
-        List[] results = createResults(projectedSymbols);
+        List[] results = createResults(projectedSymbols, rows, useIntCounter);
         if (RelationalNodeUtil.isUpdate(message.getCommand())) {
         	results = new List[] {Arrays.asList(1)};
         }
@@ -114,7 +114,6 @@ public class AutoGenDataService extends ConnectorManager{
         msg.setFinalRow(rows);
         return new ConnectorWork() {
         	
-        	RequestWorkItem item;
         	boolean returnedInitial;
         	
         	@Override
@@ -122,16 +121,6 @@ public class AutoGenDataService extends ConnectorManager{
         		return dataAvailable;
         	}
         	
-        	@Override
-        	public boolean areLobsUsableAfterClose() {
-        		return false;
-        	}
-        	
-        	@Override
-        	public void setRequestWorkItem(RequestWorkItem item) {
-        		this.item = item;
-        	}
-			
 			@Override
 			public AtomicResultsMessage more() throws TranslatorException {
 				if (dataNotAvailable != null) {
@@ -177,11 +166,6 @@ public class AutoGenDataService extends ConnectorManager{
 			}
 			
 			@Override
-			public boolean copyLobs() {
-				return copyLobs;
-			}
-
-			@Override
 			public CacheDirective getCacheDirective() {
 				return cacheDirective;
 			}
@@ -191,6 +175,15 @@ public class AutoGenDataService extends ConnectorManager{
 				return true;
 			}
 			
+			@Override
+			public boolean isThreadBound() {
+				return threadBound;
+			}
+
+            @Override
+            public AtomicRequestID getId() {
+                return null;
+            }
 		};
     }
     
@@ -202,16 +195,16 @@ public class AutoGenDataService extends ConnectorManager{
 		return closeCount;
 	}
     
-    private List[] createResults(List symbols) {
-        List[] rows = new List[this.rows];
+    public static List[] createResults(List symbols, int rowCount, boolean useIntCounter) {
+        List[] rows = new List[rowCount];
 
-        for(int i=0; i<this.rows; i++) {        
+        for(int i=0; i<rowCount; i++) {        
             List row = new ArrayList();        
             Iterator iter = symbols.iterator();
             while(iter.hasNext()) {
                 Expression symbol = (Expression) iter.next();
                 Class type = symbol.getType();
-                row.add( getValue(type, i) );
+                row.add( getValue(type, i, useIntCounter) );
             }
             rows[i] = row;
         }   
@@ -227,7 +220,7 @@ public class AutoGenDataService extends ConnectorManager{
     private static final Double DOUBLE_VAL = new Double(0.0);
     private static final Character CHAR_VAL = new Character('c');
     private static final Byte BYTE_VAL = new Byte((byte)0);
-    private static final Clob CLOB_VAL = new ClobImpl(new InputStreamFactory() {
+    public static final Clob CLOB_VAL = new ClobImpl(new InputStreamFactory() {
     	@Override
     	public InputStream getInputStream() throws IOException {
     		return new ByteArrayInputStream("hello world".getBytes(Streamable.CHARSET));
@@ -240,7 +233,7 @@ public class AutoGenDataService extends ConnectorManager{
     private static final java.sql.Time TIME_VAL = new java.sql.Time(0);
     private static final java.sql.Timestamp TIMESTAMP_VAL = new java.sql.Timestamp(0);
     
-    private Object getValue(Class<?> type, int row) {
+    static Object getValue(Class<?> type, int row, boolean useIntCounter) {
         if(type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
             return STRING_VAL;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.INTEGER)) {

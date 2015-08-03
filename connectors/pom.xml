@@ -3,10 +3,9 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.2.0.Beta1-SNAPSHOT</version>
+    <version>8.12.0.Alpha3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.jboss.teiid</groupId>
   <artifactId>connectors</artifactId>
   <packaging>pom</packaging>
   <name>Connectors</name>
@@ -91,21 +90,45 @@
   </dependencies>
   
   <modules>
+    <module>google-api</module>
+    <module>mongodb-api</module>
+    <module>simpledb-api</module>
+      
     <module>translator-jdbc</module>
+    <module>translator-google</module>
     <module>translator-ldap</module>
     <module>translator-loopback</module>
     <module>translator-file</module>
     <module>translator-salesforce</module>
-    <module>connector-file</module>
-    <module>connector-salesforce</module>
-    <module>connector-ldap</module>
-    <module>salesforce-api</module>
-    <module>connector-ws</module>
-    <module>sandbox</module>
+    <module>translator-mongodb</module>
+    <module>translator-cassandra</module>
+    <module>translator-simpledb</module>
+    <module>translator-accumulo</module>
+    <module>translator-solr</module>
+    <module>translator-excel</module>
     <module>translator-ws</module>
     <module>translator-olap</module>
     <module>translator-hive</module>
     <module>translator-jpa</module>
     <module>translator-object</module>
+    <module>translator-odata</module>
+    <module>translator-infinispan-dsl</module>
+
+    <module>connector-file</module>
+    <module>connector-google</module>
+    <module>connector-salesforce</module>
+    <module>connector-ldap</module>
+    <module>connector-ws</module>
+    <module>connector-mongodb</module>
+    <module>connector-cassandra</module>
+    <module>connector-infinispan.6</module>
+    <module>connector-simpledb</module>
+    <module>connector-accumulo</module>
+    <module>connector-solr</module>
+    <module>connector-infinispan-dsl</module>
+    <module>translator-prestodb</module>
+    <module>sandbox</module>
+
+    <module>translator-hbase</module>
   </modules>
 </project>

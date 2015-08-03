@@ -22,25 +22,24 @@
 
 package org.teiid.query.parser;
 
+import org.junit.Test;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 
-import junit.framework.TestCase;
-
-public class TestSetQueryParsing extends TestCase {
+public class TestSetQueryParsing {
 
     // ======================= UNION ================================================
 
     /** SELECT a FROM g UNION select b from h*/
-    public void testUnion(){
+    @Test public void testUnion(){
         SetQuery setQuery = exampleSetQuery(Operation.UNION);
 
         TestParser.helpTest("SELECT a FROM g UNION select b from h",  //$NON-NLS-1$
@@ -48,7 +47,7 @@ public class TestSetQueryParsing extends TestCase {
                  setQuery);
     }
     
-    public void testExcept(){
+    @Test public void testExcept(){
         SetQuery setQuery = exampleSetQuery(Operation.EXCEPT);
 
         TestParser.helpTest("SELECT a FROM g except select b from h",  //$NON-NLS-1$
@@ -56,7 +55,7 @@ public class TestSetQueryParsing extends TestCase {
                  setQuery);
     }
 
-    public void testIntersect(){
+    @Test public void testIntersect(){
         SetQuery setQuery = exampleSetQuery(Operation.INTERSECT);
 
         TestParser.helpTest("SELECT a FROM g intersect select b from h",  //$NON-NLS-1$
@@ -64,7 +63,7 @@ public class TestSetQueryParsing extends TestCase {
                  setQuery);
     }
 
-    public void testIntersectPresedence(){
+    @Test public void testIntersectPresedence(){
         
         SetQuery setQuery = new SetQuery(Operation.INTERSECT, false, createTestQuery("t2"), createTestQuery("t3")); //$NON-NLS-1$  //$NON-NLS-2$
         
@@ -120,7 +119,7 @@ public class TestSetQueryParsing extends TestCase {
     }
     
     /** SELECT a FROM g UNION ALL select b from h*/
-    public void testUnionAll(){
+    @Test public void testUnionAll(){
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -154,7 +153,7 @@ public class TestSetQueryParsing extends TestCase {
     }
     
     /** select c1 from g1 union select c2 from g2 union select c3 from g3*/
-    public void testTwoUnions(){
+    @Test public void testTwoUnions(){
         SetQuery setQuery = new SetQuery(Operation.UNION);
         setQuery.setAll(false);
         GroupSymbol g = new GroupSymbol("g1"); //$NON-NLS-1$
@@ -202,7 +201,7 @@ public class TestSetQueryParsing extends TestCase {
     }
     
     /** select c1 from g1 union select c2 from g2 union all select c3 from g3 union select c4 from g4 */
-    public void testThreeUnions(){
+    @Test public void testThreeUnions(){
         SetQuery setQuery = new SetQuery(Operation.UNION);
         setQuery.setAll(false);
         GroupSymbol g = new GroupSymbol("g1"); //$NON-NLS-1$
@@ -262,13 +261,51 @@ public class TestSetQueryParsing extends TestCase {
                  setQuery);
     }   
     
-    public void testUnionWithLimit(){
+    @Test public void testUnionWithLimit(){
         SetQuery setQuery = exampleSetQuery(Operation.UNION);
         setQuery.setLimit(new Limit(null, new Constant(1)));
 
         TestParser.helpTest("SELECT a FROM g UNION select b from h LIMIT 1",  //$NON-NLS-1$
                  "SELECT a FROM g UNION SELECT b FROM h LIMIT 1",  //$NON-NLS-1$
                  setQuery);
+    }
+    
+    @Test public void testMultipleValues(){
+        SetQuery setQuery = new SetQuery(Operation.UNION);
+        setQuery.setAll(true);
+
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("c1")); //$NON-NLS-1$
+        
+        Query query = new Query();
+        query.setSelect(select);
+
+        setQuery.setLeftQuery(query);
+        
+        select = new Select();
+        select.addSymbol(new ElementSymbol("c2")); //$NON-NLS-1$
+        
+        query = new Query();
+        query.setSelect(select);
+        
+        setQuery.setRightQuery(query);
+
+        TestParser.helpTest("values (c1), (c2)",  //$NON-NLS-1$
+                 "SELECT c1 UNION ALL SELECT c2",  //$NON-NLS-1$
+                 setQuery);
+    }
+    
+    @Test public void testSingleValue(){
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("c1")); //$NON-NLS-1$
+        select.addSymbol(new Constant("x")); //$NON-NLS-1$
+        
+        Query query = new Query();
+        query.setSelect(select);
+
+        TestParser.helpTest("values (c1, 'x')",  //$NON-NLS-1$
+                 "SELECT c1, 'x'",  //$NON-NLS-1$
+                 query);
     }
     
 }

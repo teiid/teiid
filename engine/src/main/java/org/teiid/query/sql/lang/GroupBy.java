@@ -43,7 +43,8 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class GroupBy implements LanguageObject {
 
     /** The set of expressions for the data elements to be group. */
-    private List<Expression> symbols; 
+    private List<Expression> symbols;
+    private boolean rollup;
 
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -107,7 +108,9 @@ public class GroupBy implements LanguageObject {
 	 * @return Deep copy of object
 	 */
 	public Object clone() {
-		return new GroupBy(LanguageObject.Util.deepClone(this.symbols, Expression.class));
+		GroupBy clone = new GroupBy(LanguageObject.Util.deepClone(this.symbols, Expression.class));
+		clone.rollup = this.rollup;
+		return clone;
 	}
 
 	/**
@@ -124,7 +127,9 @@ public class GroupBy implements LanguageObject {
 			return false;
 		}
 
-        return EquivalenceUtil.areEqual(getSymbols(), ((GroupBy)obj).getSymbols());
+        GroupBy other = (GroupBy)obj;
+		return EquivalenceUtil.areEqual(getSymbols(), other.getSymbols())
+        		&& this.rollup == other.rollup;
 	}
 
 	/**
@@ -135,7 +140,7 @@ public class GroupBy implements LanguageObject {
 	 * @return Hash code for object
 	 */
 	public int hashCode() {
-		return HashCodeUtil.hashCode(0, getSymbols());
+		return HashCodeUtil.hashCode(rollup?1:0, getSymbols());
 	}
 
     /**
@@ -145,5 +150,13 @@ public class GroupBy implements LanguageObject {
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
     }
+    
+    public boolean isRollup() {
+		return rollup;
+	}
+    
+    public void setRollup(boolean rollup) {
+		this.rollup = rollup;
+	}
 
 }  // END CLASS

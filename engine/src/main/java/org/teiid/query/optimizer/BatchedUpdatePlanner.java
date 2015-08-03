@@ -176,7 +176,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                 }
             }
         }
-        return new BatchedUpdatePlan(childPlans, batchedUpdateCommand.getUpdateCommands().size(), planContexts);
+        return new BatchedUpdatePlan(childPlans, batchedUpdateCommand.getUpdateCommands().size(), planContexts, batchedUpdateCommand.isSingleResult());
     }
     
     /**

@@ -212,7 +212,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                         outerMatched = false;
                         innerState.reset();
                         loopState = LoopState.LOAD_INNER;
-                    } else if (matchState == MatchState.MATCH_LEFT && joinNode.getJoinType() == JoinType.JOIN_FULL_OUTER) {
+                    } else if (matchState == MatchState.MATCH_LEFT && joinNode.getJoinType() == JoinType.JOIN_FULL_OUTER && this.joinNode.getJoinCriteria() != null) {
                         // on a full outer join, we need to determine the outer right values as well
                         matchState = MatchState.MATCH_RIGHT;
                         outerState = this.rightSource;
@@ -287,7 +287,7 @@ public class MergeJoinStrategy extends JoinStrategy {
         }
         if (previousTuple != null) {
             int compare = 1;
-            if (!target.isDistinct()) {
+            if (!target.isExpresssionDistinct()) {
                 compare = compare(previousTuple, target.getCurrentTuple(), target.getExpressionIndexes(), target.getExpressionIndexes());
             }
             if (compare != 0) {
@@ -304,11 +304,11 @@ public class MergeJoinStrategy extends JoinStrategy {
                              int[] leftExpressionIndecies,
                              int[] rightExpressionIndecies) {
         return compareTuples(leftProbe, rightProbe, leftExpressionIndecies,
-				rightExpressionIndecies, grouping);
+				rightExpressionIndecies, grouping, false);
     }
 
 	public static int compareTuples(List<?> leftProbe, List<?> rightProbe,
-			int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals) {
+			int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals, boolean columnDiff) {
 		for (int i = 0; i < leftExpressionIndecies.length; i++) {
             Object leftValue = leftProbe.get(leftExpressionIndecies[i]);
             Object rightValue = rightProbe.get(rightExpressionIndecies[i]);
@@ -316,19 +316,30 @@ public class MergeJoinStrategy extends JoinStrategy {
                 if (nullEquals && leftValue == null) {
                     continue;
                 }
+                if (columnDiff) {
+                	return i;
+                }
                 return -1;
             }
 
             if (leftValue == null) {
+                if (columnDiff) {
+                	return i;
+                }
                 return 1;
             }
 
             int c = Constant.COMPARATOR.compare(rightValue, leftValue);
             if (c != 0) {
+                if (columnDiff) {
+                	return i;
+                }
                 return c;
             }
         }
-
+        if (columnDiff) {
+        	return -1; 
+        }
         // Found no difference, must be a match
         return 0;
     }
@@ -342,10 +353,10 @@ public class MergeJoinStrategy extends JoinStrategy {
     @Override
     protected void loadRight() throws TeiidComponentException,
     		TeiidProcessingException {
-		this.rightSource.sort(this.processingSortRight);
-		if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER) {
+    	if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER || this.joinNode.getJoinCriteria() == null) {
 			this.rightSource.setImplicitBuffer(ImplicitBuffer.ON_MARK);
 		}
+		this.rightSource.sort(this.processingSortRight);
 	}
         
     public void setProcessingSortRight(boolean processingSortRight) {

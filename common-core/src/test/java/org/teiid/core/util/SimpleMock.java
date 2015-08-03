@@ -27,8 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import org.teiid.core.util.MixinProxy;
-
 public class SimpleMock extends MixinProxy {
 	
 	SimpleMock(Object[] baseInstances) {
@@ -45,6 +43,9 @@ public class SimpleMock extends MixinProxy {
         }
         
         if (clazz.isPrimitive()) {
+        	if (clazz == boolean.class) {
+        		return false;
+        	}
         	return 0;
         }
 

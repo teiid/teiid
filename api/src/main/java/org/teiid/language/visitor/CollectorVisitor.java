@@ -39,8 +39,8 @@ import org.teiid.language.NamedTable;
  */
 public class CollectorVisitor<T> extends HierarchyVisitor {
 
-    private Class<T> type;
-    private Collection<T> objects = new ArrayList<T>();
+    protected Class<T> type;
+    protected Collection<T> objects = new ArrayList<T>();
 
     public CollectorVisitor(Class<T> type) {
         this.type = type;

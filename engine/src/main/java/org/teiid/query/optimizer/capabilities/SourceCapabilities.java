@@ -332,7 +332,20 @@ public interface SourceCapabilities {
         QUERY_ONLY_SINGLE_TABLE_GROUP_BY,
         ONLY_FORMAT_LITERALS,
         CRITERIA_ON_SUBQUERY,
-        ARRAY_TYPE;
+        ARRAY_TYPE, 
+        QUERY_SUBQUERIES_ONLY_CORRELATED, 
+        QUERY_AGGREGATES_STRING, 
+        FULL_DEPENDENT_JOIN,
+        SELECT_WITHOUT_FROM, 
+        QUERY_GROUP_BY_ROLLUP, 
+        QUERY_ORDERBY_EXTENDED_GROUPING, 
+        INVALID_EXCEPTION, //property saying why the capabilities are invalid
+        COLLATION_LOCALE, 
+        RECURSIVE_COMMON_TABLE_EXPRESSIONS, 
+        CRITERIA_COMPARE_ORDERED_EXCLUSIVE,
+        PARTIAL_FILTERS, 
+        DEPENDENT_JOIN_BINDINGS,
+        SUBQUERY_COMMON_TABLE_EXPRESSIONS;
         
         private final String toString;
         

@@ -34,11 +34,13 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.source.SystemSource;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -54,8 +56,7 @@ public class TestFunctionTree {
         
         Collection<String> categories = ft.getCategories();
         for (String category : categories) {
-            Collection<FunctionForm> functions = ft.getFunctionForms(category);
-            assertTrue(functions.size() > 0);
+            assertTrue(ft.getFunctionsInCategory(category).size() > 0);
         }        
     }
     
@@ -159,7 +160,7 @@ public class TestFunctionTree {
     	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
     	Mockito.stub(fms.getFunctionMethods()).toReturn(list);
     	FunctionTree ft = new FunctionTree("foo", fms);
-    	assertEquals(1, ft.getFunctionForms(FunctionCategoryConstants.MISCELLANEOUS).size());
+    	assertEquals(1, ft.getFunctionsInCategory(FunctionCategoryConstants.MISCELLANEOUS).size());
     }
     
     @Test public void testVarbinary() throws Exception {
@@ -173,6 +174,30 @@ public class TestFunctionTree {
     	FunctionDescriptor fd = fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY});
     	String hello = "hello";
     	assertEquals(hello, fd.invokeFunction(new Object[] {new BinaryType(hello.getBytes())}, null, null));
+    }
+    
+    @Test public void testMultiPartName() throws Exception {
+    	FunctionMethod method = new FunctionMethod(
+    			"x.y.dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+	 	    	Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)), //$NON-NLS-1$ 
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+	 	    	true, Determinism.DETERMINISTIC);
+    	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
+    	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    	assertNotNull(fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
+    	assertNotNull(fl.findFunction("y.dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
+    }
+    
+    @Test public void testMultiPartNameSystemConflict() throws Exception {
+    	FunctionMethod method = new FunctionMethod(
+    			"x.concat", null, null, PushDown.MUST_PUSHDOWN, null, null, 
+	 	    	Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.STRING), new FunctionParameter("in", DataTypeManager.DefaultDataTypes.STRING)), //$NON-NLS-1$ 
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+	 	    	true, Determinism.DETERMINISTIC);
+    	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
+    	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    	fl.determineNecessaryConversions("concat", DataTypeManager.DefaultDataClasses.STRING, 
+    			new Expression[] {new Constant(1),  new Constant(2)}, new Class[] {DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER},false);
     }
 	
 /*

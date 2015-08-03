@@ -22,11 +22,14 @@
 
 package org.teiid.translator.jdbc.h2;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
+@SuppressWarnings("nls")
 public class TestH2Translator {
 	
     private static H2ExecutionFactory TRANSLATOR; 
@@ -38,7 +41,7 @@ public class TestH2Translator {
     }
 	
 	@Test public void testTimestampDiff() throws Exception {
-		String input = "select timestampdiff(SQL_TSI_FRAC_SECOND, timestampvalue, {d '1970-01-01'}) from BQT1.Smalla"; //$NON-NLS-1$       
+		String input = "select h2.timestampdiff('SQL_TSI_FRAC_SECOND', timestampvalue, {d '1970-01-01'}) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT datediff('MILLISECOND', SmallA.TimestampValue, TIMESTAMP '1970-01-01 00:00:00.0') * 1000000 FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
@@ -57,6 +60,23 @@ public class TestH2Translator {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
-
+	
+	@Test public void testLikeEscape() throws Exception {
+		String input = "select 1 from BQT1.Smalla where stringkey like '_a*'"; //$NON-NLS-1$       
+        String output = "SELECT 1 FROM SmallA WHERE SmallA.StringKey LIKE '_a*' ESCAPE ''";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
+	
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("create cached local temporary table if not exists foo (COL1 integer, COL2 varchar(100)) on commit drop transactional", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    }
+    
+    @Test public void testJoinNesting() throws Exception {
+		String input = "select a.intkey from (BQT1.Smalla a left outer join bqt1.smallb b on a.intkey = b.intkey) inner join (bqt1.mediuma ma inner join bqt1.mediumb mb on mb.intkey = ma.intkey) on a.intkey = mb.intkey"; //$NON-NLS-1$       
+        String output = "SELECT a.IntKey FROM (SmallA AS a LEFT OUTER JOIN SmallB AS b ON a.IntKey = b.IntKey) INNER JOIN (MediumA AS ma INNER JOIN MediumB AS mb ON mb.IntKey = ma.IntKey) ON a.IntKey = mb.IntKey";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 
 }

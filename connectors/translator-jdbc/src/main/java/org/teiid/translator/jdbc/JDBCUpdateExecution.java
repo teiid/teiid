@@ -24,11 +24,16 @@ package org.teiid.translator.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.GeneratedKeys;
 import org.teiid.language.BatchedCommand;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
@@ -36,6 +41,7 @@ import org.teiid.language.Insert;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 
 
@@ -44,6 +50,8 @@ import org.teiid.translator.UpdateExecution;
 public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExecution {
 
 	private int[] result;
+	private int maxPreparedInsertBatchSize;
+	private boolean atomic = true;
 	
     /**
      * @param connection
@@ -54,6 +62,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      */
 	public JDBCUpdateExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
         super(command, connection, context, env);
+        this.maxPreparedInsertBatchSize = this.executionFactory.getMaxPreparedInsertBatchSize();
     }
 
     // ===========================================================================================================================
@@ -63,12 +72,12 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     @Override
     public void execute() throws TranslatorException {
         if (command instanceof BatchedUpdates) {
-        	result = execute(((BatchedUpdates)command));
+        	execute(((BatchedUpdates)command));
         } else {
             // translate command
             TranslatedCommand translatedComm = translateCommand(command);
 
-            result = executeTranslatedCommand(translatedComm);
+            executeTranslatedCommand(translatedComm);
         }
     }
 
@@ -77,7 +86,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 
         boolean commitType = getAutoCommit(null);
         Command[] commands = batchedCommand.getUpdateCommands().toArray(new Command[batchedCommand.getUpdateCommands().size()]);
-        int[] results = new int[commands.length];
+        result = new int[commands.length];
 
         TranslatedCommand tCommand = null;
         
@@ -100,7 +109,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                         pstmt = (PreparedStatement)statement;
                     } else {
                         if (!executedCmds.isEmpty()) {
-                            executeBatch(i, results, executedCmds);
+                            executeBatch(i, result, executedCmds);
                         }
                         pstmt = getPreparedStatement(tCommand.getSql());
                     }
@@ -108,7 +117,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                     pstmt.addBatch();
                 } else {
                     if (previousCommand != null && previousCommand.isPrepared()) {
-                        executeBatch(i, results, executedCmds);
+                        executeBatch(i, result, executedCmds);
                         getStatement();
                     }
                     if (statement == null) {
@@ -120,7 +129,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                 previousCommand = tCommand;
             }
             if (!executedCmds.isEmpty()) {
-                executeBatch(commands.length, results, executedCmds);
+                executeBatch(commands.length, result, executedCmds);
             }
             succeeded = true;
         } catch (SQLException e) {
@@ -131,7 +140,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             }
         }
 
-        return results;
+        return result;
     }
 
     private void executeBatch(int commandCount,
@@ -154,19 +163,26 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @throws TranslatorException
      * @since 4.3
      */
-    private int[] executeTranslatedCommand(TranslatedCommand translatedComm) throws TranslatorException {
+    private void executeTranslatedCommand(TranslatedCommand translatedComm) throws TranslatorException {
         // create statement or PreparedStatement and execute
         String sql = translatedComm.getSql();
         boolean commitType = false;
         boolean succeeded = false;
         try {
         	int updateCount = 0;
+        	Statement statement = null;
             if (!translatedComm.isPrepared()) {
-                updateCount = getStatement().executeUpdate(sql);
+            	statement = getStatement();
+            	if (context.getCommandContext().isReturnAutoGeneratedKeys() && executionFactory.supportsGeneratedKeys(context, command)) {
+            		updateCount = statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+            	} else {
+            		updateCount = statement.executeUpdate(sql);
+            	}
+            	result = new int[] {updateCount};
                 addStatementWarnings();
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
-            	
+            	statement = pstatement;
             	Iterator<? extends List<?>> vi = null;
             	if (command instanceof BatchedCommand) {
             		BatchedCommand batchCommand = (BatchedCommand)command;
@@ -178,7 +194,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                     if (commitType) {
                         connection.setAutoCommit(false);
                     }
-            		int maxBatchSize = (command instanceof Insert)?this.executionFactory.getMaxPreparedInsertBatchSize():Integer.MAX_VALUE;
+            		int maxBatchSize = (command instanceof Insert)?maxPreparedInsertBatchSize:Integer.MAX_VALUE;
             		boolean done = false;
             		outer: while (!done) {
             			for (int i = 0; i < maxBatchSize; i++) {
@@ -194,19 +210,44 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             				}
             			}
             		    int[] results = pstatement.executeBatch();
-            		    
-            		    for (int i=0; i<results.length; i++) {
-            		        updateCount += results[i];
+            		    if (result == null) {
+            		    	result = results;
+            		    } else {
+            		    	int len = result.length;
+            		    	result = Arrays.copyOf(result, len + results.length);
+            		    	System.arraycopy(results, 0, result, len, results.length);
             		    }
             		}
                 } else {
-                	bind(pstatement, translatedComm.getPreparedValues(), null);
+            		bind(pstatement, translatedComm.getPreparedValues(), null);
         			updateCount = pstatement.executeUpdate();
+        			result = new int[] {updateCount};
         			addStatementWarnings();
                 }
                 succeeded = true;
             } 
-            return new int[] {updateCount};
+            if (executionFactory.supportsGeneratedKeys(context, command) && context.getCommandContext().isReturnAutoGeneratedKeys()) {
+        		ResultSet keys = statement.getGeneratedKeys();
+        		ResultSetMetaData rsmd = keys.getMetaData();
+        		int cols = rsmd.getColumnCount();
+        		Class<?>[] columnDataTypes = new Class<?>[cols];
+        		String[] columnNames = new String[cols];
+        		//this is typically expected to be an int/long, but we'll be general here.  we may eventual need the type logic off of the metadata importer
+                for (int i = 0; i < cols; i++) {
+                	columnDataTypes[i] = TypeFacility.getDataTypeClass(TypeFacility.getDataTypeNameFromSQLType(rsmd.getColumnType(i+1)));
+                	columnNames[i] = rsmd.getColumnName(i+1);
+                }
+                GeneratedKeys generatedKeys = context.getCommandContext().returnGeneratedKeys(columnNames, columnDataTypes);
+                //many databases only support returning a single generated value, but we'll still attempt to gather all
+        		while (keys.next()) {
+                    List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
+                    for (int i = 0; i < columnDataTypes.length; i++) {
+                        Object value = this.executionFactory.retrieveValue(keys, i+1, columnDataTypes[i]);
+                        vals.add(value); 
+                    }
+                    generatedKeys.addKey(vals);
+        		}
+        	}
         } catch (SQLException err) {
         	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11013, err, translatedComm);
         } finally {
@@ -222,6 +263,9 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @throws TranslatorException
      */
     private boolean getAutoCommit(TranslatedCommand tCommand) throws TranslatorException {
+    	if (!atomic) {
+    		return false;
+    	}
     	try {
             return connection.getAutoCommit();
         } catch (SQLException err) {
@@ -230,7 +274,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     }
 
     /**
-     * If the auto comm
+     * Set autoCommit back to true
      * 
      * @param exceptionOccurred
      * @param command
@@ -246,7 +290,9 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
         	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11015, err, tCommand);
         } finally {
         	try {
-        		connection.commit(); // in JbossAs setAutocommit = true does not trigger the commit.
+        		if (!exceptionOccurred) {
+        			connection.commit(); // in JbossAs setAutocommit = true does not trigger the commit.
+        		}
         		connection.setAutoCommit(true);
         	} catch (SQLException err) {
             	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11016, err, tCommand);
@@ -259,4 +305,12 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     		TranslatorException {
     	return result;
     }
+    
+    public void setMaxPreparedInsertBatchSize(int maxPreparedInsertBatchSize) {
+		this.maxPreparedInsertBatchSize = maxPreparedInsertBatchSize;
+	}
+    
+    public void setAtomic(boolean atomic) {
+		this.atomic = atomic;
+	}
 }

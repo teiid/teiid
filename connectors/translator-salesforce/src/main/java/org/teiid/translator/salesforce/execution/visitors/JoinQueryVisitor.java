@@ -1,14 +1,10 @@
 package org.teiid.translator.salesforce.execution.visitors;
 
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Join;
-import org.teiid.language.NamedTable;
-import org.teiid.language.TableReference;
+import org.teiid.core.util.StringUtil;
+import org.teiid.language.*;
+import org.teiid.language.Join.JoinType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
@@ -31,7 +27,9 @@ public class JoinQueryVisitor extends SelectVisitor {
 	private Table leftTableInJoin;
 	private Table rightTableInJoin;
 	private Table childTable;
-
+	private String parentName;
+	private ForeignKey foreignKey;
+	
 	public JoinQueryVisitor(RuntimeMetadata metadata) {
 		super(metadata);
 	}
@@ -54,19 +52,45 @@ public class JoinQueryVisitor extends SelectVisitor {
 			Expression rExp = criteria.getRightExpression();
 			if (isIdColumn(rExp) || isIdColumn(lExp)) {
 				Column rColumn = ((ColumnReference) rExp).getMetadataObject();
-				String rTableName = rColumn.getParent().getNameInSource();
+				String rTableName = rColumn.getParent().getSourceName();
 
 				Column lColumn = ((ColumnReference) lExp).getMetadataObject();
-				String lTableName = lColumn.getParent().getNameInSource();
+				String lTableName = lColumn.getParent().getSourceName();
 
-				if (leftTableInJoin.getNameInSource().equals(rTableName)
-						|| leftTableInJoin.getNameInSource().equals(lTableName)
-						&& rightTableInJoin.getNameInSource().equals(rTableName)
-						|| rightTableInJoin.getNameInSource().equals(lTableName)
+				if (leftTableInJoin.getSourceName().equals(rTableName)
+						|| leftTableInJoin.getSourceName().equals(lTableName)
+						&& rightTableInJoin.getSourceName().equals(rTableName)
+						|| rightTableInJoin.getSourceName().equals(lTableName)
 						&& !rTableName.equals(lTableName)) {
 					// This is the join criteria, the one that is the ID is the parent.
-					Expression fKey = !isIdColumn(lExp) ? lExp : rExp; 
-					table = childTable =  (Table)((ColumnReference) fKey).getMetadataObject().getParent();
+					Expression fKey = !isIdColumn(lExp) ? lExp : rExp;
+					ColumnReference columnReference = (ColumnReference) fKey;
+					table = childTable =  (Table)columnReference.getMetadataObject().getParent();
+					String name = columnReference.getMetadataObject().getSourceName();
+					if (StringUtil.endsWithIgnoreCase(name, "id")) {
+						this.parentName = name.substring(0, name.length() - 2);
+					}
+					Table parent = leftTableInJoin;
+					if (isChildToParentJoin()) {
+						parent = rightTableInJoin;
+					}
+					for (ForeignKey fk : childTable.getForeignKeys()) {
+						if (fk.getReferenceKey().equals(parent.getPrimaryKey())) {
+							foreignKey = fk;
+							break;
+						}
+					}
+					//inner joins require special handling as relationship queries are outer by default
+					if (join.getJoinType() == JoinType.INNER_JOIN) {
+						if (!isChildToParentJoin()) {
+							//flip the relationship
+							Table t = leftTableInJoin;
+							this.leftTableInJoin = rightTableInJoin;
+							this.rightTableInJoin = t;
+						} 
+   						//add is null criteria
+						addCriteria(new Comparison(fKey, new Literal(null, fKey.getType()), Comparison.Operator.NE));
+					}
 				} else {
 					// Only add the criteria to the query if it is not the join criteria.
 					// The join criteria is implicit in the salesforce syntax.
@@ -80,10 +104,10 @@ public class JoinQueryVisitor extends SelectVisitor {
 		}
 	}
 
-	@Override
+    @Override
 	public String getQuery() throws TranslatorException {
 		
-		if (isParentToChildJoin()) {
+		if (isChildToParentJoin()) {
 			return super.getQuery();
 		} 
 		if (!exceptions.isEmpty()) {
@@ -91,29 +115,49 @@ public class JoinQueryVisitor extends SelectVisitor {
 		}
 		StringBuilder select = new StringBuilder();
 		select.append(SELECT).append(SPACE);
-		addSelect(leftTableInJoin.getNameInSource(), select, true);
+		addSelect(leftTableInJoin.getSourceName(), select, true);
 		select.append(OPEN);
 		
 		StringBuilder subselect = new StringBuilder();
 		subselect.append(SELECT).append(SPACE);
-		addSelect(rightTableInJoin.getNameInSource(), subselect, false);
+		addSelect(rightTableInJoin.getSourceName(), subselect, false);
 		subselect.append(SPACE);
 
 		subselect.append(FROM).append(SPACE);
-		subselect.append(rightTableInJoin.getNameInSource()).append('s');
+		
+		String pluralName = null;
+		if (this.foreignKey != null && this.foreignKey.getNameInSource() != null) {
+			pluralName = this.foreignKey.getNameInSource();
+		} else {
+			pluralName = rightTableInJoin.getNameInSource() + "s"; //$NON-NLS-1$
+		}
+		subselect.append(pluralName);
     	subselect.append(CLOSE).append(SPACE);
     	
     	select.append(subselect);
 		
     	select.append(FROM).append(SPACE);
-		select.append(leftTableInJoin.getNameInSource()).append(SPACE);
+		select.append(leftTableInJoin.getSourceName()).append(SPACE);
 		addCriteriaString(select);
 		appendGroupByHaving(select);
 		select.append(limitClause);
 		return select.toString();			
 	}
+	
+	@Override
+	void appendColumnReference(StringBuilder queryString, ColumnReference ref) {
+		if (isChildToParentJoin() && this.rightTableInJoin.equals(ref.getMetadataObject().getParent()) 
+				&& this.parentName != null) {
+			//TODO: a self join won't work with this logic
+			queryString.append(parentName);
+			queryString.append('.');
+			queryString.append(ref.getMetadataObject().getSourceName());
+		} else {
+			super.appendColumnReference(queryString, ref);
+		}
+	}
 
-	public boolean isParentToChildJoin() {
+	public boolean isChildToParentJoin() {
 		return childTable.equals(leftTableInJoin);
 	}
 
@@ -123,8 +167,8 @@ public class JoinQueryVisitor extends SelectVisitor {
 			Expression expression = symbol.getExpression();
 			if (expression instanceof ColumnReference) {
 				Column element = ((ColumnReference) expression).getMetadataObject();
-				String tableName = element.getParent().getNameInSource();
-				if(!isParentToChildJoin() && !tableNameInSource.equals(tableName)) {
+				String tableName = element.getParent().getSourceName();
+				if(!isChildToParentJoin() && !tableNameInSource.equals(tableName)) {
 					continue;
 				}
 				if (!firstTime) {
@@ -141,7 +185,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 				}
 				appendAggregateFunction(result, (AggregateFunction)expression);
 			} else {
-				throw new AssertionError("Unknown select symbol type" + symbol); //$NON-NLS-1$
+				throw new AssertionError("Unknown select symbol type " + symbol); //$NON-NLS-1$
 			}
 		}
 		if (!firstTime && addComma) {

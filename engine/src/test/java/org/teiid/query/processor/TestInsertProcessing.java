@@ -7,17 +7,18 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.service.TransactionContext;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.query.metadata.CompositeMetadataStore;
-import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.TestMetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -27,6 +28,8 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
+import org.teiid.query.validator.TestValidator;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -113,17 +116,17 @@ public class TestInsertProcessing {
                                          Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
         
         if (doBulkInsert) {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
+                                new List[] { Arrays.asList(1), Arrays.asList(1)});             
         } 
         else 
         if (doBatching) {
             dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
+                                new List[] { Arrays.asList(1),Arrays.asList(1)});             
         } else {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});             
         }
 
@@ -144,8 +147,8 @@ public class TestInsertProcessing {
         if ( !doBulkInsert && doBatching ) {
             BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(1);
             assertEquals(2, bu.getUpdateCommands().size());
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
         }        
     }
     
@@ -169,7 +172,7 @@ public class TestInsertProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (...)",  //$NON-NLS-1$ 
+        dataManager.addData("INSERT INTO pm1.g1 (e1, e2) VALUES (...)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
         String sql = "SELECT 1, convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
@@ -203,7 +206,7 @@ public class TestInsertProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (1, 1.0)",  //$NON-NLS-1$ 
+        dataManager.addData("INSERT INTO pm1.g1 (e1, e2) VALUES (1, 1.0)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
         String sql = "SELECT 1, convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
@@ -226,23 +229,31 @@ public class TestInsertProcessing {
         assertEquals(DataTypeManager.DefaultDataClasses.FLOAT, value1.getValue().getClass());
     }
     
-    @Test public void testInsertIntoWithSubquery_None() {
+    @Test public void testInsertIntoWithSubquery_None() throws Exception {
         helpInsertIntoWithSubquery( null );
     }    
     
-    @Test public void testInsertIntoWithSubquery_Batch() {
+    @Test public void testInsertIntoWithSubquery_Batch() throws Exception {
         helpInsertIntoWithSubquery( Capability.BATCHED_UPDATES );
     }
     
-    @Test public void testInsertIntoWithSubquery_Bulk() {
+    @Test public void testInsertIntoWithSubquery_Bulk() throws Exception {
         helpInsertIntoWithSubquery( Capability.INSERT_WITH_ITERATOR );
     }
     
-    @Test public void testInsertIntoWithSubquery_Pushdown() {
+    @Test public void testInsertIntoWithSubquery_Bulk1() throws Exception {
+        helpInsertIntoWithSubquery( Capability.INSERT_WITH_ITERATOR, false );
+    }
+    
+    @Test public void testInsertIntoWithSubquery_Pushdown() throws Exception {
         helpInsertIntoWithSubquery( Capability.INSERT_WITH_QUERYEXPRESSION );
     }
 
-    public void helpInsertIntoWithSubquery( Capability cap ) {
+    public void helpInsertIntoWithSubquery( Capability cap) throws Exception {
+    	helpInsertIntoWithSubquery(cap, true);
+    }
+    
+    public void helpInsertIntoWithSubquery( Capability cap, boolean txn ) throws Exception {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
@@ -254,31 +265,53 @@ public class TestInsertProcessing {
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
-        HardcodedDataManager dataManager = new HardcodedDataManager();
+        HardcodedDataManager dataManager = new HardcodedDataManager() {
+        	@Override
+        	public TupleSource registerRequest(CommandContext context,
+        			Command command, String modelName,
+        			RegisterRequestParameter parameterObject)
+        			throws TeiidComponentException {
+        		if (command instanceof Insert) {
+        			Insert insert = (Insert)command;
+        			if (insert.getTupleSource() != null) {
+        				TupleSource ts = insert.getTupleSource();
+        				int count = 0;
+        				try {
+							while (ts.nextTuple() != null) {
+								count++;
+							}
+							return CollectionTupleSource.createUpdateCountArrayTupleSource(count);
+						} catch (TeiidProcessingException e) {
+							throw new RuntimeException(e);
+						}
+        			}
+        		}
+        		return super.registerRequest(context, command, modelName, parameterObject);
+        	}
+        };
 
-        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$ 
-                            new List[] { Arrays.asList(new Object[] { "1", new Integer(1), Boolean.FALSE, new Double(1)}),     //$NON-NLS-1$
-                                         Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
+    	List[] data = new List[txn?2:50];
+    	for (int i = 1; i <= data.length; i++) {
+    		data[i-1] = Arrays.asList(String.valueOf(i), i, (i%2==0)?Boolean.TRUE:Boolean.FALSE, Double.valueOf(i));
+    	}
+        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$
+        		data);
         
         if (cap != null) {
         	switch (cap) {
-	        case INSERT_WITH_ITERATOR:
-	            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
-	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
-	            break;
 	        case BATCHED_UPDATES:
 	            dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
-	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
+	                    new List[] { Arrays.asList(1), Arrays.asList(1)});
 	            break;
 	        case INSERT_WITH_QUERYEXPRESSION:
-	        	dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$ 
-	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
+	        	dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$ 
+	                    new List[] { Arrays.asList(new Object[] { 2})});
 	        	break;
 	        }
         } else {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});             
         }
 
@@ -289,18 +322,27 @@ public class TestInsertProcessing {
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
         List<?>[] expected = new List[] {   
-            Arrays.asList(new Object[] { new Integer(2) }), 
+            Arrays.asList(txn?2:50), 
         }; 
         
-        helpProcess(plan, dataManager, expected);
+        CommandContext cc = TestProcessor.createCommandContext();
+        if (!txn) {
+        	TransactionContext tc = new TransactionContext();
+        	tc.setNoTnx(true);
+        	cc.setTransactionContext(tc);
+        	cc.setBufferManager(null);
+        	cc.setProcessorBatchSize(2);
+        }
+        
+        helpProcess(plan, cc, dataManager, expected);
         
         // if not doBulkInsert and is doBatching,
         //    check the command hist to ensure it contains the expected commands
         if ( cap == Capability.BATCHED_UPDATES ) {
             BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(1);
             assertEquals(2, bu.getUpdateCommands().size());
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
         }        
     }
     
@@ -343,17 +385,17 @@ public class TestInsertProcessing {
                                          Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
         
         if (doBulkInsert) {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(4)})});             
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
+                                new List[] { Arrays.asList(1), Arrays.asList(1), Arrays.asList(1), Arrays.asList(1)});             
         } 
         else 
         if (doBatching) {
             dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
-                                new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
+                                new List[] { Arrays.asList(1), Arrays.asList(1)});             
         } else {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});             
         }
 
@@ -375,8 +417,8 @@ public class TestInsertProcessing {
         if ( !doBulkInsert && doBatching ) {
             BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(2);
             assertEquals(2, bu.getUpdateCommands().size());
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
         }        
     }
     
@@ -411,7 +453,7 @@ public class TestInsertProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
-		dataManager.addData("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", expected);
+		dataManager.addData("INSERT INTO g1 (e1, e2, e3, e4) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0", expected);
         helpProcess(plan, dataManager, expected);
     }
     
@@ -429,20 +471,57 @@ public class TestInsertProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
-		dataManager.addData("INSERT INTO g1 (e1) SELECT g2.e1 FROM g2", expected);
+		dataManager.addData("INSERT INTO g1 (e1) SELECT g_0.e1 FROM g2 AS g_0", expected);
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testInsertQueryExpressionInlineView() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE Test_Insert  (  status varchar(4000) ) options (updatable true);"
+        		+ " CREATE foreign TABLE test_a  (  a varchar(4000) )", "x",  "y" );
+
+        String sql = "INSERT INTO Test_Insert SELECT CASE WHEN (status = '0') AND (cnt > 0) THEN '4' ELSE status END AS status FROM"
+                + "(SELECT (SELECT COUNT(*) FROM test_a AS smh2) AS cnt, a AS status FROM test_a AS smh) AS a  "; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
+        
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"INSERT INTO Test_Insert (status) SELECT CASE WHEN (v_0.c_0 = '0') AND (v_0.c_1 > 0) THEN '4' ELSE v_0.c_0 END FROM (SELECT g_0.a AS c_0, (SELECT COUNT(*) FROM y.test_a AS g_1) AS c_1 FROM y.test_a AS g_0) AS v_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testInsertQueryExpressionLayeredView() throws Exception {
+    	QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE target  (  a integer ) options (updatable true);"
+        		+ " CREATE foreign TABLE source  (  a integer );"
+        		+ "create view v1 as select a from source group by a; create view v2 as select a from y.v1 group by a;", "x",  "y" );
+    	
+    	String sql = "insert into target SELECT * FROM y.v2;"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+     
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, capFinder);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("INSERT INTO target (a) SELECT v_0.c_0 FROM (SELECT g_0.a AS c_0 FROM source AS g_0 GROUP BY g_0.a) AS v_0 GROUP BY v_0.c_0", Arrays.asList(1));
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)});
+    }
+    
+    @Test public void testValidation() throws Exception {
+    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    	String sql = "insert into pm1.g1 (e1) SELECT key_name FROM (select 'a' as key_name, 'b' as key_type) k  HAVING count(*)>1"; //$NON-NLS-1$
+     
+        TestValidator.helpValidate(sql, new String[]{"key_name"}, metadata);
+    }
+    
     @Test public void testAutoIncrementView() throws Exception {
-    	VDBMetaData vdb = new VDBMetaData();
-    	MetadataStore store = new MetadataStore();
     	String ddl = "create foreign table t1 (x integer options (auto_increment true), y string) options (updatable true); \n"
     		+ "create view v1 (x integer options (auto_increment true), y string) options (updatable true) as select * from t1;";
-    	TestMetadataValidator.buildModel("x", true, vdb, store, ddl);
-    	TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(store)), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
-    	vdb.addAttchment(TransformationMetadata.class, tm);
-    	vdb.addAttchment(QueryMetadataInterface.class, tm);
-    	new MetadataValidator().validate(vdb, store);
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
     	
         String sql = "insert into v1 (y) values ('a')"; //$NON-NLS-1$
         
@@ -453,6 +532,103 @@ public class TestInsertProcessing {
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
 		dataManager.addData("INSERT INTO t1 (y) VALUES ('a')", expected);
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMerge() throws Exception {
+    	String ddl = "create foreign table t1 (x integer primary key, y string) options (updatable true);";
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+    	
+        String sql = "merge into t1 (x, y) select 1, 'a' union all select 2, 'b'"; //$NON-NLS-1$
+        
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder()); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT 1 FROM t1 AS g_0 WHERE g_0.x = 1", new List<?>[] {Arrays.asList(1)});
+        dataManager.addData("UPDATE t1 SET y = 'a' WHERE t1.x = 1", new List<?>[] {Arrays.asList(1)});
+        dataManager.addData("SELECT 1 FROM t1 AS g_0 WHERE g_0.x = 2", new List<?>[] {});
+        dataManager.addData("INSERT INTO t1 (x, y) VALUES (2, 'b')", new List<?>[] {Arrays.asList(1)});
+        helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(2)});
+    }
+    
+    @Test public void testInsertDefaultResolving() throws Exception {
+        String sql = "insert into x (y) values ('1')"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("" +
+        		"create foreign table t (y string, z string) options (updatable true); " +
+        		"create view x (y string, z string default 'a') options (updatable true) as select * from t; " +
+        		"create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder()); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("INSERT INTO t (y, z) VALUES ('1', 'a')", new List<?>[] {Arrays.asList(1)});
+        helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)}); 
+    }
+    
+    @Test public void testInsertQueryExpressionLimitZero() {
+        String sql = "Insert into pm1.g1 (e1) select * from (select uuid() from pm1.g2 limit 4) a limit 0"; //$NON-NLS-1$
+
+        List<?>[] expected = new List[] { 
+            Arrays.asList(new Object[] { 0})
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g2.e1 FROM pm1.g2", Arrays.asList("a"));
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertSubquery() throws Exception {
+    	String sql = "Insert into pm1.g1 (e1) values ((select current_database()))"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1)
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO pm1.g1 (e1) VALUES ('myvdb')", Arrays.asList(1));
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertSubquery1() throws Exception {
+    	String sql = "Insert into pm1.g1 (e3) values ('a' < all (select current_database()))"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1)
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO pm1.g1 (e3) VALUES (TRUE)", Arrays.asList(1));
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertDefaultSubquery() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table p (e1 string) options (updatable 'true'); "
+    			+ "create view t (col string, col1 string default '(select current_database())' options (\"teiid_rel:default_handling\" 'expression')) options (updatable 'true') as select e1, e1 from p; "
+    			+ "create trigger on t instead of insert as for each row begin insert into p (e1) values (new.col1); end;", "x", "y");
+        
+    	String sql = "Insert into t (col) values ('a')"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1)
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO p (e1) VALUES ('myvdb')", Arrays.asList(1));
+
+        ProcessorPlan plan = helpGetPlan(sql, tm);
+
         helpProcess(plan, dataManager, expected);
     }
 

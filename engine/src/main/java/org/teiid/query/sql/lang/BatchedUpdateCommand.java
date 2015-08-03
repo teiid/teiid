@@ -25,6 +25,7 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.util.VariableContext;
@@ -37,8 +38,9 @@ import org.teiid.query.sql.util.VariableContext;
  */
 public class BatchedUpdateCommand extends Command {
     
-    protected List<Command> commands;
+	protected List<Command> commands;
     private List<VariableContext> variableContexts; //processing state
+    private boolean singleResult;
     
     /**
      *  
@@ -46,7 +48,12 @@ public class BatchedUpdateCommand extends Command {
      * @since 4.2
      */
     public BatchedUpdateCommand(List<? extends Command> updateCommands) {
+        this(updateCommands, false);
+    }
+    
+    public BatchedUpdateCommand(List<? extends Command> updateCommands, boolean singleResult) {
         this.commands = new ArrayList<Command>(updateCommands);
+        this.singleResult = singleResult;
     }
     
     /**
@@ -88,6 +95,7 @@ public class BatchedUpdateCommand extends Command {
     public Object clone() {
         List<Command> clonedCommands = LanguageObject.Util.deepClone(this.commands, Command.class);
         BatchedUpdateCommand copy = new BatchedUpdateCommand(clonedCommands);
+        copy.singleResult = this.singleResult;
         copyMetadataState(copy);
         return copy;
     }
@@ -100,15 +108,7 @@ public class BatchedUpdateCommand extends Command {
 	}
 
     public String toString() {
-        StringBuffer val = new StringBuffer("BatchedUpdate{"); //$NON-NLS-1$
-        if (commands != null && commands.size() > 0) {
-            val.append(getCommandToken(commands.get(0).getType()));
-            for (int i = 1; i < commands.size(); i++) {
-                val.append(',').append(getCommandToken(commands.get(i).getType()));
-            }
-        }
-        val.append('}');
-        return val.toString();
+       return getStringForm(false);
     }
     
 	public void setVariableContexts(List<VariableContext> variableContexts) {
@@ -118,5 +118,57 @@ public class BatchedUpdateCommand extends Command {
 	public List<VariableContext> getVariableContexts() {
 		return variableContexts;
 	}
+	
+    @Override
+	public int hashCode() {
+    	return commands.hashCode();
+	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof BatchedUpdateCommand)) {
+			return false;
+		}
+		BatchedUpdateCommand other = (BatchedUpdateCommand)obj;
+		return EquivalenceUtil.areEqual(commands, other.commands) && this.singleResult == other.singleResult;
+	}
+	
+	public void setSingleResult(boolean singleResult) {
+		this.singleResult = singleResult;
+	}
+	
+	public boolean isSingleResult() {
+		return singleResult;
+	}
+
+	public String getStringForm(boolean full) {
+		StringBuffer val = new StringBuffer(); 
+		if (!full) {
+			val.append("BatchedUpdate{"); //$NON-NLS-1$
+		}
+        if (commands != null && commands.size() > 0) {
+            for (int i = 0; i < commands.size(); i++) {
+            	if (i > 0) { 
+            		if (full) {
+            			val.append(";\n"); //$NON-NLS-1$
+            		} else {
+            			val.append(","); //$NON-NLS-1$
+            		}
+            	}
+            	if (full) {
+            		val.append(commands.get(i));
+            	} else {
+            		val.append(getCommandToken(commands.get(i).getType()));	
+            	}
+            }
+        }
+        if (!full) {
+        	val.append('}');
+        }
+	    return val.toString();
+	}
+	
 }

@@ -32,6 +32,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
@@ -44,17 +45,13 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
 public class SimpleQueryResolver implements CommandResolver {
 
@@ -73,6 +70,21 @@ public class SimpleQueryResolver implements CommandResolver {
             qrv.visit(query);
             ResolverVisitor visitor = (ResolverVisitor)qrv.getVisitor();
 			visitor.throwException(true);
+			if (visitor.hasUserDefinedAggregate()) {
+				ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+					public Expression replaceExpression(Expression element) {
+						if (element instanceof Function && !(element instanceof AggregateSymbol) && ((Function) element).isAggregate()) {
+							Function f = (Function)element;
+							AggregateSymbol as = new AggregateSymbol(f.getName(), false, f.getArgs(), null);
+							as.setType(f.getType());
+							as.setFunctionDescriptor(f.getFunctionDescriptor());
+							return as;
+						}
+						return element;
+					}
+				};
+				PreOrPostOrderNavigator.doVisit(query, emv, PreOrPostOrderNavigator.POST_ORDER);
+			}
         } catch (TeiidRuntimeException e) {
             if (e.getCause() instanceof QueryMetadataException) {
                 throw (QueryMetadataException)e.getCause();
@@ -115,7 +127,25 @@ public class SimpleQueryResolver implements CommandResolver {
             
             QueryResolver.setChildMetadata(queryExpression, query);
             
-            QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
+            QueryCommand recursive = null;
+            
+            try {
+            	QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
+            } catch (QueryResolverException e) {
+            	if (!(queryExpression instanceof SetQuery)) {
+            		throw e;
+            	}
+            	SetQuery setQuery = (SetQuery)queryExpression;
+            	//valid form must be a union with nothing above
+            	if (setQuery.getOperation() != Operation.UNION
+            			|| setQuery.getLimit() != null 
+            			|| setQuery.getOrderBy() != null 
+            			|| setQuery.getOption() != null) {
+            		throw e;
+            	}
+            	QueryResolver.resolveCommand(setQuery.getLeftQuery(), metadata.getMetadata(), false);
+            	recursive = setQuery.getRightQuery();
+            }
 
             if (!discoveredGroups.add(obj.getGroupSymbol())) {
             	 throw new QueryResolverException(QueryPlugin.Event.TEIID30101, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30101, obj.getGroupSymbol()));
@@ -149,6 +179,13 @@ public class SimpleQueryResolver implements CommandResolver {
             		es.setGroupSymbol(obj.getGroupSymbol());
 				}
             }
+            
+            if (recursive != null) {
+            	QueryResolver.setChildMetadata(recursive, query);
+            	QueryResolver.resolveCommand(recursive, metadata.getMetadata(), false);
+            	new SetQueryResolver().resolveSetQuery(metadata, false, (SetQuery)queryExpression, ((SetQuery)queryExpression).getLeftQuery(), recursive);
+            	obj.setRecursive(true);
+            }
         }
 	}
 
@@ -161,9 +198,7 @@ public class SimpleQueryResolver implements CommandResolver {
             qre.addUnresolvedSymbol(new UnresolvedSymbolDescription(allInGroupSymbol.toString(), msg));
             throw qre;
         }
-        GroupSymbol gs = allInGroupSymbol.getGroup();
         allInGroupSymbol.setGroup(groupSymbols.get(0).clone());
-        allInGroupSymbol.getGroup().setOutputName(gs.getOutputName());
         return groupSymbols.get(0);
     }
     
@@ -203,7 +238,27 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(obj.getCriteria());
             visitNode(obj.getGroupBy());
             visitNode(obj.getHaving());
-            visitNode(obj.getSelect());        
+            visitNode(obj.getSelect());
+            GroupBy groupBy = obj.getGroupBy();
+            if (groupBy != null) {
+            	Object var = DQPWorkContext.getWorkContext().getSession().getSessionVariables().get("resolve_groupby_positional"); //$NON-NLS-1$
+            	if (Boolean.TRUE.equals(var)) {
+	            	for (int i = 0; i < groupBy.getCount(); i++) {
+	            		List<Expression> select = obj.getSelect().getProjectedSymbols();
+	            		Expression ex = groupBy.getSymbols().get(i);
+	            		ex = SymbolMap.getExpression(ex);
+	            		if (ex instanceof Constant && ex.getType() == DataTypeManager.DefaultDataClasses.INTEGER) {
+	            			Integer val = (Integer) ((Constant)ex).getValue();
+	            			if (val != null && val > 0 && val <= select.size()) {
+	            				Expression selectExpression = select.get(val - 1);
+	            				selectExpression = SymbolMap.getExpression(selectExpression);
+	            				groupBy.getSymbols().set(i, (Expression) selectExpression.clone());
+	            			}
+	            		}
+	            	}
+            	}
+            }
+            visitNode(obj.getLimit());
         }
         
         public void visit(GroupSymbol obj) {
@@ -252,7 +307,7 @@ public class SimpleQueryResolver implements CommandResolver {
    
             // Look for elements that are not selectable and remove them
             for (ElementSymbol element : elements) {
-                if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
+                if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT) && !metadata.isPseudo(element.getMetadataID())) {
                     element = element.clone();
                     element.setGroupSymbol(group);
                 	result.add(element);
@@ -571,6 +626,27 @@ public class SimpleQueryResolver implements CommandResolver {
 				checkImplicit(jp.getLeftClause());
 				if (allowImplicit) {
 					checkImplicit(jp.getRightClause());
+				}
+			}
+		}
+		
+		@Override
+		public void visit(Limit obj) {
+			super.visit(obj);
+			if (obj.getOffset() != null) {
+				ResolverUtil.setTypeIfNull(obj.getOffset(), DataTypeManager.DefaultDataClasses.INTEGER);
+				try {
+					obj.setOffset(ResolverUtil.convertExpression(obj.getOffset(), DataTypeManager.DefaultDataTypes.INTEGER, metadata));
+				} catch (QueryResolverException e) {
+					throw new TeiidRuntimeException(e);
+				}
+			}
+			if (obj.getRowLimit() != null) {
+				ResolverUtil.setTypeIfNull(obj.getRowLimit(), DataTypeManager.DefaultDataClasses.INTEGER);
+				try {
+					obj.setRowLimit(ResolverUtil.convertExpression(obj.getRowLimit(), DataTypeManager.DefaultDataTypes.INTEGER, metadata));
+				} catch (QueryResolverException e) {
+					throw new TeiidRuntimeException(e);
 				}
 			}
 		}

@@ -87,13 +87,11 @@ public class TestResultsCache {
 	@Test public void testCacheHintTtl() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set showplan on");
-		ResultSet rs = s.executeQuery("/* cache(ttl:50) */ select 1");
+		ResultSet rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
 		assertTrue(rs.next());
 		s.execute("set noexec on");
-		rs = s.executeQuery("/* cache(ttl:50) */ select 1");
-		assertTrue(rs.next());
 		Thread.sleep(60);
-		rs = s.executeQuery("/* cache(ttl:50) */ select 1");
+		rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
 		assertFalse(rs.next());
 	}
 	
@@ -108,6 +106,19 @@ public class TestResultsCache {
 		assertTrue(rs.next());
 		s.execute("set resultSetCacheMode false");
 		rs = s.executeQuery("select 1");
+		assertFalse(rs.next());
+	}
+	
+	@Test public void testCacheHintWithLargeSQLXML() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
+		assertTrue(rs.next());
+		assertEquals(148907, rs.getString(1).length());
+		assertFalse(rs.next());
+		rs.close();
+		rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
+		assertTrue(rs.next());
+		assertEquals(148907, rs.getString(1).length());
 		assertFalse(rs.next());
 	}
 	

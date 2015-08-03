@@ -28,8 +28,8 @@ public class ColumnStats implements Serializable {
 
 	private static final long serialVersionUID = 7827734836519486538L;
 	
-	private Integer distinctValues;
-    private Integer nullValues;
+	private Number distinctValues;
+    private Number nullValues;
     private String minimumValue;
     private String maximumValue;
 	
@@ -49,19 +49,19 @@ public class ColumnStats implements Serializable {
 		this.maximumValue = max;
 	}
 
-	public Integer getDistinctValues() {
+	public Number getDistinctValues() {
 		return distinctValues;
 	}
 
-	public void setDistinctValues(Integer numDistinctValues) {
+	public void setDistinctValues(Number numDistinctValues) {
 		this.distinctValues = numDistinctValues;
 	}
 
-	public Integer getNullValues() {
+	public Number getNullValues() {
 		return nullValues;
 	}
 
-	public void setNullValues(Integer numNullValues) {
+	public void setNullValues(Number numNullValues) {
 		this.nullValues = numNullValues;
 	}
     

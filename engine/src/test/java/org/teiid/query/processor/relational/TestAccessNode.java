@@ -57,7 +57,6 @@ public class TestAccessNode {
         AccessNode node = new AccessNode(1);
         node.setCommand(command);
         CommandContext context = new CommandContext();
-        context.setProcessorID("processorID"); //$NON-NLS-1$
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager(); 
         TestProcessor.sampleData1(dataManager);
@@ -95,7 +94,6 @@ public class TestAccessNode {
     	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         node.setCommand(query);
         CommandContext context = new CommandContext();
-        context.setProcessorID("processorID"); //$NON-NLS-1$
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager(); 
         TestProcessor.sampleData1(dataManager);
@@ -128,5 +126,9 @@ public class TestAccessNode {
     @Test public void testShouldExecuteAgg() throws Exception {
         Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT count(*) FROM pm1.g1 where false"); //$NON-NLS-1$
         assertTrue(RelationalNodeUtil.shouldExecute(query, false));
+    }
+    
+    @Test public void testUninitailizedClose() throws Exception {
+    	new AccessNode().close();
     }
 }

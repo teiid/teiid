@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
@@ -65,7 +66,6 @@ import org.teiid.net.HostInfo;
  */
 public class SocketServerInstanceImpl implements SocketServerInstance {
 	
-	static final int HANDSHAKE_RETRIES = 10;
     private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
 	private static AtomicInteger MESSAGE_ID = new AtomicInteger();
@@ -77,17 +77,18 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     private ObjectChannel socketChannel;
     private Cryptor cryptor;
     private String serverVersion;
-    private AuthenticationType authType = AuthenticationType.CLEARTEXT;
     private HashMap<Class<?>, Object> serviceMap = new HashMap<Class<?>, Object>();
     
     private boolean hasReader;
+    private int soTimeout;
     
-    public SocketServerInstanceImpl(HostInfo info, long synchTimeout) {
+    public SocketServerInstanceImpl(HostInfo info, long synchTimeout, int soTimeout) {
     	if (!info.isResolved()) {
     		throw new AssertionError("Expected HostInfo to be resolved"); //$NON-NLS-1$
     	}
         this.info = info;
         this.synchTimeout = synchTimeout;
+        this.soTimeout = soTimeout;
     }
     
     public synchronized void connect(ObjectChannelFactory channelFactory) throws CommunicationException, IOException {
@@ -108,23 +109,47 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     	return info;
     }
     
+	@Override
+	public InetAddress getLocalAddress() {
+		if (socketChannel != null) {
+			return socketChannel.getLocalAddress();
+		}
+		return null;
+	}
+    
     private void doHandshake() throws IOException, CommunicationException {
     	Handshake handshake = null;
-    	for (int i = 0; i < HANDSHAKE_RETRIES; i++) {
+    	boolean sentInit = false;
+    	long handShakeRetries = 1;
+    	if (this.soTimeout > 0) {
+    		handShakeRetries = Math.max(1, synchTimeout/this.soTimeout);
+    	}
+    	for (int i = 0; i < handShakeRetries; i++) {
 	        try {
 				Object obj = this.socketChannel.read();
 				
 				if (!(obj instanceof Handshake)) {
-					 throw new CommunicationException(JDBCPlugin.Event.TEIID20009, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20009));
+					 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20009, null, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20009));
 				}
 				handshake = (Handshake)obj;
 				break;
 			} catch (ClassNotFoundException e1) {
-				 throw new CommunicationException(JDBCPlugin.Event.TEIID20010, e1, e1.getMessage());
+				 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20010, e1, e1.getMessage());
 			} catch (SocketTimeoutException e) {
-				if (i == HANDSHAKE_RETRIES - 1) {
+				if (!sentInit && !this.info.isSsl()) {
+					//write a dummy initialization value - if the server is actually ssl, this can cause the server side handshake to fail, otherwise it's ignored
+					//TODO: could always do this initialization in the non-ssl case and not wait for a timeout
+		    		this.socketChannel.write(null);
+		    		sentInit = true;
+		    	}
+				if (i == handShakeRetries - 1) {
 					throw e;
 				}
+			} catch (IOException e) {
+				if (sentInit && !this.info.isSsl()) {
+					throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20032, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20032));
+				}
+				throw e;
 			}
     	}
 
@@ -133,7 +158,6 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
                  throw new CommunicationException(JDBCPlugin.Event.TEIID20011, NetPlugin.Util.getString(JDBCPlugin.Event.TEIID20011, getVersionInfo(), handshake.getVersion()));
             }*/
             serverVersion = handshake.getVersion();
-            authType = handshake.getAuthType();
             handshake.setVersion();
             
             byte[] serverPublicKey = handshake.getPublicKey();
@@ -141,7 +165,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             if (serverPublicKey != null) {
             	DhKeyGenerator keyGen = new DhKeyGenerator();
             	byte[] publicKey = keyGen.createPublicKey();
-                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey);
+                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey, "08.03".compareTo(serverVersion) > 0, this.getClass().getClassLoader());  //$NON-NLS-1$
                 handshake.setPublicKey(publicKey);
             } else {
                 this.cryptor = new NullCryptor();
@@ -216,14 +240,40 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         if (packet instanceof Message) {
         	Message messagePacket = (Message)packet;
         	Serializable messageKey = messagePacket.getMessageKey();
-            log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$ 
+        	ExceptionHolder holder = null;
+        	if (messageKey instanceof ExceptionHolder) {
+        		holder = (ExceptionHolder)messageKey;
+        		messageKey = (Serializable) messagePacket.getContents();
+        		if (log.isLoggable(Level.FINE)) {
+        			log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$
+        		}
+                if (messageKey == null) {
+                	if (log.isLoggable(Level.FINE)) {
+                		log.log(Level.FINE, "protocol error aborting all listeners"); //$NON-NLS-1$
+                	}
+                	for (ResultsReceiver<Object> listener : asynchronousListeners.values()) {
+                		listener.exceptionOccurred(holder.getException());
+                	}
+                	asynchronousListeners.clear();
+                	return;
+                }
+        	} 
+        	if (log.isLoggable(Level.FINE)) {
+        		log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$
+        	}
             ResultsReceiver<Object> listener = asynchronousListeners.remove(messageKey);
             if (listener != null) {
-                listener.receiveResults(messagePacket.getContents());
+            	if (holder != null) {
+            		listener.exceptionOccurred(holder.getException());
+            	} else {
+            		listener.receiveResults(messagePacket.getContents());
+            	}
             }
         } else {
         	//TODO: could ping back
-        	log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$ 
+        	if (log.isLoggable(Level.FINE)) {
+        		log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$
+        	}
         }
     }
     
@@ -377,10 +427,4 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		protected abstract SocketServerInstance getInstance() throws CommunicationException;
 
 	}
-
-	@Override
-	public AuthenticationType getAuthenticationType() {
-		return authType;
-	}
-
 }

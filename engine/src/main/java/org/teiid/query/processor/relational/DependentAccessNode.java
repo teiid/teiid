@@ -22,16 +22,13 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 
@@ -57,6 +54,8 @@ public class DependentAccessNode extends AccessNode {
      * Cached rewritten command to be used as the base for all dependent queries.
      */
     private Command rewrittenCommand;
+	private boolean useBindings;
+	private boolean complexQuery;
     
     public DependentAccessNode(int nodeID) {
         super(nodeID);
@@ -82,18 +81,13 @@ public class DependentAccessNode extends AccessNode {
     }
     
     @Override
-    protected Command initialCommand() throws TeiidProcessingException, TeiidComponentException {
+    protected Command nextCommand() throws TeiidProcessingException, TeiidComponentException {
     	if (rewrittenCommand == null) {
-    		Command atomicCommand = nextCommand();
+    		Command atomicCommand = super.nextCommand();
 	        rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
 	        rewrittenCommand = atomicCommand;
 	        nextCommand = null;
     	}
-    	return rewrittenCommand;
-    }
-    
-    @Override
-    protected Command nextCommand() {
     	if (nextCommand == null && rewrittenCommand != null) {
 			nextCommand = (Command)rewrittenCommand.clone();
     	}
@@ -105,6 +99,8 @@ public class DependentAccessNode extends AccessNode {
         clonedNode.maxSetSize = this.maxSetSize;
         clonedNode.maxPredicates = this.maxPredicates;
         clonedNode.pushdown = this.pushdown;
+        clonedNode.useBindings = this.useBindings;
+        clonedNode.complexQuery = this.complexQuery;
         super.copyTo(clonedNode);
         return clonedNode;
     }
@@ -141,26 +137,11 @@ public class DependentAccessNode extends AccessNode {
 
         Query query = (Query)atomicCommand;
         
-        if (pushdown) {
-        	List<Criteria> newCriteria = new ArrayList<Criteria>();
-        	List<Criteria> queryCriteria = Criteria.separateCriteriaByAnd(query.getCriteria());
-            for (Criteria criteria : queryCriteria) {
-				if (!(criteria instanceof DependentSetCriteria)) {
-					newCriteria.add(criteria);
-					continue;
-				}
-				DependentSetCriteria dsc = (DependentSetCriteria)criteria;
-				dsc = dsc.clone();
-				DependentValueSource dvs = (DependentValueSource) getContext().getVariableContext().getGlobalValue(dsc.getContextSymbol());
-				dsc.setDependentValueSource(dvs);
-				newCriteria.add(dsc);
-			}
-            query.setCriteria(Criteria.combineCriteria(newCriteria));
-            return RelationalNodeUtil.shouldExecute(atomicCommand, true);
-        }
-
         if (this.criteriaProcessor == null) {
             this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
+            this.criteriaProcessor.setPushdown(pushdown);
+            this.criteriaProcessor.setUseBindings(useBindings);
+            this.criteriaProcessor.setComplexQuery(complexQuery);
         }
         
         if (this.dependentCrit == null) {
@@ -200,9 +181,6 @@ public class DependentAccessNode extends AccessNode {
      * @see org.teiid.query.processor.relational.AccessNode#hasNextCommand()
      */
     protected boolean hasNextCommand() {
-    	if (pushdown) {
-    		return false;
-    	}
         return criteriaProcessor.hasNextCommand();
     }
 
@@ -216,6 +194,18 @@ public class DependentAccessNode extends AccessNode {
 			return true;
 		}
 		return null;
+	}
+	
+	public boolean isUseBindings() {
+		return useBindings;
+	}
+	
+	public void setUseBindings(boolean useBindings) {
+		this.useBindings = useBindings;
+	}
+	
+	public void setComplexQuery(boolean complexQuery) {
+		this.complexQuery = complexQuery;
 	}
 
 }

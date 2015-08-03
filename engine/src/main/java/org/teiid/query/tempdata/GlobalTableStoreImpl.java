@@ -28,15 +28,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -45,17 +48,22 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.RequestWorkItem;
+import org.teiid.dqp.message.RequestID;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.ReplicatedObject;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -93,6 +101,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		private long ttl = -1;
 		private boolean valid;
 		private boolean asynch; //sub state of loading
+		private Map<RequestID, WeakReference<RequestWorkItem>> waiters = new HashMap<RequestID, WeakReference<RequestWorkItem>>(2);
 		
 		protected MatTableInfo() {}
 		
@@ -143,7 +152,13 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			}
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
-			notifyAll();
+			for (WeakReference<RequestWorkItem> request : waiters.values()) {
+				RequestWorkItem workItem = request.get();
+				if (workItem != null) {
+					workItem.moreWork();
+				}
+			}
+			waiters.clear();
 		}
 		
 		public synchronized void setAsynchLoad() {
@@ -175,6 +190,14 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			return ttl;
 		}
 		
+		public VDBMetaData getVdbMetaData() {
+			return vdbMetaData;
+		}
+
+		public synchronized void addWaiter(RequestWorkItem waiter) {
+			waiters.put(waiter.getRequestID(), new WeakReference<RequestWorkItem>(waiter));
+		}
+		
 	}
 	
 	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();
@@ -182,9 +205,11 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	private BufferManager bufferManager;
 	private QueryMetadataInterface metadata;
 	private Serializable localAddress;
+	private VDBMetaData vdbMetaData;
 	
-	public GlobalTableStoreImpl(BufferManager bufferManager, QueryMetadataInterface metadata) {
+	public GlobalTableStoreImpl(BufferManager bufferManager, VDBMetaData vdbMetaData, QueryMetadataInterface metadata) {
 		this.bufferManager = bufferManager;
+		this.vdbMetaData = vdbMetaData;
 		this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
 	}
 
@@ -264,20 +289,21 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		    					}
 		    				}
 		    				ResolverUtil.clearGroupInfo(group, metadata);
-		    				StringBuilder query = new StringBuilder("SELECT x.*, "); //$NON-NLS-1$
+		    				StringBuilder query = new StringBuilder("SELECT "); //$NON-NLS-1$
+		    				query.append(group).append(".*, "); //$NON-NLS-1$
 		    				for (Iterator<Expression> iter = newExprs.keySet().iterator(); iter.hasNext();) {
 		    					query.append(iter.next());
 		    					if (iter.hasNext()) {
 		    						query.append(", "); //$NON-NLS-1$
 		    					}
 		    				}
-		    				query.append(" FROM ").append(group).append(" as x option nocache " + group); //$NON-NLS-1$ //$NON-NLS-2$
+		    				query.append(" FROM ").append(group).append(" option nocache ").append(group); //$NON-NLS-1$ //$NON-NLS-2$
 		    				qnode = new QueryNode(query.toString());
 						}
 					}
 					id = tableStore.getMetadataStore().addTempGroup(matTableName, allCols, false, true);
 					id.setQueryNode(qnode);
-					id.setCardinality(metadata.getCardinality(viewId));
+					id.setCardinality((int)metadata.getCardinality(viewId));
 					id.setOriginalMetadataID(viewId);
 					
 					Object pk = metadata.getPrimaryKey(viewId);
@@ -326,10 +352,10 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
     	ElementSymbol returnElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + returnElementName);
 		keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
     	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
-    	TempMetadataID id = this.getTempTableStore().getMetadataStore().getTempGroupID(matTableName);
+    	TempMetadataID id = this.tableStore.getMetadataStore().getTempGroupID(matTableName);
     	if (id == null) {
     		synchronized (this) {
-    	    	id = this.getTempTableStore().getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
+    	    	id = this.tableStore.getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
     	    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
     	    	id.setQueryNode(new QueryNode(queryString));
     	    	id.setPrimaryKey(id.getElements().subList(0, 1));
@@ -344,8 +370,36 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			TempMetadataID id) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
 			QueryValidatorException {
+		if (id.getCacheHint() != null && !id.getTableData().updateCacheHint(((Table)viewId).getLastModified())) {
+			return;
+		}
+		//TODO: be stricter about the update strategy (needs synchronized or something better than ms resolution)
 		Command c = QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand();
 		CacheHint hint = c.getCacheHint();
+		if (hint != null) {
+			hint = hint.clone();
+		} else {
+			hint = new CacheHint();	
+		}
+		//overlay the properties
+		String ttlString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_TTL, false);
+		if (Boolean.valueOf(metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false))) {
+			hint.setTtl(null); //will be managed by the scheduler
+		} else if (ttlString != null) {
+			hint.setTtl(Long.parseLong(ttlString));
+		}
+		String memString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, false);
+		if (memString != null) {
+			hint.setPrefersMemory(Boolean.valueOf(memString));
+		}
+		String updatableString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_UPDATABLE, false);
+		if (updatableString != null) {
+			hint.setUpdatable(Boolean.valueOf(updatableString));
+		}
+		String scope = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_SCOPE, false);
+		if (scope != null) {
+			hint.setScope(scope);
+		}
 		id.setCacheHint(hint);
 	}
 		
@@ -392,7 +446,6 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		return null;
 	}
 
-	@Override
 	public TempTableStore getTempTableStore() {
 		return this.tableStore;
 	}
@@ -400,16 +453,8 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	@Override
 	public TempTable createMatTable(final String tableName, GroupSymbol group) throws TeiidComponentException,
 	QueryMetadataException, TeiidProcessingException {
-		Create create = new Create();
-		create.setTable(group);
-		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
-		create.setElementSymbolsAsColumns(allColumns);
-		Object pk = metadata.getPrimaryKey(group.getMetadataID());
-		if (pk != null) {
-			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
-			create.getPrimaryKey().addAll(pkColumns);
-		}
-		TempTable table = getTempTableStore().addTempTable(tableName, create, bufferManager, false, null);
+		Create create = getCreateCommand(group, true, metadata);
+		TempTable table = tableStore.addTempTable(tableName, create, bufferManager, false, null);
 		table.setUpdatable(false);
 		CacheHint hint = table.getCacheHint();
 		if (hint != null) {
@@ -417,11 +462,37 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			if (hint.getTtl() != null) {
 				getMatTableInfo(tableName).setTtl(hint.getTtl());
 			}
-			if (pk != null) {
+			if (!create.getPrimaryKey().isEmpty()) {
 				table.setUpdatable(hint.isUpdatable(false));
 			}
 		}
 		return table;
+	}
+
+	public static Create getCreateCommand(GroupSymbol group, boolean matview, QueryMetadataInterface metadata)
+			throws QueryMetadataException, TeiidComponentException {
+		Create create = new Create();
+		create.setTable(group);
+		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
+		create.setElementSymbolsAsColumns(allColumns);
+		if (!matview) {
+			for (int i = 0; i < allColumns.size(); i++) {
+				ElementSymbol es = allColumns.get(i);
+				if (!metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.NULL)) {
+					create.getColumns().get(i).setNullType(NullType.No_Nulls);
+					if (es.getType() == DataTypeManager.DefaultDataClasses.INTEGER
+							&& metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
+						create.getColumns().get(i).setAutoIncremented(true); //serial
+					}
+				}
+			}
+		}
+		Object pk = metadata.getPrimaryKey(group.getMetadataID());
+		if (pk != null) {
+			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
+			create.getPrimaryKey().addAll(pkColumns);
+		}
+		return create;
 	}
 	
 	/**
@@ -576,6 +647,16 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	@Override
 	public boolean hasState(String stateId) {
 		return this.tableStore.getTempTable(stateId) != null;
+	}
+	
+	@Override
+	public TempMetadataID getGlobalTempTableMetadataId(String matTableName) {
+		return this.tableStore.getMetadataStore().getTempGroupID(matTableName);
+	}
+
+	@Override
+	public TempTable getTempTable(String matTableName) {
+		return this.tableStore.getTempTable(matTableName);
 	}
 
 }

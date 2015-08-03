@@ -28,8 +28,6 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class XMLParse implements Expression {
 
-	private static final long serialVersionUID = 1535624727897336538L;
-	
 	private boolean document;
 	private Expression expression;
 	private boolean wellFormed;

@@ -30,7 +30,6 @@ import java.util.List;
 import javax.resource.ResourceException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -85,15 +84,13 @@ public class GetUpdatedExecutionImpl implements SalesforceProcedureExecution {
 			
 			Argument start = params.get(STARTDATE);
 			Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
-			GregorianCalendar tempCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-			tempCalendar.setTime(startTime);
-			XMLGregorianCalendar startCalendar = factory.newXMLGregorianCalendar(tempCalendar);
+			GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+			startCalendar.setTime(startTime);
 			
 			Argument end = params.get(ENDDATE);
 			Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
-			tempCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-			tempCalendar.setTime(endTime);
-			XMLGregorianCalendar endCalendar = factory.newXMLGregorianCalendar(tempCalendar);
+			GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+			endCalendar.setTime(endTime);
 			
 			updatedResult = parent.getConnection().getUpdated(objectName, startCalendar, endCalendar);
 		} catch (ResourceException e) {

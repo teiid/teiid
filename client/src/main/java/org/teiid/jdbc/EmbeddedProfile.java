@@ -23,16 +23,10 @@
 package org.teiid.jdbc;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Properties;
 
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.PropertiesUtils;
-import org.teiid.core.util.ReflectionHelper;
 import org.teiid.net.ServerConnection;
 
 
@@ -40,6 +34,8 @@ public class EmbeddedProfile implements ConnectionProfile {
 	
     public static final String USE_CALLING_THREAD = "useCallingThread"; //$NON-NLS-1$
 	public static final String WAIT_FOR_LOAD = "waitForLoad"; //$NON-NLS-1$
+	public static final String TRANSPORT_NAME = "transportName"; //$NON-NLS-1$
+	public static final Object DQP_WORK_CONTEXT = "dqpWorkContext"; //$NON-NLS-1$
 
 	/**
      * This method tries to make a connection to the given URL. This class
@@ -60,17 +56,8 @@ public class EmbeddedProfile implements ConnectionProfile {
 		}
     }
 
-	protected ServerConnection createServerConnection(Properties info) throws TeiidException {
-		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-        try {
-        	final Module module = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create("org.jboss.teiid")); //$NON-NLS-1$
-        	Thread.currentThread().setContextClassLoader(module.getClassLoader());
-        	return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
-        } catch (ModuleLoadException e) {
-        	 throw new TeiidRuntimeException(JDBCPlugin.Event.TEIID20008, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20008));
-		} finally {
-        	Thread.currentThread().setContextClassLoader(tccl);
-        }
+	public ServerConnection createServerConnection(Properties info) throws TeiidException {
+		return ModuleHelper.createFromModule(info);
 	}
-    
+
 }

@@ -28,7 +28,12 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 
+import org.teiid.client.util.ExceptionHolder;
 
+/**
+ * A simple message holder.  To indicate an exception result,
+ * the key is set to an {@link ExceptionHolder}
+ */
 public class Message implements Externalizable {
 	public static final long serialVersionUID = 1063704220782714098L;
 	private Object contents;

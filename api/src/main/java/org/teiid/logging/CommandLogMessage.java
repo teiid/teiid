@@ -63,6 +63,8 @@ public class CommandLogMessage {
     private String translatorName;
     private ExecutionContext executionContext;
     private PlanNode plan;
+    
+    private Long cpuTime;
         
     public CommandLogMessage(long timestamp,
                                 String requestID,
@@ -110,7 +112,7 @@ public class CommandLogMessage {
                                 String sql,
                                 ExecutionContext context) {
         // dataSourceCommandStart
-    	this(timestamp, requestID, sourceCommandID, transactionID, modelName, translatorName, sessionID, principal, null, Event.NEW, context);
+    	this(timestamp, requestID, sourceCommandID, transactionID, modelName, translatorName, sessionID, principal, null, Event.NEW, context, null);
         this.sql = sql;
     }
     public CommandLogMessage(long timestamp,
@@ -123,7 +125,7 @@ public class CommandLogMessage {
                                 String principal,
                                 Integer finalRowCount,
                                 Event event,
-                                ExecutionContext context) {
+                                ExecutionContext context, Long cpuTime) {
         // dataSourceCommandEnd
     	this.source = true;
         this.event = event;
@@ -137,6 +139,7 @@ public class CommandLogMessage {
         this.principal = principal;
         this.rowCount = finalRowCount;
         this.executionContext = context;
+        this.cpuTime = cpuTime;
     }
     
     public String toString() {
@@ -144,12 +147,12 @@ public class CommandLogMessage {
     		if (event == Event.NEW) {
     			return "\tSTART USER COMMAND:\tstartTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\ttxID=" + transactionID + "\tsessionID=" + sessionID + "\tapplicationName=" + applicationName + "\tprincipal=" + principal + "\tvdbName=" + vdbName + "\tvdbVersion=" + vdbVersion + "\tsql=" + sql;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
     		}
-    		return "\t"+ event +" USER COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\ttxID=" + transactionID + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tvdbName=" + vdbName + "\tvdbVersion=" + vdbVersion + "\tfinalRowCount=" + rowCount;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
+    		return "\t"+ event +" USER COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\ttxID=" + transactionID + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tvdbName=" + vdbName + "\tvdbVersion=" + vdbVersion + "\tfinalRowCount=" + rowCount+ ((plan!=null)?"\tplan=" + plan:"");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$
     	}
     	if (event == Event.NEW) {
-    		return "\tSTART DATA SRC COMMAND:\tstartTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tsql=" + sql;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
+    		return "\tSTART DATA SRC COMMAND:\tstartTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tsql=" + sql;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
     	}
-		return "\t"+ event +" SRC COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tfinalRowCount=" + rowCount + (plan!=null?"\tplan=" + plan:"");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
+		return "\t"+ event +" SRC COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tfinalRowCount=" + rowCount + "\tcpuTime(ns)=" + cpuTime;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$
   	}
 
 	public long getTimestamp() {
@@ -227,5 +230,13 @@ public class CommandLogMessage {
 	 */
 	public PlanNode getPlan() {
 		return plan;
+	}
+	
+	/**
+	 * the cpu time in nanoseconds
+	 * @return
+	 */
+	public Long getCpuTime() {
+		return cpuTime;
 	}
 }

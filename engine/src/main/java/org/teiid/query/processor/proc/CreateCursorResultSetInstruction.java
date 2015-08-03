@@ -50,6 +50,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     protected ProcessorPlan plan;
     private Mode mode;
     private Map<ElementSymbol, ElementSymbol> procAssignments;
+	private boolean usesLocalTemp;
     
     public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, Mode mode){
         this.rsName = rsName;
@@ -65,7 +66,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     public void process(ProcedurePlan procEnv)
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	
-        procEnv.executePlan(plan, rsName, procAssignments, mode);
+        procEnv.executePlan(plan, rsName, procAssignments, mode, usesLocalTemp);
     }
 
     /**
@@ -75,6 +76,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
         ProcessorPlan clonedPlan = this.plan.clone();
         CreateCursorResultSetInstruction clone = new CreateCursorResultSetInstruction(this.rsName, clonedPlan, mode);
         clone.setProcAssignments(procAssignments);
+        clone.usesLocalTemp = true;
         return clone;
     }
     
@@ -92,5 +94,13 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     public ProcessorPlan getCommand() { //Defect 13291 - added method to support changes to ProcedurePlan
         return plan;
     }
+    
+    public Mode getMode() {
+		return mode;
+	}
+
+	public void setUsesLocalTemp(boolean b) {
+		this.usesLocalTemp = b;
+	}
     
 }

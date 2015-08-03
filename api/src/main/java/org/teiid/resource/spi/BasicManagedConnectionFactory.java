@@ -38,6 +38,7 @@ import javax.security.auth.Subject;
 
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.ReflectionHelper;
 
 
@@ -131,13 +132,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	}
 	
 	protected static boolean checkEquals(Object left, Object right) {
-		if (left == null) {
-			if (right != null)
-				return false;
-		} else if (!left.equals(right)) {
-			return false;
-		}
-		return false;
+		return EquivalenceUtil.areEqual(left, right);
 	}
 	
 }

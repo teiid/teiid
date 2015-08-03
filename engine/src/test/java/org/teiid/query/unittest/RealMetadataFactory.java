@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -42,8 +43,8 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Table.TriggerEvent;
@@ -60,8 +61,10 @@ import org.teiid.query.mapping.xml.MappingSequenceNode;
 import org.teiid.query.mapping.xml.MappingVisitor;
 import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.TestDDLParser;
@@ -97,7 +100,13 @@ public class RealMetadataFactory {
         Schema vqt = createVirtualModel("VQT", metadataStore); //$NON-NLS-1$
         Schema bvqt = createVirtualModel("BQT_V", metadataStore); //$NON-NLS-1$
         Schema bvqt2 = createVirtualModel("BQT2_V", metadataStore); //$NON-NLS-1$
-        
+
+        Schema gis = createPhysicalModel("GIS", metadataStore);
+        Table colaMarkets = createPhysicalGroup("COLA_MARKETS", gis);
+        createElement("MKT_ID", colaMarkets, "integer");
+        createElement("NAME", colaMarkets, "string");
+        createElement("SHAPE", colaMarkets, "geometry");
+
         // Create physical groups
         Table bqt1SmallA = createPhysicalGroup("SmallA", bqt1); //$NON-NLS-1$
         Table bqt1SmallB = createPhysicalGroup("SmallB", bqt1); //$NON-NLS-1$
@@ -114,6 +123,8 @@ public class RealMetadataFactory {
         Table lobTable = createPhysicalGroup("LobTbl", lob); //$NON-NLS-1$
         Table library = createPhysicalGroup("LOB_TESTING_ONE", lob); //$NON-NLS-1$
         
+        Table bin = createPhysicalGroup("binary_test", lob); //$NON-NLS-1$
+        
         // add direct query procedure
         ColumnSet<Procedure> nativeProcResults = createResultSet("bqt1.nativers", new String[] {"tuple"}, new String[] { DataTypeManager.DefaultDataTypes.OBJECT}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ProcedureParameter nativeparam = createParameter("param", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
@@ -123,7 +134,10 @@ public class RealMetadataFactory {
         nativeProc.setResultSet(nativeProcResults);        
         
         createElements( library, new String[] { "CLOB_COLUMN", "BLOB_COLUMN", "KEY_EMULATOR" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        		new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, DataTypeManager.DefaultDataTypes.INTEGER }); 
+        		new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, DataTypeManager.DefaultDataTypes.INTEGER });
+        
+        createElements( bin, new String[] { "BIN_COL" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        		new String[] { DataTypeManager.DefaultDataTypes.VARBINARY }); 
 
         // Create virtual groups
         QueryNode vqtn1 = new QueryNode("SELECT * FROM BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -319,6 +333,9 @@ public class RealMetadataFactory {
         Procedure vsp9 = createVirtualProcedure("TEIIDSP9", mmspTest1, Arrays.asList(vsp9p1, vsp9p2, vsp9p3), vspqn9); //$NON-NLS-1$
         vsp9.setResultSet(vsprs9);
         
+        createStoredProcedure("sp_noreturn", pm4, Collections.EMPTY_LIST); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        
         // this is for the source added function
         bqt1.addFunction(new FunctionMethod("reverse", "reverse", "misc", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
                 new FunctionParameter[] {new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
@@ -332,11 +349,16 @@ public class RealMetadataFactory {
 	}
     
 	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, FunctionTree... functionModels) {
-		return createTransformationMetadata(metadataStore, vdbName, null, functionModels);
+		CompositeMetadataStore cms = null;
+		if (metadataStore instanceof CompositeMetadataStore) {
+			cms = (CompositeMetadataStore)metadataStore;
+		} else {
+			cms = new CompositeMetadataStore(metadataStore);
+		}
+		return createTransformationMetadata(cms, vdbName, null, functionModels);
 	}
 	
-	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, Properties vdbProperties, FunctionTree... functionModels) {
-		CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
+	public static TransformationMetadata createTransformationMetadata(CompositeMetadataStore store, String vdbName, Properties vdbProperties, FunctionTree... functionModels) {
     	VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
@@ -345,10 +367,16 @@ public class RealMetadataFactory {
     	}
     	List<FunctionTree> udfs = new ArrayList<FunctionTree>();
     	udfs.addAll(Arrays.asList(functionModels));
-    	for (Schema schema : metadataStore.getSchemas().values()) {
+    	for (Schema schema : store.getSchemas().values()) {
 			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 			if (!schema.getFunctions().isEmpty()) {
 				udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
+			}
+			if (!schema.getProcedures().isEmpty()) {
+				FunctionTree ft = FunctionTree.getFunctionProcedures(schema);
+				if (ft != null) {
+					udfs.add(ft);
+				}
 			}
 		}
     	TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
@@ -362,7 +390,7 @@ public class RealMetadataFactory {
      * @return
      * @since 4.2
      */
-    public static QueryMetadataInterface exampleMaterializedView() {
+    public static TransformationMetadata exampleMaterializedView() {
     	MetadataStore metadataStore = new MetadataStore();
         Schema virtModel = createVirtualModel("MatView", metadataStore); //$NON-NLS-1$
         Schema physModel = createPhysicalModel("MatTable", metadataStore); //$NON-NLS-1$
@@ -398,6 +426,11 @@ public class RealMetadataFactory {
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
+        Table status = createPhysicalGroup("Status", physModel_virtSrc); //$NON-NLS-1$
+        createElements(status,
+                                      new String[] { "VDBName", "VDBVersion", "SchemaName", "Name", "TargetSchemaName", "TargetName", "Valid", "LoadState", "Cardinality", "OnErrorAction", "Updated" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.TIMESTAMP});
+        
         QueryNode virtTrans = new QueryNode("SELECT x as e1 FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table virtGroup = createVirtualGroup("MatView", virtModel, virtTrans); //$NON-NLS-1$
         createElements(virtGroup,
@@ -407,6 +440,20 @@ public class RealMetadataFactory {
         virtGroup.setMaterialized(true);
         virtGroup.setMaterializedTable(physGroup);
         virtGroup.setMaterializedStageTable(physGroupStage);
+        
+        QueryNode virtTransManaged = new QueryNode("SELECT x as e1 FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table virtGroupManaged = createVirtualGroup("ManagedMatView", virtModel, virtTransManaged); //$NON-NLS-1$
+        createElements(virtGroupManaged,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+       
+        virtGroupManaged.setMaterialized(true);
+        virtGroupManaged.setMaterializedTable(physGroup);
+        virtGroupManaged.setMaterializedStageTable(physGroupStage);
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true");
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, "MatSrc.Status");
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, "SCHEMA");
+        
         
         //add one virtual group that uses the materialized group in transformation with NOCACHE option
         QueryNode vTrans = new QueryNode("SELECT e1 FROM MatView.MatView option NOCACHE");         //$NON-NLS-1$ //$NON-NLS-2$
@@ -431,6 +478,20 @@ public class RealMetadataFactory {
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
+        QueryNode vTrans2a = new QueryNode("SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup2a = createVirtualGroup("VGroup2a", virtModel, vTrans2a); //$NON-NLS-1$
+        KeyRecord fbi = new KeyRecord(KeyRecord.Type.Index);
+        Column c = new Column();
+        c.setParent(fbi);
+        c.setName("upper(x)");
+        c.setNameInSource("upper(x)");
+        fbi.addColumn(c);
+        vGroup2a.getFunctionBasedIndexes().add(fbi);
+        vGroup2.setMaterialized(true);
+        createElements(vGroup2a,
+                                      new String[] { "x" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
         //covering index
         QueryNode vTrans3 = new QueryNode("SELECT x, 'z' || substring(x, 2) as y FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup3 = createVirtualGroup("VGroup3", virtModel, vTrans3); //$NON-NLS-1$
@@ -442,8 +503,9 @@ public class RealMetadataFactory {
         createKey(KeyRecord.Type.Primary, "pk", vGroup3, vElements3.subList(0, 1));
         createKey(KeyRecord.Type.Index, "idx", vGroup3, vElements3.subList(1, 2));
 
-        QueryNode vTrans4 = new QueryNode("/*+ cache(ttl:100) */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vTrans4 = new QueryNode("/*+ cache(ttl:10000) */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup4 = createVirtualGroup("VGroup4", virtModel, vTrans4); //$NON-NLS-1$
+        vGroup4.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, "100"); //$NON-NLS-1$
         vGroup4.setMaterialized(true);
         createElements(vGroup4,
                                       new String[] { "x" }, //$NON-NLS-1$
@@ -684,7 +746,7 @@ public class RealMetadataFactory {
         QueryNode vm1g17n1 = new QueryNode("SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 UNION ALL SELECT pm3.g2.e1, pm3.g2.e2 FROM pm3.g2 ORDER BY e2");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g17 = createVirtualGroup("g17", vm1, vm1g17n1); //$NON-NLS-1$
 
-        QueryNode vm1g18n1 = new QueryNode("SELECT (e4 * 100.0) as x FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g18n1 = new QueryNode("SELECT (e4 * cast(100.0 as double)) as x FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g18 = createVirtualGroup("g18", vm1, vm1g18n1); //$NON-NLS-1$
 
         // Transformations with subqueries and correlated subqueries
@@ -1647,6 +1709,7 @@ public class RealMetadataFactory {
 	
 	static void extractColumns(final Table table, MappingDocument plan) {
 		MappingVisitor mv = new MappingVisitor() {
+			@Override
 			public void visit(MappingElement element) {
 				String type = element.getType();
 				addColumn(element, type);
@@ -1666,6 +1729,7 @@ public class RealMetadataFactory {
 				createElement(element.getFullyQualifiedName(), table, type);
 			}
 			
+			@Override
 			public void visit(MappingAttribute attribute) {
 				String type = attribute.getType();
 				addColumn(attribute, type);
@@ -1717,6 +1781,7 @@ public class RealMetadataFactory {
         column.setUpdatable(true);
         column.setLength(100);
         column.setNameInSource(name);
+        column.setDatatype(SystemMetadata.getInstance().getRuntimeTypeMap().get(type));
         return column; 
     }
     
@@ -1811,6 +1876,10 @@ public class RealMetadataFactory {
      */
     public static ColumnSet<Procedure> createResultSet(String name, String[] colNames, String[] colTypes) {
     	ColumnSet<Procedure> rs = new ColumnSet<Procedure>();
+    	int index = name.indexOf('.');
+    	if (index > 0) {
+    		name = name.substring(index + 1);
+    	}
     	rs.setName(name);
         for(Column column : createElements(rs, colNames, colTypes)) {
         	column.setParent(rs);
@@ -2348,6 +2417,15 @@ public class RealMetadataFactory {
 	    createElements(physGroup,
 	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
 	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+	    Table physGroup1 = createPhysicalGroup("Phys1", physModel); //$NON-NLS-1$
+	    createElements(physGroup1,
+	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
+	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+	    
+	    Table physGroup2 = createPhysicalGroup("Phys2", physModel); //$NON-NLS-1$
+	    createElements(physGroup2,
+	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
+	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 	    
 	    QueryNode virtTrans = new QueryNode("SELECT * FROM MultiModel.Phys");         //$NON-NLS-1$ //$NON-NLS-2$
 	    Table virtGroup = createVirtualGroup("view", virtModel, virtTrans); //$NON-NLS-1$
@@ -2686,8 +2764,26 @@ public class RealMetadataFactory {
 	}
 	
 	public static TransformationMetadata fromDDL(String ddl, String vdbName, String modelName) throws Exception {
-		MetadataFactory mf = TestDDLParser.helpParse(ddl, modelName);
-		TransformationMetadata tm = createTransformationMetadata(mf.asMetadataStore(), vdbName);
+		return fromDDL(vdbName, new DDLHolder(modelName, ddl));
+	}	
+	
+	public static class DDLHolder {
+		String name;
+		String ddl;
+		public DDLHolder(String name, String ddl) {
+			this.name = name;
+			this.ddl = ddl;
+		}
+	}
+	
+	public static TransformationMetadata fromDDL(String vdbName, DDLHolder... schemas) throws Exception {
+		CompositeMetadataStore cms = new CompositeMetadataStore(Collections.EMPTY_LIST);
+		for (DDLHolder schema : schemas) {
+			MetadataFactory mf = TestDDLParser.helpParse(schema.ddl, schema.name);
+			cms.merge(mf.asMetadataStore());
+		}
+		
+		TransformationMetadata tm = createTransformationMetadata(cms, vdbName);
     	ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
     	if (report.hasItems()) {
     		throw new RuntimeException(report.getFailureMessage());

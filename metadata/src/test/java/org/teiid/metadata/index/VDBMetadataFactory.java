@@ -29,30 +29,37 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.Executors;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.vfs.TempFileProvider;
-import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.metadata.VDBResources.Resource;
 
 
-@SuppressWarnings("nls")
 public class VDBMetadataFactory {
 	
 	public static LRUCache<URL, TransformationMetadata> VDB_CACHE = new LRUCache<URL, TransformationMetadata>(10);
+	
+	public static class IndexVDB {
+		public MetadataStore store;
+		public VDBResources resources;
+	}
 	
 	public static TransformationMetadata getVDBMetadata(String vdbFile) {
 		try {
@@ -70,8 +77,12 @@ public class VDBMetadataFactory {
 		}
 
 		try {
-			IndexMetadataStore imf = loadMetadata(vdbName, vdbURL);
-			
+			IndexVDB imf = loadMetadata(vdbName, vdbURL);
+			Resource r = imf.resources.getEntriesPlusVisibilities().get("/META-INF/vdb.xml");
+			VDBMetaData vdb = null;
+			if (r != null) {
+				vdb = VDBMetadataParser.unmarshell(r.openStream());
+			}
 			Collection <FunctionMethod> methods = null;
 			Collection<FunctionTree> trees = null;
 			if (udfFile != null) {
@@ -80,26 +91,25 @@ public class VDBMetadataFactory {
 				trees = Arrays.asList(new FunctionTree(schema, new UDFSource(methods), true));
 			}
 			SystemFunctionManager sfm = new SystemFunctionManager();
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf)), imf.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
+			vdbmetadata = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf.store)), imf.resources.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
-		} catch (URISyntaxException e) {
-			throw new IOException(e);
 		} catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
     }
 
-	public static IndexMetadataStore loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException, URISyntaxException {
-		String fileName = String.valueOf(vdbName + "-" + url.toExternalForm().hashCode());
-		VirtualFile root = VFS.getChild(fileName);
-    	if (!root.exists()) {
-    		VFS.mountZip(url.openStream(), fileName, root, TempFileProvider.create("vdbs", Executors.newScheduledThreadPool(2)));
-    		// once done this mount should be closed, since this class is only used testing
-    		// it is hard to event when the test is done, otherwise we need to elevate the VFS to top
-    	}
-    	IndexMetadataStore store =  new IndexMetadataStore(root);
-    	store.load(null, SystemMetadata.getInstance().getDataTypes());
-    	return store;
+	public static IndexVDB loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException {
+		VirtualFile root;
+		try {
+			root = PureZipFileSystem.mount(url);
+		} catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
+    	IndexVDB result = new IndexVDB();
+    	result.resources = new VDBResources(root, null);
+    	IndexMetadataRepository store =  new IndexMetadataRepository();
+    	result.store = store.load(SystemMetadata.getInstance().getDataTypes(), result.resources);
+    	return result;
 	}
 }

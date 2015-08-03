@@ -5,6 +5,7 @@
   
   <formats>
     <format>zip</format>
+    <format>dir</format>
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
@@ -13,24 +14,54 @@
   <fileSets>
           
     <fileSet>
-        <directory>target/kits/jboss-as7</directory>
+        <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <includes>
           <include>**/*.sh</include>
         </includes>   
         <fileMode>755</fileMode>  
-        <directoryMode>0755</directoryMode>    
     </fileSet> 
           
     <fileSet>
-        <directory>target/kits/jboss-as7</directory>
+        <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>
     </fileSet>
+    
+    <fileSet>
+        <directory>target/kits/jboss-as7/overlay</directory>
+        <outputDirectory>/</outputDirectory>      
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>      
+    </fileSet>  
+    
+    <fileSet>
+        <directory>target/kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>  
+    </fileSet> 
+          
+    <fileSet>
+        <directory>target/kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>      
+        <excludes>
+          <exclude>**/*.sh</exclude>
+        </excludes>      
+    </fileSet>
+    
+    <fileSet>
+        <directory>target/kits/jboss-as7/modules</directory>
+        <outputDirectory>${jbossas-module-root}</outputDirectory>      
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>      
+    </fileSet> 
           
     <fileSet>
         <directory>../client/src/main/resources</directory>
@@ -38,8 +69,6 @@
             <include>vdb-deployer.xsd</include>
         </includes>                
         <outputDirectory>docs/teiid/schema</outputDirectory>
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>        
     </fileSet>
     
     <fileSet>
@@ -48,8 +77,6 @@
             <include>jboss-teiid.xsd</include>
         </includes>                
         <outputDirectory>docs/schema</outputDirectory>
-        <fileMode>0644</fileMode>
-        <directoryMode>0755</directoryMode>        
     </fileSet>    
     	
   </fileSets>
@@ -65,7 +92,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/common-core/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/common-core/main</outputDirectory>
       </binaries>
     </moduleSet>
 
@@ -77,7 +104,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/api/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/api/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -89,7 +116,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>    
             
@@ -101,9 +128,71 @@
       <binaries>
 		<includeDependencies>false</includeDependencies>
 		<unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-odata</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+      </binaries>
+    </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-olingo</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/olingo/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-jboss-security</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/security/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+    
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        <includes>
+            <include>org.jboss.teiid:teiid-olingo</include>
+        </includes>
+        <binaries>
+            <includeDependencies>false</includeDependencies>
+            <unpack>false</unpack>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+            <attachmentClassifier>odata4</attachmentClassifier>
+        </binaries>
+    </moduleSet> 
+    
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        <includes>
+            <include>org.jboss.teiid:teiid-olingo</include>
+        </includes>
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>dependencies</attachmentClassifier>
+        </binaries>
+    </moduleSet>              
 
     <!-- These are Teiid internal dependencies; to make JCA work -->
     <moduleSet>
@@ -125,15 +214,69 @@
                         <exclude>org.jboss.teiid:teiid-common-core</exclude>
                         <exclude>org.jboss.teiid:teiid-api</exclude>
                         <exclude>org.jboss.teiid:teiid-client</exclude>                        
+                        <exclude>xom:xom</exclude>                        
+                        <exclude>jaxen:jaxen</exclude>
+                        <exclude>org.jboss:staxmapper</exclude>
+                        <exclude>io.netty:netty</exclude>
+                        <exclude>org.apache.olingo:*</exclude>
+                        <exclude>com.fasterxml.jackson.core:*</exclude>
+                        <exclude>net.sf.saxon:Saxon-HE</exclude>
+                        <exclude>nux:nux</exclude>
+                        <exclude>org.wololo:jts2geojson</exclude>
+                        <exclude>org.osgeo:proj4j</exclude>
+                        <exclude>com.vividsolutions:jts</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.apache.olingo:*</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/apache/olingo</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <includes>
+                         <include>com.fasterxml.jackson.core:jackson-databind</include>
+                         <include>com.fasterxml.jackson.core:jackson-annotations</include>
+                         <include>com.fasterxml.jackson.core:jackson-core</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>net.sf.saxon:Saxon-HE</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/net/sf/saxon/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>nux:nux</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/nux/nux/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.wololo:jts2geojson</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/wololo/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.osgeo:proj4j</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/osgeo/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.vividsolutions:jts</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/vividsolutions/main</outputDirectory>
+                </dependencySet>                                                                                    
             </dependencySets>
-            <outputDirectory>modules/org/jboss/teiid/main</outputDirectory>
-            <fileMode>0644</fileMode>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>
     </moduleSet>
     
@@ -146,317 +289,61 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/admin/main</outputDirectory>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/admin/main</outputDirectory>
       </binaries>
     </moduleSet>    
-    
-    <!-- These are built in connectors  -->
+
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-jboss-admin</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
+      </binaries>
+    </moduleSet> 
+  
+     
+    <!-- ******************************************************** 
+        These are built in resource-adapters  
+        *********************************************************-->
+    <moduleSet>
         <useAllReactorProjects>true</useAllReactorProjects>
-
+        
         <includes>
-            <include>org.jboss.teiid.connectors:connector-file:rar</include>
-            <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
-            <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
-            <include>org.jboss.teiid.connectors:connector-ws:rar</include>
+            <include>org.jboss.teiid.connectors:connector-*</include>
         </includes>
-
-        <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>standalone/deployments</outputDirectory>
-          <fileMode>0644</fileMode>
+                
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>jboss-as7-dist</attachmentClassifier>
         </binaries>
       
     </moduleSet>
+    
     
     <!-- **************************************************************************
                         These are built in translators  
          **************************************************************************-->
     <moduleSet>
-        <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-jdbc</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/jdbc/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-    </moduleSet>
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-loopback</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/loopback/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-    </moduleSet>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-file</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/file/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-    </moduleSet>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-ldap</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/ldap/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-    </moduleSet>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-salesforce</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>false</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/salesforce/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:salesforce-api</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/salesforce/api/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-ws</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/ws/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-    </moduleSet>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-olap</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/olap/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-    </moduleSet>                        
         
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
         <includes>
-            <include>org.jboss.teiid.connectors:translator-hive</include>
+            <include>org.jboss.teiid.connectors:translator-*</include>
         </includes>
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/hive/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>      
-    
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-jpa</include>
-        </includes>
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-            <dependencySets>
-                <dependencySet>
-                    <useProjectArtifact>true</useProjectArtifact>
-                    <unpack>false</unpack>
-                    <useTransitiveDependencies>false</useTransitiveDependencies>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                </dependencySet>
-            </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/jpa/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-    </moduleSet>        
-     
-  	<moduleSet>
-          <includeSubModules>true</includeSubModules>
-          <useAllReactorProjects>true</useAllReactorProjects>
-          <includes>
-              <include>org.jboss.teiid.connectors:translator-object</include>
-          </includes>
-          <binaries>        
-              <includeDependencies>true</includeDependencies>
-              <unpack>false</unpack>
-              <dependencySets>
-                  <dependencySet>
-                      <useProjectArtifact>true</useProjectArtifact>
-                      <unpack>false</unpack>
-                      <useTransitiveDependencies>false</useTransitiveDependencies>
-                      <useDefaultExcludes>true</useDefaultExcludes>
-                  </dependencySet>
-              </dependencySets>          
-              <outputDirectory>modules/org/jboss/teiid/translator/object/main</outputDirectory>
-              <fileMode>0644</fileMode>
-          </binaries>
-      </moduleSet>       
-    <!-- Include the JOPR plugin     
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid:teiid-console</include>
-        </includes>
-
-        <binaries>        
+                
+        <binaries> 
           <includeDependencies>false</includeDependencies>
-          <unpack>false</unpack>
-          <outputDirectory>deploy/admin-console.war/plugins</outputDirectory>
-          <fileMode>0644</fileMode>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>jboss-as7-dist</attachmentClassifier>
         </binaries>
       
     </moduleSet>
-    -->        
+        
     </moduleSets>  
 </assembly>

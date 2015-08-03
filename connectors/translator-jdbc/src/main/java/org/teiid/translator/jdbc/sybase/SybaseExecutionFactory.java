@@ -24,7 +24,7 @@
  */
 package org.teiid.translator.jdbc.sybase;
 
-import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -37,11 +37,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants;
+import org.teiid.language.Select;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -53,25 +58,26 @@ import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.ParseFormatFunctionModifier;
+import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
 
 @Translator(name="sybase", description="A translator for Sybase Database")
 public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 
-	public static final String TWELVE_5_3 = "12.5.3"; //$NON-NLS-1$
-	public static final String TWELVE_5 = "12.5"; //$NON-NLS-1$
-	public static final String FIFTEEN_0_2 = "15.0.2"; //$NON-NLS-1$
-	public static final String FIFTEEN_5 = "15.5"; //$NON-NLS-1$
+	public static final Version TWELVE_5_3 = Version.getVersion("12.5.3"); //$NON-NLS-1$
+	public static final Version TWELVE_5 = Version.getVersion("12.5"); //$NON-NLS-1$
+	public static final Version FIFTEEN_0_2 = Version.getVersion("15.0.2"); //$NON-NLS-1$
+	public static final Version FIFTEEN_5 = Version.getVersion("15.5"); //$NON-NLS-1$
 	
 	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
 	protected boolean jtdsDriver;
+	protected ConvertModifier convertModifier = new ConvertModifier();
 	
 	public SybaseExecutionFactory() {
-		setDatabaseVersion(TWELVE_5);
 		setSupportsFullOuterJoins(false);
 		setMaxInCriteriaSize(250);
-		setMaxDependentInPredicates(10);
+		setMaxDependentInPredicates(7);
 		populateDateFormats();
 	}
 	
@@ -162,7 +168,6 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		});
         
         //add in type conversion
-        ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.setBooleanNullable(booleanNullable());
         //boolean isn't treated as bit, since it doesn't support null
         //byte is treated as smallint, since tinyint is unsigned
@@ -175,28 +180,9 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
     	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
     	convertModifier.addTypeMapping("varchar(40)", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIME, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				List<Object> result = new ArrayList<Object>();
-				result.add("cast("); //$NON-NLS-1$
-				boolean needsEnd = false;
-				if (!nullPlusNonNullIsNull() && !ConcatFunctionModifier.isNotNull(function.getParameters().get(0))) {
-					result.add("CASE WHEN "); //$NON-NLS-1$
-					result.add(function.getParameters().get(0));
-					result.add(" IS NOT NULL THEN "); //$NON-NLS-1$
-					needsEnd = true;
-				} 
-				result.add("'1970-01-01 ' + "); //$NON-NLS-1$
-				result.addAll(convertTimeToString(function));
-				if (needsEnd) {
-					result.add(" END"); //$NON-NLS-1$
-				}
-				result.add(" AS datetime)"); //$NON-NLS-1$
-				return result;
-			}
-		});
+    	if (!isSourceRequiredForCapabilities()) {
+    		handleTimeConversions();
+    	}
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -240,6 +226,36 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 			}
 		}); 
     }
+
+	private void handleTimeConversions() {
+		if (!hasTimeType()) {
+    		convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIME, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
+    			@Override
+    			public List<?> translate(Function function) {
+    				List<Object> result = new ArrayList<Object>();
+    				result.add("cast("); //$NON-NLS-1$
+    				boolean needsEnd = false;
+    				if (!nullPlusNonNullIsNull() && !ConcatFunctionModifier.isNotNull(function.getParameters().get(0))) {
+    					result.add("CASE WHEN "); //$NON-NLS-1$
+    					result.add(function.getParameters().get(0));
+    					result.add(" IS NOT NULL THEN "); //$NON-NLS-1$
+    					needsEnd = true;
+    				} 
+    				result.add("'1970-01-01 ' + "); //$NON-NLS-1$
+    				result.addAll(convertTimeToString(function));
+    				if (needsEnd) {
+    					result.add(" END"); //$NON-NLS-1$
+    				}
+    				result.add(" AS datetime)"); //$NON-NLS-1$
+    				return result;
+    			}
+    		});
+    	} else {
+    		convertModifier.addTypeMapping("datetime", FunctionModifier.DATE, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    		convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+    	}
+	}
     
 	private List<Object> convertTimeToString(Function function) {
 		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 8)"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -315,7 +331,8 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
-        supportedFunctions.add("WEEK"); //$NON-NLS-1$
+        //not an iso calculation
+        //supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
@@ -343,7 +360,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return getDatabaseVersion().compareTo(FIFTEEN_0_2) >= 0;
+    	return getVersion().compareTo(FIFTEEN_0_2) >= 0;
     }
     
     public boolean nullPlusNonNullIsNull() {
@@ -371,7 +388,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	@Override
 	public boolean supportsRowLimit() {
-		return (getDatabaseVersion().startsWith("12") && getDatabaseVersion().compareTo(TWELVE_5_3) >= 0) || getDatabaseVersion().compareTo(FIFTEEN_0_2) >=0; //$NON-NLS-1$
+		return (getVersion().getMajorVersion() == 12 && getVersion().compareTo(TWELVE_5_3) >= 0) || getVersion().compareTo(FIFTEEN_0_2) >=0; //$NON-NLS-1$
 	}
 
 	@TranslatorProperty(display="JTDS Driver", description="True if the driver is the JTDS driver",advanced=true)
@@ -383,17 +400,87 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		this.jtdsDriver = jtdsDriver;
 	}
 	
-	protected boolean setFetchSizeOnCallableStatements() {
-		return false;
+	protected boolean setFetchSize() {
+		return isJtdsDriver();
 	}
 	
 	@Override
 	public void setFetchSize(Command command, ExecutionContext context,
 			Statement statement, int fetchSize) throws SQLException {
-		if (!isJtdsDriver() && !setFetchSizeOnCallableStatements() && statement instanceof CallableStatement) {
+		if (!setFetchSize()) {
 			return;
 		}
 		super.setFetchSize(command, context, statement, fetchSize);
 	}
+	
+	@Override
+	public void initCapabilities(Connection connection)
+			throws TranslatorException {
+		super.initCapabilities(connection);
+		if (!jtdsDriver) {
+			try {
+				jtdsDriver = StringUtil.indexOfIgnoreCase(connection.getMetaData().getDriverName(), "jtds") != -1; //$NON-NLS-1$
+			} catch (SQLException e) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not automatically determine if the jtds driver is in use"); //$NON-NLS-1$
+			}
+		}
+		handleTimeConversions();
+	}
+	
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	if (getVersion().compareTo(FIFTEEN_0_2) >= 0) {
+    		return "org.hibernate.dialect.SybaseASE15Dialect"; //$NON-NLS-1$
+    	}
+    	return "org.hibernate.dialect.Sybase11Dialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean supportsGroupByRollup() {
+    	//TODO: there is support in SQL Anywhere/IQ, but not ASE
+    	return false;
+    }
+    
+    @Override
+    public boolean useUnicodePrefix() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsFormatLiteral(String literal,
+    		org.teiid.translator.ExecutionFactory.Format format) {
+    	if (format == Format.NUMBER) {
+    		return false; //TODO: add support
+    	}
+    	return formatMap.containsKey(literal);
+    }
+    
+    @Override
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (!supportsLiteralOnlyWithGrouping() && (command instanceof Select)) {
+	    	Select select = (Select)command;
+	    	if (select.getGroupBy() != null && select.getDerivedColumns().size() == 1) {
+	    		DerivedColumn dc = select.getDerivedColumns().get(0);
+	    		if (dc.getExpression() instanceof Literal) {
+	    			dc.setExpression(select.getGroupBy().getElements().get(0));
+	    		}
+	    	}
+    	}
+    	return super.translateCommand(command, context);
+    }
+    
+    public boolean supportsLiteralOnlyWithGrouping() {
+    	return false;
+    }
     
 }

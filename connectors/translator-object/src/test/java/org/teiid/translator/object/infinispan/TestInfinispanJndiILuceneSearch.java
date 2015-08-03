@@ -21,97 +21,141 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
-import org.infinispan.manager.CacheContainer;
+import java.util.Collections;
+import java.util.Properties;
+
 import org.infinispan.manager.DefaultCacheManager;
-import org.junit.Before;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.Select;
+import org.teiid.resource.adapter.infinispan.base.AbstractInfinispanManagedConnectionFactory;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
-import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.util.TradesCacheSource;
+import org.teiid.translator.object.testdata.TradesCacheSource;
+import org.teiid.translator.object.testdata.annotated.Trade;
+import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
-    private static CacheContainer container = null;
+	protected static final String JNDI_NAME = "java/MyCacheManager";
+
+
+	private static AbstractInfinispanManagedConnectionFactory afactory;
 	private static ExecutionContext context;
-    private static ObjectConnection conn;
-    private InfinispanExecutionFactory factory = null;
-		
+    private static InfinispanExecutionFactory factory;
+	
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
-	       // Create the cache manager ...
-		container = new DefaultCacheManager("infinispan_persistent_indexing_config.xml"); 
-		
-		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
-		
-		conn = new TestInfinispanConfigFileKeySearch.InfinispanConnection(container);
-		
+	    
 		context = mock(ExecutionContext.class);
-	}
+        
+		final DefaultCacheManager container = TestInfinispanConnection.createContainerForLucene();
+        
+		TradesAnnotatedCacheSource.loadCache(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME));
+  
+        afactory = new AbstractInfinispanManagedConnectionFactory() {
+			/**
+			 */
+			private static final long serialVersionUID = 1L;
 
-	@Before public void beforeEachTest() throws Exception{	
+			@Override
+			protected Object performJNDICacheLookup(String jndiName) throws Exception {
+				return container;
+			}
+
+			@Override
+			protected CacheContainerWrapper createRemoteCache(Properties props,
+					ClassLoader classLoader) {
+				return null;
+			}
+		};
+		
+		afactory.setCacheJndiName(JNDI_NAME);
+		afactory.setCacheTypeMap(TradesAnnotatedCacheSource.TRADES_CACHE_NAME + ":" + Trade.class.getName());
+
 		factory = new InfinispanExecutionFactory();
 		factory.setSupportsLuceneSearching(true);
-		factory.start();
-    }
 
+		factory.start();
+
+	}	
+	
+    @SuppressWarnings("unchecked")
+	@AfterClass
+    public static void closeConnection() throws Exception {
+   	    CacheContainerWrapper ccw = afactory.getCacheContainer();
+	    
+	    ReflectionHelper h = new ReflectionHelper(ccw.getClass());
+	    
+	    (h.findBestMethodWithSignature("cleanUp", Collections.EMPTY_LIST)).invoke(ccw);
+
+      	afactory.cleanUp();
+
+    }
+    
 	@Override
-	protected ObjectExecution createExecution(Select command) throws TranslatorException {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
-	}
+	protected ObjectExecution createExecution(Select command) throws Exception {
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, afactory.createConnectionFactory().getConnection());
+	}	
 	
 	@Test public void testQueryLikeCriteria1() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name From Trade_Object.Trade as T WHERE T.Name like 'TradeName%'"); //$NON-NLS-1$
+	Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeName like 'TradeName%'"); //$NON-NLS-1$
 					
-		performTest(command, 3, 2);
+		performTest(command, 3, 4);
 	}	
 	
 	@Test public void testQueryLikeCriteria2() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name From Trade_Object.Trade as T WHERE T.Name like 'TradeName 2%'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeName like 'TradeName 2%'"); //$NON-NLS-1$
 					
-		performTest(command, 1, 2);
+		performTest(command, 1, 4);
 	}	
 	
 	@Test public void testQueryCompareEQBoolean() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name, T.Settled From Trade_Object.Trade as T WHERE T.Settled = 'false'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  Settled = 'false'"); //$NON-NLS-1$
 					
-		performTest(command, 2, 3);
+		performTest(command, 2, 4);
 	}	
 	
 	@Test public void testQueryCompareNEBoolean() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name, T.Settled From Trade_Object.Trade as T WHERE T.Settled <> 'false'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  Settled <> 'false'"); //$NON-NLS-1$
 					
-		performTest(command, 1, 3);
+		performTest(command, 1, 4);
 	}		
 	
 	@Test public void testQueryRangeBetween() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId > '1' and T.TradeId < '3'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select tradeName, tradeId From Trade_Object.Trade  where  TradeId > '1' and TradeId < '3'"); //$NON-NLS-1$
 					
 		performTest(command, 1, 2);
 	}
 
 	@Test public void testQueryRangeAbove() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId > '1'"); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId > '1'"); //$NON-NLS-1$
 					
-		performTest(command, 2, 2);
+		performTest(command, 2, 4);
 	}
 	
-	@Test public void testQueryRangeBelow() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId < '2'"); //$NON-NLS-1$
-					
-		performTest(command, 1, 2);
-	}	
+	@Test public void testQueryRangeAbove2() throws Exception {     
+	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId > 1"); //$NON-NLS-1$
+	                                       
+	    performTest(command, 2, 4);
+	}
+
+	@Test public void testQueryRangeBelow() throws Exception {     
+	    Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId < 3"); //$NON-NLS-1$
+	                                       
+	    performTest(command, 2, 4);
+	}
 	
 	@Test public void testQueryAnd() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId > '1' and T.Settled = 'false' "); //$NON-NLS-1$
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade  where  TradeId > '1' and Settled = 'false'"); //$NON-NLS-1$
 					
-		performTest(command, 1, 2);
+		performTest(command, 1, 4);
 	}	
 }

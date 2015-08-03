@@ -22,9 +22,12 @@
 
 package org.teiid.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.util.Properties;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -91,5 +94,12 @@ public class TestCase3473 {
         ResultSet rs1 = dbmd.getTables(null, "%foo", null, null); //$NON-NLS-1$ 
         ResultSet rs2 = dbmd.getTables("foo", "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
         TestMMDatabaseMetaData.compareResultSet(rs, rs1, rs2);
+        assertFalse(dbmd.getTables(null, null, null, new String[] {"VIEW"}).next());
+        
+        Properties p = new Properties();
+        p.setProperty(DatabaseMetaDataImpl.REPORT_AS_VIEWS, "true");
+        Connection c = server.getDriver().connect("jdbc:teiid:test", p);
+        DatabaseMetaData dmd = c.getMetaData();
+        assertTrue(dmd.getTables(null, null, null, new String[] {"VIEW"}).next());
     }
 }

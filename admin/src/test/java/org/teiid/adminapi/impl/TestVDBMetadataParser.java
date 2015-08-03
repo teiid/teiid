@@ -21,7 +21,12 @@
  */
 package org.teiid.adminapi.impl;
 
+import static org.junit.Assert.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.util.Collections;
 
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
@@ -36,7 +41,18 @@ public class TestVDBMetadataParser {
 		VDBMetadataParser.validate(in);
 		in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
 		VDBMetaData vdb = VDBMetadataParser.unmarshell(in);
-		TestVDBMetaData.validateVDB(vdb);
+		TestVDBUtility.validateVDB(vdb);
+	}
+	
+	@Test public void testExcludeImported() throws Exception {
+		VDBMetaData metadata = TestVDBUtility.buildVDB();
+		assertNotNull(metadata.getModel("model-one"));
+		metadata.setImportedModels(Collections.singleton("model-one"));
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		VDBMetadataParser.marshell(metadata, baos);
+		baos.close();
+		VDBMetaData parsed = VDBMetadataParser.unmarshell(new ByteArrayInputStream(baos.toByteArray()));
+		assertNull(parsed.getModel("model-one"));
 	}
 	
 	@Test(expected=SAXException.class) public void testModelNameUniqueness() throws Exception {

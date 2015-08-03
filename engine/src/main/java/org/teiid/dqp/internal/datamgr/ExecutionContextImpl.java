@@ -23,9 +23,9 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.io.Serializable;
-import java.lang.ref.WeakReference;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,8 +35,10 @@ import org.teiid.adminapi.Session;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.ExecutionContext;
@@ -56,15 +58,15 @@ public class ExecutionContextImpl implements ExecutionContext {
     
     private boolean isTransactional;
     
-    private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
+    private int batchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
 	private Session session;
-	private WeakReference<RequestWorkItem> worktItem;
 	private boolean dataAvailable;
-	private String generalHint;
-	private String hint;
+	private Collection<String> generalHint;
+	private Collection<String> hint;
 	private CommandContext commandContext;
 	private CacheDirective cacheDirective;
+	private RuntimeMetadata runtimeMetadata;
 	
 	public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
@@ -210,13 +212,9 @@ public class ExecutionContextImpl implements ExecutionContext {
 		this.session = session;
 	}
 
-	public void setRequestWorkItem(RequestWorkItem item) {
-		this.worktItem = new WeakReference<RequestWorkItem>(item);
-	}
-	
 	@Override
 	public synchronized void dataAvailable() {
-		RequestWorkItem requestWorkItem = this.worktItem.get();
+		RequestWorkItem requestWorkItem = this.commandContext.getWorkItem();
 		dataAvailable = true;
 		if (requestWorkItem != null) {
 			requestWorkItem.moreWork();
@@ -231,19 +229,29 @@ public class ExecutionContextImpl implements ExecutionContext {
 	
 	@Override
 	public String getGeneralHint() {
-		return generalHint;
+		return StringUtil.join(generalHint, " "); //$NON-NLS-1$
 	}
 	
 	@Override
 	public String getSourceHint() {
+		return StringUtil.join(hint, " "); //$NON-NLS-1$
+	}
+	
+	@Override
+	public Collection<String> getGeneralHints() {
+		return generalHint;
+	}
+	
+	@Override
+	public Collection<String> getSourceHints() {
 		return hint;
 	}
 	
-	public void setGeneralHint(String generalHint) {
+	public void setGeneralHints(Collection<String> generalHint) {
 		this.generalHint = generalHint;
 	}
 	
-	public void setHint(String hint) {
+	public void setHints(Collection<String> hint) {
 		this.hint = hint;
 	}
 
@@ -280,4 +288,14 @@ public class ExecutionContextImpl implements ExecutionContext {
 	public void setCacheDirective(CacheDirective directive) {
 		this.cacheDirective = directive;
 	}
+
+	public void setRuntimeMetadata(RuntimeMetadataImpl queryMetadata) {
+		this.runtimeMetadata = queryMetadata;
+	}
+	
+	@Override
+	public RuntimeMetadata getRuntimeMetadata() {
+		return this.runtimeMetadata;
+	}
+
 }

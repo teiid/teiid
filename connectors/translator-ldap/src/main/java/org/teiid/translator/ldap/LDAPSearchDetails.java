@@ -157,7 +157,7 @@ public class LDAPSearchDetails {
 		int i = 0;
 		while(itr.hasNext()) {
 			Column attr = (Column)itr.next();
-			String attrName = IQueryToLdapSearchParser.getNameFromElement(attr);
+			String attrName = attr.getSourceName();
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Attribute [" + i + "]: " + attrName + " (" +attr.toString() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			i++;
 		}

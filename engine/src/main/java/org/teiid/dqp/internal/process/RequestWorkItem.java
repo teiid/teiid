@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.lang.ref.WeakReference;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,19 +33,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.teiid.client.BatchSerializer;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
+import org.teiid.client.ResizingArrayList;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.plan.PlanNode;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -52,20 +58,19 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
-import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
-import org.teiid.jdbc.SQLStates;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.jdbc.EnhancedTimer.Task;
+import org.teiid.jdbc.SQLStates;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -73,6 +78,7 @@ import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.QueryProcessor.ExpiredTimeSliceException;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
@@ -80,11 +86,37 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.GeneratedKeysImpl;
+import org.teiid.query.util.Options;
 
+/**
+ * Compiles results and other information for the client.  There is quite a bit of logic
+ * surrounding forming batches to prevent buffer growth, send multiple batches at a time,
+ * partial batches, etc.  There is also special handling for the update count case, which
+ * needs to read the entire result before sending it back to the client.
+ */
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
 	//TODO: this could be configurable
-	private static final int OUTPUT_BUFFER_MAX_BATCHES = 20;
+	private static final int OUTPUT_BUFFER_MAX_BATCHES = 8;
+	private static final int CLIENT_FETCH_MAX_BATCHES = 3;
+	
+	public static final class MoreWorkTask implements Runnable {
+
+		WeakReference<RequestWorkItem> ref;
+
+    	public MoreWorkTask(RequestWorkItem workItem) {
+    		ref = new WeakReference<RequestWorkItem>(workItem);
+		}
+
+		@Override
+		public void run() {
+			RequestWorkItem item = ref.get();
+			if (item != null) {
+				item.moreWork();
+			}
+		}
+	}
 
 	private final class WorkWrapper<T> implements
 			DQPCore.CompletionListener<T> {
@@ -102,6 +134,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			synchronized (queue) {
 				if (!submitted) {
 					return;
+				}
+				synchronized (RequestWorkItem.this) {
+					if (isProcessing()) {
+						totalThreads--;
+						moreWork();
+						return;
+					}
 				}
 				nextWork = queue.pollFirst();
 				if (nextWork == null) {
@@ -132,6 +171,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     final RequestMessage requestMsg;    
     final RequestID requestID;
     private Request request; //provides the processing plan, held on a temporary basis
+    private Options options;
     private final int processorTimeslice;
 	private CacheID cid;
 	private final TransactionService transactionService;
@@ -172,7 +212,15 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     protected boolean useCallingThread;
     private volatile boolean hasThread;
     
-    private Task cancelTask;
+    private Future<Void> cancelTask;
+    private Future<Void> moreWorkTask;
+
+	private boolean explicitSourceClose;
+	private int schemaSize;
+	
+	AtomicLong dataBytes = new AtomicLong();
+	private long planningStart;
+	private long planningEnd;
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -181,6 +229,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         this.transactionService = dqpCore.getTransactionService();
         this.dqpCore = dqpCore;
         this.request = request;
+        if (request != null) {
+        	this.options = request.options;
+        }
         this.dqpWorkContext = workContext;
         this.requestResults(1, requestMsg.getFetchSize(), receiver);
     }
@@ -295,11 +346,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
         		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- processor blocked"); //$NON-NLS-1$ //$NON-NLS-2$
         	}
-        } catch (QueryProcessor.ExpiredTimeSliceException e) {
-        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-        		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$
+        	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION || e instanceof ExpiredTimeSliceException) {
+        		//requeue
+        		this.moreWork();
         	}
-            this.moreWork();
         } catch (Throwable e) {
         	handleThrowable(e);
         } finally {
@@ -328,6 +378,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    //Case 5558: Differentiate between system level errors and
 		    //processing errors.  Only log system level errors as errors, 
 		    //log the processing errors as warnings only
+			if (this.options.isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+	    		e = ExceptionUtil.sanitize(e, true);
+	    	}
 		    if(e instanceof TeiidProcessingException) {                          
 		    	Throwable cause = e;
 		    	while (cause.getCause() != null && cause.getCause() != cause) {
@@ -335,12 +388,22 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    	}
 		    	StackTraceElement[] elems = cause.getStackTrace();
 		    	Object elem = null;
-		    	if (elems.length > 0) {
-		    		elem = cause.getStackTrace()[0];
-		    	} else {
-		    		elem = cause.getMessage();
+		    	String causeMsg = cause.getMessage();
+	    		if (elems.length > 0) {
+		    		StackTraceElement ste = cause.getStackTrace()[0];
+		    		if (ste.getLineNumber() > 0 && ste.getFileName() != null) {
+		    			elem = ste.getFileName() + ":" + ste.getLineNumber(); //$NON-NLS-1$
+		    		} else {
+		    			elem = ste;
+		    		}
+		    		String msg = e.getMessage();
+		    		if (causeMsg != null && cause != e && !msg.contains(causeMsg)) {
+		    			elem = "'" + causeMsg + "' " + elem; //$NON-NLS-1$ //$NON-NLS-2$
+		    		} 
+		    	} else if (cause != e && causeMsg != null) {
+		    		elem = "'" + cause.getMessage() + "'"; //$NON-NLS-1$ //$NON-NLS-2$
 		    	}
-		        String msg = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30020, e.getMessage(), requestID, e.getClass().getName(), elem);
+		        String msg = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30020, e.getMessage(), requestID, e.getClass().getSimpleName(), elem);
 		    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 		    		LogManager.logWarning(LogConstants.CTX_DQP, e, msg);
 		    	} else {
@@ -364,7 +427,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private boolean isSuspendable() {
-		return this.transactionContext.getTransaction() != null && !(this.useCallingThread & this.transactionContext.getTransactionType() == Scope.GLOBAL);
+		return this.transactionContext.getTransaction() != null && !(this.useCallingThread && this.transactionContext.getTransactionType() == Scope.GLOBAL);
 	}
 
 	private void suspend() {
@@ -379,27 +442,40 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	protected void processMore() throws BlockedException, TeiidException {
 		if (!doneProducingBatches) {
+			synchronized (queue) {
+				while (!queue.isEmpty() && totalThreads < dqpCore.getUserRequestSourceConcurrency()) {
+					WorkWrapper<?> w = queue.removeFirst();
+	        		dqpCore.addWork(w.work);
+	        		w.submitted = true;
+	        		totalThreads++;
+	        	}
+			}
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
-			this.resultsBuffer = collector.collectTuples();
+			try {
+				CommandContext.pushThreadLocalContext(this.processor.getContext());
+				this.resultsBuffer = collector.collectTuples();
+			} finally {
+				CommandContext.popThreadLocalContext();
+			}
 			if (!doneProducingBatches) {
 				done();
 			}
 		}
 		if (this.transactionState == TransactionState.ACTIVE) {
-			/*
-			 * TEIID-14 if we are done producing batches, then proactively close transactional 
-			 * executions even ones that were intentionally kept alive. this may 
-			 * break the read of a lob from a transactional source under a transaction 
-			 * if the source does not support holding the clob open after commit
-			 */
-        	for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-        		if (connectorRequest.isTransactional()) {
-        			connectorRequest.fullyCloseSource();
-        		}
-            }
 			this.transactionState = TransactionState.DONE;
 			if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+				/*
+				 * TEIID-14 if we are done producing batches, then proactively close transactional 
+				 * executions even ones that were intentionally kept alive. this may 
+				 * break the read of a lob from a transactional source under a transaction 
+				 * if the source does not support holding the clob open after commit
+				 */
+	        	for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+	        		if (connectorRequest.isTransactional()) {
+	        			connectorRequest.fullyCloseSource();
+	        		}
+	            }
 				this.transactionService.commit(transactionContext);
 			} else {
 				suspend();
@@ -416,30 +492,33 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		int rowcount = -1;
 		try {
 			cancelCancelTask();
+			if (moreWorkTask != null) {
+				moreWorkTask.cancel(false);
+				moreWorkTask = null;
+			}
 			if (this.resultsBuffer != null) {
 				if (this.processor != null) {
-					this.processor.closeProcessing();
-				
-					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
-				    }
-					rowcount = resultsBuffer.getRowCount();
-					if (this.cid == null || !this.doneProducingBatches) {
-						resultsBuffer.remove();
-					} else {
-						try {
-							this.resultsBuffer.persistLobs();
-						} catch (TeiidComponentException e) {
-							LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
+					try {
+					    CommandContext.pushThreadLocalContext(this.processor.getContext());
+						this.processor.closeProcessing();
+					
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					        LogManager.logDetail(LogConstants.CTX_DQP, "Removing tuplesource for the request " + requestID); //$NON-NLS-1$
+					    }
+						rowcount = resultsBuffer.getRowCount();
+						if (this.cid == null || !this.doneProducingBatches) {
+							resultsBuffer.remove();
 						}
+						
+						for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+							connectorRequest.fullyCloseSource();
+					    }
+						
+						CommandContext cc = this.processor.getContext();
+						cc.close();
+					} finally {
+						CommandContext.popThreadLocalContext();
 					}
-					
-					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-						connectorRequest.fullyCloseSource();
-				    }
-					
-					CommandContext cc = this.processor.getContext();
-					cc.close();
 				}
 	
 				this.resultsBuffer = null;
@@ -478,7 +557,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			handleThrowable(t);
 		} finally {
 			isClosed = true;
-			
 			dqpCore.removeRequest(this);
 		    
 			if (this.processingException != null) {
@@ -491,23 +569,28 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void cancelCancelTask() {
 		if (this.cancelTask != null) {
-			this.cancelTask.cancel();
+			this.cancelTask.cancel(false);
 			this.cancelTask = null;
 		}
 	}
 
 	protected void processNew() throws TeiidProcessingException, TeiidComponentException {
+		planningStart = System.currentTimeMillis();
 		SessionAwareCache<CachedResults> rsCache = dqpCore.getRsCache();
 				
 		boolean cachable = false;
 		CacheID cacheId = null;
-		boolean canUseCached = !requestMsg.getRequestOptions().isContinuous() && (requestMsg.useResultSetCache() || 
-				getCacheHint() != null);
 		
 		if (rsCache != null) {
-			if (!canUseCached) {
-				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Non-cachable command."); //$NON-NLS-1$
-			} else {
+			boolean canUseCache = true;
+			if (requestMsg.getRequestOptions().isContinuous()) {
+				canUseCache = false;
+				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Command is continuous, result set caching will not be used"); //$NON-NLS-1$
+			} else if (!requestMsg.useResultSetCache() && getCacheHint() == null) {
+				canUseCache = false;
+				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Command has no cache hint and result set cache mode is not on."); //$NON-NLS-1$
+			}
+			if (canUseCache) {
 				ParseInfo pi = Request.createParseInfo(requestMsg);
 				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
 		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
@@ -524,10 +607,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					//check that there are enough cached results
 					//TODO: possibly ignore max rows for caching
 					if (cr != null && (cr.getRowLimit() == 0 || (requestMsg.getRowLimit() != 0 && requestMsg.getRowLimit() <= cr.getRowLimit()))) {
-						this.resultsBuffer = cr.getResults();
 						request.initMetadata();
 						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
 						if (!request.validateAccess(requestMsg.getCommands(), this.originalCommand, CommandType.CACHED)) {
+							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using result set cached results", cacheId); //$NON-NLS-1$
+							this.resultsBuffer = cr.getResults();
 							doneProducingBatches();
 							return;
 						}
@@ -537,6 +621,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Parameters are not serializable - cache cannot be used for", cacheId); //$NON-NLS-1$
 				}
 			}
+		} else {
+			LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Result set caching is disabled."); //$NON-NLS-1$
 		}
 		try {
 			request.processRequest();
@@ -549,53 +635,112 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	//turn on the collection of data objects used
         	request.processor.getContext().setDataObjects(new HashSet<Object>(4));
         }
+        request.processor.getContext().setWorkItem(this);
 		processor = request.processor;
+		planningEnd = System.currentTimeMillis();
 		this.dqpCore.logMMCommand(this, Event.PLAN, null);
 		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {
+			
+			int maxRows = 0;
+			
+			@Override
 			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
 				resultsBuffer = getTupleBuffer();
+				if (maxRows == 0) {
+					maxRows = OUTPUT_BUFFER_MAX_BATCHES * resultsBuffer.getBatchSize();
+				}
 				if (cid != null) {
 					super.flushBatchDirect(batch, add);
 				}
-				if (batch.getTerminationFlag()) {
-					done();
-				}
 				synchronized (lobStreams) {
-					if (resultsBuffer.isLobs()) {
+					if (cid == null && resultsBuffer.isLobs()) {
 						super.flushBatchDirect(batch, false);
+					}
+					if (batch.getTerminationFlag()) {
+						done();
 					}
 					add = sendResultsIfNeeded(batch);
 					if (cid != null) {
 						return;
 					}
 					super.flushBatchDirect(batch, add);
-					if (!add && !processor.hasFinalBuffer()) {
-						 resultsBuffer.setRowCount(batch.getEndRow());
-					} else if (!processor.hasFinalBuffer() //restrict the buffer size for forward only results
-							&& !batch.getTerminationFlag() 
-							&& transactionState != TransactionState.ACTIVE
-							&& this.getTupleBuffer().getManagedRowCount() >= OUTPUT_BUFFER_MAX_BATCHES * this.getTupleBuffer().getBatchSize()) {
-						if (!dqpCore.hasWaitingPlans(RequestWorkItem.this)) {
-							//requestMore will trigger more processing
-							throw BlockedException.block(requestID, "Blocking due to full results TupleBuffer", //$NON-NLS-1$
-									this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
-						} 
-						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans."); //$NON-NLS-1$
+					if (!add && !processor.hasBuffer(false)) {
+						resultsBuffer.setRowCount(batch.getEndRow());
+					}
+					if (transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
+			        	synchronized (this) {
+							if (resultsReceiver == null) {
+					        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
+							}
 						}
+			        	if (add && !returnsUpdateCount) {
+			        		throw new AssertionError("Should not add batch to buffer"); //$NON-NLS-1$
+			        	}
+			        }
+					if (add) {
+						flowControl(batch);
 					}
 				}
 			}
+
+			private void flowControl(TupleBatch batch)
+					throws BlockedException {
+				if (processor.hasBuffer(false)
+						|| batch.getTerminationFlag() 
+						|| transactionState == TransactionState.ACTIVE) {
+					return;
+				}
+				if (!isForwardOnly() && resultsReceiver != null && begin > resultsBuffer.getRowCount()) {
+					return; //a valid request beyond the processed range
+				}
+				
+				if (resultsBuffer.getManagedRowCount() < maxRows) {
+					return; //continue to buffer
+				}
+					
+				int timeOut = 500;
+				if (!connectorInfo.isEmpty()) {
+					if (explicitSourceClose) {
+						for (DataTierTupleSource ts : getConnectorRequests()) {
+							if (!ts.isExplicitClose()) {
+								timeOut = 100;
+								break;
+							}
+						}
+					} else {
+						timeOut = 100;	
+					}
+				}
+				if (dqpCore.blockOnOutputBuffer(RequestWorkItem.this)) {
+					if (moreWorkTask != null) {
+						moreWorkTask.cancel(false);
+						moreWorkTask = null;
+					}
+					if (getThreadState() != ThreadState.MORE_WORK) {
+						//we schedule the work to ensure that an idle client won't just indefinitely hold resources
+						moreWorkTask = scheduleWork(timeOut); 
+					}
+					throw BlockedException.block(requestID, "Blocking due to full results TupleBuffer", //$NON-NLS-1$
+							this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
+				} 
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans or this is using the calling thread."); //$NON-NLS-1$
+				}
+			}
 		};
-		if (!request.addedLimit && this.requestMsg.getRowLimit() > 0 && !request.isReturingParams()) {
+		if (!request.addedLimit && this.requestMsg.getRowLimit() > 0 && this.requestMsg.getRowLimit() < Integer.MAX_VALUE) {
 			//covers maxrows for commands that already have a limit, are prepared, or are a stored procedure
-			//TODO: allow max rows to have an effect for callablestatements with out params
         	this.collector.setRowLimit(this.requestMsg.getRowLimit());
+    		this.collector.setSaveLastRow(request.isReturingParams());
         }
 		this.resultsBuffer = collector.getTupleBuffer();
 		if (this.resultsBuffer == null) {
 			//This is just a dummy result it will get replaced by collector source
 	    	resultsBuffer = this.processor.getBufferManager().createTupleBuffer(this.originalCommand.getProjectedSymbols(), this.request.context.getConnectionId(), TupleSourceType.FINAL);
+		} else if (this.requestMsg.getRequestOptions().isContinuous()) {
+			//TODO: this is based upon continuous being an embedded connection otherwise we have to do something like
+			//forcing inlining, but truncating or erroring over a given size (similar to odbc handling)
+			resultsBuffer.removeLobTracking();
 		}
 		initTransactionState(request.transactionContext);
 		if (requestMsg.isNoExec()) {
@@ -635,11 +780,15 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	CachedResults cr = new CachedResults();
     	cr.setCommand(originalCommand);
         cr.setResults(resultsBuffer, processor.getProcessorPlan());
-        if (requestMsg.getRowLimit() > 0 && resultsBuffer.getRowCount() == requestMsg.getRowLimit()) {
-        	cr.setRowLimit(resultsBuffer.getRowCount());
+        if (requestMsg.getRowLimit() > 0 && resultsBuffer.getRowCount() == requestMsg.getRowLimit() + (collector.isSaveLastRow()?1:0)) {
+        	cr.setRowLimit(requestMsg.getRowLimit());
         }
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
+        	if (originalCommand.getCacheHint().getMinRows() != null && resultsBuffer.getRowCount() <= originalCommand.getCacheHint().getMinRows()) {
+        		LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Not caching result as there are fewer rows than needed", resultsBuffer.getRowCount()); //$NON-NLS-1$
+        		return;
+        	}
 			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().isPrefersMemory());
         	if (originalCommand.getCacheHint().getDeterminism() != null) {
 				determinismLevel = originalCommand.getCacheHint().getDeterminism();
@@ -654,6 +803,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         
         if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
 			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30008, originalCommand));
+		}
+		try {
+			this.resultsBuffer.persistLobs();
+		} catch (TeiidException e) {
+			LogManager.logDetail(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
 		}
         dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
 	}
@@ -670,51 +824,122 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		ResultsReceiver<ResultsMessage> receiver = null;
 		boolean result = true;
 		synchronized (this) {
-			if (this.resultsReceiver == null
-					|| (this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
-					|| (this.transactionState == TransactionState.ACTIVE)) {
+			if (this.resultsReceiver == null) {
+				if (this.transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
+					if (batch != null) {
+						throw new AssertionError("batch has no handler"); //$NON-NLS-1$
+					}
+		        	throw BlockedException.block(requestID, "Blocking until client is ready"); //$NON-NLS-1$            	
+		        }
 				return result;
 			}
+			if (!this.requestMsg.getRequestOptions().isContinuous()) {
+				if ((this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
+						|| (this.transactionState == TransactionState.ACTIVE) || (returnsUpdateCount && !doneProducingBatches)) {
+					return result;
+				}
+			
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID:", requestID, "resultsID:", this.resultsBuffer, "done:", doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
 		
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID:", requestID, "resultsID:", this.resultsBuffer, "done:", doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-	
-			//TODO: support fetching more than 1 batch
-			boolean fromBuffer = false;
-    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
-	    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
-	    			batch = savedBatch;
-	    		} else {
-	    			batch = resultsBuffer.getBatch(begin);
+				boolean fromBuffer = false;
+	    		int count = this.end - this.begin + 1;
+	    		if (returnsUpdateCount) {
+	    			count = Integer.MAX_VALUE;
 	    		}
-	    		savedBatch = null;
-	    		fromBuffer = true;
-	    	}
-    		int count = this.end - this.begin + 1;
-    		if (batch.getRowCount() > count) {
-    			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
-    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
-    			boolean last = false;
-    			if (endRow == batch.getEndRow()) {
-    				last = batch.getTerminationFlag();
-    			} else if (fromBuffer && isForwardOnly()) {
-        			savedBatch = batch;
-    			}
-                List<List<?>> memoryRows = batch.getTuples();
-                batch = new TupleBatch(beginRow, memoryRows.subList(beginRow - batch.getBeginRow(), endRow - batch.getBeginRow() + 1));
-                batch.setTerminationFlag(last);
-    		} else if (!fromBuffer){
-    			result = !isForwardOnly();
-    		}
+	    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
+		    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
+		    			batch = savedBatch;
+		    		} else {
+		    			batch = resultsBuffer.getBatch(begin);
+		    			//fetch more than 1 batch from the buffer
+		    			boolean first = true;
+		    			int rowSize = resultsBuffer.getRowSizeEstimate();
+		    			int batches = CLIENT_FETCH_MAX_BATCHES;
+		    			if (rowSize > 0) {
+		    				int totalSize = rowSize * resultsBuffer.getBatchSize();
+		    				if (schemaSize == 0) {
+		    					schemaSize = this.dqpCore.getBufferManager().getSchemaSize(this.originalCommand.getProjectedSymbols());
+		    				}
+		    				int multiplier = schemaSize/totalSize;
+		    				if (multiplier > 1) {
+		    					batches *= multiplier;
+		    				}
+		    			}
+		    			if (returnsUpdateCount) {
+			    			batches = Integer.MAX_VALUE;
+			    		}
+		    			for (int i = 1; i < batches && batch.getRowCount() + resultsBuffer.getBatchSize() <= count && !batch.getTerminationFlag(); i++) {
+		    				TupleBatch next = resultsBuffer.getBatch(batch.getEndRow() + 1);
+		    				if (next.getRowCount() == 0) {
+		    					break;
+		    				}
+		    				if (first) {
+		    					first = false;
+		    					TupleBatch old = batch;
+		    					batch = new TupleBatch(batch.getBeginRow(), new ResizingArrayList<List<?>>(batch.getTuples()));
+		    					batch.setTermination(old.getTermination());
+		    				}
+		    				batch.getTuples().addAll(next.getTuples());
+		    				batch.setTermination(next.getTermination());
+		    			}
+		    		}
+		    		savedBatch = null;
+		    		fromBuffer = true;
+		    	}
+	    		if (batch.getRowCount() > count) {
+	    			int beginRow = isForwardOnly()?begin:Math.min(this.begin, batch.getEndRow() - count + 1);
+	    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
+	    			boolean last = false;
+	    			if (endRow == batch.getEndRow()) {
+	    				last = batch.getTerminationFlag();
+	    			} else if (fromBuffer && isForwardOnly()) {
+	        			savedBatch = batch;
+	    			}
+	                List<List<?>> memoryRows = batch.getTuples();
+	                batch = new TupleBatch(beginRow, memoryRows.subList(beginRow - batch.getBeginRow(), endRow - batch.getBeginRow() + 1));
+	                batch.setTerminationFlag(last);
+	    		} else if (!fromBuffer){
+	    			result = !isForwardOnly();
+	    		}
+			} else if (batch == null) {
+				return result;
+			} else {
+				result = false;
+			}
 	        int finalRowCount = (this.resultsBuffer.isFinal()&&!this.requestMsg.getRequestOptions().isContinuous())?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
 	        
 	        response = createResultsMessage(batch.getTuples(), this.originalCommand.getProjectedSymbols());
 	        response.setFirstRow(batch.getBeginRow());
-	        response.setLastRow(batch.getEndRow());
+	        if (batch.getTermination() == TupleBatch.ITERATION_TERMINATED) {
+	        	response.setLastRow(batch.getEndRow() - 1);
+	        } else {
+	        	response.setLastRow(batch.getEndRow());
+	        }
 	        response.setUpdateResult(this.returnsUpdateCount);
+	        //swap the result for the generated keys
+	        if (this.returnsUpdateCount 
+	        		&& this.processor.getContext().isReturnAutoGeneratedKeys() 
+	        		&& finalRowCount == 1
+	        		&& this.processor.getContext().getGeneratedKeys() != null) {
+	        	GeneratedKeysImpl keys = this.processor.getContext().getGeneratedKeys();
+	        	response.setColumnNames(keys.getColumnNames());
+	        	String[] dataTypes = new String[keys.getColumnNames().length];
+	        	for(int i=0; i<dataTypes.length; i++) {
+	                dataTypes[i] = DataTypeManager.getDataTypeName(keys.getColumnTypes()[i]);
+	            }
+	        	response.setUpdateCount((Integer)response.getResultsList().get(0).get(0));
+	        	response.setDataTypes(dataTypes);
+	        	response.setResults(keys.getKeys());
+	        	response.setLastRow(keys.getKeys().size());
+	        	finalRowCount = response.getLastRow();
+	        }
 	        // set final row
 	        response.setFinalRow(finalRowCount);
+	        if (response.getLastRow() == finalRowCount) {
+	        	response.setDelayDeserialization(false);
+	        }
 	
 	        setWarnings(response);
 	        
@@ -733,17 +958,44 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             this.resultsReceiver = null;    
 		}
 		cancelCancelTask();
+		if ((!this.dqpWorkContext.getSession().isEmbedded() && requestMsg.isDelaySerialization() && this.requestMsg.getShowPlan() == ShowPlan.ON) 
+				|| this.requestMsg.getShowPlan() == ShowPlan.DEBUG
+				|| LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE)) {
+			int bytes;
+			try {
+				boolean keep = !this.dqpWorkContext.getSession().isEmbedded() && requestMsg.isDelaySerialization();
+				bytes = response.serialize(keep);
+				if (keep) {
+					response.setDelayDeserialization(true);
+				}
+				dataBytes.addAndGet(bytes);
+				LogManager.logDetail(LogConstants.CTX_DQP, "Sending results for", requestID, "start row", //$NON-NLS-1$ //$NON-NLS-2$ 
+						response.getFirstRow(), "end row", response.getLastRow(), bytes, "bytes"); //$NON-NLS-1$ //$NON-NLS-2$
+			} catch (Exception e) {
+				//do nothing.  there is a low level serialization error that we will let happen
+				//later since it would be inconvenient here
+			}
+		}
+		setAnalysisRecords(response);
         receiver.receiveResults(response);
         return result;
 	}
 
 	private void setWarnings(ResultsMessage response) {
+		boolean sanitize = this.options.isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL);
+		
 		// send any warnings with the response object
 		List<Throwable> responseWarnings = new ArrayList<Throwable>();
 		if (this.processor != null) {
 			List<Exception> currentWarnings = processor.getAndClearWarnings();
 		    if (currentWarnings != null) {
-		    	responseWarnings.addAll(currentWarnings);
+		    	if (sanitize) {
+		    		for (Exception e : currentWarnings) {
+		    			responseWarnings.add(ExceptionUtil.sanitize(e, false));
+		    		}
+		    	} else {
+		    		responseWarnings.addAll(currentWarnings);
+		    	}
 		    }
 		}
 		response.setWarnings(responseWarnings);
@@ -753,14 +1005,19 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];
 
+        byte clientSerializationVersion = this.dqpWorkContext.getClientVersion().getClientSerializationVersion();
         for(int i=0; i<columnSymbols.size(); i++) {
             Expression symbol = columnSymbols.get(i);
             columnNames[i] = Symbol.getShortName(Symbol.getOutputName(symbol));
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
+            if (dataTypes[i].equals(DataTypeManager.DefaultDataTypes.GEOMETRY) && !this.dqpWorkContext.getSession().isEmbedded() && clientSerializationVersion < BatchSerializer.VERSION_GEOMETRY) {
+            	dataTypes[i] = DataTypeManager.DefaultDataTypes.BLOB;
+            }
         }
         ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
-        result.setClientSerializationVersion(this.dqpWorkContext.getClientVersion().getClientSerializationVersion());
-        setAnalysisRecords(result);
+        
+		result.setClientSerializationVersion(clientSerializationVersion);
+        result.setDelayDeserialization(this.requestMsg.isDelaySerialization() && this.originalCommand.returnsResultSet());
         return result;
     }
     
@@ -768,7 +1025,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		if(analysisRecord != null) {
         	if (requestMsg.getShowPlan() != ShowPlan.OFF) {
         		if (processor != null) {
-            		response.setPlanDescription(processor.getProcessorPlan().getDescriptionProperties());
+        			PlanNode node = processor.getProcessorPlan().getDescriptionProperties();
+        			node.addProperty(AnalysisRecord.PROP_DATA_BYTES_SENT, String.valueOf(dataBytes.get()));
+        			if (planningEnd != 0) {
+        				node.addProperty(AnalysisRecord.PROP_PLANNING_TIME, String.valueOf(planningEnd - planningStart));
+        			}
+            		response.setPlanDescription(node);
         		}
         		if (analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
 		            response.setAnnotations(analysisRecord.getAnnotations());
@@ -795,6 +1057,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sending error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage();
         Throwable exception = this.processingException;
+        if (this.options.isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        	//we still convey an exception hierarcy here because the client logic looks for certian exception types
+        	exception = ExceptionUtil.sanitize(exception, false);
+        }
         if (isCanceled) {
         	exception = addCancelCode(exception); 
         }
@@ -811,7 +1077,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				return exception;
 			}
 		}
-		return new TeiidProcessingException(exception, SQLStates.QUERY_CANCELED);
+		TeiidProcessingException tpe = new TeiidProcessingException(exception);
+		tpe.setCode(SQLStates.QUERY_CANCELED);
+		return tpe;
 	}
     
     private static List<ParameterInfo> getParameterInfo(StoredProcedure procedure) {
@@ -922,6 +1190,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
     
 	public void addConnectorRequest(AtomicRequestID atomicRequestId, DataTierTupleSource connInfo) {
+		this.explicitSourceClose |= connInfo.isExplicitClose();
 		connectorInfo.put(atomicRequestId, connInfo);
 	}
     
@@ -981,17 +1250,20 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void done() {
 		doneProducingBatches();
+		addToCache();
 		//TODO: we could perform more tracking to know what source lobs are in use
 		if (this.resultsBuffer.getLobCount() == 0) {
 			for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
 				connectorRequest.fullyCloseSource();
 		    }
 		}
-		addToCache();
 	}
 
 	private void doneProducingBatches() {
 		this.doneProducingBatches = true;
+		synchronized (queue) {
+			queue.clear();
+		}
 		dqpCore.finishProcessing(this);
 	}
 	
@@ -1029,8 +1301,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	return work;
     }
     
-    ScheduledFuture<?> scheduleWork(Runnable r, int priority, long delay) {
-    	return dqpCore.scheduleWork(r, priority, delay);
+    public Future<Void> scheduleWork(long delay) {
+    	return dqpCore.scheduleWork(new MoreWorkTask(this), delay);
     }
     
     public void setCancelTask(Task cancelTask) {
@@ -1039,6 +1311,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     
     public QueryProcessor getProcessor() {
 		return processor;
+	}
+    
+    public RequestID getRequestID() {
+		return requestID;
 	}
 
 }

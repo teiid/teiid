@@ -68,7 +68,7 @@ public class AtomicRequestMessage {
 	private Command command;
 
 	// results fetch size
-	private int fetchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
+	private int fetchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 
 	// The time when command begins processing on the server.
 	private long processingTimestamp = System.currentTimeMillis();
@@ -83,9 +83,8 @@ public class AtomicRequestMessage {
     private boolean serial;
     
     private DQPWorkContext workContext;
-    private String generalHint;
-    private String hint;
     private CommandContext commandContext;
+    private BufferManager bufferManager;
     
     public AtomicRequestMessage(RequestMessage requestMessage, DQPWorkContext parent, int nodeId){
     	this.workContext = parent;
@@ -204,28 +203,20 @@ public class AtomicRequestMessage {
 		return workContext;
 	}
 	
-	public String getGeneralHint() {
-		return generalHint;
-	}
-	
-	public void setGeneralHint(String generalHint) {
-		this.generalHint = generalHint;
-	}
-	
-	public String getHint() {
-		return hint;
-	}
-	
-	public void setHint(String hint) {
-		this.hint = hint;
-	}
-	
 	public CommandContext getCommandContext() {
 		return commandContext;
 	}
 	
 	public void setCommandContext(CommandContext commandContext) {
 		this.commandContext = commandContext;
+	}
+	
+	public BufferManager getBufferManager() {
+		return bufferManager;
+	}
+	
+	public void setBufferManager(BufferManager bufferManager) {
+		this.bufferManager = bufferManager;
 	}
 
 }

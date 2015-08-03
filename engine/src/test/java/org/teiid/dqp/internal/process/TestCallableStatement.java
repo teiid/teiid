@@ -69,7 +69,7 @@ public class TestCallableStatement {
 	}
 	
 	@Test public void testReturnParameter() throws Exception {
-		String sql = "{? = call pm4.spTest9(?)}"; //$NON-NLS-1$
+		String sql = "{? = call pm4.spTest9(inkey=>?)}"; //$NON-NLS-1$
 
 		List values = new ArrayList();
 		values.add(1);

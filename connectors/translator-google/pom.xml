@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>connectors</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+        <version>8.12.0.Alpha3-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>translator-google</artifactId>
+	<groupId>org.jboss.teiid.connectors</groupId>
+	<name>Google APIs Translator</name>
+	<description>Integrates the query engine with various Google APIs</description>
+    <packaging>bundle</packaging>
+	<dependencies>
+        <dependency>
+          <groupId>org.jboss.teiid</groupId>
+          <artifactId>teiid-api</artifactId>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.teiid</groupId>
+          <artifactId>teiid-common-core</artifactId>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+      	    <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>google-api</artifactId>
+        </dependency>
+       <!-- can't do this but this should be possible!   
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-google-spreadsheet</artifactId>
+  	    <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+      -->
+    </dependencies>
+    
+    <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.xml</exclude>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                  <execution>
+                    <id>create-assemblies</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>single</goal>
+                    </goals>
+                  </execution>
+                </executions>
+            </plugin>   
+        </plugins>         
+    </build>    
+</project>

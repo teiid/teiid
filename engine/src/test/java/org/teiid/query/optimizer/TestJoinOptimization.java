@@ -32,25 +32,32 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Table;
 import org.teiid.metadata.KeyRecord.Type;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.JoinUtil;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.JoinNode;
+import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -261,6 +268,21 @@ public class TestJoinOptimization {
         });
     }
     
+    @Test public void testCopyCriteriaWithFunction3() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select bqt1.smalla.intkey, bqt1.smallb.intkey from bqt1.smalla, bqt1.smallb where bqt1.smalla.stringkey = bqt1.smallb.intkey and bqt1.smallb.intkey = 1"; //$NON-NLS-1$
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.IntKey, g_1.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.StringKey = '1') AND (g_1.IntKey = 1)"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.THETA);
+        
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.StringKey = '1'", "SELECT g_0.IntKey FROM BQT1.SmallB AS g_0 WHERE g_0.IntKey = 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     /**
      * The intkey criteria should not be copied above to bqt1.smalla since the criteria is coming from the inner side in the join below 
      */
@@ -268,7 +290,7 @@ public class TestJoinOptimization {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla inner join (select bqt3.smalla.intkey from bqt2.smalla left outer join bqt3.smalla on bqt2.smalla.intkey = bqt3.smalla.intkey and bqt3.smalla.intkey = 1) foo on bqt1.smalla.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT 1 FROM bqt2.smalla AS g_0", "SELECT g_0.intkey AS c_0 FROM bqt1.smalla AS g_0 ORDER BY c_0"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT 1 FROM BQT2.SmallA AS g_0 WHERE g_0.IntKey = 1", "SELECT 1 FROM BQT3.SmallA AS g_0 WHERE g_0.IntKey = 1", "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             3,      // Access
@@ -277,8 +299,8 @@ public class TestJoinOptimization {
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
-            1,      // Join
-            1,      // MergeJoin
+            2,      // Join
+            0,      // MergeJoin
             0,      // Null
             0,      // PlanExecution
             1,      // Project
@@ -893,6 +915,20 @@ public class TestJoinOptimization {
         
     }
     
+    @Test public void testPreserveHint() throws Exception { 
+        String sql = "select pm1.g1.e1 from /*+ preserve */ (pm1.g1 left outer join pm1.g2 on g1.e2 = g2.e2) where pm1.g2.e1 = 'a'"; //$NON-NLS-1$
+        assertEquals("SELECT pm1.g1.e1 FROM /*+ PRESERVE */ (pm1.g1 LEFT OUTER JOIN pm1.g2 ON g1.e2 = g2.e2) WHERE pm1.g2.e1 = 'a'", QueryParser.getQueryParser().parseCommand(sql).toString());
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
+                                      null, TestOptimizer.getGenericFinder(true), 
+                                      new String[] { 
+                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e2 = g_1.e2 WHERE g_1.e1 = 'a'" }, //$NON-NLS-1$
+                                          TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
     /**
      * RuleCopyCriteria will remove the first join criteria and the source doesn't support the * function.  However we still
      * want the join to be pushed since it originally contained proper criteria.
@@ -1041,11 +1077,27 @@ public class TestJoinOptimization {
             "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallB, BQT1.Smalla, bqt2.smallb where bqt2.smallb.intkey = bqt1.smallb.intkey and bqt2.smallb.stringkey = bqt1.smalla.stringkey",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1 FROM BQT2.SmallB AS g_0 ORDER BY c_0", 
+            new String[] {"SELECT g_0.IntKey, g_0.StringKey FROM BQT2.SmallB AS g_0", 
             		"SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_0", 
             		"SELECT g_0.IntKey AS c_0 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, 
             ComparisonMode.EXACT_COMMAND_STRING );
 
     }
+    
+	@Test public void testOuterJoinRemoval() throws Exception {
+	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+	   	ProcessorPlan plan = TestOptimizer.helpPlan("SELECT * from pm1.g1 inner join (pm1.g2 left outer join pm1.g3 on pm1.g2.e1=pm1.g3.e1) on pm1.g1.e1=pm1.g3.e1", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g2 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+	    RelationalNode node = ((RelationalPlan)plan).getRootNode().getChildren()[0];
+	    assertTrue(node instanceof JoinNode);
+	    node = node.getChildren()[0];
+	    assertTrue(node instanceof JoinNode);
+	    assertEquals(JoinType.JOIN_INNER, ((JoinNode)node).getJoinType());
+	 }
     
 }

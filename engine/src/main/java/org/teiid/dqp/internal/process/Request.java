@@ -26,9 +26,9 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
+import org.teiid.PreParser;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -42,24 +42,20 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
-import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
-import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
-import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -75,6 +71,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -97,8 +94,9 @@ import org.teiid.query.validator.ValidatorReport;
 /**
  * Server side representation of the RequestMessage.  Knows how to process itself.
  */
-public class Request implements SecurityFunctionEvaluator {
+public class Request {
     
+	private static final String CLEAN_LOBS_ONCLOSE = "clean_lobs_onclose"; //$NON-NLS-1$
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
@@ -114,7 +112,6 @@ public class Request implements SecurityFunctionEvaluator {
     // acquired state
     protected CapabilitiesFinder capabilitiesFinder;
     protected QueryMetadataInterface metadata;
-    private Set<String> multiSourceModels;
 
     // internal results
     protected boolean addedLimit;
@@ -135,6 +132,8 @@ public class Request implements SecurityFunctionEvaluator {
 	private int userRequestConcurrency;
 	private AuthorizationValidator authorizationValidator;
 	private Executor executor;
+	protected Options options;
+	protected PreParser preParser;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -157,10 +156,13 @@ public class Request implements SecurityFunctionEvaluator {
         this.planCache = planCache;
     }
     
-	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata, Set multiSourceModels) {
+    public void setOptions(Options options) {
+		this.options = options;
+	}
+    
+	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata) {
 		this.capabilitiesFinder = capabilitiesFinder;
 		this.metadata = metadata;
-		this.multiSourceModels = multiSourceModels;
 	}
 	
 	public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
@@ -193,52 +195,51 @@ public class Request implements SecurityFunctionEvaluator {
              throw new TeiidComponentException(QueryPlugin.Event.TEIID30489, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30489, this.vdbName, this.vdbVersion));
         }
         
-        // Check for multi-source models and further wrap the metadata interface
-        Set<String> multiSourceModelList = workContext.getVDB().getMultiSourceModelNames();
-        if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
-        	this.multiSourceModels = multiSourceModelList;
-            this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels);
-        }
-        
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, this.tempTableStore.getMetadataStore());
         tma.setSession(true);
         this.metadata = tma;
     }
     
-    protected void createCommandContext(Command command) throws QueryValidatorException {
-    	boolean returnsResultSet = command.returnsResultSet();
-    	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
-    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
-    			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
-        	throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
+    protected void createCommandContext() {
+    	if (this.context != null) {
+    		return;
     	}
-
     	// Create command context, used in rewriting, planning, and processing
         // Identifies a "group" of requests on a per-connection basis to allow later
         // cleanup of all resources in the group on connection shutdown
         String groupName = workContext.getSessionId();
 
-        RequestID reqID = workContext.getRequestID(this.requestMsg.getExecutionId());
-        
         this.context =
             new CommandContext(
-                reqID,
                 groupName,
                 workContext.getUserName(),
-                requestMsg.getExecutionPayload(), 
+                requestMsg.getExecutionPayload(),
                 workContext.getVdbName(), 
-                workContext.getVdbVersion(),
-                this.requestMsg.getShowPlan() != ShowPlan.OFF);
+                workContext.getVdbVersion(), 
+                this.requestMsg.getShowPlan() != ShowPlan.OFF 
+                || LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
-        if (multiSourceModels != null) {
-            MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
-					metadata, idGenerator, analysisRecord, capabilitiesFinder,
-					multiSourceModels, workContext, context);
-            context.setPlanToProcessConverter(modifier);
+        boolean autoCleanLobs = true;
+        if (this.workContext.getSession().isEmbedded()) {
+	        Object value = this.workContext.getSession().getSessionVariables().get(CLEAN_LOBS_ONCLOSE);
+	        if (value != null) {
+				value = DataTypeManager.convertToRuntimeType(value, false);
+				try {
+					value = DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.BOOLEAN);
+			        if (!(Boolean)value) {
+			        	autoCleanLobs = false;
+			        }
+				} catch (TransformationException e) {
+					LogManager.logDetail(LogConstants.CTX_DQP, e, "Improper value for", CLEAN_LOBS_ONCLOSE); //$NON-NLS-1$
+				}
+			}
+        }
+        if (!autoCleanLobs) {
+        	context.disableAutoCleanLobs();
         }
         context.setExecutor(this.executor);
-        context.setSecurityFunctionEvaluator(this);
+        context.setAuthoriziationValidator(authorizationValidator);
         context.setTempTableStore(tempTableStore);
         context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(this.bufferManager, this.processorDataManager, this.capabilitiesFinder, idGenerator, metadata));
         context.setMetadata(this.metadata);
@@ -247,26 +248,12 @@ public class Request implements SecurityFunctionEvaluator {
         context.setResultSetCacheEnabled(this.resultSetCacheEnabled);
         context.setUserRequestSourceConcurrency(this.userRequestConcurrency);
         context.setSubject(workContext.getSubject());
-        Options options = new Options();
-        options.setProperties(System.getProperties());
-        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
+        this.context.setOptions(options);
         this.context.setSession(workContext.getSession());
         this.context.setRequestId(this.requestId);
         this.context.setDQPWorkContext(this.workContext);
         this.context.setTransactionService(this.transactionService);
         this.context.setVDBClassLoader(workContext.getVDB().getAttachment(ClassLoader.class));
-    }
-    
-    @Override
-    public boolean hasRole(String roleType, String roleName)
-    		throws TeiidComponentException {
-        if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
-            return false;
-        }
-        if (this.authorizationValidator == null) {
-        	return true;
-        }
-        return authorizationValidator.hasRole(roleName, context);
     }
     
     public void setUserRequestConcurrency(int userRequestConcurrency) {
@@ -303,14 +290,21 @@ public class Request implements SecurityFunctionEvaluator {
     	}
         String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = createParseInfo(this.requestMsg);
-        if (requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || !requestMsg.isBatchedUpdate()) {
+        QueryParser queryParser = QueryParser.getQueryParser();
+		if (requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || !requestMsg.isBatchedUpdate()) {
         	String commandStr = commands[0];
-            return QueryParser.getQueryParser().parseCommand(commandStr, parseInfo);
+        	if (preParser != null) {
+        		commandStr = preParser.preParse(commandStr, this.context);
+        	}
+            return queryParser.parseCommand(commandStr, parseInfo);
         } 
         List<Command> parsedCommands = new ArrayList<Command>(commands.length);
         for (int i = 0; i < commands.length; i++) {
         	String updateCommand = commands[i];
-            parsedCommands.add(QueryParser.getQueryParser().parseCommand(updateCommand, parseInfo));
+        	if (preParser != null) {
+        		updateCommand = preParser.preParse(updateCommand, this.context);
+        	}
+            parsedCommands.add(queryParser.parseCommand(updateCommand, parseInfo));
         }
         return new BatchedUpdateCommand(parsedCommands);
     }
@@ -338,7 +332,6 @@ public class Request implements SecurityFunctionEvaluator {
     private void createProcessor() throws TeiidComponentException {
     	this.context.setTransactionContext(getTransactionContext(true));
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
-    	this.processor.setContinuous(this.requestMsg.getRequestOptions().isContinuous());
     }
 
 	TransactionContext getTransactionContext(boolean startAutoWrap) throws TeiidComponentException {
@@ -352,8 +345,10 @@ public class Request implements SecurityFunctionEvaluator {
         // If local or global transaction is not started.
         if (tc.getTransactionType() == Scope.NONE && !requestMsg.isNoExec()) {
             if (!startAutoWrap) {
+            	tc.setNoTnx(true);
             	return null;
             }
+            tc.setNoTnx(false);
             boolean startAutoWrapTxn = false;
             
             if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
@@ -390,11 +385,12 @@ public class Request implements SecurityFunctionEvaluator {
      * @throws TeiidProcessingException 
      */
     protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
+    	createCommandContext();
         Command command = parseCommand();
-
+        
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
         
-        this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
+        getAnalysisRecord();
                 
         resolveCommand(command);
 
@@ -428,14 +424,6 @@ public class Request implements SecurityFunctionEvaluator {
             }
         }
         
-    	// If using multi-source models, insert a proxy to simplify the supported capabilities.  This is 
-        // done OUTSIDE the cache (wrapped around the cache) intentionally to avoid caching the simplified
-        // capabilities which may be different for the same model in a different VDB used by this same DQP.
-    	CapabilitiesFinder finder = this.capabilitiesFinder;
-        if(this.multiSourceModels != null) {
-            finder = new MultiSourceCapabilitiesFinder(finder, this.multiSourceModels);
-        }
-        
         boolean debug = analysisRecord.recordDebug();
 		if(debug) {
 			analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
@@ -443,7 +431,7 @@ public class Request implements SecurityFunctionEvaluator {
         }
         // Run the optimizer
         try {
-            processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, analysisRecord, context);
+            processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, capabilitiesFinder, analysisRecord, context);
         } finally {
             String debugLog = analysisRecord.getDebugLog();
             if(debugLog != null && debugLog.length() > 0) {
@@ -455,6 +443,13 @@ public class Request implements SecurityFunctionEvaluator {
         }
         LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { QueryPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
     }
+
+	private AnalysisRecord getAnalysisRecord() {
+		if (this.analysisRecord == null) {
+			this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
+		}
+		return this.analysisRecord;
+	}
 
     public void processRequest() 
         throws TeiidComponentException, TeiidProcessingException {
@@ -478,9 +473,16 @@ public class Request implements SecurityFunctionEvaluator {
 	}
 
 	protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
-		if (context == null) {
-			createCommandContext(command);
-		}
+		boolean returnsResultSet = command.returnsResultSet();
+    	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
+    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && returnsResultSet) 
+    			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
+        	throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
+    	}
+		createCommandContext();
+		if (command instanceof Insert) {
+        	context.setReturnAutoGeneratedKeys(this.requestMsg.isReturnAutoGeneratedKeys());
+        }
 		if (!this.workContext.isAdmin() && this.authorizationValidator != null) {
 			return this.authorizationValidator.validate(commandStr, command, metadata, context, type);
 		}
@@ -494,5 +496,9 @@ public class Request implements SecurityFunctionEvaluator {
 	public boolean isReturingParams() {
 		return false;
 	}
-	
+
+	public void setPreParser(PreParser preParser) {
+		this.preParser = preParser;
+	}
+
 }

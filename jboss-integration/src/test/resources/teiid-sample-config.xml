@@ -1,21 +1,21 @@
 <subsystem xmlns="urn:jboss:domain:teiid:1.0">
-    <allow-env-function>false</allow-env-function>
+    <allow-env-function>true</allow-env-function>
     <async-thread-pool>teiid-async</async-thread-pool>
 
-    <buffer-service use-disk="true" processor-batch-size="512" connector-batch-size="1024" 
-        max-processing-kb="-1" max-reserve-kb="-1" max-file-size="2048" max-buffer-space="51200" max-open-files="64"
-        memory-buffer-space="-2" memory-buffer-off-heap="true" max-storage-object-size="102400" inline-lobs="false"/>
+    <buffer-service use-disk="false" processor-batch-size="2"  
+        max-processing-kb="2" max-reserve-kb="2" max-file-size="2" max-buffer-space="2" max-open-files="2"
+        memory-buffer-space="-2" memory-buffer-off-heap="true" max-storage-object-size="2" inline-lobs="false" encrypt-files="true"/>
 
-    <max-threads>64</max-threads>
-    <max-active-plans>20</max-active-plans>
-    <thread-count-for-source-concurrency>0</thread-count-for-source-concurrency>
-    <time-slice-in-millseconds>2000</time-slice-in-millseconds>
-    <max-row-fetch-size>20480</max-row-fetch-size>
-    <lob-chunk-size-in-kb>100</lob-chunk-size-in-kb>
-    <query-threshold-in-seconds>600</query-threshold-in-seconds>
-    <max-source-rows-allowed>-1</max-source-rows-allowed>
-    <exception-on-max-source-rows>true</exception-on-max-source-rows>
-    <detect-change-events>true</detect-change-events>
+    <max-threads>2</max-threads>
+    <max-active-plans>2</max-active-plans>
+    <thread-count-for-source-concurrency>2</thread-count-for-source-concurrency>
+    <time-slice-in-milliseconds>2</time-slice-in-milliseconds>
+    <max-row-fetch-size>2</max-row-fetch-size>
+    <lob-chunk-size-in-kb>2</lob-chunk-size-in-kb>
+    <query-threshold-in-seconds>2</query-threshold-in-seconds>
+    <max-source-rows-allowed>2</max-source-rows-allowed>
+    <exception-on-max-source-rows>false</exception-on-max-source-rows>
+    <detect-change-events>false</detect-change-events>
     <query-timeout>23</query-timeout>
     <workmanager>wm</workmanager>
     <!-- 
@@ -33,10 +33,11 @@
     <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
 
     <transport name="odbc" protocol="pg" socket-binding="teiid-odbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3">
-        <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5000" sessions-expiration-timelimit="0" krb5-domain="krb5"/>
-        <pg max-lob-size-in-bytes="5242880"/>
-        <ssl mode="login" authentication-mode="1-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo">
-            <keystore name="keystore name" password="keystore passs" type="keystore type"/>
+        <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5" sessions-expiration-timelimit="2" type="GSS"/>
+        <pg max-lob-size-in-bytes="50"/>
+        <ssl mode="enabled" authentication-mode="2-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo"
+            enabled-cipher-suites="x,y">
+            <keystore  key-alias="x" key-password="y" name="keystore name" password="keystore passs" type="keystore type"/>
             <truststore name="truststore name" password="truststore pass"/>
         </ssl>
     </transport>

@@ -43,6 +43,7 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
+import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.validator.ValidatorReport;
 
@@ -75,6 +76,11 @@ public class SystemMetadata {
 					}
 				}
 				PropertiesUtils.setBeanProperties(dt, p, null);
+				if ("string".equals(dt.getName())) { //$NON-NLS-1$
+					dt.setLength(DataTypeManager.MAX_STRING_LENGTH);
+				} else if ("varbinary".equals(dt.getName())) { //$NON-NLS-1$
+					dt.setLength(DataTypeManager.MAX_VARBINARY_BYTES);
+				}
 				dataTypes.add(dt);
 				if (dt.isBuiltin()) {
 					typeMap.put(dt.getRuntimeTypeName(), dt);
@@ -106,24 +112,27 @@ public class SystemMetadata {
 		vdb.setName("System");  //$NON-NLS-1$
 		vdb.setVersion(1);
 		Properties p = new Properties();
-		systemStore = loadSchema(vdb, p, "SYS").asMetadataStore(); //$NON-NLS-1$
+		QueryParser parser = new QueryParser();
+		systemStore = loadSchema(vdb, p, "SYS", parser).asMetadataStore(); //$NON-NLS-1$
 		systemStore.addDataTypes(dataTypes);
-		loadSchema(vdb, p, "SYSADMIN").mergeInto(systemStore); //$NON-NLS-1$
-		MetadataValidator validator = new MetadataValidator();
+		loadSchema(vdb, p, "SYSADMIN", parser).mergeInto(systemStore); //$NON-NLS-1$
+		TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(systemStore), null, new SystemFunctionManager(typeMap).getSystemFunctions(), null);
+		vdb.addAttchment(QueryMetadataInterface.class, tm);
+		MetadataValidator validator = new MetadataValidator(this.typeMap, parser);
 		ValidatorReport report = validator.validate(vdb, systemStore);
 		if (report.hasItems()) {
 			throw new TeiidRuntimeException(report.getFailureMessage());
 		}
 	}
 
-	private MetadataFactory loadSchema(VDBMetaData vdb, Properties p, String name) {
+	private MetadataFactory loadSchema(VDBMetaData vdb, Properties p, String name, QueryParser parser) {
 		ModelMetaData mmd = new ModelMetaData();
 		mmd.setName(name);
 		vdb.addModel(mmd);
 		InputStream is = SystemMetadata.class.getClassLoader().getResourceAsStream("org/teiid/metadata/"+name+".sql"); //$NON-NLS-1$ //$NON-NLS-2$
 		try {
 			MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), name, typeMap, p, null);
-			QueryParser.getQueryParser().parseDDL(factory, new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
+			parser.parseDDL(factory, new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
 			for (Table t : factory.getSchema().getTables().values()) {
 				t.setSystem(true);
 			}

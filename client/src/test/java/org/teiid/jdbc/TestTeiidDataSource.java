@@ -30,8 +30,11 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.net.TeiidURL;
 
 @SuppressWarnings("nls")
 public class TestTeiidDataSource extends TestCase {
@@ -669,6 +672,14 @@ public class TestTeiidDataSource extends TestCase {
     	ds.setPortNumber(1);
     	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2048;ApplicationName=JDBC;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
+    
+    public void testBuildURLEncryptRequests() throws TeiidSQLException {
+    	final TeiidDataSource ds = new TeiidDataSource();
+    	ds.setServerName("hostName"); //$NON-NLS-1$
+    	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
+    	ds.setEncryptRequests(true);
+    	assertEquals("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+    }
 
     public void testInvalidDataSource() {
         final String serverName = "hostName"; //$NON-NLS-1$
@@ -709,4 +720,58 @@ public class TestTeiidDataSource extends TestCase {
             // this is expected!
         }
     }
+    
+    public void testUrlEncodedProperties() throws SQLException {
+    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
+    	TeiidDataSource tds = new TeiidDataSource(td);
+    	tds.setDatabaseName("y");
+    	tds.setUser("%25user");
+    	tds.setServerName("x");
+    	tds.getConnection();
+    	
+        ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
+    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+    	Properties p = argument.getValue();
+    	assertEquals("%25user", p.getProperty(BaseDataSource.USER_NAME));
+    }
+    
+    public void testLoginTimeout() throws SQLException {
+    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
+    	TeiidDataSource tds = new TeiidDataSource(td);
+    	tds.setDatabaseName("y");
+    	tds.setServerName("x");
+    	tds.setLoginTimeout(2);
+    	tds.getConnection();
+    	
+        ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
+    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+    	Properties p = argument.getValue();
+    	assertEquals("2", p.getProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT));
+    }
+    
+    public void testGetConnectionWithUser() throws SQLException {
+    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
+    	TeiidDataSource tds = new TeiidDataSource(td);
+    	tds.setDatabaseName("y");
+    	tds.setUser("%25user");
+    	tds.setServerName("x");
+    	tds.getConnection("user", "password");
+    	
+        ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
+    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+    	Properties p = argument.getValue();
+    	assertEquals("user", p.getProperty(BaseDataSource.USER_NAME));
+    }
+    
+    public void testKerberos() throws SQLException {
+    	TeiidDataSource tds = new TeiidDataSource();
+    	tds.setDatabaseName("y");
+    	tds.setUser("%25user");
+    	tds.setJaasName("x");
+    	tds.setKerberosServicePrincipleName("z");
+    	tds.setServerName("t");
+    	assertEquals("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
+    	
+    }
+    
 }

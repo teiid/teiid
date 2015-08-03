@@ -56,6 +56,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.util.SymbolMap;
 
 
 /**
@@ -181,8 +182,8 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 			Expression expression = (Expression) valueIter.next();
 			ElementSymbol element = varIter.next();
 			
-			if (!usingQuery) {
-				ResolverUtil.setDesiredType(expression, element.getType(), insert);
+			if (expression.getType() == null) {
+				ResolverUtil.setDesiredType(SymbolMap.getExpression(expression), element.getType(), insert);
 			}
 
             if(element.getType() != null && expression.getType() != null) {
@@ -272,14 +273,14 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 
         Iterator<ElementSymbol> defaultIter = insertElmnts.iterator();
         while(defaultIter.hasNext()) {
-        	ElementSymbol next = varIter.next();
+        	ElementSymbol next = defaultIter.next();
  			ElementSymbol varSymbol = next.clone();
             varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
             varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.FALSE));
             if (!changingOnly) {
-                Expression value = ResolverUtil.getDefault(varSymbol, metadata);
             	varSymbol = next.clone();
+            	Expression value = ResolverUtil.getDefault(varSymbol, metadata);
             	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(varSymbol, value);
             }

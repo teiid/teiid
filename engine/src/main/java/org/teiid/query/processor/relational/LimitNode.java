@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,6 +36,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.validator.ValidationVisitor;
 
 
 
@@ -82,15 +84,14 @@ public class LimitNode extends RelationalNode {
                 }
             }
             
-            List[] tuples = null;
+            List<List<?>> tuples = null;
             
             if (rowCounter > offset) {
-                List[] originalTuples = batch.getAllTuples();
+                List<List<?>> originalTuples = batch.getTuples();
                 int rowsToKeep = rowCounter - offset;
-                tuples = new List[rowsToKeep];
-                System.arraycopy(originalTuples, batch.getRowCount() - rowsToKeep, tuples, 0, tuples.length);
+                tuples = new ArrayList<List<?>>(originalTuples.subList(batch.getRowCount() - rowsToKeep, batch.getRowCount()));
             } else {
-                tuples = new List[0]; //empty batch
+                tuples = Collections.emptyList();
             }
             TupleBatch resultBatch = new TupleBatch(1, tuples);
             resultBatch.setTerminationFlag(batch.getTerminationFlag());
@@ -101,16 +102,15 @@ public class LimitNode extends RelationalNode {
             batch = getChildren()[0].nextBatch(); // Can throw BlockedException
         }
         
-        List[] tuples = null;
+        List<List<?>> tuples = null;
         
         if (limit < 0 || rowCounter + batch.getRowCount() <= limit) {
             // Passthrough
-           tuples = batch.getAllTuples();
+           tuples = batch.getTuples();
         } else {
             // Partial batch
-            List[] originalTuples = batch.getAllTuples();
-            tuples = new List[limit - rowCounter];
-            System.arraycopy(originalTuples, 0, tuples, 0, tuples.length);
+            List<List<?>> originalTuples = batch.getTuples();
+            tuples = new ArrayList<List<?>>(originalTuples.subList(0, limit - rowCounter));
         }
         
         TupleBatch resultBatch = new TupleBatch(rowCounter+1, tuples);
@@ -126,6 +126,7 @@ public class LimitNode extends RelationalNode {
     	limit = -1;
     	if (limitExpr != null) {
             Integer limitVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(limitExpr, Collections.emptyList());
+            ValidationVisitor.LIMIT_CONSTRAINT.validate(limitVal);
             limit = limitVal.intValue();
     	}
         if (limit == 0) {
@@ -133,6 +134,7 @@ public class LimitNode extends RelationalNode {
         }
         if (offsetExpr != null) {
             Integer offsetVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(offsetExpr, Collections.emptyList());
+            ValidationVisitor.LIMIT_CONSTRAINT.validate(offsetVal);
             offset = offsetVal.intValue();
         } else {
             offset = 0;
@@ -191,13 +193,13 @@ public class LimitNode extends RelationalNode {
 	}
 	
 	@Override
-	public boolean hasFinalBuffer() {
+	public boolean hasBuffer(boolean requireFinal) {
 		//TODO: support offset
-		return offsetExpr == null && this.getChildren()[0].hasFinalBuffer();
+		return offsetExpr == null && this.getChildren()[0].hasBuffer(requireFinal);
 	}
 	
 	@Override
-	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
+	public TupleBuffer getBuffer(int maxRows) throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		if (maxRows >= 0) {
 			if (limit >= 0) {
@@ -206,7 +208,7 @@ public class LimitNode extends RelationalNode {
 		} else {
 			maxRows = limit;
 		}
-		return this.getChildren()[0].getFinalBuffer(maxRows);
+		return this.getChildren()[0].getBuffer(maxRows);
 	}
 
 }

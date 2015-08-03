@@ -2,33 +2,37 @@ package org.teiid.query.xquery.saxon;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.Receiver;
-import net.sf.saxon.om.Axis;
-import net.sf.saxon.om.AxisIterator;
-import net.sf.saxon.om.AxisIteratorImpl;
+import net.sf.saxon.om.AtomicSequence;
+import net.sf.saxon.om.AxisInfo;
 import net.sf.saxon.om.DocumentInfo;
-import net.sf.saxon.om.EmptyIterator;
-import net.sf.saxon.om.FastStringBuffer;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceIterator;
-import net.sf.saxon.om.Navigator;
+import net.sf.saxon.om.NamespaceBinding;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.SiblingCountingNode;
-import net.sf.saxon.om.SingleNodeIterator;
-import net.sf.saxon.om.SingletonIterator;
 import net.sf.saxon.om.StandardNames;
-import net.sf.saxon.om.VirtualNode;
 import net.sf.saxon.pattern.AnyNodeTest;
 import net.sf.saxon.pattern.NameTest;
 import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.NamespaceNode;
+import net.sf.saxon.tree.iter.AxisIterator;
+import net.sf.saxon.tree.iter.AxisIteratorImpl;
+import net.sf.saxon.tree.iter.EmptyAxisIterator;
+import net.sf.saxon.tree.iter.SingleNodeIterator;
+import net.sf.saxon.tree.iter.SingletonIterator;
+import net.sf.saxon.tree.util.FastStringBuffer;
+import net.sf.saxon.tree.util.Navigator;
+import net.sf.saxon.tree.wrapper.SiblingCountingNode;
+import net.sf.saxon.tree.wrapper.VirtualNode;
+import net.sf.saxon.type.AnySimpleType;
+import net.sf.saxon.type.SchemaType;
 import net.sf.saxon.type.Type;
+import net.sf.saxon.type.Untyped;
 import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.UntypedAtomicValue;
-import net.sf.saxon.value.Value;
 import nu.xom.Attribute;
 import nu.xom.Comment;
 import nu.xom.DocType;
@@ -48,10 +52,12 @@ import nu.xom.Text;
  *
  * @author Michael H. Kay
  * @author Wolfgang Hoschek (ported net.sf.saxon.jdom to XOM)
- * @author Steve Hawkins (Ported to Saxon 9.1 for Teiid and fixed a bug with the buffer usage in getDeclaredNamespaces)
+ * @author Steve Hawkins (Ported to Saxon 9.5 for Teiid and fixed a bug with the buffer usage in getDeclaredNamespaces)
  */
 
 public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
+
+	private static final EmptyAxisIterator<NodeInfo> EMPTY_AXIS_ITERATOR = EmptyAxisIterator.emptyAxisIterator();
 
 	protected Node node;
 
@@ -207,8 +213,9 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 	 *         representing a sequence whose items are atomic values.
 	 * @since 8.5
 	 */
-
-	public Value atomize() {
+	
+	@Override
+	public AtomicSequence atomize() {
 		switch (getNodeKind()) {
 			case Type.COMMENT:
 			case Type.PROCESSING_INSTRUCTION:
@@ -488,7 +495,7 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 	public int getFingerprint() {
 		int nc = getNameCode();
 		if (nc == -1) return -1;
-		return nc & 0xfffff;
+		return nc & NamePool.FP_MASK;
 	}
 
 	/**
@@ -640,84 +647,84 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 		// for clarifications, see the W3C specs or:
 		// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/xmlsdk/html/xmrefaxes.asp
 		switch (axisNumber) {
-		case Axis.ANCESTOR:
+		case AxisInfo.ANCESTOR:
 			return new AncestorAxisIterator(this, false, nodeTest);
 
-		case Axis.ANCESTOR_OR_SELF:
+		case AxisInfo.ANCESTOR_OR_SELF:
 			return new AncestorAxisIterator(this, true, nodeTest);
 
-		case Axis.ATTRIBUTE:
+		case AxisInfo.ATTRIBUTE:
 			if (nodeKind != Type.ELEMENT || ((Element) node).getAttributeCount() == 0) {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			} else {
 				return new AttributeAxisIterator(this, nodeTest);
 			}
 
-		case Axis.CHILD:
+		case AxisInfo.CHILD:
 			if (hasChildNodes()) {
 				return new ChildAxisIterator(this, true, true, nodeTest);
 			} else {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			}
 
-		case Axis.DESCENDANT:
+		case AxisInfo.DESCENDANT:
 			if (hasChildNodes()) {
 				return new DescendantAxisIterator(this, false, false, nodeTest);
 			} else {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			}
 
-		case Axis.DESCENDANT_OR_SELF:
+		case AxisInfo.DESCENDANT_OR_SELF:
 			if (hasChildNodes()) {
 				return new DescendantAxisIterator(this, true, false, nodeTest);
 			} else {
 				return filteredSingleton(this, nodeTest);
 			}
 
-		case Axis.FOLLOWING:
+		case AxisInfo.FOLLOWING:
 			if (getParent() == null) {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			} else {
 				return new DescendantAxisIterator(this, false, true, nodeTest);
 			}
 
-		case Axis.FOLLOWING_SIBLING:
+		case AxisInfo.FOLLOWING_SIBLING:
 			if (nodeKind == Type.ATTRIBUTE || getParent() == null) {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			} else {
 				return new ChildAxisIterator(this, false, true, nodeTest);
 			}
 
-		case Axis.NAMESPACE:
+		case AxisInfo.NAMESPACE:
 			if (nodeKind == Type.ELEMENT) {
-				return NamespaceIterator.makeIterator(this, nodeTest);
+				return NamespaceNode.makeIterator(this, nodeTest);
 			} else {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			}
 
-		case Axis.PARENT:
+		case AxisInfo.PARENT:
 			if (getParent() == null) {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			} else {
 				return filteredSingleton(getParent(), nodeTest);
 			}
 
-		case Axis.PRECEDING:
+		case AxisInfo.PRECEDING:
 			return new PrecedingAxisIterator(this, false, nodeTest);
 //			return new Navigator.AxisFilter(
 //					new Navigator.PrecedingEnumeration(this, false), nodeTest);
 
-		case Axis.PRECEDING_SIBLING:
+		case AxisInfo.PRECEDING_SIBLING:
 			if (nodeKind == Type.ATTRIBUTE || getParent() == null) {
-				return EmptyIterator.getInstance();
+				return EMPTY_AXIS_ITERATOR;
 			} else {
 				return new ChildAxisIterator(this, false, false, nodeTest);
 			}
 
-		case Axis.SELF:
+		case AxisInfo.SELF:
 			return filteredSingleton(this, nodeTest);
 
-		case Axis.PRECEDING_OR_ANCESTOR:
+		case AxisInfo.PRECEDING_OR_ANCESTOR:
 			// This axis is used internally by saxon for the xsl:number implementation,
 			// it returns the union of the preceding axis and the ancestor axis.
 			return new PrecedingAxisIterator(this, true, nodeTest);
@@ -810,56 +817,12 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 	public long getDocumentNumber() {
 		return docWrapper.getDocumentNumber();
 	}
-
-	/**
-	 * Copy this node to a given outputter (deep copy)
-	 */
-
-	public void copy(Receiver out, int whichNamespaces,
-			boolean copyAnnotations, int locationId) throws XPathException {
-		Navigator.copy(this, out, docWrapper.getNamePool(), whichNamespaces,
-				copyAnnotations, locationId);
+	
+	@Override
+	public void copy(Receiver out, int copyOptions, int locationId) throws XPathException {
+		Navigator.copy(this, out, copyOptions, locationId);
 	}
-
-    /**
-     * Get all namespace undeclarations and undeclarations defined on this element.
-     *
-     * @param buffer If this is non-null, and the result array fits in this buffer, then the result
-     *               may overwrite the contents of this array, to avoid the cost of allocating a new array on the heap.
-     * @return An array of integers representing the namespace declarations and undeclarations present on
-     *         this element. For a node other than an element, return null. Otherwise, the returned array is a
-     *         sequence of namespace codes, whose meaning may be interpreted by reference to the name pool. The
-     *         top half word of each namespace code represents the prefix, the bottom half represents the URI.
-     *         If the bottom half is zero, then this is a namespace undeclaration rather than a declaration.
-     *         The XML namespace is never included in the list. If the supplied array is larger than required,
-     *         then the first unused entry will be set to -1.
-     *         <p/>
-     *         <p>For a node other than an element, the method returns null.</p>
-     */
-
-    public int[] getDeclaredNamespaces(int[] buffer) {
-        if (node instanceof Element) {
-            Element elem = (Element)node;
-            int size = elem.getNamespaceDeclarationCount();
-            if (size == 0) {
-                return EMPTY_NAMESPACE_LIST;
-            }
-            int[] result = (buffer != null && size <= buffer.length ? buffer : new int[size]);
-            NamePool pool = getNamePool();
-            for (int i=0; i < size; i++) {
-                String prefix = elem.getNamespacePrefix(i);
-                String uri = elem.getNamespaceURI(prefix);
-                result[i] = pool.allocateNamespaceCode(prefix, uri);
-            }
-            if (size < result.length) {
-                result[size] = -1;
-            }
-            return result;
-        } else {
-            return null;
-        }
-    }
-
+	
 	///////////////////////////////////////////////////////////////////////////////
 	// Axis enumeration classes
 	///////////////////////////////////////////////////////////////////////////////
@@ -883,8 +846,8 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			this.includeSelf = includeSelf;
 			this.position = 0;
 		}
-
-		public Item next() {
+		
+		public NodeInfo next() {
 			NodeInfo curr;
 			do { // until we find a match
 				curr = advance();
@@ -905,16 +868,8 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			return current;
 		}
 
-		public Item current() {
-			return current;
-		}
-
-		public SequenceIterator getAnother() {
+		public AncestorAxisIterator getAnother() {
 			return new AncestorAxisIterator(start, includeSelf, nodeTest);
-		}
-
-		public int getProperties() {
-			return 0;
 		}
 
 	} // end of class AncestorAxisIterator
@@ -939,7 +894,7 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			this.cursor = 0;
 		}
 
-		public Item next() {
+		public NodeInfo next() {
 			NodeInfo curr;
 			do { // until we find a match
 				curr = advance();
@@ -959,16 +914,8 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			return curr;
 		}
 
-		public Item current() {
-			return current;
-		}
-
-		public SequenceIterator getAnother() {
+		public AttributeAxisIterator getAnother() {
 			return new AttributeAxisIterator(start, nodeTest);
-		}
-
- 		public int getProperties() {
-			return 0;
 		}
 
 	} // end of class AttributeAxisIterator
@@ -1020,7 +967,7 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			if (!downwards && !forwards) ix--;
 		}
 
-		public Item next() {
+		public NodeInfo next() {
 			NodeInfo curr;
 			do { // until we find a match
 				curr = advance();
@@ -1050,17 +997,10 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			return curr;
 		}
 
-		public Item current() {
-			return current;
-		}
-
-		public SequenceIterator getAnother() {
+		public ChildAxisIterator getAnother() {
 			return new ChildAxisIterator(start, downwards, forwards, nodeTest);
 		}
 
- 		public int getProperties() {
-			return 0;
-		}
 	}
 
 	/**
@@ -1116,7 +1056,7 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			this.position = 0;
 		}
 
-		public Item next() {
+		public NodeInfo next() {
 			NodeInfo curr;
 			do { // until we find a match
 				curr = advance();
@@ -1189,17 +1129,10 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			}
 		}
 
-		public Item current() {
-			return current;
-		}
-
-		public SequenceIterator getAnother() {
+		public DescendantAxisIterator getAnother() {
 			return new DescendantAxisIterator(start, includeSelf, following, nodeTest);
 		}
 
- 		public int getProperties() {
-			return 0;
-		}
 	}
 
 	/**
@@ -1252,7 +1185,7 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			this.position = 0;
 		}
 
-		public Item next() {
+		public NodeInfo next() {
 			NodeInfo curr;
 			do { // until we find a match
 				curr = advance();
@@ -1327,17 +1260,10 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 			}
 		}
 
-		public Item current() {
-			return current;
-		}
-
-		public SequenceIterator getAnother() {
+		public PrecedingAxisIterator getAnother() {
 			return new PrecedingAxisIterator(start, includeAncestors, nodeTest);
 		}
 
- 		public int getProperties() {
-			return 0;
-		}
 	}
 
     private static AxisIterator filteredSingleton(NodeInfo node, NodeTest nodeTest) {
@@ -1345,7 +1271,7 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
         if (node != null && (nodeTest == AnyNodeTest.getInstance() || nodeTest.matches(node))) {
             return SingleNodeIterator.makeIterator(node);
         } else {
-            return EmptyIterator.getInstance();
+            return EMPTY_AXIS_ITERATOR;
         }
     }
 
@@ -1367,6 +1293,60 @@ public class NodeWrapper implements NodeInfo, VirtualNode, SiblingCountingNode {
 	@Override
 	public boolean isNilled() {
 		return false;
+	}
+
+	@Override
+	public String getAttributeValue(String uri, String localName) {
+		if (nodeKind == Type.ELEMENT) {
+			Attribute att = ((Element) node).getAttribute(localName, uri);
+			if (att != null) return att.getValue();
+		}
+		return null;
+	}
+
+	@Override
+	public NamespaceBinding[] getDeclaredNamespaces(NamespaceBinding[] buffer) {
+        if (nodeKind == Type.ELEMENT) {
+            Element elem = (Element)node;
+            int size = elem.getNamespaceDeclarationCount();
+            if (size == 0) {
+                return new NamespaceBinding[0];
+            }
+            NamespaceBinding[] result = (buffer != null && size <= buffer.length ? buffer : new NamespaceBinding[size]);
+            for (int i=0; i < size; i++) {
+                String prefix = elem.getNamespacePrefix(i);
+                String uri = elem.getNamespaceURI(prefix);
+                result[i] = new NamespaceBinding(prefix, uri);
+            }
+            if (size < result.length) {
+                result[size] = null;
+            }
+            return result;
+        }
+        return null;
+	}
+	
+	@Override
+	public SchemaType getSchemaType() {
+		if (nodeKind == Type.ATTRIBUTE) {
+			return AnySimpleType.getInstance();
+		}
+		return Untyped.getInstance();
+	}
+	
+	@Override
+	public int comparePosition(NodeInfo other) {
+		return Navigator.comparePosition(this, other);
+	}
+	
+	@Override
+	public Item head() throws XPathException {
+		return this;
+	}
+	
+	@Override
+	public SequenceIterator<? extends Item> iterate() throws XPathException {
+		return SingletonIterator.makeIterator((NodeInfo)this);
 	}
 
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<persistence version="2.0"
+   xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="
+        http://java.sun.com/xml/ns/persistence
+        http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+   <persistence-unit name="org.teiid.eclipselink.test"  transaction-type="RESOURCE_LOCAL">
+   	  
+      <class>org.teiid.eclipselink.platform.model.Marketdata</class>
+      
+      <properties>
+      <property name="javax.persistence.jdbc.driver" value="org.teiid.jdbc.TeiidDriver" />
+      <property name="javax.persistence.jdbc.url" value="jdbc:teiid:Marketdata" />
+      <property name="javax.persistence.jdbc.user" value="" />
+      <property name="javax.persistence.jdbc.password" value="" />
+
+      <!-- EclipseLink should create the database schema automatically -->
+      <property name="eclipselink.ddl-generation" value="create-tables" />
+      <property name="eclipselink.ddl-generation.output-mode" value="database" />
+      <!--  -->
+      <property name="eclipselink.target-database" value="org.teiid.eclipselink.platform.TeiidPlatform"/>
+      
+      <property name="eclipselink.logging.level.sql" value="FINE"/>
+      
+    </properties>
+      
+   </persistence-unit>
+</persistence>

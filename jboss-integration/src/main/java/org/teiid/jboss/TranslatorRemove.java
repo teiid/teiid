@@ -21,33 +21,18 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
-
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 
-class TranslatorRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
-
-	@Override
-	public ModelNode getModelDescription(Locale locale) {
-        final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-        final ModelNode operation = new ModelNode();
-        operation.get(OPERATION_NAME).set(REMOVE);
-        operation.get(DESCRIPTION).set(bundle.getString("translator.remove")); //$NON-NLS-1$  
-        return operation;
-	}
+class TranslatorRemove extends AbstractRemoveStepHandler {
+	public static TranslatorRemove INSTANCE = new TranslatorRemove();
 	
 	@Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {

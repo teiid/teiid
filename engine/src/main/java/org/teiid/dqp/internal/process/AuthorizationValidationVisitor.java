@@ -38,8 +38,10 @@ import org.teiid.logging.AuditMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
@@ -67,7 +69,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(Create obj) {
-    	validateTemp(PermissionType.CREATE, obj.getTable(), Context.CREATE);
+    	validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.CREATE);
     }
     
     @Override
@@ -96,18 +98,17 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	validateEntitlements(PermissionType.LANGUAGE, Context.QUERY, map);
     }
 
-	private void validateTemp(DataPolicy.PermissionType action, GroupSymbol symbol, Context context) {
-		String resource = symbol.getNonCorrelationName();
+	private void validateTemp(DataPolicy.PermissionType action, String resource, boolean schema, LanguageObject object, Context context) {
 		Set<String> resources = Collections.singleton(resource);
 		logRequest(resources, context);
         
-    	boolean allowed = decider.isTempAccessable(action, resource, context, commandContext);
+    	boolean allowed = decider.isTempAccessable(action, schema?resource:null, context, commandContext);
     	
     	logResult(resources, context, allowed);
     	if (!allowed) {
 		    handleValidationError(
 			        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
-			        Arrays.asList(symbol));
+			        Arrays.asList(object));
     	}
 	}
 
@@ -121,7 +122,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(Drop obj) {
-    	validateTemp(PermissionType.DROP, obj.getTable(), Context.DROP);
+    	validateTemp(PermissionType.DROP, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.DROP);
     }
     
     public void visit(Delete obj) {
@@ -171,7 +172,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     // ######################### Validation methods #########################
 
     /**
-     * Validate insert entitlements
+     * Validate insert/merge entitlements
      */
     protected void validateEntitlements(Insert obj) {
     	List<LanguageObject> insert = new LinkedList<LanguageObject>();
@@ -181,6 +182,12 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         		insert,
             DataPolicy.PermissionType.CREATE,
             Context.INSERT);
+        if (obj.isMerge()) {
+        	validateEntitlements(
+            		insert,
+                DataPolicy.PermissionType.UPDATE,
+                Context.MERGE);
+        }
     }
 
     /**
@@ -287,15 +294,15 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     if (metadataID instanceof TempMetadataID) {
                     	if (group.isProcedure()) {
                     		Map<String, LanguageObject> procMap = new LinkedHashMap<String, LanguageObject>();
-                    		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap);
+                    		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap, getMetadata());
                     		validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
                     	} else if (group.isTempTable() && group.isImplicitTempGroupSymbol()) {
-                    		validateTemp(actionCode, group, auditContext);
+                    		validateTemp(actionCode, group.getNonCorrelationName(), false, group, auditContext);
                     	}
                         continue;
                     }
                 }
-                addToNameMap(metadataID, symbol, nameToSymbolMap);
+                addToNameMap(metadataID, symbol, nameToSymbolMap, getMetadata());
             } catch(QueryMetadataException e) {
                 handleException(e);
             } catch(TeiidComponentException e) {
@@ -306,16 +313,28 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         validateEntitlements(actionCode, auditContext, nameToSymbolMap);
 	}
     
-    private void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap) throws QueryMetadataException, TeiidComponentException {
-    	String fullName = getMetadata().getFullName(metadataID);
-        Object modelId = getMetadata().getModelID(metadataID);
-        String modelName = getMetadata().getFullName(modelId);
+    static void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    	String fullName = metadata.getFullName(metadataID);
+        Object modelId = metadata.getModelID(metadataID);
+        String modelName = metadata.getFullName(modelId);
         if (!isSystemSchema(modelName)) {
+        	//foreign temp table full names are not schema qualified by default
+        	if (!metadata.isVirtualModel(modelId)) {
+        		GroupSymbol group = null;
+        		if (symbol instanceof ElementSymbol) {
+        			group = ((ElementSymbol)symbol).getGroupSymbol();
+        		} else if (symbol instanceof GroupSymbol) {
+        			group = (GroupSymbol)symbol; 
+        		}
+        		if (group != null && group.isTempGroupSymbol() && !group.isGlobalTable()) {
+            		fullName = modelName + AbstractMetadataRecord.NAME_DELIM_CHAR + modelId;
+        		}
+        	}
         	nameToSymbolMap.put(fullName, symbol);
         }
     }
 
-	private boolean isSystemSchema(String modelName) {
+	static private boolean isSystemSchema(String modelName) {
 		return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);
 	}
 

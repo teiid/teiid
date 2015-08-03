@@ -173,7 +173,7 @@ public class TestQueryRewriter {
     }
     
     public static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata) throws TeiidException { 
-        return helpTestRewriteCommand(original, expected, metadata, null);
+        return helpTestRewriteCommand(original, expected, metadata, new CommandContext());
     }
     
     public static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata, CommandContext cc) throws TeiidException {
@@ -239,13 +239,17 @@ public class TestQueryRewriter {
     @Test public void testRewriteInCriteriaWithNoValues() throws Exception {
     	ElementSymbol e1 = new ElementSymbol("e1");
     	e1.setGroupSymbol(new GroupSymbol("g1"));
-        Criteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
+    	SetCriteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
         
         Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null);
         
-        IsNullCriteria inc = new IsNullCriteria(e1);
-        inc.setNegated(true);
-        assertEquals(inc, actual);
+        assertEquals(QueryRewriter.FALSE_CRITERIA, actual);
+        
+        crit.setNegated(true);
+        
+        actual = QueryRewriter.rewriteCriteria(crit, null, null);
+        
+        assertEquals(QueryRewriter.TRUE_CRITERIA, actual);
     }
         
     @Test public void testRewriteBetweenCriteria1() {
@@ -817,7 +821,7 @@ public class TestQueryRewriter {
     
     @Test public void testCompareSubqueryUnknown() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE null = SOME (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
-                                "SELECT e1 FROM pm1.g1 WHERE 1 = 0"); //$NON-NLS-1$
+                                "SELECT e1 FROM pm1.g1 WHERE null IN (SELECT e1 FROM pm1.g2 LIMIT 1)"); //$NON-NLS-1$
     }
 
     @Test public void testINClauseSubquery() {
@@ -972,6 +976,10 @@ public class TestQueryRewriter {
     // First WHEN always true, so rewrite as THEN expression
     @Test public void testRewriteCaseExpr1() {
         helpTestRewriteCriteria("case when 0=0 then 1 else 2 end = 1", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteCaseExpr1a() {
+        helpTestRewriteCriteria("case when pm1.g1.e1 = 'a' then 3 when 0=0 then 1 when 1=1 then 4 else 2 end = 1", "CASE WHEN pm1.g1.e1 = 'a' THEN 3 WHEN 1 = 1 THEN 1 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // First WHEN always false, so rewrite as ELSE expression
@@ -1160,7 +1168,7 @@ public class TestQueryRewriter {
         procedure1 += "select e1 from pm1.g1;\n"; //$NON-NLS-1$
         procedure1 += "END"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nSELECT e1 FROM pm1.g1;\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nSELECT e1 FROM pm1.g1;\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1172,7 +1180,7 @@ public class TestQueryRewriter {
         procedure1 += "select e1 from pm1.g1;\n"; //$NON-NLS-1$
         procedure1 += "end\n"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nBEGIN ATOMIC\nSELECT e1 FROM pm1.g1;\nEND\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nBEGIN ATOMIC\nSELECT e1 FROM pm1.g1;\nEND\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1183,7 +1191,7 @@ public class TestQueryRewriter {
         procedure1 += "exception e\n"; //$NON-NLS-1$
         procedure1 += "end\n"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nRAISE 'org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /';\nEXCEPTION e\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nRAISE 'org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /';\nEXCEPTION e\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1194,7 +1202,7 @@ public class TestQueryRewriter {
         procedure1 += "declare integer x = 1 + 1;\n"; //$NON-NLS-1$
         procedure1 += "END"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nDECLARE integer x = 2;\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nDECLARE integer x = 2;\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1233,7 +1241,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteSelectInto() {
         String sql = "select distinct pm1.g1.e1 into #temp from pm1.g1"; //$NON-NLS-1$
-        String expected = "INSERT INTO #temp (#temp.e1) SELECT DISTINCT pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
+        String expected = "INSERT INTO #temp (e1) SELECT DISTINCT pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -1243,7 +1251,7 @@ public class TestQueryRewriter {
      */
     @Test public void testRewriteSelectInto1() {
         String sql = "select distinct e2, e2, e3, e4 into pm1.g1 from pm1.g2"; //$NON-NLS-1$
-        String expected = "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4) SELECT convert(X.e2, string) AS e1, X.e2_0 AS e2, X.e3, X.e4 FROM (SELECT DISTINCT e2, e2 AS e2_0, e3, e4 FROM pm1.g2) AS X"; //$NON-NLS-1$
+        String expected = "INSERT INTO pm1.g1 (e1, e2, e3, e4) SELECT convert(X.e2, string) AS e1, X.e2_0 AS e2, X.e3, X.e4 FROM (SELECT DISTINCT e2, e2 AS e2_0, e3, e4 FROM pm1.g2) AS X"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -1300,7 +1308,7 @@ public class TestQueryRewriter {
         procedure += "Select x from temp;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
-        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (temp.x, temp.y, temp.z) SELECT convert(X.e2, string) AS x, X.x AS y, X.x_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS x_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
+        helpTestRewriteCommand(procedure, "BEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (x, y, z) SELECT convert(X.e2, string) AS x, X.x AS y, X.x_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS x_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
     }
     
     @Test public void testRewriteNot() {
@@ -1317,16 +1325,16 @@ public class TestQueryRewriter {
      * Case 4814
      */
     @Test public void testVirtualRightOuterJoinSwap() throws Exception {
-        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (select * from BQT1.smalla) sa RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
-        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN (SELECT * FROM BQT1.smalla) AS sa ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (select intkey from BQT1.smalla) sa RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN (SELECT intkey FROM BQT1.smalla) AS sa ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
     
     /**
      * Case 4814
      */
     @Test public void testVirtualRightOuterJoinSwap1() throws Exception {
-        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM ((select * from BQT1.smalla) sa inner join BQT1.smallb on sa.intkey = smallb.intkey) RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
-        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN ((SELECT * FROM BQT1.smalla) AS sa INNER JOIN BQT1.smallb ON sa.intkey = smallb.intkey) ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM ((select intkey from BQT1.smalla) sa inner join BQT1.smallb on sa.intkey = smallb.intkey) RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN ((SELECT intkey FROM BQT1.smalla) AS sa INNER JOIN BQT1.smallb ON sa.intkey = smallb.intkey) ON sa.IntKey = mb.IntKey", RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
     
     @Test public void testRewriteConcat2() {
@@ -1377,8 +1385,8 @@ public class TestQueryRewriter {
     }
     
     @Test public void testBetweenInCase() {
-    	String sqlBefore = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
-    	String sqlAfter = "SELECT * FROM pm1.g1 WHERE convert(e3, integer) = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	String sqlBefore = "SELECT e1 FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	String sqlAfter = "SELECT e1 FROM pm1.g1 WHERE convert(e3, integer) = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
     	
     	helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
@@ -1532,7 +1540,7 @@ public class TestQueryRewriter {
     @Test public void testRewriteXmlTable() throws Exception {
     	String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
     	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteCommand(original, "SELECT * FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT convert(curdate(), string)) AS x", metadata);
+    	helpTestRewriteCommand(original, "SELECT x.x FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT convert(curdate(), string)) AS x", metadata);
     }
     
     @Test public void testRewriteQueryString() throws Exception {
@@ -1586,6 +1594,18 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
     }
     
+    @Test public void testRewritePredicateOptimization8() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 = 2 and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+    }
+    
+    @Test public void testRewritePredicateOptimization8a() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (0, 2) and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+    }
+    
+    @Test public void testRewritePredicateOptimization9() throws Exception {
+    	helpTestRewriteCriteria("not(pm1.g1.e2 = 2 and pm1.g1.e2 = 3)", "(pm1.g1.e2 <> 2) OR (pm1.g1.e2 <> 3)");
+    }
+    
     @Test public void testRewritePredicateOptimizationOr() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
     }
@@ -1599,11 +1619,15 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteCritSubqueryFalse1() {
-        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g1 where 1=0))", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g1 where 1=0))", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCritSubqueryFalse2() {
-        helpTestRewriteCriteria("pm1.g1.e1 < ALL (select 'a' from pm1.g1 where 1=0)", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 < ALL (select 'a' from pm1.g1 where 1=0)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteCritSubqueryFalse3() {
+        helpTestRewriteCriteria("pm1.g1.e1 not in (select 'a' from pm1.g1 where 1=0)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 	@Test public void testUDFParse() throws Exception {     
@@ -1638,6 +1662,20 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteXmlSerialize1() throws Exception {
     	helpTestRewriteExpression("xmlserialize(DOCUMENT cast (pm1.g1.e1 as xml) as clob version '2.0')", "XMLSERIALIZE(DOCUMENT convert(pm1.g1.e1, xml) AS clob VERSION '2.0' INCLUDING XMLDECLARATION)", RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testRewriteMerge() throws Exception {
+		String ddl = "CREATE foreign table x (y string primary key)";
+
+		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+		
+    	helpTestRewriteCommand("merge into x (y) values (1)", "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X) AS X1\nBEGIN\nIF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\nBEGIN\nEND\nELSE\nBEGIN\nINSERT INTO x (y) VALUES (X1.y);\nEND\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND", metadata);
+    }
+    
+	@Test public void testUnknownRewrite() throws Exception {
+		String sql = "SELECT 1 = null"; //$NON-NLS-1$
+        
+		helpTestRewriteCommand(sql, "SELECT UNKNOWN");
     }
 
 }

@@ -1,0 +1,20 @@
+<module xmlns="urn:jboss:module:1.1" name="org.springframework.spring">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+  <resources>
+    <resource-root path="spring-beans-${version.org.springframework}.jar"/>
+    <resource-root path="spring-context-${version.org.springframework}.jar"/>    
+    <resource-root path="spring-core-${version.org.springframework}.jar"/>
+    <!-- 
+    <resource-root path="spring-asm.jar"/>
+    <resource-root path="spring-aop.jar"/>    
+    <resource-root path="spring-expression.jar"/>
+    <resource-root path="spring-tx.jar"/>
+     -->    
+  </resources>
+  <dependencies>
+    <module name="javax.api"/>
+  </dependencies>
+</module>

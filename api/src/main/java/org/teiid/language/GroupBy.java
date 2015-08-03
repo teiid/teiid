@@ -32,6 +32,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 public class GroupBy extends BaseLanguageObject {
 
     private List<Expression> elements;
+    private boolean rollup;
     
     public GroupBy(List<Expression> elements) {
         this.elements = elements;
@@ -52,5 +53,13 @@ public class GroupBy extends BaseLanguageObject {
     public void setElements(List<Expression> elements) {
         this.elements = elements;
     }
+    
+    public boolean isRollup() {
+		return rollup;
+	}
+    
+    public void setRollup(boolean rollup) {
+		this.rollup = rollup;
+	}
 
 }

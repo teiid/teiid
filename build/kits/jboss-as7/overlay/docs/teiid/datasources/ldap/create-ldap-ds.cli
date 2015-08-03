@@ -1,0 +1,7 @@
+/subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
+/subsystem=resource-adapters/resource-adapter=ldap/connection-definitions=ldapDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=ldap/connection-definitions=ldapDS/config-properties=LdapUrl:add(value="${ldap.url}")
+/subsystem=resource-adapters/resource-adapter=ldap/connection-definitions=ldapDS/config-properties=LdapAdminUserDN:add(value="${dn}")
+/subsystem=resource-adapters/resource-adapter=ldap/connection-definitions=ldapDS/config-properties=LdapAdminUserPassword:add(value="${user.password}")
+/subsystem=resource-adapters/resource-adapter=ldap/connection-definitions=ldapDS/config-properties=LdapTxnTimeoutInMillis:add(value="${timeout}")
+/subsystem=resource-adapters/resource-adapter=ldap:activate

@@ -131,7 +131,7 @@ public class LanguageFactory {
         return new SortSpecification(direction, element);
     }
 
-    public Argument createArgument(Argument.Direction direction, Literal value, Class<?> type, ProcedureParameter metadataReference) {
+    public Argument createArgument(Argument.Direction direction, Expression value, Class<?> type, ProcedureParameter metadataReference) {
         return new Argument(direction, value, type, metadataReference);
     }
 

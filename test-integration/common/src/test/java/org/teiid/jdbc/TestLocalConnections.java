@@ -35,32 +35,49 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
+
+import org.apache.cxf.common.security.SimplePrincipal;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Base64;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.language.Command;
+import org.teiid.logging.LogConstants;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
+import org.teiid.security.SecurityHelper;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.transport.LogonImpl;
 
 @SuppressWarnings("nls")
 public class TestLocalConnections {
@@ -127,7 +144,7 @@ public class TestLocalConnections {
 										lock.lock();
 										try {
 											sourceCounter.release();
-											if (!wait.await(2, TimeUnit.SECONDS)) {
+											if (!wait.await(5, TimeUnit.SECONDS)) {
 												throw new RuntimeException();
 											}
 										} catch (InterruptedException e) {
@@ -182,7 +199,8 @@ public class TestLocalConnections {
     	
     	Thread t = new Thread() {
     		
-    		public void run() {
+    		@Override
+			public void run() {
     			try {
 	    	    	Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
 	    	    	
@@ -238,7 +256,8 @@ public class TestLocalConnections {
     	assertFalse(server.getDqp().getRequests().isEmpty());
 
     	Thread t = new Thread() {
-    		public void run() {
+    		@Override
+			public void run() {
     			try {
 					s.close();
 				} catch (SQLException e) {
@@ -267,6 +286,7 @@ public class TestLocalConnections {
 		final Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
 		Thread t = new Thread() {
+			@Override
 			public void run() {
 		    	Statement s;
 				try {
@@ -304,6 +324,7 @@ public class TestLocalConnections {
 		final Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
 		Thread t = new Thread() {
+			@Override
 			public void run() {
 		    	Statement s;
 				try {
@@ -354,6 +375,7 @@ public class TestLocalConnections {
 		final ResultsFuture<Void> future = new ResultsFuture<Void>();
 		
 		Thread t = new Thread() {
+			@Override
 			public void run() {
 				try {
 					server.createConnection("jdbc:teiid:not_there.1");
@@ -379,5 +401,158 @@ public class TestLocalConnections {
 			
 		}
 	}
+
+	static int calls;
+	static Subject currentContext = new Subject();
 	
+	@Test public void testPassThroughDifferentUsers() throws Throwable {
+		SecurityHelper securityHelper = new SecurityHelper() {
+			
+			@Override
+			public Subject getSubjectInContext(String securityDomain) {
+				return currentContext;
+			}
+						
+			@Override
+			public Object getSecurityContext() {
+				calls++;
+				return currentContext;
+			}
+			
+			@Override
+			public void clearSecurityContext() {
+			}
+			
+			@Override
+			public Object associateSecurityContext(Object context) {
+				Object result = currentContext;
+				currentContext = (Subject)context;
+				return result;
+			}
+			
+			@Override
+			public Object authenticate(String securityDomain, String baseUserName,
+					Credentials credentials, String applicationName) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
+		};
+		SecurityHelper current = server.getSessionService().getSecurityHelper();
+		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
+		server.getSessionService().setSecurityHelper(securityHelper);
+		try {
+		
+			final Connection c = server.createConnection("jdbc:teiid:PartsSupplier;PassthroughAuthentication=true");
+			
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery("select session_id()");
+			Subject o = currentContext;
+			currentContext = null;
+			s.cancel();
+			currentContext = o;
+			rs.next();
+			String id = rs.getString(1);
+			rs.close();
+			assertEquals(4, calls);
+			server.getSessionService().pingServer(id);
+			currentContext = new Subject();
+			currentContext.getPrincipals().add(new SimplePrincipal("x"));
+			rs = s.executeQuery("select session_id()");
+			rs.next();
+			String id1 = rs.getString(1);
+			rs.close();
+			assertFalse(id.equals(id1));
+			try {
+				server.getSessionService().pingServer(id);
+				//should have logged off
+				fail();
+			} catch (InvalidSessionException e) {
+				
+			}
+		
+		} finally {
+			server.getClientServiceRegistry().setSecurityHelper(current);
+			server.getSessionService().setSecurityHelper(current);
+		}
+	}
+	
+	
+	@Test public void testSimulateGSSWithODBC() throws Throwable {
+		SecurityHelper securityHelper = new SecurityHelper() {
+			
+			@Override
+			public Subject getSubjectInContext(String securityDomain) {
+				return new Subject();
+			}
+						
+			@Override
+			public Object getSecurityContext() {
+				return currentContext;
+			}
+			
+			@Override
+			public void clearSecurityContext() {
+			}
+			
+			@Override
+			public Object associateSecurityContext(Object context) {
+				Object result = currentContext;
+				currentContext = (Subject)context;
+				return result;
+			}
+			
+			@Override
+			public Object authenticate(String securityDomain, String baseUserName,
+					Credentials credentials, String applicationName) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
+		};
+		SecurityHelper current = server.getSessionService().getSecurityHelper();
+		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
+		server.getSessionService().setSecurityHelper(securityHelper);
+		server.getSessionService().setAuthenticationType(AuthenticationType.GSS);
+		final byte[] token = "This is test of Partial GSS API".getBytes();
+		final AtomicBoolean set = new AtomicBoolean(true);
+		LogonImpl login = new LogonImpl(server.getSessionService(), null) {
+			@Override
+			public LogonResult logon(Properties connProps) throws LogonException {
+				if (set.get()) {
+					this.gssServiceTickets.put(Base64.encodeBytes(MD5(token)), currentContext);
+					set.set(false);
+				}
+				return super.logon(connProps);
+			}			
+		};
+		server.getClientServiceRegistry().registerClientService(ILogon.class, login, LogConstants.CTX_SECURITY);
+
+		try {
+		
+			Properties prop = new Properties();
+			prop.put(ILogon.KRB5TOKEN, token);
+			final Connection c = server.createConnection("jdbc:teiid:PartsSupplier;user=GSS", prop);
+			
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery("select session_id()");
+			Subject o = currentContext;
+			currentContext = null;
+			s.cancel();
+			currentContext = o;
+			rs.next();
+			String id = rs.getString(1);
+			rs.close();
+		} finally {
+			server.getSessionService().setAuthenticationType(AuthenticationType.USERPASSWORD);
+			server.getClientServiceRegistry().setSecurityHelper(current);
+			server.getSessionService().setSecurityHelper(current);
+		}
+	}	
 }

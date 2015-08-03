@@ -79,4 +79,17 @@ public class ProcedureParameter extends BaseColumn {
     public String toString() { 
         return getName()+(isVarArg?"... ":" ")+" "+getType(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }	
+    
+    @Override
+    public String getNativeType() {
+    	String nativeType = super.getNativeType();
+    	if (nativeType != null) {
+    		return nativeType;
+    	}
+    	nativeType = getProperty(AbstractMetadataRecord.RELATIONAL_URI + "native_type" , false); //$NON-NLS-1$
+    	if (nativeType != null) {
+    		this.setNativeType(nativeType);
+    	}
+    	return nativeType;
+    }
 }

@@ -24,6 +24,7 @@
  */
 package org.teiid.translator.jdbc.access;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,12 +32,14 @@ import org.teiid.language.AggregateFunction;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.sybase.BaseSybaseExecutionFactory;
 
 @Translator(name="access", description="A translator for Microsoft Access Database")
@@ -44,7 +47,6 @@ public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	public AccessExecutionFactory() {
 		setSupportsOrderBy(false);
-		setDatabaseVersion("2003"); //$NON-NLS-1$
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(10); //sql length length is 64k
 	}
@@ -131,4 +133,13 @@ public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+    	JDBCMetdataProcessor processor = new JDBCMetdataProcessor();
+    	processor.setExcludeTables(".*[.]MSys.*"); //$NON-NLS-1$
+    	processor.setImportKeys(false);
+    	return processor;
+    }
+    
 }

@@ -1986,7 +1986,7 @@ public class TestXMLProcessor {
      
     public static FakeDataManager exampleDataManager(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
-    
+        dataMgr.setBlockOnce();
         try { 
             dataMgr.registerTuples(
                 metadata,
@@ -2083,7 +2083,7 @@ public class TestXMLProcessor {
     
     public static FakeDataManager exampleDataManagerNested(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
-    
+        dataMgr.setBlockOnce();
         try { 
             dataMgr.registerTuples(
                 metadata,
@@ -5381,7 +5381,7 @@ public class TestXMLProcessor {
             "            </Item>\r\n" +  //$NON-NLS-1$
             "        </Items>\r\n" +  //$NON-NLS-1$
             "    </Catalog>\r\n" +  //$NON-NLS-1$
-            "    <duh:Fake xmlns:duh=\"http://www.duh.org/duh\" xmlns:duh2=\"http://www.duh2.org/duh2\"\n" + //$NON-NLS-1$
+            "    <duh:Fake xmlns:duh=\"http://www.duh.org/duh\" \nxmlns:duh2=\"http://www.duh2.org/duh2\"\n" + //$NON-NLS-1$
             "              xmlns=\"http://www.default.org/default\">fixed constant value<duh:FakeChild2>\r\n" +  //$NON-NLS-1$
             "            <FakeChild2a>another fixed constant value</FakeChild2a>\r\n" +  //$NON-NLS-1$
             "        </duh:FakeChild2>\r\n" +  //$NON-NLS-1$
@@ -7388,7 +7388,7 @@ public class TestXMLProcessor {
        
         helpTestProcess("SELECT * " + //$NON-NLS-1$
             " FROM xmltest.doc9c " + //$NON-NLS-1$
-            " WHERE SupplierID > '54' AND context(SupplierID, SupplierID)>'54' ", //$NON-NLS-1$
+            " WHERE SupplierID > '54' AND context(SupplierID, SupplierID)>'54' order by itemid", //$NON-NLS-1$
             expectedDoc, metadata, dataMgr);        
     }  
 
@@ -7647,7 +7647,7 @@ public class TestXMLProcessor {
         
         helpTestProcess("SELECT Catalogs.Catalog.Items.Item.ItemID, OrderID " + //$NON-NLS-1$
             " FROM xmltest.doc9c " + //$NON-NLS-1$
-            " WHERE SupplierID > '54' ", //$NON-NLS-1$
+            " WHERE SupplierID > '54' order by itemid", //$NON-NLS-1$
             expectedDoc, metadata, dataMgr);        
     }
                      
@@ -8451,7 +8451,7 @@ public class TestXMLProcessor {
         FakeDataManager dataMgr = exampleDataManager(metadata);
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
-            "<Root><!--Comment1--><Something><!--Comment2--></Something>\r\n" + //$NON-NLS-1$
+            "<Root><!--Comment1-->\n<Something><!--Comment2--></Something>\r\n" + //$NON-NLS-1$
             "</Root>\r\n\r\n"; //$NON-NLS-1$
         
         helpTestProcess("SELECT * FROM xmltest.doc17", //$NON-NLS-1$
@@ -8661,17 +8661,17 @@ public class TestXMLProcessor {
             "<mm:Catalogs xmlns:mm=\"http://www.duh.org/duh\">\r\n" + //$NON-NLS-1$
             "    <Catalog>\r\n" +  //$NON-NLS-1$
             "        <Items>\r\n" +  //$NON-NLS-1$
-            "            <mm:Item xmlns:mm2=\"http://www.duh3.org/duh3\" xmlns:mm=\"http://www.duh2.org/duh2\"\r\n" + //$NON-NLS-1$
+            "            <mm:Item xmlns:mm2=\"http://www.duh3.org/duh3\" \nxmlns:mm=\"http://www.duh2.org/duh2\"\r\n" + //$NON-NLS-1$
             "                     ItemID=\"001\">\r\n" +  //$NON-NLS-1$
             "                <Name>Lamp</Name>\r\n" +  //$NON-NLS-1$
             "                <Quantity>5</Quantity>\r\n" +           //$NON-NLS-1$
             "            </mm:Item>\r\n" +  //$NON-NLS-1$
-            "            <mm:Item xmlns:mm2=\"http://www.duh3.org/duh3\" xmlns:mm=\"http://www.duh2.org/duh2\"\r\n" + //$NON-NLS-1$
+            "            <mm:Item xmlns:mm2=\"http://www.duh3.org/duh3\" \nxmlns:mm=\"http://www.duh2.org/duh2\"\r\n" + //$NON-NLS-1$
             "                     ItemID=\"002\">\r\n" +  //$NON-NLS-1$
             "                <Name>Screwdriver</Name>\r\n" +  //$NON-NLS-1$
             "                <Quantity>100</Quantity>\r\n" +             //$NON-NLS-1$
             "            </mm:Item>\r\n" +  //$NON-NLS-1$
-            "            <mm:Item xmlns:mm2=\"http://www.duh3.org/duh3\" xmlns:mm=\"http://www.duh2.org/duh2\"\r\n" + //$NON-NLS-1$
+            "            <mm:Item xmlns:mm2=\"http://www.duh3.org/duh3\" \nxmlns:mm=\"http://www.duh2.org/duh2\"\r\n" + //$NON-NLS-1$
             "                     ItemID=\"003\">\r\n" +  //$NON-NLS-1$
             "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
             "                <Quantity>4</Quantity>\r\n" +           //$NON-NLS-1$
@@ -8919,7 +8919,7 @@ public class TestXMLProcessor {
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE SupplierID > ANY (SELECT supplierNum FROM stock.suppliers WHERE supplierNum IN ('53','54') )", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE SupplierID > ANY (SELECT supplierNum FROM stock.suppliers WHERE supplierNum IN ('53','54') ) order by itemid", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     } 
 
     @Test public void testSubqueryInXMLQueryCriteriaNestedMappingClass3() throws Exception {
@@ -11081,6 +11081,14 @@ public class TestXMLProcessor {
         helpTestProcess("select * from xmltest.playersDoc where context(manager, owner.@ownerid) = '1009'", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
         
     }    
+    
+    @Test public void testWithXml() throws Exception {
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
+        FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
+        
+        helpTestProcess("with a as (select * from xmltest.playersDoc where context(manager, owner.@ownerid) = '1009') select * from a", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
+    }  
     
     @Test public void testBaseballPlayersPseudoGroup() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();

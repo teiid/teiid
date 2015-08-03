@@ -33,6 +33,8 @@ import org.teiid.core.util.Assertion;
  * This is purely for type purposes.
  */
 public class NullToAnyTransform extends Transform {
+	
+	public static final NullToAnyTransform INSTANCE = new NullToAnyTransform(Object.class);
 
 	private Class<?> targetType;
 	

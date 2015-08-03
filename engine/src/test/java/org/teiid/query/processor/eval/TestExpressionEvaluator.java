@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +48,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.resolver.TestFunctionResolving;
+import static org.teiid.query.resolver.TestFunctionResolving.assertEval;
 import org.teiid.query.sql.lang.CollectionValueIterator;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
@@ -323,7 +325,7 @@ public class TestExpressionEvaluator {
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(null, "user", payload, "vdb", 1, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 
@@ -484,4 +486,32 @@ public class TestExpressionEvaluator {
     	assertNull(new Evaluator(null, null, null).evaluateTVL(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(null)))), null));
     }
     
+    @Test public void testToCharsBytesWellformed() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("to_chars(to_bytes('abc', 'utf-8', false), 'utf-8', true)");
+    	assertEquals("abc", ((Clob)Evaluator.evaluate(ex)).getSubString(1, 3));
+    	
+    	try {
+    		ex = TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
+    		Evaluator.evaluate(ex);
+    		fail("expected exception");
+    	} catch (ExpressionEvaluationException e) {
+    		
+    	}
+    	
+    	TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
+    }
+
+    @Test public void testRegexpReplaceOkay() throws Exception {
+        // Test replace-first vs replace-all.
+        assertEval("regexp_replace('foobarbaz', 'b..', 'X')", "fooXbaz");
+        assertEval("regexp_replace('foobarbaz', 'b..', 'X', 'g')", "fooXX");
+        // Test replace-all with capture group.
+        assertEval("regexp_replace('foobarbaz', 'b(..)', 'X$1Y', 'g')", "fooXarYXazY");
+        // Test case-insensitive matching.
+        assertEval("regexp_replace('fooBARbaz', 'a', 'X', 'g')", "fooBARbXz");
+        assertEval("regexp_replace('fooBARbaz', 'a', 'X', 'gi')", "fooBXRbXz");
+        // Test multiline.
+        assertEval("regexp_replace('foo\nbar\nbaz', '(b[\\d\\w\\s]+?)$', 'X', 'g')", "foo\nX");
+        assertEval("regexp_replace('foo\nbar\nbaz', '(b[\\d\\w\\s]+?)$', 'X', 'gm')", "foo\nX\nX");
+    }
 }

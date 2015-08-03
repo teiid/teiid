@@ -3,6 +3,7 @@
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:infinispan:config:5.1 http://www.infinispan.org/schemas/infinispan-config-5.1.xsd" xmlns="urn:infinispan:config:5.1">
 
     <global>
+        <globalJmxStatistics cacheManagerName="second" enabled="false"/>
         <transport clusterName="teiid-cluster" machineId="m1" rackId="r1" nodeName="Node-A">
          <properties>
             <property name="configurationFile" value="tcp-shared-1.xml"/>

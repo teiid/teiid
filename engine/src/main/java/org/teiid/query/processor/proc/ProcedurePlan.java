@@ -33,7 +33,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.TreeMap;
+
+import javax.transaction.SystemException;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -42,21 +43,20 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
-import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DataTierTupleSource;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
@@ -86,16 +86,18 @@ import org.teiid.query.util.CommandContext;
 
 /**
  */
-public class ProcedurePlan extends ProcessorPlan {
+public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager {
 
 	private static class CursorState {
 		QueryProcessor processor;
 		IndexedTupleSource ts;
 		List<?> currentRow;
 		TupleBuffer resultsBuffer;
+		public boolean returning;
+		public boolean usesLocalTemp;
 	}
 	
-	static ElementSymbol ROWCOUNT =
+	static final ElementSymbol ROWCOUNT =
 		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
 	
 	static {
@@ -105,7 +107,6 @@ public class ProcedurePlan extends ProcessorPlan {
     private Program originalProgram;
 
 	// State initialized by processor
-	private ProcessorDataManager dataMgr;
 	private ProcessorDataManager parentDataMrg;
     private BufferManager bufferMgr;
     private int batchSize;
@@ -116,18 +117,17 @@ public class ProcedurePlan extends ProcessorPlan {
     // Temp state for final results
     private TupleSource finalTupleSource;
     private int beginBatch = 1;
-    private List<Object> batchRows;
+    private List<List<?>> batchRows;
     private boolean lastBatch = false;
     private LinkedHashMap<ElementSymbol, Expression> params;
+    private boolean runInContext = true;
     private List<ElementSymbol> outParams;
     private QueryMetadataInterface metadata;
 
-    private Map<String, CursorState> cursorStates = new TreeMap<String, CursorState>(StringUtil.NULL_SAFE_CASE_INSENSITIVE_ORDER);
-
+    private VariableContext cursorStates;
 	private VariableContext currentVarContext;
+	private VariableContext parentContext;
 
-    private CursorState last;
-    
     private List outputElements;
     
 	private SubqueryAwareEvaluator evaluator;
@@ -163,33 +163,8 @@ public class ProcedurePlan extends ProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {       
         this.bufferMgr = bufferMgr;
         this.batchSize = bufferMgr.getProcessorBatchSize(getOutputElements());
+        this.parentContext = context.getVariableContext();
         setContext(context.clone());
-        this.dataMgr = new ProcessorDataManager() {
-			
-			@Override
-			public TupleSource registerRequest(CommandContext context, Command command,
-					String modelName, RegisterRequestParameter parameterObject)
-					throws TeiidComponentException, TeiidProcessingException {
-				TupleSource ts = parentDataMrg.registerRequest(context, command, modelName, parameterObject);
-				if (blockContext != null && ts instanceof DataTierTupleSource) {
-					txnTupleSources.add(new WeakReference<DataTierTupleSource>((DataTierTupleSource)ts));
-				}
-				return ts;
-			}
-			
-			@Override
-			public Object lookupCodeValue(CommandContext context, String codeTableName,
-					String returnElementName, String keyElementName, Object keyValue)
-					throws BlockedException, TeiidComponentException,
-					TeiidProcessingException {
-				return parentDataMrg.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, keyValue);
-			}
-			
-			@Override
-			public EventDistributor getEventDistributor() {
-				return parentDataMrg.getEventDistributor();
-			}
-		};
         this.parentDataMrg = dataMgr;
         if (evaluator == null) {
         	this.evaluator = new SubqueryAwareEvaluator(Collections.emptyMap(), getDataManager(), getContext(), this.bufferMgr);
@@ -202,10 +177,15 @@ public class ProcedurePlan extends ProcessorPlan {
         	evaluator.reset();
         }
         evaluatedParams = false;
-        cursorStates.clear();
+        if (parentContext != null) {
+        	super.getContext().setVariableContext(parentContext);
+        }
         createVariableContext();
-        last = null;
-        
+        CommandContext cc = super.getContext();
+        if (cc != null) {
+        	//create fresh local state
+        	setContext(cc.clone());
+        }
         done = false;
         currentState = null;
         finalTupleSource = null;
@@ -218,7 +198,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
 
     public ProcessorDataManager getDataManager() {
-        return this.dataMgr;
+        return this;
     }
 
     public void open() throws TeiidProcessingException, TeiidComponentException {
@@ -234,13 +214,20 @@ public class ProcedurePlan extends ProcessorPlan {
 		            Expression expr = entry.getValue();
 		            
 		            VariableContext context = getCurrentVariableContext();
+		            if (context.getVariableMap().containsKey(param)) {
+		            	continue;
+		            }
 		            Object value = this.evaluateExpression(expr);
 		
 		            //check constraint
 		            checkNotNull(param, value);
 		            setParameterValue(param, context, value);
 		        }
-    		}
+		        this.evaluator.close();
+    		} else if (runInContext) {
+    			//if there are no params, this needs to run in the current variable context
+            	this.currentVarContext.setParentContext(parentContext);
+            }
     		this.push(originalProgram);
     	}
     	this.evaluatedParams = true;
@@ -252,16 +239,17 @@ public class ProcedurePlan extends ProcessorPlan {
 		if (metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
 			return;
 		}
-		if (value == null) {
-		     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
-		}
-		if (value instanceof ArrayImpl && metadata.isVariadic(param.getMetadataID())) {
-			ArrayImpl av = (ArrayImpl)value;
-			for (Object o : av.getValues()) {
-				if (o == null) {
-				     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
+		if (metadata.isVariadic(param.getMetadataID())) {
+			if (value instanceof ArrayImpl) {
+				ArrayImpl av = (ArrayImpl)value;
+				for (Object o : av.getValues()) {
+					if (o == null) {
+					     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
+					}
 				}
 			}
+		} else if (value == null) {
+			throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
 		}
 	}
 
@@ -359,6 +347,24 @@ public class ProcedurePlan extends ProcessorPlan {
             inst = program.getCurrentInstruction();
 	        if (inst == null){
 	        	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Finished program", program); //$NON-NLS-1$
+        		//look ahead to see if we need to process in place
+        		VariableContext vc = this.cursorStates.getParentContext();
+        		CursorState last = (CursorState) this.cursorStates.getValue(null);
+                if(last != null){
+                	if (last.resultsBuffer == null && (last.usesLocalTemp || !txnTupleSources.isEmpty())) {
+                		last.resultsBuffer = bufferMgr.createTupleBuffer(last.processor.getOutputElements(), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
+                		last.returning = true;
+                	}
+                	if (last.returning) {
+	                	while (last.ts.hasNext()) {
+	                		List<?> tuple = last.ts.nextTuple();
+	                		last.resultsBuffer.addTuple(tuple);
+	                	}
+	                	last.resultsBuffer.close();
+	                	last.ts = last.resultsBuffer.createIndexedTupleSource(true);
+	                	last.returning = false;
+                	}
+                }
                 this.pop(true);
                 continue;
             }
@@ -377,6 +383,7 @@ public class ProcedurePlan extends ProcessorPlan {
 	            } else {
 	            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
 	                inst.process(this);
+	                this.evaluator.close();
 	            }
 	        } catch (RuntimeException e) {
 	        	throw e;
@@ -384,6 +391,7 @@ public class ProcedurePlan extends ProcessorPlan {
 	        	throw e;
 	        } catch (Exception e) {
 	        	//processing or teiidsqlexception
+	        	boolean atomic = program.isAtomic();
 	        	while (program.getExceptionGroup() == null) {
         			this.pop(false);
 	        		if (this.programs.empty()) {
@@ -394,15 +402,30 @@ public class ProcedurePlan extends ProcessorPlan {
     	        		throw new ProcedureErrorInstructionException(QueryPlugin.Event.TEIID30167, e);
 	        		}
         			program = peek();
+        			atomic |= program.isAtomic();
+	        	}
+	        	this.pop(false); //allow the current program to go out of scope
+	        	if (atomic) {
+	        		TransactionContext tc = this.getContext().getTransactionContext();
+	            	if (tc != null && tc.getTransactionType() != Scope.NONE) {
+		        		//a non-completing atomic block under a higher level transaction 
+	            		
+		        		//this will not work correctly until we support
+		        		//checkpoints/subtransactions
+	            		try {
+							tc.getTransaction().setRollbackOnly();
+						} catch (IllegalStateException e1) {
+							throw new TeiidComponentException(e1);
+						} catch (SystemException e1) {
+							throw new TeiidComponentException(e1);
+						}
+	            	}
 	        	}
         		if (program.getExceptionProgram() == null) {
-        			this.pop(true);
         			continue;
         		}
 	        	Program exceptionProgram = program.getExceptionProgram();
-	        	exceptionProgram.setStartedTxn(program.startedTxn());
-    			this.pop(null); //all the current program to go out of scope
-				this.push(exceptionProgram);	
+				this.push(exceptionProgram);
 				TeiidSQLException tse = TeiidSQLException.create(e);
 				GroupSymbol gs = new GroupSymbol(program.getExceptionGroup());
 				this.currentVarContext.setValue(exceptionSymbol(gs, 0), tse.getSQLState());
@@ -414,7 +437,7 @@ public class ProcedurePlan extends ProcessorPlan {
 	        }
             program.incrementProgramCounter();
 	    }
-
+	    CursorState last = (CursorState) this.cursorStates.getValue(null);
         if(last == null){
             return CollectionTupleSource.createNullTupleSource();
         }
@@ -429,12 +452,6 @@ public class ProcedurePlan extends ProcessorPlan {
 
     public void close()
         throws TeiidComponentException {
-        if (!this.cursorStates.isEmpty()) {
-        	List<String> cursors = new ArrayList<String>(this.cursorStates.keySet());
-        	for (String rsName : cursors) {
-    			removeResults(rsName);
-			}
-        }
         while (!programs.isEmpty()) {
         	try {
         		pop(false);
@@ -445,9 +462,13 @@ public class ProcedurePlan extends ProcessorPlan {
         if (this.evaluator != null) {
         	this.evaluator.close();
         }
-        this.dataMgr = parentDataMrg;
+        if (this.cursorStates != null) {
+        	removeAllCursors(this.cursorStates);
+            this.cursorStates = null;
+        }
         this.txnTupleSources.clear();
         this.blockContext = null;
+        this.currentVarContext = null;
     }
 
     public String toString() {
@@ -461,12 +482,13 @@ public class ProcedurePlan extends ProcessorPlan {
         plan.setOutParams(outParams);
         plan.setMetadata(metadata);
         plan.requiresTransaction = requiresTransaction;
+        plan.runInContext = runInContext;
         return plan;
     }
 
 	private void addBatchRow(List<?> row, boolean last) {
         if(this.batchRows == null) {
-            this.batchRows = new ArrayList<Object>(this.batchSize/4);
+            this.batchRows = new ArrayList<List<?>>(this.batchSize/4);
         }
         if (!last && this.outParams != null) {
         	List<Object> newRow = Arrays.asList(new Object[row.size() + this.outParams.size()]);
@@ -524,8 +546,10 @@ public class ProcedurePlan extends ProcessorPlan {
     }
     
 	private void createVariableContext() {
-		this.currentVarContext = new VariableContext(true);
+		this.currentVarContext = new VariableContext(runInContext && this.params == null);
         this.currentVarContext.setValue(ROWCOUNT, 0);
+        this.cursorStates = new VariableContext(false);
+        this.cursorStates.setValue(null, null);
 	}
 
     /**
@@ -539,11 +563,21 @@ public class ProcedurePlan extends ProcessorPlan {
 		return this.currentVarContext;
     }
 
-    public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, CreateCursorResultSetInstruction.Mode mode)
+    /**
+     * 
+     * @param command
+     * @param rsName
+     * @param procAssignments
+     * @param mode
+     * @param usesLocalTemp - only matters in HOLD mode
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
+     */
+    public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, CreateCursorResultSetInstruction.Mode mode, boolean usesLocalTemp)
         throws TeiidComponentException, TeiidProcessingException {
     	
-        CursorState state = this.cursorStates.get(rsName);
-        if (state == null) {
+        CursorState state = (CursorState) this.cursorStates.getValue(rsName);
+        if (state == null || rsName == null) {
         	if (this.currentState != null && this.currentState.processor.getProcessorPlan() != command) {
         		//sanity check for non-deterministic paths
         		removeState(this.currentState);
@@ -556,7 +590,8 @@ public class ProcedurePlan extends ProcessorPlan {
 		        CommandContext subContext = getContext().clone();
 		        subContext.setVariableContext(this.currentVarContext);
 		        state = new CursorState();
-		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this.dataMgr);
+		        state.usesLocalTemp = usesLocalTemp;
+		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this);
 		        state.ts = new BatchIterator(state.processor);
 		        if (mode == Mode.HOLD && procAssignments != null && state.processor.getOutputElements().size() - procAssignments.size() > 0) {
 		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements().subList(0, state.processor.getOutputElements().size() - procAssignments.size()), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
@@ -590,7 +625,8 @@ public class ProcedurePlan extends ProcessorPlan {
             	while (this.currentState.ts.hasNext()) {
             		List<?> tuple = this.currentState.ts.nextTuple();
         			this.currentState.resultsBuffer.addTuple(tuple);
-            	}	
+            	}
+            	getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
             } else if (mode == Mode.UPDATE) {
         		List<?> t = this.currentState.ts.nextTuple();
         		if (this.currentState.ts.hasNext()) {
@@ -613,6 +649,7 @@ public class ProcedurePlan extends ProcessorPlan {
             		this.currentState.ts.nextTuple();
             	}
             	this.currentState = null;
+            	getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
             	return;
         	}
         	if (this.currentState.resultsBuffer != null) {
@@ -620,14 +657,9 @@ public class ProcedurePlan extends ProcessorPlan {
             	this.currentState.resultsBuffer.close();
             	this.currentState.ts = this.currentState.resultsBuffer.createIndexedTupleSource(true);
         	}
-	        CursorState old = this.cursorStates.put(rsName, this.currentState);
+	        CursorState old = (CursorState) this.cursorStates.setValue(rsName, this.currentState);
 	        if (old != null) {
 	        	removeState(old);
-	        }
-	        //keep a reference to the tuple source
-            //it may be the last one
-	        if (mode == Mode.HOLD) {
-	        	this.last = this.currentState;
 	        }
 	        this.currentState = null;
         }
@@ -638,37 +670,52 @@ public class ProcedurePlan extends ProcessorPlan {
      * @throws TeiidComponentException 
      * @throws XATransactionException 
      */
-    public void pop(Boolean success) throws TeiidComponentException {
+    public void pop(boolean success) throws TeiidComponentException {
+    	this.evaluator.close();
     	Program program = this.programs.pop();
-        if (this.currentVarContext.getParentContext() != null) {
+    	VariableContext vc = this.currentVarContext;
+    	VariableContext cs = this.cursorStates;
+    	try {
         	this.currentVarContext = this.currentVarContext.getParentContext();
-        }
-    	program.getTempTableStore().removeTempTables();
-    	if (success != null && program.startedTxn() && this.blockContext != null) {
-    		TransactionService ts = this.getContext().getTransactionServer();
-    		TransactionContext tc = this.blockContext;
-    		this.blockContext = null;
-    		try {
-    			this.getContext().getTransactionServer().resume(tc);
-	    		for (WeakReference<DataTierTupleSource> ref : txnTupleSources) {
-	    			DataTierTupleSource dtts = ref.get();
-	    			if (dtts != null) {
-	    				dtts.fullyCloseSource();
-	    			}
+        	this.cursorStates = this.cursorStates.getParentContext();
+        	TempTableStore tempTableStore = program.getTempTableStore();
+			this.getContext().setTempTableStore(tempTableStore.getParentTempTableStore());
+        	tempTableStore.removeTempTables();
+			if (program.startedTxn()) {
+	    		TransactionService ts = this.getContext().getTransactionServer();
+	    		TransactionContext tc = this.blockContext;
+	    		this.blockContext = null;
+	    		try {
+	    			ts.resume(tc);
+		    		for (WeakReference<DataTierTupleSource> ref : txnTupleSources) {
+		    			DataTierTupleSource dtts = ref.get();
+		    			if (dtts != null) {
+		    				dtts.fullyCloseSource();
+		    			}
+		    		}
+		    		this.txnTupleSources.clear();
+		    		if (success) {
+		    			ts.commit(tc);
+		    		} else {
+		    			ts.rollback(tc);
+		    		}
+	    		} catch (XATransactionException e) {
+	    			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30165, e);
 	    		}
-	    		this.txnTupleSources.clear();
-	    		if (success) {
-	    			ts.commit(tc);
-	    		} else {
-	    			ts.rollback(tc);
-	    		}
-    		} catch (XATransactionException e) {
-    			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30165, e);
-    		}
+			}
+    	} finally {
+			removeAllCursors(cs);
     	}
     }
+
+	private void removeAllCursors(VariableContext cs) {
+		for (Map.Entry<Object, Object> entry : cs.getVariableMap().entrySet()) {
+			removeState((CursorState) entry.getValue());
+		}
+	}
     
     public void push(Program program) throws XATransactionException {
+    	this.evaluator.close();
     	program.reset(this.getContext().getConnectionId());
 		program.setTrappingExceptions(program.getExceptionGroup() != null || (!this.programs.isEmpty() && this.programs.peek().isTrappingExceptions()));
     	TempTableStore tts = getTempTableStore();
@@ -678,8 +725,11 @@ public class ProcedurePlan extends ProcessorPlan {
         VariableContext context = new VariableContext(true);
         context.setParentContext(this.currentVarContext);
         this.currentVarContext = context;
+        VariableContext cc = new VariableContext(true);
+        cc.setParentContext(this.cursorStates);
+        this.cursorStates = cc;
         
-        if (program.isAtomic()) {
+        if (program.isAtomic() && this.blockContext == null) {
         	TransactionContext tc = this.getContext().getTransactionContext();
         	if (tc != null && tc.getTransactionType() == Scope.NONE) {
         		//start a transaction
@@ -717,7 +767,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
 
 	private CursorState getCursorState(String rsKey) throws TeiidComponentException {
-		CursorState state = this.cursorStates.get(rsKey);
+		CursorState state = (CursorState) this.cursorStates.getValue(rsKey);
 		if (state == null) {
 			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30166, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30166, rsKey));
 		}
@@ -725,7 +775,7 @@ public class ProcedurePlan extends ProcessorPlan {
 	}
 
     public void removeResults(String rsName) {
-		CursorState state = this.cursorStates.remove(rsName);
+		CursorState state = (CursorState) this.cursorStates.remove(rsName);
         removeState(state);
     }
 
@@ -735,9 +785,6 @@ public class ProcedurePlan extends ProcessorPlan {
         	if (state.resultsBuffer != null) {
         		state.resultsBuffer.remove();
         	}
-        }
-        if (state == last) {
-        	last = null;
         }
 	}
 
@@ -756,7 +803,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
 
     public boolean resultSetExists(String rsName) {
-        return this.cursorStates.containsKey(rsName);
+        return this.cursorStates.containsVariable(rsName);
     }
 
     public CommandContext getContext() {
@@ -781,6 +828,9 @@ public class ProcedurePlan extends ProcessorPlan {
      */
     public TempTableStore getTempTableStore() {
     	if (this.programs.isEmpty()) {
+    		if (runInContext) {
+    			return getContext().getTempTableStore();
+    		}
     		return null;
     	}
         return this.peek().getTempTableStore();
@@ -788,19 +838,18 @@ public class ProcedurePlan extends ProcessorPlan {
 
     boolean evaluateCriteria(Criteria condition) throws BlockedException, TeiidProcessingException, TeiidComponentException {
     	evaluator.initialize(getContext(), getDataManager());
-		boolean result = evaluator.evaluate(condition, Collections.emptyList());
-		this.evaluator.close();
-		return result;
+		return evaluator.evaluate(condition, Collections.emptyList());
     }
     
     Object evaluateExpression(Expression expression) throws BlockedException, TeiidProcessingException, TeiidComponentException {
     	evaluator.initialize(getContext(), getDataManager());
-    	Object result = evaluator.evaluate(expression, Collections.emptyList());
-    	this.evaluator.close();
-    	return result;
+    	return evaluator.evaluate(expression, Collections.emptyList());
     }
                
     public Program peek() {
+    	if (this.programs.isEmpty()) {
+    		return null;
+    	}
         return programs.peek();
     }
     
@@ -814,4 +863,38 @@ public class ProcedurePlan extends ProcessorPlan {
     	return requiresTransaction || transactionalReads;
     }
     
+    /**
+     * For procedures without explicit parameters, sets whether the 
+     * procedure should run in the parent variable context.
+     * @param runInContext
+     */
+    public void setRunInContext(boolean runInContext) {
+		this.runInContext = runInContext;
+	}
+
+	@Override
+	public TupleSource registerRequest(CommandContext context, Command command,
+			String modelName, RegisterRequestParameter parameterObject)
+			throws TeiidComponentException, TeiidProcessingException {
+		//programs will be empty for parameter evaluation
+		TupleSource ts = parentDataMrg.registerRequest(context, command, modelName, parameterObject);
+		if (blockContext != null && ts instanceof DataTierTupleSource) {
+			txnTupleSources.add(new WeakReference<DataTierTupleSource>((DataTierTupleSource)ts));
+		}
+		return ts;
+	}
+
+	@Override
+	public Object lookupCodeValue(CommandContext context, String codeTableName,
+			String returnElementName, String keyElementName, Object keyValue)
+			throws BlockedException, TeiidComponentException,
+			TeiidProcessingException {
+		return parentDataMrg.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, keyValue);
+	}
+
+	@Override
+	public EventDistributor getEventDistributor() {
+		return parentDataMrg.getEventDistributor();
+	}
+
 }

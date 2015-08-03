@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 /** 
@@ -16,6 +18,12 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
  */
 @Translator(name="metamatrix", description="A translator for MetaMatrix 5.5 or later")
 public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
+	
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
+		addPushDownFunction("mm", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+	}
     
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -96,7 +104,7 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
-        supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+        //supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
         supportedFunctions.add("MODIFYTIMEZONE"); //$NON-NLS-1$
@@ -133,5 +141,10 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
     @Override
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.UNKNOWN;
+    }
+    
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
     }
 }

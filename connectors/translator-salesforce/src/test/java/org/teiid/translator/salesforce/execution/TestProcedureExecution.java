@@ -25,8 +25,7 @@ package org.teiid.translator.salesforce.execution;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
-
-import javax.xml.datatype.XMLGregorianCalendar;
+import java.util.Calendar;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -47,7 +46,7 @@ public class TestProcedureExecution {
 		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
 		UpdatedResult ur = new UpdatedResult();
 		ur.setIDs(Arrays.asList("1", "2"));
-		Mockito.stub(sfc.getUpdated(Mockito.eq("foo"), (XMLGregorianCalendar)Mockito.anyObject(), (XMLGregorianCalendar)Mockito.anyObject())).toReturn(ur);
+		Mockito.stub(sfc.getUpdated(Mockito.eq("foo"), (Calendar)Mockito.anyObject(), (Calendar)Mockito.anyObject())).toReturn(ur);
 		ProcedureExecutionParentImpl pepi = new ProcedureExecutionParentImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
 		pepi.execute();
 		assertNotNull(pepi.next());

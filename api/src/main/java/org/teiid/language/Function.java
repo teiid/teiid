@@ -68,7 +68,7 @@ public class Function extends BaseLanguageObject implements Expression, Metadata
 
     /**
      * Get the parameters used in this function.
-     * @return Array of IExpressions defining the parameters
+     * @return List of Expression defining the parameters
      */
     public List<Expression> getParameters() {
         return parameters;

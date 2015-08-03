@@ -34,6 +34,7 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
@@ -42,15 +43,15 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -58,6 +59,7 @@ import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
@@ -239,16 +241,9 @@ public class TestValidator {
 		return command;
     }
     
-    static Command helpResolve(String sql, GroupSymbol container, int type, QueryMetadataInterface metadata) { 
-    	Command command = null;
-		
-		try { 
-			command = QueryParser.getQueryParser().parseCommand(sql);
-			QueryResolver.resolveCommand(command, container, type, metadata);
-		} catch(Exception e) {
-            throw new TeiidRuntimeException(e);
-		} 
-
+    static Command helpResolve(String sql, GroupSymbol container, int type, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException { 
+    	Command command = QueryParser.getQueryParser().parseCommand(sql);
+		QueryResolver.resolveCommand(command, container, type, metadata, false);
 		return command;
     }
         
@@ -1188,7 +1183,7 @@ public class TestValidator {
     @Test public void testValidateObjectInComparison() throws Exception {
         String sql = "SELECT IntKey FROM BQT1.SmallA WHERE ObjectValue = 5";   //$NON-NLS-1$
         ValidatorReport report = helpValidate(sql, new String[] {"ObjectValue = 5"}, RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
-        assertEquals("Expressions of type OBJECT, CLOB, BLOB, or XML cannot be used in comparison: ObjectValue = 5.", report.toString()); //$NON-NLS-1$
+        assertEquals("Non-comparable expression of type object cannot be used in comparison: ObjectValue = 5.", report.toString()); //$NON-NLS-1$
     }
 
     @Test public void testValidateAssignmentWithFunctionOnParameter_InServer() throws Exception{
@@ -1231,7 +1226,7 @@ public class TestValidator {
     	QueryResolver.resolveCommand(command, metadata); 
         
         ValidatorReport report = Validator.validate(command, metadata);
-        assertEquals("Expressions of type OBJECT, CLOB, BLOB, or XML cannot be used as LOOKUP key columns: test.\"group\".e3.", report.toString()); //$NON-NLS-1$
+        assertEquals("Non-comparable expression of type blob cannot be used as LOOKUP key columns: test.\"group\".e3.", report.toString()); //$NON-NLS-1$
     }
     
     @Test public void testDefect12107() throws Exception{
@@ -1245,10 +1240,10 @@ public class TestValidator {
     }
     
     private ValidatorReport helpValidateInModeler(String procName, String procSql, QueryMetadataInterface metadata) throws Exception {
-        Command command = new QueryParser().parseCommand(procSql);
+        Command command = QueryParser.getQueryParser().parseCommand(procSql);
         
         GroupSymbol group = new GroupSymbol(procName);
-        QueryResolver.resolveCommand(command, group, Command.TYPE_STORED_PROCEDURE, metadata);
+        QueryResolver.resolveCommand(command, group, Command.TYPE_STORED_PROCEDURE, metadata, true);
         
         // Validate
         return Validator.validate(command, metadata);         
@@ -1263,6 +1258,17 @@ public class TestValidator {
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", sql, metadata);  //$NON-NLS-1$
         assertEquals(1, report.getItems().size());
         assertEquals("Wrong number of elements being SELECTed INTO the target table. Expected 4 elements, but was 1.", report.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testValidateInModeler() throws Exception{
+        // SQL is same as pm1.vsp36() in example1 
+        String sql = "CREATE VIRTUAL PROCEDURE BEGIN select 1, 2; END";  //$NON-NLS-1$        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
+        GroupSymbol group = new GroupSymbol("pm1.vsp36");
+        QueryResolver.resolveCommand(command, group, Command.TYPE_STORED_PROCEDURE, metadata, true);
+
+        assertEquals(2, command.getResultSetColumns().size());
     }
     
     @Test public void testDynamicDupUsing() throws Exception {
@@ -1388,7 +1394,7 @@ public class TestValidator {
      * 
      * This virtual procedure calls a physical stored procedure directly.  
      */
-    @Test public void testCase4237() {
+    @Test public void testCase4237() throws Exception {
 
         QueryMetadataInterface metadata = helpCreateCase4237VirtualProcedureMetadata();
         
@@ -1401,7 +1407,7 @@ public class TestValidator {
      * This test was already working before the case was logged, due for some reason
      * to the exec() statement being inside an inline view.  This is a control test. 
      */
-    @Test public void testCase4237InlineView() {
+    @Test public void testCase4237InlineView() throws Exception {
 
         QueryMetadataInterface metadata = helpCreateCase4237VirtualProcedureMetadata();
         
@@ -1553,6 +1559,10 @@ public class TestValidator {
         helpValidate("SELECT * from texttable(null columns x string NO ROW DELIMITER) as x", new String[] {"TEXTTABLE(null COLUMNS x string NO ROW DELIMITER) AS x"}, RealMetadataFactory.exampleBQTCached()); 
 	}
     
+    @Test public void testTextTableFixedSelector() {        
+        helpValidate("SELECT * from texttable(null SELECTOR 'a' columns x string width 1) as x", new String[] {}, RealMetadataFactory.exampleBQTCached()); 
+	}
+    
     @Test public void testXMLNamespaces() {
     	helpValidate("select xmlforest(xmlnamespaces(no default, default 'http://foo'), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES(NO DEFAULT, DEFAULT 'http://foo')"}, RealMetadataFactory.example1Cached());
     }
@@ -1678,10 +1688,19 @@ public class TestValidator {
         assertEquals(report.toString(), 1, report.getItems().size());
     }
     
+    @Test public void testMultiSourceInsert() throws Exception {  
+    	Set<String> models = new HashSet<String>();
+    	models.add("pm1");
+        helpValidate("insert into pm1.g1 (e1) values (1)", new String[] {"pm1.g1", "pm1.g1.SOURCE_NAME"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
+    }
+    
+    /**
+     * TODO: this should be allowable
+     */
     @Test public void testDisallowProjectIntoMultiSource() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("pm1");
-        helpValidate("insert into pm1.g1 select * from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
+        helpValidate("insert into pm1.g1 select pm1.g1.*, 1 from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
     }
     
     @Test public void testTextAggEncoding() throws Exception {
@@ -1695,7 +1714,7 @@ public class TestValidator {
     @Test public void testMultiSourceProcValue() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("MultiModel");
-        helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {"MultiModel.proc.source_name"}, new MultiSourceMetadataWrapper(RealMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
+        helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {}, new MultiSourceMetadataWrapper(RealMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
     }
     
 	@Test public void testFailAggregateInGroupBy() {
@@ -1766,10 +1785,54 @@ public class TestValidator {
         helpValidate(userUpdateStr, new String[]{"vm1.g2", "INSERT INTO vm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
+    @Test public void testMergeNoKey() {
+        String userUpdateStr = "MERGE into pm1.g2 (e1) values ('x')"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{"MERGE INTO pm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
     @Test public void testDeleteError() {
         String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
         
         helpValidate(userUpdateStr, new String[]{"vm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testJsonArrayBlob() {
+        String sql = "select jsonArray(to_bytes('hello', 'us-ascii'))"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{"jsonArray(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testJsonArrayClob() {
+        String sql = "select jsonArray(cast('hello' as clob))"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testJsonObject() {
+        String sql = "select jsonObject(to_bytes('hello', 'us-ascii'))"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{"JSONOBJECT(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testWithValidation() {
+        String sql = "with a as (select jsonObject(to_bytes('hello', 'us-ascii')) as x) select a.x from a"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{"JSONOBJECT(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testInsertIntoVirtualWithQueryExpression() { 
+        
+        QueryMetadataInterface qmi = RealMetadataFactory.example1(); 
+
+        String sql = "select * from vm1.g1 as x"; //$NON-NLS-1$
+        
+        TestProcessor.helpGetPlan(sql, qmi);
+        
+        sql = "insert into vm1.g1 (e1, e2, e3, e4) select * from pm1.g1"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[] {}, qmi);
+
     }
 	
 }

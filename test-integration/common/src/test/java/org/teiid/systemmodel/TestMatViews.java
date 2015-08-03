@@ -30,21 +30,28 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBImportMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.runtime.HardCodedExecutionFactory;
+import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestMatViews {
@@ -75,8 +82,8 @@ public class TestMatViews {
     }
 	
 	@After public void tearDown() throws Exception {
-		server.stop();
 		conn.close();
+		server.stop();
 	}
 	
 	@Test public void testSystemMatViewsWithImplicitLoad() throws Exception {
@@ -247,5 +254,230 @@ public class TestMatViews {
 		//prior to load refresh of a single row returns -1
 		s.executeQuery("select * from (call refreshMatViewRow('TEST.MATVIEW', 0)) p");
 	}
+	
+	@Test public void testMatViewWithImportedVDB() throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("phy");
+		mmd.setSchemaSourceType("DDL");
+		mmd.setSchemaText("CREATE FOREIGN TABLE t1 ( col1 string, col2 integer )");
+		mmd.addSourceMapping("phy", "loopback", null);
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("phy_mv");
+		mmd1.setSchemaSourceType("DDL");
+		mmd1.setSchemaText("CREATE FOREIGN TABLE t1_mv ( col1 string, col2 integer )");
+		mmd1.addSourceMapping("phy_mv", "loopback", null);
 
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setSchemaSourceType("DDL");
+		mmd2.setSchemaText("CREATE VIEW v1 ( col1 string, col2 integer ) OPTIONS (MATERIALIZED true, MATERIALIZED_TABLE 'phy_mv.t1_mv') AS select t1.col1, t1.col2 FROM t1");
+		server.addTranslator(LoopbackExecutionFactory.class);
+		server.deployVDB("base", mmd, mmd1, mmd2);
+		
+		VDBMetaData vdbMetaData = new VDBMetaData();
+		vdbMetaData.setXmlDeployment(true);
+		VDBImportMetadata importVDB = new VDBImportMetadata();
+		importVDB.setName("base");
+		importVDB.setVersion(1);
+		vdbMetaData.getVDBImports().add(importVDB);
+		vdbMetaData.setName("importing");
+		
+		server.deployVDB(vdbMetaData);
+	}
+	
+	@Test public void testImportedMatView() throws Exception {
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.PHYSICAL);
+		mmd2.setSchemaSourceType("DDL");
+		mmd2.setSchemaText("create foreign table x (col integer); CREATE VIEW v1 ( col1 string ) OPTIONS (MATERIALIZED true) AS select current_database() from x");
+		mmd2.addSourceMapping("a", "a", null);
+		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+		hcef.addData("SELECT x.col FROM x", Arrays.asList(Collections.singletonList(1)));
+		server.addTranslator("a", hcef);
+		server.deployVDB("base", mmd2);
+		
+		VDBMetaData vdbMetaData = new VDBMetaData();
+		vdbMetaData.setXmlDeployment(true);
+		VDBImportMetadata importVDB = new VDBImportMetadata();
+		importVDB.setName("base");
+		importVDB.setVersion(1);
+		vdbMetaData.getVDBImports().add(importVDB);
+		vdbMetaData.setName("importing");
+		
+		server.deployVDB(vdbMetaData);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:importing", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("select * from v1");
+		rs.next();
+		assertEquals("base", rs.getString(1));
+	}
+	
+	@Test public void testSessionScoping() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("alter view test.randomview as /*+ cache(scope:session) */ select rand() as x, rand() as y");
+		ResultSet rs = s.executeQuery("select * from MatViews where name = 'MatView'");
+		assertTrue(rs.next());
+		assertEquals("NEEDS_LOADING", rs.getString("loadstate"));
+		assertEquals(false, rs.getBoolean("valid"));
+		
+		//should be the same
+		rs = s.executeQuery("select * from randomview");
+		rs.next();
+		double d = rs.getDouble(1);
+		rs = s.executeQuery("select * from randomview");
+		rs.next();
+		assertEquals(d, rs.getDouble(1), 0);
+		
+		rs = s.executeQuery("select * from MatViews where name = 'RandomView'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		
+		//should be different in a new session
+		Connection c = server.getDriver().connect("jdbc:teiid:matviews", null);
+		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
+		assertTrue(rs.next());
+		assertEquals("NEEDS_LOADING", rs.getString("loadstate"));
+		assertEquals(false, rs.getBoolean("valid"));
+		s = c.createStatement();
+		rs = s.executeQuery("select * from randomview");
+		rs.next();
+		assertFalse(d == rs.getDouble(1));
+		
+		//should be different after a refresh
+		s.execute("call refreshMatView('TEST.RANDOMVIEW', false)");
+		
+		rs = s.executeQuery("select * from randomview");
+		rs.next();
+		assertFalse(d == rs.getDouble(1));
+	}
+	
+	@Test public void testCompositeRowUpdate() throws Exception {
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setSchemaSourceType("DDL");
+		mmd2.setSchemaText("CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) OPTIONS (MATERIALIZED true) AS /*+ cache(updatable) */ select 1, current_database()");
+		server.deployVDB("comp", mmd2);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("select * from v1");
+		rs.next();
+		assertEquals("1", rs.getString(1));
+		
+		try {
+			rs = s.executeQuery("select * from (call refreshMatViewRow('view1.v1', 0)) p");
+			fail();
+		} catch (SQLException e) {
+			//not enough key parameters
+		}
+		
+		rs = s.executeQuery("select * from (call refreshMatViewRow('view1.v1', 0, 'a')) p");
+		assertTrue(rs.next());
+		//row doesn't exist
+		assertEquals(0, rs.getInt(1));
+		assertFalse(rs.next());
+		
+		rs = s.executeQuery("select * from (call refreshMatViewRow('view1.v1', '1', 'comp')) p");
+		assertTrue(rs.next());
+		//row does exist
+		assertEquals(1, rs.getInt(1));
+		assertFalse(rs.next());
+	}
+	
+	@Test public void testCompositeRowsUpdate() throws Exception {
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setSchemaSourceType("DDL");
+		mmd2.setSchemaText("CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) OPTIONS (MATERIALIZED true) AS /*+ cache(updatable) */ select 1, current_database()");
+		server.deployVDB("comp", mmd2);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("select * from v1");
+		rs.next();
+		assertEquals("1", rs.getString(1));
+		
+		try {
+			rs = s.executeQuery("select * from (call refreshMatViewRows('view1.v1', (0,))) p");
+			fail();
+		} catch (SQLException e) {
+			//not enough key parameters
+		}
+		
+		rs = s.executeQuery("select * from (call refreshMatViewRows('view1.v1', (0, 'a'))) p");
+		assertTrue(rs.next());
+		//row doesn't exist
+		assertEquals(0, rs.getInt(1));
+		assertFalse(rs.next());
+		
+		rs = s.executeQuery("select * from (call refreshMatViewRows('view1.v1', ('1', 'comp'), ('2', 'comp'))) p");
+		assertTrue(rs.next());
+		//row does exist
+		assertEquals(1, rs.getInt(1));
+		assertFalse(rs.next());
+	}
+	
+	@Test public void testMatViewProceduresWithSameName() throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+    	mmd.setName("x");
+    	mmd.setModelType(Type.VIRTUAL);
+    	mmd.addSourceMetadata("DDL", "create view T as select 1");
+    	ModelMetaData mmd1 = new ModelMetaData();
+    	mmd1.setName("y");
+    	mmd1.setModelType(Type.VIRTUAL);
+    	mmd1.addSourceMetadata("DDL", "create view T as select 1");
+    	server.deployVDB("test", mmd, mmd1);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:test", null);
+		Statement s = c.createStatement();
+		try {
+			s.execute("call sysadmin.matviewstatus('x', 'T')");
+		} catch (TeiidSQLException e) {
+			e.getTeiidCode().equals("TEIID30167");
+		}
+
+		try {
+			s.execute("call sysadmin.loadmatview('x', 'T')");
+		} catch (TeiidSQLException e) {
+			e.getTeiidCode().equals("TEIID30167");
+		}
+
+		try {
+			s.execute("call sysadmin.updateMatView('x', 'T')");
+		} catch (TeiidSQLException e) {
+			e.getTeiidCode().equals("TEIID30167");
+		}
+
+	}
+	
+	@Test public void testInternalWithManagement() throws Exception {
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true) AS select 1, current_database()");
+		server.deployVDB("comp", mmd2);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+		Statement s = c.createStatement();
+		Thread.sleep(5000);
+		
+		//ensure that we are preloaded
+		ResultSet rs = s.executeQuery("select * from MatViews where name = 'v1'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		
+		//and queryable
+		rs = s.executeQuery("select * from v1");
+		rs.next();
+		assertEquals("1", rs.getString(1));
+	}
+	
 }

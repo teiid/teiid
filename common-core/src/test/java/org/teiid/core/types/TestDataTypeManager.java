@@ -181,17 +181,17 @@ public class TestDataTypeManager {
     }
     
     @Test public void testRuntimeTypeConversion() throws Exception {
-    	assertNull(DataTypeManager.convertToRuntimeType(null));
+    	assertNull(DataTypeManager.convertToRuntimeType(null, true));
     	
-    	assertTrue(DataTypeManager.convertToRuntimeType(new SerialBlob(new byte[0])) instanceof BlobType);
+    	assertTrue(DataTypeManager.convertToRuntimeType(new SerialBlob(new byte[0]), true) instanceof BlobType);
     
     	//unknown type should return as same
     	Object foo = new Object();
-    	assertEquals(foo, DataTypeManager.convertToRuntimeType(foo));
+    	assertEquals(foo, DataTypeManager.convertToRuntimeType(foo, true));
     
     	//known type should return as same
     	Integer bar = new Integer(1);
-    	assertEquals(bar, DataTypeManager.convertToRuntimeType(bar));
+    	assertEquals(bar, DataTypeManager.convertToRuntimeType(bar, true));
     }
     
     @Test public void testObjectType() {
@@ -230,4 +230,11 @@ public class TestDataTypeManager {
     	Object[] value = {1,2};
     	assertArrayEquals(value, (Object[])DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.OBJECT)); 
     }	
+	
+	@Test public void testByteArray() throws Exception {
+    	byte[] value = {1,2};
+    	assertArrayEquals(value, (byte[])DataTypeManager.convertToRuntimeType(value, false)); 
+    	assertEquals(new BinaryType(value), DataTypeManager.convertToRuntimeType(value, true));
+    }	
+	
 }

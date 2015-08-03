@@ -24,10 +24,12 @@ package org.teiid.jdbc;
 
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -39,9 +41,9 @@ import java.util.regex.Pattern;
 
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.ShowPlan;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.client.plan.Annotation;
@@ -154,10 +156,13 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     //Map<out/inout/return param index --> index in results>
     protected Map<Integer, Integer> outParamIndexMap = new HashMap<Integer, Integer>();
     protected Map<String, Integer> outParamByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+
+	private boolean closeOnCompletion;
     
-    static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:([a-zA-Z]\\w*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SET_CHARACTERISTIC_STATEMENT = Pattern.compile("\\s*set\\s+session\\s+characteristics\\s+as\\s+transaction\\s+isolation\\s+level\\s+((?:read\\s+(?:(?:committed)|(?:uncommitted)))|(?:repeatable\\s+read)|(?:serializable))\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*|(?:\"[^\"]*\")+)\\s*;?\\s*?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     /**
      * MMStatement Constructor.
@@ -218,8 +223,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.annotations = null;
 
         if ( this.resultSet != null ) {
-            this.resultSet.close();
-            this.resultSet = null;
+        	ResultSet rs = this.resultSet;
+        	this.resultSet = null;
+            rs.close();
+            checkStatement();
         }
 
         this.serverWarnings = null;
@@ -272,8 +279,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
         // close the the server's statement object (if necessary)
         if(resultSet != null) {
-            resultSet.close();
-            resultSet = null;
+        	ResultSet rs = this.resultSet;
+        	resultSet = null;
+            rs.close();
+            
         }
 
         isClosed = true;
@@ -308,8 +317,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
 	@Override
     public boolean execute(String sql) throws SQLException {
-        executeSql(new String[] {sql}, false, ResultsMode.EITHER, true, null);
-        return hasResultSet();
+        return execute(sql, Statement.NO_GENERATED_KEYS);
     }
     
 	@Override
@@ -330,13 +338,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
 	@Override
     public int executeUpdate(String sql) throws SQLException {
-        String[] commands = new String[] {sql};
-        executeSql(commands, false, ResultsMode.UPDATECOUNT, true, null);
-        return this.updateCounts[0];
+		return executeUpdate(sql, Statement.NO_GENERATED_KEYS);
     }
 
     protected boolean hasResultSet() throws SQLException {
-        return resultSet != null && resultSet.getMetaData().getColumnCount() > 0;
+        return updateCounts == null && resultSet != null && resultSet.getMetaData().getColumnCount() > 0;
     }
     
 	protected void createResultSet(ResultsMessage resultsMsg) throws SQLException {
@@ -390,8 +396,13 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		resultSet.setMaxFieldSize(this.maxFieldSize);
 	}
     
-	@SuppressWarnings("unchecked")
 	protected ResultsFuture<Boolean> executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode, boolean synch, RequestOptions options)
+	        throws SQLException {
+		return executeSql(commands, isBatchedCommand, resultsMode, synch, options, false);
+	}
+
+	@SuppressWarnings("unchecked")
+	protected ResultsFuture<Boolean> executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode, boolean synch, RequestOptions options, boolean autoGenerateKeys)
         throws SQLException {
         checkStatement();
         resetExecutionState();
@@ -421,10 +432,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		if (resultsMode == ResultsMode.RESULTSET) {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
         		}
-        		String key = match.group(2);
+        		String val = match.group(2);
+        		String key = unescapeId(val);
         		String value = match.group(3);
-        		if (value == null) {
-        			value = match.group(4);
+        		if (value != null && value.startsWith("\'") && value.endsWith("\'")) { //$NON-NLS-1$ //$NON-NLS-2$
         			value = value.substring(1, value.length() - 1);
         			value = StringUtil.replaceAll(value, "''", "'"); //$NON-NLS-1$ //$NON-NLS-2$
         		}
@@ -436,7 +447,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         				this.getMMConnection().setPayload(p);
         			}
         			p.setProperty(key, value);
-        		} else if ("SESSION AUTHORIZATION".equalsIgnoreCase(key)) { //$NON-NLS-1$
+        		} else if (val == key && "SESSION AUTHORIZATION".equalsIgnoreCase(key)) { //$NON-NLS-1$
         			this.getMMConnection().changeUser(value, this.getMMConnection().getPassword());
         		} else if (key.equalsIgnoreCase(TeiidURL.CONNECTION.PASSWORD)) {
         			this.getMMConnection().setPassword(value);
@@ -447,6 +458,21 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		} else {
         			this.driverConnection.setExecutionProperty(key, value);
         		}
+        		this.updateCounts = new int[] {0};
+        		return booleanFuture(false);
+        	}
+        	match = SET_CHARACTERISTIC_STATEMENT.matcher(commands[0]);
+        	if (match.matches()) {
+        		String value = match.group(1);
+				if (StringUtil.endsWithIgnoreCase(value, "uncommitted")) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+				} else if (StringUtil.endsWithIgnoreCase(value, "committed")) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+				} else if (StringUtil.startsWithIgnoreCase(value, "repeatable")) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+				} else if ("serializable".equalsIgnoreCase(value)) { //$NON-NLS-1$
+					this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);	
+				}        		
         		this.updateCounts = new int[] {0};
         		return booleanFuture(false);
         	}
@@ -502,6 +528,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
         
         final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
+        reqMessage.setReturnAutoGeneratedKeys(autoGenerateKeys);
         reqMessage.setRequestOptions(options);
     	ResultsFuture<ResultsMessage> pendingResult = execute(reqMessage, synch);
     	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
@@ -539,9 +566,18 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     	return result;
     }
 
+	private String unescapeId(String key) {
+		if (key.startsWith("\"")) { //$NON-NLS-1$
+			key = key.substring(1, key.length() - 1);
+			key = StringUtil.replaceAll(key, "\"\"", "\""); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return key;
+	}
+
 	ResultsFuture<Boolean> executeShow(Matcher match)
 			throws SQLException {
 		String show = match.group(1);
+		show = unescapeId(show);
 		if (show.equalsIgnoreCase("PLAN")) { //$NON-NLS-1$
 			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
 			PlanNode plan = driverConnection.getCurrentPlanDescription();
@@ -604,19 +640,19 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         } else {
         	reqMsg.setExecutionPayload(this.getMMConnection().getPayload());
         }
+        reqMsg.setDelaySerialization(true);
         reqMsg.setCursorType(this.resultSetType);
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setRowLimit(this.maxRows);
         reqMsg.setTransactionIsolation(this.driverConnection.getTransactionIsolation());
-        String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
-        reqMsg.setSync(synch && (useCallingThread == null || Boolean.valueOf(useCallingThread)));
+        reqMsg.setSync(synch && useCallingThread());
         // Get connection properties and set them onto request message
         copyPropertiesToRequest(reqMsg);
 
         reqMsg.setExecutionId(this.currentRequestID);
         
         ResultsFuture.CompletionListener<ResultsMessage> compeletionListener = null;
-		if (queryTimeoutMS > 0 && !synch) {
+		if (queryTimeoutMS > 0 && (!synch || this.driverConnection.getServerConnection().isLocal())) {
 			final Task c = cancellationTimer.add(cancelTask, queryTimeoutMS);
 			compeletionListener = new ResultsFuture.CompletionListener<ResultsMessage>() {
 				@Override
@@ -637,6 +673,14 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		}
     	return pendingResult;
     }
+	
+	boolean useCallingThread() throws SQLException {
+		if (this.getConnection().getServerConnection() == null || !this.getConnection().getServerConnection().isLocal()) {
+			return false;
+		}
+		String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
+		return (useCallingThread == null || Boolean.valueOf(useCallingThread));
+	}
 
 	public static ResultsFuture<Boolean> booleanFuture(boolean isTrue) {
 		ResultsFuture<Boolean> rs = new ResultsFuture<Boolean>();
@@ -661,12 +705,19 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             accumulateWarnings(resultsWarning);
         }
         
+        resultsMsg.processResults();
+        
         if (resultsMsg.isUpdateResult()) {
-        	List[] results = resultsMsg.getResults();
-        	this.updateCounts = new int[results.length];
-            for (int i = 0; i < results.length; i++) {
-            	updateCounts[i] = (Integer)results[i].get(0);
-            }
+        	List<? extends List<?>> results = resultsMsg.getResultsList();
+        	if (resultsMsg.getUpdateCount() == -1) { 
+            	this.updateCounts = new int[results.size()];
+                for (int i = 0; i < results.size(); i++) {
+                	updateCounts[i] = (Integer)results.get(i).get(0);
+                }
+        	} else {
+        		this.updateCounts = new int[] {resultsMsg.getUpdateCount()};
+        		this.createResultSet(resultsMsg);
+        	}
             if (logger.isLoggable(Level.FINER)) {
             	logger.finer("Recieved update counts: " + Arrays.toString(updateCounts)); //$NON-NLS-1$
             }
@@ -822,6 +873,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     public void setMaxRows(int maxRows) throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
+        if (maxRows < 0 || maxRows == Integer.MAX_VALUE) {
+        	maxRows = 0;
+        }
         this.maxRows = maxRows;
     }
 
@@ -1011,35 +1065,43 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
 	public boolean execute(String sql, int autoGeneratedKeys)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		executeSql(new String[] {sql}, false, ResultsMode.EITHER, true, null, autoGeneratedKeys == Statement.RETURN_GENERATED_KEYS);
+        return hasResultSet();
 	}
 
 	public boolean execute(String sql, int[] columnIndexes) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return execute(sql, Statement.RETURN_GENERATED_KEYS);	
 	}
 
 	public boolean execute(String sql, String[] columnNames)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return execute(sql, Statement.RETURN_GENERATED_KEYS);	
 	}
 
 	public int executeUpdate(String sql, int autoGeneratedKeys)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+        executeSql(new String[] {sql}, false, ResultsMode.UPDATECOUNT, true, null, autoGeneratedKeys == Statement.RETURN_GENERATED_KEYS);
+        if (this.updateCounts == null) {
+        	return 0;
+        }
+        return this.updateCounts[0];
 	}
 
 	public int executeUpdate(String sql, int[] columnIndexes)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);	
 	}
 
 	public int executeUpdate(String sql, String[] columnNames)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);	
 	}
 
 	public ResultSet getGeneratedKeys() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		if (this.updateCounts != null && this.resultSet != null) {
+			return this.resultSet;
+		}
+		return createResultSet(Collections.emptyList(), new Map[0]);
 	}
 
 	public int getResultSetHoldability() throws SQLException {
@@ -1073,7 +1135,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     }
 
     ResultSetImpl createResultSet(List records, ResultSetMetaData rsmd) throws SQLException {
-    	rsmd.getScale(1); //force the load of the metadata
+    	if (rsmd.getColumnCount() > 0) {
+    		rsmd.getScale(1); //force the load of the metadata
+    	}
         ResultsMessage resultsMsg = createDummyResultsMessage(null, null, records);
 		resultSet = new ResultSetImpl(resultsMsg, this, rsmd, 0);
 		resultSet.setMaxFieldSize(this.maxFieldSize);
@@ -1124,10 +1188,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
 
 	public void closeOnCompletion() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		this.closeOnCompletion = true;
 	}
 
 	public boolean isCloseOnCompletion() throws SQLException {
-		return false;
+		return closeOnCompletion;
 	}
 }

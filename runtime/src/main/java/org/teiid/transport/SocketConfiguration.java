@@ -24,9 +24,6 @@ package org.teiid.transport;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.teiid.core.TeiidRuntimeException;
-import org.teiid.runtime.RuntimePlugin;
-
 
 public class SocketConfiguration {
 	
@@ -38,7 +35,7 @@ public class SocketConfiguration {
 	private SSLConfiguration sslConfiguration;
 	private String hostName;
 	private String name;
-	private String protocol = "teiid"; //$NON-NLS-1$
+	private WireProtocol protocol = WireProtocol.teiid;
 	
 	public String getName() {
 		return name;
@@ -72,17 +69,6 @@ public class SocketConfiguration {
 		this.sslConfiguration = value;
 	}	
  	
-	private void resolveHostName() {
-		try {
-			// if not defined then see if can bind to local address; if supplied resolve it by name
-			if (this.hostName == null) {
-				this.hostName = InetAddress.getLocalHost().getHostName();
-			}
-		} catch (UnknownHostException e) {
-			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
-		}
-	}
-
 	public int getOutputBufferSize() {
 		return outputBufferSize;
 	}
@@ -100,21 +86,23 @@ public class SocketConfiguration {
 	}
 
 	public InetAddress getHostAddress() {
-		resolveHostName();
-		
+		return hostAddress;
+	}
+
+	public InetAddress getResolvedHostAddress() throws UnknownHostException {
 		if (this.hostAddress != null) {
 			return hostAddress;
 		}
-    	try {
-    		//only cache inetaddresses if they represent the ip. 
-			InetAddress addr = InetAddress.getByName(this.hostName);
-			if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
-				this.hostAddress = addr;
-			}
-			return addr;
-		} catch (UnknownHostException e) {
-			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
-		}		
+		// if not defined then see if can bind to local address; if supplied resolve it by name
+		if (this.hostName == null) {
+			this.hostName = InetAddress.getLocalHost().getHostName();
+		}
+		//only cache inetaddresses if they represent the ip. 
+		InetAddress addr = InetAddress.getByName(this.hostName);
+		if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
+			this.hostAddress = addr;
+		}
+		return addr;
 	}
 	
 	public void setHostAddress(InetAddress hostAddress) {
@@ -123,7 +111,6 @@ public class SocketConfiguration {
 	}	
 	
 	public String getHostName() {
-		resolveHostName();
 		return this.hostName;
 	}
 
@@ -135,11 +122,15 @@ public class SocketConfiguration {
 		return this.sslConfiguration != null && this.sslConfiguration.isSslEnabled();
 	}
 
-	public String getProtocol() {
+	public WireProtocol getProtocol() {
 		return protocol;
 	}
 
 	public void setProtocol(String protocol) {
-		this.protocol = protocol;
+		this.protocol = WireProtocol.valueOf(protocol);
 	}
+	
+	public void setProtocol(WireProtocol protocol) {
+		this.protocol = protocol;
+	}	
 }

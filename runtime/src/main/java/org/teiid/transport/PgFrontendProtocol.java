@@ -43,6 +43,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCServerRemote;
+import org.teiid.runtime.RuntimePlugin;
 
 /**
  * Represents the messages going from PG ODBC Client --> back end Server  
@@ -131,19 +132,19 @@ public class PgFrontendProtocol extends FrameDecoder {
 
         byte[] data = createByteArray(this.dataLength - 4);
         buffer.readBytes(data);
-		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.pgBackendProtocol.getEncoding()));
+		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.pgBackendProtocol.getEncoding()), channel);
 		this.dataLength = null;
 		this.messageType = null;
 		return message;
 	}
 
-	private Object createRequestMessage(byte messageType, NullTerminatedStringDataInputStream data) throws IOException{
+	private Object createRequestMessage(byte messageType, NullTerminatedStringDataInputStream data, Channel channel) throws IOException{
         switch(messageType) {
         case 'I': 
         	this.initialized = true;
-        	return buildInitialize(data);
+        	return buildInitialize(data, channel);
         case 'p':
-        	return buildLogin(data);
+        	return buildLogin(data, channel);
         case 'P':
         	return buildParse(data);
         case 'B':
@@ -184,7 +185,7 @@ public class PgFrontendProtocol extends FrameDecoder {
 		return message;
 	}
 
-	private Object buildInitialize(NullTerminatedStringDataInputStream data) throws IOException{
+	private Object buildInitialize(NullTerminatedStringDataInputStream data, Channel channel) throws IOException{
         Properties props = new Properties();
        
         int version = data.readInt();
@@ -194,6 +195,11 @@ public class PgFrontendProtocol extends FrameDecoder {
         if (version == 80877103) {
         	this.initialized = false;
         	this.odbcProxy.sslRequest();
+        	return message;
+        }
+        
+        if (this.pgBackendProtocol.secureData() && channel.getPipeline().get(org.teiid.transport.PgBackendProtocol.SSL_HANDLER_KEY) == null) {
+        	this.odbcProxy.unsupportedOperation(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40123));
         	return message;
         }
         
@@ -218,8 +224,8 @@ public class PgFrontendProtocol extends FrameDecoder {
         return message;
 	}
 	
-	private Object buildLogin(NullTerminatedStringDataInputStream data) {
-        this.odbcProxy.logon(this.databaseName, this.user, data);
+	private Object buildLogin(NullTerminatedStringDataInputStream data, Channel channel) {
+        this.odbcProxy.logon(this.databaseName, this.user, data, channel.getRemoteAddress());
         return message;
 	}	
 
@@ -271,13 +277,13 @@ public class PgFrontendProtocol extends FrameDecoder {
         for (int i = 0; i < resultCodeCount; i++) {
             resultColumnFormat[i] = data.readShort();
         }
-        this.odbcProxy.bindParameters(bindName, prepName, paramCount, params, resultCodeCount, resultColumnFormat);
+        this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat);
         return message;
 	}	
 
 	private Object buildExecute(NullTerminatedStringDataInputStream data) throws IOException {
 		String portalName = data.readString();
-        int maxRows = data.readShort();
+        int maxRows = data.readInt();
         this.odbcProxy.execute(portalName, maxRows);
         return message;
 	}	

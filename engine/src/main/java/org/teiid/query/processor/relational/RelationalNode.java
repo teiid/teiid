@@ -42,9 +42,8 @@ import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
+import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
@@ -88,6 +87,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
 	/** Child nodes, usually just 1 or 2 */
 	private RelationalNode[] children = new RelationalNode[2];
+	protected int childCount;
 	
 	protected RelationalNode() {
 		
@@ -96,6 +96,10 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	public RelationalNode(int nodeID) {
 		this.data = new NodeData();
 		this.data.nodeID = nodeID;
+	}
+	
+	public int getChildCount() {
+		return childCount;
 	}
 	
 	public boolean isLastBatch() {
@@ -195,18 +199,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         // Set parent of child to match
         child.setParent(this);
 
-        for(int i=0; i<children.length; i++) {
-            if(children[i] == null) {
-                children[i] = child;
-                return;
-            }
+        if (this.children.length == this.childCount) {
+	        // No room to add - double size of the array and copy
+	        RelationalNode[] newChildren = new RelationalNode[children.length * 2];
+	        System.arraycopy(this.children, 0, newChildren, 0, this.children.length);
+	        this.children = newChildren;
         }
-        
-        // No room to add - double size of the array and copy
-        RelationalNode[] newChildren = new RelationalNode[children.length * 2];
-        System.arraycopy(this.children, 0, newChildren, 0, this.children.length);
-        newChildren[this.children.length] = child;
-        this.children = newChildren;        
+        this.children[childCount++] = child;
     }
 
     protected void addBatchRow(List<?> row) {
@@ -283,11 +282,12 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                         this.getProcessingState().nodeStatistics.stopBatchTimer();
                         this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
                         if (batch.getTerminationFlag()) {
-                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren(), this.getClassName());
+                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
                             //this.nodeStatistics.dumpProperties(this.getClassName());
                         }
                     }
                     this.recordBatch(batch);
+                    recordStats = false;
                 }
                 //24663: only return non-zero batches. 
                 //there have been several instances in the code that have not correctly accounted for non-terminal zero length batches
@@ -304,19 +304,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 // stop timer for this batch (BlockedException)
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
                 this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+                recordStats = false;
             }
             throw e;
-        } catch (QueryProcessor.ExpiredTimeSliceException e) {
-        	if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
-                this.getProcessingState().nodeStatistics.stopBatchTimer();
-            }
-            throw e;
-        } catch (TeiidComponentException e) {
-            // stop timer for this batch (MetaMatrixComponentException)
+        } finally {
             if(recordStats &&  this.getProcessingState().context.getCollectNodeStatistics()) {
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
             }
-            throw e;
         }
     }
 
@@ -521,11 +515,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 break;
             }
         }
+        target.childCount = this.childCount;
 	}
     
     public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
         PlanNode result = new PlanNode(getClassName());
+        result.addProperty(PROP_ID, String.valueOf(getID()));
         result.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(this.data.elements));
         if(this.getProcessingState().context != null && this.getProcessingState().context.getCollectNodeStatistics()) {
             result.addProperty(PROP_NODE_STATS_LIST, this.getProcessingState().nodeStatistics.getStatisticsList());
@@ -608,7 +604,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		return processingState;
 	}
 	
-	public boolean hasFinalBuffer() {
+	public boolean hasBuffer(boolean requireFinal) {
 		return false;
 	}
 	
@@ -619,7 +615,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	 * @throws TeiidComponentException 
 	 * @throws BlockedException 
      */
-	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		return null;
 	}
 	

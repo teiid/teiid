@@ -24,8 +24,7 @@ package org.teiid.resource.adapter.salesforce;
 
 import static org.junit.Assert.*;
 
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
+import java.util.Calendar;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -33,23 +32,23 @@ import org.teiid.translator.salesforce.execution.DeletedResult;
 
 import com.sforce.soap.partner.DeletedRecord;
 import com.sforce.soap.partner.GetDeletedResult;
-import com.sforce.soap.partner.Soap;
+import com.sforce.soap.partner.PartnerConnection;
 
 @SuppressWarnings("nls")
 public class TestSalesforceConnectionImpl {
 	
 	@Test public void testGetDeleted() throws Exception {
-		Soap soap = Mockito.mock(Soap.class);
+		PartnerConnection pc = Mockito.mock(PartnerConnection.class);
 		GetDeletedResult gdr = new GetDeletedResult();
-		XMLGregorianCalendar c = DatatypeFactory.newInstance().newXMLGregorianCalendar();
+		Calendar c = Calendar.getInstance();
 		gdr.setEarliestDateAvailable(c);
 		gdr.setLatestDateCovered(c);
 		DeletedRecord dr = new DeletedRecord();
 		dr.setDeletedDate(c);
 		dr.setId("id");
-		gdr.getDeletedRecords().add(dr);
-		Mockito.stub(soap.getDeleted("x", null, null)).toReturn(gdr);
-		SalesforceConnectionImpl sfci = new SalesforceConnectionImpl(soap);
+		gdr.setDeletedRecords(new DeletedRecord[] {dr});
+		Mockito.stub(pc.getDeleted("x", null, null)).toReturn(gdr);
+		SalesforceConnectionImpl sfci = new SalesforceConnectionImpl(pc);
 		DeletedResult result = sfci.getDeleted("x", null, null);
 		assertEquals(1, result.getResultRecords().size());
 	}

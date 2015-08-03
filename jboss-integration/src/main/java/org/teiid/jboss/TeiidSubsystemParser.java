@@ -23,9 +23,9 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 import static org.jboss.as.controller.parsing.ParseUtils.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +41,8 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
 import org.jboss.staxmapper.XMLExtendedStreamWriter;
 
 class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<ModelNode>>, XMLElementWriter<SubsystemMarshallingContext> {
-
+	public static TeiidSubsystemParser INSTANCE = new TeiidSubsystemParser();
+	
     @Override
     public void writeContent(final XMLExtendedStreamWriter writer, final SubsystemMarshallingContext context) throws XMLStreamException {
         context.startSubsystemElement(Namespace.CURRENT.getUri(), false);
@@ -50,8 +51,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         	return;
         }
         
-        writeElement(writer, Element.ALLOW_ENV_FUNCTION_ELEMENT, node);
-        writeElement(writer, Element.ASYNC_THREAD_POOL_ELEMENT, node);
+        ALLOW_ENV_FUNCTION_ELEMENT.marshallAsElement(node, false, writer);
+        ASYNC_THREAD_POOL_ELEMENT.marshallAsElement(node, false, writer);
         
     	if (like(node, Element.BUFFER_SERVICE_ELEMENT)){
     		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
@@ -59,21 +60,24 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		writer.writeEndElement();
     	}
     	
-    	writeElement(writer, Element.MAX_THREADS_ELEMENT, node);
-    	writeElement(writer, Element.MAX_ACTIVE_PLANS_ELEMENT, node);
-    	writeElement(writer, Element.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, node);
-    	writeElement(writer, Element.TIME_SLICE_IN_MILLI_ELEMENT, node);
-    	writeElement(writer, Element.MAX_ROWS_FETCH_SIZE_ELEMENT, node);
-    	writeElement(writer, Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT, node);
-    	writeElement(writer, Element.QUERY_THRESHOLD_IN_SECS_ELEMENT, node);
-    	writeElement(writer, Element.MAX_SOURCE_ROWS_ELEMENT, node);
-    	writeElement(writer, Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT, node);
-    	writeElement(writer, Element.DETECTING_CHANGE_EVENTS_ELEMENT, node);
-    	writeElement(writer, Element.QUERY_TIMEOUT, node);
-    	writeElement(writer, Element.WORKMANAGER, node);
-
-    	writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
-    	writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
+    	MAX_THREADS_ELEMENT.marshallAsElement(node, false, writer);
+    	MAX_ACTIVE_PLANS_ELEMENT.marshallAsElement(node, false, writer);
+    	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT.marshallAsElement(node, false, writer);
+    	TIME_SLICE_IN_MILLI_ELEMENT.marshallAsElement(node, false, writer);
+    	MAX_ROWS_FETCH_SIZE_ELEMENT.marshallAsElement(node, false, writer);
+    	LOB_CHUNK_SIZE_IN_KB_ELEMENT.marshallAsElement(node, false, writer);
+    	QUERY_THRESHOLD_IN_SECS_ELEMENT.marshallAsElement(node, false, writer);
+    	MAX_SOURCE_ROWS_ELEMENT.marshallAsElement(node, false, writer);
+    	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT.marshallAsElement(node, false, writer);
+    	DETECTING_CHANGE_EVENTS_ELEMENT.marshallAsElement(node, false, writer);
+    	QUERY_TIMEOUT.marshallAsElement(node, false, writer);
+    	WORKMANAGER.marshallAsElement(node, false, writer);
+    	
+    	DATA_ROLES_REQUIRED_ELEMENT.marshallAsElement(node, false, writer);
+    	AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.marshallAsElement(node, false, writer);
+    	POLICY_DECIDER_MODULE_ELEMENT.marshallAsElement(node, false, writer);
+    	
+    	PREPARSER_MODULE_ELEMENT.marshallAsElement(node, false, writer);
     	
     	if (like(node, Element.RESULTSET_CACHE_ELEMENT)){
     		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
@@ -95,7 +99,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	   	
     	if (has(node, Element.TRANSPORT_ELEMENT.getLocalName())) {
 	    	ArrayList<String> transports = new ArrayList<String>(node.get(Element.TRANSPORT_ELEMENT.getLocalName()).keys());
-	    	Collections.sort(transports);
 	    	if (!transports.isEmpty()) {
 	    		for (String transport:transports) {
 	    	        writer.writeStartElement(Element.TRANSPORT_ELEMENT.getLocalName());
@@ -107,7 +110,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	
     	if (has(node, Element.TRANSLATOR_ELEMENT.getLocalName())) {
 	    	ArrayList<String> translators = new ArrayList<String>(node.get(Element.TRANSLATOR_ELEMENT.getLocalName()).keys());
-	    	Collections.sort(translators);
 	    	if (!translators.isEmpty()) {
 	    		for (String translator:translators) {
 	    	        writer.writeStartElement(Element.TRANSLATOR_ELEMENT.getLocalName());
@@ -120,61 +122,64 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     }
     
     private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-    	writeAttribute(writer, Element.DC_STACK_ATTRIBUTE, node);
+    	DC_STACK_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 	}
 
 	private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node, String translatorName) throws XMLStreamException {
     	writer.writeAttribute(Element.TRANSLATOR_NAME_ATTRIBUTE.getLocalName(), translatorName);
-    	writeAttribute(writer, Element.TRANSLATOR_MODULE_ATTRIBUTE, node);
+    	TRANSLATOR_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    	TRANSLATOR_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     }
     
     // write the elements according to the schema defined.
     private void writeTransportConfiguration( XMLExtendedStreamWriter writer, ModelNode node, String transportName) throws XMLStreamException {
     	
     	writer.writeAttribute(Element.TRANSPORT_NAME_ATTRIBUTE.getLocalName(), transportName);
-    	writeAttribute(writer, Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE, node);
-    	writeAttribute(writer, Element.TRANSPORT_PROTOCOL_ATTRIBUTE, node);
-    	writeAttribute(writer, Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE, node);
-    	writeAttribute(writer, Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE, node);
-    	writeAttribute(writer, Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE, node);
+    	TRANSPORT_SOCKET_BINDING_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    	TRANSPORT_PROTOCOL_ATTRIBUTE.marshallAsAttribute(node, true, writer);
+    	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	
     	// authentication
     	if (like(node, Element.AUTHENTICATION_ELEMENT)) {
 			writer.writeStartElement(Element.AUTHENTICATION_ELEMENT.getLocalName());
-			writeAttribute(writer, Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, node);
-			writeAttribute(writer, Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, node);
-			writeAttribute(writer, Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, node);
-			writeAttribute(writer, Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE, node);
+			AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			writer.writeEndElement();
     	}
     	
     	if (like(node, Element.PG_ELEMENT)) {
 			writer.writeStartElement(Element.PG_ELEMENT.getLocalName());
-			writeAttribute(writer, Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT, node);			
+			PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.marshallAsAttribute(node, false, writer);			
 			writer.writeEndElement();
     	}    	
     	
     	if (like(node, Element.SSL_ELEMENT)) {
 			writer.writeStartElement(Element.SSL_ELEMENT.getLocalName());
 			
-			writeAttribute(writer, Element.SSL_MODE_ATTRIBUTE, node);
-			writeAttribute(writer, Element.SSL_AUTH_MODE_ATTRIBUTE, node);
-			writeAttribute(writer, Element.SSL_SSL_PROTOCOL_ATTRIBUTE, node);
-			writeAttribute(writer, Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE, node);
-			writeAttribute(writer, Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE, node);
+			SSL_MODE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			SSL_AUTH_MODE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			SSL_SSL_PROTOCOL_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 
 			if (like(node, Element.SSL_KETSTORE_ELEMENT)) {
 				writer.writeStartElement(Element.SSL_KETSTORE_ELEMENT.getLocalName());
-				writeAttribute(writer, Element.SSL_KETSTORE_NAME_ATTRIBUTE, node);
-				writeAttribute(writer, Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE, node);
-				writeAttribute(writer, Element.SSL_KETSTORE_TYPE_ATTRIBUTE, node);
+				SSL_KETSTORE_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+				SSL_KETSTORE_PASSWORD_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+				SSL_KETSTORE_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+				SSL_KETSTORE_ALIAS_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+				SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 				writer.writeEndElement();
 			}
 			
 			if (like(node, Element.SSL_TRUSTSTORE_ELEMENT)) {
 				writer.writeStartElement(Element.SSL_TRUSTSTORE_ELEMENT.getLocalName());
-				writeAttribute(writer, Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE, node);
-				writeAttribute(writer, Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE, node);
+				SSL_TRUSTSTORE_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+				SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 				writer.writeEndElement();
 			}			
 			writer.writeEndElement();
@@ -182,31 +187,31 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     }
     
 	private void writeBufferService(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeAttribute(writer, Element.USE_DISK_ATTRIBUTE, node);
-		writeAttribute(writer, Element.INLINE_LOBS, node);
-		writeAttribute(writer, Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MAX_PROCESSING_KB_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MAX_RESERVED_KB_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MAX_FILE_SIZE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MAX_BUFFER_SPACE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MAX_OPEN_FILES_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MEMORY_BUFFER_SPACE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, node);
-		writeAttribute(writer, Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, node);
+		USE_DISK_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		INLINE_LOBS.marshallAsAttribute(node, false, writer);
+		PROCESSOR_BATCH_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MAX_PROCESSING_KB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MAX_RESERVED_KB_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MAX_FILE_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MAX_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MAX_OPEN_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MEMORY_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		ENCRYPT_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 	}
 
 	private void writeResultsetCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeAttribute(writer, Element.RSC_NAME_ELEMENT, node);
-		writeAttribute(writer, Element.RSC_CONTAINER_NAME_ELEMENT, node);
-		writeAttribute(writer, Element.RSC_ENABLE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.RSC_MAX_STALENESS_ELEMENT, node);
+		RSC_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		RSC_CONTAINER_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		RSC_ENABLE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		RSC_MAX_STALENESS_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 	}
 
 	private void writePreparedPlanCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeAttribute(writer, Element.PPC_NAME_ELEMENT, node);
-		writeAttribute(writer, Element.PPC_CONTAINER_NAME_ELEMENT, node);
-		writeAttribute(writer, Element.PPC_ENABLE_ATTRIBUTE, node);
+		PPC_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		PPC_CONTAINER_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		PPC_ENABLE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 	}
 
 	private boolean has(ModelNode node, String name) {
@@ -217,33 +222,13 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 		if (node.isDefined()) {			
 			Set<String> keys = node.keys();
 			for (String key:keys) {
-				if (key.startsWith(element.getLocalName())) {
+				if (key.startsWith(element.getLocalName()) && node.get(key).isDefined()) {
 					return true;
 				}
 			}
 		}
         return false;
     }
-
-    private void writeElement(final XMLExtendedStreamWriter writer, final Element element, final ModelNode node) throws XMLStreamException {
-    	if (has(node, element.getModelName())) {
-    		String value = node.get(element.getModelName()).asString();
-	        if (!element.sameAsDefault(value)) {
-	    		writer.writeStartElement(element.getLocalName());
-		        writer.writeCharacters(value);
-		        writer.writeEndElement();
-	        }
-    	}
-    }     
-    
-    private void writeAttribute(final XMLExtendedStreamWriter writer, final Element element, final ModelNode node) throws XMLStreamException {
-    	if (has(node, element.getModelName())) {
-    		String value = node.get(element.getModelName()).asString();
-    		if (!element.sameAsDefault(value)) {
-    			writer.writeAttribute(element.getLocalName(), value);
-    		}
-    	}
-    }     
 
     @Override
     public void readElement(final XMLExtendedStreamReader reader, final List<ModelNode> list) throws XMLStreamException {
@@ -273,10 +258,13 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 
     				case POLICY_DECIDER_MODULE_ELEMENT:
     				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
+    				case PREPARSER_MODULE_ELEMENT:
     				case WORKMANAGER:    					
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
-    					
+    				case TIME_SLICE_IN_MILL_ELEMENT:
+    					bootServices.get(Element.TIME_SLICE_IN_MILLI_ELEMENT.getLocalName()).set(Integer.parseInt(reader.getElementText()));
+    					break;
     				case MAX_THREADS_ELEMENT:
     				case MAX_ACTIVE_PLANS_ELEMENT:
     				case USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT:
@@ -443,8 +431,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
-
     			case AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE:
+    				node.get(element.getModelName()).set(attrValue);
+    				break;
+    			case AUTHENTICATION_TYPE_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     				
@@ -498,6 +488,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case SSL_SSL_PROTOCOL_ATTRIBUTE:
     			case SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE:
     			case SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE:
+    			case SSL_KETSTORE_ALIAS_ATTRIBUTE:
+    			case SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
 
@@ -536,11 +528,19 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     				
     			case SSL_KETSTORE_PASSWORD_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
+    				node.get(element.getModelName()).setExpression(attrValue);
     				break;
     				
     			case SSL_KETSTORE_TYPE_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
+    				break;
+
+    			case SSL_KETSTORE_ALIAS_ATTRIBUTE:
+    				node.get(element.getModelName()).set(attrValue);
+    				break;
+    				
+    			case SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE:
+    				node.get(element.getModelName()).setExpression(attrValue);
     				break;
 
     			default:
@@ -565,7 +565,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     				
     			case SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
+    				node.get(element.getModelName()).setExpression(attrValue);
     				break;
     				
     			default:
@@ -596,7 +596,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case CONNECTOR_BATCH_SIZE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case MAX_PROCESSING_KB_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
@@ -621,7 +620,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     			case MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
-    				break;    				
+    				break;
+    			case ENCRYPT_FILES_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				break;
     			default:
     				throw ParseUtils.unexpectedAttribute(reader, i);    			
     			}
@@ -644,7 +646,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case PPC_ENABLE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
-    			case PPC_NAME_ELEMENT:
+    			case PPC_NAME_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     			default: 
@@ -663,16 +665,16 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			String attrValue = reader.getAttributeValue(i);
     			Element element = Element.forName(attrName, Element.RESULTSET_CACHE_ELEMENT);
     			switch(element) {
-    			case RSC_CONTAINER_NAME_ELEMENT:
+    			case RSC_CONTAINER_NAME_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     			case RSC_ENABLE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
-    			case RSC_MAX_STALENESS_ELEMENT:
+    			case RSC_MAX_STALENESS_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
     				break;
-    			case RSC_NAME_ELEMENT:
+    			case RSC_NAME_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     			default: 
@@ -698,6 +700,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				translatorName = attrValue;
     				break;
     			case TRANSLATOR_MODULE_ATTRIBUTE:
+    			case TRANSLATOR_SLOT_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     			default: 

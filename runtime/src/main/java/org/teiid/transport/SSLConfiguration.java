@@ -60,7 +60,8 @@ public class SSLConfiguration {
     private String trustStorePassword = ""; //$NON-NLS-1$
     private String authenticationMode = ONEWAY;
     private String[] enabledCipherSuites;
-    
+    private String keyAlias; 
+    private String keyPassword;
 
 	public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isSslEnabled()) {
@@ -79,7 +80,10 @@ public class SSLConfiguration {
                                     trustStorePassword,
                                     keyManagerFactoryAlgorithm,
                                     keyStoreType,
-                                    sslProtocol);
+                                    sslProtocol,
+                                    keyAlias,
+                                    keyPassword,
+                                    false);
         } 
 
         SSLEngine result = context.createSSLEngine();
@@ -94,7 +98,7 @@ public class SSLConfiguration {
         		result.setEnabledCipherSuites(this.enabledCipherSuites);
         	}
         }
-        
+
         result.setNeedClientAuth(TWOWAY.equals(authenticationMode));
         return result;
     }
@@ -156,5 +160,13 @@ public class SSLConfiguration {
 	
 	public String[] getEnabledCipherSuitesAsArray() {
 		return enabledCipherSuites;
+	}
+
+	public void setKeystoreKeyAlias(String alias) {
+		this.keyAlias = alias;
+	}
+	
+	public void setKeystoreKeyPassword(String keyPassword) {
+		this.keyPassword = keyPassword;
 	}
 }

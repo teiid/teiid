@@ -30,8 +30,8 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.PreparedPlan;
-import org.teiid.metadata.Procedure;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -105,8 +105,8 @@ public class QueryOptimizer {
 		switch (command.getType()) {
 		case Command.TYPE_UPDATE_PROCEDURE:
 			CreateProcedureCommand cupc = (CreateProcedureCommand)command;
-			if (cupc.getUpdateType() != Command.TYPE_UNKNOWN) {
-				//row update procedure
+			if (cupc.getUpdateType() != Command.TYPE_UNKNOWN || cupc.getVirtualGroup() == null) {
+				//row update procedure or anon block
 				result = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
 			} else {
 				Object pid = cupc.getVirtualGroup().getMetadataID();
@@ -121,16 +121,19 @@ public class QueryOptimizer {
 				PreparedPlan pp = context.getPlan(fullName);
 				if (pp == null) {
 					Determinism determinismLevel = context.resetDeterminismLevel();
-					CommandContext clone = context.clone();
-					ProcessorPlan plan = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, clone);
-					//note that this is not a full prepared plan.  It is not usable by user queries.
-					if (pid instanceof Procedure) {
-						clone.accessedPlanningObject(pid);
+					try {
+						CommandContext clone = context.clone();
+						ProcessorPlan plan = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, clone);
+						//note that this is not a full prepared plan.  It is not usable by user queries.
+						if (pid instanceof Procedure) {
+							clone.accessedPlanningObject(pid);
+						}
+						pp = new PreparedPlan();
+						pp.setPlan(plan, clone);
+						context.putPlan(fullName, pp, context.getDeterminismLevel());
+					} finally {
+						context.setDeterminismLevel(determinismLevel);
 					}
-					pp = new PreparedPlan();
-					pp.setPlan(plan, clone);
-					context.putPlan(fullName, pp, context.getDeterminismLevel());
-					context.setDeterminismLevel(determinismLevel);
 				}
 				result = pp.getPlan().clone();
 				for (Object id : pp.getAccessInfo().getObjectsAccessed()) {

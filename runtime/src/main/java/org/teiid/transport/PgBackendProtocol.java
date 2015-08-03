@@ -31,11 +31,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.sql.Array;
 import java.sql.Blob;
-import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.List;
 import java.util.Properties;
 
@@ -74,7 +73,9 @@ import org.teiid.transport.pg.PGbytea;
  */
 @SuppressWarnings("nls")
 public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRemote {
-	
+
+	public static final String SSL_HANDLER_KEY = "sslHandler";
+
     private final class SSLEnabler implements ChannelFutureListener {
     	
     	private SSLEngine engine;
@@ -87,7 +88,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		public void operationComplete(ChannelFuture future) throws Exception {
 			if (future.isSuccess()) {
 				SslHandler handler = new SslHandler(engine);
-				future.getChannel().getPipeline().addFirst("sslHandler", handler);
+				future.getChannel().getPipeline().addFirst(SSL_HANDLER_KEY, handler);
 				handler.handshake();
 			}
 		}
@@ -151,6 +152,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     				flushResults(done);
     				processNext = !done;
     				if (done) {
+    					if (sql != null) {
+    						sendCommandComplete(sql, rowsSent);
+    					}
     					result.getResultsReceiver().receiveResults(rowsSent);
     				}
     			} else {
@@ -192,15 +196,17 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     private MessageEvent message;
     private int maxLobSize = (2*1024*1024); // 2 MB
 	private final int maxBufferSize;
+	private boolean requireSecure;
     
 	private volatile ResultsFuture<Boolean> nextFuture;
 
 	private SSLConfiguration config;
 
-	public PgBackendProtocol(int maxLobSize, int maxBufferSize, SSLConfiguration config) {
+	public PgBackendProtocol(int maxLobSize, int maxBufferSize, SSLConfiguration config, boolean requireSecure) {
     	this.maxLobSize = maxLobSize;
     	this.maxBufferSize = maxBufferSize;
     	this.config = config;
+		this.requireSecure = requireSecure;
     }
     
 	@Override
@@ -239,7 +245,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	
 	@Override
 	public void useClearTextAuthentication() {
-		sendAuthenticationCleartextPassword();
+		if (requireSecure && config != null && config.isClientEncryptionEnabled()) {
+			sendErrorResponse(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40125));
+		} else {
+			sendAuthenticationCleartextPassword();
+		}
 	}
 	
 	@Override
@@ -329,24 +339,13 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 
 	@Override
-	public void sendParameterDescription(ParameterMetaData meta, int[] paramType) {
-		try {
-			int count = meta.getParameterCount();
-			startMessage('t');
-			writeShort(count);
-			for (int i = 0; i < count; i++) {
-				int type;
-				if (paramType != null && paramType[i] != 0) {
-					type = paramType[i];
-				} else {
-					type = convertType(meta.getParameterType(i+1));
-				}
-				writeInt(type);
-			}
-			sendMessage();
-		} catch (SQLException e) {
-			sendErrorResponse(e);
-		}			
+	public void sendParameterDescription(int[] paramType) {
+		startMessage('t');
+		writeShort(paramType.length);
+		for (int i = 0; i < paramType.length; i++) {
+			writeInt(paramType[i]);
+		}
+		sendMessage();
 	}
 
 	@Override
@@ -355,37 +354,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	@Override
-	public void sendCursorResults(ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount) {
-    	sendRowDescription(cols);
-
-    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
-    	r.run();  	        					
-	}
-	
-	@Override
-	public void sendPortalResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean portal) {
-    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
-    	r.run();	        	
-	}
-	
-	@Override
-	public void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results) {
-		try {
-			int rowsMoved = 0;
-			for (int i = 0; i < rowCount; i++) {
-				if (!rs.next()) {
-					break;
-				}
-				rowsMoved++;
-			}				
-			results.getResultsReceiver().receiveResults(rowsMoved);
-		} catch (SQLException e) {
-			sendErrorResponse(e);
-		}
-	}		
-	
-	@Override
-	public void sendResults(final String sql, final ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, boolean describeRows) {
+	public void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols,
+			ResultsFuture<Integer> result, int rowCount, boolean describeRows) {
 		if (nextFuture != null) {
 			sendErrorResponse(new IllegalStateException("Pending results have not been sent")); //$NON-NLS-1$
 		}
@@ -393,7 +363,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     	if (describeRows) {
     		sendRowDescription(cols);
     	}
-    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, -1);
+    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
     	r.sql = sql;
     	r.run();    
 	}
@@ -529,17 +499,20 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		    case PG_TYPE_TEXTARRAY:
 		    case PG_TYPE_OIDARRAY:
 		    	{
-		    	ArrayImpl obj = (ArrayImpl)rs.getObject(column);
+		    	Array obj = rs.getArray(column);
 		    	if (obj != null) {
 		    		writer.append("{");
 			    	boolean first = true;
-			    	for (Object o:obj.getValues()) {
+			    	Object array = obj.getArray();
+					int length = java.lang.reflect.Array.getLength(array);
+			    	for (int i = 0; i < length; i++) {
 			    		if (!first) {
 			    			writer.append(",");
 			    		}
 			    		else {
 			    			first = false;
 			    		}
+			    		Object o = java.lang.reflect.Array.get(array, i);
 			    		if (o != null) {
 				    		if (col.type == PG_TYPE_TEXTARRAY) {
 				    			escapeQuote(writer, o.toString());
@@ -568,6 +541,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			    		}
 			    		if (o != null) {
 			    			writer.append(o.toString());
+			    		} else {
+			    			writer.append('0');
 			    		}
 			    	}
 		    	}	
@@ -596,14 +571,20 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	public void sendSslResponse() {
 		SSLEngine engine = null;
 		try {
-			engine = config.getServerSSLEngine();
+			if (config != null) {
+				engine = config.getServerSSLEngine();
+			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		} catch (GeneralSecurityException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		}
 		ChannelBuffer buffer = ctx.getChannel().getConfig().getBufferFactory().getBuffer(1);
 		if (engine == null) {
+			if (requireSecure) {
+				sendErrorResponse(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40124));
+				return;
+			}
 			buffer.writeByte('N');
 		} else {
 			this.message.getFuture().addListener(new SSLEnabler(engine));
@@ -616,7 +597,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		if (t instanceof SQLException) {
 			//we are just re-logging an exception raised by the engine
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODBC, MessageLevel.DETAIL)) {
-				LogManager.logWarning(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40020)); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logDetail(LogConstants.CTX_ODBC, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40020)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} else {
 			//should be in the odbc layer
@@ -682,6 +663,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		writeString("08P01");
 		write('M');
 		writeString(message);
+		write(0);
 		sendMessage();
 	}
 	
@@ -839,55 +821,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		LogManager.logTrace(LogConstants.CTX_ODBC, (Object[])msg);
 	}
 	
-	/**
-	 * Types.ARRAY is not supported
-	 */
-    private static int convertType(final int type) {
-        switch (type) {
-        case Types.BIT:
-        case Types.BOOLEAN:
-            return PG_TYPE_BOOL;
-        case Types.VARCHAR:
-            return PG_TYPE_VARCHAR;        
-        case Types.CHAR:
-            return PG_TYPE_BPCHAR;
-        case Types.TINYINT:
-        case Types.SMALLINT:
-        	return PG_TYPE_INT2;
-        case Types.INTEGER:
-            return PG_TYPE_INT4;
-        case Types.BIGINT:
-            return PG_TYPE_INT8;
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            return PG_TYPE_NUMERIC;
-        case Types.FLOAT:
-        case Types.REAL:
-            return PG_TYPE_FLOAT4;
-        case Types.DOUBLE:
-            return PG_TYPE_FLOAT8;
-        case Types.TIME:
-            return PG_TYPE_TIME;
-        case Types.DATE:
-            return PG_TYPE_DATE;
-        case Types.TIMESTAMP:
-            return PG_TYPE_TIMESTAMP_NO_TMZONE;
-            
-        case Types.BLOB:            
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-        	return PG_TYPE_BYTEA;
-        	
-        case Types.LONGVARCHAR:
-        case Types.CLOB:            
-        	return PG_TYPE_TEXT;
-        
-        case Types.SQLXML:        	
-            return PG_TYPE_TEXT;
-            
-        default:
-            return PG_TYPE_UNKNOWN;
-        }
-    }	
+	public boolean secureData() {
+		return requireSecure && config != null && config.isSslEnabled();
+	}
+	
 }

@@ -25,15 +25,12 @@ package org.teiid.runtime;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.resource.spi.work.WorkException;
 import javax.resource.spi.work.WorkManager;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 import org.teiid.security.SecurityHelper;
@@ -44,7 +41,6 @@ import org.teiid.security.SecurityHelper;
  */
 final class WorkManagerTeiidExecutor implements TeiidExecutor {
 	WorkManager workManager;
-	private ScheduledThreadPoolExecutor stpe = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("Scheduler")); //$NON-NLS-1$
 	
 	WorkManagerTeiidExecutor(WorkManager workManager) {
 		this.workManager = workManager;
@@ -54,18 +50,6 @@ final class WorkManagerTeiidExecutor implements TeiidExecutor {
 	public List<Runnable> shutdownNow() {
 		workManager = null;
 		return Collections.emptyList();
-	}
-
-	@Override
-	public ScheduledFuture<?> schedule(Runnable command, long delay,
-			TimeUnit unit) {
-		final ThreadReuseExecutor.RunnableWrapper wrapper = new ThreadReuseExecutor.RunnableWrapper(command);
-		return stpe.schedule(new Runnable() {
-			@Override
-			public void run() {
-				execute(wrapper);
-			}
-		}, delay, unit);
 	}
 
 	@Override

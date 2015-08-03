@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
@@ -38,8 +37,6 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
-import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestCrossSourceStarJoin {
@@ -97,8 +94,8 @@ public class TestCrossSourceStarJoin {
         createKey(KeyRecord.Type.Primary, "pk", p, p_cols.subList(0, 1));
 
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("oracle", CapabilitiesConverter.convertCapabilities(new OracleExecutionFactory())); //$NON-NLS-1$
-        finder.addCapabilities("sybase", CapabilitiesConverter.convertCapabilities(new SybaseExecutionFactory())); //$NON-NLS-1$
+        finder.addCapabilities("oracle", TestTPCR.oracleCapabilities()); //$NON-NLS-1$
+        finder.addCapabilities("sybase", TestTPCR.sqlServerCapabilities()); //$NON-NLS-1$
 
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "star");
         

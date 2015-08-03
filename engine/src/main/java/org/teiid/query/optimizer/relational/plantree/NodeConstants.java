@@ -71,10 +71,14 @@ public final class NodeConstants {
     public enum Info {
         ATOMIC_REQUEST,      // Command
         MODEL_ID,            // Object (model ID)
-        IS_COMMON_TABLE,
         PROCEDURE_CRITERIA,
         PROCEDURE_INPUTS,
         PROCEDURE_DEFAULTS,
+        IS_MULTI_SOURCE,
+        SOURCE_NAME,
+        CONFORMED_SOURCES, //Set <model id>
+        SUB_PLAN,
+        SUB_PLANS,
         
         // Set operation properties 
         SET_OPERATION,      // SetOperation
@@ -94,11 +98,13 @@ public final class NodeConstants {
         IS_LEFT_DISTINCT, 	// Boolean
         IS_RIGHT_DISTINCT, 	// Boolean
         IS_SEMI_DEP,		// Boolean
+        PRESERVE,
 
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>
         INTO_GROUP,         // GroupSymbol
         HAS_WINDOW_FUNCTIONS,		// Boolean
+        CONSTRAINT,
 
         // Select node properties
         SELECT_CRITERIA,    // Criteria
@@ -106,6 +112,7 @@ public final class NodeConstants {
         //phantom nodes represent the previous position of criteria that has been pushed across a source, group, or union node.
         //phantom nodes are used by RuleCopyCriteria and removed by RuleCleanCriteria.
         IS_PHANTOM,         // Boolean
+        IS_TEMPORARY,         // Boolean
         IS_COPIED,           // Boolean - used in CopyCriteria to mark which selects have already been copied
         IS_PUSHED,           // true if this node has already been pushed
         IS_DEPENDENT_SET, // Boolean - only used with dependent joins
@@ -119,7 +126,7 @@ public final class NodeConstants {
         SYMBOL_MAP,         // SymbolMap
         PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
         VIRTUAL_COMMAND,    // Command
-        MAKE_DEP,           // Boolean
+        MAKE_DEP,           // Option.Makedep
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
         NESTED_COMMAND,     // Command for nested processor plan
         TABLE_FUNCTION,     // Table Function
@@ -128,9 +135,11 @@ public final class NodeConstants {
         INLINE_VIEW,        // If the source node represents an inline view
         NO_UNNEST,
         MAKE_IND,
+        SOURCE_HINT,
         
         // Group node properties
         GROUP_COLS,         // List <Expression>
+        ROLLUP,             // Boolean
 
         // Special constant used in converting plan to process for all nodes
         OUTPUT_COLS,        // List <SingleElementSymbol>
@@ -148,11 +157,12 @@ public final class NodeConstants {
         MAX_TUPLE_LIMIT,     // Expression that evaluates to the max number of tuples generated
         OFFSET_TUPLE_COUNT,  // Expression that evaluates to the tuple offset of the starting tuple
         IS_IMPLICIT_LIMIT,   // Boolean if the limit is created by the rewriter as part of a subquery optimization
-        IS_STRICT,			 // Boolean if the unordered limit should be enforced strictly
+        IS_NON_STRICT,		 // Boolean if the unordered limit should not be enforced strictly
 
         // Common AP Information
         ACCESS_PATTERNS,     // Collection <List <Object element ID> >
         ACCESS_PATTERN_USED, // List <Object element ID>
-        REQUIRED_ACCESS_PATTERN_GROUPS
+        REQUIRED_ACCESS_PATTERN_GROUPS, 
+        
     }
 }

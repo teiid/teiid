@@ -23,6 +23,7 @@
 package org.teiid.net.socket;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.Future;
 
@@ -37,5 +38,7 @@ public interface ObjectChannel {
 	boolean isOpen();
 	
 	void close();
+
+	InetAddress getLocalAddress();
 
 }

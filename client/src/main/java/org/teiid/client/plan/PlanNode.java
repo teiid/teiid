@@ -31,7 +31,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -111,7 +111,7 @@ public class PlanNode implements Externalizable {
 		
 	}
 	
-    private List<Property> properties = new LinkedList<Property>();
+    private LinkedHashMap<String, Property> properties = new LinkedHashMap<String, PlanNode.Property>();
     private PlanNode parent;
     private String name;
     
@@ -136,14 +136,14 @@ public class PlanNode implements Externalizable {
     }
     
     public List<Property> getProperties() {
-		return properties;
+		return new ArrayList<PlanNode.Property>(properties.values());
 	}
     
     public void addProperty(String pname, PlanNode value) {
     	Property p = new Property(pname);
     	p.setPlanNode(value);
     	value.setParent(this);
-    	this.properties.add(p);
+    	this.properties.put(pname, p);
     }
     
     public void addProperty(String pname, List<String> value) {
@@ -152,13 +152,17 @@ public class PlanNode implements Externalizable {
     		value = Collections.emptyList();
     	}
     	p.setValues(value);
-    	this.properties.add(p);
+    	this.properties.put(pname, p);
     }
     
     public void addProperty(String pname, String value) {
     	Property p = new Property(pname);
-    	p.setValues(Arrays.asList(value));
-    	this.properties.add(p);
+    	if (value == null) {
+    		p.setValues(new ArrayList<String>(0));
+    	} else {
+    		p.setValues(Arrays.asList(value));
+    	}
+    	this.properties.put(pname, p);
     }
     
     /**
@@ -187,7 +191,9 @@ public class PlanNode implements Externalizable {
     	writer.writeAttribute("name", property.getName()); //$NON-NLS-1$
     	if (property.getValues() != null) {
 	    	for (String value:property.getValues()) {
-	    		writeElement(writer, "value", value); //$NON-NLS-1$
+	    		if (value != null) {
+	    			writeElement(writer, "value", value); //$NON-NLS-1$
+	    		}
 	    	}
     	}
     	PlanNode node = property.getPlanNode();
@@ -208,7 +214,9 @@ public class PlanNode implements Externalizable {
     
     private static void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
         writer.writeStartElement(name);
-        writer.writeCharacters(value);
+        if (value != null) {
+        	writer.writeCharacters(value);
+        }
         writer.writeEndElement();
     }    
     
@@ -330,16 +338,23 @@ public class PlanNode implements Externalizable {
     @Override
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
-    	this.properties = ExternalizeUtil.readList(in, Property.class);
+    	this.properties = new LinkedHashMap<String, PlanNode.Property>();
+    	for (Property p : ExternalizeUtil.readList(in, Property.class)) {
+    		this.properties.put(p.name, p);
+    	}
     	this.parent = (PlanNode)in.readObject();
     	this.name = (String)in.readObject();
     }
     
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-    	ExternalizeUtil.writeCollection(out, properties);
+    	ExternalizeUtil.writeCollection(out, this.properties.values());
     	out.writeObject(this.parent);
     	out.writeObject(this.name);
+    }
+    
+    public Property getProperty(String pName) {
+    	return this.properties.get(pName);
     }
     
 }

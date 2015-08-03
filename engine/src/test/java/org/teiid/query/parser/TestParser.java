@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.metadata.ParameterInfo;
@@ -70,7 +71,7 @@ public class TestParser {
 		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
 	}
 
-	static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
+	public static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
 		Expression	actual = QueryParser.getQueryParser().parseExpression(sql);
 		String actualString = actual.toString();
 
@@ -1172,6 +1173,29 @@ public class TestParser {
 		query.setGroupBy(groupBy);
 		helpTest("SELECT a FROM m.g GROUP BY b, c",  //$NON-NLS-1$
 				 "SELECT a FROM m.g GROUP BY b, c",  //$NON-NLS-1$
+				 query);
+	}
+	
+	@Test public void testGroupByRollup() {
+		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+		From from = new From();
+		from.addGroup(g);
+
+		Select select = new Select();
+		select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
+		
+		GroupBy groupBy = new GroupBy();
+		groupBy.setRollup(true);
+		groupBy.addSymbol(new ElementSymbol("b", false));		 //$NON-NLS-1$
+		groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
+		
+
+		Query query = new Query();
+		query.setSelect(select);
+		query.setFrom(from);
+		query.setGroupBy(groupBy);
+		helpTest("SELECT a FROM m.g GROUP BY rollup(b, c)",  //$NON-NLS-1$
+				 "SELECT a FROM m.g GROUP BY ROLLUP(b, c)",  //$NON-NLS-1$
 				 query);
 	}
 
@@ -2429,7 +2453,7 @@ public class TestParser {
 
         Expression constant1 = new Constant(new Integer(1000));
         Expression constant2 = new Constant(new Integer(5000));
-        Collection constants = new ArrayList(2);
+        Collection<Expression> constants = new ArrayList<Expression>(2);
         constants.add(constant1);
         constants.add(constant2);
         Criteria crit = new SetCriteria(new ElementSymbol("b"), constants); //$NON-NLS-1$
@@ -2454,7 +2478,7 @@ public class TestParser {
 
         Expression constant1 = new Constant(new Integer(1000));
         Expression constant2 = new Constant(new Integer(5000));
-        Collection constants = new ArrayList(2);
+        Collection<Expression> constants = new ArrayList<Expression>(2);
         constants.add(constant1);
         constants.add(constant2);
         SetCriteria crit = new SetCriteria(new ElementSymbol("b"), constants); //$NON-NLS-1$
@@ -2482,7 +2506,7 @@ public class TestParser {
 
 		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy(elements);
 
@@ -2494,9 +2518,9 @@ public class TestParser {
 
 	/** SELECT a FROM db.g WHERE b = aString order by c desc*/
 	@Test public void testOrderByDesc(){
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
-		ArrayList orderTypes = new ArrayList();
+		ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
 		orderTypes.add(Boolean.FALSE);
 		OrderBy orderBy = new OrderBy(elements, orderTypes);
 		
@@ -2522,7 +2546,7 @@ public class TestParser {
 
 	/** SELECT a FROM db.g WHERE b = aString order by c,d*/
 	@Test public void testOrderBys(){
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy(elements);
@@ -2603,6 +2627,27 @@ public class TestParser {
                  "SELECT a FROM db.g WHERE b LIKE 'aString'",  //$NON-NLS-1$
                  query);
     }   
+    
+    @Test public void testPgLike(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
+
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
+
+        Expression string1 = new Constant("\\_aString"); //$NON-NLS-1$
+        Criteria crit = new MatchCriteria(new ElementSymbol("b"), string1, '\\'); //$NON-NLS-1$
+
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a FROM db.g WHERE b LIKE E'\\\\_aString'",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b LIKE '\\_aString' ESCAPE '\\'",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT a FROM db.g WHERE b NOT LIKE 'aString'*/
     @Test public void testLike1(){
@@ -2914,10 +2959,10 @@ public class TestParser {
     @Test public void testInsertWithReference() {
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
-        List vars = new ArrayList();
+        List<ElementSymbol> vars = new ArrayList<ElementSymbol>();
         vars.add(new ElementSymbol("a"));         //$NON-NLS-1$
         insert.setVariables(vars);
-        List values = new ArrayList();
+        List<Reference> values = new ArrayList<Reference>();
         values.add(new Reference(0));
         insert.setValues(values);
         helpTest("INSERT INTO m.g (a) VALUES (?)",  //$NON-NLS-1$
@@ -2988,10 +3033,7 @@ public class TestParser {
         
         Select select = new Select();
         select.addSymbol(new ElementSymbol("x.a")); //$NON-NLS-1$
-        
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
+
         helpTest("exec proc1('param1')", "EXEC proc1('param1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
@@ -3066,7 +3108,7 @@ public class TestParser {
     @Test public void testAssignStatement() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
        
-        List symbols = new ArrayList();
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(new ElementSymbol("a1"));  //$NON-NLS-1$
         Select select = new Select(symbols);       
         
@@ -3169,7 +3211,7 @@ public class TestParser {
     }
     
     @Test public void testDynamicCommandStatement() throws Exception {
-        List symbols = new ArrayList();
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
@@ -3860,8 +3902,8 @@ public class TestParser {
         CreateProcedureCommand virtualProcedureCommand = new CreateProcedureCommand();
         virtualProcedureCommand.setBlock(block);
         
-        helpTest("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT c1, c2 FROM m.g) AS mycursor BEGIN x=mycursor.c1; IF(x > 5) BEGIN CONTINUE; END END SELECT c1, c2 FROM m.g; END", //$NON-NLS-1$
-        "CREATE VIRTUAL PROCEDURE\nBEGIN\nDECLARE integer x;\n" //$NON-NLS-1$
+        helpTest("BEGIN DECLARE integer x; LOOP ON (SELECT c1, c2 FROM m.g) AS mycursor BEGIN x=mycursor.c1; IF(x > 5) BEGIN CONTINUE; END END SELECT c1, c2 FROM m.g; END", //$NON-NLS-1$
+        "BEGIN\nDECLARE integer x;\n" //$NON-NLS-1$
         + "LOOP ON (SELECT c1, c2 FROM m.g) AS mycursor\nBEGIN\n" //$NON-NLS-1$
         + "x = mycursor.c1;\nIF(x > 5)\nBEGIN\nCONTINUE;\nEND\nEND\n" //$NON-NLS-1$
         + "SELECT c1, c2 FROM m.g;\nEND", virtualProcedureCommand); //$NON-NLS-1$
@@ -4409,7 +4451,7 @@ public class TestParser {
     }
 
     @Test public void testCompoundNonJoinCriteriaInFromUWithIN() {        
-        Collection values = new ArrayList();
+        Collection<Expression> values = new ArrayList<Expression>();
         values.add(new Constant(new Integer(0)));
         values.add(new Constant(new Integer(1)));
         PredicateCriteria crit = new SetCriteria(new ElementSymbol("e2"), values); //$NON-NLS-1$
@@ -4488,7 +4530,7 @@ public class TestParser {
 
         ElementSymbol e =  new ElementSymbol("foo"); //$NON-NLS-1$ 
 
-        Insert query = new Insert(g, new ArrayList(), new ArrayList());
+        Insert query = new Insert(g, new ArrayList<ElementSymbol>(), new ArrayList());
         query.addVariable(e);
         query.addValue(new Constant("bar", String.class)); //$NON-NLS-1$
         
@@ -4750,73 +4792,9 @@ public class TestParser {
         }
     }
     
+    @Ignore
     @Test public void testEmptyOuterJoinCriteria() {
         helpException("select a from b left outer join c on ()"); //$NON-NLS-1$
-    }
-    
-    @Test public void testCreateTempTable1() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable (c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testCreateTempTable2() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testCreateTempTable3() {
-        helpException("Create TEMPORARY table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
-    }
-    
-    @Test public void testCreateTempTable4() {
-        helpException("Create table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
-    }
-    
-    @Test public void testCreateTempTable5() {
-        helpException("Create  local TEMPORARY table tempTable (c1 boolean primary, c2 byte)"); //$NON-NLS-1$ 
-    }
-        
-    @Test public void testCreateTempTable7() {
-        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"TEIID31100 Parsing error: Encountered \"table tempTable ([*]c1.x[*] boolean,\" at line 1, column 41.\nInvalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
-    }
-    
-    @Test public void testCreateTempTableWithPrimaryKey() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        create.getPrimaryKey().add(column);
-        helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte, primary key (c2))", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte, PRIMARY KEY(c2))", create); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testDropTable() {
-        Drop drop = new Drop();
-        drop.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        helpTest("DROP table tempTable", "DROP TABLE tempTable", drop); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testEscapedOuterJoin() {
@@ -4880,7 +4858,7 @@ public class TestParser {
     
     @Test public void testIfElseWithoutBeginEnd() {
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN IF (x > 1) select 1; IF (x > 1) select 1; ELSE select 1; END"; //$NON-NLS-1$
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nIF(x > 1)\nBEGIN\nSELECT 1;\nEND\nELSE\nBEGIN\nSELECT 1;\nEND\nEND"; //$NON-NLS-1$
         
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new Constant(1)))); //$NON-NLS-1$
@@ -4899,10 +4877,6 @@ public class TestParser {
         CreateProcedureCommand command = new CreateProcedureCommand(block3);
         
         helpTest(sql, expected, command);
-    }
-    
-    @Test public void testBadCreate() {
-        helpException("create insert"); //$NON-NLS-1$
     }
     
     @Test public void testCommandWithSemicolon() throws Exception {
@@ -4928,29 +4902,6 @@ public class TestParser {
         helpTest("INSERT INTO m.g VALUES ('a', 'b')",  //$NON-NLS-1$
                  "INSERT INTO m.g VALUES ('a', 'b')",  //$NON-NLS-1$
                  insert);
-    }
-
-    @Test public void testTypeAliases() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.STRING);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        column = new ElementSymbol("c3");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.SHORT);
-        columns.add(column);
-        column = new ElementSymbol("c4");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.FLOAT);
-        columns.add(column);
-        column = new ElementSymbol("c5");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", create); //$NON-NLS-1$ 
     }
     
     @Test public void testXmlElement() throws Exception {
@@ -5178,7 +5129,7 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         ArrayTable tt = new ArrayTable();
-        tt.setArrayValue(new Constant(null, DataTypeManager.DefaultDataClasses.OBJECT));
+        tt.setArrayValue(new Constant(null, DataTypeManager.DefaultDataClasses.NULL));
         List<TableFunctionReference.ProjectedColumn> columns = new ArrayList<TableFunctionReference.ProjectedColumn>();
         columns.add(new TableFunctionReference.ProjectedColumn("x", "string"));
         columns.add(new TableFunctionReference.ProjectedColumn("y", "date"));
@@ -5257,7 +5208,7 @@ public class TestParser {
 		assertEquals("SELECT foo(ALL x, y ORDER BY e1)", actualCommand.toString());
     }
 
-    @Test(expected=QueryParserException.class) public void testWindowedExpression() throws QueryParserException {
+    @Test public void testWindowedExpression() throws QueryParserException {
 		QueryParser.getQueryParser().parseCommand("SELECT foo(x, y) over ()", new ParseInfo());
     }
     
@@ -5283,11 +5234,29 @@ public class TestParser {
     	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
     	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
     	Block b = new Block();
-    	b.setExceptionGroup("g");
+    	b.setExceptionGroup("e");
     	b.addStatement(cmdStmt);
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt, true);
     	helpStmtTest("BEGIN\nselect * from x;\na = 1;\nexception e\nERROR 'My Error';\nEND", "BEGIN\nSELECT * FROM x;\na = 1;\nEXCEPTION e\nRAISE SQLEXCEPTION 'My Error';\nEND", b); //$NON-NLS-1$
+    }
+    
+    @Test public void testJSONObject() throws Exception {
+    	JSONObject f = new JSONObject(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
+    	helpTestExpression("jsonObject(a as \"table\")", "JSONOBJECT(a AS \"table\")", f);
+    }
+    
+    @Test public void testLineComment() {
+    	String sql = "select 1 -- some comment";
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new Constant(1))));
+        helpTest(sql, "SELECT 1", query);
+    }
+    
+    @Test public void testTrimExpression() throws QueryParserException {
+    	String sql = "select trim(substring(Description, pos1+1))";
+    	Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand(sql, new ParseInfo());
+		assertEquals("SELECT trim(' ' FROM substring(Description, (pos1 + 1)))", actualCommand.toString());
     }
 
 }

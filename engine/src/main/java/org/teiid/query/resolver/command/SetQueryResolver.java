@@ -60,16 +60,25 @@ public class SetQueryResolver implements CommandResolver {
         QueryResolver.setChildMetadata(firstCommand, setQuery);
         QueryResolver.resolveCommand(firstCommand, metadata.getMetadata(), false);
 
-        List<Expression> firstProject = firstCommand.getProjectedSymbols();
-        List<Class<?>> firstProjectTypes = new ArrayList<Class<?>>();
-        for (Expression symbol : firstProject) {
-            firstProjectTypes.add(symbol.getType());
-        }
-
         QueryCommand rightCommand = setQuery.getRightQuery();
         
         QueryResolver.setChildMetadata(rightCommand, setQuery);
         QueryResolver.resolveCommand(rightCommand, metadata.getMetadata(), false);
+        
+        resolveSetQuery(metadata, resolveNullLiterals, setQuery, firstCommand,
+				rightCommand);
+    }
+
+	public void resolveSetQuery(TempMetadataAdapter metadata,
+			boolean resolveNullLiterals, SetQuery setQuery,
+			QueryCommand firstCommand, QueryCommand rightCommand)
+			throws QueryResolverException, QueryMetadataException,
+			TeiidComponentException {
+		List<Expression> firstProject = firstCommand.getProjectedSymbols();
+        List<Class<?>> firstProjectTypes = new ArrayList<Class<?>>();
+        for (Expression symbol : firstProject) {
+            firstProjectTypes.add(symbol.getType());
+        }
 
         if (firstProject.size() != rightCommand.getProjectedSymbols().size()) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30147, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30147, setQuery.getOperation()));

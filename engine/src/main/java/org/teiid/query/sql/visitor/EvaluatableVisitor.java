@@ -26,8 +26,11 @@ import java.util.TreeSet;
 
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.DependentSetCriteria;
@@ -64,15 +67,36 @@ public class EvaluatableVisitor extends LanguageVisitor {
 	private EvaluationLevel targetLevel;
 	private Determinism determinismLevel = Determinism.DETERMINISTIC;
 	private boolean hasCorrelatedReferences;
+	private Object modelId;
+	private QueryMetadataInterface metadata;
+	private CapabilitiesFinder capFinder;
+	
+	public EvaluatableVisitor() {
+		
+	}
+	
+	public EvaluatableVisitor(Object modelId, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
+		this.modelId = modelId;
+		this.metadata = metadata;
+		this.capFinder = capFinder;
+	}
 	    
     public void visit(Function obj) {
-        this.setDeterminismLevel(obj.getFunctionDescriptor().getDeterministic());
-        if (obj.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN || obj.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
-            evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+        FunctionDescriptor fd = obj.getFunctionDescriptor();
+		this.setDeterminismLevel(fd.getDeterministic());
+        if (fd.getDeterministic() == Determinism.NONDETERMINISTIC || fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
+        	if (obj.isEval()) {
+        		evaluationNotPossible(EvaluationLevel.PROCESSING);
+        	} else {
+        		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+        	}
         } else if (obj.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)
         		//TODO: if we had the context here we could plan better for non-prepared requests
-        		|| obj.getFunctionDescriptor().getDeterministic().compareTo(Determinism.COMMAND_DETERMINISTIC) <= 0) {
+        		|| fd.getDeterministic().compareTo(Determinism.COMMAND_DETERMINISTIC) <= 0) {
             evaluationNotPossible(EvaluationLevel.PROCESSING);
+        } else if (fd.getProcedure() != null) {
+        	//a function defined by a procedure
+        	evaluationNotPossible(EvaluationLevel.PROCESSING);
         }
     }
     
@@ -83,13 +107,13 @@ public class EvaluatableVisitor extends LanguageVisitor {
     	}
     }
     
-    private void setDeterminismLevel(Determinism value) {
+    public void setDeterminismLevel(Determinism value) {
     	if (determinismLevel == null || value.compareTo(determinismLevel) < 0) {
     		determinismLevel = value;
     	}
     }
     
-    private void evaluationNotPossible(EvaluationLevel newLevel) {
+    public void evaluationNotPossible(EvaluationLevel newLevel) {
     	levels.add(newLevel);
     	EvaluationLevel level = levels.last();
     	if (targetLevel != null && level.compareTo(targetLevel) > 0) {
@@ -98,6 +122,10 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
         
     public void visit(ElementSymbol obj) {
+    	if (obj.getGroupSymbol() == null) {
+    		evaluationNotPossible(EvaluationLevel.PROCESSING);
+    		return;
+    	}
     	//if the element is a variable, or an element that will have a value, it will be evaluatable at runtime
 		//begin hack for not having the metadata passed in
 		if (obj.getGroupSymbol().getMetadataID() instanceof TempMetadataID) {
@@ -131,6 +159,12 @@ public class EvaluatableVisitor extends LanguageVisitor {
      */
     public void visit(Reference obj) {
         hasCorrelatedReferences |= obj.isCorrelated();
+        if (obj.isPositional()) {
+        	setDeterminismLevel(Determinism.COMMAND_DETERMINISTIC);
+        } else if (modelId != null) {
+        	//for pushdown commands correlated references mean we're non-deterministic
+        	setDeterminismLevel(Determinism.NONDETERMINISTIC);
+        }
     	evaluationNotPossible(EvaluationLevel.PROCESSING);
     }
     
@@ -230,9 +264,17 @@ public class EvaluatableVisitor extends LanguageVisitor {
 		return hasCorrelatedReferences;
 	}
     
-    public static final EvaluatableVisitor needsEvaluation(LanguageObject obj) {
+    public static final EvaluatableVisitor needsEvaluation(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
+        visitor.modelId = modelID;
+        visitor.metadata = metadata;
+        visitor.capFinder = capFinder;
         DeepPreOrderNavigator.doVisit(obj, visitor);
         return visitor;
     }
+
+	public void reset() {
+		this.determinismLevel = Determinism.DETERMINISTIC;
+		this.levels.clear();
+	}
 }

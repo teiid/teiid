@@ -22,62 +22,37 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.activation.DataSource;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.Source;
-import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamSource;
 
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.StandardXMLTranslator;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
-import org.teiid.core.util.ReaderInputStream;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
-import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.events.EventDistributor;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.CacheDirective.Scope;
-import org.teiid.util.XMLInputStream;
 
 
 /**
@@ -90,35 +65,11 @@ import org.teiid.util.XMLInputStream;
  */
 public class DataTierTupleSource implements TupleSource, CompletionListener<AtomicResultsMessage> {
 	
-	private static final class MoreWorkTask implements Runnable {
-
-		WeakReference<RequestWorkItem> ref;
-
-    	public MoreWorkTask(RequestWorkItem workItem) {
-    		ref = new WeakReference<RequestWorkItem>(workItem);
-		}
-
-		@Override
-		public void run() {
-			RequestWorkItem item = ref.get();
-			if (item != null) {
-				item.moreWork();
-			}
-		}
-	}
-
 	// Construction state
     private final AtomicRequestMessage aqr;
     private final RequestWorkItem workItem;
     private final ConnectorWork cwi;
     private final DataTierManagerImpl dtm;
-    
-    private boolean[] convertToRuntimeType;
-    private boolean[] convertToDesiredRuntimeType;
-    private boolean[] isLob;
-    private FileStore lobStore;
-    private byte[] lobBuffer;
-    private Class<?>[] schema;
     
     private int limit = -1;
     
@@ -127,7 +78,6 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     private int rowsProcessed;
     private AtomicResultsMessage arm;
     private AtomicBoolean closed = new AtomicBoolean();
-    private volatile boolean canAsynchClose;
     private volatile boolean canceled;
     private volatile boolean cancelAsynch;
     private boolean executed;
@@ -141,7 +91,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	Scope scope; //this is to avoid synchronization
 	
 	private long waitUntil;
-	private ScheduledFuture<?> scheduledFuture;
+	private Future<Void> scheduledFuture;
     
     public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm, int limit) {
         this.aqr = aqr;
@@ -149,134 +99,17 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
         this.cwi = cwi;
         this.dtm = dtm;
         this.limit = limit;
-		List<Expression> symbols = this.aqr.getCommand().getProjectedSymbols();
-		this.schema = new Class[symbols.size()];
-        this.convertToDesiredRuntimeType = new boolean[symbols.size()];
-		this.convertToRuntimeType = new boolean[symbols.size()];
-		this.isLob = new boolean[symbols.size()];
-		for (int i = 0; i < symbols.size(); i++) {
-			Expression symbol = symbols.get(i);
-			this.schema[i] = symbol.getType();
-			this.convertToDesiredRuntimeType[i] = true;
-			this.convertToRuntimeType[i] = true;
-			this.isLob[i] = DataTypeManager.isLOB(this.schema[i]);
-		}
-        
     	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
         workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
-        if (!aqr.isSerial()) {
-        	addWork();
-        }
     }
 
-	private void addWork() {
-		this.canAsynchClose = true;
+	void addWork() {
 		futureResult = workItem.addWork(new Callable<AtomicResultsMessage>() {
 			@Override
 			public AtomicResultsMessage call() throws Exception {
 				return getResults();
 			}
 		}, this, 100);
-	}
-
-	private List<?> correctTypes(List<Object> row) throws TransformationException, TeiidComponentException {
-		//TODO: add a proper intermediate schema
-		for (int i = 0; i < row.size(); i++) {
-			Object value = row.get(i);
-			if (value == null) {
-				continue;
-			}
-			if (convertToRuntimeType[i]) {
-				Object result = convertToRuntimeType(dtm.getBufferManager(), value, this.schema[i]);
-				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
-					convertToRuntimeType[i] = false;
-				} else {
-					if (isLob[i] && !cwi.copyLobs() && !cwi.areLobsUsableAfterClose() && DataTypeManager.isLOB(value.getClass())) {
-						explicitClose = true;
-					}				
-					row.set(i, result);
-					value = result;
-				}
-			}
-			if (convertToDesiredRuntimeType[i]) {
-				if (value != null) {
-					Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
-					if (isLob[i] && cwi.copyLobs()) {
-						if (lobStore == null) {
-							lobStore = dtm.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
-							lobBuffer = new byte[1 << 14];
-						}
-						result = dtm.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
-					} else if (value == result) {
-						convertToDesiredRuntimeType[i] = false;
-						continue;
-					}
-					row.set(i, result);
-				}
-			} else if (DataTypeManager.isValueCacheEnabled()) {
-				row.set(i, DataTypeManager.getCanonicalValue(value));
-			}
-		}
-		return row;
-	}
-
-	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType) throws TransformationException {
-		if (value instanceof DataSource && (!(value instanceof Source) || desiredType != DataTypeManager.DefaultDataClasses.XML)) {
-			if (value instanceof InputStreamFactory) {
-				return new BlobType(new BlobImpl((InputStreamFactory)value));
-			}
-			FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
-			//TODO: guess at the encoding from the content type
-			FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-
-			try {
-				SaveOnReadInputStream is = new SaveOnReadInputStream(((DataSource)value).getInputStream(), fsisf);
-				return new BlobType(new BlobImpl(is.getInputStreamFactory()));
-			} catch (IOException e) {
-				throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
-			}
-		}
-		if (value instanceof Source) {
-			if (!(value instanceof InputStreamFactory)) {
-				if (value instanceof StreamSource) {
-					StreamSource ss = (StreamSource)value;
-					InputStream is = ss.getInputStream();
-					Reader r = ss.getReader();
-					if (is == null && r != null) {
-						is = new ReaderInputStream(r, Streamable.CHARSET);
-					}
-					final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
-					final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-
-					value = new SaveOnReadInputStream(is, fsisf).getInputStreamFactory();
-				} else if (value instanceof StAXSource) {
-					//TODO: do this lazily.  if the first access to get the STaXSource, then 
-					//it's more efficient to let the processing happen against STaX
-					StAXSource ss = (StAXSource)value;
-					try {
-						final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
-						final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-						value = new SaveOnReadInputStream(new XMLInputStream(ss, XMLSystemFunctions.getOutputFactory()), fsisf).getInputStreamFactory();
-					} catch (XMLStreamException e) {
-						throw new TransformationException(e);
-					}
-				} else {
-					//maybe dom or some other source we want to get out of memory
-					StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
-					SQLXMLImpl sqlxml;
-					try {
-						sqlxml = XMLSystemFunctions.saveToBufferManager(bm, sxt);
-					} catch (TeiidComponentException e) {
-						 throw new TransformationException(e);
-					} catch (TeiidProcessingException e) {
-						 throw new TransformationException(e);
-					}
-					return new XMLType(sqlxml);	
-				}
-			}
-			return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
-		}
-		return DataTypeManager.convertToRuntimeType(value);
 	}
 
     public List<?> nextTuple() throws TeiidComponentException, TeiidProcessingException {
@@ -340,7 +173,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	    			arm = null;
 	    			return null;
 	    		}
-	            return correctTypes(this.arm.getResults()[index++]);
+	            return this.arm.getResults()[index++];
 	        }
 	    	arm = null;
 	    	if (isDone()) {
@@ -379,7 +212,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (scheduledFuture != null) {
 			this.scheduledFuture.cancel(false);
 		}
-		scheduledFuture = workItem.scheduleWork(new MoreWorkTask(workItem), 10, timeDiff);
+		scheduledFuture = workItem.scheduleWork(timeDiff);
 	}
 
 	private void checkForUpdates(AtomicResultsMessage results, Command command,
@@ -387,7 +220,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (!RelationalNodeUtil.isUpdate(command) || !(command instanceof ProcedureContainer)) {
 			return;
 		}
-		ProcedureContainer pc = (ProcedureContainer)aqr.getCommand();
+		ProcedureContainer pc = (ProcedureContainer)command;
 		GroupSymbol gs = pc.getGroup();
 		Integer zero = Integer.valueOf(0);
 		if (results.getResults().length <= commandIndex || zero.equals(results.getResults()[commandIndex].get(0))) {
@@ -398,6 +231,12 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			return;
 		}
 		if (!(metadataId instanceof Table)) {
+			if (metadataId instanceof TempMetadataID) {
+				TempMetadataID tid = (TempMetadataID)metadataId;
+				if (tid.getTableData().getModel() != null) {
+					tid.getTableData().dataModified((Integer)results.getResults()[commandIndex].get(0));
+				}
+			}
 			return;
 		} 
 		Table t = (Table)metadataId;
@@ -424,6 +263,8 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			if (results.getFinalRow() < 0) {
 				addWork();
 			}
+		} catch (CancellationException e) {
+			throw new TeiidProcessingException(e);
 		} catch (InterruptedException e) {
 			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30503, e);
 		} catch (ExecutionException e) {
@@ -475,19 +316,23 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	}
     
     public void fullyCloseSource() {
+    	cancelFutures();
 		cancelAsynch = true;
     	if (closed.compareAndSet(false, true)) {
+        	if (!done) {
+        		this.cwi.cancel();
+        	}
 	    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
-	    	if (aqr.isSerial()) {
+	    	if (aqr.isSerial() || futureResult == null) {
 	    		this.cwi.close();
-	    	} else if (!canAsynchClose) {
-	    		workItem.addHighPriorityWork(new Callable<Void>() {
-    				@Override
-    				public Void call() throws Exception {
-    					cwi.close();
-    					return null;
-    				}
-    			});
+	    	} else {
+	    		futureResult.addCompletionListener(new CompletionListener<AtomicResultsMessage>() {
+					
+					@Override
+					public void onCompletion(FutureWork<AtomicResultsMessage> future) {
+						cwi.close();						
+					}
+				});
 	    	}
     	}
     }
@@ -499,23 +344,29 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     public void cancelRequest() {
     	this.canceled = true;
 		this.cwi.cancel();
+		cancelFutures();
     }
 
     /**
      * @see TupleSource#closeSource()
      */
     public void closeSource() {
-    	if (this.scheduledFuture != null) {
-    		this.scheduledFuture.cancel(true);
-    		this.scheduledFuture = null;
-    	}
-    	lobBuffer = null;
-    	lobStore = null; //can still be referenced by lobs and will be cleaned-up by reference
+    	cancelFutures();
     	cancelAsynch = true;
     	if (!explicitClose) {
         	fullyCloseSource();
     	}
     }
+
+	private void cancelFutures() {
+		if (this.scheduledFuture != null) {
+    		this.scheduledFuture.cancel(true);
+    		this.scheduledFuture = null;
+    	}
+    	if (this.futureResult != null) {
+    		this.futureResult.cancel(false);
+    	}
+	}
 
     AtomicResultsMessage exceptionOccurred(TranslatorException exception) throws TeiidComponentException, TeiidProcessingException {
     	if(workItem.requestMsg.supportsPartialResults()) {
@@ -565,14 +416,18 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 
 	@Override
 	public void onCompletion(FutureWork<AtomicResultsMessage> future) {
+		running = false;		
 		if (!cancelAsynch) {
 			workItem.moreWork(); //this is not necessary in some situations with DataNotAvailable
 		}
-		canAsynchClose = false;
-		if (closed.get()) {
-			cwi.close();
-		}
-		running = false;		
+	}
+	
+	public boolean isExplicitClose() {
+		return explicitClose;
+	}
+	
+	public Future<Void> getScheduledFuture() {
+		return scheduledFuture;
 	}
 	
 }

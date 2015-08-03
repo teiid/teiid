@@ -23,20 +23,27 @@
 package org.teiid.query.function;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
+import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
@@ -93,6 +100,17 @@ public class FunctionLibrary {
 
     public static final String SPACE = "space"; //$NON-NLS-1$
 	public static final String ARRAY_GET = "array_get"; //$NON-NLS-1$
+	public static final String JSONARRAY = "jsonarray"; //$NON-NLS-1$
+	
+	public static final String MVSTATUS = "mvstatus"; //$NON-NLS-1$
+	
+	public static final Set<String> INTERNAL_SCHEMAS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+	
+	static {
+		INTERNAL_SCHEMAS.add(CoreConstants.SYSTEM_MODEL);
+		INTERNAL_SCHEMAS.add(CoreConstants.SYSTEM_ADMIN_MODEL);
+		INTERNAL_SCHEMAS.add(CoreConstants.ODBC_MODEL);
+	}
 	
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;
@@ -107,6 +125,14 @@ public class FunctionLibrary {
 	public FunctionLibrary(FunctionTree systemFuncs, FunctionTree... userFuncs) {
         systemFunctions = systemFuncs;
        	userFunctions = userFuncs;
+	}
+	
+	public FunctionTree[] getUserFunctions() {
+		return userFunctions;
+	}
+	
+	public FunctionTree getSystemFunctions() {
+		return systemFunctions;
 	}
 
     /**
@@ -128,21 +154,18 @@ public class FunctionLibrary {
     }
 
     /**
-     * Get all function forms in a category, sorted by name, then # of args, then names of args.
+     * Get all function in a category.
      * @param category Category name
-     * @return List of {@link FunctionForm}s in a category
+     * @return List of {@link FunctionMethod}s in a category
      */
-    public List<FunctionForm> getFunctionForms(String category) {
-        List<FunctionForm> forms = new ArrayList<FunctionForm>();
-        forms.addAll(systemFunctions.getFunctionForms(category));
+    public List<FunctionMethod> getFunctionsInCategory(String category) {
+        List<FunctionMethod> forms = new ArrayList<FunctionMethod>();
+        forms.addAll(systemFunctions.getFunctionsInCategory(category));
         if (this.userFunctions != null) {
 	        for (FunctionTree tree: this.userFunctions) {
-	        	forms.addAll(tree.getFunctionForms(category));
+	        	forms.addAll(tree.getFunctionsInCategory(category));
 	        }
         }
-
-        // Sort alphabetically
-        Collections.sort(forms);
         return forms;
     }
 
@@ -152,17 +175,20 @@ public class FunctionLibrary {
      * @param numArgs Number of arguments
      * @return Corresponding form or null if not found
      */
-    public FunctionForm findFunctionForm(String name, int numArgs) {
-        FunctionForm form = systemFunctions.findFunctionForm(name, numArgs);
-        if(form == null && this.userFunctions != null) {
+    public boolean hasFunctionMethod(String name, int numArgs) {
+        List<FunctionMethod> methods = systemFunctions.findFunctionMethods(name, numArgs);
+        if (!methods.isEmpty()) {
+        	return true;
+        }
+        if(this.userFunctions != null) {
         	for (FunctionTree tree: this.userFunctions) {
-        		form = tree.findFunctionForm(name, numArgs);
-        		if (form != null) {
-        			break;
+        		methods = tree.findFunctionMethods(name, numArgs);
+        		if (!methods.isEmpty()) {
+        			return true;
         		}
         	}
         }
-        return form;
+        return false;
     }
 
 	/**
@@ -189,6 +215,49 @@ public class FunctionLibrary {
 
         return descriptor;
 	}
+	
+	/**
+	 * Find a function descriptor given a name and the types of the arguments.
+	 * This method matches based on case-insensitive function name and
+     * an exact match of the number and types of parameter arguments.
+     * @param name Name of the function to resolve
+     * @param types Array of classes representing the types
+     * @return Descriptor if found, null if not found
+	 */
+	public List<FunctionDescriptor> findAllFunctions(String name, Class<?>[] types) {
+        // First look in system functions
+        FunctionDescriptor descriptor = systemFunctions.getFunction(name, types);
+
+        // If that fails, check the user defined functions
+        if(descriptor == null && this.userFunctions != null) {
+        	List<FunctionDescriptor> result = new LinkedList<FunctionDescriptor>();
+        	for (FunctionTree tree: this.userFunctions) {
+        		descriptor = tree.getFunction(name, types);
+        		if (descriptor != null) {
+        			//pushdown function takes presedence 
+        			//TODO: there may be multiple translators contributing functions with the same name / types
+        			//need "conformed" logic so that the right pushdown can occur
+        			if (CoreConstants.SYSTEM_MODEL.equals(descriptor.getSchema())) {
+        				return Arrays.asList(descriptor);
+        			}
+        			result.add(descriptor);
+        		}
+        	}
+        	return result;
+        }
+        if (descriptor != null) {
+        	return Arrays.asList(descriptor);
+        }
+        return Collections.emptyList();
+	}
+	
+	public static class ConversionResult {
+		public ConversionResult(FunctionMethod method) {
+			this.method = method;
+		}
+		public FunctionMethod method;
+		public boolean needsConverion;
+	}
 
 	/**
 	 * Get the conversions that are needed to call the named function with arguments
@@ -200,19 +269,10 @@ public class FunctionLibrary {
 	 * @param returnType
 	 * @param args 
 	 * @param types Existing types passed to the function
-     * @return Null if no conversion could be found, otherwise an array of conversions
-     * to apply to each argument.  The list should match 1-to-1 with the parameters.
-     * Parameters that do not need a conversion are null; parameters that do are
-     * FunctionDescriptors.
 	 * @throws InvalidFunctionException 
 	 * @throws QueryResolverException 
 	 */
-	public FunctionDescriptor[] determineNecessaryConversions(String name, Class<?> returnType, Expression[] args, Class<?>[] types, boolean hasUnknownType) throws InvalidFunctionException {
-		// Check for no args - no conversion necessary
-		if(types.length == 0) {
-			return null;
-		}
-
+	public ConversionResult determineNecessaryConversions(String name, Class<?> returnType, Expression[] args, Class<?>[] types, boolean hasUnknownType) throws InvalidFunctionException {
         //First find existing functions with same name and same number of parameters
         final Collection<FunctionMethod> functionMethods = new LinkedList<FunctionMethod>();
         functionMethods.addAll( this.systemFunctions.findFunctionMethods(name, types.length) );
@@ -228,16 +288,18 @@ public class FunctionLibrary {
         int bestScore = Integer.MAX_VALUE;
         boolean ambiguous = false;
         FunctionMethod result = null;
+        boolean isSystem = false;
+        boolean narrowing = false;
                 
-        for (FunctionMethod nextMethod : functionMethods) {
+        outer: for (FunctionMethod nextMethod : functionMethods) {
             int currentScore = 0; 
+            boolean nextNarrowing = false;
             final List<FunctionParameter> methodTypes = nextMethod.getInputParameters();
             //Holder for current signature with converts where required
             
             //Iterate over the parameters adding conversions where required or failing when
             //no implicit conversion is possible
-            int i = 0;
-            for(; i < types.length; i++) {
+            for(int i = 0; i < types.length; i++) {
                 final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getType();
                 Class<?> targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
 
@@ -245,6 +307,11 @@ public class FunctionLibrary {
                 if (sourceType == null) {
                     currentScore++;
                     continue;
+                }
+                if (sourceType.isArray()&& targetType.isArray()
+                        && sourceType.getComponentType().equals(targetType.getComponentType())) {
+                    currentScore++;
+                    continue;                    
                 }
                 if (sourceType.isArray()) {
                     if (isVarArgArrayParam(nextMethod, types, i, targetType)) {
@@ -259,20 +326,21 @@ public class FunctionLibrary {
 					if (t != null) {
 		                if (t.isExplicit()) {
 		                	if (!(args[i] instanceof Constant) || ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(sourceType), tmpTypeName, (Constant)args[i]) == null) {
-		                		break;
+		                		continue outer;
 		                	}
+		                	nextNarrowing = true;
 		                	currentScore++;
 		                } else {
 		                	currentScore++;
 		                }
 					}
 				} catch (InvalidFunctionException e) {
-					break;
+					continue outer;
 				}
             }
             
             //If the method is valid match and it is the current best score, capture those values as current best match
-            if (i != types.length || currentScore > bestScore) {
+            if (currentScore > bestScore) {
                 continue;
             }
             
@@ -284,6 +352,7 @@ public class FunctionLibrary {
 							if (t.isExplicit()) {
 								//there still may be a common type, but use any other valid conversion over this one
 								currentScore += types.length + 1;
+								nextNarrowing = true;
 							} else {
 								currentScore++;
 							}
@@ -293,29 +362,114 @@ public class FunctionLibrary {
 						currentScore += (types.length * types.length);
 					}
             	}
-                ambiguous = currentScore == bestScore;
             }
             
-            if (currentScore < bestScore) {
+            if (nextNarrowing && result != null && !narrowing) {
+            	continue;
+            }
 
-                if (currentScore == 0) {
-                    //this must be an exact match
-                    return null;
+            boolean useNext = false;
+            
+            if (!nextNarrowing && narrowing) {
+            	useNext = true;
+            }
+            
+        	boolean isSystemNext = nextMethod.getParent() == null || INTERNAL_SCHEMAS.contains(nextMethod.getParent().getName());
+        	if ((isSystem && isSystemNext) || (!isSystem && !isSystemNext && result != null)) {
+    			int partCount = partCount(result.getName());
+    			int nextPartCount = partCount(nextMethod.getName());
+    			if (partCount < nextPartCount) {
+    				//the current is more specific
+    				//this makes us more consistent with the table resolving logic
+    				continue outer; 
+    			}
+    			if (nextPartCount < partCount) {
+    				useNext = true;
+    			}
+        	} else if (isSystemNext) {
+        		useNext = true;
+        	}
+        	
+            if (currentScore == bestScore && !useNext) {
+            	ambiguous = true;
+            	boolean useCurrent = false;
+            	List<FunctionParameter> bestParams = result.getInputParameters();
+				for (int j = 0; j < types.length; j++) {
+            		String t1 = bestParams.get(Math.min(j, bestParams.size() - 1)).getType();
+            		String t2 = methodTypes.get((Math.min(j, methodTypes.size() - 1))).getType();
+            		
+            		if (types[j] == null || t1.equals(t2)) {
+            			continue;
+            		}
+            		
+            		String commonType = ResolverUtil.getCommonType(new String[] {t1, t2});
+            		
+            		if (commonType == null) {
+            			continue outer; //still ambiguous
+            		}
+            		
+            		if (commonType.equals(t1)) {
+            			if (!useCurrent) {
+            				useNext = true;
+            			}
+            		} else if (commonType.equals(t2)) {
+            			if (!useNext) {
+            				useCurrent = true;
+            			}
+            		} else {
+            			continue outer;
+            		}
+            	}
+				if (useCurrent) {
+					ambiguous = false; //prefer narrower
+				} else {
+					String sysName = result.getProperty(FunctionMethod.SYSTEM_NAME, false);
+					String sysNameOther = nextMethod.getProperty(FunctionMethod.SYSTEM_NAME, false);
+					if (sysName != null && sysName.equalsIgnoreCase(sysNameOther)) {
+						ambiguous = false;
+					}
+				}
+            }
+            
+            if (currentScore < bestScore || useNext) {
+            	ambiguous = false;
+                if (currentScore == 0 && isSystemNext) {
+                    return new ConversionResult(nextMethod);
                 }    
                 
                 bestScore = currentScore;
                 result = nextMethod;
+                isSystem = isSystemNext;
+                narrowing = nextNarrowing;
             }            
         }
         
-        if (ambiguous || result == null) {
-             throw new InvalidFunctionException(QueryPlugin.Event.TEIID30418);
+        if (ambiguous) {
+        	throw GENERIC_EXCEPTION;
         }
         
-		return getConverts(result, types);
+        ConversionResult cr = new ConversionResult(result);
+        if (result != null) {
+        	cr.needsConverion = (bestScore != 0);
+        }
+        return cr;
 	}
 	
-	private FunctionDescriptor[] getConverts(FunctionMethod method, Class<?>[] types) {
+	private int partCount(String name) {
+		int result = 0;
+		int index = 0;
+		while (true) {
+			index = name.indexOf('.', index+1);
+			if (index > 0) {
+				result++;
+			} else {
+				break;
+			}
+		}
+		return result;
+	}
+
+	public FunctionDescriptor[] getConverts(FunctionMethod method, Class<?>[] types) {
         final List<FunctionParameter> methodTypes = method.getInputParameters();
         FunctionDescriptor[] result = new FunctionDescriptor[types.length];
         for(int i = 0; i < types.length; i++) {
@@ -340,8 +494,10 @@ public class FunctionLibrary {
 	public boolean isVarArgArrayParam(FunctionMethod method, Class<?>[] types,
 			int i, Class<?> targetType) {
 		return i == types.length - 1 && method.isVarArgs() && i == method.getInputParameterCount() - 1 
-				&& types[i].getComponentType() == targetType;
+				&& types[i].isArray() && targetType.isAssignableFrom(types[i].getComponentType());
 	}
+	
+	private static final InvalidFunctionException GENERIC_EXCEPTION = new InvalidFunctionException(QueryPlugin.Event.TEIID30419); 
 	
 	private Transform getConvertFunctionDescriptor(Class<?> sourceType, Class<?> targetType) throws InvalidFunctionException {
         //If exact match no conversion necessary
@@ -351,7 +507,7 @@ public class FunctionLibrary {
         Transform result = DataTypeManager.getTransform(sourceType, targetType);
         //Else see if an implicit conversion is possible.
         if(result == null){
-             throw new InvalidFunctionException(QueryPlugin.Event.TEIID30419);
+             throw GENERIC_EXCEPTION;
         }
         return result;
 	}
@@ -392,5 +548,89 @@ public class FunctionLibrary {
         String funcName = function.getName();
         
         return args.length == 2 && (funcName.equalsIgnoreCase(FunctionLibrary.CONVERT) || funcName.equalsIgnoreCase(FunctionLibrary.CAST));
+    }
+    
+    /**
+     * Return a list of the most general forms of built-in aggregate functions.
+     * <br/>count(*) - is not included
+     * <br/>textagg - is not included due to its non standard syntax
+     * 
+     * @param includeAnalytic - true to include analytic functions that must be windowed
+     * @return
+     */
+    public List<FunctionMethod> getBuiltInAggregateFunctions(boolean includeAnalytic) {
+    	ArrayList<FunctionMethod> result = new ArrayList<FunctionMethod>();
+    	for (Type type : AggregateSymbol.Type.values()) {
+			AggregateAttributes aa = new AggregateAttributes();
+    		String returnType = null;
+    		String[] argTypes = null;
+    		aa.setAllowsDistinct(true);
+    		switch (type) {
+    		case USER_DEFINED:
+    			continue;
+			case DENSE_RANK:
+			case RANK:
+			case ROW_NUMBER:
+				if (!includeAnalytic) {
+					continue;
+				}
+				aa.setAllowsDistinct(false);
+				aa.setAnalytic(true);
+				returnType = DataTypeManager.DefaultDataTypes.INTEGER;
+				argTypes = new String[] {};
+				break;
+			case ANY:
+			case SOME:
+			case EVERY:
+				returnType = DataTypeManager.DefaultDataTypes.BOOLEAN;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.BOOLEAN};
+				break;
+			case COUNT:
+				returnType = DataTypeManager.DefaultDataTypes.INTEGER;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				break;
+			case MAX:
+			case MIN:
+			case AVG:
+			case SUM:
+				returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				break;
+			case STDDEV_POP:
+			case STDDEV_SAMP:
+			case VAR_POP:
+			case VAR_SAMP:
+				returnType = DataTypeManager.DefaultDataTypes.DOUBLE;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.DOUBLE};
+				break;
+			case STRING_AGG:
+				returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				aa.setAllowsOrderBy(true);
+				break;
+			case ARRAY_AGG:
+				returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+				argTypes = new String[] {DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT))};
+				aa.setAllowsOrderBy(true);
+				aa.setAllowsDistinct(false);
+				break;
+			case JSONARRAY_AGG:
+				returnType = DataTypeManager.DefaultDataTypes.CLOB;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+				aa.setAllowsOrderBy(true);
+				aa.setAllowsDistinct(false);
+				break;
+			case XMLAGG:
+				returnType = DataTypeManager.DefaultDataTypes.XML;
+				argTypes = new String[] {DataTypeManager.DefaultDataTypes.XML};
+				aa.setAllowsOrderBy(true);
+				aa.setAllowsDistinct(false);
+				break;
+    		}
+			FunctionMethod fm = FunctionMethod.createFunctionMethod(type.name(), type.name(), FunctionCategoryConstants.AGGREGATE, returnType, argTypes);
+			fm.setAggregateAttributes(aa);
+    		result.add(fm);
+    	}
+    	return result;
     }
 }

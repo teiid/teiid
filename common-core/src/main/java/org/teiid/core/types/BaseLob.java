@@ -23,11 +23,13 @@
 package org.teiid.core.types;
 
 import java.io.BufferedInputStream;
+import java.io.EOFException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.OptionalDataException;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
@@ -77,6 +79,7 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
 	}
 	
 	public void free() {
+		//we don't actually free the underlying streamFactory as this could be a caching scenario
 		this.streamFactory = null;
 	}
 	
@@ -112,11 +115,19 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
     	streamFactory = (InputStreamFactory)in.readObject();
+    	try {
+    		charset = (Charset) in.readObject();
+		} catch (EOFException e) {
+    		//just ignore
+    	} catch (OptionalDataException e) {
+    		//just ignore
+    	}
     }
     
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
     	out.writeObject(streamFactory);
+    	out.writeObject(charset);
     }
     
     /**

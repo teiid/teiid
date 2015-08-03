@@ -30,9 +30,13 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.TimeZone;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.TimestampUtil;
@@ -40,6 +44,16 @@ import org.teiid.query.util.CommandContext;
 
 
 public class TestFunction {
+	
+	@Before
+	public void setUp() {
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-5")); //$NON-NLS-1$
+	}
+	
+	@After
+	public void tearDown() {
+		TimestampWithTimezone.resetCalendar(null);
+	}
 
     private void helpConcat(String s1, String s2, Object expected) {
         Object actual = FunctionMethods.concat(s1, s2);
@@ -130,6 +144,11 @@ public class TestFunction {
         int actualLocation = location.intValue();
         assertEquals("Didn't get expected result from locate", expectedLocation, actualLocation); //$NON-NLS-1$
     }
+    
+    public static void helpTestEndssWith(String locateString, String input, Boolean expected) {
+        Boolean actual = (Boolean) FunctionMethods.endsWith(locateString, input);
+        assertEquals("Didn't get expected result from startsWith", expected, actual); //$NON-NLS-1$
+    }    
 
     public static void helpTestLocate(String locateString, String input, Integer start, int expectedLocation) {
         Integer location = (Integer) FunctionMethods.locate(locateString, input, start);
@@ -175,7 +194,7 @@ public class TestFunction {
                      expected, actual.toString()); 
     }
 
-    public static void helpTestTimestampDiff(String intervalType, Timestamp timeStamp1, Timestamp timeStamp2, Long expected) {
+    public static void helpTestTimestampDiff(String intervalType, Timestamp timeStamp1, Timestamp timeStamp2, Long expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.timestampDiff(intervalType, timeStamp1, timeStamp2);
         assertEquals("timestampDiff(" + intervalType + ", " + timeStamp1 + ", " + timeStamp2 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                      expected, actual); 
@@ -626,6 +645,14 @@ public class TestFunction {
     @Test public void testLocate8() throws Exception {
         helpTestLocate("z", "abab", -1, 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testEndsWith1() throws Exception {
+        helpTestEndssWith("z", "abab", false); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testEndsWith2() throws Exception {
+    	helpTestEndssWith("b", "abab", true); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Test public void testBitand() throws Exception {
         // Both values are integers
@@ -918,21 +945,21 @@ public class TestFunction {
         helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 0, 0, 2, 0, 0, 0),
                               TimestampUtil.createTimestamp((2001-1900), 0, 0, 0, 33, 12, 0),
-                              new Long(-86));
+                              new Long(-87));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_3() throws Exception {
         helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 07, 58, 65497),
                               TimestampUtil.createTimestamp((2001-1900), 8, 29, 11, 25, 42, 483219),
-                              new Long(4277));
+                              new Long(4278));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_4() throws Exception {
         helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 07, 58, 0),
                               TimestampUtil.createTimestamp((2001-1900), 8, 29, 11, 25, 42, 0),
-                              new Long(4277));
+                              new Long(4278));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_5() throws Exception {
@@ -943,10 +970,20 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_Hour_1() throws Exception {
-        helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
+    	helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
+                TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
+                TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
+                new Long(0));
+    	//ensure that we get the same answer in a tz with an non-hour aligned offset and no dst
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("Pacific/Marquesas")); //$NON-NLS-1$ 
+    	try {
+    		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
                               new Long(0));
+    	} finally {
+    		TimestampWithTimezone.resetCalendar(null);
+    	}
     }
 
     @Test public void testTimestampDiffTimeStamp_Week_1() throws Exception {
@@ -1023,7 +1060,7 @@ public class TestFunction {
 	@Test public void testTimestampDiffTime_Hour_2() throws Exception {
 		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
 				TimestampUtil.createTime(5, 0, 30).getTime()), new Timestamp(
-				TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-1));
+				TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-2));
 	}
 
     @Test public void testParseTimestamp1() throws Exception {

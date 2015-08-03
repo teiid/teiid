@@ -38,17 +38,15 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.salesforce.execution.DeleteExecutionImpl;
 import org.teiid.translator.salesforce.execution.DirectQueryExecution;
@@ -63,16 +61,18 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	private static final String EXCLUDES = "excludes";//$NON-NLS-1$
 	private static final String INCLUDES = "includes";//$NON-NLS-1$
 	private boolean auditModelFields = false;
+	private int maxInsertBatchSize = 2048;
 	
 	public SalesForceExecutionFactory() {
 	    // http://jira.jboss.org/jira/browse/JBEDSP-306
 	    // Salesforce supports ORDER BY, but not on all column types
 		setSupportsOrderBy(false);
 		setSupportsOuterJoins(true);
+		setSupportsInnerJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
 	
-	@TranslatorProperty(display="Audit Model Fields", advanced=true)
+	@TranslatorProperty(display="Model Audit Fields", advanced=true)
 	public boolean isModelAuditFields() {
 		return this.auditModelFields;
 	}
@@ -100,11 +100,11 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
 		UpdateExecution result = null;
 		if(command instanceof org.teiid.language.Delete) {
-			result = new DeleteExecutionImpl(command, connection, metadata, executionContext);
+			result = new DeleteExecutionImpl(this, command, connection, metadata, executionContext);
 		} else if (command instanceof org.teiid.language.Insert) {
-			result = new InsertExecutionImpl(command, connection, metadata, executionContext);
+			result = new InsertExecutionImpl(this, command, connection, metadata, executionContext);
 		} else if (command instanceof org.teiid.language.Update) {
-			result = new UpdateExecutionImpl(command, connection, metadata, executionContext);
+			result = new UpdateExecutionImpl(this, command, connection, metadata, executionContext);
 		}
 		return result;
 
@@ -128,37 +128,14 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, SalesforceConnection connection) throws TranslatorException {
-		MetadataProcessor processor = new MetadataProcessor(connection,metadataFactory, this);
-		processor.processMetadata();
-		
-		Procedure p1 = metadataFactory.addProcedure("GetUpdated"); //$NON-NLS-1$
-		p1.setAnnotation("Gets the updated objects"); //$NON-NLS-1$
-		ProcedureParameter param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
-		param.setAnnotation("ObjectName"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("StartDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
-		param.setAnnotation("Start Time"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("EndDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
-		param.setAnnotation("End Time"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
-		param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$
-		metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
-		
-		
-		Procedure p2 = metadataFactory.addProcedure("GetDeleted"); //$NON-NLS-1$
-		p2.setAnnotation("Gets the deleted objects"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
-		param.setAnnotation("ObjectName"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("StartDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
-		param.setAnnotation("Start Time"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("EndDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
-		param.setAnnotation("End Time"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("EarliestDateAvailable", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
-		param.setAnnotation("Earliest Date Available"); //$NON-NLS-1$
-		param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
-		param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$		
-		metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p2); //$NON-NLS-1$		
-		metadataFactory.addProcedureResultSetColumn("DeletedDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p2); //$NON-NLS-1$
+	    metadataFactory.getModelProperties().setProperty("importer.modelAuditFields", String.valueOf(this.auditModelFields)); //$NON-NLS-1$
+	    super.getMetadata(metadataFactory, connection);	    
 	}	
+	
+	@Override
+    public MetadataProcessor<SalesforceConnection> getMetadataProcessor(){
+	    return new SalesForceMetadataProcessor();
+	}
 	
     @Override
     public List<String> getSupportedFunctions() {
@@ -266,4 +243,20 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     	return true;
     }
     
+    @Override
+    public boolean supportsBulkUpdate() {
+    	return true;
+    }    
+    
+    @TranslatorProperty(display="Max Bulk Insert Batch Size", description="The max size of a bulk insert batch.  Default 2048.", advanced=true)
+    public int getMaxBulkInsertBatchSize() {
+    	return maxInsertBatchSize;
+    }
+    
+    public void setMaxBulkInsertBatchSize(int maxInsertBatchSize) {
+    	if (maxInsertBatchSize < 1) {
+    		throw new AssertionError("Max bulk insert batch size must be greater than 0"); //$NON-NLS-1$
+    	}
+		this.maxInsertBatchSize = maxInsertBatchSize;
+	}
 }

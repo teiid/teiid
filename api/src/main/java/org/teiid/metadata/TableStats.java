@@ -28,13 +28,13 @@ public class TableStats implements Serializable {
 	
 	private static final long serialVersionUID = 4316568283357485330L;
 	
-	private Integer cardinality;
+	private Number cardinality;
 	
-	public Integer getCardinality() {
+	public Number getCardinality() {
 		return cardinality;
 	}
 	
-	public void setCardinality(Integer cardinality) {
+	public void setCardinality(Number cardinality) {
 		this.cardinality = cardinality;
 	}
 

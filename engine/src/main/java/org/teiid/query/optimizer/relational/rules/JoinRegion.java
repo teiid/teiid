@@ -22,17 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -42,8 +32,8 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
-import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -250,8 +240,10 @@ class JoinRegion {
         
         HashSet<PlanNode> criteria = new HashSet<PlanNode>(this.criteriaNodes);
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>(this.joinSourceNodes.size());
-        boolean hasUnknown = false;
-        for (int i = 0; i < joinOrder.length; i++) {
+        //only calculate up to the second to last as the last is not an intermediate result
+        for (int i = 0; i < joinOrder.length - 1; i++) {
+        	boolean hasUnknown = false;
+        	boolean shouldFilter = true;
             Integer source = (Integer)joinOrder[i];
             
             Map.Entry<PlanNode, PlanNode> entry = joinSourceEntries.get(source.intValue());
@@ -288,17 +280,17 @@ class JoinRegion {
         		sourceCost = UNKNOWN_TUPLE_EST;
         		hasUnknown = true;
                 if (applicableCriteria != null && !applicableCriteria.isEmpty()) {
+                	shouldFilter = false;
                 	CompoundCriteria cc = new CompoundCriteria();
                 	for (PlanNode planNode : applicableCriteria) {
     					cc.addCriteria((Criteria) planNode.getProperty(NodeConstants.Info.SELECT_CRITERIA));
     				}
                 	sourceCost = (float)cost;
                 	criteria.removeAll(applicableCriteria);
-	            	applicableCriteria = null;
-            		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i == 1 && joinSourceRoot.hasBooleanProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
+            		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i >= 1 && joinSourceRoot.hasProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
     	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING, sourceCost));
             		} else {
-    	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING * 2, sourceCost));
+    	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * NewCalculateCostUtil.UNKNOWN_JOIN_SCALING * 8);
             		}
                 }
             } else if (Double.isInfinite(sourceCost) || Double.isNaN(sourceCost)) {
@@ -330,7 +322,7 @@ class JoinRegion {
         
             cost *= sourceCost;
             
-            if (applicableCriteria != null) {
+            if (applicableCriteria != null && shouldFilter) {
                 for (PlanNode criteriaNode : applicableCriteria) {
                     float filter = ((Float)criteriaNode.getProperty(NodeConstants.Info.EST_SELECTIVITY)).floatValue();
                     
@@ -546,16 +538,16 @@ class JoinRegion {
         return false;
     }
     
-    public List<PlanNode> getJoinCriteriaForGroups(Set<GroupSymbol> groups) {
-        return getJoinCriteriaForGroups(groups, getCriteriaNodes());
-    }
-    
     //TODO: this should be better than a linear search
     protected List<PlanNode> getJoinCriteriaForGroups(Set<GroupSymbol> groups, Collection<PlanNode> nodes) {
         List<PlanNode> result = new LinkedList<PlanNode>();
         
         for (PlanNode critNode : nodes) {
             if (groups.containsAll(critNode.getGroups())) {
+            	Criteria crit = (Criteria) critNode.getProperty(Info.SELECT_CRITERIA);
+            	if (crit instanceof CompareCriteria && ((CompareCriteria) crit).isOptional()) {
+            		continue;
+            	}
                 result.add(critNode);
             }
         }

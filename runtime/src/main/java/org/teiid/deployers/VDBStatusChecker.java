@@ -29,24 +29,20 @@ import java.util.concurrent.Executor;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.translator.ExecutionFactory;
 import org.teiid.vdb.runtime.VDBKey;
 
 
 public abstract class VDBStatusChecker {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
-	private TranslatorRepository translatorRepository;
 	
 	/**
 	 * @param translatorName  
@@ -118,70 +114,39 @@ public abstract class VDBStatusChecker {
 			}
 		}
 	}	
-
-	/**
-	 * 
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param modelName
-	 * @param sourceName
-	 * @param translatorName
-	 * @param dsName
-	 * @return true if the datasource is new to the vdb
-	 * @throws AdminProcessingException
-	 */
+	
 	public boolean dataSourceReplaced(String vdbName, int vdbVersion,
 			String modelName, String sourceName, String translatorName,
 			String dsName) throws AdminProcessingException {
-		dsName = stripContext(dsName);		
+		return updateSource(vdbName, vdbVersion, new SourceMappingMetadata(sourceName, translatorName, dsName), true);
+	}
+
+	/**
+	 * @return true if the datasource is new to the vdb
+	 * @throws AdminProcessingException
+	 */
+	public boolean updateSource(String vdbName, int vdbVersion, SourceMappingMetadata mapping, boolean replace) throws AdminProcessingException {
+		String dsName = stripContext(mapping.getConnectionJndiName());		
 		
 		VDBMetaData vdb = getVDBRepository().getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null || vdb.getStatus() == Status.FAILED) {
 			return false;
 		}
-		ModelMetaData model = vdb.getModel(modelName);
 
 		synchronized (vdb) {
 			ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
-			ConnectorManager cm = cmr.getConnectorManager(sourceName);
-			ExecutionFactory<Object, Object> ef = cm.getExecutionFactory();
-			
-			boolean dsReplaced = false;
-			String oldDsName = stripContext(cm.getConnectionName());
-			if ((dsName != null && !dsName.equals(oldDsName)) || (dsName == null && oldDsName != null)) {
-				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName));
-				cm = new ConnectorManager(translatorName, dsName);
-				
-				cm.setExecutionFactory(ef);
-				cmr.addConnectorManager(sourceName, cm);
-				dsReplaced = true;
+			ConnectorManager existing = cmr.getConnectorManager(mapping.getName());
+			try {
+				cmr.createConnectorManager(vdb, cmr.getProvider(), mapping, replace);
+			} catch (TeiidException e) {
+				throw new AdminProcessingException(RuntimePlugin.Event.TEIID40033, e);
 			}
-			
-			if (!cm.getTranslatorName().equals(translatorName)) {
-				try {
-					TranslatorRepository repo = vdb.getAttachment(TranslatorRepository.class);
-					VDBTranslatorMetaData t = null;
-					if (repo != null) {
-						t = repo.getTranslatorMetaData(translatorName);
-					}
-					if (t == null) {
-						t = this.translatorRepository.getTranslatorMetaData(translatorName);
-					}
-					if (t == null) {
-						 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40032, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40032, vdb.getName(), vdb.getVersion(), translatorName));
-					}
-					ef = TranslatorUtil.buildExecutionFactory(t, t.getAttachment(ClassLoader.class));
-					cm.setExecutionFactory(ef);
-				} catch (TeiidException e) {
-					 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40033, e.getCause());
-				}
+			if (mapping.getConnectionJndiName() != null && (existing == null || !dsName.equals(existing.getConnectionName()))) {
+				List<Runnable> runnables = new ArrayList<Runnable>();
+				resourceAdded(dsName, runnables, vdb);
+				return true;
 			}
-			if (dsReplaced) {
-				ArrayList<Runnable> runnables = new ArrayList<Runnable>(1);
-				checkStatus(runnables, vdb, model, cm);
-				updateVDB(runnables, vdb);
-			}
-			return dsReplaced;
+			return false;
 		}
 	}
 
@@ -269,8 +234,5 @@ public abstract class VDBStatusChecker {
 	public abstract Executor getExecutor();
 	
 	public abstract VDBRepository getVDBRepository();
-	
-	public void setTranslatorRepository(TranslatorRepository repo) {
-		this.translatorRepository = repo;
-	}
+
 }

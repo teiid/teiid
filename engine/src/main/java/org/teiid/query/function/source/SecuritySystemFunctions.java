@@ -22,44 +22,29 @@
 
 package org.teiid.query.function.source;
 
-import org.teiid.api.exception.query.FunctionExecutionException;
-import org.teiid.core.TeiidComponentException;
-import org.teiid.query.QueryPlugin;
-import org.teiid.query.eval.SecurityFunctionEvaluator;
+import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.query.util.CommandContext;
 
-
-
 public class SecuritySystemFunctions {
-
-    public static boolean hasRole(CommandContext context, String roleName) throws FunctionExecutionException {
-        SecurityFunctionEvaluator eval = context.getSecurityFunctionEvaluator();
-        
-        if (eval == null) {
-            return true;
-        }
-        
-        try {
-            return eval.hasRole(SecurityFunctionEvaluator.DATA_ROLE, roleName);
-        } catch (TeiidComponentException e) {
-             throw new FunctionExecutionException(e);
-        }
+	
+	public static final String DATA_ROLE = "data"; //$NON-NLS-1$
+	
+    public static boolean hasRole(CommandContext context, String roleName) {
+        return hasRole(context, DATA_ROLE, roleName);
     }
 	
-    public static boolean hasRole(CommandContext context, String roleType, String roleName) throws FunctionExecutionException {
-        
-        SecurityFunctionEvaluator eval = context.getSecurityFunctionEvaluator();
-        
-        if (eval == null) {
+    public static boolean hasRole(CommandContext context, String roleType, String roleName) {
+        if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
+            return false;
+        }
+        if (context == null) {
             return true;
         }
-        
-        try {
-            return eval.hasRole(roleType, roleName);
-        } catch (TeiidComponentException e) {
-             throw new FunctionExecutionException(e);
+        AuthorizationValidator authorizationValidator = context.getAuthorizationValidator();
+        if (authorizationValidator == null) {
+        	return true;
         }
+    	return authorizationValidator.hasRole(roleName, context);
     }
-    
     
 }

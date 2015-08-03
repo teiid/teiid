@@ -138,8 +138,12 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         throws TeiidComponentException, TeiidProcessingException {
         // Set Up Join Strategy
         this.joinStrategy.initialize(this);
-        
-        joinStrategy.openLeft();
+
+        if (isDependent() && (this.joinType == JoinType.JOIN_ANTI_SEMI || this.joinType == JoinType.JOIN_SEMI)) {
+        	joinStrategy.openRight();
+        } else {
+        	joinStrategy.openLeft();
+        }
         
         if(!isDependent()) {
         	joinStrategy.openRight();
@@ -178,34 +182,70 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     protected TupleBatch nextBatchDirect() throws BlockedException,
                                           TeiidComponentException,
                                           TeiidProcessingException {
-        if (state == State.LOAD_LEFT) {
-        	if (this.joinType != JoinType.JOIN_FULL_OUTER) {
-            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
-            }
-        	//left child was already opened by the join node
-            this.joinStrategy.loadLeft();
-            if (isDependent()) { 
-                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
-                //the tuplebuffer may be from a lower node, so pass in the schema
-                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
-                dvs.setDistinct(this.joinStrategy.leftSource.isDistinct());
-                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
-            }
-            state = State.LOAD_RIGHT;
-        }
-        if (state == State.LOAD_RIGHT) {
-        	this.joinStrategy.openRight();
-            this.joinStrategy.loadRight();
-            state = State.EXECUTE;
-        }
+    	try {
+	    	if (state == State.LOAD_LEFT) {
+	    		boolean rightDep = false;
+	    		//dependent semi joins are processed right first
+	    		if (isDependent() && (this.joinType == JoinType.JOIN_ANTI_SEMI || this.joinType == JoinType.JOIN_SEMI)) {
+	    			rightDep = true;
+	    			this.joinStrategy.openRight();
+		            this.joinStrategy.loadRight();
+		            TupleBuffer buffer = this.joinStrategy.rightSource.getTupleBuffer();
+	                //the tuplebuffer may be from a lower node, so pass in the schema
+	                dvs = new DependentValueSource(buffer, this.joinStrategy.rightSource.getSource().getElements());
+	                dvs.setDistinct(this.joinStrategy.rightSource.isExpresssionDistinct());
+	                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
+	    		}
+	        	if (this.joinType != JoinType.JOIN_FULL_OUTER || this.getJoinCriteria() == null) {
+	            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
+	            }
+	        	this.joinStrategy.openLeft();
+	            this.joinStrategy.loadLeft();
+	            if (isDependent() && !rightDep) { 
+	                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
+	                //the tuplebuffer may be from a lower node, so pass in the schema
+	                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
+	                dvs.setDistinct(this.joinStrategy.leftSource.isExpresssionDistinct());
+	                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
+	            }
+	            state = State.LOAD_RIGHT;
+	        }
+    	} catch (BlockedException e) {
+    		if (!isDependent()) {
+    			this.joinStrategy.openRight();
+                this.joinStrategy.loadRight();
+                prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
+    		}
+    		throw e;
+    	}
         try {
+            if (state == State.LOAD_RIGHT) {
+	        	this.joinStrategy.openRight();
+	            this.joinStrategy.loadRight();
+                state = State.EXECUTE;
+            }
         	this.joinStrategy.process();
         	this.terminateBatches();
         } catch (BatchAvailableException e) {
         	//pull the batch
+        } catch (BlockedException e) {
+        	//TODO: this leads to duplicate exceptions, we 
+        	//could track which side is blocking
+        	try {
+        		prefetch(this.joinStrategy.leftSource, this.joinStrategy.rightSource);
+        	} catch (BlockedException e1) {
+        		
+        	}
+        	prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
+        	throw e;
         }
         return pullBatch();
     }
+
+	private void prefetch(SourceState toFetch, SourceState other) throws TeiidComponentException,
+			TeiidProcessingException {
+		toFetch.prefetch(Math.max(1l, other.getIncrementalRowCount(false)/other.getSource().getBatchSize())*toFetch.getSource().getBatchSize());
+	}
 
     /** 
      * @see org.teiid.query.processor.relational.RelationalNode#getDescriptionProperties()
@@ -293,6 +333,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     @Override
     public void reset() {
     	super.reset();
+    	this.joinStrategy = this.joinStrategy.clone();
     	this.dvs = null;
     }
 

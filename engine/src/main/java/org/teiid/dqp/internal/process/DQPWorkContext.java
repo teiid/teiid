@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.io.Serializable;
 import java.security.Principal;
 import java.security.acl.Group;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -41,24 +42,38 @@ import javax.security.auth.Subject;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.BatchSerializer;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.logging.LogManager;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.metadata.SystemMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.security.SecurityHelper;
 
 
 public class DQPWorkContext implements Serializable {
 	
-	private static final long serialVersionUID = -6389893410233192977L;
+	private static final String TEIID_VDB = "teiid-vdb"; //$NON-NLS-1$
+
+	private static final String TEIID_SESSION = "teiid-session"; //$NON-NLS-1$
+
+	private static final long serialVersionUID = -6389893410233192977L; 
 	
 	private static final boolean longDatesTimes = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.longDatesTimes", false); //$NON-NLS-1$
 	
 	public enum Version {
-		SEVEN_1("7.1", (byte)0), //$NON-NLS-1$
-		SEVEN_3("7.3", (byte)0), //$NON-NLS-1$
-		SEVEN_4("7.4", (byte)0), //$NON-NLS-1$
-		EIGHT_0("8.0", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$
-		EIGHT_2("8.2", (byte)2); //$NON-NLS-1$
+		SEVEN_1("07.01", (byte)0), //$NON-NLS-1$
+		SEVEN_3("07.03", (byte)0), //$NON-NLS-1$
+		SEVEN_4("07.04", (byte)0), //$NON-NLS-1$
+		EIGHT_0("08.00", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$
+		EIGHT_2("08.02", (byte)2), //$NON-NLS-1$
+		EIGHT_4("08.04.00.CR3", (byte)2), //$NON-NLS-1$
+		EIGHT_6("08.06.00.Beta3", (byte)3), //$NON-NLS-1$
+		EIGHT_7("08.07.00.Beta2", (byte)3), //$NON-NLS-1$
+		EIGHT_10("08.10.00.Alpha3", BatchSerializer.VERSION_GEOMETRY); //$NON-NLS-1$
 		
 		private String string;
 		private byte clientSerializationVersion;
@@ -104,9 +119,17 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public static void setWorkContext(DQPWorkContext context) {
+		LogManager.removeMdc(TEIID_SESSION);
+		LogManager.removeMdc(TEIID_VDB);
 		if (context == null) {
 			CONTEXTS.remove();
 		} else {
+			if (context.session != null) {
+				LogManager.putMdc(TEIID_SESSION, context.session.getSessionId());
+				if (context.session.getVdb() != null) {
+					LogManager.putMdc(TEIID_VDB, context.session.getVdb().getFullName());
+				}
+			}
 			CONTEXTS.set(context);
 		}
 	}
@@ -119,6 +142,9 @@ public class DQPWorkContext implements Serializable {
     private boolean useCallingThread;
     private Version clientVersion = Version.SEVEN_4;
     private boolean admin;
+    private MetadataFactory metadataFactory;
+
+	private transient EmbeddedProfile connectionProfile = new EmbeddedProfile();
     
     public DQPWorkContext() {
 	}
@@ -262,7 +288,15 @@ public class DQPWorkContext implements Serializable {
 	    	Set<String> userRoles = getUserRoles();
 	    	
 	    	// get data roles from the VDB
-	    	for (DataPolicy policy : getVDB().getDataPolicies()) {
+	    	VDBMetaData vdb = getVDB();
+	    	TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+	    	Collection<? extends DataPolicy> allPolicies = null;
+	    	if (metadata == null) {
+	    		allPolicies = vdb.getDataPolicies(); 
+	    	} else {
+	    		allPolicies = metadata.getPolicies().values();
+	    	}
+	    	for (DataPolicy policy : allPolicies) {
 	        	if (matchesPrincipal(userRoles, policy)) {
 	        		this.policies.put(policy.getName(), policy);
 	        	}
@@ -283,12 +317,11 @@ public class DQPWorkContext implements Serializable {
 	}    
 
 	private Set<String> getUserRoles() {
-		Set<String> roles = new HashSet<String>();
-		
 		if (getSubject() == null) {
 			return Collections.emptySet();
 		}
 		
+		Set<String> roles = new HashSet<String>();
 		Set<Principal> principals = getSubject().getPrincipals();
 		for(Principal p: principals) {
 			// this JBoss specific, but no code level dependencies
@@ -319,4 +352,19 @@ public class DQPWorkContext implements Serializable {
 		return admin;
 	}
 
+	public MetadataFactory getTempMetadataFactory() {
+		if (this.metadataFactory == null) {
+			this.metadataFactory = new MetadataFactory("temp", 1, "temp", SystemMetadata.getInstance().getRuntimeTypeMap(), null, null); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return this.metadataFactory;
+	}
+
+	public void setConnectionProfile(EmbeddedProfile connectionProfile) {
+		this.connectionProfile = connectionProfile;
+	}
+	
+	public EmbeddedProfile getConnectionProfile() {
+		return connectionProfile;
+	}
+	
 }

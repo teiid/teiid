@@ -76,7 +76,7 @@ public class Annotation implements Externalizable {
     }
     
     public String toString() {
-        return "QueryAnnotation<" + getCategory() + ", " + getPriority() + "," + getAnnotation() + "," + getResolution() + ">";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        return getPriority() + " [" + getCategory() +"] "+ getAnnotation() + " - " + getResolution();  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
     }
     
     @Override

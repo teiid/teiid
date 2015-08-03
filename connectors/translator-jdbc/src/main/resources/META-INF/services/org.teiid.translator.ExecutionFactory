@@ -4,6 +4,7 @@ org.teiid.translator.jdbc.access.AccessExecutionFactory # Access
 org.teiid.translator.jdbc.db2.DB2ExecutionFactory #db2
 org.teiid.translator.jdbc.derby.DerbyExecutionFactory #Derby
 org.teiid.translator.jdbc.h2.H2ExecutionFactory #h2
+org.teiid.translator.jdbc.hana.HanaExecutionFactory #hana
 org.teiid.translator.jdbc.hsql.HsqlExecutionFactory #hsql
 org.teiid.translator.jdbc.informix.InformixExecutionFactory #informix
 org.teiid.translator.jdbc.ingres.IngresExecutionFactory #ingres
@@ -18,7 +19,11 @@ org.teiid.translator.jdbc.oracle.OracleExecutionFactory #oracle
 org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory #postgresql
 org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory #sqlserver
 org.teiid.translator.jdbc.sybase.SybaseExecutionFactory #sybase
+org.teiid.translator.jdbc.sybase.SybaseIQExecutionFactory #sybaseiq
 org.teiid.translator.jdbc.teiid.TeiidExecutionFactory #teiid
 org.teiid.translator.jdbc.teradata.TeradataExecutionFactory #teradata
 org.teiid.translator.jdbc.excel.ExcelExecutionFactory #excel-odbc
 org.teiid.translator.jdbc.postgresql.GreenplumExecutionFactory #greenplum
+org.teiid.translator.jdbc.ucanaccess.UCanAccessExecutionFactory #ucanaccess
+org.teiid.translator.jdbc.vertica.VerticaExecutionFactory #vertica
+org.teiid.translator.jdbc.actian.ActianVectorInHadoopExecutionFactory #actian-vector

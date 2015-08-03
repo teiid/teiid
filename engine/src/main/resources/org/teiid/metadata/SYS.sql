@@ -29,7 +29,10 @@ CREATE FOREIGN TABLE Columns (
 	Radix integer NOT NULL,
 	UID string(50) NOT NULL,
 	Description string(255),
-	OID integer
+	OID integer,
+	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
+	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
+	UNIQUE (UID)
 );
 
 CREATE FOREIGN TABLE DataTypes (
@@ -51,7 +54,9 @@ CREATE FOREIGN TABLE DataTypes (
 	RuntimeType string(64),
 	BaseType string(64),
 	Description string(255),
-	OID integer
+	OID integer,
+	PRIMARY KEY (Name),
+	UNIQUE (UID)	
 );
 
 CREATE FOREIGN TABLE KeyColumns (
@@ -64,7 +69,10 @@ CREATE FOREIGN TABLE KeyColumns (
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
 	Position integer,
-	OID integer
+	OID integer,
+	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
+	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
+	UNIQUE (UID)	
 );
 
 CREATE FOREIGN TABLE Keys (
@@ -78,7 +86,10 @@ CREATE FOREIGN TABLE Keys (
 	IsIndexed boolean NOT NULL,
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
-	OID integer
+	OID integer,
+	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
+	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
+	UNIQUE (UID)
 );
 
 CREATE FOREIGN TABLE ProcedureParams (
@@ -97,7 +108,10 @@ CREATE FOREIGN TABLE ProcedureParams (
 	NullType string(10) NOT NULL,
 	UID string(50),
 	Description string(255),
-	OID integer
+	OID integer,
+	PRIMARY KEY (VDBName, SchemaName, ProcedureName, Name),
+	FOREIGN KEY (VDBName, SchemaName, ProcedureName) REFERENCES Procedures (VDBName, SchemaName, Name),
+	UNIQUE (UID)	
 );
 
 CREATE FOREIGN TABLE Procedures (
@@ -108,15 +122,53 @@ CREATE FOREIGN TABLE Procedures (
 	ReturnsResults boolean NOT NULL,
 	UID string(50) NOT NULL,
 	Description string(255),
-	OID integer
+	OID integer,
+	PRIMARY KEY (VDBName, SchemaName, Name),
+	FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
+	UNIQUE (UID)	
+);
+
+CREATE FOREIGN TABLE FunctionParams (
+    VDBName string(255) NOT NULL,
+    SchemaName string(255),
+    FunctionName string(255) NOT NULL,
+    FunctionUID string(50) NOT NULL,
+    Name string(255) NOT NULL,
+    DataType string(25) NOT NULL,
+    Position integer NOT NULL,
+    Type string(100) NOT NULL,
+    "Precision" integer NOT NULL,
+    TypeLength integer NOT NULL,
+    Scale integer NOT NULL,
+    Radix integer NOT NULL,
+    NullType string(10) NOT NULL,
+    UID string(50),
+    Description string(4000),
+    UNIQUE (UID),
+    PRIMARY KEY (VDBName, SchemaName, FunctionName, Name),
+    FOREIGN KEY (VDBName, SchemaName, FunctionName) REFERENCES Functions (VDBName, SchemaName, Name)
+);
+
+CREATE FOREIGN TABLE Functions (
+    VDBName string(255) NOT NULL,
+    SchemaName string(255),
+    Name string(255) NOT NULL,
+    NameInSource string(255),
+    UID string(50) NOT NULL,
+    Description string(4000),
+    IsVarArgs boolean,
+    PRIMARY KEY (VDBName, SchemaName, Name),
+    FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
+    UNIQUE (UID)    
 );
 
 CREATE FOREIGN TABLE Properties (
-	Name string(255) NOT NULL,
-	"Value" string(255) NOT NULL,
+	Name string(4000) NOT NULL,
+	"Value" string(4000) NOT NULL,
 	UID string(50) NOT NULL,
 	OID integer,
-	ClobValue clob(2097152)
+	ClobValue clob(2097152),
+	UNIQUE(UID, Name)
 );
 
 CREATE FOREIGN TABLE ReferenceKeyColumns (
@@ -143,7 +195,9 @@ CREATE FOREIGN TABLE Schemas (
 	UID string(50) NOT NULL,
 	Description string(255),
 	PrimaryMetamodelURI string(255) NOT NULL,
-	OID integer
+	OID integer,
+	PRIMARY KEY (VDBName, Name),
+	UNIQUE (UID)	
 );
 
 CREATE FOREIGN TABLE Tables (
@@ -159,13 +213,43 @@ CREATE FOREIGN TABLE Tables (
 	Description string(255),
 	IsSystem boolean,
 	IsMaterialized boolean NOT NULL,
-	OID integer
+	OID integer,
+	PRIMARY KEY (VDBName, SchemaName, Name),
+	FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
+	UNIQUE (UID)	
 );
 
 CREATE FOREIGN TABLE VirtualDatabases (
 	Name string(255) NOT NULL,
-	Version string(50) NOT NULL
+	Version string(50) NOT NULL,
+	PRIMARY KEY (Name, Version)
 );
 
 CREATE FOREIGN PROCEDURE getXMLSchemas(IN document string NOT NULL) RETURNS TABLE (schema xml)
 OPTIONS (UPDATECOUNT 0)
+
+CREATE VIEW spatial_ref_sys (
+    srid integer primary key,
+    auth_name string(256),
+    auth_srid integer,
+    srtext string(2048),
+    proj4text string(2048))
+    OPTIONS (MATERIALIZED true)
+AS select t.* from objecttable('teiid_context' COLUMNS x clob 'teiid_row.spatialRefSys') o
+, texttable(o.x columns srid integer, auth_name string, auth_srid integer, srtext string, proj4text string skip 1) t;
+
+CREATE VIEW GEOMETRY_COLUMNS ( 
+    F_TABLE_CATALOG VARCHAR(256) NOT NULL, 
+    F_TABLE_SCHEMA VARCHAR(256) NOT NULL, 
+    F_TABLE_NAME VARCHAR(256) NOT NULL, 
+    F_GEOMETRY_COLUMN VARCHAR(256) NOT NULL,
+    COORD_DIMENSION INTEGER NOT NULL, 
+    SRID INTEGER NOT NULL, 
+    TYPE VARCHAR(30) NOT NULL)
+as select c.VDBName, c.SchemaName, c.TableName, c.Name, 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}coord_dimension') as integer), 2), 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}srid') as integer), 0),
+  nvl((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}type'), 'GEOMETRY') 
+  from sys.columns as c where DataType = 'geometry';
+  
+CREATE FOREIGN PROCEDURE ARRAYITERATE (val object[]) RETURNS TABLE (col object);

@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
@@ -50,7 +51,7 @@ public class CapabilitiesConverter {
     
     public static BasicSourceCapabilities convertCapabilities(ExecutionFactory srcCaps, Object connectorID) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
-        
+        tgtCaps.setTranslator(srcCaps);
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, srcCaps.supportsSelectExpression());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, srcCaps.supportsSelectDistinct());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, srcCaps.supportsAliasedTable());
@@ -102,6 +103,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, srcCaps.supportsOrderByNullOrdering());
         tgtCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, srcCaps.supportsBulkUpdate());
         tgtCaps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, srcCaps.supportsCommonTableExpressions());
+        tgtCaps.setCapabilitySupport(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsRecursiveCommonTableExpressions());
         tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsElementaryOlapOperations());
         setSupports(connectorID, tgtCaps, Capability.ADVANCED_OLAP, srcCaps.supportsAdvancedOlapOperations(), Capability.ELEMENTARY_OLAP);
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates(), Capability.ELEMENTARY_OLAP);
@@ -112,8 +114,29 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, srcCaps.supportsOnlyFormatLiterals());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, srcCaps.supportsOnlyLiteralComparison());
         tgtCaps.setCapabilitySupport(Capability.DEPENDENT_JOIN, srcCaps.supportsDependentJoins());
+        tgtCaps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, srcCaps.supportsFullDependentJoins());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, srcCaps.supportsSubqueryInOn());
         tgtCaps.setCapabilitySupport(Capability.ARRAY_TYPE, srcCaps.supportsArrayType());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, srcCaps.supportsOnlyCorrelatedSubqueries());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, srcCaps.supportsStringAgg());
+        tgtCaps.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, srcCaps.supportsSelectWithoutFrom());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY_ROLLUP, srcCaps.supportsGroupByRollup());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, srcCaps.supportsOrderByWithExtendedGrouping());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, srcCaps.supportsCompareCriteriaOrderedExclusive());
+        tgtCaps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsSubqueryCommonTableExpressions());
+        if (srcCaps.supportsPartialFiltering()) {
+        	//disable supports that could end up being not filterable
+        	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
+        	Assertion.assertTrue(!srcCaps.supportsOuterJoins());
+        	Assertion.assertTrue(!srcCaps.supportsFullOuterJoins());
+        	Assertion.assertTrue(!srcCaps.supportsInlineViews());
+        	Assertion.assertTrue(!srcCaps.supportsIntersect());
+        	Assertion.assertTrue(!srcCaps.supportsExcept());
+        	Assertion.assertTrue(!srcCaps.supportsSelectExpression());
+        	Assertion.assertTrue(!srcCaps.supportsUnions());
+        	Assertion.assertTrue(!srcCaps.supportsSelectDistinct());
+        	Assertion.assertTrue(!srcCaps.supportsGroupBy());
+        }
         
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
@@ -137,6 +160,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
         tgtCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, srcCaps.getDefaultNullOrder());
+        tgtCaps.setSourceProperty(Capability.COLLATION_LOCALE, srcCaps.getCollationLocale());
         return tgtCaps;
     }
 

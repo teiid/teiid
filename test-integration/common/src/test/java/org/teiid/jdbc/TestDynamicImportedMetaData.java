@@ -24,32 +24,54 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
+import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
 import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
-
 
 /**
  */
 @SuppressWarnings("nls")
 public class TestDynamicImportedMetaData {
+
+	public static final class BadMetadata {
+		public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
+			throw new SQLException();
+		}
+	}
 
 	private FakeServer server;
 	
@@ -106,10 +128,10 @@ public class TestDynamicImportedMetaData {
     	
     	Properties importProperties = new Properties();
     	importProperties.setProperty("importer.importProcedures", Boolean.TRUE.toString());
-    	importProperties.setProperty("importer.excludeTables", "VDB\\.SYS\\..*");
+    	importProperties.setProperty("importer.excludeTables", "VDB\\.SYS.*");
     	importProperties.setProperty("importer.excludeProcedures", "VDB\\..*");
     	MetadataFactory mf = getMetadata(importProperties, conn);
-    	assertEquals(String.valueOf(mf.asMetadataStore().getSchemas().get("TEST").getTables()), 18, mf.asMetadataStore().getSchemas().get("TEST").getTables().size());
+    	assertEquals(String.valueOf(mf.asMetadataStore().getSchemas().get("TEST").getTables()), 17, mf.asMetadataStore().getSchemas().get("TEST").getTables().size());
     	assertEquals(0, mf.asMetadataStore().getSchemas().get("TEST").getProcedures().size());
     }
         
@@ -139,7 +161,7 @@ public class TestDynamicImportedMetaData {
     	try {
     		getMetadata(importProperties, conn);
     		fail();
-    	} catch (TranslatorException e) {
+    	} catch (DuplicateRecordException e) {
     		
     	}
     }
@@ -161,6 +183,67 @@ public class TestDynamicImportedMetaData {
     	mf = getMetadata(importProperties, conn);
     	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("X.DUP");
     	assertEquals("\"x\".\"dup\"", t.getNameInSource());
+    }
+
+    public static class DatabaseMetaDataProxy {
+		public String getCatalogSeparator() {
+			return ":";
+		}
+	}
+    
+    public static class ConnectionProxy {
+
+		private final Connection conn;
+
+		private ConnectionProxy(Connection conn) {
+			this.conn = conn;
+		}
+
+		public DatabaseMetaData getMetaData() throws SQLException {
+			DatabaseMetaData dmd = conn.getMetaData();
+			dmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new DatabaseMetaDataProxy(), dmd}, new Class<?>[] {DatabaseMetaData.class});
+			return dmd;
+		}
+	}
+    
+    @Test public void testUseCatalogSeparator() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	final Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	Connection conn1 = (Connection) SimpleMock.createSimpleMock(new Object[] {new ConnectionProxy(conn), conn}, new Class<?>[] {Connection.class});
+    	mf = getMetadata(importProperties, conn1);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("test:X.DUP");
+    	assertEquals("\"test\":\"x\".\"dup\"", t.getNameInSource());
+    }
+    
+    @Test public void testUseQualified() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	//neither the name nor name in source should be qualified
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+    	
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("DUP");
+    	assertEquals("\"dup\"", t.getNameInSource());
     }
     
     @Test
@@ -201,4 +284,195 @@ public class TestDynamicImportedMetaData {
     	assertEquals("symbol", columns.get(0).getName());
     	assertEquals("price", columns.get(1).getName());
     }    
+    
+    @Test public void testImportFunction() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty(NativeMetadataRepository.IMPORT_PUSHDOWN_FUNCTIONS, Boolean.TRUE.toString());
+    	
+    	mf = createMetadataFactory("test", importProperties);
+    	NativeMetadataRepository nmr = new NativeMetadataRepository();
+    	OracleExecutionFactory oef = new OracleExecutionFactory();
+    	oef.start();
+    	DataSource ds = Mockito.mock(DataSource.class);
+    	    	
+    	Mockito.stub(ds.getConnection()).toReturn(conn);
+    	
+    	nmr.loadMetadata(mf, oef, ds);
+    	
+    	Map<String, FunctionMethod> functions = mf.asMetadataStore().getSchemas().get("TEST").getFunctions();
+    	
+    	assertEquals(14, functions.size());
+    }
+    
+    @Test public void testIgnorePkIndex() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("x");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	mf.addPrimaryKey("foo", Arrays.asList("x"), dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	
+    	//cheat and add the index after deployment
+    	mf.addIndex("foo", false, Arrays.asList("x"), dup);
+    	
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importKeys", Boolean.TRUE.toString());
+    	importProperties.setProperty("importer.importIndexes", Boolean.TRUE.toString());
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("test.X.X");
+    	assertNotNull(t.getPrimaryKey());
+    	assertEquals(0, t.getUniqueKeys().size());
+    	assertEquals(0, t.getIndexes().size());
+    }
+    
+    @Test public void testDroppedFk() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);"
+    			+ "create foreign table z (y integer, foreign key (y) references x)");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
+		server.deployVDB("vdb", mmd);
+    	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importKeys", "true");
+    	//only import z and not the referenced table x
+    	importProperties.setProperty("importer.tableNamePattern", "z");
+    	MetadataFactory mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("test").getTables().get("vdb.foo.z");
+    	List<ForeignKey> fks = t.getForeignKeys();
+    	assertEquals(0, fks.size());
+	}
+    
+    @Test public void testMultipleFK() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer, z integer, primary key (y, z));"
+    			+ "create foreign table z (y integer, z integer, y1 integer, z1 integer, foreign key (y, z) references x (y, z), foreign key (y1, z1) references x (y, z))");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
+		server.deployVDB("vdb", mmd);
+    	Connection conn = server.createConnection("jdbc:teiid:vdb"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.importKeys", "true");
+    	MetadataFactory mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("test").getTables().get("vdb.foo.z");
+    	List<ForeignKey> fks = t.getForeignKeys();
+    	assertEquals(2, fks.size());
+	}
+    
+    @Test public void testMultiSource() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
+		server.deployVDB("vdb", mmd);
+		TeiidExecutionFactory tef = new TeiidExecutionFactory() {
+			@Override
+			public void closeConnection(Connection connection,
+					DataSource factory) {
+			}
+		};
+		tef.setSupportsDirectQueryProcedure(true);
+		tef.start();
+		server.addTranslator("teiid", tef);
+		DataSource ds = Mockito.mock(DataSource.class);
+		Mockito.stub(ds.getConnection()).toReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
+		server.addConnectionFactory("teiid1", ds);
+		server.addConnectionFactory("teiid2", ds);
+		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("multi.xml")));
+		Connection c = server.createConnection("jdbc:teiid:multi", null);
+		Statement s = c.createStatement();
+		
+		s.execute("call native('select ?', 'b')");
+		
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		
+		s.execute("call native(request=>'select ?', variable=>('b',), target=>'teiid1')");
+		rs = s.getResultSet();
+		
+		assertTrue(rs.next());
+		
+		Object[] result = (Object[]) rs.getArray(1).getArray();
+		assertArrayEquals(new Object[] {"b"}, result);
+		assertFalse(rs.next());
+	}
+    
+    @Test public void testMultiSourceImportError() throws Exception {
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);");
+    	mmd.setName("foo");
+    	mmd.addSourceMapping("x", "x", "x");
+    	server.addTranslator("x", new ExecutionFactory());
+		server.deployVDB("vdb", mmd);
+		TeiidExecutionFactory tef = new TeiidExecutionFactory() {
+			@Override
+			public void closeConnection(Connection connection,
+					DataSource factory) {
+			}
+		};
+		tef.start();
+		server.addTranslator("teiid", tef);
+		DataSource ds = Mockito.mock(DataSource.class);
+		Connection c = server.getDriver().connect("jdbc:teiid:vdb", null);
+		//bad databasemetadata
+		DatabaseMetaData dbmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new BadMetadata(), c.getMetaData()}, new Class[] {DatabaseMetaData.class});
+		Connection mock = Mockito.mock(Connection.class);
+		Mockito.stub(mock.getMetaData()).toReturn(dbmd);
+		Mockito.stub(ds.getConnection()).toReturn(mock);
+
+		DataSource ds1 = Mockito.mock(DataSource.class);
+		Mockito.stub(ds1.getConnection()).toReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
+		
+		server.addConnectionFactory("teiid1", ds);
+		server.addConnectionFactory("teiid2", ds1);
+		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("multi.xml")));
+	}
+    
+    @Test public void testUseScale() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("x");
+    	
+    	Column c = mf.addColumn("x", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, dup);
+    	c.setPrecision(10);
+    	c.setScale(2);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+    	
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("x");
+    	c = t.getColumnByName("x");
+    	assertEquals(10, c.getPrecision());
+    	assertEquals(2, c.getScale());
+    }
 }

@@ -33,7 +33,6 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class XMLForest implements Expression {
 
-	private static final long serialVersionUID = -3348922701950966494L;
 	private List<DerivedColumn> args;
 	private XMLNamespaces namespaces;
 	

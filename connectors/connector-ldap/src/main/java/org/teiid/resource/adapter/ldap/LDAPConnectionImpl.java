@@ -42,10 +42,12 @@ import javax.naming.ldap.ExtendedResponse;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.resource.ResourceException;
+import javax.security.auth.Subject;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ConnectionContext;
 
 
 
@@ -85,16 +87,6 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.urlPropNotFound"); //$NON-NLS-1$
             throw new ResourceException(msg);
 		}
-		// LDAP Admin User DN
-		if(this.config.getLdapAdminUserDN() == null) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserDNPropNotFound"); //$NON-NLS-1$
-            throw new ResourceException(msg);
-		}
-		// LDAP Admin User Password
-		if(this.config.getLdapAdminUserPassword() == null) {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserPassPropNotFound"); //$NON-NLS-1$
-            throw new ResourceException(msg);
-		}
 	}
 	
 	/**
@@ -111,20 +103,41 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 		connenv.put(Context.INITIAL_CONTEXT_FACTORY, this.config.getLdapContextFactory());
 		connenv.put(Context.PROVIDER_URL, this.config.getLdapUrl());
 		connenv.put(Context.REFERRAL, LDAP_REFERRAL_MODE);
+		
+		String userName = this.config.getLdapAdminUserDN();
+		String password = this.config.getLdapAdminUserPassword();
+
+		// if security-domain is specified and caller identity is used; then use
+		// credentials from subject
+		Subject subject = ConnectionContext.getSubject();
+		if (subject != null) {
+			userName = ConnectionContext.getUserName(subject, this.config, userName);
+			password = ConnectionContext.getPassword(subject, this.config, userName, password);
+		}
+		
+		if (userName == null) {
+            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserDNPropNotFound"); //$NON-NLS-1$
+            throw new ResourceException(msg);
+		}
+		
+		if (password == null) {
+            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserPassPropNotFound"); //$NON-NLS-1$
+            throw new ResourceException(msg);
+		}
+		
 		// If username is blank, we will perform an anonymous bind.
 		// Note: This is not supported when using Sun's VLVs, so remove this if VLVs are used.
-		if(!this.config.getLdapAdminUserDN().equals("")) { //$NON-NLS-1$
-
+		if(!userName.equals("")) { //$NON-NLS-1$
 			connenv.put(Context.SECURITY_AUTHENTICATION, LDAP_AUTH_TYPE);
-			connenv.put(Context.SECURITY_PRINCIPAL, this.config.getLdapAdminUserDN());
-			connenv.put(Context.SECURITY_CREDENTIALS, this.config.getLdapAdminUserPassword());
+			connenv.put(Context.SECURITY_PRINCIPAL, userName);
+			connenv.put(Context.SECURITY_CREDENTIALS, password);
 		} else {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "LDAP Username DN was blank; performing anonymous bind."); //$NON-NLS-1$
 			connenv.put(Context.SECURITY_AUTHENTICATION, "none"); //$NON-NLS-1$
 		}
 		
 		if(this.config.getLdapTxnTimeoutInMillis() != null && this.config.getLdapTxnTimeoutInMillis() != -1) { 
-			connenv.put("com.sun.jndi.ldap.connect.timeout", this.config.getLdapTxnTimeoutInMillis()); //$NON-NLS-1$
+			connenv.put("com.sun.jndi.ldap.connect.timeout", this.config.getLdapTxnTimeoutInMillis().toString()); //$NON-NLS-1$
 		}
 		
 		// Enable connection pooling for the Initial context.
@@ -135,7 +148,7 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 			initContext = new InitialLdapContext(connenv, null);
 		} catch(NamingException ne){ 
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.directoryNamingError",ne.getExplanation()); //$NON-NLS-1$
-			throw new ResourceException(msg);
+			throw new ResourceException(msg, ne);
 		} 
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Successfully obtained initial LDAP context."); //$NON-NLS-1$
 		return initContext;

@@ -26,17 +26,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.optimizer.relational.RowBasedSecurityHelper;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -65,7 +66,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
     private TupleSource tupleSource;
     
     /** Set containing the indexes of commands that weren't executed. */
-    private Set<Integer> unexecutedCommands;
+    private boolean[] unexecutedCommands;
 
 	private int commandCount;
     
@@ -90,7 +91,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
      */
     public void open() throws TeiidComponentException, TeiidProcessingException {
         super.open();
-        unexecutedCommands = new HashSet<Integer>();
+        unexecutedCommands = new boolean[updateCommands.size()];
         List<Command> commandsToExecute = new ArrayList<Command>(updateCommands.size());
         // Find the commands to be executed
         for (int i = 0; i < updateCommands.size(); i++) {
@@ -111,11 +112,12 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
             if (needProcessing) {
                 commandsToExecute.add(updateCommand);
             } else {
-                unexecutedCommands.add(Integer.valueOf(i));
+                unexecutedCommands[i] = true;
             }
         }
         if (!commandsToExecute.isEmpty()) {
             BatchedUpdateCommand command = new BatchedUpdateCommand(commandsToExecute);
+            RowBasedSecurityHelper.checkConstraints(command, getEvaluator(Collections.emptyMap()));
             tupleSource = getDataManager().registerRequest(getContext(), command, modelName, new RegisterRequestParameter(null, getID(), -1));
         }
     }
@@ -129,7 +131,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         int numExpectedCounts = updateCommands.size();
         for (;commandCount < numExpectedCounts; commandCount++) {
             // If the command at this index was not executed
-            if (tupleSource == null || unexecutedCommands.contains(Integer.valueOf(commandCount))) {
+            if (tupleSource == null || unexecutedCommands[commandCount]) {
                 addBatchRow(ZERO_COUNT_TUPLE);
             } else { // Otherwise, get the next count in the batch
                 List<?> tuple = tupleSource.nextTuple();
@@ -188,6 +190,13 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
     	return true;
+    }
+    
+    @Override
+    public PlanNode getDescriptionProperties() {
+    	PlanNode node = super.getDescriptionProperties();
+    	AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_SQL, this.updateCommands);
+    	return node;
     }
 
 }

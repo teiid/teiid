@@ -33,6 +33,7 @@ import java.util.List;
 public interface Model extends AdminObject {
 	
 	enum Type {PHYSICAL, VIRTUAL, FUNCTION, OTHER};
+	enum MetadataStatus {LOADING, LOADED, FAILED, RETRYING};
 	
 	/**
 	 * Description about the model
@@ -49,6 +50,8 @@ public interface Model extends AdminObject {
 
     /**
      * Determine whether this model is exposed for querying.
+     * 
+     * <br>Note: for imported models, this may be overriden.  See {@link VDB#isVisible(String)}
      * 
      * @return <code>true</code> if the model is visible
      * for querying.
@@ -94,4 +97,10 @@ public interface Model extends AdminObject {
      * @return
      */
     List<String> getValidityErrors();
+    
+    /**
+     * Metadata Load status of the model.
+     * @return
+     */
+    MetadataStatus getMetadataStatus();    
 }

@@ -61,18 +61,22 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     
     private List<VariableContext> contexts; //only set for bulk updates
     
+    private boolean singleResult;
+    
     /**
      *  
      * @param childPlans the child update plans for this batch
      * @param commandsInBatch The total number of commands in this batch. This does not always equal the number of plans if some
      * commands have been batched together.
+     * @param singleResult 
      * @since 4.2
      */
-    public BatchedUpdatePlan(List<? extends ProcessorPlan> childPlans, int commandsInBatch, List<VariableContext> contexts) {
+    public BatchedUpdatePlan(List<? extends ProcessorPlan> childPlans, int commandsInBatch, List<VariableContext> contexts, boolean singleResult) {
         this.updatePlans = childPlans.toArray(new ProcessorPlan[childPlans.size()]);
         this.planOpened = new boolean[updatePlans.length];
         this.updateCounts = new List[commandsInBatch];
         this.contexts = contexts;
+        this.singleResult = singleResult;
     }
 
     /** 
@@ -90,7 +94,8 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         		clonedPlans.add(clonedPlans.get(0));
         	}
         }
-        return new BatchedUpdatePlan(clonedPlans, updateCounts.length, contexts);
+        BatchedUpdatePlan clone = new BatchedUpdatePlan(clonedPlans, updateCounts.length, contexts, singleResult);
+        return clone;
     }
 
     /** 
@@ -151,6 +156,15 @@ public class BatchedUpdatePlan extends ProcessorPlan {
             // since we are done with the plan explicitly close it.
             updatePlans[planIndex].close();
         }
+        if (singleResult) {
+        	int result = 0;
+        	for (int i = 0; i < updateCounts.length; i++) {
+        		result += (Integer)updateCounts[i].get(0);
+        	}
+        	TupleBatch batch = new TupleBatch(1, new List<?>[] {Arrays.asList(result) });
+        	batch.setTerminationFlag(true);
+        	return batch;
+        }
         // Add tuples to current batch
         TupleBatch batch = new TupleBatch(1, updateCounts);
         batch.setTerminationFlag(true);
@@ -159,13 +173,20 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 
 	private void openPlan() throws TeiidComponentException,
 			TeiidProcessingException {
+		//reset prior to updating the context
+		updatePlans[planIndex].reset();
 		if (this.contexts != null && !this.contexts.isEmpty()) {
 			CommandContext context = updatePlans[planIndex].getContext();
-			context.getVariableContext().clear();
+			VariableContext vc = context.getVariableContext();
+			//ensure that we're dealing with the global context
+			//this is just a safe guard against the plan not correctly resetting the context
+			while (vc.getParentContext() != null) {
+				vc = vc.getParentContext();
+			}
+			vc.clear();
 			VariableContext currentValues = this.contexts.get(planIndex);
-			context.getVariableContext().putAll(currentValues); 
+			vc.putAll(currentValues); 
 		}
-		updatePlans[planIndex].reset();
 		updatePlans[planIndex].open();
 		planOpened[planIndex] = true;
 	}
@@ -237,5 +258,9 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 		}
 		return true;
     }
+    
+    public void setSingleResult(boolean singleResult) {
+		this.singleResult = singleResult;
+	}
     
 }

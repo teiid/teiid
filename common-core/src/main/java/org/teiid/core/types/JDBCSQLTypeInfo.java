@@ -76,6 +76,7 @@ public final class JDBCSQLTypeInfo {
     	//note the order in which these are added matters.  if there are multiple sql type mappings (e.g. biginteger and bigdecimal to numeric), the latter will be the primary
     	addType(DataTypeManager.DefaultDataTypes.BIG_INTEGER, 20, 19, DataTypeManager.DefaultDataClasses.BIG_INTEGER.getName(), Types.NUMERIC);
     	addType(new String[] {DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "decimal"}, 22, 20, DataTypeManager.DefaultDataClasses.BIG_DECIMAL.getName(), Types.NUMERIC, Types.DECIMAL); //$NON-NLS-1$
+        addType(DataTypeManager.DefaultDataTypes.GEOMETRY, Integer.MAX_VALUE, Integer.MAX_VALUE, GeometryType.class.getName(), Types.BLOB, Types.LONGVARBINARY);
     	addType(DataTypeManager.DefaultDataTypes.BLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Blob.class.getName(), Types.BLOB, Types.LONGVARBINARY);
     	addType(DataTypeManager.DefaultDataTypes.BOOLEAN, 5, 1, DataTypeManager.DefaultDataClasses.BOOLEAN.getName(), Types.BIT, Types.BOOLEAN);
     	addType(new String[] {DataTypeManager.DefaultDataTypes.BYTE, "tinyint"}, 4, 3, DataTypeManager.DefaultDataClasses.BYTE.getName(), Types.TINYINT); //$NON-NLS-1$
@@ -93,8 +94,7 @@ public final class JDBCSQLTypeInfo {
     	addType(DataTypeManager.DefaultDataTypes.TIMESTAMP, 29, 29, DataTypeManager.DefaultDataClasses.TIMESTAMP.getName(), Types.TIMESTAMP);
     	addType(DataTypeManager.DefaultDataTypes.XML, Integer.MAX_VALUE, Integer.MAX_VALUE, SQLXML.class.getName(), Types.SQLXML);
     	addType(DataTypeManager.DefaultDataTypes.NULL, 4, 1, null, Types.NULL);
-    	addType(DataTypeManager.DefaultDataTypes.VARBINARY, DataTypeManager.MAX_LOB_MEMORY_BYTES, DataTypeManager.MAX_LOB_MEMORY_BYTES, byte[].class.getName(), Types.VARBINARY, Types.BINARY);
-    	addType(DataTypeManager.DefaultDataTypes.VARBINARY, DataTypeManager.MAX_LOB_MEMORY_BYTES, DataTypeManager.MAX_LOB_MEMORY_BYTES, byte[].class.getName(), Types.VARBINARY, Types.BINARY);
+    	addType(DataTypeManager.DefaultDataTypes.VARBINARY, DataTypeManager.MAX_VARBINARY_BYTES, DataTypeManager.MAX_VARBINARY_BYTES, byte[].class.getName(), Types.VARBINARY, Types.BINARY);
     	
     	TypeInfo typeInfo = new TypeInfo(Integer.MAX_VALUE, 0, "ARRAY", Array.class.getName(), new int[Types.ARRAY]); //$NON-NLS-1$
 		CLASSNAME_TO_TYPEINFO.put(Array.class.getName(), typeInfo); 

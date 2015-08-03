@@ -22,17 +22,8 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
-
-import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
-import org.teiid.net.socket.SocketUtil;
-import org.teiid.transport.SSLConfiguration;
 
 @SuppressWarnings("nls")
 enum Element {
@@ -40,125 +31,124 @@ enum Element {
     UNKNOWN(null),
 
     // VM wide elements
-    ASYNC_THREAD_POOL_ELEMENT("async-thread-pool", "async-thread-pool", ModelType.STRING, true, null),
-    ALLOW_ENV_FUNCTION_ELEMENT("allow-env-function", "allow-env-function", ModelType.BOOLEAN, false, "false"),
+    ASYNC_THREAD_POOL_ELEMENT("async-thread-pool", "async-thread-pool"),
+    ALLOW_ENV_FUNCTION_ELEMENT("allow-env-function", "allow-env-function"),
             	
-	MAX_THREADS_ELEMENT("max-threads", "max-threads", ModelType.INT, false, "64"),
-	MAX_ACTIVE_PLANS_ELEMENT("max-active-plans", "max-active-plans", ModelType.INT, false, "20"),
-	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT("thread-count-for-source-concurrency", "thread-count-for-source-concurrency", ModelType.INT, false, "0"),
-	TIME_SLICE_IN_MILLI_ELEMENT("time-slice-in-millseconds", "time-slice-in-millseconds", ModelType.INT, false, "2000"),
-	MAX_ROWS_FETCH_SIZE_ELEMENT("max-row-fetch-size", "max-row-fetch-size", ModelType.INT, false, "20480"),
-	LOB_CHUNK_SIZE_IN_KB_ELEMENT("lob-chunk-size-in-kb", "lob-chunk-size-in-kb", ModelType.INT, false, "100"),
-	QUERY_THRESHOLD_IN_SECS_ELEMENT("query-threshold-in-seconds", "query-threshold-in-seconds", ModelType.INT, false, "600"),
-	MAX_SOURCE_ROWS_ELEMENT("max-source-rows-allowed", "max-source-rows-allowed", ModelType.INT, false, "-1"),
-	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT("exception-on-max-source-rows", "exception-on-max-source-rows", ModelType.BOOLEAN, false, "true"),	
-	DETECTING_CHANGE_EVENTS_ELEMENT("detect-change-events", "detect-change-events", ModelType.BOOLEAN, false, "true"),
-    QUERY_TIMEOUT("query-timeout", "query-timeout", ModelType.LONG, false, "0"),
-    WORKMANAGER("workmanager", "workmanager", ModelType.STRING, false, "default"),
+	MAX_THREADS_ELEMENT("max-threads", "max-threads"),
+	MAX_ACTIVE_PLANS_ELEMENT("max-active-plans", "max-active-plans"),
+	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT("thread-count-for-source-concurrency", "thread-count-for-source-concurrency"),
+	TIME_SLICE_IN_MILLI_ELEMENT("time-slice-in-milliseconds", "time-slice-in-milliseconds"),
+	@Deprecated
+	TIME_SLICE_IN_MILL_ELEMENT("time-slice-in-millseconds", "time-slice-in-millseconds"),
+	MAX_ROWS_FETCH_SIZE_ELEMENT("max-row-fetch-size", "max-row-fetch-size"),
+	LOB_CHUNK_SIZE_IN_KB_ELEMENT("lob-chunk-size-in-kb", "lob-chunk-size-in-kb"),
+	QUERY_THRESHOLD_IN_SECS_ELEMENT("query-threshold-in-seconds", "query-threshold-in-seconds"),
+	MAX_SOURCE_ROWS_ELEMENT("max-source-rows-allowed", "max-source-rows-allowed"),
+	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT("exception-on-max-source-rows", "exception-on-max-source-rows"),	
+	DETECTING_CHANGE_EVENTS_ELEMENT("detect-change-events", "detect-change-events"),
+    QUERY_TIMEOUT("query-timeout", "query-timeout"),
+    WORKMANAGER("workmanager", "workmanager"),
     
-    POLICY_DECIDER_MODULE_ELEMENT("policy-decider-module", "policy-decider-module", ModelType.STRING, false, null),
-    AUTHORIZATION_VALIDATOR_MODULE_ELEMENT("authorization-validator-module", "authorization-validator-module", ModelType.STRING, false, null),
+    POLICY_DECIDER_MODULE_ELEMENT("policy-decider-module", "policy-decider-module"),
+    DATA_ROLES_REQUIRED_ELEMENT("data-roles-required", "data-roles-required"),
+    AUTHORIZATION_VALIDATOR_MODULE_ELEMENT("authorization-validator-module", "authorization-validator-module"),
+    PREPARSER_MODULE_ELEMENT("preparser-module", "preparser-module"),
 	
 	// buffer manager
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
-	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk", ModelType.BOOLEAN, false, "true"),
-	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size", ModelType.INT, false, "256"),
-	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size", ModelType.INT, false, "512"),
-	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb", ModelType.INT, false, "-1"),
-	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb", ModelType.INT, false, "-1"),
-	MAX_FILE_SIZE_ATTRIBUTE("max-file-size", "buffer-service-max-file-size", ModelType.LONG, false, "2048"),
-	MAX_BUFFER_SPACE_ATTRIBUTE("max-buffer-space", "buffer-service-max-buffer-space", ModelType.LONG, false, "51200"),
-	MAX_OPEN_FILES_ATTRIBUTE("max-open-files", "buffer-service-max-open-files", ModelType.INT, false, "64"),
-	MEMORY_BUFFER_SPACE_ATTRIBUTE("memory-buffer-space", "buffer-service-memory-buffer-space", ModelType.INT, false, "-1"),
-	MEMORY_BUFFER_OFFHEAP_ATTRIBUTE("memory-buffer-off-heap", "buffer-service-memory-buffer-off-heap", ModelType.BOOLEAN, false, "false"),
-	MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE("max-storage-object-size", "buffer-service-max-storage-object-size", ModelType.INT, false, "8388608"),
-	INLINE_LOBS("inline-lobs", "buffer-service-inline-lobs", ModelType.BOOLEAN, false, "true"),
+	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk"),
+	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size"),
+	@Deprecated
+	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size"),
+	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb"),
+	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb"),
+	MAX_FILE_SIZE_ATTRIBUTE("max-file-size", "buffer-service-max-file-size"),
+	MAX_BUFFER_SPACE_ATTRIBUTE("max-buffer-space", "buffer-service-max-buffer-space"),
+	MAX_OPEN_FILES_ATTRIBUTE("max-open-files", "buffer-service-max-open-files"),
+	MEMORY_BUFFER_SPACE_ATTRIBUTE("memory-buffer-space", "buffer-service-memory-buffer-space"),
+	MEMORY_BUFFER_OFFHEAP_ATTRIBUTE("memory-buffer-off-heap", "buffer-service-memory-buffer-off-heap"),
+	MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE("max-storage-object-size", "buffer-service-max-storage-object-size"),
+	INLINE_LOBS("inline-lobs", "buffer-service-inline-lobs"),
+	ENCRYPT_FILES_ATTRIBUTE("encrypt-files", "buffer-service-encrypt-files"),
 	
 	//prepared-plan-cache-config
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
-	PPC_ENABLE_ATTRIBUTE("enable", "preparedplan-cache-enable", ModelType.BOOLEAN, false, "true"),
-	PPC_NAME_ELEMENT("name", "preparedplan-cache-name", ModelType.STRING, false, "preparedplan"),
-	PPC_CONTAINER_NAME_ELEMENT("infinispan-container", "preparedplan-cache-infinispan-container", ModelType.STRING, false, null),
+	PPC_ENABLE_ATTRIBUTE("enable", "preparedplan-cache-enable"),
+	PPC_NAME_ATTRIBUTE("name", "preparedplan-cache-name"),
+	PPC_CONTAINER_NAME_ELEMENT("infinispan-container", "preparedplan-cache-infinispan-container"),
 	
 	// Object Replicator
 	DISTRIBUTED_CACHE("distributed-cache"),
-	DC_STACK_ATTRIBUTE("jgroups-stack", "distributed-cache-jgroups-stack", ModelType.STRING, false, null),
+	DC_STACK_ATTRIBUTE("jgroups-stack", "distributed-cache-jgroups-stack"),
 	
 	// Result set cache	
 	RESULTSET_CACHE_ELEMENT("resultset-cache"),
-	RSC_ENABLE_ATTRIBUTE("enable", "resultset-cache-enable", ModelType.BOOLEAN, false, "true"),
-	RSC_NAME_ELEMENT("name", "resultset-cache-name", ModelType.STRING, false, "resultset"),
-	RSC_CONTAINER_NAME_ELEMENT("infinispan-container", "resultset-cache-infinispan-container", ModelType.STRING, false, null),
-	RSC_MAX_STALENESS_ELEMENT("max-staleness", "resultset-cache-max-staleness", ModelType.INT, false, "60"),
+	RSC_ENABLE_ATTRIBUTE("enable", "resultset-cache-enable"),
+	RSC_NAME_ATTRIBUTE("name", "resultset-cache-name"),
+	RSC_CONTAINER_NAME_ATTRIBUTE("infinispan-container", "resultset-cache-infinispan-container"),
+	RSC_MAX_STALENESS_ATTRIBUTE("max-staleness", "resultset-cache-max-staleness"),
 	
 	//transport
 	TRANSPORT_ELEMENT("transport"),
-	TRANSPORT_PROTOCOL_ATTRIBUTE("protocol", "protocol", ModelType.STRING, false, "teiid"),
-	TRANSPORT_NAME_ATTRIBUTE("name", "name", ModelType.STRING, true, null),
-	TRANSPORT_SOCKET_BINDING_ATTRIBUTE("socket-binding", "socket-binding", ModelType.STRING, true, null),
-	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE("max-socket-threads", "max-socket-threads", ModelType.INT, false, "0"),
-	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE("input-buffer-size", "input-buffer-size",ModelType.INT, false, "0"),
-	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE("output-buffer-size", "output-buffer-size", ModelType.INT, false, "0"),
+	TRANSPORT_PROTOCOL_ATTRIBUTE("protocol", "protocol"),
+	TRANSPORT_NAME_ATTRIBUTE("name", "name"),
+	TRANSPORT_SOCKET_BINDING_ATTRIBUTE("socket-binding", "socket-binding"),
+	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE("max-socket-threads", "max-socket-threads"),
+	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE("input-buffer-size", "input-buffer-size"),
+	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE("output-buffer-size", "output-buffer-size"),
 	
 	AUTHENTICATION_ELEMENT("authentication"),
-	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain", ModelType.STRING, false, null),	
-	AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE("max-sessions-allowed", "authentication-max-sessions-allowed",ModelType.INT, false, "5000"),
-	AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE("sessions-expiration-timelimit", "authentication-sessions-expiration-timelimit", ModelType.INT, false, "0"),
-	AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE("krb5-domain", "authentication-krb5-domain", ModelType.STRING, false, null),
+	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain"),	
+	AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE("max-sessions-allowed", "authentication-max-sessions-allowed"),
+	AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE("sessions-expiration-timelimit", "authentication-sessions-expiration-timelimit"),
+	AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE("krb5-domain", "authentication-krb5-domain"),
+	AUTHENTICATION_TYPE_ATTRIBUTE("type", "authentication-type"),
 	
 	PG_ELEMENT("pg"), //$NON-NLS-1$
-	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes", ModelType.INT, false, "5242880"), //$NON-NLS-1$ //$NON-NLS-2$
+	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes"), //$NON-NLS-1$ //$NON-NLS-2$
 	
 	SSL_ELEMENT("ssl"),
-	SSL_MODE_ATTRIBUTE("mode", "ssl-mode", ModelType.STRING, false, SSLConfiguration.LOGIN),
-	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode", ModelType.STRING, false, SSLConfiguration.ONEWAY),
-	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol", ModelType.STRING, false, SocketUtil.DEFAULT_PROTOCOL),
-	SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE("keymanagement-algorithm", "ssl-keymanagement-algorithm", ModelType.STRING, false, null),
-	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "enabled-cipher-suites", ModelType.STRING, false, null),
+	SSL_MODE_ATTRIBUTE("mode", "ssl-mode"),
+	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode"),
+	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol"),
+	SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE("keymanagement-algorithm", "ssl-keymanagement-algorithm"),
+	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "ssl-enabled-cipher-suites"),
 	SSL_KETSTORE_ELEMENT("keystore"),
-	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name", ModelType.STRING, false, null),
-	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.STRING, false, null),
-	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type", ModelType.STRING, false, "JKS"),
+	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name"),
+	SSL_KETSTORE_ALIAS_ATTRIBUTE("key-alias", "keystore-key-alias"),
+	SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE("key-password", "keystore-key-password"),
+	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password"),
+	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type"),
 	SSL_TRUSTSTORE_ELEMENT("truststore"),
-	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name", ModelType.STRING, false, null),
-	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password", ModelType.STRING, false, null),	
+	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name"),
+	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password"),	
 
 	// Translator
     TRANSLATOR_ELEMENT("translator"),
-    TRANSLATOR_NAME_ATTRIBUTE("name", "name", ModelType.STRING, true, null),
-    TRANSLATOR_MODULE_ATTRIBUTE("module", "module", ModelType.STRING, true, null);
+    TRANSLATOR_NAME_ATTRIBUTE("name", "name"),
+    TRANSLATOR_MODULE_ATTRIBUTE("module", "module"),
+    TRANSLATOR_SLOT_ATTRIBUTE("slot", "slot");
     
-    private final String name;
+    private final String xmlName;
     private final String modelName;
-    private final boolean required;
-    private final ModelType modelType;
-    private final String defaultValue;
 
-    private Element(String name) {
-    	this.name = name;
-    	this.modelName = name;
-    	this.required = false;
-    	this.modelType = null;
-    	this.defaultValue = null;
+    private Element(String xmlName) {
+    	this.xmlName = xmlName;
+    	this.modelName = xmlName;
     }
     
-    Element(final String name, String modelName, ModelType type, boolean required, String defltValue) {
-        this.name = name;
+    Element(final String xmlName, final String modelName) {
+        this.xmlName = xmlName;
         this.modelName = modelName;
-        this.modelType = type;
-        this.required = required;
-        this.defaultValue = defltValue;
     }
 
-    /**
-     * Get the local name of this element.
-     *
-     * @return the local name
-     */
-    public String getLocalName() {
-        return name;
+    public String getXMLName() {
+        return xmlName;
     }
     
+    public String getLocalName() {
+        return xmlName;
+    }    
     public String getModelName() {
     	return this.modelName;
     }
@@ -175,7 +165,7 @@ enum Element {
     }
 
     public static Element forName(String localName, Element parentNode) {
-    	String modelName = parentNode.getLocalName()+"-"+localName;
+    	String modelName = parentNode.getModelName()+"-"+localName;
         final Element element = elements.get(modelName);
         return element == null ? UNKNOWN : element;
     }
@@ -184,99 +174,5 @@ enum Element {
         final Element element = elements.get(localName);
         return element == null ? UNKNOWN : element;
     }    
-    
-    public void describe(ModelNode node, String type, ResourceBundle bundle) {
-		String name = getModelName();
-		node.get(type, name, TYPE).set(this.modelType);
-        node.get(type, name, DESCRIPTION).set(getDescription(bundle));
-        node.get(type, name, REQUIRED).set(this.required);
-        //node.get(type, name, MAX_OCCURS).set(1);
-        
-        if (this.defaultValue != null) {
-        	if (ModelType.INT == this.modelType) {
-        		node.get(type, name, DEFAULT).set(Integer.parseInt(this.defaultValue));
-        	}
-        	else if (ModelType.BOOLEAN == this.modelType) {
-        		node.get(type, name, DEFAULT).set(Boolean.parseBoolean(this.defaultValue));
-        	}
-        	else if (ModelType.LONG == this.modelType) {
-        		node.get(type, name, DEFAULT).set(Long.parseLong(this.defaultValue));
-        	}        	
-        	else if (ModelType.STRING == this.modelType) {
-        		node.get(type, name, DEFAULT).set(this.defaultValue);
-        	}
-        	else {
-        		 throw new AssertionError(this.modelType);
-        	}
-        }        
-    }
-    
-    public void populate(ModelNode operation, ModelNode model) {
-    	if (getModelName() == null) {
-    		return;
-    	}
-    	
-    	if (operation.hasDefined(getModelName())) {
-    		if (ModelType.STRING == this.modelType) {
-    			model.get(getModelName()).set(operation.get(getModelName()).asString());
-    		}
-    		else if (ModelType.INT == this.modelType) {
-    			model.get(getModelName()).set(operation.get(getModelName()).asInt());
-    		}
-    		else if (ModelType.LONG == this.modelType) {
-    			model.get(getModelName()).set(operation.get(getModelName()).asLong());
-    		}
-    		else if (ModelType.BOOLEAN == this.modelType) {
-    			model.get(getModelName()).set(operation.get(getModelName()).asBoolean());
-    		}
-    		else {
-    			throw new AssertionError(this.modelType);
-    		}
-    	}
-    }
-    
-    public boolean isDefined(ModelNode node) {
-    	if ( node.hasDefined(getModelName())) {
-    		return !asString(node).isEmpty();
-    	}
-    	return false;
-    }
-    
-    public int asInt(ModelNode node) {
-    	return node.get(getModelName()).asInt();
-    }
-    
-    public long asLong(ModelNode node) {
-    	return node.get(getModelName()).asLong();
-    }
-    
-    public String asString(ModelNode node) {
-    	return node.get(getModelName()).asString();
-    }
-    
-    public boolean asBoolean(ModelNode node) {
-    	return node.get(getModelName()).asBoolean();
-    }
-    
-    public boolean isLike(ModelNode node) {
-    	Set<String> keys = node.keys();
-    	for(String key:keys) {
-    		if (key.startsWith(this.name)) {
-    			return true;
-    		}
-    	}
-    	return false; 
-    }
-    
-    public String getDescription(ResourceBundle bundle) {
-    	return bundle.getString(this.modelName+".describe");
-    }
-
-	public boolean sameAsDefault(String value) {
-		if (this.defaultValue == null) {
-			return (value == null);
-		}
-		return this.defaultValue.equalsIgnoreCase(value);
-	}
 }
 

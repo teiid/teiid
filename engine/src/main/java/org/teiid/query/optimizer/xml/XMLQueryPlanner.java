@@ -22,15 +22,7 @@
 
 package org.teiid.query.optimizer.xml;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -53,6 +45,7 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
@@ -117,7 +110,13 @@ public class XMLQueryPlanner {
     
     static void optimizeQueries(MappingDocument doc, final XMLPlannerEnvironment planEnv) 
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-
+    	
+    	final boolean hasExplicitStagingTables = planEnv.hasExplicitStagingTables();
+    	final Map<Object, Object> reverseMap = new HashMap<Object, Object>();
+    	for (Map.Entry<Object, Object> entry : planEnv.getStagingTableIds().entrySet()) {
+    		reverseMap.put(entry.getValue(), entry.getKey());
+    	}
+    	
         MappingVisitor queryPlanVisitor = new MappingVisitor() {
             public void visit(MappingSourceNode sourceNode) {
                 try {
@@ -131,11 +130,100 @@ public class XMLQueryPlanner {
                     
                     // Plan the result set.
                     ProcessorPlan queryPlan = optimizePlan(cmd, planEnv);
+                    
+                    /*
+                	 * Since Designer does not provide us with additional metadata we check the query plans
+                	 * to see if we can improve staging table performance (which can be an issue with large staging tables).
+                	 * 
+                	 * This is a somewhat low level optimization since it introspects the plans rather than looking
+                	 * at the original XML structure.
+                	 * 
+                	 * There are several cases here for optimizing staging table access.
+                	 * 
+                	 * 1. if the staging table is used in a subquery - we'll ignore that case for now
+                	 *   in theory that would be similar to the logic below or could be pushed to the accessnode to detect
+                	 *   bind eligible equi criteria against a temp table and issue an add index
+                	 * 2. TODO: if the staging table is used in a join which implies an order by clause or a parent join 
+                	 *   - the join could be performed repeatedly and thus we would need a covering index to speed up performance
+                	 * 3. if the staging table access is filtered by input set criteria - this should be
+                	 *   the most common case. In theory this analysis could be done at a higher level since we are basically
+                	 *   looking at how the input set maps to the staging table - however that can be complicated if the
+                	 *   staging table is used in a join and the projected column used in the criteria is transitively
+                	 *   related to the staging table.
+                	 *   
+                	 * TODO: the staging plans created for non-global auto staged results should be checked as well, since their
+                	 * execution can be repeated - although at a lesser factor   
+                	 */
+                    if (hasExplicitStagingTables 
+                    		&& !sourceNode.isRootSourceNode() 
+                    		&& queryPlan instanceof RelationalPlan 
+                    		&& !rsInfo.isAutoStaged()) {
+                    	RelationalNode node = ((RelationalPlan)queryPlan).getRootNode();
+                    	optimizeStagingTableAccess(node);
+                    }
+                    
                     rsInfo.setPlan(queryPlan);                    
                 } catch (Exception e) {
                      throw new TeiidRuntimeException(e);
                 }
             }
+
+			private void optimizeStagingTableAccess(RelationalNode node) throws QueryMetadataException, TeiidComponentException {
+				checkNode(node);
+				for (RelationalNode child : node.getChildren()) {
+					if (child != null) {
+						optimizeStagingTableAccess(child);
+					}
+				}
+			}
+
+			private void checkNode(RelationalNode node)
+					throws TeiidComponentException, QueryMetadataException,
+					AssertionError {
+				if (!(node instanceof AccessNode)) {
+					return;
+				}
+				AccessNode anode = (AccessNode)node;
+				if (!(anode.getCommand() instanceof Query)) {
+					return;
+				}
+				Query query = (Query)anode.getCommand();
+				if (query.getFrom() == null || query.getFrom().getClauses().size() != 1 || !(query.getFrom().getClauses().get(0) instanceof UnaryFromClause)) {
+					return;
+				}
+				UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
+				Object id = reverseMap.get(ufc.getGroup().getMetadataID());
+				if (id == null) {
+					return;
+				}
+				String name = planEnv.getGlobalMetadata().getFullName(id);
+				ResultSetInfo info = planEnv.getStagingTableResultsInfo(name);
+				//this is a staging table access
+				List<ElementSymbol> keyCols = new ArrayList<ElementSymbol>(2);
+				if (query.getCriteria() != null) {
+					Criteria crit = query.getCriteria();
+					for (Criteria part : Criteria.separateCriteriaByAnd(crit)) {
+						if (!(part instanceof CompareCriteria)) {
+							continue;
+						}
+						CompareCriteria cc = (CompareCriteria)part;
+						if (cc.getOperator() != CompareCriteria.EQ) {
+							continue;
+						}
+						if (!(cc.getLeftExpression() instanceof ElementSymbol) || !(cc.getRightExpression() instanceof Reference)) {
+							continue;
+						}
+						keyCols.add((ElementSymbol) cc.getLeftExpression());
+					}
+					if (!keyCols.isEmpty()) {
+						//info.addFkColumns(keyCols);
+						return; //assume that filtering is the most important operation
+					}
+				}
+				//TODO
+				//if (anode.getParent() != null && anode.getParent() instanceof JoinNode) {
+				//}
+			}
         };
         planWalk(doc, queryPlanVisitor);
     }    
@@ -298,7 +386,7 @@ public class XMLQueryPlanner {
             updateSymbolMap(symbolMap, childRsInfo.getResultSetName(), inlineViewName, planEnv.getGlobalMetadata());
             
             // check if the criteria has been raised, if it is then we can update this as a join.
-            if (!rsInfo.isCritNullDependent() && childRsInfo.hasInputSet() && childRsInfo.isCriteriaRaised()) {
+            if (childRsInfo.hasInputSet() && childRsInfo.isCriteriaRaised()) {
                 Query transformationQuery = (Query) command;
                 SubqueryFromClause sfc = (SubqueryFromClause)transformationQuery.getFrom().getClauses().get(0);
                 
@@ -526,8 +614,7 @@ public class XMLQueryPlanner {
             }
         }
         
-        // since this was staging table; this adds some temp metadata to the query node; extract
-        // that metadata and inject into global metadata store for rest of the queries to use.
+        // inject the new metadata id into global metadata store for rest of the queries to use.
         TempMetadataStore tempMetadata = query.getTemporaryMetadata();
         if (tempMetadata != null && !tempMetadata.getData().isEmpty()) {
             planEnv.addToGlobalMetadata(tempMetadata.getData());
@@ -558,7 +645,7 @@ public class XMLQueryPlanner {
         return true;
     }
 
-	static String getTempTableName(String stageGroupName) {
+	public static String getTempTableName(String stageGroupName) {
 		String intoGroupName =  "#"+stageGroupName.replace('.', '_'); //$NON-NLS-1$
 		return intoGroupName;
 	}

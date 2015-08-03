@@ -22,13 +22,15 @@
 
 package org.teiid.translator.jdbc;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,9 +40,18 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
+import javax.sql.rowset.serial.SerialStruct;
 
+import org.teiid.core.TeiidException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.MixinProxy;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
@@ -59,60 +70,31 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
 	public static final int DEFAULT_MAX_DEPENDENT_PREDICATES = 50;
-
-	// Because the retrieveValue() method will be hit for every value of 
-    // every JDBC result set returned, we do lots of weird special stuff here 
-    // to improve the performance (most importantly to remove big if/else checks
-    // of every possible type.  
-    
-    private static final Map<Class<?>, Integer> TYPE_CODE_MAP = new HashMap<Class<?>, Integer>();
-    
-    private static final int INTEGER_CODE = 0;
-    private static final int LONG_CODE = 1;
-    private static final int DOUBLE_CODE = 2;
-    private static final int BIGDECIMAL_CODE = 3;
-    private static final int SHORT_CODE = 4;
-    private static final int FLOAT_CODE = 5;
-    private static final int TIME_CODE = 6;
-    private static final int DATE_CODE = 7;
-    private static final int TIMESTAMP_CODE = 8;
-    private static final int BLOB_CODE = 9;
-    private static final int CLOB_CODE = 10;
-    private static final int BOOLEAN_CODE = 11;
-    
-    static {
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.INTEGER, new Integer(INTEGER_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.LONG, new Integer(LONG_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DOUBLE, new Integer(DOUBLE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, new Integer(BIGDECIMAL_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.SHORT, new Integer(SHORT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.FLOAT, new Integer(FLOAT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIME, new Integer(TIME_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DATE, new Integer(DATE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, new Integer(TIMESTAMP_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BLOB, new Integer(BLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(SHORT_CODE));
+	
+    public enum StructRetrieval {
+    	OBJECT,
+    	COPY,
+    	ARRAY
     }
 	
-    private static final ThreadLocal<MessageFormat> COMMENT = new ThreadLocal<MessageFormat>() {
-    	protected MessageFormat initialValue() {
-    		return new MessageFormat("/*teiid sessionid:{0}, requestid:{1}.{2}*/ "); //$NON-NLS-1$
+    private final ThreadLocal<MessageFormat> comment = new ThreadLocal<MessageFormat>() {
+    	@Override
+        protected MessageFormat initialValue() {
+    		return new MessageFormat(commentFormat);
     	}
     };
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
-    static class DatbaseCalender extends ThreadLocal<Calendar> {
+    static class DatabaseCalender extends ThreadLocal<Calendar> {
     	private String timeZone;
-    	public DatbaseCalender(String tz) {
+    	public DatabaseCalender(String tz) {
     		this.timeZone = tz;
     	}
     	@Override
     	protected Calendar initialValue() {
             if(this.timeZone != null && this.timeZone.trim().length() > 0) {
             	TimeZone tz = TimeZone.getTimeZone(this.timeZone);
-                if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
+                if(!TimestampWithTimezone.getCalendar().getTimeZone().hasSameRules(tz)) {
             		return Calendar.getInstance(tz);
                 }
             }      		
@@ -126,10 +108,16 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private String databaseTimeZone;
 	private boolean trimStrings;
 	private boolean useCommentsInSourceQuery;
-	private String version;
+	private Version version;
 	private int maxInsertBatchSize = 2048;
-	private DatbaseCalender databaseCalender;
-
+	private DatabaseCalender databaseCalender;
+	private boolean supportsGeneratedKeys;
+	private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
+	protected SQLDialect dialect; 
+	private boolean enableDependentJoins;
+	private boolean useBindingsForDependentJoin = true;
+	private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
+	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
 	public JDBCExecutionFactory() {
@@ -145,16 +133,39 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public void start() throws TranslatorException {
 		super.start();		
-		this.databaseCalender = new DatbaseCalender(this.databaseTimeZone);
+		this.databaseCalender = new DatabaseCalender(this.databaseTimeZone);
+		if (useCommentsInSourceQuery) {
+			//will throw an exception if not valid
+			new MessageFormat(commentFormat);
+		}
     }
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
     public String getDatabaseVersion() {
-    	return this.version;
-    }    
+    	return this.version.toString();
+    }
     
+    /**
+     * Sets the database version.  See also {@link #getVersion()}
+     * @param version
+     */
     public void setDatabaseVersion(String version) {
-    	this.version = version;
+    	this.version = Version.getVersion(version);
+    }
+    
+    public void setDatabaseVersion(Version version) {
+		this.version = version;
+    }
+    
+    /**
+     * Get the database version as a comparable object
+     * @return
+     */
+    protected Version getVersion() {
+    	if (version == null) {
+    		throw new IllegalStateException("version not set"); //$NON-NLS-1$
+    	}
+    	return this.version;
     }
     
 	@TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)
@@ -197,36 +208,55 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public boolean isSourceRequired() {
 		return true;
 	}
+	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+		return isSourceRequired() && this.version == null && usesDatabaseVersion();
+	}
+	
+	protected boolean usesDatabaseVersion() {
+		return false;
+	}
+	
+	@Override
+	public void initCapabilities(Connection connection)
+			throws TranslatorException {
+    	try {
+			DatabaseMetaData metadata = connection.getMetaData();
+    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+    		if (this.version == null) {
+    			String fullVersion = metadata.getDatabaseProductVersion();
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
+    			setDatabaseVersion(fullVersion);
+    		}
+		} catch (SQLException e) {
+			if (this.version == null) {
+				throw new TranslatorException(e);
+			}
+		}
+	}
 
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-    	//TODO: This is not correct; this should be only called once for connection creation    	
-    	obtainedConnection(conn);
     	return new JDBCQueryExecution(command, conn, executionContext, this);
     }
     
     @Override
     public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-    	//TODO: This is not correct; this should be only called once for connection creation    	
-    	obtainedConnection(conn);
     	return new JDBCDirectQueryExecution(arguments, command, conn, executionContext, this);
     }    
     
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-		//TODO: This is not correct; this should be only called once for connection creation    	
-		obtainedConnection(conn);
 		return new JDBCProcedureExecution(command, conn, executionContext, this);
     }
 
     @Override
-    public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
+    public JDBCUpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-		//TODO: This is not correct; this should be only called once for connection creation
-		obtainedConnection(conn);
 		return new JDBCUpdateExecution(command, conn, executionContext, this);
     }	
     
@@ -234,7 +264,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     public Connection getConnection(DataSource ds)
     		throws TranslatorException {
 		try {
-	    	return ds.getConnection();
+	    	Connection c = ds.getConnection();
+	    	obtainedConnection(c);
+	    	return c;
 		} catch (SQLException e) {
 			 throw new TranslatorException(JDBCPlugin.Event.TEIID11009, e);
 		}
@@ -259,18 +291,27 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 				throw new TranslatorException(JDBCPlugin.Event.TEIID11018, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11018));
 			}
 			JDBCMetdataProcessor metadataProcessor = createMetadataProcessor();
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {
 			 throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
 		}
 	}
-
-	protected JDBCMetdataProcessor createMetadataProcessor() {
-		JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
-		return metadataProcessor;
+	
+	/**
+	 * @deprecated
+	 * @see getMetadataProcessor
+	 */
+    @Deprecated
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+		return (JDBCMetdataProcessor)getMetadataProcessor();
 	}    
 	
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new JDBCMetdataProcessor();
+    }
+		
 	@Override
     public List<String> getSupportedFunctions() {
         return getDefaultSupportedFunctions();
@@ -512,9 +553,65 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 					&& ("char".equalsIgnoreCase(elem.getMetadataObject().getNativeType()) || "nchar".equalsIgnoreCase(elem.getMetadataObject().getNativeType()))) { //$NON-NLS-1$ //$NON-NLS-2$
 				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.RTRIM, new Expression[] {elem}, TypeFacility.RUNTIME_TYPES.STRING));
 			}
-    	}
+    	} else if (obj instanceof DerivedColumn) {
+            DerivedColumn dc = (DerivedColumn) obj;
+            if (dc.isProjected()) {
+	            Expression expr = dc.getExpression();
+	            if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
+	                dc.setExpression(translateGeometrySelect(expr));
+	            }
+            }
+        } else if (obj instanceof Literal) {
+            Literal l = (Literal) obj;
+            if (l.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY && l.getValue() != null) {
+                return translateGeometryLiteral(l);
+            }
+        }
     	return parts;
     }
+    
+    /**
+     * Translate GEOMETRY column reference into an expression that 
+     * will return SRID & WKB.
+     * 
+     * @param expr
+     * @return 
+     */
+    public Expression translateGeometrySelect(Expression expr) {
+        return new Function(SourceSystemFunctions.ST_ASBINARY, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.BLOB);
+    }
+    
+    /**
+     * Translate GEOMETRY literal into an expression that will convert to database 
+     * geometry type.
+     * 
+     * @param l
+     * @return 
+     */
+    public List<?> translateGeometryLiteral(Literal l) {
+        Literal srid = getLanguageFactory().createLiteral(
+                ((GeometryType) l.getValue()).getSrid(),
+                Integer.class
+        );
+        return Arrays.asList(getLanguageFactory().createFunction(
+                SourceSystemFunctions.ST_GEOMFROMWKB, 
+                new Expression[] { l, srid }, 
+                TypeFacility.RUNTIME_TYPES.GEOMETRY)
+        );
+    }
+    
+    public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
+        GeometryType geom = null;
+        Blob val = results.getBlob(paramIndex);
+        if (val != null) {
+            geom = new GeometryType(val);
+        }
+        return geom;
+    }    
+    
+    public GeometryType retrieveGeometryValue(CallableStatement results, int parameterIndex) throws SQLException {
+    	throw new SQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11022));
+	}
     
     /**
      * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
@@ -591,9 +688,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return Translated string
      */
     public String translateLiteralTime(Time timeValue) {
-    	if (!hasTimeType()) {
-    		return translateLiteralTimestamp(new Timestamp(timeValue.getTime())); 
-    	}
         return "{t '" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -614,12 +708,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     
     /**
      * Format the dateObject (of type date, time, or timestamp) into a string
-     * using the DatabaseTimeZone format.
+     * optionally using the DatabaseTimeZone.
      * @param dateObject
      * @return Formatted string
      */
-    public String formatDateValue(java.util.Date dateObject) {
-        if (dateObject instanceof Timestamp && getTimestampNanoPrecision() < 9) {
+    public String formatDateValue(java.util.Date dateObject, boolean useTimezone) {
+    	if (dateObject instanceof Timestamp && getTimestampNanoPrecision() < 9) {
         	Timestamp ts = (Timestamp)dateObject;
         	Timestamp newTs = new Timestamp(ts.getTime());
         	if (getTimestampNanoPrecision() > 0) {
@@ -630,7 +724,20 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	}
         	dateObject = newTs;
         }
-        return getTypeFacility().convertDate(dateObject, DEFAULT_TIME_ZONE, getDatabaseCalendar(), dateObject.getClass()).toString();        
+    	if (!useTimezone) {
+    		return dateObject.toString();
+    	}
+        return getTypeFacility().convertDate(dateObject, getDatabaseCalendar().getTimeZone(), TimestampWithTimezone.getCalendar(), dateObject.getClass()).toString();	
+    }
+    
+    /**
+     * Format the dateObject (of type date, time, or timestamp) into a string
+     * using the DatabaseTimeZone.
+     * @param dateObject
+     * @return Formatted string
+     */
+    public String formatDateValue(java.util.Date dateObject) {
+    	return formatDateValue(dateObject, true);
     }    
     
     /**
@@ -697,7 +804,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public String getSourceComment(ExecutionContext context, Command command) {
 	    if (addSourceComment() && context != null) {
-            return COMMENT.get().format(new Object[] {context.getConnectionId(), context.getRequestId(), context.getPartIdentifier()});
+            return comment.get().format(new Object[] {context.getConnectionId(), context.getRequestId(), context.getPartIdentifier(), 
+            		context.getExecutionCountIdentifier(), context.getSession().getUserName(), context.getVdbName(), context.getVdbVersion(), context.isTransactional() });
 	    }
 	    return ""; //$NON-NLS-1$ 
     }
@@ -732,7 +840,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             registerSpecificTypeOfOutParameter(statement, returnType, index++);
         }
         
-        Iterator iter = preparedValues.iterator();
+        Iterator<?> iter = preparedValues.iterator();
         while(iter.hasNext()){
             Argument param = (Argument)iter.next();
                     
@@ -789,7 +897,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         int type = TypeFacility.getSQLTypeFromRuntimeType(paramType);
                 
         if (param == null) {
-            stmt.setNull(i, type);
+        	if (type == Types.JAVA_OBJECT) {
+        		stmt.setNull(i, Types.OTHER);
+        	} else {
+        		stmt.setNull(i, type);
+        	}
             return;
         } 
         //if this is a Date object, then use the database calendar
@@ -834,7 +946,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	param = ((BinaryType)param).getBytesDirect();
         }
         
-        stmt.setObject(i, param, type);
+        if (type != Types.JAVA_OBJECT) {
+        	stmt.setObject(i, param, type);
+        } else {
+        	stmt.setObject(i, param);
+        }
     }
     
     /**
@@ -854,7 +970,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @throws SQLException
 	 */
     public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
-        Integer code = TYPE_CODE_MAP.get(expectedType);
+        Integer code = DataTypeManager.getTypeCode(expectedType);
         if(code != null) {
             // Calling the specific methods here is more likely to get uniform (and fast) results from different
             // data sources as the driver likely knows the best and fastest way to convert from the underlying
@@ -862,54 +978,54 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             // as there is a special bytecode instruction that treats this case as a map such that not every value 
             // needs to be tested, which means it is very fast.
             switch(code.intValue()) {
-                case INTEGER_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.INTEGER:  {
                     int value = results.getInt(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }
                     return Integer.valueOf(value);
                 }
-                case LONG_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.LONG:  {
                     long value = results.getLong(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Long.valueOf(value);
                 }                
-                case DOUBLE_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.DOUBLE:  {
                     double value = results.getDouble(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Double.valueOf(value);
                 }                
-                case BIGDECIMAL_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.BIGDECIMAL:  {
                     return results.getBigDecimal(columnIndex); 
                 }
-                case SHORT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.SHORT:  {
                     short value = results.getShort(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }                    
                     return Short.valueOf(value);
                 }
-                case FLOAT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.FLOAT:  {
                     float value = results.getFloat(columnIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Float.valueOf(value);
                 }
-                case TIME_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIME: {
             		return results.getTime(columnIndex, getDatabaseCalendar());
                 }
-                case DATE_CODE: {
+                case DataTypeManager.DefaultTypeCodes.DATE: {
             		return results.getDate(columnIndex, getDatabaseCalendar());
                 }
-                case TIMESTAMP_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIMESTAMP: {
             		return results.getTimestamp(columnIndex, getDatabaseCalendar());
                 }
-    			case BLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.BLOB: {
     				try {
     					return results.getBlob(columnIndex);
     				} catch (SQLException e) {
@@ -922,7 +1038,10 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				}
     				break;
     			}
-    			case CLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
+                    return retrieveGeometryValue(results, columnIndex);
+    			}
+    			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
     					return results.getClob(columnIndex);
     				} catch (SQLException e) {
@@ -930,13 +1049,21 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     				}
     				break;
     			}  
-    			case BOOLEAN_CODE: {
-    				return results.getBoolean(columnIndex);
+    			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
+    				boolean result = results.getBoolean(columnIndex);
+    				if(results.wasNull()) {
+                        return null;
+                    } 
+    				return result;
     			}
             }
         }
 
-        return results.getObject(columnIndex);
+        Object result = results.getObject(columnIndex);
+        if (expectedType == TypeFacility.RUNTIME_TYPES.OBJECT) {
+        	return convertObject(result);
+        }
+		return result;
     }
 
     /**
@@ -948,57 +1075,57 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @throws SQLException
      */
     public Object retrieveValue(CallableStatement results, int parameterIndex, Class<?> expectedType) throws SQLException{
-        Integer code = TYPE_CODE_MAP.get(expectedType);
+        Integer code = DataTypeManager.getTypeCode(expectedType);
         if(code != null) {
             switch(code.intValue()) {
-                case INTEGER_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.INTEGER:  {
                     int value = results.getInt(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }
                     return Integer.valueOf(value);
                 }
-                case LONG_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.LONG:  {
                     long value = results.getLong(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return Long.valueOf(value);
                 }                
-                case DOUBLE_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.DOUBLE:  {
                     double value = results.getDouble(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return new Double(value);
                 }                
-                case BIGDECIMAL_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.BIGDECIMAL:  {
                     return results.getBigDecimal(parameterIndex); 
                 }
-                case SHORT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.SHORT:  {
                     short value = results.getShort(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     }                    
                     return Short.valueOf(value);
                 }
-                case FLOAT_CODE:  {
+                case DataTypeManager.DefaultTypeCodes.FLOAT:  {
                     float value = results.getFloat(parameterIndex);                    
                     if(results.wasNull()) {
                         return null;
                     } 
                     return new Float(value);
                 }
-                case TIME_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIME: {
             		return results.getTime(parameterIndex, getDatabaseCalendar());
                 }
-                case DATE_CODE: {
+                case DataTypeManager.DefaultTypeCodes.DATE: {
             		return results.getDate(parameterIndex, getDatabaseCalendar());
                 }
-                case TIMESTAMP_CODE: {
+                case DataTypeManager.DefaultTypeCodes.TIMESTAMP: {
             		return results.getTimestamp(parameterIndex, getDatabaseCalendar());
                 }
-    			case BLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.BLOB: {
     				try {
     					return results.getBlob(parameterIndex);
     				} catch (SQLException e) {
@@ -1010,25 +1137,50 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     					// ignore
     				}
     			}
-    			case CLOB_CODE: {
+    			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
+    				return retrieveGeometryValue(results, parameterIndex);
+    			}
+    			case DataTypeManager.DefaultTypeCodes.CLOB: {
     				try {
     					return results.getClob(parameterIndex);
     				} catch (SQLException e) {
     					// ignore
     				}
     			}
-    			case BOOLEAN_CODE: {
-    				return results.getBoolean(parameterIndex);
+    			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
+    				boolean result = results.getBoolean(parameterIndex);
+    				if(results.wasNull()) {
+                        return null;
+                    } 
+    				return result;
     			}
             }
         }
 
         // otherwise fall through and call getObject() and rely on the normal
 		// translation routines
-		return results.getObject(parameterIndex);
+        Object result = results.getObject(parameterIndex);
+        if (expectedType == TypeFacility.RUNTIME_TYPES.OBJECT) {
+        	return convertObject(result);
+        }
+		return result;
     }
-       
-    /**
+
+    protected Object convertObject(Object object) throws SQLException {
+    	if (object instanceof Struct) {
+    		switch (structRetrieval) {
+    		case OBJECT:
+    			return object;
+    		case ARRAY:
+    			return new ArrayImpl(((Struct)object).getAttributes());
+    		case COPY:
+    			return new SerialStruct((Struct)object, Collections.<String, Class<?>> emptyMap());
+    		}
+    	}
+    	return object;
+	}
+
+	/**
      * Called exactly once for this source.
      * @param connection
      */
@@ -1045,7 +1197,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             sb.append(";DriverName=").append(dbmd.getDriverName()); //$NON-NLS-1$
             sb.append(";DriverVersion=").append(dbmd.getDriverVersion()); //$NON-NLS-1$
             sb.append(";IsolationLevel=").append(dbmd.getDefaultTransactionIsolation()); //$NON-NLS-1$
-            
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, sb.toString());
         } catch (SQLException e) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11002)); 
@@ -1063,8 +1214,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             afterInitialConnectionObtained(connection);
         }
     }
-    
-
     
     /**
      * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
@@ -1163,6 +1312,219 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 */
 	public void setFetchSize(Command command, ExecutionContext context, Statement statement, int fetchSize) throws SQLException {
 		statement.setFetchSize(fetchSize);
+	}
+	
+	public boolean supportsGeneratedKeys() {
+		return supportsGeneratedKeys;
+	}
+	
+	@TranslatorProperty(display="Struct retrieval", description="Struct retrieval mode (OBJECT, COPY, ARRAY)",advanced=true)
+	public StructRetrieval getStructRetrieval() {
+		return structRetrieval;
+	}
+	
+	public void setStructRetrieval(StructRetrieval structRetrieval) {
+		this.structRetrieval = structRetrieval;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param command
+	 * @return true if generated keys can be returned
+	 */
+	protected boolean supportsGeneratedKeys(ExecutionContext context,
+			Command command) {
+		return supportsGeneratedKeys() && command instanceof Insert;
+	}
+
+    /**
+     * Create a temp table with the given name prefix and columns
+     * @param prefix
+	 * @param cols
+	 * @param context
+	 * @param connection
+	 * @return the name of the table created
+	 * @throws SQLException 
+	 */
+	public String createTempTable(String prefix, List<ColumnReference> cols, ExecutionContext context, Connection connection) throws SQLException {
+    	String name = getTemporaryTableName(prefix);
+		String sql = getCreateTempTableSQL(name, cols, !connection.getAutoCommit());
+    	Statement s = connection.createStatement();
+    	try {
+    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "creating temporary table with:", sql); //$NON-NLS-1$ 
+    		s.execute(sql);
+    	} finally {
+    		try {
+    			s.close();
+    		} catch (SQLException e) {
+    			
+    		}
+    	}
+    	return name;
+	}
+
+	public String getCreateTempTableSQL(String name, List<ColumnReference> cols, boolean transactional) {
+		SQLDialect d = getDialect();
+    	StringBuilder sb = new StringBuilder(getCreateTemporaryTableString(transactional)).append(" "); //$NON-NLS-1$
+    	sb.append(name).append(" ("); //$NON-NLS-1$
+    	for (Iterator<ColumnReference> iter = cols.iterator(); iter.hasNext();) {
+    		ColumnReference col = iter.next();
+    		sb.append(col.getName());
+    		sb.append(" "); //$NON-NLS-1$
+    		Integer defaultValue = JDBCSQLTypeInfo.getDefaultPrecision(col.getType()); 
+    		int precision = defaultValue == null?255:defaultValue;
+    		int scale = col.getType() == TypeFacility.RUNTIME_TYPES.BIG_DECIMAL?2:0;
+    		long length = precision;
+    		if (col.getMetadataObject() != null) {
+    			precision = col.getMetadataObject().getPrecision();
+    			scale = col.getMetadataObject().getScale();
+    			length = col.getMetadataObject().getLength();
+    		}
+    		sb.append(d.getTypeName(TypeFacility.getSQLTypeFromRuntimeType(col.getType()), length, precision, scale));
+    		//sb.append(" NOT NULL"); -- needed if we will add an index
+    		if (iter.hasNext()) {
+    			sb.append(", "); //$NON-NLS-1$
+    		}
+    	}
+    	sb.append(") ").append(getCreateTemporaryTablePostfix(transactional)); //$NON-NLS-1$
+    	String sql = sb.toString();
+		return sql;
+	}
+
+	/**
+	 * 
+	 * @param prefix
+	 * @return a valid temporary table name
+	 */
+	public String getTemporaryTableName(String prefix) {
+		return prefix;
+	}
+	
+	/**
+	 * 
+	 * @param inTransaction
+	 * @return the post script for the temp table create
+	 */
+	public String getCreateTemporaryTablePostfix(boolean inTransaction) {
+		return getDialect().getCreateTemporaryTablePostfix();
+	}
+	
+	/**
+	 * 
+	 * @param inTransaction
+	 * @return the temp table creation ddl
+	 */
+	public String getCreateTemporaryTableString(boolean inTransaction) {
+		return getDialect().getCreateTemporaryTableString();
+	}
+	
+	public SQLDialect getDialect() {
+		if (dialect == null) {
+			String name = getHibernateDialectClassName();
+			if (name != null) {
+				try {
+					Object impl = ReflectionHelper.create(name, null, this.getClass().getClassLoader());
+					InvocationHandler handler = new MixinProxy(new Object[] {impl});
+					this.dialect = (SQLDialect) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[]{SQLDialect.class}, handler);
+				} catch (TeiidException e) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, name, "could not be loaded"); //$NON-NLS-1$
+				}
+			}
+			if (dialect == null) {
+				dialect = new DefaultSQLDialect();
+			}
+		}
+		return dialect;
+	}
+	
+	public String getHibernateDialectClassName() {
+		return null;
+	}
+	
+	@Override
+	public boolean supportsDependentJoins() {
+		return enableDependentJoins && getDialect().supportsTemporaryTables();
+	}
+	
+	@Override
+	public boolean supportsFullDependentJoins() {
+		return this.supportsDependentJoins();
+	}
+	
+	public boolean tempTableRequiresTransaction() {
+		return false;
+	}
+
+	/**
+	 * Called after the temporary table has been loaded
+	 * @param tableName
+	 * @param context
+	 * @param connection
+	 * @throws SQLException 
+	 */
+	public void loadedTemporaryTable(String tableName,
+			ExecutionContext context, Connection connection) throws SQLException {
+		
+	}
+	
+	@TranslatorProperty(display="Enable Dependent Joins", description="Enable Dependent Join Pushdown",advanced=true)
+	public boolean isEnableDependentJoins() {
+		return enableDependentJoins;
+	}
+
+	public void setEnableDependentJoins(boolean enableDependentJoins) {
+		this.enableDependentJoins = enableDependentJoins;
+	}
+
+	/**
+	 * @return true if the rollup syntax is WITH ROLLUP
+	 */
+	public boolean useWithRollup() {
+		return false;
+	}
+	
+	@TranslatorProperty(display="Comment Format", description= "Comment format string used with useCommentsInSourceQuery")
+	public String getCommentFormat() {
+		return commentFormat;
+	}
+	
+	public void setCommentFormat(String commentFormat) {
+		this.commentFormat = commentFormat;
+	}
+
+	/**
+	 * @return true if scientific notation should be used for float/double types
+	 */
+	public boolean useScientificNotation() {
+		return false;
+	}
+
+	/**
+	 * @return true if the N prefix should be used for strings containing non-ascii characters
+	 */
+	public boolean useUnicodePrefix() {
+		return false;
+	}
+
+	
+	/**
+	 * Implemented if the {@link Connection} needs initialized after a statement cancel
+	 * @param c
+	 * @throws SQLException 
+	 */
+	public void intializeConnectionAfterCancel(Connection c) throws SQLException {
+	}
+
+	@Override
+	@TranslatorProperty(display="Use Bindings For Dependent Join", description= "If PreparedStatement bindings should be used for dependent join values.")
+	public boolean useBindingsForDependentJoin() {
+		return useBindingsForDependentJoin;
+	}
+	
+	public void setUseBindingsForDependentJoin(
+			boolean useBindingsForDependentJoin) {
+		this.useBindingsForDependentJoin = useBindingsForDependentJoin;
 	}
 	
 }

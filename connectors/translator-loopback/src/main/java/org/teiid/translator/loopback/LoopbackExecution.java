@@ -22,6 +22,7 @@
 
 package org.teiid.translator.loopback;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -29,15 +30,14 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
 import org.teiid.language.Argument;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.DataNotAvailableException;
@@ -51,26 +51,48 @@ import org.teiid.translator.UpdateExecution;
  * Represents the execution of a command.
  */
 public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
-
-    private static final String ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //$NON-NLS-1$
-
-    // Connector resources
+//     Connector resources
     private LoopbackExecutionFactory config;
     private Command command;
-    
+    private String staticStringValue = ""; //$NON-NLS-1$
+        
     // Execution state
-    private Random randomNumber = new Random(System.currentTimeMillis());
+    private Random randomNumber = new Random();
     private List<Object> row;
+    private List<Class<?>> types;
     private boolean waited = false;
     private int rowsReturned = 0;
     private int rowsNeeded = 1;
+	private BigInteger rowNumber = BigInteger.ZERO;
     
     public LoopbackExecution(Command command, LoopbackExecutionFactory config) {
         this.config = config;
         this.command = command;
+            
+        staticStringValue = constructIncrementedString(config.getCharacterValuesSize());
     }
     
-    @Override
+    /**
+     * Creates string "ABCD...ZABC..." of length characterValueSize
+     * @param characterValuesSize
+     * @return
+     */
+    public static String constructIncrementedString(int characterValuesSize) {
+        //Create string of length as defined in the translator configuration
+    	StringBuffer alphaString = new StringBuffer();
+        int genAlphaSize = characterValuesSize;
+        char currentChar = 'A';
+        while (genAlphaSize-- != 0){
+        	alphaString.append(currentChar);
+        	if (currentChar =='Z')
+        		currentChar = 'A';
+        	else
+        		currentChar += 1;
+        }
+        return alphaString.toString();
+	}
+
+	@Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         // Wait on first batch if necessary
         if(this.config.getWaitTime() > 0 && !waited) {
@@ -79,7 +101,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 
             // If we're asynch and the wait time was longer than the poll interval,
             // then just say we don't have results instead
-            if(randomTimeToWait > this.config.getPollIntervalInMilli()) {
+            if(this.config.getPollIntervalInMilli() >= 0 && randomTimeToWait > this.config.getPollIntervalInMilli()) {
             	waited = true;
                 DataNotAvailableException dnae = new DataNotAvailableException(randomTimeToWait);
                 dnae.setStrict(true);
@@ -92,15 +114,23 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             waited = true;
         }
                 
-        if(rowsReturned < this.rowsNeeded && row.size() > 0) {
+        List<Object> resultRow = row;
+        if(rowsReturned < this.rowsNeeded && resultRow.size() > 0) {
             rowsReturned++;            
-            return row;
+            if (config.getIncrementRows()) {
+            	rowNumber = rowNumber.add(BigInteger.ONE);
+        		generateRow();
+            }
+            return resultRow;
         }
         
         return null;
     }
 
-    @Override
+	
+	
+
+	@Override
     public void execute() throws TranslatorException {
        
     	// Log our command
@@ -119,9 +149,10 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             }
         }
         
+        
         // Prepare for execution
-        List types = determineOutputTypes(this.command);
-        createDummyRow(types);        
+        determineOutputTypes();
+        generateRow();
     }
     
     @Override
@@ -152,105 +183,89 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 
     }
 
-    private List determineOutputTypes(Command command) {            
+    private void determineOutputTypes() {            
         // Get select columns and lookup the types in metadata
         if(command instanceof QueryExpression) {
             QueryExpression query = (QueryExpression) command;
-            return Arrays.asList(query.getColumnTypes());
+            types = Arrays.asList(query.getColumnTypes());  
+            return;
         }
         if (command instanceof Call) {
-        	return Arrays.asList(((Call)command).getResultSetColumnTypes());
+        	types = Arrays.asList(((Call)command).getResultSetColumnTypes());
+        	return;
         }
-        List<Class<?>> types = new ArrayList<Class<?>>(1);
+        types = new ArrayList<Class<?>>(1);
         types.add(Integer.class);
-        return types;
     }
     
-    private void createDummyRow(List<Class<?>> types) {
-        row = new ArrayList<Object>(types.size());
-        
-        for (Class<?> type : types) {
-            row.add( getValue(type) );
-        }   
-    }
-
+    public static final Long DAY_SECONDS=86400L;
+    private static final int DATE_PERIOD = 365*(8099-1970);
+    
     /**
-     * Get a variable-sized string.
-     * @param size The size (in characters) of the string
-     */
-    private String getVariableString( int size ) {
-        int multiplier = size / ALPHA.length();
-        int remainder  = size % ALPHA.length();
-        String value = ""; //$NON-NLS-1$
-        for ( int k = 0; k < multiplier; k++ ) {
-            value += ALPHA;
-        }
-        value += ALPHA.substring(0,remainder);
-        return value;
-    }
-    
-    private static final Integer INTEGER_VAL = new Integer(0);
-    private static final Long LONG_VAL = new Long(0);
-    private static final Float FLOAT_VAL = new Float(0.0);
-    private static final Short SHORT_VAL = new Short((short)0);
-    private static final Double DOUBLE_VAL = new Double(0.0);
-    private static final Character CHAR_VAL = new Character('c');
-    private static final Byte BYTE_VAL = new Byte((byte)0);
-    private static final Boolean BOOLEAN_VAL = Boolean.FALSE;
-    private static final BigInteger BIG_INTEGER_VAL = new BigInteger("0"); //$NON-NLS-1$
-    private static final BigDecimal BIG_DECIMAL_VAL = new BigDecimal("0"); //$NON-NLS-1$
-    public static java.sql.Date SQL_DATE_VAL;
-    public static java.sql.Time TIME_VAL;
-    public static java.sql.Timestamp TIMESTAMP_VAL;
-    
-    /*
-     * Set the date/time fields to UTC 0 as displayed in US/Central
-     */
-    static {
-    	Calendar cal = Calendar.getInstance();
-    	cal.clear();
-    	cal.set(1969, 11, 31, 18, 0, 0);
-    	SQL_DATE_VAL = new Date(cal.getTimeInMillis());
-    	TIME_VAL = new Time(cal.getTimeInMillis());
-    	TIMESTAMP_VAL = new Timestamp(cal.getTimeInMillis());
-    }
-    
-    private Object getValue(Class type) {
-        if(type.equals(java.lang.String.class)) {
-            return getVariableString(10);
-        } else if(type.equals(java.lang.Integer.class)) {
-            return INTEGER_VAL;
-        } else if(type.equals(java.lang.Short.class)) { 
-            return SHORT_VAL;    
-        } else if(type.equals(java.lang.Long.class)) {
-            return LONG_VAL;
-        } else if(type.equals(java.lang.Float.class)) {
-            return FLOAT_VAL;
-        } else if(type.equals(java.lang.Double.class)) {
-            return DOUBLE_VAL;
-        } else if(type.equals(java.lang.Character.class)) {
-            return CHAR_VAL;
-        } else if(type.equals(java.lang.Byte.class)) {
-            return BYTE_VAL;
-        } else if(type.equals(java.lang.Boolean.class)) {
-            return BOOLEAN_VAL;
-        } else if(type.equals(java.math.BigInteger.class)) {
-            return BIG_INTEGER_VAL;
-        } else if(type.equals(java.math.BigDecimal.class)) {
-            return BIG_DECIMAL_VAL;
-        } else if(type.equals(java.sql.Date.class)) {
-            return SQL_DATE_VAL;
-        } else if(type.equals(java.sql.Time.class)) {
-            return TIME_VAL;
-        } else if(type.equals(java.sql.Timestamp.class)) {
-            return TIMESTAMP_VAL;
-        } else if(type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
-            return this.config.getTypeFacility().convertToRuntimeType(ALPHA.toCharArray());
-        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BLOB)) {
-            return this.config.getTypeFacility().convertToRuntimeType(ALPHA.getBytes());
-        } else {
-            return getVariableString(10);
-        }
-    }
+	 * Increments value in each column. If the value is bounded type (e.g. short) it will cycle the values.
+	 */
+	private void generateRow() {
+		List<Object> newRow = new ArrayList<Object>(types.size());
+		String incrementedString = incrementString(staticStringValue,rowNumber);
+		for (Class<?> type : types) {
+			Object val = getVal(incrementedString, type);
+			newRow.add(val);
+		}
+		row = newRow;
+	}
+
+	Object getVal(String incrementedString, Class<?> type) {
+		Object val;
+		if (type.equals(Integer.class)) {
+			val = rowNumber.intValue();
+		} else if (type.equals(java.lang.Short.class)) {
+			val = rowNumber.shortValue();
+		} else if (type.equals(java.lang.Long.class)) {
+			val = rowNumber.longValue();
+		} else if (type.equals(java.lang.Float.class)) {
+			val = rowNumber.floatValue()/10;
+		} else if (type.equals(java.lang.Double.class)) {
+			val = rowNumber.doubleValue()/10;
+		} else if (type.equals(java.lang.Character.class)) {
+			val = (char)((((rowNumber.byteValue()&0xff) + 2)%26) + 97);
+		} else if (type.equals(java.lang.Byte.class)) {
+			val = rowNumber.byteValue();
+		} else if (type.equals(java.lang.Boolean.class)) {
+			val = rowNumber.intValue()%2!=0;
+		} else if (type.equals(java.math.BigInteger.class)) {
+			val = rowNumber;
+		} else if (type.equals(java.math.BigDecimal.class)) {
+			val = new BigDecimal(rowNumber, 1);
+		} else if (type.equals(java.sql.Date.class)) {
+			val = new Date(DAY_SECONDS * 1000 * (rowNumber.intValue()%DATE_PERIOD));
+		} else if (type.equals(java.sql.Time.class)) {
+			val = new Time((rowNumber.intValue()%DAY_SECONDS) * 1000);
+		} else if (type.equals(java.sql.Timestamp.class)) {
+			val = new Timestamp(rowNumber.longValue());
+		} else if (type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
+			val = this.config.getTypeFacility().convertToRuntimeType(incrementedString.toCharArray());
+		} else if (type.equals(TypeFacility.RUNTIME_TYPES.BLOB) || type.equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) {
+			val = this.config.getTypeFacility().convertToRuntimeType(incrementedString.getBytes());
+		} else if (type.isArray()) {
+			val = Array.newInstance(type.getComponentType(), 1);
+			Array.set(val, 0, getVal(incrementedString, type.getComponentType()));
+		} else {
+			val = incrementedString;
+		}
+		return val;
+	}
+	
+	/**
+	 * Increments the string by appending unique number in sequence. Preserves string length.
+	 * @param number Number in the sequence of strings (which row)
+	 * @return
+	 */
+	public static String incrementString(String string, BigInteger number) {
+		String numberString= number.toString();
+		if (number.equals(BigInteger.ZERO)) {
+			return string;//Backward compatibility for first string
+		}
+		return string.substring(0,string.length()-numberString.length())+ numberString;
+	}
 
 }

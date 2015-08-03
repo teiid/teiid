@@ -193,6 +193,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
         ExistsCriteria ec = new ExistsCriteria((QueryCommand) this.command.clone());
         ec.subqueryHint = this.subqueryHint.clone();
         ec.setNegated(this.negated);
+        ec.shouldEvaluate = this.shouldEvaluate;
         return ec;
     }
     

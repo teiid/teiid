@@ -22,11 +22,17 @@
 
 package org.teiid.jboss;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
+import org.jboss.logging.MDC;
+import org.teiid.core.util.StringUtil;
 import org.teiid.logging.MessageLevel;
 
 public class JBossLogger implements org.teiid.logging.Logger {
+	
+	private ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
 
 	@Override
 	public boolean isEnabled(String context, int level) {
@@ -39,15 +45,27 @@ public class JBossLogger implements org.teiid.logging.Logger {
 	}
 
 	@Override
-	public void log(int level, String context, Object msg) {
-		Logger logger = getLogger(context);
-		logger.log(convert2JbossLevel(level), msg);
+	public void log(int level, String context, Object... msg) {
+		log(level, context, null, msg);
 	}
 
 	@Override
-	public void log(int level, String context, Throwable t, Object msg) {
+	public void log(int level, String context, Throwable t, Object... msg) {
 		Logger logger = getLogger(context);
-		logger.log(convert2JbossLevel(level), msg, t);
+		Level jbossLevel = convert2JbossLevel(level);
+		if (msg.length == 0) {
+			logger.log(jbossLevel, null, t);
+		}
+		else if (msg.length == 1 && !(msg[0] instanceof String)) {
+    		String msgStr = StringUtil.toString(msg, " ", false); //$NON-NLS-1$
+    		if (msgStr.indexOf('%') > -1) {
+    			msgStr = StringUtil.replaceAll(msgStr, "%", "%%"); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
+    		logger.logf(jbossLevel, t, msgStr, msg); 
+		}
+    	else {
+			logger.log(jbossLevel, StringUtil.toString(msg, " ", false), t); //$NON-NLS-1$
+    	}		
 	}
 	
 	/**
@@ -102,11 +120,26 @@ public class JBossLogger implements org.teiid.logging.Logger {
      * @return
      */
 	private Logger getLogger(String context) {
-		return Logger.getLogger(context);
+		Logger logger = loggers.get(context);
+		if (logger == null) {
+			logger = Logger.getLogger(context);
+			loggers.put(context, logger);
+		}
+		return logger;
 	}  
 					
 	@Override
 	public void shutdown() {
+	}
+
+	@Override
+	public void putMdc(String key, String val) {
+		MDC.put(key, val);
+	}
+
+	@Override
+	public void removeMdc(String key) {
+		MDC.remove(key);
 	}
 
 }

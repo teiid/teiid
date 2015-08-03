@@ -1,21 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
-        <artifactId>connectors</artifactId>
-        <groupId>org.jboss.teiid</groupId>
-        <version>8.2.0.Beta1-SNAPSHOT</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>translator-object</artifactId>
-    <groupId>org.jboss.teiid.connectors</groupId>
-    <name>Object Translator</name>
-    <description>This is the tranlator for API interfaces</description>
+	<parent>
+		<artifactId>connectors</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>8.12.0.Alpha3-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>translator-object</artifactId>
+	<groupId>org.jboss.teiid.connectors</groupId>
+	<name>Object Translator</name>
+	<description>This is the tranlator for API interfaces</description>
+	<packaging>bundle</packaging>
+	
+    <properties>
+        <!-- slot defined in the module  -->
+        <jdg.slot>jdg-6.4</jdg.slot>
+    </properties>	
 
-     <properties>
-        <version.hibernate.search>4.1.1.Final</version.hibernate.search>
-       <mockito.all.version>1.8.4</mockito.all.version>
-  	</properties>
-    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-core</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-commons</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>           
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-query</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-query-dsl</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>       
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-lucene-directory </artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>       
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-search</artifactId>
+                <version>${version.org.hibernate.search}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-search-engine</artifactId>
+                <version>${version.org.hibernate.search}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -33,105 +75,116 @@
             <artifactId>teiid-engine</artifactId>
             <scope>provided</scope>
         </dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-client</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency> 
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-metadata</artifactId>
-			<scope>test</scope>
-		</dependency>		 
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-metadata</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>		       
         <dependency>
-          <groupId>javax.resource</groupId>
-          <artifactId>connector-api</artifactId>
-          <scope>provided</scope>
-        </dependency>  
-        
-		<dependency>
-	        <groupId>org.infinispan</groupId>
-    	    <artifactId>infinispan-core</artifactId>
-       		<version>${version.org.infinispan}</version>
-       		<scope>provided</scope>
-		</dependency>	 
-	 	<dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-query</artifactId>
-	      <version>${version.org.infinispan}</version>
-	      <scope>provided</scope>
-	 	</dependency>  
-		<dependency>
-		   <groupId>org.hibernate</groupId>
-		   <artifactId>hibernate-search</artifactId>
-		   <version>${version.hibernate.search}</version>
-		   <scope>provided</scope>
-		</dependency>
-		
-	    <dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-client-hotrod</artifactId>
-	      <version>${version.org.infinispan}</version>
-	      <scope>provided</scope>
-	    </dependency> 
-	    <dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-server-hotrod</artifactId>
-            <version>${version.org.infinispan}</version>
-	      <type>test-jar</type>
-	      <scope>test</scope>
-	    </dependency>
-	    <dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-server-hotrod</artifactId>
-	      <version>${version.org.infinispan}</version>
-	      <scope>test</scope>
-	    </dependency>	     		
-     	<dependency>
-              <groupId>org.jgroups</groupId>
-              <artifactId>jgroups</artifactId>
-              <scope>test</scope>
-     	</dependency>
-        <dependency>
-            <groupId>org.jboss.marshalling</groupId>
-            <artifactId>jboss-marshalling-river</artifactId>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-client</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-	    <dependency>
-		    <groupId>org.mockito</groupId>
-		    <artifactId>mockito-all</artifactId>
-			<version>${mockito.all.version}</version>
-			<scope>test</scope>	      
-	    </dependency>		
-                                        
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-metadata</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-metadata</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-commons</artifactId>
+            <scope>provided</scope>
+        </dependency>       
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-query</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-query-dsl</artifactId>
+            <scope>provided</scope>
+        </dependency>       
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-lucene-directory </artifactId>
+            <scope>provided</scope>
+        </dependency>       
+
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-search</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-search-engine</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.modules</groupId>
+            <artifactId>jboss-modules</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
-     <build>
-        <outputDirectory>target/classes</outputDirectory>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>**/*.xml</include>
-                    <include>**/*.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>**/*.xml</exclude>
-                    <exclude>**/*.properties</exclude>
-                </excludes>
-            </resource>
-        </resources>
-    </build>
+
+	<build>
+		<outputDirectory>target/classes</outputDirectory>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.xml</include>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/*.xml</exclude>
+					<exclude>**/*.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptors>
+						<descriptor>kits/jboss-as7-dist.xml</descriptor>
+						<descriptor>kits/embedded-dist.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<id>create-assemblies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

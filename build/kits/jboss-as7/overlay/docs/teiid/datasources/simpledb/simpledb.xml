@@ -1,0 +1,24 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="simpledb">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.simpledb"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.simpledb.SimpleDBManagedConnectionFactory" 
+                        jndi-name="java:/simpledbDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-simpledb-ds">
+                        
+                      <!-- simpledb access key id -->
+                      <config-property name="AccessKey">xxx</config-property>
+                      
+                      <!-- simpledb secret access key -->
+                      <config-property name="SecretAccessKey">xxx</config-property>
+                      
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

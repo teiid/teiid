@@ -36,6 +36,34 @@ import org.teiid.translator.*;
 @SuppressWarnings({"nls", "unused"})
 public class SQLParser extends SQLParserUtil {
 
+  private void jj_add_error_token ( int kind, int pos) {
+	    if (pos >= 100) return;
+	    if (pos == jj_endpos + 1) {
+	      jj_lasttokens[jj_endpos++] = kind;
+	    } else if (jj_endpos != 0) {
+	      jj_expentry = new int[jj_endpos];
+	      for (int i = 0; i < jj_endpos; i++) {
+	        jj_expentry[i] = jj_lasttokens[i];
+	      }
+	      boolean exists = false;
+	      for (java.util.Iterator e = jj_expentries.iterator(); e.hasNext();) {
+	        int[] oldentry = (int[])(e.next());
+	        if (oldentry.length == jj_expentry.length) {
+	          exists = true;
+	          for (int i = 0; i < jj_expentry.length; i++) {
+	            if (oldentry[i] != jj_expentry[i]) {
+	              exists = false;
+	              break;
+	            }
+	          }
+	          if (exists) break;
+	        }
+	      }
+	      if (!exists) jj_expentries.add(jj_expentry);
+	      if (pos != 0) jj_lasttokens[(jj_endpos = pos) - 1] = kind;
+	    }
+	  }
+
 } // end class
 
 PARSER_END(SQLParser)
@@ -74,6 +102,11 @@ SPECIAL_TOKEN :
 MORE :
 {
   < ~[] >
+}
+
+SPECIAL_TOKEN:
+{
+   <LINE_COMMENT: "--"(~["\r","\n"])*>
 }
 
 TOKEN: /* Data types */
@@ -217,6 +250,7 @@ TOKEN : /* Reserved words */
 |   <LOCAL: "local">
 |   <LOOP: "loop">
 |   <MAKEDEP: "makedep">
+|   <MAKEIND: "makeind">
 |   <MAKENOTDEP: "makenotdep">
 |   <MATCH: "match">
 |   <MERGE: "merge">
@@ -458,6 +492,10 @@ TOKEN : /* NonReserved words */
 |   <EXCEPTION: "exception">
 |   <RAISE: "raise">
 |   <CHAIN: "chain">
+|   <JSONARRAY_AGG: "jsonarray_agg">
+|   <JSONOBJECT: "jsonobject">
+|   <PRESERVE: "preserve">
+|   <GEOMETRY: "geometry">
 
 }
 /*
@@ -565,7 +603,7 @@ Token nonReserved() :
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>)
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>)
     {
     	return getToken(0);
     }	
@@ -576,15 +614,15 @@ name=identifier
 description=Partial or full name of a single entity.
 example={code:sql}tbl.col{code}\n{code:sql}"tbl"."col"{code}
 */
-String id(Boolean validate) :
+String id(Boolean nonAlias) :
 {
 }
 {
   	(<ID>|nonReserved())
   	{
   		String id = normalizeId(getToken(0).image);
-  		if (validate != null) {
-  			return validateName(id, validate);
+  		if (nonAlias != null) {
+  			return validateName(id, nonAlias);
   		}
   		return id;
   	}
@@ -755,35 +793,23 @@ Command userCommand(ParseInfo info) :
 {
 	Command command = null;
 	SourceHint sourceHint = null;
+	Block block = null;
 }
 {
-    {int index = 1; 
-     Token t = null;
-     do  
-       t = getToken(index++);
-     while (t != null && t.kind == LPAREN);
-     t = getToken(index);
-     if (t != null) 
-      sourceHint = getSourceHint(t); 
-    }
 	(command = queryExpression(info) |
 	command = storedProcedure(info, 1) |
-	command = insert(info) |
-	command = update(info) |
-	command = delete(info) |
+	{ sourceHint = getSourceHint(this); } command = insert(info) |
+	{ sourceHint = getSourceHint(this); } command = update(info) |
+	{ sourceHint = getSourceHint(this); } command = delete(info) |
 	command = dropTable(info) |
 	LOOKAHEAD(2) command = createTempTable(info) |
+	LOOKAHEAD(2) command = createForeignTempTable(info) |
 	command = alter(info) |
-	command = createTrigger(info)
+	command = createTrigger(info) |
+	block = compoundStatement(info) {command = new CreateProcedureCommand(block);}
 	)
 	{
-	    if (sourceHint != null) {
-	        if (command instanceof SetQuery) {
-	        	((SetQuery)command).getProjectedQuery().setSourceHint(sourceHint);
-	        } else {
-	    		command.setSourceHint(sourceHint);
-	    	}
-	    }
+		setSourceHint(sourceHint, command);
 		return command;
 	}
 }
@@ -821,7 +847,7 @@ Command createTempTable(ParseInfo info) :
 	List<ElementSymbol> pk = null;
 }
 {
-	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
+	<CREATE> [<LOCAL>] <TEMPORARY> <TABLE> 
 	table = id(null)
 	<LPAREN>
 	{
@@ -844,6 +870,8 @@ Command createTempTable(ParseInfo info) :
 	  }	  
 	]
 	<RPAREN>
+	[<ON> <COMMIT> 
+	     <PRESERVE> {create.setCommitAction(Create.CommitAction.PRESERVE_ROWS);} <ROWS>]
 	{
 		return create;
 	}
@@ -1021,7 +1049,8 @@ Statement delimitedStatement(ParseInfo info) :
       stmt = errorStatement(info) |
       stmt = raiseStatement(info) |
 	  stmt = declareStatement(info) |
-	  stmt = branchingStatement(info)
+	  stmt = branchingStatement(info) |
+	  stmt = returnStatement(info)
 	 )
 	 <SEMICOLON>
 	 {
@@ -1093,6 +1122,22 @@ BranchingStatement branchingStatement(ParseInfo info) :
 } 	
 
 /*
+name=return statement
+description=A return statement.
+example={code:sql}RETURN 1{code}
+*/
+ReturnStatement returnStatement(ParseInfo info) :
+{
+    Expression ex = null;
+}
+{
+ 	<RETURN> [ex = expression(info)]
+ 	{
+ 	    return new ReturnStatement(ex);
+ 	}
+} 	
+
+/*
 name=while statement
 description=A procedure while statement that executes until its condition is false.
 example={code:sql}WHILE (var) BEGIN ... END{code}
@@ -1145,7 +1190,7 @@ LoopStatement loopStatement(ParseInfo info) :
 /*
 name=if statement
 description=A procedure loop statement that executes over the given cursor.
-example={code:sql}LOOP ON (SELECT * FROM tbl) AS x BEGIN ... END{code}
+example={code:sql}IF (boolVal) BEGIN variables.x = 1 END ELSE BEGIN variables.x = 2 END{code}
 */
 IfStatement ifStatement(ParseInfo info) :
 {
@@ -1313,7 +1358,7 @@ CreateProcedureCommand  createProcedure(ParseInfo info) :
 /*
 name=procedure body definition
 description=Defines a procedure body on a Procedure metadata object.
-example={code:sql}CREATE VIRTUAL PROCEDURE BEGIN ... END{code}
+example={code:sql}BEGIN ... END{code}
 index=true
 */
 CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
@@ -1489,7 +1534,11 @@ StoredProcedure callableStatement(ParseInfo info) :
 	//parameters
 		
 	[<LPAREN>
-	 [values = expressionList(info) { convertToParameters(values, storedProcedure, parameterIndex); }]
+	  (LOOKAHEAD(2)
+        executeNamedParams(info, storedProcedure, parameterIndex)
+        |      
+        [values = expressionList(info) { convertToParameters(values, storedProcedure, parameterIndex); }]
+      )
 	 <RPAREN>
 	]
 	<RBRACE>			
@@ -1515,8 +1564,10 @@ StoredProcedure storedProcedure(ParseInfo info, int startIndex) :
 	Option option = null;
 	List<Expression> values = null;
 	StoredProcedure storedProcedure = new StoredProcedure();
+	SourceHint sourceHint = null;
 }
 {
+	{ sourceHint = getSourceHint(this); }
 	(
 		(<EXEC> | <EXECUTE> | <CALL>)
 		procName = id(null)
@@ -1542,6 +1593,7 @@ StoredProcedure storedProcedure(ParseInfo info, int startIndex) :
 	 }
 	]
 	{
+		storedProcedure.setSourceHint(sourceHint);
 		return storedProcedure;
 	}
 }
@@ -1594,6 +1646,7 @@ example={code:sql}INSERT INTO tbl (col1, col2) VALUES ('a', 1){code}
 Insert insert(ParseInfo info) :
 {
 	Insert insert = new Insert();
+	boolean merge = false;
 	String group = null;
 	List values = null;
 	List<ElementSymbol> columns = null;
@@ -1601,29 +1654,17 @@ Insert insert(ParseInfo info) :
 	QueryCommand query = null;
 }
 {
-	<INSERT> <INTO>
+	(<INSERT>|<MERGE>{merge=true;}) <INTO>
 	group = id(null)
 
 	[LOOKAHEAD(<LPAREN> id(null)) columns = columnList(false, true) {
 	  insert.setVariables(columns);
 	}]
 
-	(
-		( <VALUES> <LPAREN>
-		  values = expressionList(info)
-		  <RPAREN>
-		  {
-		    // Store each row of values
-		    insert.setValues(values);
-		  }
-		)
-		|
-		( query = queryExpression(info)
-		  {
-		    insert.setQueryExpression(query);
-		  }
-		)
-	)
+    query = queryExpression(info)
+	{
+	  insert.setQueryExpression(query);
+    }
 	
 	[ option = option(info)
 	  {
@@ -1634,7 +1675,7 @@ Insert insert(ParseInfo info) :
 	{
 		// Store group
 		insert.setGroup(new GroupSymbol(group) );
-
+		insert.setMerge(merge);
 		return insert;
 	}
 }
@@ -1744,6 +1785,7 @@ QueryCommand queryExpression(ParseInfo info) :
 	QueryCommand query = null;
 	List<WithQueryCommand> withList = null;
 	WithQueryCommand withQueryCommand = null;
+	SourceHint sourceHint = null;
 }
 {
 	[<WITH> withQueryCommand = withListElement(info)
@@ -1758,9 +1800,11 @@ QueryCommand queryExpression(ParseInfo info) :
 	    }
 	  )*
 	]
+	{ sourceHint = getSourceHint(this); }
 	query = queryExpressionBody(info)
 	{
 		query.setWith(withList);
+		setSourceHint(sourceHint, query);
 		return query;
 	}
 }
@@ -1853,10 +1897,21 @@ QueryCommand queryPrimary(ParseInfo info) :
 {
     QueryCommand query = null;
     String name = null;
+    List<Expression> expr = null;
 }
 {
     (
-        query=query(info) | 
+        query=query(info) |
+        (<VALUES> <LPAREN> expr = expressionList(info) 
+         {
+           query = Query.rowConstructor(expr);
+         } 
+         <RPAREN> 
+          (<COMMA> <LPAREN> expr = expressionList(info) 
+           { 
+             query = new SetQuery(SetQuery.Operation.UNION, true, query, Query.rowConstructor(expr));
+           } 
+          <RPAREN>)*) | 
         (<TABLE> name=id(null) {
            Query q = new Query();
            q.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
@@ -2051,7 +2106,7 @@ AggregateSymbol orderedAgg(ParseInfo info) :
 	OrderBy orderBy = null;
 }
 {
-	(t=<XMLAGG>|t=<ARRAY_AGG>)
+	(t=<XMLAGG>|t=<ARRAY_AGG>|t=<JSONARRAY_AGG>)
 	<LPAREN>
 	expression = expression(info)
 	[ orderBy = orderby(info) ]
@@ -2336,6 +2391,7 @@ FromClause tablePrimary(ParseInfo info) :
 {
 	FromClause clause = null;
 	Token lparen = null;
+	Option.MakeDep makedep = null;
 }
 {
 	(	LOOKAHEAD(2) clause = textTable(info)
@@ -2357,12 +2413,37 @@ FromClause tablePrimary(ParseInfo info) :
 		 <RPAREN> 
 		)
 	)
-	[	(<MAKEDEP>  { clause.setMakeDep(true); })
+	[	(<MAKEDEP> makedep = makedepOptions() { clause.setMakeDep(makedep); })
 	 	| (<MAKENOTDEP> {  clause.setMakeNotDep(true); } )
 	]
+	[ (<MAKEIND> makedep = makedepOptions() { clause.setMakeInd(makedep); }) ]
 	{
 		return clause;
 	}
+}
+
+/*
+name=make dep options
+description=options for the make dep hint
+example={code:sql}(min:10000){code}
+*/
+Option.MakeDep makedepOptions() :
+{
+	Integer max = null;
+	Boolean join = null;
+	boolean no = false;
+}
+{
+ [<LPAREN>
+	[<MAX><COLON> max = intVal()]
+	[[<NO> {no = true;}] <JOIN> {join = true;}]
+  <RPAREN>]
+ {
+ 	Option.MakeDep result = new Option.MakeDep();
+ 	result.setMax(max);
+ 	result.setJoin(no?Boolean.FALSE:join);
+ 	return result;
+ }
 }
 
 /*
@@ -2444,12 +2525,14 @@ TextTable textTable(ParseInfo info) :
 	List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
 	boolean useRowDelimiter = true;
 	Character delimiter = null;
+	Character rowDelimiter = null;
 	boolean escape = false;
 	Character quote = null;
 	Integer header = null;
 	Integer skip = null;
 	String selector = null;
 	String aliasID = null;
+	boolean noTrim = false;
 }
 {
  	<TEXTTABLE> <LPAREN> file = commonValueExpression(info)
@@ -2469,10 +2552,14 @@ TextTable textTable(ParseInfo info) :
 		}
 	)* 
 	[
-	  <NO> <ROW> <DELIMITER>
+	  LOOKAHEAD(2) ((<NO> <ROW> <DELIMITER>
 	  {
 	    useRowDelimiter = false;
-	  }
+	  })
+	  |
+	  (<ROW> <DELIMITER>
+	    rowDelimiter = charVal(info, " ROW DELMITER")
+	  ))
 	]
 	[
 	  <DELIMITER>
@@ -2498,6 +2585,12 @@ TextTable textTable(ParseInfo info) :
 	  <SKIP_KEYWORD>
 	  skip = intVal()
 	]
+	[ LOOKAHEAD(2)
+      <NO> <TRIM>
+      {
+    	noTrim = true;	  	
+      }
+  	]
  	<RPAREN>
  	[<AS>] aliasID=id(Boolean.FALSE)
  	{
@@ -2512,6 +2605,10 @@ TextTable textTable(ParseInfo info) :
  		result.setQuote(quote);
  		result.setUsingRowDelimiter(useRowDelimiter);
  		result.setSelector(selector);
+ 		if (noTrim) {
+ 			result.setNoTrim();
+ 		}
+ 		result.setRowDelimiter(rowDelimiter);
  		return result;
  	}
 }
@@ -2529,31 +2626,90 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	boolean noTrim = false;
 	String selector = null;
 	Integer position = null;
+	String header = null;
 }
 {
 	name = id(Boolean.TRUE)
-	datatype = parseDataType()
-	[ 
-	  	<WIDTH>
-	  	width = intVal() 
-	  	[ LOOKAHEAD(2)
-		  	<NO> <TRIM>
-		  	{
-				noTrim = true;	  	
-		  	}
+	
+	( (
+      <FOR> <ORDINALITY> 
+      {
+        return new TextTable.TextColumn(name); 
+      } 
+    ) | (
+        [
+            <HEADER>
+            header = stringVal()
+        ]
+    	datatype = parseDataType()
+    	[ 
+    	  	<WIDTH>
+    	  	width = intVal() 
+    	  	[ LOOKAHEAD(2)
+    		  	<NO> <TRIM>
+    		  	{
+    				noTrim = true;	  	
+    		  	}
+    		]
+    	]
+    	[ 
+	  		<SELECTOR>
+		    selector = stringVal()
+		  	position = intVal() 
 		]
-	]
-	[ 
-	  	<SELECTOR>
-	    selector = stringVal()
-	  	position = intVal() 
-	]
-	{
-		TextTable.TextColumn result = new TextTable.TextColumn(name, datatype.type, width, noTrim);
-		result.setSelector(selector);
-		result.setPosition(position);
-		return result;
-	}
+		{
+			TextTable.TextColumn result = new TextTable.TextColumn(name, datatype.type, width, noTrim);
+			result.setSelector(selector);
+			result.setPosition(position);
+			result.setHeader(header);
+			return result;
+		}
+    ) )
+	
+}
+
+/*
+name=xml query
+description=Executes an XQuery to return an XML result.
+example={code:sql}XMLQUERY('<a>...</a>' PASSING doc){code}
+*/
+Expression xmlExists(ParseInfo info) :
+{
+    String xquery = null;
+    XMLNamespaces xmlNamespaces = null;
+    DerivedColumn passing = null;
+    ArrayList<DerivedColumn> passingValues = new ArrayList<DerivedColumn>();
+    Boolean content = null;
+    Boolean empty = null;
+}
+{
+    <XMLEXISTS> <LPAREN> 
+    [ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
+    xquery = stringVal()
+    [ 
+      <PASSING>
+      passing = derivedColumn(info)
+      {
+        passingValues.add(passing);
+        passing.setPropagateName(false);
+      }
+      (<COMMA>
+        passing = derivedColumn(info)
+        {
+          passingValues.add(passing);
+          passing.setPropagateName(false);
+        }
+      )*
+    ]
+    <RPAREN>
+    {
+        XMLQuery result = new XMLQuery();
+        result.setXquery(xquery);
+        result.setNamespaces(xmlNamespaces);
+        result.setPassing(passingValues);
+        result.setEmptyOnEmpty(true);
+        return new XMLExists(result);
+    }
 }
 
 /*
@@ -2771,7 +2927,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	Expression defaultExpr = null;
 }
 {
-	name = id(null)
+	name = id(Boolean.TRUE)
 	
 	((
 	  <FOR> <ORDINALITY> 
@@ -3001,8 +3157,8 @@ Expression booleanPrimary(ParseInfo info) :
 			ex=compareCrit(info, ex)
 	     )]
 	    )
-	    |
-		ex=existsCriteria(info)
+	    | ex=existsCriteria(info)
+	    | ex=xmlExists(info)
     )
 	{
 		return ex;
@@ -3035,7 +3191,7 @@ Token operator() :
 /*
 name=comparison predicate
 description=A value comparison.
-example={code:sql}x = 'a'{code}
+example={code:sql}= 'a'{code}
 */
 CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 {
@@ -3098,7 +3254,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
     QueryCommand subquery = null;
     Token operator = null;
     Token quantifier = null;
-    
+    ExistsCriteria.SubqueryHint hint = null;
 }
 {
 	operator=operator()
@@ -3106,6 +3262,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
 	  quantifier=<SOME> |
 	  quantifier=<ALL>
 	)
+	{ hint = getSubqueryHint(getToken(1)); }
 	subquery = subquery(info)
 
 	{
@@ -3124,7 +3281,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
 		} else if(quantifier.image.equalsIgnoreCase("all")) { //$NON-NLS-1$
 			subqueryCrit.setPredicateQuantifier(SubqueryCompareCriteria.ALL);
 		} 
-
+        subqueryCrit.setSubqueryHint(hint);
 	    return subqueryCrit;
    	}
 }
@@ -3140,10 +3297,12 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 	Expression value = null;
 	boolean negated = false;
 	boolean similar = false;
+	Token t = null;
 }
 {
 	[<NOT> {negated = true;}]
     (<LIKE>|(<SIMILAR> <TO> {similar = true;}))
+    {t = getToken(1);}
 	value=commonValueExpression(info)
     [   <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") |
         (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") <RBRACE>) 
@@ -3153,6 +3312,10 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 		matchcriteria.setNegated(negated);
 	    if(esc != null) {
 			matchcriteria.setEscapeChar(esc.charValue());
+		} else if (!similar && value instanceof Constant) {
+			if (t.image != null && t.image.startsWith("E'")) {
+				matchcriteria.setEscapeChar('\\');
+			}
 		}
 		matchcriteria.setMode(similar?MatchMode.SIMILAR:MatchMode.LIKE);
 		return matchcriteria;
@@ -3322,12 +3485,23 @@ example={code:sql}GROUP BY col1, col2{code}
 GroupBy groupBy(ParseInfo info) :
 {
 	List<Expression> expressions = null;
+	boolean rollup = false;
 }
 {
 	<GROUP> <BY>
-    expressions = expressionList(info)	
+	(<ROLLUP><LPAREN>
+     expressions = expressionList(info)
+     <RPAREN>
+     {
+       rollup = true;
+     }
+     |
+     expressions = expressionList(info)
+    )	
 	{
-		return new GroupBy(expressions);
+		GroupBy result = new GroupBy(expressions);
+		result.setRollup(rollup);
+		return result;
 	}
 }
 
@@ -3434,15 +3608,18 @@ example={code:sql}?{code}
 */
 Expression intParam(ParseInfo info) :
 {
+   Expression ex = null;
    Integer val = null;
 }
 {
-   (val = intVal() | <QMARK>)
+   val = intVal() 
    {
-     if (val == null) {
-       return new Reference(info.referenceCount++);
-     } 
      return new Constant(val, DataTypeManager.DefaultDataClasses.INTEGER);
+   }
+   |
+   ex = unsignedValueExpressionPrimary(info)
+   {
+     return ex;
    }
 }
 
@@ -3508,19 +3685,31 @@ Option option(ParseInfo info) :
 	String id = null;
 	Token nocache = null;
 	Option option = new Option();
+	Option.MakeDep makedep = null;
 }
 {
 	<OPTION>
 	(
 		<MAKEDEP>		
-		id=id(null)
+		id=id(null) makedep = makedepOptions()
 		{
-            option.addDependentGroup(id);
+            option.addDependentGroup(id, makedep);
 		}
 		(<COMMA>
-			id=id(null)
+			id=id(null) makedep = makedepOptions()
 			{
-                option.addDependentGroup(id);
+    	        option.addDependentGroup(id, makedep);
+	        }
+		)* |
+		<MAKEIND>		
+		id=id(null) makedep = makedepOptions()
+		{
+            option.addIndependentGroup(id, makedep);
+		}
+		(<COMMA>
+			id=id(null) makedep = makedepOptions()
+			{
+    	        option.addIndependentGroup(id, makedep);
 	        }
 		)* |
 		<MAKENOTDEP>		
@@ -3700,6 +3889,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 {
 	String strVal = null;
 	Expression ex = null;
+	Expression indexExpr = null;
+    List<Expression> indexExprs = null;
 }
 {
 	// Literal
@@ -3707,17 +3898,114 @@ Expression valueExpressionPrimary(ParseInfo info) :
 	| [strVal = plusMinus()] 
 	  (ex = unsignedNumericLiteral(strVal)
 	   |
-	   ex = unsignedValueExpressionPrimary(info) {
-	     if (strVal != null && strVal.charAt(0) == '-') {
-	     	ex = new Function("*", new Expression[] { new Constant(-1), ex });
-	     }
-	    }
+	   (ex = unsignedValueExpressionPrimary(info)
+	    //array element reference expressions
+        (<LSBRACE> indexExpr = plusExpression(info) <RSBRACE> {
+           indexExprs = arrayExpressions(indexExprs, indexExpr);
+           }
+        )*
+        {
+          if (indexExprs != null) {
+            for (Expression expr : indexExprs) {
+                ex = new Function("array_get", new Expression[] {ex, expr});
+            }
+          }
+        }
+	   ) {
+         if (strVal != null && strVal.charAt(0) == '-') {
+            ex = new Function("*", new Expression[] { new Constant(-1), ex });
+         }
+        }
 	   )
 	 )
 	 {
 		return ex;	 
 	 }  
 }
+
+/*
+name=parameter reference
+description=A parameter reference to be bound later.
+example={code:sql}?{code}
+*/
+Reference parameterReference(ParseInfo info) :
+{
+    Integer index = null;
+}
+{
+    <QMARK> {return new Reference(info.referenceCount++);}
+    |
+    (<DOLLAR> index = intVal() {return new Reference(index -1); })
+}
+
+Expression unescapedFunction(ParseInfo info) :
+{
+    Expression expression = null;
+    Expression condition = null;
+    ParsedDataType type = null;
+    
+}
+{
+    // Aggregate function
+    (LOOKAHEAD(2) ((expression=textAgg(info) | expression=aggregateSymbol(info) | expression=orderedAgg(info)) [condition = filterClause(info)] [expression = windowSpecification(expression, info)])
+    |
+    LOOKAHEAD(2) (expression=analyticAggregateSymbol(info) [condition = filterClause(info)] expression = windowSpecification(expression, info))
+    |
+    // Function
+    LOOKAHEAD(2) (expression=function(info) [expression = windowSpecification(expression, info)]))
+    {
+        if (condition != null) {
+            if (expression instanceof WindowFunction) {
+                ((WindowFunction)expression).getFunction().setCondition(condition);
+            } else {
+                ((AggregateSymbol)expression).setCondition(condition);
+            }
+        }
+        return expression;
+    }
+    |
+	(			
+		<XMLCAST>
+		<LPAREN>
+		expression = expression(info)
+		<AS>
+		type = parseDataType()
+		<RPAREN>				
+    ) { return new XMLCast(expression, DataTypeManager.getDataTypeClass(type.type)); }
+}
+
+/*
+name=nested expression
+description=An expression nested in parens
+example={code:sql}(1){code}
+*/
+Expression nestedExpression(ParseInfo info) :
+{
+    Expression expression = null;
+    Expression arrayExpression = null;
+    List<Expression> arrayExpressions = null;
+}
+{
+    ( <LPAREN> 
+        [expression = expression(info)
+        (LOOKAHEAD(2) <COMMA>arrayExpression = expression(info) {
+          if (expression != null) {
+             arrayExpressions = arrayExpressions(arrayExpressions, expression);
+             expression = null;
+          } 
+          arrayExpressions = arrayExpressions(arrayExpressions, arrayExpression);})*]
+        [<COMMA> {arrayExpressions = arrayExpressions(arrayExpressions, expression);} ]
+      <RPAREN>
+    )
+    {
+        if (arrayExpressions != null) {
+            expression = new Array(arrayExpressions);
+        } else if (expression == null) {
+            expression = new Array(new ArrayList<Expression>(0));
+        }
+        return expression;
+    }
+}    
 
 /*
 name=unsigned value expression primary
@@ -3729,30 +4017,20 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 	Expression expression = null;
 	Token symbol = null;
 	QueryCommand subquery = null;
-	Integer index = null;
-	Expression condition = null;
-	Expression indexExpr = null;
+	ExistsCriteria.SubqueryHint hint = null;
 }
 {
-        (
+    (
 		// Reference
-		<QMARK> {return new Reference(info.referenceCount++);}
-		|
-		(<DOLLAR> index = intVal() {return new Reference(index -1); })
+		expression = parameterReference(info)
 		|
 		// Escaped function
 		(	<ESCAPEDFUNCTION>
 			expression=function(info)
 			<RBRACE>
 		)
-		|		
-		// Aggregate function
-		LOOKAHEAD(2) ((expression=textAgg(info) | expression=aggregateSymbol(info) | expression=orderedAgg(info)) [condition = filterClause(info)] [expression = windowSpecification(expression, info)])
 		|
-		LOOKAHEAD(2) (expression=analyticAggregateSymbol(info) [condition = filterClause(info)] expression = windowSpecification(expression, info))
-		|
-		// Function
-		LOOKAHEAD(2) (expression=function(info) [expression = windowSpecification(expression, info)])
+		LOOKAHEAD(2) expression = unescapedFunction(info)		
 		|
 		// ElementSymbol
 		((symbol=<ID> {
@@ -3760,37 +4038,24 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 				if(isStringLiteral(symbolImage, info)) {
 				    return new Constant(normalizeStringLiteral(symbolImage));
 				}  
-			} | symbol=nonReserved()) 
-			(<LSBRACE> indexExpr = commonValueExpression(info) <RSBRACE>)?
+			} | symbol=nonReserved()) {expression = new ElementSymbol(normalizeId(symbol.image));} 
 		)
 		|
-		LOOKAHEAD(subquery(info)) subquery = subquery(info)
+		LOOKAHEAD(subquery(info)) ({ hint = getSubqueryHint(getToken(1)); } subquery = subquery(info) {
+		   ScalarSubquery ss = new ScalarSubquery(subquery);
+		   ss.setSubqueryHint(hint);
+		   expression = ss;
+		})
 		|
-		( <LPAREN> 
- 			expression = expression(info)
-		  <RPAREN>
-		  (<LSBRACE> indexExpr = commonValueExpression(info) <RSBRACE>)?
-		)
+		expression = nestedExpression(info)
 		|
 		// Searched CASE expressions
 		LOOKAHEAD(2) expression = searchedCaseExpression(info)
 		|
 		// Non-searched CASE expressions
 		expression = caseExpression(info)
-	)						
-		
+	)
 	{
-		if(symbol != null) {
-			expression = new ElementSymbol(normalizeId(symbol.image));
-		} else if (subquery != null){
-			expression = new ScalarSubquery(subquery);
-		}
-		if (condition != null) {
-			((AggregateSymbol)expression).setCondition(condition);
-		}
-		if (indexExpr != null) {
-			expression = new Function("array_get", new Expression[] {expression, indexExpr});		
-		}
 		return expression;
 	}
 }
@@ -3807,9 +4072,13 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
 }
 {
 	<OVER> { 
-	if (!(agg instanceof AggregateSymbol)) {
-	   		throw new ParseException(QueryPlugin.Util.getString("SQLParser.invalid_window", agg)); //$NON-NLS-1$
-    	}
+	  if (!(agg instanceof AggregateSymbol)) {
+	    if (!(agg instanceof Function)) {
+	      throw new ParseException(QueryPlugin.Util.getString("SQLParser.invalid_window", agg)); //$NON-NLS-1$
+	    }
+	    Function f = (Function)agg;
+	    agg = new AggregateSymbol(f.getName(), false, f.getArgs(), null);
+	  }
     }
     <LPAREN> 
     [<PARTITION> <BY> partitionList = expressionList(info)]
@@ -3985,7 +4254,7 @@ Expression function(ParseInfo info) :
 	   <LPAREN>
 	   { funcName = funcToken.image; funcToken = null; expression = null;}
 	   [
-	    LOOKAHEAD(2) (((funcToken = <LEADING>|
+	    LOOKAHEAD((<LEADING>|<TRAILING>|<BOTH>)|(expression(info)<FROM>)) (((funcToken = <LEADING>|
 	      funcToken = <TRAILING>|
 	      funcToken = <BOTH>)
 	    [expression = expression(info)])
@@ -4030,6 +4299,7 @@ Expression function(ParseInfo info) :
 		{
 			args.add(new Constant(literal));
 		} 
+		[<COMMA> expression = expression(info) { args.add(expression); }]
 		<RPAREN>				
 	)
 	|
@@ -4062,7 +4332,7 @@ Expression function(ParseInfo info) :
 		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR> | funcToken = <USER> 
 		                    | funcToken = <YEAR> | funcToken = <MONTH> | funcToken = <HOUR>
 		                    | funcToken = <MINUTE> | funcToken = <SECOND> | funcToken = <XMLCONCAT>
-		                    | funcToken = <XMLCOMMENT>)
+		                    | funcToken = <XMLCOMMENT> | funcToken = <XMLTEXT>)
         <LPAREN>
 		[args = expressionList(info)]
 		<RPAREN>
@@ -4102,6 +4372,10 @@ Expression function(ParseInfo info) :
 		{
 			return expression;
 		}
+	|	LOOKAHEAD(<JSONOBJECT>) expression = jsonObject(info)
+		{
+			return expression;
+		}
 	|	expression = xmlSerialize(info)
 		{
 			return expression;
@@ -4123,7 +4397,7 @@ Expression function(ParseInfo info) :
 		if(funcName == null) { 
 			funcName = funcToken.image;
 		}
-		if (distinct != null || orderBy != null || condition != null) {
+		if (distinct != null || orderBy != null || condition != null || "string_agg".equalsIgnoreCase(funcName)) {
 			AggregateSymbol as = new AggregateSymbol(funcName, distinct!=null?distinct:false, (Expression[])args.toArray(new Expression[args.size()]), orderBy);
 			as.setCondition(condition);
 			return as;
@@ -4165,7 +4439,7 @@ XMLParse xmlParse(ParseInfo info) :
 /*
 name=querystring function
 description=Produces a URL query string from the given arguments.
-example={code:sql}QUERYSTRING(col1 AS opt, col2 AS val){code}
+example={code:sql}QUERYSTRING('path', col1 AS opt, col2 AS val){code}
 */
 QueryString queryString(ParseInfo info) :
 {
@@ -4254,21 +4528,35 @@ XMLAttributes xmlAttributes(ParseInfo info) :
 }
 
 /*
-name=xml forest
-description=Produces an element for each derived column.
-example={code:sql}XMLFOREST(col1 AS ELEM1, col2 AS ELEM2){code}
+name=json object
+description=Produces a JSON object containing name value pairs.
+example={code:sql}JSONOBJECT(col1 AS val1, col2 AS val2){code}
 */
-XMLForest xmlForest(ParseInfo info) :
+JSONObject jsonObject(ParseInfo info) :
+{
+	ArrayList<DerivedColumn> args = null;
+}
+{
+ 	<JSONOBJECT> <LPAREN>
+ 	args = derivedColumnList(info)
+ 	<RPAREN>  		
+	{
+		JSONObject result = new JSONObject(args);
+		return result;
+	}
+}
+
+/*
+name=derived column list
+description=a list of name value pairs
+example={code:sql}col1 AS val1, col2 AS val2{code}
+*/
+ArrayList<DerivedColumn> derivedColumnList(ParseInfo info) :
 {
 	DerivedColumn expression = null;
-	XMLNamespaces xmlNamespaces = null;
 	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
- 	<XMLFOREST> <LPAREN>
-	[
-		xmlNamespaces = xmlNamespaces(info) <COMMA>
-	]
 	expression = derivedColumn(info)
 	{
 		args.add(expression);
@@ -4278,6 +4566,28 @@ XMLForest xmlForest(ParseInfo info) :
 		args.add(expression);
 	 }
 	)*
+	{ 
+		return args;
+	}
+}
+
+/*
+name=xml forest
+description=Produces an element for each derived column.
+example={code:sql}XMLFOREST(col1 AS ELEM1, col2 AS ELEM2){code}
+*/
+XMLForest xmlForest(ParseInfo info) :
+{
+	DerivedColumn expression = null;
+	XMLNamespaces xmlNamespaces = null;
+	ArrayList<DerivedColumn> args = null;
+}
+{
+ 	<XMLFOREST> <LPAREN>
+	[
+		xmlNamespaces = xmlNamespaces(info) <COMMA>
+	]
+	args = derivedColumnList(info)
 	<RPAREN>  		
 	{
 		XMLForest result = new XMLForest(args);
@@ -4343,11 +4653,11 @@ XMLNamespaces.NamespaceItem namespaceItem() :
 }
 
 /*
-name=data type
-description=A data type.
+name=simple data type
+description=A non-collection data type.
 example={code:sql}STRING{code}
 */
-ParsedDataType parseDataType() :
+ParsedDataType parseDataTypePrimary() :
 {
 	Token typeToken = null;
 	Integer length = null;
@@ -4376,23 +4686,44 @@ ParsedDataType parseDataType() :
 		typeToken = <DATE> | 
 		typeToken = <TIME> |
 		typeToken = <TIMESTAMP> |
-		typeToken = <OBJECT> |
+		(typeToken = <OBJECT> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <BLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <VARBINARY> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
+		typeToken = <GEOMETRY> |
 		typeToken = <XML>
-		
 	)
-	
 	{
+	    String typeName = typeToken.image;
 		if (scale != null){
-			return new ParsedDataType(typeToken.image, length, scale, precision);
+			return new ParsedDataType(typeName, length, scale, precision);
 		}
 		else if (length != null){
-			return new ParsedDataType(typeToken.image, length, precision);
+			return new ParsedDataType(typeName, length, precision);
 		}
-		return new ParsedDataType(typeToken.image);
+		return new ParsedDataType(typeName);
 	}
+}
+
+/*
+name=data type
+description=A data type.
+example={code:sql}STRING[]{code}
+*/
+ParsedDataType parseDataType() :
+{
+    int arraySuffixes = 0;
+    ParsedDataType type = null;
+}
+{
+    type = parseDataTypePrimary()
+    (<LSBRACE><RSBRACE> {arraySuffixes++;})*
+    {
+        if (arraySuffixes > 0) {
+           type.type += StringUtil.join(Collections.nCopies(arraySuffixes, "[]"), "");
+        }
+        return type;
+    }
 }
 
 /*
@@ -4544,9 +4875,10 @@ void ddlStmt(MetadataFactory factory) :
 }
 {
 	(LOOKAHEAD(3) 	createTable(factory) | 
-	 LOOKAHEAD(4)	createDDLProcedure(factory, new ParseInfo()) |
+	 LOOKAHEAD(4)	createDDLProcedure(factory, ParseInfo.DEFAULT_INSTANCE) |
 	 LOOKAHEAD(2)	createNameSpace(factory) |
-	 LOOKAHEAD(4) 	command=createTrigger(new ParseInfo())
+	 LOOKAHEAD(4)	alterStatement(factory) |
+	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE)
 	 {
 	 	createDDLTrigger(factory, (AlterTrigger)command);
 	 }
@@ -4618,7 +4950,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 			proc.setVirtual(virtual);
 			proc.setFunction(function);
 			if (stmt != null){
-			    if (function || !virtual) {
+			    if (!virtual) {
 			         throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
 			    }
 				proc.setQueryPlan((comment != null?comment.image+" ":"") + stmt.toString());
@@ -4716,22 +5048,86 @@ example={code:sql}CREATE VIEW vw AS SELECT 1{code}
 */
 void createTable(MetadataFactory factory) :
 {
-	Table table = null;
-	String tableName = null;
 	boolean view = false;
-	Command query = null;
+	boolean globalTemp = false;
+	String tableName = null;
+	Table table = null;
 	Token comment = null;
-	String name = null;
-	AbstractMetadataRecord constraint = null;
+	Command query = null;
 }
 {
-	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
+	<CREATE> (
+		(<FOREIGN> <TABLE>) | 
+		([<VIRTUAL>] <VIEW> {view = true;}) |
+		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
+	) 
 	tableName = id(null)
 	{
 	    table = factory.addTable(tableName);
 	    table.setVirtual(view);
+	    if (globalTemp) {
+	    	table.setTableType(Table.Type.TemporaryTable);
+	    }
 	}
-	[<LPAREN>
+	(createTableBody(table, factory) | [optionsClause(table, factory)
+	   {
+	      setTableOptions(table);
+	   }
+	])
+	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
+	  {
+		   if (!view || globalTemp) {
+     		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", table.getName()));
+		   }
+		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
+	  }
+	]
+}
+
+/*
+name=create foreign temp table
+description=Defines a foreign temp table
+example={code:sql}CREATE FOREIGN TEMPORARY TABLE t (x string) ON z{code}
+*/
+Create createForeignTempTable(ParseInfo info) :
+{
+	Table table = null;
+	String tableName = null;
+	String model = null;
+	MetadataFactory factory = getTempMetadataFactory();
+}
+{
+	<CREATE> [<LOCAL>] <FOREIGN> <TEMPORARY> <TABLE>
+	tableName = id(null)
+	{
+		table = new Table();
+		//need to set a dummy/stable uuid
+		table.setUUID("tid:0");
+		table.setTableType(Table.Type.TemporaryTable);
+		table.setName(tableName);
+	} 
+	createTableBody(table, factory)
+	<ON> model = id(null)
+	{
+		Create create = new Create();
+		create.setTableMetadata(table);
+		create.setOn(model);
+		return create;
+	}
+}
+
+/*
+name=create table body
+description=Defines a table.
+example={code:sql}(x string) OPTIONS (CARDINALITY 100){code}
+*/
+void createTableBody(Table table, MetadataFactory factory) :
+{
+	String name = null;
+	AbstractMetadataRecord constraint = null;
+}
+{
+	<LPAREN>
     createColumn(factory, table)
     (LOOKAHEAD(3) <COMMA>
       createColumn(factory, table)
@@ -4743,23 +5139,14 @@ void createTable(MetadataFactory factory) :
 	   }
 	]
     )*
-    <RPAREN>]    
+    <RPAREN>    
     [optionsClause(table, factory)
 	   {
 	      setTableOptions(table);
 	   }
 	]
-	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)]
 	{
-		if (query != null){
-		   if (!view) {
-     		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", tableName));
-		   }
-		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
-		}
-		if (table.getColumns() == null) {
-			table.addAttchment(MetadataFactory.class, factory);
-		} else if (!table.supportsUpdate()) {
+		if (table.getColumns() != null && !table.supportsUpdate()) {
 			for (Column c : table.getColumns()) {
 				c.setUpdatable(false);
 			}
@@ -4894,7 +5281,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	String element = null;
 	ParsedDataType type = null;
 	boolean autoIncrement = false;
-	Boolean notNull = false;
+	boolean notNull = false;
 	String defalt = null;
 	Column column = null;
 	List<String> columnName = new ArrayList<String>();
@@ -4906,22 +5293,26 @@ void createColumn(MetadataFactory factory, Table table) :
 {
 	 element = id(Boolean.TRUE)
 	 (
-	  type = parseDataType()
-	  {
-		column = factory.addColumn(element, type.type, table);
-		column.setUpdatable(true);
-	    setTypeInfo(type, column);		    	
-		columnName.add(element);
-	  }
+      <SERIAL>
+      {
+        type = new ParsedDataType("INTEGER");
+        autoIncrement = true;
+        notNull = true;
+      }
+      |
+      (
+	    type = parseDataType()
+	    [<NOT> <NULL> { notNull = true; }]
+        [<AUTO_INCREMENT> {  autoIncrement = true; }]
+	  )
 	 )
-	 [<NOT> <NULL> { column.setNullType(Column.NullType.No_Nulls); }]
-	 ([(<UNIQUE> { unique = true;  })
-	  |((word = <INDEX> | word = <AUTO_INCREMENT>)  
-	    { if (word.image.equalsIgnoreCase("INDEX")) index = true;
-	      else if (word.image.equalsIgnoreCase("AUTO_INCREMENT")) autoIncrement = true; 
-	    })+	 
-	  |(<PRIMARY> <KEY> { pk = true; })	 
-	  ])
+	 {
+       column = factory.addColumn(element, type.type, table);
+       column.setUpdatable(true);
+       setTypeInfo(type, column);                
+       columnName.add(element);
+     }
+	 ((<PRIMARY> <KEY> { pk = true; }) | ([<UNIQUE> { unique = true;  }] [<INDEX> { index = true; }]))
 	 [<DEFAULT_KEYWORD> defalt = stringVal() {column.setDefaultValue(defalt);}]
 	 [optionsClause(column, factory)
 	   {
@@ -4939,7 +5330,9 @@ void createColumn(MetadataFactory factory, Table table) :
 	    	}
 	 		factory.addPrimaryKey("PK", columnName, table);
 	 	}
-	     	 	
+	 	if (notNull) {
+	       column.setNullType(Column.NullType.No_Nulls);
+	    }
 	    column.setAutoIncremented(autoIncrement);
 	 }
 }
@@ -4975,11 +5368,116 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 	 (value = nonNumericLiteral()
 	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 
-	 	key = resolvePropertyKey(factory, key);
+	 	key = MetadataFactory.resolvePropertyKey(factory, key);
 	 	String val = null;
 	 	if (!value.isNull()) {
 	 		val = value.getValue().toString();
 	 	}
 	 	record.setProperty(key, val); 
 	 } 
+}
+
+/*
+name=alter options
+description=alters options of tables/procedure
+example={code:sql}ALTER FOREIGN TABLE foo OPTIONS (ADD cardinality 100){code}
+*/
+void alterStatement(MetadataFactory factory) :
+{
+	boolean table = false;
+	boolean proc = false;
+	boolean func = false;
+	String objectName = null;
+	AbstractMetadataRecord record = null;
+}
+{ 
+	<ALTER> [<VIRTUAL> | <FOREIGN>] (<TABLE> {table = true;} | <VIEW> {table = true;} | <PROCEDURE> {proc=true;})
+	objectName = id(null)
+	{
+		if (table){
+			record = factory.getSchema().getTable(objectName);
+			if (record == null){
+				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_table_doesnot_exist", objectName));
+			}
+		}
+		if (proc){
+			record = factory.getSchema().getProcedure(objectName);
+			if (record == null){
+				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_procedure_doesnot_exist", objectName));
+			}
+		}		
+	}
+	
+	(alterOptionsList(record, factory) | 
+	 alterColumn(record, factory))
+}
+
+/*
+name=alter options list
+description=a list of alterations to options
+example={code:sql}OPTIONS (ADD updatable true){code}
+*/
+void alterOptionsList(AbstractMetadataRecord record, MetadataFactory factory) :
+{
+
+}
+{
+  <OPTIONS> <LPAREN>
+  (addSetOption(record, factory) |
+   dropOption(record))
+  (<COMMA> (addSetOption(record, factory) |
+   dropOption(record)))*
+  <RPAREN>
+  {
+ 		setOptions(record);
+  }
+}
+
+/*
+name=drop option
+description=drop option
+example={code:sql}DROP updatable{code}
+*/
+void dropOption(AbstractMetadataRecord record) :
+{
+	String key = null;
+}
+{
+   <DROP> key = id(null) 
+   {
+ 		removeOption(key, record);
+   }
+}
+
+/*
+name=add set option
+description=add or set an option pair
+example={code:sql}ADD updatable true{code}
+*/
+void addSetOption(AbstractMetadataRecord record, MetadataFactory factory) :
+{
+}
+{
+   (<ADD>|<SET>) optionPair(record, factory) 
+}
+
+/*
+name=alter column options
+description=alters a set of column options
+example={code:sql}ALTER COLUMN bar OPTIONS (ADD updatable true){code}
+*/
+void alterColumn(AbstractMetadataRecord parent, MetadataFactory factory) :
+{
+	boolean param = false;
+	String objectName = null;
+	AbstractMetadataRecord record = null;
+	String key = null;
+}
+{ 
+	<ALTER> [<COLUMN>|<PARAMETER>{param=true;}]
+	objectName = id(null)
+	{
+		record = getChild(objectName, parent, param);
+	}
+	alterOptionsList(record, factory)
 }

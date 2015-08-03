@@ -22,28 +22,14 @@
 
 package org.teiid.dqp.internal.process.multisource;
 
+import org.teiid.metadata.Column;
 
-public class MultiSourceElement {
-    public static final String MULTI_SOURCE_ELEMENT_NAME = "SOURCE_NAME"; //$NON-NLS-1$
-    
-    public Object groupID;
-    public int position;
-    public String fullName;
-    
-    public MultiSourceElement(Object groupID, int position, String fullName) {
-        this.groupID = groupID;
-        this.position = position;
-        this.fullName = fullName;
-    }
-    
-    public boolean equals(Object obj) {
-    	if(obj == this) {
-            return true;
-        }
-        if(!(obj instanceof MultiSourceElement)) {
-            return false;
-        } 
-        return groupID.equals(((MultiSourceElement)obj).groupID);
-    }
+/**
+ * TODO: introduce a real (non group context) pseudo column
+ */
+public class MultiSourceElement extends Column {
+
+	private static final long serialVersionUID = 5275578893617706914L;
+	public static final String DEFAULT_MULTI_SOURCE_ELEMENT_NAME = "SOURCE_NAME"; //$NON-NLS-1$
     
 }

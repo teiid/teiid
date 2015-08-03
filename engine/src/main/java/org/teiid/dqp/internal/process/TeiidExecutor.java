@@ -24,7 +24,6 @@ package org.teiid.dqp.internal.process;
 
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
@@ -39,8 +38,5 @@ public interface TeiidExecutor extends Executor {
 
 	boolean awaitTermination(long timeout, TimeUnit unit)
 			throws InterruptedException;
-
-	ScheduledFuture<?> schedule(final Runnable command, long delay,
-			TimeUnit unit);
 
 }

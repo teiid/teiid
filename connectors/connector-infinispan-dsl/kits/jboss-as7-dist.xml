@@ -1,0 +1,40 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+
+    <id>jboss-as7-dist</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>modules</baseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>kits/jboss-as7/modules</directory>
+            <outputDirectory>${jbossas-module-root}</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+       <fileSet>
+            <directory>${project.build.directory}/rar-unpack</directory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/infinispan/dsl/main</outputDirectory>
+            <filtered>false</filtered>
+            <includes>
+                <include>**/connector-infinispan-dsl-${project.version}.jar</include>
+            </includes>
+        </fileSet>        
+        <fileSet>
+            <directory>${project.build.directory}/rar-unpack</directory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/infinispan/dsl/main</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/META-INF/**</include>
+            </includes>
+        </fileSet>
+
+    </fileSets>
+</assembly>

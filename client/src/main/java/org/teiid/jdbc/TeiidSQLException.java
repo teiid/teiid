@@ -77,10 +77,9 @@ public class TeiidSQLException extends SQLException {
     }
     
     private TeiidSQLException(SQLException ex, String message, boolean addChildren) {
-        super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode());
-        
+        super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode(), ex);
         if (addChildren) {
-        	SQLException childException = ex; // this a child to the SQLException constructed from reason
+        	SQLException childException = ex.getNextException(); // this a child to the SQLException constructed from reason
 
             while (childException != null) {
                 if (childException instanceof TeiidSQLException) {
@@ -92,6 +91,7 @@ public class TeiidSQLException extends SQLException {
             }
         }
     }    
+    
     public static TeiidSQLException create(Throwable exception, String message) {
 		message = getMessage(exception, message);
 		Throwable origException = exception;
@@ -152,6 +152,9 @@ public class TeiidSQLException extends SQLException {
 			sqlState = SQLStates.VIRTUAL_PROCEDURE_ERROR;
 		} else if (exception instanceof TeiidProcessingException) {
 			sqlState = SQLStates.USAGE_ERROR;
+			if (SQLStates.QUERY_CANCELED.equals(((TeiidException) exception).getCode())) {
+				sqlState = SQLStates.QUERY_CANCELED;
+            }
 		} else if (exception instanceof UnknownHostException
 				|| exception instanceof ConnectException
 				|| exception instanceof MalformedURLException
@@ -168,11 +171,6 @@ public class TeiidSQLException extends SQLException {
             Throwable originalException = exception;
             exception = originalException.getCause();
             exception = findRootException(exception);
-            
-            if (exception instanceof CommunicationException) {
-                sqlState = SQLStates.USAGE_ERROR;
-                exception = exception.getCause();
-            }
             
             if (exception != null && exception != originalException) {
                 sqlState = determineSQLState(exception, sqlState);
@@ -225,18 +223,6 @@ public class TeiidSQLException extends SQLException {
         return message;
     }
     
-    
-    /** 
-     * @see java.lang.Throwable#getCause()
-     * @since 4.3.2
-     */
-    public Throwable getCause() {
-        if (this.getNextException() != null) {
-        	return getNextException();
-        }
-        return super.getCause();
-    }
-
     /** 
      * @see org.teiid.jdbc.api.SQLException#isSystemErrorState()
      * @since 4.3

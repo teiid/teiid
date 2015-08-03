@@ -37,7 +37,6 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.net.CommunicationException;
@@ -85,6 +84,7 @@ public class TestFailover {
 			sscf = new SocketServerConnectionFactory();
 			sscf.initialize(socketConfig);
 		}
+		
 		return sscf.getConnection(p);
 	}
 
@@ -95,10 +95,11 @@ public class TestFailover {
 				return getClass().getClassLoader();
 			}
 		};
-		server.registerClientService(ILogon.class, new LogonImpl(mock(SessionService.class), "fakeCluster") { //$NON-NLS-1$
+		SessionService ss = mock(SessionService.class);
+		server.registerClientService(ILogon.class, new LogonImpl(ss, "fakeCluster") { //$NON-NLS-1$
 			@Override
 			public LogonResult logon(Properties connProps)
-					throws LogonException, ComponentNotFoundException {
+					throws LogonException {
 				logonAttempts++;
 				return new LogonResult(new SessionToken("dummy"), "x", 1, "z");
 			}
@@ -125,11 +126,13 @@ public class TestFailover {
 		Properties p = new Properties();
 		SocketServerConnection conn = helpEstablishConnection(false, config, p);
 		assertTrue(conn.isOpen(1000));
+		assertEquals(1, logonAttempts);
 		//restart the second instance now that we know the connection was made to the first
 		listener1 = createListener(new InetSocketAddress(addr.getAddress(), listener1.getPort()), config);
 		listener.stop();
 		conn.isOpen(1000); //there is a chance this call can fail
 		assertTrue(conn.isOpen(1000));
+		assertEquals(2, logonAttempts);
 		listener1.stop();
 		//both instances are down
 		assertFalse(conn.isOpen(1000));

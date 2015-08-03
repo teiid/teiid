@@ -226,8 +226,7 @@ public class XMLProcessorEnvironment {
         return result;
     }
 
-    public PlanExecutor createResultExecutor(ResultSetInfo info) 
-        throws TeiidComponentException{
+    public PlanExecutor createResultExecutor(ResultSetInfo info) {
     
         // cloning the plan inside the resultset is not possible
         // because of the dependencies.

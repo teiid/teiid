@@ -22,21 +22,23 @@
 
 package org.teiid.translator.jdbc.derby;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.Version;
 
-
-/**
- */
+@SuppressWarnings("nls")
 public class TestDerbySQLTranslator {
 
     private static DerbyExecutionFactory TRANSLATOR; 
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
-        TRANSLATOR = new DerbyExecutionFactory();        
+        TRANSLATOR = new DerbyExecutionFactory();
+        TRANSLATOR.setDatabaseVersion(Version.DEFAULT_VERSION);
         TRANSLATOR.start();
     }
     
@@ -70,6 +72,34 @@ public class TestDerbySQLTranslator {
         String output = "SELECT CASE WHEN SmallA.StringNum IS NULL AND SmallA.StringNum IS NULL THEN NULL ELSE {fn concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, ''))} END FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSelectWithNoFrom() throws Exception {
+        String input = "select 1, 2"; //$NON-NLS-1$       
+        String output = "VALUES(1, 2)";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    
+    
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    }
+    
+    @Test public void testXmlSelect() throws Exception {
+        String input = "SELECT col as x, col1 as y from test"; //$NON-NLS-1$
+        String output = "SELECT XMLSERIALIZE(test.col AS CLOB) AS x, test.col1 AS y FROM test";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor("create foreign table test (col xml, col1 integer);",
+                input, output, 
+                TRANSLATOR);
+        
+        input = "SELECT * from test"; //$NON-NLS-1$
+        output = "SELECT XMLSERIALIZE(test.col AS CLOB), test.col1 FROM test";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor("create foreign table test (col xml, col1 integer);",
+                input, output, 
+                TRANSLATOR);
+    }
     
 }

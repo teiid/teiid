@@ -31,8 +31,8 @@ public interface SearchableTable {
 	Map<Expression, Integer> getColumnMap();
 
 	int getPkLength();
-
-	boolean matchesPkColumn(int pkIndex, Expression ex);
+	
+	Object matchesPkColumn(int pkIndex, Expression ex);
 	
 	boolean supportsOrdering(int pkIndex, Expression ex);
 

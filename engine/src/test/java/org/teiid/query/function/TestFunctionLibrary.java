@@ -32,7 +32,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -43,20 +42,24 @@ import javax.sql.rowset.serial.SerialClob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.InvalidFunctionException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.query.function.FunctionLibrary.ConversionResult;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
@@ -103,20 +106,25 @@ public class TestFunctionLibrary {
         final String fname = name;
         final Class<?>[] ftypes = types;
         return new FunctionDescriptor() {
-            public String getName() {
+            @Override
+			public String getName() {
                 return fname;
             }
-            public PushDown getPushdown() {
+            @Override
+			public PushDown getPushdown() {
                 return PushDown.CAN_PUSHDOWN;
             }
-            public Class<?>[] getTypes() { 
+            @Override
+			public Class<?>[] getTypes() { 
                 return ftypes;
             }
-            public Class<?> getReturnType() { 
+            @Override
+			public Class<?> getReturnType() { 
                 return null;
             }
             
-            public String toString() {
+            @Override
+			public String toString() {
                 StringBuffer str = new StringBuffer(fname);
                 str.append("("); //$NON-NLS-1$
                 for(int i=0; i<ftypes.length; i++) {
@@ -131,10 +139,12 @@ public class TestFunctionLibrary {
                 }
                 return str.toString();
             }
-            public boolean requiresContext() {
+            @Override
+			public boolean requiresContext() {
                 return false;
             }
-            public boolean isNullDependent() {
+            @Override
+			public boolean isNullDependent() {
                 return true;
             }
             
@@ -157,9 +167,13 @@ public class TestFunctionLibrary {
 
 		FunctionDescriptor[] actual;
 		try {
-			actual = library.determineNecessaryConversions(fname, null, new Expression[types.length], types, false);
-			if (actual == null) {
+			ConversionResult result = library.determineNecessaryConversions(fname, null, new Expression[types.length], types, false);
+			if (result.needsConverion) {
+				actual = library.getConverts(result.method, types);
+			} else if (result.method != null) {
 				actual = new FunctionDescriptor[types.length];
+			} else {
+				actual = null;
 			}
 		} catch (InvalidFunctionException e) {
 			actual = null;
@@ -193,10 +207,7 @@ public class TestFunctionLibrary {
 	}	
 	
 	private void helpFindForm(String fname, int numArgs) {
-		FunctionForm form = library.findFunctionForm(fname, numArgs);
-        assertNotNull("Failed to find function '" + fname + "' with " + numArgs + " args", form); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        assertEquals("Function names do not match: ", fname.toUpperCase(), form.getName().toUpperCase());             //$NON-NLS-1$
-        assertEquals("Arg lengths do not match: ", numArgs, form.getArgNames().size()); //$NON-NLS-1$
+		assertTrue(library.hasFunctionMethod(fname, numArgs));
 	}
 
 	private void helpInvokeMethod(String fname, Object[] inputs, Object expectedOutput) {
@@ -207,14 +218,14 @@ public class TestFunctionLibrary {
         } 
 	}
     
-    private void helpInvokeMethod(String fname, Class<?>[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws FunctionExecutionException {
+    private void helpInvokeMethod(String fname, Class<?>[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws FunctionExecutionException, BlockedException {
     	Object actualOutput = helpInvokeMethod(fname, types, inputs, context);
         assertEquals("Actual function output not equal to expected: ", expectedOutput, actualOutput); //$NON-NLS-1$
     }
 
 	private Object helpInvokeMethod(String fname, Class<?>[] types,
 			Object[] inputs, CommandContext context)
-			throws FunctionExecutionException {
+			throws FunctionExecutionException, BlockedException {
 		if (types == null) {
             // Build type signature
             types = new Class<?>[inputs.length];
@@ -253,7 +264,8 @@ public class TestFunctionLibrary {
             helpInvokeMethod(fname, types, inputs, null);
             fail("expected exception"); //$NON-NLS-1$
         } catch (FunctionExecutionException err) {
-        }    
+        } catch (BlockedException e) {
+        }
     }    
 	// ################################## ACTUAL TESTS ################################
 	
@@ -489,22 +501,6 @@ public class TestFunctionLibrary {
 				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }) }
 			);
 	}
-
-    // Walk through all functions by metadata 
-    @Test public void testEnumerateForms() {
-        Collection<String> categories = library.getFunctionCategories();
-        for (String category : categories) {
-            //System.out.println("Category: " + category);
-            
-            Collection<FunctionForm> functions = library.getFunctionForms(category);
-            for (FunctionForm form : functions) {
-                //System.out.println("\tFunction: " + form.getDisplayString());                
-                
-                // Lookup this form
-                helpFindForm(form.getName(), form.getArgNames().size());
-            }            
-        }        
-    }
 
 	@Test public void testFindForm1() { 
 		helpFindForm("convert", 2); //$NON-NLS-1$
@@ -1324,7 +1320,7 @@ public class TestFunctionLibrary {
     
     @Test public void testInvokeWeek() {
         Timestamp time = TimestampUtil.createTimestamp(100, 0, 1, 1, 2, 3, 4);
-        helpInvokeMethod("week", new Object[] { time }, new Integer(1)); //$NON-NLS-1$ 
+        helpInvokeMethod("week", new Object[] { time }, 52); //$NON-NLS-1$ 
     }
     
     @Test public void testInvokeYear() {
@@ -1390,6 +1386,10 @@ public class TestFunctionLibrary {
 		assertEquals(44, result.length()); //4 bytes / char
 	}
 	
+	@Test public void testToBytes1() throws Exception {
+		helpInvokeMethodFail("to_bytes", new Object[] { new ClobType(new SerialClob("hello\uffffworld".toCharArray())), "ASCII", Boolean.FALSE }); //$NON-NLS-1$
+	}
+	
 	@Test public void testToChars1() throws Exception {
 		Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "BASE64" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
@@ -1433,6 +1433,28 @@ public class TestFunctionLibrary {
 
 	@Test() public void testTrim2() throws Exception {
 		helpInvokeMethod("trim", new Object[] {"trailing", "x", "xaxx"}, "xa"); //$NON-NLS-1$
+	}
+	
+	@Test public void testCastWithNonRuntimeTypes() throws Exception {
+		helpInvokeMethod("cast", new Object[] {new java.util.Date(0), "time"}, new Time(24*60*60*1000)); //$NON-NLS-1$
+		helpInvokeMethod("cast", new Object[] {new byte[0], "blob"}, new BlobType(BlobType.createBlob(new byte[0]))); //$NON-NLS-1$
+	}
+	
+	@Test public void testSessionVariables() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setSession(new SessionMetadata());
+        Object result = helpInvokeMethod("teiid_session_set", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT}, new Object[] {"key", "value"}, c);
+        assertNull(result);
+        result = helpInvokeMethod("teiid_session_get", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] {"key"}, c);
+        assertEquals("value", result);
+        result = helpInvokeMethod("teiid_session_set", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT}, new Object[] {"key", "value1"}, c);
+        assertEquals("value", result);
+        result = helpInvokeMethod("teiid_session_get", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] {"key"}, c);
+        assertEquals("value1", result);
+    }
+	
+	@Test() public void testTokenize() throws Exception {
+		helpInvokeMethod("tokenize", new Object[] {"bxaxxc", 'x'}, new ArrayImpl("b", "axc")); //$NON-NLS-1$
 	}
 
 }

@@ -27,12 +27,16 @@ package org.teiid.core.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.Writer;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 
-import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.CorePlugin;
 
 /**
  * Implements a buffered {@link InputStream} for a given {@link Reader} and {@link Charset}
@@ -40,43 +44,108 @@ import org.teiid.core.types.DataTypeManager;
 public class ReaderInputStream extends InputStream {
 	
 	//even though we're dealing with chars, we'll use the same default
-	private static final int DEFAULT_BUFFER_SIZE = DataTypeManager.MAX_LOB_MEMORY_BYTES;
+	static final int DEFAULT_BUFFER_SIZE = 1<<13;
 	
 	private final Reader reader;
-	private Writer writer;
-	private char[] charBuffer;
-	private AccessibleByteArrayOutputStream out = new AccessibleByteArrayOutputStream();
-	private boolean hasMore = true;
-	private int pos;
+	private CharBuffer cb;
+	private ByteBuffer bb;
+	private boolean done;
+	private boolean wasOverflow;
+	private CharsetEncoder encoder;
+	private byte[] singleByte = new byte[1];
 	
+	/**
+	 * Creates a new inputstream that will replace any malformed/unmappable input
+	 * @param reader
+	 * @param charset
+	 */
 	public ReaderInputStream(Reader reader, Charset charset) {
-		this(reader, charset, DEFAULT_BUFFER_SIZE);
+		this(reader, charset.newEncoder()
+				.onMalformedInput(CodingErrorAction.REPLACE)
+				.onUnmappableCharacter(CodingErrorAction.REPLACE), 
+				DEFAULT_BUFFER_SIZE);
+	}
+	
+	public ReaderInputStream(Reader reader, CharsetEncoder encoder) {
+		this(reader, encoder, DEFAULT_BUFFER_SIZE);
 	}
 
-	public ReaderInputStream(Reader reader, Charset charset, int bufferSize) {
+	public ReaderInputStream(Reader reader, CharsetEncoder encoder, int bufferSize) {
 		this.reader = reader;
-		this.writer = new OutputStreamWriter(out, charset);
-		this.charBuffer = new char[bufferSize];
+		this.encoder = encoder;
+		this.encoder.reset();
+		this.cb = CharBuffer.allocate(bufferSize);
+		this.bb = ByteBuffer.allocate(bufferSize);
+		this.bb.limit(0);
+	}
+	
+	@Override
+	public int read(byte[] bbuf, int off, int len) throws IOException {
+		if ((off < 0) || (off > bbuf.length) || (len < 0) ||
+            ((off + len) > bbuf.length) || ((off + len) < 0)) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        }
+		while (!done && !bb.hasRemaining()) {
+			int read = 0;
+			int pos = cb.position();
+			if (!wasOverflow) {
+		    	while ((read = reader.read(cb)) == 0) {
+		    		//blocking read
+		    	}
+				cb.flip();
+			}
+			bb.clear();
+			CoderResult cr = encoder.encode(cb, bb, read == -1);
+			checkResult(cr);
+			if (read == -1 && !wasOverflow) {
+	    		cr = encoder.flush(bb);
+				checkResult(cr);
+				if (!wasOverflow) {
+		    		done = true;
+				}
+	    	}
+			if (!wasOverflow) {
+				if (read != 0 && cb.position() != read + pos) {
+					cb.compact();
+		    	} else {
+		    		cb.clear();
+		    	}
+			}
+			bb.flip();
+		}
+		len = Math.min(len, bb.remaining());
+		if (len == 0 && done) {
+			return -1;
+		}
+		bb.get(bbuf, off, len);
+		return len;
 	}
 
+	private void checkResult(CoderResult cr) throws IOException {
+		if (cr.isOverflow()) {
+			wasOverflow = true;
+			assert bb.position() > 0;
+		} else if (!cr.isUnderflow()) {
+			try {
+				cr.throwException();
+			} catch (CharacterCodingException e) {
+				throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10083, encoder.charset().displayName()), e);
+			}
+		} else {
+			wasOverflow = false;
+		}
+	}
+	
 	@Override
 	public int read() throws IOException {
-		while (pos >= out.getCount()) {
-			if (!hasMore) {
-				return -1;
-			}
-			out.reset();
-			pos = 0;
-			int charsRead = reader.read(charBuffer);
-			if (charsRead == -1) {
-				writer.close();
-	            hasMore = false;
-				continue;
-			}
-			writer.write(charBuffer, 0, charsRead);
-			writer.flush();
+		int read = read(singleByte, 0, 1);
+		if (read == 1) {
+			return singleByte[0] & 0xff;
 		}
-		return out.getBuffer()[pos++] & 0xff;
+		assert read != 0;
+		return -1;
 	}
 	
 	@Override

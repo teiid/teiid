@@ -499,6 +499,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		ReplicatedInvocationHandler<?> handler = (ReplicatedInvocationHandler<?>) Proxy.getInvocationHandler(object);
 		Channel c = handler.disp.getChannel();
 		handler.disp.stop();
+		c.disconnect();
 		c.close();
 	}
 	

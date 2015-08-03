@@ -59,12 +59,13 @@ import org.teiid.core.util.PropertiesUtils;
 public class DataTypeManager {
 	
 	static final String ARRAY_SUFFIX = "[]"; //$NON-NLS-1$
-	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", false); //$NON-NLS-1$
+	public static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableLobs", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_OBJECT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableObject", false); //$NON-NLS-1$
 	public static final boolean PAD_SPACE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.padSpace", false); //$NON-NLS-1$
+	public static final String COLLATION_LOCALE = System.getProperties().getProperty("org.teiid.collationLocale"); //$NON-NLS-1$
 	
-	private static boolean valueCacheEnabled;
+	private static boolean valueCacheEnabled = USE_VALUE_CACHE;
 	
 	private interface ValueCache<T> {
 		T getValue(T value);
@@ -153,8 +154,17 @@ public class DataTypeManager {
 		}
 	};
 
-	public static final int MAX_STRING_LENGTH = 4000;
-	public static final int MAX_LOB_MEMORY_BYTES = 1 << 13;
+	public static final int MAX_STRING_LENGTH = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxStringLength", 4000); //$NON-NLS-1$
+	public static final int MAX_VARBINARY_BYTES = Math.max(nextPowOf2(2*MAX_STRING_LENGTH), 1<<13);
+	public static final int MAX_LOB_MEMORY_BYTES = Math.max(nextPowOf2(8*MAX_STRING_LENGTH), 1<<15);
+	
+	public static int nextPowOf2(int val) {
+		int result = 1;
+        while (result < val) {
+        	result <<= 1;
+        }
+        return result;
+	}
 	
 	public static final class DataTypeAliases {
 		public static final String VARCHAR = "varchar"; //$NON-NLS-1$
@@ -186,6 +196,7 @@ public class DataTypeManager {
 		public static final String CLOB = "clob"; //$NON-NLS-1$
 		public static final String XML = "xml"; //$NON-NLS-1$
 		public static final String VARBINARY = "varbinary"; //$NON-NLS-1$
+		public static final String GEOMETRY = "geometry"; //$NON-NLS-1$
 	}
 
 	public static final class DefaultDataClasses {
@@ -209,6 +220,7 @@ public class DataTypeManager {
 		public static final Class<ClobType> CLOB = ClobType.class;
 		public static final Class<XMLType> XML = XMLType.class;
 		public static final Class<BinaryType> VARBINARY = BinaryType.class;
+		public static final Class<GeometryType> GEOMETRY = GeometryType.class;
 	}
 	
 	public static final class DefaultTypeCodes {
@@ -232,9 +244,10 @@ public class DataTypeManager {
 		public static final int XML = 17;
 		public static final int NULL = 18;
 		public static final int VARBINARY = 19;
+		public static final int GEOMETRY = 20;
 	}
 	
-	public static int MAX_TYPE_CODE = DefaultTypeCodes.VARBINARY;
+	public static int MAX_TYPE_CODE = DefaultTypeCodes.GEOMETRY;
 	
     private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
     private static final List<Class<?>> typeList;
@@ -260,6 +273,7 @@ public class DataTypeManager {
         typeMap.put(DataTypeManager.DefaultDataClasses.XML, DefaultTypeCodes.XML);
         typeMap.put(DataTypeManager.DefaultDataClasses.NULL, DefaultTypeCodes.NULL);
         typeMap.put(DataTypeManager.DefaultDataClasses.VARBINARY, DefaultTypeCodes.VARBINARY);
+        typeMap.put(DataTypeManager.DefaultDataClasses.GEOMETRY, DefaultTypeCodes.GEOMETRY);
         typeList = new ArrayList<Class<?>>(typeMap.keySet());
     }    
     
@@ -289,9 +303,49 @@ public class DataTypeManager {
 	private static Transform getTransformFromMaps(String srcType,
 			String targetType) {
 		Map<String, Transform> innerMap = transforms.get(srcType);
+		boolean found = false;
 		if (innerMap != null) {
-			return innerMap.get(targetType);
+			Transform result = innerMap.get(targetType);
+			if (result != null) {
+				return result;
+			}
+			found = true;
 		}
+		if (srcType.equals(targetType)) {
+			return null;
+		}
+		if (DataTypeManager.DefaultDataTypes.OBJECT.equals(targetType)) {
+			return AnyToObjectTransform.INSTANCE;
+		}
+		if (srcType.equals(DefaultDataTypes.NULL)) {
+			return NullToAnyTransform.INSTANCE;
+		}
+		if (srcType.equals(DefaultDataTypes.OBJECT)) {
+			return ObjectToAnyTransform.INSTANCE;
+		}
+		if (found) {
+			//built-in type
+			return null;
+		}
+		int sourceDims = 0;
+		while (isArrayType(srcType)) {
+			srcType = srcType.substring(0, srcType.length() - 2);
+			sourceDims++;
+		}
+		int targetDims = 0;
+		while(isArrayType(targetType)) {
+			targetType = targetType.substring(0, targetType.length() - 2);
+			targetDims++;
+		}
+		//go from typed[] to object[]
+		if (DataTypeManager.DefaultDataTypes.OBJECT.equals(targetType) && targetDims <= sourceDims) {
+			return AnyToObjectTransform.INSTANCE;
+		}
+		//go from object[] to typed[]
+		if (DataTypeManager.DefaultDataTypes.OBJECT.equals(srcType) && targetDims >= sourceDims) {
+			return ObjectToAnyTransform.INSTANCE;
+		}
+		//TODO: will eventually allow integer[] to long[], etc.
 		return null;
 	}
 
@@ -304,11 +358,10 @@ public class DataTypeManager {
 	private static Map<Class<?>, Class<?>> arrayTypes = new HashMap<Class<?>, Class<?>>(128); 
 	private static Map<Class<?>, String> arrayTypeNames = new HashMap<Class<?>, String>(128); 
 
+	/** a set of all type names roughly ordered based upon data width */
 	private static Set<String> DATA_TYPE_NAMES;
 
 	private static Set<Class<?>> DATA_TYPE_CLASSES = Collections.unmodifiableSet(dataTypeClasses.keySet());
-
-	private static Map<Class<?>, SourceTransform> sourceConverters = new HashMap<Class<?>, SourceTransform>();
 
 	// Static initializer - loads basic transforms types
 	static {
@@ -317,8 +370,6 @@ public class DataTypeManager {
 
 		// Load default transforms
 		loadBasicTransforms();
-		
-		loadSourceConversions();
 		
 		for (Map.Entry<String, Class<?>> entry : dataTypeNames.entrySet()) {
 			Class<?> arrayType = getArrayType(entry.getValue());
@@ -398,7 +449,7 @@ public class DataTypeManager {
 		}
 		String result = dataTypeClasses.get(typeClass);
 		if (result == null) {
-			if (typeClass.isArray()) {
+			if (typeClass.isArray() && !typeClass.getComponentType().isPrimitive()) {
 				result = arrayTypeNames.get(typeClass);
 				if (result == null) {
 					return getDataTypeName(typeClass.getComponentType()) + ARRAY_SUFFIX;
@@ -424,7 +475,7 @@ public class DataTypeManager {
 		if (DATA_TYPE_CLASSES.contains(clazz)) {
 			return clazz;
 		}
-		clazz = convertToRuntimeType(value).getClass();
+		clazz = convertToRuntimeType(value, true).getClass();
 		if (DATA_TYPE_CLASSES.contains(clazz)) {
 			return clazz;
 		}
@@ -533,9 +584,11 @@ public class DataTypeManager {
 					result.add(entry.getKey());
 				}
 			}
+			result.add(DefaultDataTypes.OBJECT);
 			return;
 		}
 		String previous = DataTypeManager.DefaultDataTypes.OBJECT;
+		result.add(previous);
 		while (isArrayType(type)) {
 			previous += ARRAY_SUFFIX;
 			result.add(previous);
@@ -551,13 +604,16 @@ public class DataTypeManager {
 		if (DefaultDataTypes.NULL.equals(srcType) && !DefaultDataTypes.NULL.equals(tgtType)) {
 			return true;
 		}
+		if (DefaultDataTypes.OBJECT.equals(tgtType) && !DefaultDataTypes.OBJECT.equals(srcType)) {
+			return true;
+		}
 		if (isArrayType(srcType) && isArrayType(tgtType)) {
 			return isImplicitConversion(getComponentType(srcType), getComponentType(tgtType));
 		}
 		return false;
 	}
 
-	private static String getComponentType(String srcType) {
+	public static String getComponentType(String srcType) {
 		return srcType.substring(0, srcType.length() - ARRAY_SUFFIX.length());
 	}
 
@@ -578,13 +634,15 @@ public class DataTypeManager {
 	public static boolean isLOB(Class<?> type) {
 		return DataTypeManager.DefaultDataClasses.BLOB.equals(type)
 				|| DataTypeManager.DefaultDataClasses.CLOB.equals(type)
-				|| DataTypeManager.DefaultDataClasses.XML.equals(type);
+				|| DataTypeManager.DefaultDataClasses.XML.equals(type)
+                || DataTypeManager.DefaultDataClasses.GEOMETRY.equals(type);
 	}
 
 	public static boolean isLOB(String type) {
 		return DataTypeManager.DefaultDataTypes.BLOB.equals(type)
 				|| DataTypeManager.DefaultDataTypes.CLOB.equals(type)
-				|| DataTypeManager.DefaultDataTypes.XML.equals(type);
+				|| DataTypeManager.DefaultDataTypes.XML.equals(type)
+                || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type);
 	}
 
 	/**
@@ -611,6 +669,7 @@ public class DataTypeManager {
 		DataTypeManager.addDataType(DefaultDataTypes.NULL, DefaultDataClasses.NULL);
 		DataTypeManager.addDataType(DefaultDataTypes.BLOB, DefaultDataClasses.BLOB);
 		DataTypeManager.addDataType(DefaultDataTypes.VARBINARY, DefaultDataClasses.VARBINARY);
+		DataTypeManager.addDataType(DefaultDataTypes.GEOMETRY, DefaultDataClasses.GEOMETRY);
 		DATA_TYPE_NAMES = Collections.unmodifiableSet(new LinkedHashSet<String>(dataTypeNames.keySet()));
 		dataTypeNames.put(DataTypeAliases.BIGINT, DefaultDataClasses.LONG);
 		dataTypeNames.put(DataTypeAliases.DECIMAL, DefaultDataClasses.BIG_DECIMAL);
@@ -780,16 +839,6 @@ public class DataTypeManager {
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
 		
-		for (Class<?> type : getAllDataTypeClasses()) {
-			if (type != DefaultDataClasses.OBJECT) {
-				DataTypeManager.addTransform(new AnyToObjectTransform(type));
-				DataTypeManager.addTransform(new ObjectToAnyTransform(type));
-			} 
-			if (type != DefaultDataClasses.NULL) {
-				DataTypeManager.addTransform(new NullToAnyTransform(type));
-			}
-		}
-		
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.OBJECT) {
 			@Override
 			public boolean isExplicit() {
@@ -799,46 +848,11 @@ public class DataTypeManager {
 
 	}
 
-	static void loadSourceConversions() {
-		addSourceTransform(Clob.class, new SourceTransform<Clob, ClobType>() {
-			@Override
-			public ClobType transform(Clob value) {
-				return new ClobType(value);
-			}
-		});
-		addSourceTransform(char[].class, new SourceTransform<char[], ClobType>() {
-			@Override
-			public ClobType transform(char[] value) {
-				return new ClobType(ClobImpl.createClob(value));
-			}
-		});
-		addSourceTransform(Blob.class, new SourceTransform<Blob, BlobType>() {
-			@Override
-			public BlobType transform(Blob value) {
-				return new BlobType(value);
-			}
-		});
-		addSourceTransform(byte[].class, new SourceTransform<byte[], BinaryType>() {
-			@Override
-			public BinaryType transform(byte[] value) {
-				return new BinaryType(value);
-			}
-		});
-		addSourceTransform(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {
-			@Override
-			public XMLType transform(SQLXML value) {
-				return new XMLType(value);
-			}
-		});
-		addSourceTransform(Date.class, new SourceTransform<Date, Timestamp>() {
-			@Override
-			public Timestamp transform(Date value) {
-				return new Timestamp(value.getTime());
-			}
-		});
-	}
-	
-	public static Object convertToRuntimeType(Object value) {
+	/**
+	 * Convert the value to the probable runtime type.
+	 * @param allConversions if false only lob conversions will be used
+	 */
+	public static Object convertToRuntimeType(Object value, boolean allConversions) {
 		if (value == null) {
 			return null;
 		}
@@ -846,32 +860,78 @@ public class DataTypeManager {
 		if (DATA_TYPE_CLASSES.contains(c)) {
 			return value;
 		}
-		SourceTransform t = sourceConverters.get(c);
-		if (t != null) {
-			return t.transform(value);
-		}
-		for (Map.Entry<Class<?>, SourceTransform> entry : sourceConverters.entrySet()) {
-			if (entry.getKey().isAssignableFrom(c)) {
-				return entry.getValue().transform(value);
+		if (allConversions) {
+			if (c == char[].class) {
+				return new ClobType(ClobImpl.createClob((char[])value));
+			}
+			if (c == byte[].class) {
+				return new BinaryType((byte[])value);
+			}
+			if (java.util.Date.class.isAssignableFrom(c)) {
+				return new Timestamp(((java.util.Date)value).getTime());				
+			}
+			if (Object[].class.isAssignableFrom(c)) {
+				return new ArrayImpl((Object[])value);
 			}
 		}
+		if (Clob.class.isAssignableFrom(c)) {
+			return new ClobType((Clob)value);
+		} 
+		if (Blob.class.isAssignableFrom(c)) {
+			return new BlobType((Blob)value);
+		} 
+		if (SQLXML.class.isAssignableFrom(c)) {
+			return new XMLType((SQLXML)value);
+		} 
 		return value; // "object type"
 	}
+	
+	public static Class<?> getRuntimeType(Class<?> c) {
+		if (c == null) {
+			return DefaultDataClasses.NULL;
+		}
+		if (DATA_TYPE_CLASSES.contains(c)) {
+			return c;
+		}
+		if (c == char[].class) {
+			return DefaultDataClasses.CLOB;
+		}
+		if (c == byte[].class) {
+			return DefaultDataClasses.VARBINARY;
+		}
+		if (java.util.Date.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.DATE;				
+		}
+		if (Clob.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.CLOB;
+		} 
+		if (Blob.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.BLOB;
+		} 
+		if (SQLXML.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.XML;
+		} 
+		if (c == ArrayImpl.class) {
+			return getArrayType(DefaultDataClasses.OBJECT); 
+		}
+		if (c.isArray()) {
+			return getDataTypeClass(getDataTypeName(c));
+		}
+		return DefaultDataClasses.OBJECT; // "object type"
+	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> T transformValue(Object value, Class<T> targetClass)
+	public static Object transformValue(Object value, Class<?> targetClass)
 			throws TransformationException {
 		if (value == null) {
-			return (T)value;
+			return value;
 		}
 		return transformValue(value, value.getClass(), targetClass);
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> T transformValue(Object value, Class sourceType,
-			Class<T> targetClass) throws TransformationException {
+	public static Object transformValue(Object value, Class<?> sourceType,
+			Class<?> targetClass) throws TransformationException {
 		if (value == null || sourceType == targetClass || DefaultDataClasses.OBJECT == targetClass) {
-			return (T) value;
+			return value;
 		}
 		Transform transform = DataTypeManager.getTransform(sourceType,
 				targetClass);
@@ -879,7 +939,7 @@ public class DataTypeManager {
             Object[] params = new Object[] { sourceType, targetClass, value};
               throw new TransformationException(CorePlugin.Event.TEIID10076, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, params));
 		}
-		T result = (T) transform.transform(value);
+		Object result = transform.transform(value, targetClass);
 		return getCanonicalValue(result);
 	}
 	
@@ -887,11 +947,8 @@ public class DataTypeManager {
         return (!COMPARABLE_OBJECT && DataTypeManager.DefaultDataTypes.OBJECT.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.CLOB.equals(type))
+            || DataTypeManager.DefaultDataTypes.GEOMETRY.equals(type)
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
-    }
-    
-    public static <S> void addSourceTransform(Class<S> sourceClass, SourceTransform<S, ?> transform) {
-    	sourceConverters.put(sourceClass, transform);
     }
     
     public static void setValueCacheEnabled(boolean enabled) {
@@ -926,7 +983,7 @@ public class DataTypeManager {
     
 	public static boolean isHashable(Class<?> type) {
 		if (type == DataTypeManager.DefaultDataClasses.STRING) {
-			return !PAD_SPACE;
+			return !PAD_SPACE && COLLATION_LOCALE == null;
 		}
 		return !(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
 				|| type == DataTypeManager.DefaultDataClasses.BLOB

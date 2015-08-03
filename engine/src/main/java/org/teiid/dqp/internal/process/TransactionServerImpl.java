@@ -40,6 +40,7 @@ import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.RollbackException;
+import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -53,10 +54,9 @@ import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.query.QueryPlugin;
 
 /**
@@ -120,6 +120,15 @@ public class TransactionServerImpl implements TransactionService {
     private XATerminator xaTerminator;
     protected TransactionManager transactionManager;
     private WorkManager workManager;
+    private boolean detectTransactions;
+    
+    public void setDetectTransactions(boolean detectTransactions) {
+		this.detectTransactions = detectTransactions;
+	}
+    
+    public boolean isDetectTransactions() {
+		return detectTransactions;
+	}
 
     public void setXaTerminator(XATerminator xaTerminator) {
 		this.xaTerminator = xaTerminator;
@@ -353,6 +362,18 @@ public class TransactionServerImpl implements TransactionService {
     	throws XATransactionException {
 
         final TransactionContext tc = transactions.getOrCreateTransactionContext(threadId);
+        
+        //TODO: this check is only really needed in local mode
+        if (!transactionExpected && detectTransactions) {
+        	try {
+				Transaction tx = transactionManager.getTransaction();
+				if (tx != null && tx != tc.getTransaction()) {
+					throw new XATransactionException(QueryPlugin.Event.TEIID30517, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
+				}
+			} catch (SystemException e) {
+			} catch (IllegalStateException e) {
+			}
+        }
 
         try {
 	        if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
@@ -411,6 +432,8 @@ public class TransactionServerImpl implements TransactionService {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
 		} catch (SystemException e) {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
+		} catch (IllegalStateException e) {
+			throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
 		} finally {
             transactions.removeTransactionContext(tc);
         }
@@ -469,8 +492,33 @@ public class TransactionServerImpl implements TransactionService {
         rollbackDirect(tc);
     }
 
-    public TransactionContext getOrCreateTransactionContext(String threadId) {
-        return transactions.getOrCreateTransactionContext(threadId);
+    public TransactionContext getOrCreateTransactionContext(final String threadId) {
+        TransactionContext tc = transactions.getOrCreateTransactionContext(threadId);
+        if (detectTransactions) {
+			try {
+				Transaction tx = transactionManager.getTransaction();
+				if (tx != null && tx != tc.getTransaction()) {
+					tx.registerSynchronization(new Synchronization() {
+						
+						@Override
+						public void beforeCompletion() {
+						}
+						
+						@Override
+						public void afterCompletion(int status) {
+							transactions.removeTransactionContext(threadId);
+						}
+					});
+					tc.setTransaction(tx);
+					tc.setTransactionType(Scope.GLOBAL);
+				}
+				//TODO: it may be appropriate to throw an up-front exception
+			} catch (SystemException e) {
+			} catch (IllegalStateException e) {
+			} catch (RollbackException e) {
+			}
+		}
+        return tc;
     }
 
     /**
@@ -482,6 +530,7 @@ public class TransactionServerImpl implements TransactionService {
         }
         beginDirect(context);
         context.setTransactionType(TransactionContext.Scope.REQUEST);
+        this.transactions.addTransactionContext(context); //it may have been removed if this is a block level operation
     }
 
     /**
@@ -489,7 +538,12 @@ public class TransactionServerImpl implements TransactionService {
      */    
     public void commit(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
-        commitDirect(context);
+        try {
+        	commitDirect(context);
+        } finally {
+        	context.setTransaction(null);
+        	context.setTransactionType(Scope.NONE);
+        }
     }
 
     /**
@@ -497,7 +551,12 @@ public class TransactionServerImpl implements TransactionService {
      */    
     public void rollback(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
-        rollbackDirect(context);
+        try {
+            rollbackDirect(context);
+        } finally {
+        	context.setTransaction(null);
+        	context.setTransactionType(Scope.NONE);
+        }
     }
 
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {

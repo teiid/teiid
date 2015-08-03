@@ -21,10 +21,12 @@
  */
 package org.teiid.query.metadata;
 
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -33,14 +35,14 @@ import org.teiid.translator.TypeFacility;
 /**
  * This Metadata repository adds the "native" procedure to all the execution factories that support them. 
  */
-public class DirectQueryMetadataRepository extends BaseMetadataRepository {
+public class DirectQueryMetadataRepository extends MetadataRepository {
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
 
-		if (executionFactory != null && executionFactory.supportsNativeQueries()) {
-			Procedure p = factory.addProcedure(executionFactory.getNativeQueryProcedureName());
-			p.setAnnotation("Invokes translator with a native query that returns results in array of values"); //$NON-NLS-1$
+		if (executionFactory != null && executionFactory.supportsDirectQueryProcedure()) {
+			Procedure p = factory.addProcedure(executionFactory.getDirectQueryProcedureName());
+			p.setAnnotation("Invokes translator with a native query that returns results in an array of values"); //$NON-NLS-1$
 
 			ProcedureParameter param = factory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 			param.setAnnotation("The native query to execute"); //$NON-NLS-1$
@@ -51,8 +53,7 @@ public class DirectQueryMetadataRepository extends BaseMetadataRepository {
 			param.setNullType(NullType.Nullable);
 			param.setVarArg(true);
 			
-			factory.addProcedureResultSetColumn("tuple", TypeFacility.RUNTIME_NAMES.OBJECT, p); //$NON-NLS-1$		
+			factory.addProcedureResultSetColumn("tuple", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(TypeFacility.RUNTIME_TYPES.OBJECT)), p); //$NON-NLS-1$		
 		}
-		super.loadMetadata(factory, executionFactory, connectionFactory);
 	}	
 }

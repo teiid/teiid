@@ -1,4 +1,0 @@
-/subsystem=resource-adapters/resource-adapter=wsDS:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
-/subsystem=resource-adapters/resource-adapter=wsDS/connection-definitions=wsDS:add(jndi-name=java:/wsDS, class-name=org.teiid.resource.adapter.ws.WSManagedConnectionFactory, enabled=true, use-java-context=true)
-/subsystem=resource-adapters/resource-adapter=wsDS/connection-definitions=wsDS/config-properties=EndPoint:add(value={end_point})
-/subsystem=resource-adapters/resource-adapter=wsDS:activate

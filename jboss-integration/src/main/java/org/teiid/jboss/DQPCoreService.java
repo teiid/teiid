@@ -23,10 +23,8 @@ package org.teiid.jboss;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
@@ -38,10 +36,10 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.teiid.PreParser;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
@@ -56,7 +54,6 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.services.InternalEventDistributorFactory;
-import org.teiid.vdb.runtime.VDBKey;
 
 
 public class DQPCoreService extends DQPConfiguration implements Serializable, Service<DQPCore>  {
@@ -72,6 +69,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
+	private final InjectedValue<PreParser> preParserInjector = new InjectedValue<PreParser>();
 	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
@@ -81,7 +79,8 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.transactionServerImpl.setWorkManager(getWorkManagerInjector().getValue());
 		this.transactionServerImpl.setXaTerminator(getXaTerminatorInjector().getValue());
 		this.transactionServerImpl.setTransactionManager(getTxnManagerInjector().getValue());
-		
+		this.transactionServerImpl.setDetectTransactions(true);
+		setPreParser(preParserInjector.getValue());
 		setAuthorizationValidator(authorizationValidatorInjector.getValue());
 		this.dqpCore.setBufferManager(bufferManagerInjector.getValue());
 		
@@ -95,18 +94,8 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     	// add vdb life cycle listeners
     	getVdbRepository().addListener(new VDBLifeCycleListener() {
 			
-			private Set<VDBKey> recentlyRemoved = Collections.synchronizedSet(Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000)));
-			
 			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {
-				recentlyRemoved.add(new VDBKey(name, version));
-			}
-			
-			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
-				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
-					return;
-				}
 				// terminate all the previous sessions
 		        List<ServiceName> services = context.getController().getServiceContainer().getServiceNames();
 		        for (ServiceName service:services) {
@@ -132,10 +121,18 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		        	getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
 		        }
 			}
+			
+			@Override
+			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
+			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB cvdb, boolean reloading) {
 			}			
+			
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+			}
 		}); 		
 
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50001, this.dqpCore.getRuntimeVersion(), new Date(System.currentTimeMillis()).toString()));
@@ -179,6 +176,10 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 
 	public InjectedValue<AuthorizationValidator> getAuthorizationValidatorInjector() {
 		return authorizationValidatorInjector;
+	}
+	
+	public InjectedValue<PreParser> getPreParserInjector() {
+		return preParserInjector;
 	}
 
 	public InjectedValue<BufferManager> getBufferManagerInjector() {

@@ -799,6 +799,16 @@ public class TestResolver {
             new String[] { "pm1.g1.e1", "pm1.g2.e2" } ); //$NON-NLS-1$
             
     }
+    
+    @Test public void testResolveInputParameters() throws Exception {
+        List bindings = new ArrayList();
+        bindings.add("pm1.g2.e1 as x"); //$NON-NLS-1$
+        
+        Query resolvedQuery = (Query) helpResolveWithBindings("SELECT pm1.g1.e1, input.x FROM pm1.g1", metadata, bindings); //$NON-NLS-1$
+
+        helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
+        assertEquals("SELECT pm1.g1.e1, pm1.g2.e1 AS x FROM pm1.g1", resolvedQuery.toString());
+    }
 
     @Test public void testResolveParametersInsert() throws Exception {
     	List<String> bindings = Arrays.asList("pm1.g2.e1"); //$NON-NLS-1$
@@ -1871,14 +1881,6 @@ public class TestResolver {
         helpResolve("SELECT pm1.g1.e1 a FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$
     }
     
-    @Test public void testUnaliasedOrderByFails() {
-        helpResolveException("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2"); //$NON-NLS-1$
-    }
-    
-    @Test public void testUnaliasedOrderByFails1() {
-        helpResolveException("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2 + 1"); //$NON-NLS-1$
-    }
-
     /** 
      * the group g1 is not known to the order by clause of a union
      */
@@ -2559,7 +2561,7 @@ public class TestResolver {
         
         Command cmd = helpResolve(proc.toString()); 
 
-        String sExpected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE #matt (x integer);\nINSERT INTO #matt (#matt.x) VALUES (1);\nEND\n\tCREATE LOCAL TEMPORARY TABLE #matt (x integer)\n\tINSERT INTO #matt (#matt.x) VALUES (1)\n";   //$NON-NLS-1$
+        String sExpected = "BEGIN\nCREATE LOCAL TEMPORARY TABLE #matt (x integer);\nINSERT INTO #matt (x) VALUES (1);\nEND\n\tCREATE LOCAL TEMPORARY TABLE #matt (x integer)\n\tINSERT INTO #matt (x) VALUES (1)\n";   //$NON-NLS-1$
         String sActual = cmd.printCommandTree(); 
         assertEquals( sExpected, sActual );
     }
@@ -2773,10 +2775,6 @@ public class TestResolver {
         helpResolveException("SELECT distinct pm1.g1.e1, e2 as x, e3 as y FROM pm1.g1 ORDER BY e4"); //$NON-NLS-1$
     }
 
-    @Test public void testOrderByUnrelated2() {
-        helpResolveException("SELECT max(e2) FROM pm1.g1 group by e1 ORDER BY e4"); //$NON-NLS-1$
-    }
-    
     @Test public void testOrderByExpression() {
     	Query query = (Query)helpResolve("select pm1.g1.e1 from pm1.g1 order by e2 || e3 "); //$NON-NLS-1$
     	assertEquals(-1, query.getOrderBy().getExpressionPosition(0));
@@ -2922,6 +2920,16 @@ public class TestResolver {
     @Test public void testArrayCase1() {
     	Command c = helpResolve("select case when e1 is null then array_agg(e1) when e2 is null then array_agg(e4+1) end from pm1.g1 group by e1, e2");
     	assertTrue(c.getProjectedSymbols().get(0).getType().isArray());
+    }
+    
+    @Test public void testForeignTempInvalidModel() {
+        String sql = "create foreign temporary table x (y string) on x"; //$NON-NLS-1$
+        helpResolveException(sql, "TEIID31134 Could not create foreign temporary table, since schema x does not exist."); //$NON-NLS-1$ 
+    }
+
+    @Test public void testForeignTempInvalidModel1() {
+        String sql = "create foreign temporary table x (y string) on vm1"; //$NON-NLS-1$
+        helpResolveException(sql, "TEIID31135 Could not create foreign temporary table, since schema vm1 is not physical."); //$NON-NLS-1$ 
     }
 
 }

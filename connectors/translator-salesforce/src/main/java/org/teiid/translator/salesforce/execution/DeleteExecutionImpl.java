@@ -28,6 +28,7 @@ import org.teiid.language.Delete;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.visitors.DeleteVisitor;
 
@@ -35,10 +36,10 @@ import org.teiid.translator.salesforce.execution.visitors.DeleteVisitor;
 public class DeleteExecutionImpl extends AbstractUpdateExecution {
 
 
-	public DeleteExecutionImpl(Command command,
+	public DeleteExecutionImpl(SalesForceExecutionFactory ef, Command command,
 			SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context) {
-		super(command, salesforceConnection, metadata, context);
+		super(ef, command, salesforceConnection, metadata, context);
 	}
 
 	@Override
