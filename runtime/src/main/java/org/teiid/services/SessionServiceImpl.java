@@ -130,8 +130,8 @@ public class SessionServiceImpl implements SessionService {
 			LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		}
 		SessionMetadata info = getSessionInfo(sessionID, true);
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
-			LogManager.logDetail(LogConstants.CTX_COMMANDLOGGING, new AuditMessage("session", "logoff", info)); //$NON-NLS-1$ //$NON-NLS-2$
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+			LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logoff", info)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		if (info.getVDBName() != null) {
             try {
@@ -155,8 +155,8 @@ public class SessionServiceImpl implements SessionService {
         
         AuditMessage.LogonInfo info = new AuditMessage.LogonInfo(vdbName, vdbVersion, authType.toString(), userName, applicationName);
         
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
-        	LogManager.logDetail(LogConstants.CTX_COMMANDLOGGING, new AuditMessage("session", "logon-request", info, null)); //$NON-NLS-1$ //$NON-NLS-2$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-request", info, null)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         try {
         
@@ -223,18 +223,18 @@ public class SessionServiceImpl implements SessionService {
 	        	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$
 	        }
 	        this.sessionCache.put(newSession.getSessionId(), newSession);
-	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
-	        	LogManager.logDetail(LogConstants.CTX_COMMANDLOGGING, new AuditMessage("session", "logon-success", newSession)); //$NON-NLS-1$ //$NON-NLS-2$
+	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-success", newSession)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 	        return newSession;
         } catch (LoginException e) {
-	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
-	        	LogManager.logDetail(LogConstants.CTX_COMMANDLOGGING, new AuditMessage("session", "logon-fail", info, e)); //$NON-NLS-1$ //$NON-NLS-2$
+	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-fail", info, e)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
         	throw e;
         } catch (SessionServiceException e) {
-	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
-	        	LogManager.logDetail(LogConstants.CTX_COMMANDLOGGING, new AuditMessage("session", "logon-fail", info, e)); //$NON-NLS-1$ //$NON-NLS-2$
+	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-fail", info, e)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
         	throw e;
         }
