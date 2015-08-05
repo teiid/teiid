@@ -25,13 +25,77 @@ package org.teiid.logging;
 import java.util.Arrays;
 
 import org.teiid.CommandContext;
+import org.teiid.adminapi.Session;
 
 /**
  * Log format for auditing.
  */
 public class AuditMessage {
+	
+	/**
+	 * Contains information related to a logon attempt
+	 */
+	public static class LogonInfo {
+
+		private final String vdbName;
+		private final String vdbVersion;
+		private final String authType;
+		private final String userName;
+		private final String applicationName;
+
+		public LogonInfo(String vdbName, String vdbVersion,
+				String authType, String userName,
+				String applicationName) {
+			this.vdbName = vdbName;
+			this.vdbVersion = vdbVersion;
+			this.authType = authType;
+			this.userName = userName;
+			this.applicationName = applicationName;
+		}
+		
+		public String getVdbName() {
+			return vdbName;
+		}
+		
+		public String getVdbVersion() {
+			return vdbVersion;
+		}
+		
+		public String getAuthType() {
+			return authType;
+		}
+		
+		public String getUserName() {
+			return userName;
+		}
+		
+		public String getApplicationName() {
+			return applicationName;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuffer msg = new StringBuffer();
+	        msg.append( vdbName );
+	        msg.append(", "); //$NON-NLS-1$
+	        msg.append( vdbVersion );
+	        msg.append(' ');
+	        msg.append( userName );
+	        msg.append(' ');
+	        msg.append(authType);
+	        return msg.toString();
+		}
+		
+	}
+	
 	private String context;
 	private String activity;
+	
+	private LogonInfo logonInfo;
+	private Exception exception;
+	
+	private Session session;
+	
 	private String[] resources;
 	private CommandContext commandContext;
 
@@ -40,6 +104,38 @@ public class AuditMessage {
 	    this.activity = activity;
 	    this.resources = resources;
 	    this.commandContext = commandContext;
+	}
+	
+	public AuditMessage(String context, String activity, LogonInfo info, Exception e) {
+		this.context = context;
+		this.activity = activity;
+		this.logonInfo = info;
+		this.exception = e;
+	}
+	
+	public AuditMessage(String context, String activity, Session session) {
+		this.context = context;
+		this.activity = activity;
+		this.session = session;
+	}
+	
+	/**
+	 * The related {@link LogonInfo} only if this is a logon related event
+	 * @return
+	 */
+	public LogonInfo getLogonInfo() {
+		return logonInfo;
+	}
+	
+	/**
+	 * The {@link Session} for the event or null if one has not been established. 
+	 * @return
+	 */
+	public Session getSession() {
+		if (this.commandContext != null) {
+			return this.commandContext.getSession();
+		}
+		return session;
 	}
 
     public String getContext() {
@@ -50,10 +146,23 @@ public class AuditMessage {
         return this.activity;
     }
 
+    /**
+     * The user name or null if the session has not yet been established.
+     * @return
+     */
     public String getPrincipal() {
-        return this.commandContext.getUserName();
+    	Session s = getSession();
+    	if (s != null) {
+    		return s.getUserName();
+    	}
+    	return null; 
     }
 
+    /**
+     * The list of relevant resources for the audit event.
+     * Will be null for logon/logoff events.
+     * @return
+     */
 	public String[] getResources() {
 		return this.resources;
 	}
@@ -62,17 +171,33 @@ public class AuditMessage {
 		return commandContext;
 	}
 	
+	/**
+	 * The exception associated with a failed logon attempt.
+	 * @return
+	 */
+	public Exception getException() {
+		return exception;
+	}
+	
 	public String toString() {
         StringBuffer msg = new StringBuffer();
-        msg.append( this.commandContext.getRequestId());
+        if (this.commandContext != null) {
+        	msg.append( this.commandContext.getRequestId());
+        } 
         msg.append(" ["); //$NON-NLS-1$
-        msg.append( getPrincipal() );
+        if (this.logonInfo != null) {
+        	msg.append(this.logonInfo);
+        } else {
+        	msg.append( getPrincipal() );
+        }
         msg.append("] <"); //$NON-NLS-1$
         msg.append( getContext() );
         msg.append('.');
         msg.append( getActivity() );
         msg.append("> "); //$NON-NLS-1$
-    	msg.append( Arrays.toString(resources) );
+        if (resources != null) {
+        	msg.append( Arrays.toString(resources) );
+        }
         return msg.toString();
 	}
 
