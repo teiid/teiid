@@ -56,6 +56,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.datamgr.ThreadCpuTimer;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
@@ -221,6 +222,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	AtomicLong dataBytes = new AtomicLong();
 	private long planningStart;
 	private long planningEnd;
+	
+	private ThreadCpuTimer timer = new ThreadCpuTimer();
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -262,6 +265,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	@Override
 	public void run() {
 		hasThread = true;
+		timer.start();
 		try {
 			while (!isDoneProcessing()) {
 				super.run();
@@ -288,6 +292,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 			}
 		} finally {
+			timer.stop();
 			hasThread = false;
 		}
 	}
@@ -374,7 +379,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void handleThrowable(Throwable e) {
 		if (!isCanceled()) {
-			dqpCore.logMMCommand(this, Event.ERROR, null);
+			dqpCore.logMMCommand(this, Event.ERROR, null, null);
 		    //Case 5558: Differentiate between system level errors and
 		    //processing errors.  Only log system level errors as errors, 
 		    //log the processing errors as warnings only
@@ -561,9 +566,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    
 			if (this.processingException != null) {
 				sendError();			
-			} else {
-		        dqpCore.logMMCommand(this, Event.END, rowcount);
 			}
+	        dqpCore.logMMCommand(this, Event.END, rowcount, this.timer.stop());
 		}
 	}
 
@@ -638,7 +642,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         request.processor.getContext().setWorkItem(this);
 		processor = request.processor;
 		planningEnd = System.currentTimeMillis();
-		this.dqpCore.logMMCommand(this, Event.PLAN, null);
+		this.dqpCore.logMMCommand(this, Event.PLAN, null, null);
 		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {
 			
 			int maxRows = 0;

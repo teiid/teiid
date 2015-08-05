@@ -106,7 +106,6 @@ public class ConnectorWorkItem implements ConnectorWork {
     /* End state information */    
     private boolean lastBatch;
     private int rowCount;
-    private boolean error;
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
 	private org.teiid.language.Command translatedCommand;
@@ -262,7 +261,6 @@ public class ConnectorWorkItem implements ConnectorWork {
     	if (t instanceof DataNotAvailableException) {
     		throw (DataNotAvailableException)t;
     	}
-    	error = true;
     	if (t instanceof RuntimeException && t.getCause() != null) {
     		t = t.getCause();
     	}

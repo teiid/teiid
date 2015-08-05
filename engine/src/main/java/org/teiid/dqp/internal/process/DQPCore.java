@@ -264,7 +264,7 @@ public class DQPCore implements DQP {
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         final RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
-    	logMMCommand(workItem, Event.NEW, null); 
+    	logMMCommand(workItem, Event.NEW, null, null); 
         addRequest(requestID, workItem, state);
         long timeout = workContext.getVDB().getQueryTimeout();
         timeout = Math.min(timeout>0?timeout:Long.MAX_VALUE, config.getQueryTimeout()>0?config.getQueryTimeout():Long.MAX_VALUE);
@@ -501,7 +501,7 @@ public class DQPCore implements DQP {
         	markCancelled = workItem.requestCancel();
         }
     	if (markCancelled) {
-            logMMCommand(workItem, Event.CANCEL, null);
+            logMMCommand(workItem, Event.CANCEL, null, null);
     	} else {
     		LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
     	}
@@ -540,7 +540,7 @@ public class DQPCore implements DQP {
 		this.transactionService.terminateTransaction(xid);
 	}	
 	
-    void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount) {
+    void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount, Long cpuTime) {
     	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO))
     			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
     		return;
@@ -558,7 +558,7 @@ public class DQPCore implements DQP {
         // Log to request log
         CommandLogMessage message = null;
         if (status == Event.NEW) {
-            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), msg.getCommandString());
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), msg.getCommandString(), cpuTime);
         } else {
             QueryProcessor qp = workItem.getProcessor();
             PlanNode plan = null;
