@@ -488,10 +488,12 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	if (semiDep) {
     		result.append(" [SEMI]"); //$NON-NLS-1$  
     	}
-    	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
-    		result.append(" RAN AS SORT MERGE"); //$NON-NLS-1$
-    	} else if (repeatedMerge) {
-    		result.append(" RAN AS REPEATED SORT MERGE"); //$NON-NLS-1$
+    	if (this.processingSortLeft != null) {
+	    	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
+	    		result.append(" RAN AS SORT MERGE"); //$NON-NLS-1$
+	    	} else if (repeatedMerge) {
+	    		result.append(" RAN AS REPEATED SORT MERGE"); //$NON-NLS-1$
+	    	}
     	}
     	return result.toString();
     }
