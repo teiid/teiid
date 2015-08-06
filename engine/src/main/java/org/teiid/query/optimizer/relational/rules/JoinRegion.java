@@ -233,7 +233,7 @@ class JoinRegion {
      * @throws QueryMetadataException 
      * @throws QueryPlannerException 
      */
-    public double scoreRegion(Object[] joinOrder, int startIndex, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
+    public double scoreRegion(Object[] joinOrder, int startIndex, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context, boolean partial) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         List<Map.Entry<PlanNode, PlanNode>> joinSourceEntries = new ArrayList<Map.Entry<PlanNode, PlanNode>>(joinSourceNodes.entrySet());
         double totalIntermediatCost = 0;
         double cost = 1;
@@ -241,7 +241,7 @@ class JoinRegion {
         HashSet<PlanNode> criteria = new HashSet<PlanNode>(this.criteriaNodes);
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>(this.joinSourceNodes.size());
         //only calculate up to the second to last as the last is not an intermediate result
-        for (int i = 0; i < joinOrder.length - 1; i++) {
+        for (int i = 0; i < joinOrder.length - (partial?0:1); i++) {
         	boolean hasUnknown = false;
         	boolean shouldFilter = true;
             Integer source = (Integer)joinOrder[i];
@@ -249,7 +249,7 @@ class JoinRegion {
             Map.Entry<PlanNode, PlanNode> entry = joinSourceEntries.get(source.intValue());
             PlanNode joinSourceRoot = entry.getValue();
             
-            if (startIndex == 0) {
+            if (i >= startIndex) {
 	            //check to make sure that this group ordering satisfies the access patterns
 	            if (!this.unsatisfiedAccessPatterns.isEmpty() || this.containsNestedTable) {
 	                PlanNode joinSource = entry.getKey();
@@ -264,7 +264,7 @@ class JoinRegion {
             
             groups.addAll(joinSourceRoot.getGroups());
             
-            if (startIndex > 0) {
+            if (startIndex > 0 && i < startIndex) {
             	continue;
             }
             

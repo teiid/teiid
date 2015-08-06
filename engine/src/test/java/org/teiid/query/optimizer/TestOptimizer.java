@@ -1047,6 +1047,32 @@ public class TestOptimizer {
         assertTrue("Did not plan many join query in reasonable time frame: " + elapsed + " ms", elapsed < 4000); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Test public void testManyJoinsGreedy() throws Exception {
+    	TransformationMetadata tm = example1();
+    	RealMetadataFactory.setCardinality("pm1.g5", 1000000, tm);
+    	RealMetadataFactory.setCardinality("pm1.g4", 1000000, tm);
+    	RealMetadataFactory.setCardinality("pm1.g1", 10000000, tm);
+    	RealMetadataFactory.setCardinality("pm1.g8", 100, tm);
+    	RealMetadataFactory.setCardinality("pm1.g3", 10000, tm);
+    	RealMetadataFactory.setCardinality("pm1.g6", 100000, tm); 
+        ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3, pm1.g4, pm1.g5, pm1.g6, pm1.g7, pm1.g8 "
+        		+ "WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1 AND pm1.g3.e1 = pm1.g4.e1 AND pm1.g4.e1 = pm1.g5.e1 AND pm1.g5.e1=pm1.g6.e1 AND pm1.g6.e1=pm1.g7.e1 AND pm1.g7.e1=pm1.g8.e1", //$NON-NLS-1$
+            tm, 
+            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
+                            "SELECT pm1.g2.e1 FROM pm1.g2",  //$NON-NLS-1$
+                            "SELECT pm1.g3.e1 FROM pm1.g3",  //$NON-NLS-1$
+                            "SELECT pm1.g4.e1 FROM pm1.g4", //$NON-NLS-1$
+                            "SELECT pm1.g5.e1 FROM pm1.g5",  //$NON-NLS-1$
+                            "SELECT pm1.g6.e1 FROM pm1.g6",  //$NON-NLS-1$
+                            "SELECT pm1.g7.e1 FROM pm1.g7", //$NON-NLS-1$
+                            "SELECT pm1.g8.e1 FROM pm1.g8", //$NON-NLS-1$
+                            }, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING ); //$NON-NLS-1$
+        
+        RelationalPlan rp = (RelationalPlan)plan;
+        //g1 should be last
+        assertEquals("[pm1.g1.e1]", ((JoinNode)rp.getRootNode().getChildren()[0]).getRightExpressions().toString());
+    }
+    
     @Test public void testAggregateWithoutGroupBy() {
         ProcessorPlan plan = helpPlan("select count(e2) from pm1.g1", example1(), //$NON-NLS-1$
             new String[] { "SELECT e2 FROM pm1.g1" } );         //$NON-NLS-1$

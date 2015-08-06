@@ -551,16 +551,18 @@ public class RulePlanJoins implements OptimizerRule {
 
         //after 16 sources this will be completely greedy. before that it will try to strike a compromise between the exhaustive
         //and non-exhaustive searches
+        boolean partial = false;
         if (regionCount > EXHAUSTIVE_SEARCH_GROUPS) {
             exhaustive = Math.max(2, EXHAUSTIVE_SEARCH_GROUPS - (int)Math.ceil(Math.sqrt((regionCount - EXHAUSTIVE_SEARCH_GROUPS))));
+            partial = true;
         } 
         
-        Iterator permIter = perms.generate(exhaustive);
+        Iterator<Object[]> permIter = perms.generate(exhaustive);
         
         while(permIter.hasNext()) {
-            Object[] order = (Object[]) permIter.next();
+            Object[] order = permIter.next();
 
-            double score = region.scoreRegion(order, 0, metadata, capFinder, context);
+            double score = region.scoreRegion(order, 0, metadata, capFinder, context, partial);
             if(score < bestSubScore) {
                 bestSubScore = score;
                 bestSubOrder = order;
@@ -580,20 +582,20 @@ public class RulePlanJoins implements OptimizerRule {
         //remove the joins that have already been placed
         for(int i=0; i<bestSubOrder.length; i++) {
             result[i] = (Integer)bestSubOrder[i];
+            orderList.remove(bestSubOrder[i]);
         }
         
         while(!orderList.isEmpty()) {
             
             double bestPartialScore = Double.MAX_VALUE;
-            List bestOrder = null;
+            List<Object> bestOrder = null;
 
             for (int i = 0; i < orderList.size(); i++) {
                 Integer index = orderList.get(i);
                 
-                List order = new ArrayList(Arrays.asList(bestSubOrder));
+                List<Object> order = new ArrayList<Object>(Arrays.asList(bestSubOrder));
                 order.add(index);
-                
-                double partialScore = region.scoreRegion(order.toArray(), bestSubOrder.length, metadata, capFinder, context);
+                double partialScore = region.scoreRegion(order.toArray(), bestSubOrder.length - 1, metadata, capFinder, context, true);
                 
                 if (partialScore < bestPartialScore) {
                     bestPartialScore = partialScore;
