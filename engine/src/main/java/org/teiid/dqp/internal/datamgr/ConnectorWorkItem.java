@@ -202,6 +202,9 @@ public class ConnectorWorkItem implements ConnectorWork {
     }
     
     public synchronized AtomicResultsMessage more() throws TranslatorException {
+    	if (this.execution == null) {
+    		return null; //already closed
+    	}
     	if (this.dnae != null) {
     		//clear the exception if it has been set
     		DataNotAvailableException e = this.dnae;
@@ -240,6 +243,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	            if (execution instanceof ReusableExecution<?>) {
 		        	this.requestMsg.getCommandContext().putReusableExecution(this.manager.getId(), (ReusableExecution<?>) execution);
 		        }
+	            execution = null;
 	        }	        
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
