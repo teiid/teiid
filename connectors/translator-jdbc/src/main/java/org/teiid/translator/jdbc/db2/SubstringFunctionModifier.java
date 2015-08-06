@@ -27,12 +27,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Comparison;
+import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
 import org.teiid.language.SearchedCase;
 import org.teiid.language.SearchedWhenClause;
-import org.teiid.language.Comparison.Operator;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
@@ -58,6 +58,11 @@ public class SubstringFunctionModifier extends AliasModifier {
 			int value = (Integer)l.getValue();
 			isNegative = value < 0;
 		}
+		Expression from = function.getParameters().get(1);
+		SearchedCase adjustedFrom = new SearchedCase(Arrays.asList(new SearchedWhenClause(new Comparison(from, length, Operator.GT), length)), 
+				from, TypeFacility.RUNTIME_TYPES.INTEGER);
+		function.getParameters().set(1, adjustedFrom);
+
 		Expression maxLength = new Function(
 				SourceSystemFunctions.SUBTRACT_OP,
 				Arrays.asList(new Function(
@@ -77,8 +82,7 @@ public class SubstringFunctionModifier extends AliasModifier {
 			clauses.add(new SearchedWhenClause(new Comparison(length, new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.GT), length));
 		} else if (isNegative) {
 			//TODO: could be done in the rewriter
-			function.getParameters().set(2, null);
-			return null;
+			return Arrays.asList(new Literal(null, TypeFacility.RUNTIME_TYPES.STRING));
 		} else {
 			defaultExpr = length;
 		}
