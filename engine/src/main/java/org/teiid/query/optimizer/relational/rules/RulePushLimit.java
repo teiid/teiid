@@ -207,23 +207,28 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.SOURCE:
             {
-                GroupSymbol virtualGroup = child.getGroups().iterator().next();
-                if (virtualGroup.isProcedure()) {
-                    return false;
-                }
-                if (FrameUtil.isProcedure(child.getFirstChild())) {
-                    return false;
-                }
-                if (child.hasProperty(Info.TABLE_FUNCTION)) {
-                	return false;
-                }
-                return true;
+                return canPushThroughView(child);
             }
             case NodeConstants.Types.SELECT:
             case NodeConstants.Types.DUP_REMOVE:
             	return limitNode.hasBooleanProperty(Info.IS_NON_STRICT);
             case NodeConstants.Types.SORT:
             	switch (child.getFirstChild().getType()) {
+            	case NodeConstants.Types.SOURCE:
+            	{
+            		if (canPushThroughView(child.getFirstChild())) {
+            			PlanNode sourceNode = child.getFirstChild();
+            			NodeEditor.removeChildNode(limitNode, child);
+            			NodeEditor.removeChildNode(limitNode.getParent(), limitNode);
+            			limitNode.setProperty(NodeConstants.Info.OUTPUT_COLS, sourceNode.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
+            			child.setProperty(NodeConstants.Info.OUTPUT_COLS, sourceNode.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
+            			sourceNode.getFirstChild().addAsParent(child);
+            			child.addAsParent(limitNode);
+            			//push again
+            			limitNodes.add(limitNode);
+            			return false;
+            		}
+            	}
             	case NodeConstants.Types.SET_OP:
             	{
             		PlanNode setOp = child.getFirstChild();
@@ -256,7 +261,7 @@ public class RulePushLimit implements OptimizerRule {
             	case NodeConstants.Types.PROJECT:
             	{
             		rootNode[0] = RulePlanSorts.checkForProjectOptimization(child, rootNode[0], metadata, capFinder, record, context);
-            		if (child.getFirstChild().getType() != NodeConstants.Types.PROJECT) {
+            		if (child.getFirstChild().getType() != NodeConstants.Types.PROJECT && NodeEditor.findParent(child, NodeConstants.Types.ACCESS) == null) {
             			return canPushLimit(rootNode, limitNode, limitNodes, metadata, capFinder, record, context);
             		}
             		break;
@@ -269,6 +274,23 @@ public class RulePushLimit implements OptimizerRule {
             }
         }
     }
+
+	private boolean canPushThroughView(PlanNode child) {
+		if (child.getChildCount() == 0) {
+			return false; //not a view
+		}
+		GroupSymbol virtualGroup = child.getGroups().iterator().next();
+		if (virtualGroup.isProcedure()) {
+		    return false;
+		}
+		if (FrameUtil.isProcedure(child.getFirstChild())) {
+		    return false;
+		}
+		if (child.hasProperty(Info.TABLE_FUNCTION)) {
+			return false;
+		}
+		return true;
+	}
 
 	private void pushOrderByAndLimit(PlanNode limitNode,
 			List<PlanNode> limitNodes, QueryMetadataInterface metadata,
@@ -304,7 +326,9 @@ public class RulePushLimit implements OptimizerRule {
 		newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
 		grandChild.addAsParent(newLimit);
 		newLimit.setProperty(NodeConstants.Info.OUTPUT_COLS, newLimit.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
-		limitNodes.add(newLimit);
+		if (NodeEditor.findParent(newLimit, NodeConstants.Types.ACCESS) == null) {
+			limitNodes.add(newLimit);
+		}
 		if (grandChild.getType() == NodeConstants.Types.SET_OP) {
 			newLimit.setProperty(Info.IS_COPIED, true);
 		}

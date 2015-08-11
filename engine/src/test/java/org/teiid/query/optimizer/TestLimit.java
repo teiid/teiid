@@ -1168,7 +1168,7 @@ public class TestLimit {
                 0       // UnionAll
         }, NODE_TYPES);
     }
-
+    
     /**
      * ensure we can push through multiple joins and handle an offset
      * @throws Exception
@@ -1211,6 +1211,37 @@ public class TestLimit {
         		Arrays.asList("a", 2, 2.0), //$NON-NLS-1$
         		Arrays.asList("c", 3, null), //$NON-NLS-1$
         });
+    }
+    
+    @Test public void testOrderedOuterJoinLimitInlineView() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+         
+        String sql = "select u.e1, u.e2 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 union all select pm3.g1.e1, pm3.g1.e2 from pm3.g1 )as u left outer join pm2.g1 on u.e1 = pm2.g1.e1 order by u.e1 limit 3"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3", "SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 ORDER BY pm3.g1.e1 LIMIT 3", "SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                3,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                2,      // Limit
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                3,      // Project
+                0,      // Select
+                2,      // Sort
+                1       // UnionAll
+        }, NODE_TYPES);
+        
     }
 
 }
