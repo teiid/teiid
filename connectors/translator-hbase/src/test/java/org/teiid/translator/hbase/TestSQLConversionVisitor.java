@@ -133,6 +133,21 @@ public class TestSQLConversionVisitor {
         helpTest(sql, expected);
     }
     
+    @Test
+    public void testBooleanLiterals() throws Exception {
+    	String sql = "SELECT true, false FROM Customer";
+        String expected = "SELECT true, false FROM \"Customer\"";
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testBigDecimalLiteral() throws Exception {
+    	String sql = "SELECT cast(1 as bigdecimal) FROM Customer";
+        String expected = "SELECT 1.0 FROM \"Customer\"";
+        helpTest(sql, expected);
+    }
+
+    
     private static TranslationUtility translationUtility = new TranslationUtility(TestHBaseUtil.queryMetadataInterface());
     
     private void helpTest(String sql, String expected) throws TranslatorException  {

@@ -25,9 +25,11 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.teiid.core.types.BinaryType;
 import org.teiid.language.Command;
+import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
@@ -70,13 +72,6 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
 
     public HBaseSQLConversionVisitor getSQLConversionVisitor() {
         return new HBaseSQLConversionVisitor(this);
-    }
-
-    /*
-     * Phoenix do not support XML, CLOB, BLOB, OBJECT
-     */
-    protected boolean isBindEligible(Literal l) {
-        return false;
     }
 
     @Override
@@ -163,11 +158,6 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
             return;
         }
         
-        if (TypeFacility.RUNTIME_TYPES.BIG_DECIMAL.equals(paramType)) {
-            pstmt.setBigDecimal(i, (BigDecimal)param);
-            return;
-        }
-        
         if (useStreamsForLobs()) {
             // Phonix current not support Blob, Clob, XML
         }
@@ -178,6 +168,33 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsInsertWithQueryExpression() {
     	return true;
+    }
+    
+    @Override
+    public String translateLiteralBoolean(Boolean booleanValue) {
+    	if(booleanValue.booleanValue()) {
+            return "true"; //$NON-NLS-1$
+        }
+        return "false"; //$NON-NLS-1$
+    }
+    
+    /**
+     * Adding a specific workaround for just Pheonix and BigDecimal.
+     */
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (!(obj instanceof Literal)) {
+    		return super.translate(obj, context);
+    	}
+		Literal l = (Literal)obj;
+		if (l.isBindEligible() || l.getType() != TypeFacility.RUNTIME_TYPES.BIG_DECIMAL) {
+			return super.translate(obj, context);
+		}
+		BigDecimal bd = ((BigDecimal)l.getValue());
+		if (bd.scale() == 0) {
+			l.setValue(bd.setScale(1));
+		}
+		return null;
     }
     
 }
