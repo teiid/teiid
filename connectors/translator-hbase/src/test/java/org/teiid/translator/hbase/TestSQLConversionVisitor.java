@@ -147,6 +147,12 @@ public class TestSQLConversionVisitor {
         helpTest(sql, expected);
     }
 
+    @Test
+    public void testDateTimeLiterals() throws Exception {
+    	String sql = "SELECT {d '2001-01-01'}, {t '23:00:02'}, {ts '2004-02-01 11:11:11.001'} FROM Customer";
+        String expected = "SELECT DATE '2001-01-01 00:00:00.0', TIME '1970-01-01 23:00:02.0', TIMESTAMP '2004-02-01 11:11:11.001' FROM \"Customer\"";
+        helpTest(sql, expected);
+    }
     
     private static TranslationUtility translationUtility = new TranslationUtility(TestHBaseUtil.queryMetadataInterface());
     
