@@ -25,6 +25,8 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.teiid.core.types.BinaryType;
@@ -195,6 +197,28 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
 			l.setValue(bd.setScale(1));
 		}
 		return null;
+    }
+    
+    /**
+     * It doesn't appear that the time component is needed, but for consistency with their
+     * documentation, we'll add it.
+     */
+    @Override
+    public String translateLiteralDate(java.sql.Date dateValue) {
+    	return "DATE '" + formatDateValue(new Timestamp(dateValue.getTime())) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    /**
+     * A date component is required, so create a new Timestamp instead
+     */
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+    	return "TIME '" + formatDateValue(new Timestamp(timeValue.getTime())) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+    	return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }
