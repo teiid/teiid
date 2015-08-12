@@ -1,3 +1,24 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 package org.teiid.translator.mongodb;
 
 import static org.junit.Assert.*;
@@ -19,6 +40,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBRef;
 
 @SuppressWarnings("nls")
@@ -30,10 +52,15 @@ public class TestMongoDBMetadataProcessor {
         
         MetadataFactory mf = new MetadataFactory("vdb", 1, "mongodb", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         MongoDBConnection conn = Mockito.mock(MongoDBConnection.class);
-        DBCollection dbCollection = Mockito.mock(DBCollection.class);
+        DBCollection tableDBCollection = Mockito.mock(DBCollection.class);
+        DBCollection embeddedDBCollection = Mockito.mock(DBCollection.class);
+        DBCollection emptyDBCollection = Mockito.mock(DBCollection.class);
+        DBCollection emptyFirstDBCollection = Mockito.mock(DBCollection.class);
         LinkedHashSet<String> tables = new LinkedHashSet<String>();
         tables.add("table");
         tables.add("embedded");
+        tables.add("empty");
+        tables.add("emptyFirst");
         
         DB db = Mockito.mock(DB.class);
         
@@ -56,8 +83,10 @@ public class TestMongoDBMetadataProcessor {
         child.append("col2", "two");
         row.append("child", child);
 
-        BasicDBObject empty = new BasicDBObject();
-        row.append("empty", empty);        
+        BasicDBObject emptyFirstRow = new BasicDBObject();
+        emptyFirstRow.append("_id", new Integer(1));
+        emptyFirstRow.append("col2", new Double(2.0));
+        emptyFirstRow.append("col3", new Long(3L));
         
         BasicDBObject embedded = new BasicDBObject();
         embedded.append("col1", "one");
@@ -65,8 +94,31 @@ public class TestMongoDBMetadataProcessor {
         row.append("embedded", embedded);
         
         Mockito.stub(db.getCollectionNames()).toReturn(tables);
-        Mockito.stub(db.getCollection(Mockito.anyString())).toReturn(dbCollection);
-        Mockito.stub(dbCollection.findOne()).toReturn(row);
+        Mockito.stub(db.getCollection(Mockito.eq("table"))).toReturn(tableDBCollection);
+        Mockito.stub(db.getCollection(Mockito.eq("embedded"))).toReturn(embeddedDBCollection);
+        Mockito.stub(db.getCollection(Mockito.eq("empty"))).toReturn(emptyDBCollection);
+        Mockito.stub(db.getCollection(Mockito.eq("emptyFirst"))).toReturn(emptyFirstDBCollection);
+        
+        DBCursor tableCursor = Mockito.mock(DBCursor.class);
+        Mockito.when(tableCursor.hasNext()).thenReturn(true).thenReturn(false);
+        Mockito.when(tableCursor.next()).thenReturn(row);
+        Mockito.when(tableDBCollection.find()).thenReturn(tableCursor);
+        
+        DBCursor embeddedCursor = Mockito.mock(DBCursor.class);
+        Mockito.when(embeddedCursor.hasNext()).thenReturn(true).thenReturn(false);
+        Mockito.when(embeddedCursor.next()).thenReturn(child);
+        Mockito.when(embeddedDBCollection.find()).thenReturn(embeddedCursor);
+        
+        DBCursor emptyFirstCursor = Mockito.mock(DBCursor.class);
+        Mockito.when(emptyFirstCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        Mockito.when(emptyFirstCursor.next()).thenReturn(null).thenReturn(emptyFirstRow);
+        Mockito.when(emptyFirstDBCollection.find()).thenReturn(emptyFirstCursor);
+        
+        DBCursor emptyCursor = Mockito.mock(DBCursor.class);
+        Mockito.when(emptyCursor.hasNext()).thenReturn(true).thenReturn(false);
+        Mockito.when(emptyCursor.next()).thenReturn(null);
+        Mockito.when(emptyDBCollection.find()).thenReturn(emptyCursor);
+        
         Mockito.stub(conn.getDatabase()).toReturn(db);
         
         mp.process(mf, conn);
@@ -89,6 +141,13 @@ public class TestMongoDBMetadataProcessor {
         		"\tFOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
         		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
         		"\n" +
+        		"CREATE FOREIGN TABLE emptyFirst (\n" + 
+        		"\t\"_id\" integer,\n" + 
+        		"\tcol2 double,\n" + 
+        		"\tcol3 long,\n" + 
+        		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
+        		") OPTIONS (UPDATABLE TRUE);\n"+
+        		"\n"+
         		"CREATE FOREIGN TABLE \"table\" (\n" + 
         		"\t\"_id\" integer,\n" + 
         		"\tcol2 double,\n" + 

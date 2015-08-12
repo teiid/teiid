@@ -53,14 +53,21 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         DB db = connection.getDatabase();
         for (String tableName:db.getCollectionNames()) {
             
-            DBCollection rows = db.getCollection(tableName);
-            BasicDBObject row = (BasicDBObject)rows.findOne();
-            Table table = addTable(metadataFactory, tableName, row);
-
-            if (table != null) {
-                // top level documents can not be seen as merged
-                table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));
+            DBCollection collection = db.getCollection(tableName);
+            DBCursor cursor = collection.find();
+            while(cursor.hasNext()) {
+                BasicDBObject row = (BasicDBObject)cursor.next();
+                if (row == null) {
+                    continue;
+                }
+                Table table = addTable(metadataFactory, tableName, row);   
+                if (table != null) {
+                    // top level documents can not be seen as merged
+                    table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));                    
+                    break;
+                }                
             }
+            cursor.close();
         }
 
         for (Table table:metadataFactory.getSchema().getTables().values()) {
