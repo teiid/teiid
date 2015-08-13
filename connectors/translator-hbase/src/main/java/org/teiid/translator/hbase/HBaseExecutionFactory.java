@@ -24,12 +24,14 @@ package org.teiid.translator.hbase;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
@@ -219,6 +221,30 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
     	return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    /**
+     * The Phoenix driver has issues using a calendar object.
+     * it throws an npe on a null value and also has https://issues.apache.org/jira/browse/PHOENIX-869
+     */
+    @Override
+    public Object retrieveValue(ResultSet results, int columnIndex,
+    		Class<?> expectedType) throws SQLException {
+    	Integer code = DataTypeManager.getTypeCode(expectedType);
+        if(code != null) {
+	    	switch (code) {
+	    		case DataTypeManager.DefaultTypeCodes.TIME: {
+	        		return results.getTime(columnIndex);
+	            }
+	            case DataTypeManager.DefaultTypeCodes.DATE: {
+	        		return results.getDate(columnIndex);
+	            }
+	            case DataTypeManager.DefaultTypeCodes.TIMESTAMP: {
+	        		return results.getTimestamp(columnIndex);
+	            }
+	    	}
+        }
+        return super.retrieveValue(results, columnIndex, expectedType);
     }
     
 }
