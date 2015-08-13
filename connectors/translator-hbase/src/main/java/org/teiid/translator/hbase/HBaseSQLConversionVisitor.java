@@ -37,7 +37,6 @@ import org.teiid.language.SetClause;
 import org.teiid.language.TableReference;
 import org.teiid.language.Update;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.KeyRecord;
 
 
 public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConversionVisitor {
@@ -67,10 +66,6 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 		if (update.getWhere() == null) {
 			insert = new Insert(update.getTable(), cols, new ExpressionValueSource(vals));
 		} else {
-			KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
-			if (pk == null) {
-				throw new AssertionError("Update with a WHERE clause is not possible against a table without a primary key"); //$NON-NLS-1$
-			}
 			List<DerivedColumn> select = new ArrayList<DerivedColumn>();
 			Set<Column> columns = new HashSet<Column>();
 			for (ColumnReference col : cols) {
@@ -79,7 +74,7 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 			for (Expression val : vals) {
 				select.add(new DerivedColumn(null, val));
 			}
-			for (Column c : pk.getColumns()) {
+			for (Column c : update.getTable().getMetadataObject().getColumns()) {
 				if (!columns.contains(c)) {
 					ColumnReference cr = new ColumnReference(update.getTable(), c.getName(), c, c.getJavaType());
 					select.add(new DerivedColumn(null, cr));
