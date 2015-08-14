@@ -37,6 +37,7 @@ import org.teiid.language.SetClause;
 import org.teiid.language.TableReference;
 import org.teiid.language.Update;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.KeyRecord;
 
 
 public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConversionVisitor {
@@ -74,7 +75,16 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 			for (Expression val : vals) {
 				select.add(new DerivedColumn(null, val));
 			}
-			for (Column c : update.getTable().getMetadataObject().getColumns()) {
+			
+			KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
+			List<Column> list = new ArrayList<Column>();
+			if(pk == null) {
+				list = update.getTable().getMetadataObject().getColumns();
+			} else {
+				list = pk.getColumns();
+			}
+			
+			for (Column c : list) {
 				if (!columns.contains(c)) {
 					ColumnReference cr = new ColumnReference(update.getTable(), c.getName(), c, c.getJavaType());
 					select.add(new DerivedColumn(null, cr));
@@ -83,6 +93,7 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 			}
 			Select query = new Select(select, false, Arrays.asList((TableReference)update.getTable()), update.getWhere(), null, null, null);
 			insert = new Insert(update.getTable(), cols, query);
+			
 		}
 		append(insert);
     }
