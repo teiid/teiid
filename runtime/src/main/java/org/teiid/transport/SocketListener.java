@@ -86,12 +86,13 @@ public class SocketListener implements ChannelListenerFactory {
         this.channelHandler = createChannelPipelineFactory(config, storageManager);
         bootstrap.setPipelineFactory(channelHandler);
         if (inputBufferSize != 0) {
-        	bootstrap.setOption("receiveBufferSize", new Integer(inputBufferSize)); //$NON-NLS-1$
+        	bootstrap.setOption("child.receiveBufferSize", new Integer(inputBufferSize)); //$NON-NLS-1$
         }
         if (outputBufferSize != 0) {
-        	bootstrap.setOption("sendBufferSize", new Integer(outputBufferSize)); //$NON-NLS-1$
+        	bootstrap.setOption("child.sendBufferSize", new Integer(outputBufferSize)); //$NON-NLS-1$
         }
-        bootstrap.setOption("keepAlive", Boolean.TRUE); //$NON-NLS-1$
+        bootstrap.setOption("child.tcpNoDelay", true); //$NON-NLS-1$
+        bootstrap.setOption("child.keepAlive", Boolean.TRUE); //$NON-NLS-1$
         
         this.serverChanel = bootstrap.bind(address);
     }

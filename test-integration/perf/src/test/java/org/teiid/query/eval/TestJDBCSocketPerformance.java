@@ -123,6 +123,25 @@ public class TestJDBCSocketPerformance {
 		System.out.println((System.currentTimeMillis() - start));
 	}
 	
+	@Test public void testSmallSelects() throws Exception {
+		Properties p = new Properties();
+		p.setProperty("user", "testuser");
+		p.setProperty("password", "testpassword");
+		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:x@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
+		long start = System.currentTimeMillis();
+		for (int j = 0; j < 1000; j++) {
+			Statement s = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			assertTrue(s.execute("select 1"));
+			ResultSet rs = s.getResultSet();
+			int i = 0;
+			while (rs.next()) {
+				i++;
+			}
+			s.close();
+		}
+		System.out.println((System.currentTimeMillis() - start));
+	}
+	
 	//TODO: this isn't a socket test per se, but does show a performance bump with multi-threaded texttable execution
 	@Test public void testTextTable() throws Exception {
 		Properties p = new Properties();
