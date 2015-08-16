@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
@@ -31,6 +32,8 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -89,5 +92,13 @@ public class TestObjectTable {
 
         process(sql, expected);
 	}
+	
+	@Test public void testClone() throws Exception {
+    	String sql = "select * from objecttable(language 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') as X"; //$NON-NLS-1$
+    	
+    	Command c = QueryParser.getQueryParser().parseCommand(sql);
+    	assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.toString());
+    	assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.clone().toString());
+    }
 	
 }

@@ -45,6 +45,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -365,7 +366,11 @@ public class TestTextTable {
 	
 	@Test public void testTextTableSelector() throws Exception {
 		String sql = "select x.* from (select * from pm1.g1) y, texttable(e1 || '\n' || e2 || '\n' || e3 SELECTOR 'c' COLUMNS x string) x";
-    	
+    	Command c = QueryParser.getQueryParser().parseCommand(sql);
+		
+		assertEquals("SELECT x.* FROM (SELECT * FROM pm1.g1) AS y, TEXTTABLE(((((e1 || '\\u000A') || e2) || '\\u000A') || e3) SELECTOR c COLUMNS x string) AS x", c.toString());
+		assertEquals("SELECT x.* FROM (SELECT * FROM pm1.g1) AS y, TEXTTABLE(((((e1 || '\\u000A') || e2) || '\\u000A') || e3) SELECTOR c COLUMNS x string) AS x", c.clone().toString());
+		
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("c"),
         };    

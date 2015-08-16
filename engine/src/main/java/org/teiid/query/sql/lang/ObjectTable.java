@@ -169,6 +169,7 @@ public class ObjectTable extends TableFunctionReference {
 		}
 		clone.rowScript = this.rowScript;
 		clone.compiledScript = this.compiledScript;
+		clone.scriptingLanguage = this.scriptingLanguage;
 		return clone;
 	}
 
@@ -183,7 +184,8 @@ public class ObjectTable extends TableFunctionReference {
 		ObjectTable other = (ObjectTable)obj;
 		return this.columns.equals(other.columns) 
 			&& this.rowScript.equals(other.rowScript)
-			&& this.passing.equals(other.passing);
+			&& this.passing.equals(other.passing)
+			&& EquivalenceUtil.areEqual(scriptingLanguage, other.scriptingLanguage);
 	}
 
 	public ScriptEngine getScriptEngine() {

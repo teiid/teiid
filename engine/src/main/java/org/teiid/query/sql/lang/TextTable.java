@@ -271,6 +271,7 @@ public class TextTable extends TableFunctionReference {
 		clone.fixedWidth = this.fixedWidth;
 		clone.usingRowDelimiter = this.usingRowDelimiter;
 		clone.rowDelimiter = this.rowDelimiter;
+		clone.selector = this.selector;
 		return clone;
 	}
 
@@ -291,6 +292,7 @@ public class TextTable extends TableFunctionReference {
 			&& EquivalenceUtil.areEqual(header, other.header)
 			&& EquivalenceUtil.areEqual(skip, other.skip)
 			&& usingRowDelimiter == other.usingRowDelimiter
+			&& EquivalenceUtil.areEqual(selector, other.selector)
 			&& EquivalenceUtil.areEqual(rowDelimiter, other.rowDelimiter);
 		
 	}
