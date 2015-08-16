@@ -230,7 +230,7 @@ public class MetadataFactory implements Serializable {
 		if (this.autoCorrectColumnNames) {
 			name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
-			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
+			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, table.getFullName(), name));
 		}
 		if (table.getColumnByName(name) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
@@ -370,7 +370,7 @@ public class MetadataFactory implements Serializable {
 	private void assignColumn(Table table, ColumnSet<?> columns, String columnName) {
 		Column column = table.getColumnByName(columnName);
 		if (column == null) {
-			throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));
+			throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, table.getFullName(), columnName));
 		}
 		columns.getColumns().add(column);
 	}
