@@ -290,7 +290,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         // Remove link from connection to statement
         this.driverConnection.closeStatement(this);
 
-        logger.fine(JDBCPlugin.Util.getString("MMStatement.Close_stmt_success")); //$NON-NLS-1$
+        if (logger.isLoggable(Level.FINE)) {
+        	logger.fine(JDBCPlugin.Util.getString("MMStatement.Close_stmt_success")); //$NON-NLS-1$
+        }
     }
 
     /**
@@ -733,7 +735,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             createResultSet(resultsMsg);
         }
         
-        logger.fine(JDBCPlugin.Util.getString("MMStatement.Success_query", reqMessage.getCommandString())); //$NON-NLS-1$
+        if (logger.isLoggable(Level.FINE)) {
+        	logger.fine(JDBCPlugin.Util.getString("MMStatement.Success_query", reqMessage.getCommandString())); //$NON-NLS-1$
+        }
 	}
 
 	protected RequestMessage createRequestMessage(String[] commands,

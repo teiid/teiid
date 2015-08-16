@@ -111,8 +111,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         this.url = url;
         this.dqp = serverConn.getService(DQP.class);
         
-        logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
-        logConnectionProperties(url, info);
+        if (logger.isLoggable(Level.FINE)) {
+	        logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
+	        logConnectionProperties(url, info);
+        }
         
         setExecutionProperties(info);
     }
