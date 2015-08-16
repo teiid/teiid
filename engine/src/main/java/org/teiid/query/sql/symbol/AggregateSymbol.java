@@ -277,7 +277,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 			copy.setCondition((Expression) condition.clone());
 		}
 		copy.isWindowed = this.isWindowed;
-		copy.setType(getType());
+		copy.type = this.type;
 		copy.setFunctionDescriptor(getFunctionDescriptor());
 		return copy;
 	}

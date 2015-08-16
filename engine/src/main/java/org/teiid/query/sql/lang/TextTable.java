@@ -41,6 +41,7 @@ public class TextTable extends TableFunctionReference {
 		private String selector;
 		private Integer position;
 		private boolean ordinal;
+		private String header;
 		
 		public TextColumn(String name) {
 			super(name, DataTypeManager.DefaultDataTypes.INTEGER);
@@ -73,6 +74,14 @@ public class TextTable extends TableFunctionReference {
 			this.noTrim = noTrim;
 		}
 		
+		public String getHeader() {
+			return header;
+		}
+		
+		public void setHeader(String header) {
+			this.header = header;
+		}
+		
 		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
@@ -86,7 +95,8 @@ public class TextTable extends TableFunctionReference {
 			&& EquivalenceUtil.areEqual(selector, other.selector)
 			&& EquivalenceUtil.areEqual(position, other.position)
 			&& noTrim == other.noTrim
-			&& ordinal == other.ordinal;
+			&& ordinal == other.ordinal
+			&& EquivalenceUtil.areEqual(header, other.header);
 		}
 		
 		@Override
@@ -97,6 +107,7 @@ public class TextTable extends TableFunctionReference {
 			clone.selector = this.selector;
 			clone.position = this.position;
 			clone.ordinal = this.ordinal;
+			clone.header = this.header;
 			this.copyTo(clone);
 			return clone;
 		}
@@ -125,6 +136,7 @@ public class TextTable extends TableFunctionReference {
 	
     private Expression file;
     private List<TextColumn> columns = new ArrayList<TextColumn>();
+    private Character rowDelimiter;
 	private Character delimiter;
 	private Character quote;
     private boolean escape;
@@ -175,6 +187,14 @@ public class TextTable extends TableFunctionReference {
 		this.columns = columns;
 	}
     
+    public Character getRowDelimiter() {
+		return rowDelimiter;
+	}
+    
+    public void setRowDelimiter(Character rowDelimiter) {
+		this.rowDelimiter = rowDelimiter;
+	}
+    
     public Character getDelimiter() {
 		return delimiter;
 	}
@@ -214,6 +234,21 @@ public class TextTable extends TableFunctionReference {
     public void setUsingRowDelimiter(boolean usingRowDelimiter) {
 		this.usingRowDelimiter = usingRowDelimiter;
 	}
+    
+    public void setNoTrim() {
+    	for (TextColumn col : columns) {
+    		col.noTrim = true;
+    	}
+    }
+    
+    public boolean isNoTrim() {
+    	for (TextColumn col : columns) {
+    		if (!col.noTrim) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
 
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
@@ -235,6 +270,8 @@ public class TextTable extends TableFunctionReference {
 		}
 		clone.fixedWidth = this.fixedWidth;
 		clone.usingRowDelimiter = this.usingRowDelimiter;
+		clone.rowDelimiter = this.rowDelimiter;
+		clone.selector = this.selector;
 		return clone;
 	}
 
@@ -254,7 +291,10 @@ public class TextTable extends TableFunctionReference {
 			&& EquivalenceUtil.areEqual(quote, other.quote)
 			&& EquivalenceUtil.areEqual(header, other.header)
 			&& EquivalenceUtil.areEqual(skip, other.skip)
-			&& usingRowDelimiter == other.usingRowDelimiter;
+			&& usingRowDelimiter == other.usingRowDelimiter
+			&& EquivalenceUtil.areEqual(selector, other.selector)
+			&& EquivalenceUtil.areEqual(rowDelimiter, other.rowDelimiter);
+		
 	}
 	
 }

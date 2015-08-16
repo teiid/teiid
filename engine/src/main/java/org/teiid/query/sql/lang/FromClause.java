@@ -78,6 +78,7 @@ public abstract class FromClause implements LanguageObject {
     	clone.makeNotDep = makeNotDep;
     	clone.optional = optional;
     	clone.noUnnest = noUnnest;
+    	clone.preserve = preserve;
     	return clone;
     }
     
