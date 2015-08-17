@@ -39,6 +39,7 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.infinispan.dsl.metadata.ProtobufMetadataProcessor;
 
 
@@ -57,6 +58,8 @@ public class InfinispanExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, InfinispanConnection> {
 
 	public static final int MAX_SET_SIZE = 10000;
+	
+	private boolean supportsCompareCriteriaOrdered = false;
 	
 	public InfinispanExecutionFactory() {
 		super();
@@ -126,10 +129,15 @@ public class InfinispanExecutionFactory extends
     public boolean supportsCompareCriteriaEquals() {
 		return Boolean.TRUE.booleanValue();
 	}
-	
+
+	@TranslatorProperty(display="CompareCriteriaOrdered", description="If true, translator can support comparison criteria with the operator '=>' or '<=' ",advanced=true)
 	@Override
 	public boolean supportsCompareCriteriaOrdered() {
-		return Boolean.FALSE.booleanValue();
+		return supportsCompareCriteriaOrdered;
+	}
+	
+	public boolean setSupportsCompareCriteriaOrdered(boolean supports) {
+		return supportsCompareCriteriaOrdered = supports;
 	}
 	
 	@Override
