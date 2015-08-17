@@ -127,10 +127,9 @@ public class InfinispanExecutionFactory extends
 		return Boolean.TRUE.booleanValue();
 	}
 	
-	
 	@Override
 	public boolean supportsCompareCriteriaOrdered() {
-		return Boolean.TRUE.booleanValue();
+		return Boolean.FALSE.booleanValue();
 	}
 	
 	@Override
