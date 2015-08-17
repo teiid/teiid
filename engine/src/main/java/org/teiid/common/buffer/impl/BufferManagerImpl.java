@@ -367,7 +367,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     //set to acceptable defaults for testing
     private int maxProcessingBytes = 1 << 21; 
     private Integer maxProcessingBytesOrig;
-    long maxReserveBytes = 1 << 28;;
+    long maxReserveBytes = 1 << 28;
     AtomicLong reserveBatchBytes = new AtomicLong();
     AtomicLong overheadBytes = new AtomicLong();
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
@@ -564,7 +564,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     
     public void setMaxReserveKB(int maxReserveBatchKB) {
 		if (maxReserveBatchKB > -1) {
-			int maxReserve = maxReserveBatchKB<<10;
+			long maxReserve = ((long)maxReserveBatchKB)<<10;
 			this.maxReserveBytes = maxReserve;
 			this.reserveBatchBytes.set(maxReserve);
 		} else {
@@ -1242,7 +1242,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 
 	public int getMaxReserveKB() {
-		return (int)maxReserveBytes>>10;
+		return (int)(maxReserveBytes>>10);
 	}
 	
 	public void setCache(Cache cache) {
