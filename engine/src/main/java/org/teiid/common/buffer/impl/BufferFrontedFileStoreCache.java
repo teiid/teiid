@@ -559,15 +559,20 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	private BufferManagerImpl bufferManager;
 	
 	@Override
-	public void initialize() throws TeiidComponentException {
+ 	public void initialize() throws TeiidComponentException {
+ 		initialize(true);
+ 	}
+	
+	public void initialize(boolean allocateMemory) throws TeiidComponentException {
 		storageManager.initialize();
 		memoryBufferSpace = Math.max(memoryBufferSpace, maxStorageObjectSize);
 		blocks = (int) Math.min(Integer.MAX_VALUE, (memoryBufferSpace>>LOG_BLOCK_SIZE)*ADDRESSES_PER_BLOCK/(ADDRESSES_PER_BLOCK+1));
 		inodesInuse = new ConcurrentBitSet(blocks+1, BufferManagerImpl.CONCURRENCY_LEVEL);
 		blocksInuse = new ConcurrentBitSet(blocks, BufferManagerImpl.CONCURRENCY_LEVEL);
-		this.blockByteBuffer = new BlockByteBuffer(30, blocks, LOG_BLOCK_SIZE, direct);
+
+		this.blockByteBuffer = new BlockByteBuffer(30, blocks, LOG_BLOCK_SIZE, direct, allocateMemory);
 		//ensure that we'll run out of blocks first
-		this.inodeByteBuffer = new BlockByteBuffer(30, blocks+1, LOG_INODE_SIZE, direct);
+		this.inodeByteBuffer = new BlockByteBuffer(30, blocks+1, LOG_INODE_SIZE, direct, allocateMemory);
 		memoryWritePermits = new Semaphore(blocks);
 		maxMemoryBlocks = Math.min(MAX_DOUBLE_INDIRECT, blocks);
 		maxMemoryBlocks = Math.min(maxMemoryBlocks, maxStorageObjectSize>>LOG_BLOCK_SIZE + ((maxStorageObjectSize&BufferFrontedFileStoreCache.BLOCK_MASK)>0?1:0));
