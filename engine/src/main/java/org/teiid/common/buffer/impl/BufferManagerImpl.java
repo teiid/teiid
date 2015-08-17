@@ -367,7 +367,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     //set to acceptable defaults for testing
     private int maxProcessingBytes = 1 << 21; 
     private Integer maxProcessingBytesOrig;
-    long maxReserveBytes = 1 << 28;;
+    long maxReserveBytes = 1 << 28;
     AtomicLong reserveBatchBytes = new AtomicLong();
     AtomicLong overheadBytes = new AtomicLong();
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
@@ -564,7 +564,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     
     public void setMaxReserveKB(int maxReserveBatchKB) {
 		if (maxReserveBatchKB > -1) {
-			int maxReserve = maxReserveBatchKB<<10;
+			long maxReserve = ((long)maxReserveBatchKB)<<10;
 			this.maxReserveBytes = maxReserve;
 			this.reserveBatchBytes.set(maxReserve);
 		} else {
@@ -581,9 +581,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			int one_gig = 1 << 30;
 			if (maxMemory > one_gig) {
 				//assume 70% of the memory over the first gig
-				this.maxReserveBytes = (long)Math.max(0, (maxMemory - one_gig) * .7);
+				this.maxReserveBytes = (long)Math.max(0, (maxMemory - one_gig) * .5);
 			}
-			this.maxReserveBytes += Math.max(0, Math.min(one_gig, maxMemory) >> 1);
+			this.maxReserveBytes += Math.max(0, Math.min(one_gig, maxMemory) * .4);
     	}
 		this.reserveBatchBytes.set(maxReserveBytes);
 		if (this.maxProcessingBytesOrig == null) {
@@ -591,7 +591,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			this.maxProcessingBytesOrig = this.maxProcessingBytes;
 		}
 		if (this.maxProcessingBytesOrig < 0) {
-			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 16l, (.2 * maxMemory)/maxActivePlans),  Integer.MAX_VALUE);
+			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 16l, (.07 * maxMemory)/Math.pow(maxActivePlans, .8)),  Integer.MAX_VALUE);
 		} 
 		//make a guess at the max number of batches
 		long memoryBatches = maxMemory / (processorBatchSize * targetBytesPerRow);
@@ -1242,7 +1242,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 
 	public int getMaxReserveKB() {
-		return (int)maxReserveBytes>>10;
+		return (int)(maxReserveBytes>>10);
 	}
 	
 	public void setCache(Cache cache) {

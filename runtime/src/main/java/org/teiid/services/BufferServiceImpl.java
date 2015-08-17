@@ -116,18 +116,25 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsc.setBufferManager(this.bufferMgr);
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
                 fsc.setDirect(memoryBufferOffHeap);
-                int batchOverheadKB = (int)(this.memoryBufferSpace<0?(this.bufferMgr.getMaxReserveKB()<<8):this.memoryBufferSpace)>>20;
-        		this.bufferMgr.setMaxReserveKB(Math.max(0, this.bufferMgr.getMaxReserveKB() - batchOverheadKB));
-                if (memoryBufferSpace < 0) {
-                	//use approximately 25% of what's set aside for the reserved
-                	fsc.setMemoryBufferSpace(((long)this.bufferMgr.getMaxReserveKB()) << 8);
+                //use approximately 40% of what's set aside for the reserved accounting for conversion from kb to bytes
+                long autoMaxBufferSpace = 4*(((long)this.bufferMgr.getMaxReserveKB())<<10)/10; 
+                //estimate inode/batch overhead
+				if (memoryBufferSpace < 0) {
+                	fsc.setMemoryBufferSpace(autoMaxBufferSpace);
                 } else {
                 	//scale from MB to bytes
                 	fsc.setMemoryBufferSpace(memoryBufferSpace << 20);
                 }
-                if (!memoryBufferOffHeap && this.maxReserveKb < 0) {
-            		//adjust the value
-            		this.bufferMgr.setMaxReserveKB(this.bufferMgr.getMaxReserveKB() - (int)Math.min(this.bufferMgr.getMaxReserveKB(), (fsc.getMemoryBufferSpace()>>10)));
+				long batchAndInodeOverheadKB = fsc.getMemoryBufferSpace()>>(memoryBufferOffHeap?19:17);
+        		this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - batchAndInodeOverheadKB));
+                if (this.maxReserveKb < 0) {
+                	if (memoryBufferOffHeap) {
+                		//the default is too large if off heap
+                		this.bufferMgr.setMaxReserveKB(8*this.bufferMgr.getMaxReserveKB()/10);
+                	} else {
+	            		//adjust the value for the main memory buffer
+	            		this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - (fsc.getMemoryBufferSpace()>>10)));
+                	}
                 }
                 fsc.setStorageManager(sm);
                 fsc.initialize();
@@ -255,7 +262,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     }
 
 	public long getHeapCacheMemoryInUseKB() {
-		return bufferMgr.getActiveBatchBytes()/1024 + workingMaxReserveKb - bufferMgr.getMaxReserveKB();
+		return bufferMgr.getActiveBatchBytes()/1024;
 	}
 
 	public long getHeapMemoryInUseByActivePlansKB() {

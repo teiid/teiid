@@ -49,5 +49,12 @@ public class TestBufferManagerImpl {
         //the difference between 1mb and 1000k
         assertEquals(24576, bufferManager.reserveBuffers(1024000, BufferReserveMode.NO_WAIT));
     }
+    
+    @Test public void testLargeReserve() throws Exception {
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
+        bufferManager.setCache(new MemoryStorageManager());
+        bufferManager.setMaxReserveKB((1<<22) + 11);
+        assertEquals(4194315, bufferManager.getMaxReserveKB());
+    }
 
 }
