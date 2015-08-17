@@ -50,7 +50,7 @@ public class BlockByteBuffer {
 	 * @param blockAddressBits
 	 * @param direct
 	 */
-	public BlockByteBuffer(int segmentAddressBits, int blockCount, int blockAddressBits, boolean direct) {
+	public BlockByteBuffer(int segmentAddressBits, int blockCount, int blockAddressBits, boolean direct, boolean allocate) {
 		this.data = new BlockByteBufferData();
 		this.data.segmentAddressBits = segmentAddressBits;
 		this.data.blockAddressBits = blockAddressBits;
@@ -58,7 +58,7 @@ public class BlockByteBuffer {
 		this.data.segmentSize = 1 << this.data.segmentAddressBits;
 		this.data.blockCount = blockCount;
 		long size = ((long)blockCount)<<blockAddressBits;
-		int fullSegments = (int)size>>segmentAddressBits;
+		int fullSegments = (int)(size>>segmentAddressBits);
 		int lastSegmentSize = (int) (size&(data.segmentSize-1));
 		int segments = fullSegments;
 		if (lastSegmentSize > 0) {
@@ -66,12 +66,18 @@ public class BlockByteBuffer {
 		}
 		origBuffers = new ByteBuffer[segments];
 		buffers = new ByteBuffer[segments];
-		for (int i = 0; i < fullSegments; i++) {
-			origBuffers[i] = allocate(data.segmentSize, direct);
+		if (allocate) {
+			for (int i = 0; i < fullSegments; i++) {
+				origBuffers[i] = allocate(data.segmentSize, direct);
+			}
+			if (lastSegmentSize > 0) {
+				origBuffers[fullSegments] = allocate(lastSegmentSize, direct);
+			}
 		}
-		if (lastSegmentSize > 0) {
-			origBuffers[fullSegments] = allocate(lastSegmentSize, direct);
-		}
+	}
+	
+	public ByteBuffer[] getBuffers() {
+		return buffers;
 	}
 	
 	private BlockByteBuffer() {
