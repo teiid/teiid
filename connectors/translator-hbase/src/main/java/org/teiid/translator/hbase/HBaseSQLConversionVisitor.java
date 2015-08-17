@@ -67,10 +67,6 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 		if (update.getWhere() == null) {
 			insert = new Insert(update.getTable(), cols, new ExpressionValueSource(vals));
 		} else {
-			KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
-			if (pk == null) {
-				throw new AssertionError("Update with a WHERE clause is not possible against a table without a primary key"); //$NON-NLS-1$
-			}
 			List<DerivedColumn> select = new ArrayList<DerivedColumn>();
 			Set<Column> columns = new HashSet<Column>();
 			for (ColumnReference col : cols) {
@@ -79,7 +75,16 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 			for (Expression val : vals) {
 				select.add(new DerivedColumn(null, val));
 			}
-			for (Column c : pk.getColumns()) {
+			
+			KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
+			List<Column> list = new ArrayList<Column>();
+			if(pk == null) {
+				list = update.getTable().getMetadataObject().getColumns();
+			} else {
+				list = pk.getColumns();
+			}
+			
+			for (Column c : list) {
 				if (!columns.contains(c)) {
 					ColumnReference cr = new ColumnReference(update.getTable(), c.getName(), c, c.getJavaType());
 					select.add(new DerivedColumn(null, cr));
@@ -88,6 +93,7 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 			}
 			Select query = new Select(select, false, Arrays.asList((TableReference)update.getTable()), update.getWhere(), null, null, null);
 			insert = new Insert(update.getTable(), cols, query);
+			
 		}
 		append(insert);
     }

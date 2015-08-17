@@ -48,6 +48,10 @@ public class TestSQLConversionVisitor {
     	String sql = "update Customer set city = 'Beijing' where name = 'Kylin Soong'";
         String expected = "UPSERT INTO \"Customer\" (\"city\", ROW_ID) SELECT 'Beijing', \"Customer\".ROW_ID FROM \"Customer\" WHERE \"Customer\".\"name\" = 'Kylin Soong'";
         helpTest(sql, expected);
+        
+        sql = "UPDATE smalla SET StringKey = '55' WHERE smalla.StringKey IS NULL";
+        expected = "UPSERT INTO smalla (stringkey, intkey) SELECT '55', smalla.intkey FROM smalla WHERE smalla.stringkey IS NULL";
+        helpTest(sql, expected);
     }
     
     @Test

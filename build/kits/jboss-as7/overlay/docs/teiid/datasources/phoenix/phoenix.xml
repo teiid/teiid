@@ -3,6 +3,9 @@
     <datasources>
         <datasource jndi-name="java:jboss/datasources/PhoenixDS" enabled="true" use-java-context="true" pool-name="PhoenixDS">
             <connection-url>jdbc:phoenix:{zookeeper quorum server}</connection-url>
+	    <connection-property name="phoenix.connection.autoCommit">
+                true
+            </connection-property>
             <driver>phoenix</driver>
             <security>
                 <user-name>{user}</user-name>

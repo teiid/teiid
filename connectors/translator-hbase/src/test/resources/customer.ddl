@@ -41,3 +41,8 @@ CREATE FOREIGN TABLE TimesTest (
     column3 timestamp,
     CONSTRAINT PK0 PRIMARY KEY(PK)
 ) OPTIONS("UPDATABLE" 'TRUE');
+
+CREATE FOREIGN TABLE smalla (
+	IntKey integer OPTIONS (nameinsource 'intkey'), 
+	StringKey string OPTIONS (nameinsource 'stringkey')
+) OPTIONS (CARDINALITY 50, UPDATABLE 'TRUE', nameinsource 'smalla');
