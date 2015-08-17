@@ -77,20 +77,16 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
 			}
 			
 			KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
-			List<Column> list = new ArrayList<Column>();
-			if(pk == null) {
-				list = update.getTable().getMetadataObject().getColumns();
-			} else {
-				list = pk.getColumns();
-			}
-			
-			for (Column c : list) {
-				if (!columns.contains(c)) {
-					ColumnReference cr = new ColumnReference(update.getTable(), c.getName(), c, c.getJavaType());
-					select.add(new DerivedColumn(null, cr));
-					cols.add(cr);
+			if(pk != null) {
+				for (Column c : pk.getColumns()) {
+					if (!columns.contains(c)) {
+						ColumnReference cr = new ColumnReference(update.getTable(), c.getName(), c, c.getJavaType());
+						select.add(new DerivedColumn(null, cr));
+						cols.add(cr);
+					}
 				}
 			}
+			
 			Select query = new Select(select, false, Arrays.asList((TableReference)update.getTable()), update.getWhere(), null, null, null);
 			insert = new Insert(update.getTable(), cols, query);
 			

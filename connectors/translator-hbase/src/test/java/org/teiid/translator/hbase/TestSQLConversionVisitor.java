@@ -50,7 +50,7 @@ public class TestSQLConversionVisitor {
         helpTest(sql, expected);
         
         sql = "UPDATE smalla SET StringKey = '55' WHERE smalla.StringKey IS NULL";
-        expected = "UPSERT INTO smalla (stringkey, intkey) SELECT '55', smalla.intkey FROM smalla WHERE smalla.stringkey IS NULL";
+        expected = "UPSERT INTO smalla (stringkey) SELECT '55' FROM smalla WHERE smalla.stringkey IS NULL";
         helpTest(sql, expected);
     }
     
