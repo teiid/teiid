@@ -84,6 +84,7 @@
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.4.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
+	<version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
 	    <version.narayana>5.0.4.Final</version.narayana>
 	</properties>
 	<scm>
@@ -1526,6 +1527,17 @@
                 <artifactId>proj4j</artifactId>
                 <version>${version.proj4j}</version>
             </dependency>
+	    <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-jaxrs</artifactId>
+                <version>${version.swagger-jaxrs}</version>
+		<exclusions>
+                    <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>jsr311-api</artifactId>
+                    </exclusion>
+		</exclusions>
+            </dependency>
             <dependency>
                 <groupId>org.jboss.narayana.jta</groupId>
                 <artifactId>narayana-jta</artifactId>
@@ -1545,6 +1557,7 @@
 		<module>hibernate-dialect</module>
 		<module>eclipselink-platform</module>
 		<module>jboss-integration</module>
+		<module>swagger-integration</module>
 		<module>jboss-security</module>
 		<module>test-integration</module>
 		<module>client-jdk15</module>

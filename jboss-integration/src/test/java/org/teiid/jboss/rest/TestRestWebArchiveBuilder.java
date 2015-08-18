@@ -24,7 +24,9 @@ package org.teiid.jboss.rest;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -74,6 +76,34 @@ public class TestRestWebArchiveBuilder {
 			assertTrue(files.contains(ze.getName()));
 			zipIn.closeEntry();
 		}
+	}
+	
+	@Test
+    public void testBuildArchiveSwagger() throws Exception {
+	    VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+        MetadataStore ms = new MetadataStore();
+        for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
+            MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());
+            ms.addSchema(mf.getSchema());
+        }
+        
+        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "Rest");
+        vdb.addAttchment(QueryMetadataInterface.class, metadata);
+        vdb.addAttchment(TransformationMetadata.class, metadata);
+        vdb.addAttchment(MetadataStore.class, ms);
+        
+        RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+        byte[] contents = builder.createRestArchive(vdb);
+        
+        ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(contents));
+        ZipEntry ze;
+        while ((ze = zipIn.getNextEntry()) != null) {
+            
+            System.out.println(ze.getName());
+            zipIn.closeEntry();            
+            
+        }
+        zipIn.close();
 	}
 
 }

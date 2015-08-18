@@ -101,6 +101,8 @@ public class RestASMBasedWebArchiveBuilder {
 		writeEntry("WEB-INF/web.xml", out, replaceTemplates(getFileContents("rest-war/web.xml"), props).getBytes());
 		writeEntry("WEB-INF/jboss-web.xml", out, replaceTemplates(getFileContents("rest-war/jboss-web.xml"), props).getBytes());
 		
+		writeSwagger(out, props);
+		
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
@@ -117,7 +119,61 @@ public class RestASMBasedWebArchiveBuilder {
 		return byteStream.toByteArray();
 	}
 
-	private void writeEntry(String name, ZipOutputStream out, byte[] contents) throws IOException {
+	private void writeSwagger(ZipOutputStream out, Properties props) throws IOException {
+	    writeEntry("api-doc.html", out, replaceTemplates(getFileContents("swagger/api-doc.html"), props).getBytes());
+	    writeEntry("o2c.html", out, replaceTemplates(getFileContents("swagger/o2c.html"), props).getBytes());
+	    writeEntry("swagger-ui.min.js", out, replaceTemplates(getFileContents("swagger/swagger-ui.min.js"), props).getBytes());
+	    writeEntry("swagger-ui.js", out, replaceTemplates(getFileContents("swagger/swagger-ui.js"), props).getBytes());
+	    
+	    writeEntry("css/print.css", out, replaceTemplates(getFileContents("swagger/css/print.css"), props).getBytes());
+	    writeEntry("css/reset.css", out, replaceTemplates(getFileContents("swagger/css/reset.css"), props).getBytes());
+	    writeEntry("css/screen.css", out, replaceTemplates(getFileContents("swagger/css/screen.css"), props).getBytes());
+	    writeEntry("css/style.css", out, replaceTemplates(getFileContents("swagger/css/style.css"), props).getBytes());
+	    writeEntry("css/typography.css", out, replaceTemplates(getFileContents("swagger/css/typography.css"), props).getBytes());
+	    
+	    
+	    writeEntry("fonts/droid-sans-v6-latin-700.eot", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.eot"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-700.svg", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.svg"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-700.ttf", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.ttf"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-700.woff", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.woff"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-700.woff2", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.woff2"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-regular.eot", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.eot"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-regular.svg", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.svg"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-regular.ttf", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.ttf"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-regular.woff", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.woff"), props).getBytes());
+	    writeEntry("fonts/droid-sans-v6-latin-regular.woff2", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.woff2"), props).getBytes());
+	    
+	    
+	    writeEntry("images/explorer_icons.png", out, replaceTemplates(getFileContents("swagger/images/explorer_icons.png"), props).getBytes());
+	    writeEntry("images/favicon-16x16.png", out, replaceTemplates(getFileContents("swagger/images/favicon-16x16.png"), props).getBytes());
+	    writeEntry("images/favicon-32x32.png", out, replaceTemplates(getFileContents("swagger/images/favicon-32x32.png"), props).getBytes());
+	    writeEntry("images/favicon.ico", out, replaceTemplates(getFileContents("swagger/images/favicon.ico"), props).getBytes());
+	    writeEntry("images/logo_small.png", out, replaceTemplates(getFileContents("swagger/images/logo_small.png"), props).getBytes());
+	    writeEntry("images/pet_store_api.png", out, replaceTemplates(getFileContents("swagger/images/pet_store_api.png"), props).getBytes());
+	    writeEntry("images/wordnik_api.png", out, replaceTemplates(getFileContents("swagger/images/wordnik_api.png"), props).getBytes());
+	    
+	    
+	    writeEntry("lang/en.js", out, replaceTemplates(getFileContents("swagger/lang/en.js"), props).getBytes());
+	    writeEntry("lang/es.js", out, replaceTemplates(getFileContents("swagger/lang/es.js"), props).getBytes());
+	    writeEntry("lang/pt.js", out, replaceTemplates(getFileContents("swagger/lang/pt.js"), props).getBytes());
+	    writeEntry("lang/ru.js", out, replaceTemplates(getFileContents("swagger/lang/ru.js"), props).getBytes());
+	    writeEntry("lang/translator.js", out, replaceTemplates(getFileContents("swagger/lang/translator.js"), props).getBytes());
+	    
+	    
+	    writeEntry("lib/backbone-min.js", out, replaceTemplates(getFileContents("swagger/lib/backbone-min.js"), props).getBytes());
+	    writeEntry("lib/handlebars-2.0.0.js", out, replaceTemplates(getFileContents("swagger/lib/handlebars-2.0.0.js"), props).getBytes());
+	    writeEntry("lib/highlight.7.3.pack.js", out, replaceTemplates(getFileContents("swagger/lib/highlight.7.3.pack.js"), props).getBytes());
+	    writeEntry("lib/jquery-1.8.0.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery-1.8.0.min.js"), props).getBytes());
+	    writeEntry("lib/jquery.ba-bbq.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.ba-bbq.min.js"), props).getBytes());
+	    writeEntry("lib/jquery.slideto.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.slideto.min.js"), props).getBytes());
+	    writeEntry("lib/jquery.wiggle.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.wiggle.min.js"), props).getBytes());
+	    writeEntry("lib/marked.js", out, replaceTemplates(getFileContents("swagger/lib/marked.js"), props).getBytes());
+	    writeEntry("lib/swagger-oauth.js", out, replaceTemplates(getFileContents("swagger/lib/swagger-oauth.js"), props).getBytes());
+	    writeEntry("lib/underscore-min.js", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.js"), props).getBytes());
+	    writeEntry("lib/underscore-min.map", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.map"), props).getBytes());
+    }
+
+    private void writeEntry(String name, ZipOutputStream out, byte[] contents) throws IOException {
 		ZipEntry e = new ZipEntry(name); 
 		out.putNextEntry(e);
 		FileUtils.write(new ByteArrayInputStream(contents), out, 1024);
