@@ -1242,6 +1242,16 @@ public class TestLimit {
                 1       // UnionAll
         }, NODE_TYPES);
         
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3", Arrays.asList(null, 4), Arrays.asList("a", 5), Arrays.asList("c", 6));
+        hdm.addData("SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 ORDER BY pm3.g1.e1 LIMIT 3", Arrays.asList(null, 7), Arrays.asList("a", 8), Arrays.asList("c", 9));
+        hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
+        TestProcessor.helpProcess(plan, hdm, new List[] {
+        		Arrays.asList(null, 4), //$NON-NLS-1$
+        		Arrays.asList(null, 7), //$NON-NLS-1$
+        		Arrays.asList("a", 5), //$NON-NLS-1$
+        });
+        
     }
 
 }

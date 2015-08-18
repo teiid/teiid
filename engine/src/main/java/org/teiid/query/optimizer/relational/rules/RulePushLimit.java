@@ -59,6 +59,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -222,6 +223,8 @@ public class RulePushLimit implements OptimizerRule {
             			NodeEditor.removeChildNode(limitNode.getParent(), limitNode);
             			limitNode.setProperty(NodeConstants.Info.OUTPUT_COLS, sourceNode.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
             			child.setProperty(NodeConstants.Info.OUTPUT_COLS, sourceNode.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
+            			//project the order through the source
+            			FrameUtil.convertNode(child, sourceNode.getGroups().iterator().next(), null, ((SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP)).asMap(), metadata, false);
             			sourceNode.getFirstChild().addAsParent(child);
             			child.addAsParent(limitNode);
             			//push again
