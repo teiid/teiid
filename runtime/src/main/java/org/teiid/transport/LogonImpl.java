@@ -34,7 +34,11 @@ import javax.security.auth.login.LoginException;
 
 import org.ietf.jgss.GSSCredential;
 import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.client.security.*;
+import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.LogonException;
+import org.teiid.client.security.LogonResult;
+import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
@@ -42,7 +46,6 @@ import org.teiid.core.util.Base64;
 import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
-import org.teiid.dqp.service.GSSResult;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.jdbc.BaseDataSource;
@@ -52,6 +55,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.security.GSSResult;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 
@@ -168,42 +172,50 @@ public class LogonImpl implements ILogon {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, "Kerberos")); //$NON-NLS-1$
 		}
 		
-		try {
-			// Using SPENGO security domain establish a token and subject.
-			GSSResult result = service.neogitiateGssLogin(user, vdbName, vdbVersion, serviceTicket);
-			if (result == null) {
-				 throw new LogonException(RuntimePlugin.Event.TEIID40014, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
-			}
-			
+		// Using SPENGO security domain establish a token and subject.
+		GSSResult result = neogitiateGssLogin(serviceTicket, vdbName, vdbVersion, user);
+					
+		if (!result.isAuthenticated() || !createSession) {
+			LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
+			logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.isAuthenticated()));
 			if (result.isAuthenticated()) {
-				LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$	
-				connProps.setProperty(TeiidURL.CONNECTION.USER_NAME, result.getUserName());
-		    	this.gssServiceTickets.put(Base64.encodeBytes(MD5(result.getServiceToken())), result.getSecurityContext());
+			    logonResult.addProperty(GSSCredential.class.getName(), result.getDelegationCredential());
 			}
-						
-			// kerberoes (odbc) will always return here from below block
-			if (!result.isAuthenticated() || !createSession) {
-				LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
-				logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.isAuthenticated()));
-				if (result.isAuthenticated()) {
-				    logonResult.addProperty(GSSCredential.class.getName(), result.getDelegationCredentail());
-				}
-				return logonResult;
-			}		
 			
-			// GSS API (jdbc) will make the session in one single call			
-			connProps.put(ILogon.KRB5TOKEN, result.getServiceToken());
-			if(result.getDelegationCredentail() != null){
-				connProps.put(GSSCredential.class.getName(), result.getDelegationCredentail());
-			}
-			LogonResult logonResult =  logon(connProps);
 			return logonResult;
-		} catch (LoginException e) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40014, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
+		}		
+		
+		// GSS API (jdbc) will make the session in one single call
+		connProps.setProperty(TeiidURL.CONNECTION.USER_NAME, result.getUserName());
+		connProps.put(ILogon.KRB5TOKEN, result.getServiceToken());
+		if(result.getDelegationCredential() != null){
+			connProps.put(GSSCredential.class.getName(), result.getDelegationCredential());
 		}
+		LogonResult logonResult =  logon(connProps);
+		return logonResult;
 	}
-	
+
+	public GSSResult neogitiateGssLogin(byte[] serviceTicket, String vdbName,
+			String vdbVersion, String user) throws LogonException {
+		GSSResult result;
+		try {
+			result = service.neogitiateGssLogin(user, vdbName, vdbVersion, serviceTicket);
+		} catch (LoginException e) {
+			throw new LogonException(RuntimePlugin.Event.TEIID40014, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
+		}
+
+		if (result == null) {
+			 throw new LogonException(RuntimePlugin.Event.TEIID40014, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
+		}
+		
+		if (result.isAuthenticated()) {
+			LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$	
+			this.gssServiceTickets.put(Base64.encodeBytes(MD5(result.getServiceToken())), result.getSecurityContext());
+		}
+		return result;
+	}
+
 	protected static byte[] MD5(byte[] content) {
 		try {
 			java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5"); //$NON-NLS-1$

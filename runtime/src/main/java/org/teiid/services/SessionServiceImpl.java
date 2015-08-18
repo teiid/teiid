@@ -50,7 +50,6 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.service.GSSResult;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
@@ -60,6 +59,7 @@ import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 

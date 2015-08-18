@@ -46,7 +46,6 @@ import org.ietf.jgss.GSSCredential;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
-import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
@@ -59,11 +58,13 @@ import org.teiid.jdbc.StatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.security.GSSResult;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 import org.teiid.transport.ODBCClientInstance;
@@ -224,7 +225,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	public void logon(String databaseName, String user, NullTerminatedStringDataInputStream data, SocketAddress remoteAddress) {
 		try {
 			java.util.Properties info = new java.util.Properties();
-			info.put("user", user); //$NON-NLS-1$
+			info.put(TeiidURL.CONNECTION.USER_NAME, user); 
 			
 			AuthenticationType authType = getAuthenticationType(user, databaseName);
 			
@@ -234,13 +235,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 			else if (authType.equals(AuthenticationType.GSS)) {
 				byte[] serviceToken = data.readServiceToken();
-            	LogonResult result = this.logon.neogitiateGssLogin(this.props, serviceToken, false);
-            	serviceToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
-            	if (Boolean.TRUE.equals(result.getProperty(ILogon.KRB5_ESTABLISHED))) {
+            	GSSResult result = this.logon.neogitiateGssLogin(serviceToken, databaseName, null, user);
+            	serviceToken = result.getServiceToken();
+            	if (result.isAuthenticated()) {
                 	info.put(ILogon.KRB5TOKEN, serviceToken);
                 	// if delegation is in progress, participate in it.
-                	if (result.getProperty(GSSCredential.class.getName()) != null) {
-                		info.put(GSSCredential.class.getName(), result.getProperty(GSSCredential.class.getName()));
+                	if (result.getDelegationCredential() != null) {
+                		info.put(GSSCredential.class.getName(), result.getDelegationCredential());
                 	}
             	}
             	else {
@@ -255,7 +256,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"; //$NON-NLS-1$ //$NON-NLS-2$
 
 			if (password != null) {
-				info.put("password", password); //$NON-NLS-1$
+				info.put(TeiidURL.CONNECTION.PASSWORD, password); 
 			}
 			
 			if (remoteAddress instanceof InetSocketAddress) {

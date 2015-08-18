@@ -38,10 +38,10 @@ import org.jboss.security.SimplePrincipal;
 import org.jboss.security.negotiation.Constants;
 import org.jboss.security.negotiation.common.NegotiationContext;
 import org.jboss.security.negotiation.spnego.KerberosMessage;
-import org.teiid.dqp.service.GSSResult;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.services.TeiidLoginContext;
 

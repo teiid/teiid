@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.dqp.service;
+package org.teiid.security;
 
 import org.ietf.jgss.GSSCredential;
 
@@ -29,12 +29,12 @@ public class GSSResult {
 	private boolean authenticated;
 	private Object securityContext;
 	private String userName;
-	private GSSCredential delegationCredentail;
+	private GSSCredential delegationCredential;
 	
 	public GSSResult(byte[] token, boolean authenticated, GSSCredential cred) {
 		this.serviceToken = token;
 		this.authenticated = authenticated;
-		this.delegationCredentail = cred;
+		this.delegationCredential = cred;
 	}
 	
 	public boolean isAuthenticated() {
@@ -61,11 +61,11 @@ public class GSSResult {
 		this.userName = name;
 	}
 
-    public GSSCredential getDelegationCredentail() {
-        return delegationCredentail;
+    public GSSCredential getDelegationCredential() {
+        return delegationCredential;
     }
 
-    public void setDelegationCredentail(GSSCredential delegationCredentail) {
-        this.delegationCredentail = delegationCredentail;
+    public void setDelegationCredential(GSSCredential delegationCredentail) {
+        this.delegationCredential = delegationCredentail;
     }	
 }
