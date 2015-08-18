@@ -141,11 +141,6 @@ public class InfinispanExecutionFactory extends
 	}
 	
 	@Override
-	public boolean supportsCompareCriteriaOrderedExclusive() {
-		return true;
-	}
-	
-	@Override
 	public boolean supportsLikeCriteria() {
 		return Boolean.TRUE.booleanValue();
 	}	
