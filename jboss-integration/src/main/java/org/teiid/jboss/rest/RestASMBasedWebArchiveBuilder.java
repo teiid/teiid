@@ -22,6 +22,7 @@
 package org.teiid.jboss.rest;
 
 import static org.objectweb.asm.Opcodes.*;
+import io.swagger.annotations.ApiResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -243,6 +244,22 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitFieldInsn(PUTFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "empty", "Ljava/util/Set;");
     	mv.visitVarInsn(ALOAD, 0);
     	
+    	mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
+        mv.visitTypeInsn(NEW, "io/swagger/jaxrs/listing/ApiListingResource");
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/listing/ApiListingResource", "<init>", "()V");
+        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "add", "(Ljava/lang/Object;)Z");
+        mv.visitInsn(POP);
+        mv.visitVarInsn(ALOAD, 0);
+        
+        mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
+        mv.visitTypeInsn(NEW, "io/swagger/jaxrs/listing/SwaggerSerializers");
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/listing/SwaggerSerializers", "<init>", "()V");
+        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "add", "(Ljava/lang/Object;)Z");
+        mv.visitInsn(POP);
+        mv.visitVarInsn(ALOAD, 0);
+    	
     	for (int i = 0; i < models.size(); i++) {
 	    	mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
 	    	mv.visitTypeInsn(NEW, "org/teiid/jboss/rest/"+models.get(i));
@@ -283,19 +300,26 @@ public class RestASMBasedWebArchiveBuilder {
     	return cw.toByteArray();
     }
     
-    private byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
+    public byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
     	ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     	MethodVisitor mv;
     	AnnotationVisitor av0;
     	boolean hasValidProcedures = false;
     	
     	cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/"+modelName, null, "org/teiid/jboss/rest/TeiidRSProvider", null);
-
+    	
+    	{
+    	av0 = cw.visitAnnotation("Lio/swagger/annotations/Api;", true);
+        av0.visit("value", "/"+modelName.toLowerCase());
+        av0.visitEnd();
+    	}
+    	
     	{
     	av0 = cw.visitAnnotation("Ljavax/ws/rs/Path;", true);
     	av0.visit("value", "/"+modelName.toLowerCase());
     	av0.visitEnd();
     	}
+    	
     	cw.visitInnerClass("javax/ws/rs/core/Response$Status", "javax/ws/rs/core/Response", "Status", ACC_PUBLIC + ACC_FINAL + ACC_STATIC + ACC_ENUM);
 
     	{
@@ -439,6 +463,18 @@ public class RestASMBasedWebArchiveBuilder {
     	av0 = mv.visitAnnotation("Ljavax/annotation/security/PermitAll;", true);
     	av0.visitEnd();
     	}
+    	
+    	{
+    	av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiOperation;", true);
+    	av0.visit("value", procedure.getName());
+    	av0.visitEnd();
+    	}
+    	
+//    	{
+//        av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
+//        av0.visit("value", new ApiResponse[]{});
+//        av0.visitEnd();
+//        }
         
     	if(useMultipart)
     	{
@@ -467,6 +503,10 @@ public class RestASMBasedWebArchiveBuilder {
         		av0 = mv.visitParameterAnnotation(i, paramType, true);
         		av0.visit("value", params.get(i).getName());
         		av0.visitEnd();
+        		
+        		av0 = mv.visitParameterAnnotation(i, "Lio/swagger/annotations/ApiParam;", true);
+                av0.visit("value", params.get(i).getName());
+                av0.visitEnd();
     		}
     	}
     	
@@ -562,14 +602,29 @@ public class RestASMBasedWebArchiveBuilder {
 			}
 			{
 			av0 = mv.visitAnnotation("Ljavax/ws/rs/Path;", true);
-			av0.visit("value", "/query");
+			av0.visit("value", modelName);
 			av0.visitEnd();
 			}
+			{
+			av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiOperation;", true);
+			av0.visit("value", context);
+            av0.visitEnd();
+			}
+//			{
+//	        av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
+//	        av0.visit("value", new ApiResponse[]{});
+//	        av0.visitEnd();
+//	        }
 			{
 			av0 = mv.visitParameterAnnotation(0, "Ljavax/ws/rs/FormParam;", true);
 			av0.visit("value", "sql");
 			av0.visitEnd();
 			}
+			{
+	        av0 = mv.visitParameterAnnotation(0, "Lio/swagger/annotations/ApiParam;", true);
+	        av0.visit("value", context);
+	        av0.visitEnd();
+	        }
 			mv.visitCode();
 			Label l0 = new Label();
 			Label l1 = new Label();
