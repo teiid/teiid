@@ -22,7 +22,6 @@
 package org.teiid.jboss.rest;
 
 import static org.objectweb.asm.Opcodes.*;
-import io.swagger.annotations.ApiResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -103,6 +102,8 @@ public class RestASMBasedWebArchiveBuilder {
 		writeEntry("WEB-INF/jboss-web.xml", out, replaceTemplates(getFileContents("rest-war/jboss-web.xml"), props).getBytes());
 		
 		writeSwagger(out, props);
+		
+		writeEntry("WEB-INF/jboss-deployment-structure.xml", out, replaceTemplates(getFileContents("rest-war/jboss-deployment-structure.xml"), props).getBytes());
 		
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
@@ -602,7 +603,7 @@ public class RestASMBasedWebArchiveBuilder {
 			}
 			{
 			av0 = mv.visitAnnotation("Ljavax/ws/rs/Path;", true);
-			av0.visit("value", modelName);
+			av0.visit("value", "/query");
 			av0.visitEnd();
 			}
 			{

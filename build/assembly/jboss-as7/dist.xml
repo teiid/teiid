@@ -279,6 +279,48 @@
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>
     </moduleSet>
+
+<!--  -->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid:teiid-swagger-integration</include>
+        </includes>
+
+	    <binaries>
+            <includeDependencies>true</includeDependencies>
+            <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <includes>
+                        <include>io.swagger:*</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/io/swagger/main</outputDirectory>
+                </dependencySet>
+				<dependencySet>
+                    <includes>
+                        <include>com.fasterxml.jackson.dataformat:*</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/dataformat/main</outputDirectory>
+                </dependencySet>
+				<dependencySet>
+                    <includes>
+                        <include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/datatype/main</outputDirectory>
+                </dependencySet>
+				<dependencySet>
+                    <includes>
+                        <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/jaxrs/main</outputDirectory>
+                </dependencySet>
+			</dependencySets>
+	    	<outputDirectory>${jbossas-module-root}/org/jboss/teiid/swagger/main</outputDirectory>
+		</binaries>
+    </moduleSet>
     
     <!-- This is separated out so that we can avoid dragging in transitive dependencies, using pom build the adminshell correctly -->
     <moduleSet>

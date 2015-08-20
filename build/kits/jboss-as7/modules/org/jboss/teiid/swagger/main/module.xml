@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.swagger">
+    
+    <resources>
+        <resource-root path="teiid-swagger-integration-${project.version}.jar" />
+    </resources>
+
+    <dependencies>
+        <module name="io.swagger" export="true"/>
+        <module name="org.jboss.teiid.common-core" />
+    </dependencies>
+
+</module>
