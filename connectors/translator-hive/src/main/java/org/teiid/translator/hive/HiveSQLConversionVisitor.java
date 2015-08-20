@@ -26,18 +26,44 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 import java.util.List;
 
 import org.teiid.language.*;
+import org.teiid.language.Join.JoinType;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 
+	BaseHiveExecutionFactory baseHiveExecutionFactory;
+	
 	public HiveSQLConversionVisitor(BaseHiveExecutionFactory hef) {
 		super(hef);
+		this.baseHiveExecutionFactory = hef;
 	}
 	
     @Override
 	public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
+        TableReference rightItem = obj.getRightItem();
+        JoinType joinType = obj.getJoinType();
+        
+        //impala only supports a left linear join
+        if (baseHiveExecutionFactory.requiresLeftLinearJoin() && rightItem instanceof Join) {
+        	if (leftItem instanceof Join) {
+        		//TODO: this may need to be handled in the engine to inhibit pushdown
+        		throw new AssertionError("A left linear join structure is required: " + obj); //$NON-NLS-1$
+        	}
+        	
+        	//swap
+        	TableReference tr = leftItem;
+        	leftItem = rightItem;
+        	rightItem = tr;
+        	
+        	if (joinType == JoinType.RIGHT_OUTER_JOIN) {
+        		joinType = JoinType.LEFT_OUTER_JOIN;
+        	} else if (joinType == JoinType.LEFT_OUTER_JOIN) {
+        		joinType = JoinType.RIGHT_OUTER_JOIN;
+        	}
+        }
+        
         if(useParensForJoins() && leftItem instanceof Join) {
             buffer.append(Tokens.LPAREN);
             append(leftItem);
@@ -47,7 +73,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         }
         buffer.append(Tokens.SPACE);
         
-        switch(obj.getJoinType()) {
+        switch(joinType) {
             case CROSS_JOIN:
             	// Hive just works with "JOIN" keyword no inner or cross
             	// fixed in - https://issues.apache.org/jira/browse/HIVE-2549
@@ -78,7 +104,6 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
               .append(JOIN)
               .append(Tokens.SPACE);
         
-        TableReference rightItem = obj.getRightItem();
         if(rightItem instanceof Join && (useParensForJoins() || obj.getJoinType() == Join.JoinType.CROSS_JOIN)) {
             buffer.append(Tokens.LPAREN);
             append(rightItem);

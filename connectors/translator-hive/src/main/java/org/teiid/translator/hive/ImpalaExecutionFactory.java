@@ -202,4 +202,14 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     	return true;
     }
     
+    @Override
+    public org.teiid.translator.ExecutionFactory.SupportedJoinCriteria getSupportedJoinCriteria() {
+    	return SupportedJoinCriteria.ANY;
+    }
+    
+    @Override
+    public boolean requiresLeftLinearJoin() {
+    	return true;
+    }
+    
 }

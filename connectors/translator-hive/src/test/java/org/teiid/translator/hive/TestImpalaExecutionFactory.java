@@ -27,10 +27,13 @@ import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.cdk.CommandBuilder;
+import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -66,5 +69,13 @@ public class TestImpalaExecutionFactory {
     @Test public void testConversionSupport() {
     	assertFalse(impalaTranslator.supportsConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME));
     	assertTrue(impalaTranslator.supportsConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP));
+    }
+    
+    @Test public void testJoin() {
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        Command obj = commandBuilder.getCommand("select pm1.g1.e1 from pm1.g1 inner join pm1.g2 inner join pm1.g3 on pm1.g2.e2 = pm1.g3.e2 on pm1.g1.e1 = pm1.g2.e1");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT g1.e1 FROM g2  JOIN g3 ON g2.e2 = g3.e2  JOIN g1 ON g1.e1 = g2.e1", sqlVisitor.toString());
     }
 }

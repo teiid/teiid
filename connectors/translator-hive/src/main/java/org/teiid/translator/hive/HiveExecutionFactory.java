@@ -193,4 +193,14 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         return true;
     }   
     
+    @Override
+    public org.teiid.translator.ExecutionFactory.SupportedJoinCriteria getSupportedJoinCriteria() {
+    	return SupportedJoinCriteria.EQUI;
+    }
+    
+    @Override
+    public boolean useParensForJoins() {
+    	return true;
+    }
+    
 }

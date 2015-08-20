@@ -283,4 +283,8 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public void setUseDatabaseMetaData(boolean useDatabaseMetaData) {
 		this.useDatabaseMetaData = useDatabaseMetaData;
 	}
+    
+    public boolean requiresLeftLinearJoin() {
+    	return false;
+    }
 }
