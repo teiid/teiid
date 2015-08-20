@@ -1253,5 +1253,51 @@ public class TestLimit {
         });
         
     }
+    
+    @Test public void testOrderedOuterJoinLimitUnionPushdown() throws Exception {
+    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, false);
+        caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
+         
+        String sql = "select u.e1, u.e2, pm2.g1.e2 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 union all select pm1.g2.e1, pm1.g2.e2 from pm1.g2 )as u left outer join pm2.g1 on u.e1 = pm2.g1.e1 where u.e2 is null order by u.e1 limit 3"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 WHERE pm1.g1.e2 IS NULL UNION ALL SELECT pm1.g2.e1 AS c_0, pm1.g2.e2 AS c_1 FROM pm1.g2 WHERE pm1.g2.e2 IS NULL ORDER BY c_0 LIMIT 3", 
+        	"SELECT pm2.g1.e1 AS c_0, pm2.g1.e2 AS c_1 FROM pm2.g1 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                1,      // Limit
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                1,      // Sort
+                0       // UnionAll
+        }, NODE_TYPES);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 WHERE pm1.g1.e2 IS NULL UNION ALL SELECT pm1.g2.e1 AS c_0, pm1.g2.e2 AS c_1 FROM pm1.g2 WHERE pm1.g2.e2 IS NULL ORDER BY c_0 LIMIT 3", Arrays.asList(null, null), Arrays.asList("a", null), Arrays.asList("c", null));
+        hdm.addData("SELECT pm2.g1.e1 AS c_0, pm2.g1.e2 AS c_1 FROM pm2.g1 ORDER BY c_0", Arrays.asList(null, 0), Arrays.asList("a", 1), Arrays.asList("e", 2));
+        TestProcessor.helpProcess(plan, hdm, new List[] {
+        		Arrays.asList(null, null, null), //$NON-NLS-1$
+        		Arrays.asList("a", null, 1), //$NON-NLS-1$
+        		Arrays.asList("c", null, null), //$NON-NLS-1$
+        });
+        
+    }
 
 }

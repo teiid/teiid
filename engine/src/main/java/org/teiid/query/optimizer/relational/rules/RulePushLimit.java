@@ -269,6 +269,15 @@ public class RulePushLimit implements OptimizerRule {
             		}
             		break;
             	}
+            	case NodeConstants.Types.ACCESS:
+            	{
+            		if (RuleRaiseAccess.canRaiseOverSort(child.getFirstChild(), metadata, capFinder, child, null, false, context)) {
+            			NodeEditor.removeChildNode(limitNode, child);
+            			limitNode.getFirstChild().getFirstChild().addAsParent(child);
+            			limitNodes.add(limitNode); //try to keep pushing
+            			return false;
+            		}
+            	}
             	}
             	return false;
             default:
@@ -308,12 +317,7 @@ public class RulePushLimit implements OptimizerRule {
 		newSort.setProperty(Info.SORT_ORDER, newOrderBy);
 		newSort.addGroups(child.getGroups());
 		newSort.setProperty(NodeConstants.Info.OUTPUT_COLS, branch.getProperty(NodeConstants.Info.OUTPUT_COLS));
-		if (branch.getType() == NodeConstants.Types.ACCESS &&
-				RuleRaiseAccess.canRaiseOverSort(branch, metadata, capFinder, newSort, null, false, context)) {
-			branch.getFirstChild().addAsParent(newSort);
-		} else {
-			branch.addAsParent(newSort);
-		}
+		branch.addAsParent(newSort);
 		addBranchLimit(limitNode, limitNodes, metadata, parentLimit, parentOffset, newSort);
 		if (limitNode.hasBooleanProperty(Info.IS_PUSHED)) {
 			//remove the intermediate ordering/limit
