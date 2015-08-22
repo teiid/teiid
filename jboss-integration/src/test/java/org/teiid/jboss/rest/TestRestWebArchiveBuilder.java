@@ -22,6 +22,8 @@
 package org.teiid.jboss.rest;
 
 import static org.junit.Assert.*;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -71,7 +73,6 @@ public class TestRestWebArchiveBuilder {
 		ArrayList<String> files = new ArrayList<String>();
 		files.add("WEB-INF/web.xml");
 		files.add("WEB-INF/jboss-web.xml");
-		files.add("WEB-INF/jboss-deployment-structure.xml");
 		files.add("WEB-INF/classes/org/teiid/jboss/rest/View.class");
 		files.add("WEB-INF/classes/org/teiid/jboss/rest/TeiidRestApplication.class");
 		files.add("META-INF/MANIFEST.MF");
@@ -162,28 +163,28 @@ public class TestRestWebArchiveBuilder {
                 assertEquals(2, annotationSet.size());
                 
                 for(Method m : cls.getMethods()){
-//                    if(m.getName().equals("g1Tableapplication_xml")){
-//                        ApiOperation annotation = m.getAnnotation(ApiOperation.class);
-//                        assertEquals("g1Table", annotation.value());
-//                        Parameter[] params = m.getParameters();
-//                        Parameter param = params[0];
-//                        ApiParam a = param.getAnnotation(ApiParam.class);
-//                        assertEquals("p1", a.value());
-//                    } else if(m.getName().equals("sqlQueryxml")){
-//                        ApiOperation annotation = m.getAnnotation(ApiOperation.class);
-//                        assertEquals("xml", annotation.value());
-//                        Parameter[] params = m.getParameters();
-//                        Parameter param = params[0];
-//                        ApiParam a = param.getAnnotation(ApiParam.class);
-//                        assertEquals("xml", a.value());
-//                    } else if(m.getName().equals("sqlQueryjson")){
-//                        ApiOperation annotation = m.getAnnotation(ApiOperation.class);
-//                        assertEquals("json", annotation.value());
-//                        Parameter[] params = m.getParameters();
-//                        Parameter param = params[0];
-//                        ApiParam a = param.getAnnotation(ApiParam.class);
-//                        assertEquals("json", a.value());
-//                    }
+                    if(m.getName().equals("g1Tableapplication_xml")){
+                        ApiOperation annotation = m.getAnnotation(ApiOperation.class);
+                        assertEquals("g1Table", annotation.value());
+                        Parameter[] params = m.getParameters();
+                        Parameter param = params[0];
+                        ApiParam a = param.getAnnotation(ApiParam.class);
+                        assertEquals("p1", a.value());
+                    } else if(m.getName().equals("sqlQueryxml")){
+                        ApiOperation annotation = m.getAnnotation(ApiOperation.class);
+                        assertEquals("xml", annotation.value());
+                        Parameter[] params = m.getParameters();
+                        Parameter param = params[0];
+                        ApiParam a = param.getAnnotation(ApiParam.class);
+                        assertEquals("xml", a.value());
+                    } else if(m.getName().equals("sqlQueryjson")){
+                        ApiOperation annotation = m.getAnnotation(ApiOperation.class);
+                        assertEquals("json", annotation.value());
+                        Parameter[] params = m.getParameters();
+                        Parameter param = params[0];
+                        ApiParam a = param.getAnnotation(ApiParam.class);
+                        assertEquals("json", a.value());
+                    }
                 }
                                 
             }

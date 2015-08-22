@@ -107,7 +107,55 @@
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-multipart-provider</artifactId>
         <scope>provided</scope>
-    </dependency>                             
+    </dependency>
+    
+    <!-- This dependency for swagger inegration -->    
+    <dependency>
+		  <groupId>io.swagger</groupId>
+		  <artifactId>swagger-jaxrs</artifactId>
+		  <exclusions>
+		  	<exclusion>
+		  		<groupId>javax.ws.rs</groupId>
+		  		<artifactId>jsr311-api</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>javax.validation</groupId>
+		  		<artifactId>validation-api</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>org.slf4j</groupId>
+		  		<artifactId>slf4j-api</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>com.fasterxml.jackson.core</groupId>
+		  		<artifactId>*</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>com.google.guava</groupId>
+		  		<artifactId>guava</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>org.javassist</groupId>
+		  		<artifactId>javassist</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>org.apache.commons</groupId>
+		  		<artifactId>commons-lang3</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>org.yaml</groupId>
+		  		<artifactId>snakeyaml</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>org.codehaus.woodstox</groupId>
+		  		<artifactId>stax2-api</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>joda-time</groupId>
+		  		<artifactId>joda-time</artifactId>
+		  	</exclusion>
+		  </exclusions>
+		</dependency>                         
     
     <!-- This dependency is to read the ra.xml file details -->
     <dependency>

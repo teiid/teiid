@@ -101,10 +101,8 @@ public class RestASMBasedWebArchiveBuilder {
 		writeEntry("WEB-INF/web.xml", out, replaceTemplates(getFileContents("rest-war/web.xml"), props).getBytes());
 		writeEntry("WEB-INF/jboss-web.xml", out, replaceTemplates(getFileContents("rest-war/jboss-web.xml"), props).getBytes());
 		
-		writeSwagger(out, props);
-		
-		writeEntry("WEB-INF/jboss-deployment-structure.xml", out, replaceTemplates(getFileContents("rest-war/jboss-deployment-structure.xml"), props).getBytes());
-		
+		writeSwagger(out, props, vdb);
+				
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
@@ -121,7 +119,7 @@ public class RestASMBasedWebArchiveBuilder {
 		return byteStream.toByteArray();
 	}
 
-	private void writeSwagger(ZipOutputStream out, Properties props) throws IOException {
+	private void writeSwagger(ZipOutputStream out, Properties props, VDBMetaData vdb) throws IOException {
 	    writeEntry("api-doc.html", out, replaceTemplates(getFileContents("swagger/api-doc.html"), props).getBytes());
 	    writeEntry("o2c.html", out, replaceTemplates(getFileContents("swagger/o2c.html"), props).getBytes());
 	    writeEntry("swagger-ui.min.js", out, replaceTemplates(getFileContents("swagger/swagger-ui.min.js"), props).getBytes());
@@ -173,6 +171,85 @@ public class RestASMBasedWebArchiveBuilder {
 	    writeEntry("lib/swagger-oauth.js", out, replaceTemplates(getFileContents("swagger/lib/swagger-oauth.js"), props).getBytes());
 	    writeEntry("lib/underscore-min.js", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.js"), props).getBytes());
 	    writeEntry("lib/underscore-min.map", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.map"), props).getBytes());
+	    
+	    byte[] bytes = getBootstrapServletClass(vdb.getName(), vdb.getDescription(), vdb.getVersion() + ".0", new String[]{"http"}, props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
+	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/BootstrapServlet.class", out, bytes);
+	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass());
+    }
+	
+	private byte[] getApiOriginFilterClass() {
+        
+        ClassWriter cw = new ClassWriter(0);
+        MethodVisitor mv;
+        cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/ApiOriginFilter", null, "java/lang/Object", new String[]{"javax/servlet/Filter"});
+        
+        mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/FilterConfig;)V", null, new String[] {"javax/servlet/ServletException"});
+        mv.visitCode();
+        mv.visitInsn(ATHROW);
+        mv.visitMaxs(6, 3);
+        mv.visitEnd();
+        
+        mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;Ljavax/servlet/FilterChain;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+        mv.visitCode();
+        //TODO
+        mv.visitInsn(ATHROW);
+        mv.visitMaxs(6, 3);
+        mv.visitEnd();
+        
+        mv = cw.visitMethod(ACC_PUBLIC, "destroy", "()V", null, null);
+        mv.visitCode();
+        mv.visitInsn(ATHROW);
+        mv.visitMaxs(6, 3);
+        mv.visitEnd();
+        
+        cw.visitEnd();
+        
+        return cw.toByteArray();   
+    }
+	
+	private byte[] getBootstrapServletClass(String vdbName, String desc, String version, String[] schamas, String baseUrl, String packages, Boolean scan) {
+        ClassWriter cw = new ClassWriter(0);
+        MethodVisitor mv;
+        cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/BootstrapServlet", null, "javax/servlet/http/HttpServlet", null);
+        
+        mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/ServletConfig;)V", null, new String[] {"javax/servlet/ServletException"});
+        mv.visitCode();
+        mv.visitTypeInsn(NEW, "io/swagger/jaxrs/config/BeanConfig");
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/config/BeanConfig", "<init>", "()V");
+        mv.visitLdcInsn(vdbName);
+        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setTitle", "(Ljava/lang/String;)V");
+        mv.visitLdcInsn(desc);
+        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setDescription", "(Ljava/lang/String;)V");
+        mv.visitLdcInsn(version);
+        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setVersion", "(Ljava/lang/String;)V");
+//        mv.visitLdcInsn(schamas);
+//        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setSchemes", "(L[Ljava/lang/String;)V");
+        mv.visitLdcInsn(baseUrl);
+        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setBasePath", "(Ljava/lang/String;)V");
+        mv.visitLdcInsn(packages);
+        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setResourcePackage", "(Ljava/lang/String;)V");
+        mv.visitLdcInsn(scan);
+        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setScan", "(Ljava/lang/Boolean;)V");
+        mv.visitMaxs(6, 3);
+        mv.visitEnd();
+        
+        mv = cw.visitMethod(ACC_PUBLIC, "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+        mv.visitCode();
+        //TODO
+        mv.visitInsn(ATHROW);
+        mv.visitMaxs(6, 3);
+        mv.visitEnd();
+        
+        mv = cw.visitMethod(ACC_PUBLIC, "doPost", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+        mv.visitCode();
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/BootstrapServlet", "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V");
+        mv.visitMaxs(6, 3);
+        mv.visitEnd();
+        
+        cw.visitEnd();
+        
+        return cw.toByteArray();
     }
 
     private void writeEntry(String name, ZipOutputStream out, byte[] contents) throws IOException {
@@ -471,11 +548,11 @@ public class RestASMBasedWebArchiveBuilder {
     	av0.visitEnd();
     	}
     	
-//    	{
+    	{
 //        av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
 //        av0.visit("value", new ApiResponse[]{});
 //        av0.visitEnd();
-//        }
+        }
         
     	if(useMultipart)
     	{
@@ -611,21 +688,23 @@ public class RestASMBasedWebArchiveBuilder {
 			av0.visit("value", context);
             av0.visitEnd();
 			}
-//			{
+			{
 //	        av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
 //	        av0.visit("value", new ApiResponse[]{});
 //	        av0.visitEnd();
-//	        }
-			{
-			av0 = mv.visitParameterAnnotation(0, "Ljavax/ws/rs/FormParam;", true);
-			av0.visit("value", "sql");
-			av0.visitEnd();
-			}
+	        }
 			{
 	        av0 = mv.visitParameterAnnotation(0, "Lio/swagger/annotations/ApiParam;", true);
 	        av0.visit("value", context);
 	        av0.visitEnd();
 	        }
+			
+			{
+			av0 = mv.visitParameterAnnotation(0, "Ljavax/ws/rs/FormParam;", true);
+			av0.visit("value", "sql");
+			av0.visitEnd();
+			}
+			
 			mv.visitCode();
 			Label l0 = new Label();
 			Label l1 = new Label();

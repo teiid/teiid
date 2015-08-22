@@ -44,10 +44,11 @@ public class BootstrapServlet extends HttpServlet{
       //TODO-- read from servlet parameter
         BeanConfig beanConfig = new BeanConfig();
         beanConfig.setTitle("Jaxrs Examples Petstore");
+        beanConfig.setDescription("");
         beanConfig.setVersion("1.0.0");
         beanConfig.setSchemes(new String[]{"http"});
         beanConfig.setBasePath(BASEURL);
-        beanConfig.setResourcePackage("org.teiid");
+        beanConfig.setResourcePackage("org.teiid.jboss.rest");
         beanConfig.setScan(true);
     }
     
