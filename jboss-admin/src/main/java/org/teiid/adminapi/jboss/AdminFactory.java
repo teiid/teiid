@@ -22,9 +22,7 @@
 
 package org.teiid.adminapi.jboss;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REMOVE_OPERATION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +32,11 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.logging.Logger;
 
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
@@ -45,27 +47,13 @@ import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminComponentException;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminPlugin;
-import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.CacheStatistics;
-import org.teiid.adminapi.DomainAware;
-import org.teiid.adminapi.EngineStatistics;
-import org.teiid.adminapi.PropertyDefinition;
-import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Session;
-import org.teiid.adminapi.Transaction;
-import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.WorkerPoolStatistics;
-import org.teiid.adminapi.Admin.SchemaObjectType;
-import org.teiid.adminapi.Admin.TranlatorPropertyType;
-import org.teiid.adminapi.AdminPlugin.Event;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.impl.AdminObjectImpl;
+import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
@@ -453,13 +441,14 @@ public class AdminFactory {
 		@Override
 		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
 			deploymentName = removeJavaContext(deploymentName);
-
-			Collection<String> dsNames = getDataSourceNames();
+			
+			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
+			Collection<String> dsNames = getDataSourceNames(connectionFactoryNames);
 			if (dsNames.contains(deploymentName)) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70003, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70003, deploymentName));
 			}
 
-			Set<String> resourceAdapters = getResourceAdapterNames();
+			Set<String> resourceAdapters = getResourceAdapterNames(connectionFactoryNames);
         	if (resourceAdapters.contains(templateName)) {
 	            createConnectionFactory(deploymentName, templateName, properties);
 	            return;
@@ -546,8 +535,9 @@ public class AdminFactory {
 		@Override
 		public Properties getDataSource(String deployedName) throws AdminException {
 			deployedName = removeJavaContext(deployedName);
-
-			Collection<String> dsNames = getDataSourceNames();
+			
+			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
+			Collection<String> dsNames = getDataSourceNames(connectionFactoryNames);
 			if (!dsNames.contains(deployedName)) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
@@ -568,9 +558,8 @@ public class AdminFactory {
 
 			// check connection factories
 			if (dsProperties.isEmpty()) {
-				Map<String, String> raDSMap = getConnectionFactoryNames();
 				// deployed rar name, may be it is == deployedName or if server restarts it will be rar name or rar->[1..n] name
-				String rarName = raDSMap.get(deployedName);
+				String rarName = connectionFactoryNames.get(deployedName);
 				if (rarName != null) {
 					cliCall("read-resource",
 							new String[] { "subsystem", "resource-adapters", "resource-adapter", rarName, "connection-definitions", deployedName},
@@ -580,7 +569,7 @@ public class AdminFactory {
 				// figure out driver-name
 				if (dsProperties.getProperty("driver-name") == null) {
     				String moduleName = getResourceAdapterModuleName(rarName);
-    				Set<String> installedRars = getResourceAdapterNames();
+    				Set<String> installedRars = getResourceAdapterNames(connectionFactoryNames);
     				for (String installedRar:installedRars) {
     				    if (getResourceAdapterModuleName(installedRar).equals(moduleName)) {
     				        dsProperties.setProperty("driver-name", installedRar);
@@ -681,8 +670,9 @@ public class AdminFactory {
 		@Override
 		public void deleteDataSource(String deployedName) throws AdminException {
 			deployedName = removeJavaContext(deployedName);
-
-			Collection<String> dsNames = getDataSourceNames();
+			
+			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
+			Collection<String> dsNames = getDataSourceNames(connectionFactoryNames);
 			if (!dsNames.contains(deployedName)) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
@@ -696,9 +686,8 @@ public class AdminFactory {
 
 			// check connection factories
 			if (!deleted) {
-				Map<String, String> raDSMap = getConnectionFactoryNames();
 				// deployed rar name, may be it is == deployedName or if server restarts it will be rar name or rar->[1..n] name
-				String rarName = raDSMap.get(deployedName);
+				String rarName = connectionFactoryNames.get(deployedName);
 				if (rarName != null) {
 					cliCall("remove", new String[] { "subsystem",
 							"resource-adapters", "resource-adapter", rarName,
@@ -717,7 +706,7 @@ public class AdminFactory {
 
 			dsNames = getDataSourceNames();
 			if (dsNames.contains(deployedName)) {
-				throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
+				throw new AdminProcessingException(AdminPlugin.Event.TEIID70056, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70056, deployedName));
 			}
 		}
 
@@ -969,10 +958,20 @@ public class AdminFactory {
 		 */
 		@Override
 		public Collection<String> getDataSourceNames() throws AdminException {
+			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
+			return getDataSourceNames(connectionFactoryNames);
+		}
+
+		private Collection<String> getDataSourceNames(
+				Map<String, String> connectionFactoryNames)
+				throws AdminException {
 			Set<String> datasourceNames = new HashSet<String>();
 			datasourceNames.addAll(getChildNodeNames("datasources", "data-source"));
 			datasourceNames.addAll(getChildNodeNames("datasources", "xa-data-source"));
-			datasourceNames.addAll(getConnectionFactoryNames().keySet());
+			if (connectionFactoryNames == null) {
+				connectionFactoryNames = getConnectionFactoryNames();
+			}
+			datasourceNames.addAll(connectionFactoryNames.keySet());
 
 			Set<String> dsNames = new HashSet<String>();
 			for (String s:datasourceNames) {
@@ -1029,12 +1028,14 @@ public class AdminFactory {
 		}
 
 		// :read-children-names(child-type=deployment)
-		private Set<String> getResourceAdapterNames() throws AdminException {
+		private Set<String> getResourceAdapterNames(Map<String, String> connFactoryMap) throws AdminException {
 			Set<String> templates = getDeployedResourceAdaptorNames();
             templates.addAll(getInstalledResourceAdaptorNames());
             
             //AS-4776 HACK - BEGIN
-            Map<String, String> connFactoryMap = getConnectionFactoryNames();
+            if (connFactoryMap == null) {
+            	connFactoryMap = getConnectionFactoryNames();
+            }
             for (String key:connFactoryMap.keySet()) {
             	templates.remove(key);
             }
@@ -1061,7 +1062,7 @@ public class AdminFactory {
 		public Set<String> getDataSourceTemplateNames() throws AdminException {
 			Set<String> templates = new HashSet<String>();
 			templates.addAll(getInstalledJDBCDrivers());
-			templates.addAll(getResourceAdapterNames());
+			templates.addAll(getResourceAdapterNames(null));
 			return templates;
 		}
 
@@ -1172,7 +1173,7 @@ public class AdminFactory {
 			BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
 
 			// RAR properties
-			Set<String> resourceAdapters = getResourceAdapterNames();
+			Set<String> resourceAdapters = getResourceAdapterNames(null);
         	if (resourceAdapters.contains(templateName)) {
         		cliCall("read-rar-description", new String[] {"subsystem", "teiid"}, new String[] {"rar-name", templateName}, builder);
         		buildResourceAdpaterProperties(templateName, builder);
