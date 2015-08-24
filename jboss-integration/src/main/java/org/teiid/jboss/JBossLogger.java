@@ -134,7 +134,11 @@ public class JBossLogger implements org.teiid.logging.Logger {
 
 	@Override
 	public void putMdc(String key, String val) {
-		MDC.put(key, val);
+		if (val == null) {
+			MDC.remove(key);
+		} else {
+			MDC.put(key, val);
+		}
 	}
 
 	@Override

@@ -59,7 +59,6 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		private final Socket socket;
 		private ObjectOutputStream outputStream;
 		private ObjectInputStream inputStream;
-		private Object readLock = new Object();
 
 		private OioObjectChannel(Socket socket, int maxObjectSize) throws IOException {
 			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
@@ -113,20 +112,18 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		@Override
 		public Object read() throws IOException, ClassNotFoundException {
 			log.finer("reading message from socket"); //$NON-NLS-1$
-			synchronized (readLock) {
-				try {
-					return inputStream.readObject();
-				} catch (SocketTimeoutException e) {
-					Long timeout = TIMEOUTS.get();
-					if (timeout != null && timeout < System.currentTimeMillis()) {
-						TIMEOUTS.set(null);
-						throw new InterruptedIOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20035));
-					}
-					throw e;
-		        } catch (IOException e) {
-		            close();
-		            throw e;
+			try {
+				return inputStream.readObject();
+			} catch (SocketTimeoutException e) {
+				Long timeout = TIMEOUTS.get();
+				if (timeout != null && timeout < System.currentTimeMillis()) {
+					TIMEOUTS.set(null);
+					throw new InterruptedIOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20035));
 				}
+				throw e;
+	        } catch (IOException e) {
+	            close();
+	            throw e;
 			}
 		}
 

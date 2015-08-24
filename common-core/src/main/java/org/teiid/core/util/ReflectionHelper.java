@@ -76,6 +76,12 @@ public class ReflectionHelper {
      * @throws SecurityException if access to the information is denied.
      */
     public Method findBestMethodOnTarget( String methodName, Object[] arguments ) throws NoSuchMethodException, SecurityException {
+    	createMethodMap();
+    	List<Method> methods = methodMap.get(methodName);
+    	if (methods != null && methods.size() == 1) {
+    		return methods.get(0);
+    	}
+    	
     	if (arguments == null) {
     		return findBestMethodWithSignature(methodName, Collections.EMPTY_LIST);
     	}
@@ -156,19 +162,7 @@ public class ReflectionHelper {
         // match the argument classes (i.e., not methods declared with superclasses or interfaces of
         // the arguments).  There is no canned algorithm in Java to do this, so we have to brute-force it.
         // ---------------------------------------------------------------------------------------------
-        if ( this.methodMap == null ) {
-            this.methodMap = new HashMap<String, LinkedList<Method>>();
-            Method[] methods = this.targetClass.getMethods();
-            for ( int i=0; i!=methods.length; ++i ) {
-                Method method = methods[i];
-                LinkedList<Method> methodsWithSameName = this.methodMap.get(method.getName());
-                if ( methodsWithSameName == null ) {
-                    methodsWithSameName = new LinkedList<Method>();
-                    this.methodMap.put(method.getName(),methodsWithSameName);
-                }
-                methodsWithSameName.addFirst(method);   // add lower methods first
-            }
-        }
+        createMethodMap();
 
         LinkedList<Method> methodsWithSameName = this.methodMap.get(methodName);
         if ( methodsWithSameName == null ) {
@@ -191,6 +185,28 @@ public class ReflectionHelper {
 
         throw new NoSuchMethodException(methodName + " Args: " + argumentsClasses); //$NON-NLS-1$
     }
+
+	private void createMethodMap() {
+		if ( this.methodMap == null ) {
+        	synchronized (this) {
+        		if (this.methodMap != null) {
+        			return;
+        		}
+				HashMap<String, LinkedList<Method>> newMethodMap = new HashMap<String, LinkedList<Method>>();
+	            Method[] methods = this.targetClass.getMethods();
+	            for ( int i=0; i!=methods.length; ++i ) {
+	                Method method = methods[i];
+	                LinkedList<Method> methodsWithSameName = newMethodMap.get(method.getName());
+	                if ( methodsWithSameName == null ) {
+	                    methodsWithSameName = new LinkedList<Method>();
+	                    newMethodMap.put(method.getName(),methodsWithSameName);
+	                }
+	                methodsWithSameName.addFirst(method);   // add lower methods first
+	            }
+	            this.methodMap = newMethodMap;
+			}
+        }
+	}
 
 	private static boolean argsMatch(List<Class<?>> argumentsClasses,
 			List<Class<?>> argumentsClassList, Class[] args) {
