@@ -12,18 +12,20 @@
         <servlet-name>RestDataservice</servlet-name>
         <servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
     </servlet>
-    <!--  
+    <!-- 
     <servlet>
   		<servlet-name>BootstrapServlet</servlet-name>
   		<servlet-class>org.teiid.jboss.rest.BootstrapServlet</servlet-class>
   		<load-on-startup>2</load-on-startup>
   	</servlet>
-    -->
+  	-->
+    
     <servlet-mapping>
         <servlet-name>RestDataservice</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
-    <!-- 
+    
+    <!--  
   	<servlet-mapping>
   		<servlet-name>BootstrapServlet</servlet-name>
   		<url-pattern>/api-doc</url-pattern>

@@ -172,79 +172,147 @@ public class RestASMBasedWebArchiveBuilder {
 	    writeEntry("lib/underscore-min.js", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.js"), props).getBytes());
 	    writeEntry("lib/underscore-min.map", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.map"), props).getBytes());
 	    
-	    byte[] bytes = getBootstrapServletClass(vdb.getName(), vdb.getDescription(), vdb.getVersion() + ".0", new String[]{"http"}, props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
+	    String desc = vdb.getDescription();
+	    if(null == desc) {
+	        desc = vdb.getName();
+	    }
+	    byte[] bytes = getBootstrapServletClass(vdb.getName(), desc, vdb.getVersion() + ".0", new String[]{"http"}, props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
 	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/BootstrapServlet.class", out, bytes);
-	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass());
+	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Content-Type"));
     }
 	
-	private byte[] getApiOriginFilterClass() {
+	private byte[] getApiOriginFilterClass(String k1, String v1, String k2, String v2, String k3, String v3) {
         
-        ClassWriter cw = new ClassWriter(0);
+	    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         MethodVisitor mv;
+        AnnotationVisitor av0;
+        
         cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/ApiOriginFilter", null, "java/lang/Object", new String[]{"javax/servlet/Filter"});
         
-        mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/FilterConfig;)V", null, new String[] {"javax/servlet/ServletException"});
-        mv.visitCode();
-        mv.visitInsn(ATHROW);
-        mv.visitMaxs(6, 3);
-        mv.visitEnd();
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/FilterConfig;)V", null, new String[] {"javax/servlet/ServletException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
         
-        mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;Ljavax/servlet/FilterChain;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
-        mv.visitCode();
-        //TODO
-        mv.visitInsn(ATHROW);
-        mv.visitMaxs(6, 3);
-        mv.visitEnd();
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "doFilter", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;Ljavax/servlet/FilterChain;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitTypeInsn(NEW, "javax/servlet/http/HttpServletResponse");
+            mv.visitInsn(DUP);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitTypeInsn(CHECKCAST, "javax/servlet/http/HttpServletResponse");
+            mv.visitVarInsn(ASTORE, 4);
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitLdcInsn(k1);
+            mv.visitLdcInsn(v1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "addHeader", "(Ljava/lang/String;Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitLdcInsn(k2);
+            mv.visitLdcInsn(v2);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "addHeader", "(Ljava/lang/String;Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitLdcInsn(k3);
+            mv.visitLdcInsn(v3);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "addHeader", "(Ljava/lang/String;Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 3);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/FilterChain", "doFilter", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(6, 3);
+            mv.visitEnd();
+        }
         
-        mv = cw.visitMethod(ACC_PUBLIC, "destroy", "()V", null, null);
-        mv.visitCode();
-        mv.visitInsn(ATHROW);
-        mv.visitMaxs(6, 3);
-        mv.visitEnd();
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "destroy", "()V", null, null);
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
         
         cw.visitEnd();
         
-        return cw.toByteArray();   
+        return cw.toByteArray();
+           
     }
 	
 	private byte[] getBootstrapServletClass(String vdbName, String desc, String version, String[] schamas, String baseUrl, String packages, Boolean scan) {
-        ClassWriter cw = new ClassWriter(0);
+	    ClassWriter cw = new ClassWriter(0);
         MethodVisitor mv;
+        AnnotationVisitor av0;
+   
         cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/BootstrapServlet", null, "javax/servlet/http/HttpServlet", null);
         
-        mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/ServletConfig;)V", null, new String[] {"javax/servlet/ServletException"});
-        mv.visitCode();
-        mv.visitTypeInsn(NEW, "io/swagger/jaxrs/config/BeanConfig");
-        mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/config/BeanConfig", "<init>", "()V");
-        mv.visitLdcInsn(vdbName);
-        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setTitle", "(Ljava/lang/String;)V");
-        mv.visitLdcInsn(desc);
-        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setDescription", "(Ljava/lang/String;)V");
-        mv.visitLdcInsn(version);
-        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setVersion", "(Ljava/lang/String;)V");
-//        mv.visitLdcInsn(schamas);
-//        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setSchemes", "(L[Ljava/lang/String;)V");
-        mv.visitLdcInsn(baseUrl);
-        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setBasePath", "(Ljava/lang/String;)V");
-        mv.visitLdcInsn(packages);
-        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setResourcePackage", "(Ljava/lang/String;)V");
-        mv.visitLdcInsn(scan);
-        mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setScan", "(Ljava/lang/Boolean;)V");
-        mv.visitMaxs(6, 3);
-        mv.visitEnd();
+        //init method
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/ServletConfig;)V", null, new String[] {"javax/servlet/ServletException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitTypeInsn(NEW, "io/swagger/jaxrs/config/BeanConfig");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/config/BeanConfig", "<init>", "()V");
+            mv.visitVarInsn(ASTORE, 2);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(vdbName);
+            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setTitle", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(desc);
+            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setDescription", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(version);
+            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setVersion", "(Ljava/lang/String;)V");
+//            mv.visitVarInsn(ALOAD, 2);
+//            mv.visitLdcInsn(schamas);
+//            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setSchemes", "([Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(baseUrl);
+            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setBasePath", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(packages);
+            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setResourcePackage", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitInsn(scan?ICONST_1:ICONST_0);
+            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setScan", "(Z)V");
+            mv.visitMaxs(6, 3);
+            mv.visitEnd();
+        }
         
-        mv = cw.visitMethod(ACC_PUBLIC, "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
-        mv.visitCode();
-        //TODO
-        mv.visitInsn(ATHROW);
-        mv.visitMaxs(6, 3);
-        mv.visitEnd();
+        // doGet method
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/BootstrapServlet", "doPost", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(3, 1);
+            mv.visitEnd();
+        }
         
+        // doPost method
         mv = cw.visitMethod(ACC_PUBLIC, "doPost", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+        AnnotationVisitor av2 = mv.visitAnnotation("Ljava/lang/Override;", true);
+        av2.visitEnd();
         mv.visitCode();
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/BootstrapServlet", "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V");
-        mv.visitMaxs(6, 3);
+//        mv.visitVarInsn(ALOAD, 0);
+//        mv.visitVarInsn(ALOAD, 1);
+//        mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/BootstrapServlet", "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V");
+        mv.visitInsn(RETURN);
+        mv.visitMaxs(3, 2);
         mv.visitEnd();
         
         cw.visitEnd();

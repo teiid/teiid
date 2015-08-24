@@ -53,7 +53,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class TestRestWebArchiveBuilder {
 
-	@Test
+//	@Test
 	public void testBuildArchive() throws Exception {
 		VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		MetadataStore ms = new MetadataStore();
@@ -133,7 +133,7 @@ public class TestRestWebArchiveBuilder {
 		}
 	}
 	
-	@Test
+//	@Test
     public void testBuildArchiveSwagger() throws Exception {
 	    VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
         MetadataStore ms = new MetadataStore();
