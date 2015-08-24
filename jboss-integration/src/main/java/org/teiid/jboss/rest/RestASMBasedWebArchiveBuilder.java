@@ -190,6 +190,15 @@ public class RestASMBasedWebArchiveBuilder {
         cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/ApiOriginFilter", null, "java/lang/Object", new String[]{"javax/servlet/Filter"});
         
         {
+            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL,"java/lang/Object", "<init>", "()V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        
+        {
             mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/FilterConfig;)V", null, new String[] {"javax/servlet/ServletException"});
             av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
             av0.visitEnd();
@@ -252,6 +261,16 @@ public class RestASMBasedWebArchiveBuilder {
         AnnotationVisitor av0;
    
         cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/BootstrapServlet", null, "javax/servlet/http/HttpServlet", null);
+        
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "javax/servlet/http/HttpServlet", "<init>", "()V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
         
         //init method
         {
