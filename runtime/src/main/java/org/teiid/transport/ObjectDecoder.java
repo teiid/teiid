@@ -85,6 +85,8 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
     private FileStore store;
     private StreamCorruptedException error;
 
+    private int streamDataToRead = -1;
+    
 	private long maxLobSize = MAX_LOB_SIZE;
 
     /**
@@ -119,37 +121,47 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 	        streamIndex = 0;
     	}
     	while (streamIndex < streams.size()) {
-	    	if (buffer.readableBytes() < 2) {
-	            return null;
-	        }
-	        int dataLen = buffer.getShort(buffer.readerIndex()) & 0xffff;
-	        if (buffer.readableBytes() < dataLen + 2) {
-	            return null;
-	        }
-	        buffer.skipBytes(2);
-	        
+    		//read the new chunk size
+	    	if (streamDataToRead == -1) {
+	    		if (buffer.readableBytes() < 2) {
+		            return null;
+		        }	
+		        streamDataToRead = buffer.readUnsignedShort();
+	    	}
 	        if (stream == null) {
 	        	store = storageManager.createFileStore("temp-stream"); //$NON-NLS-1$
 		        StreamFactoryReference sfr = streams.get(streamIndex);
 		        sfr.setStreamFactory(new FileStoreInputStreamFactory(store, Streamable.ENCODING));
 		        this.stream = new BufferedOutputStream(store.createOutputStream());
 	        }
-	        if (dataLen == 0) {
+	        //end of stream
+	        if (streamDataToRead == 0) {
 	        	stream.close();
 	        	stream = null;
 	        	streamIndex++;
+	        	streamDataToRead = -1;
 		        continue;
 	        }
-	        if (store.getLength() + dataLen > maxLobSize) {
+	        if (store.getLength() + streamDataToRead > maxLobSize) {
 	        	if (error == null) {
 		        	error = new StreamCorruptedException(
-		                    "lob too big: " + (store.getLength() + dataLen) + " (max: " + maxLobSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
+		                    "lob too big: " + (store.getLength() + streamDataToRead) + " (max: " + maxLobSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
 	        }
 	        if (error == null) {
-	        	buffer.readBytes(this.stream, dataLen);
+	        	int toRead = Math.min(buffer.readableBytes(), streamDataToRead);
+	        	if (toRead == 0) {
+	        		return null;
+	        	}
+	        	buffer.readBytes(this.stream, toRead);
+	        	streamDataToRead -= toRead;
+	        	if (streamDataToRead == 0) {
+	        		//get the next chunk
+	        		streamDataToRead = -1;
+	        	}
 	        } else {
-	        	buffer.skipBytes(dataLen);
+	        	buffer.skipBytes(streamDataToRead);
+	        	streamDataToRead = -1;
 	        }
     	}
         Object toReturn = result;
