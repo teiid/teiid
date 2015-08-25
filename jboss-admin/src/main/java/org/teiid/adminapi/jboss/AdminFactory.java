@@ -445,6 +445,7 @@ public class AdminFactory {
 
 		@Override
 		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
+			flush();
 			deploymentName = removeJavaContext(deploymentName);
 			
 			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
@@ -456,6 +457,7 @@ public class AdminFactory {
 			Set<String> resourceAdapters = getResourceAdapterNames(connectionFactoryNames);
         	if (resourceAdapters.contains(templateName)) {
 	            createConnectionFactory(deploymentName, templateName, properties);
+	            flush();
 	            return;
         	}
 
@@ -513,6 +515,8 @@ public class AdminFactory {
 	        // issue the "enable" operation
 			cliCall("enable", new String[] { "subsystem", "datasources","data-source", deploymentName },
 					null, new ResultCallback());
+			
+			flush();
 		}
 
 		// /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
@@ -544,7 +548,12 @@ public class AdminFactory {
 			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
 			Collection<String> dsNames = getDataSourceNames(connectionFactoryNames);
 			if (!dsNames.contains(deployedName)) {
-				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
+				flush(); //just in case we were using old info, flush
+				connectionFactoryNames = getConnectionFactoryNames();
+				dsNames = getDataSourceNames(connectionFactoryNames);
+				if (!dsNames.contains(deployedName)) {
+					throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
+				}
 			}
 
 			Properties dsProperties = new Properties();
@@ -674,6 +683,7 @@ public class AdminFactory {
 
 		@Override
 		public void deleteDataSource(String deployedName) throws AdminException {
+			flush();
 			deployedName = removeJavaContext(deployedName);
 			
 			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
@@ -709,6 +719,7 @@ public class AdminFactory {
 				}
 			}
 
+			flush();
 			dsNames = getDataSourceNames();
 			if (dsNames.contains(deployedName)) {
 				throw new AdminProcessingException(AdminPlugin.Event.TEIID70056, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70056, deployedName));
@@ -963,6 +974,7 @@ public class AdminFactory {
 		 */
 		@Override
 		public Collection<String> getDataSourceNames() throws AdminException {
+			flush();
 			Map<String, String> connectionFactoryNames = getConnectionFactoryNames();
 			return getDataSourceNames(connectionFactoryNames);
 		}
@@ -991,18 +1003,19 @@ public class AdminFactory {
 		}
 
 		private Map<String, String> getConnectionFactoryNames() throws AdminException {
-		    if (this.connectionFactoryNames.get() == null) {
-    			HashMap<String, String> datasourceNames = new HashMap<String, String>();
+			Map<String, String> datasourceNames = this.connectionFactoryNames.get();
+		    if (datasourceNames == null) {
+		    	datasourceNames = new HashMap<String, String>();
     			Set<String> resourceAdapters = getInstalledResourceAdaptorNames();
     			for (String resource:resourceAdapters) {
     				getRAConnections(datasourceNames, resource);
     			}
     			this.connectionFactoryNames.set(datasourceNames, CACHE_TIME);
 		    }
-			return this.connectionFactoryNames.get();
+			return datasourceNames;
 		}
 
-		private void getRAConnections(final HashMap<String, String> datasourceNames, final String rarName) throws AdminException {
+		private void getRAConnections(final Map<String, String> datasourceNames, final String rarName) throws AdminException {
 			cliCall("read-resource", new String[] {"subsystem", "resource-adapters", "resource-adapter", rarName}, null, new ResultCallback() {
 				@Override
 				public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
@@ -1030,12 +1043,13 @@ public class AdminFactory {
 		 * @throws AdminException
 		 */
 		private Set<String> getInstalledResourceAdaptorNames() throws AdminException {
-		    if (this.installedResourceAdaptorNames.get() == null) {
-    			Set<String> templates = new HashSet<String>();
+		    Set<String> templates = this.installedResourceAdaptorNames.get();
+			if (templates == null) {
+    			templates = new HashSet<String>();
     			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
     	        this.installedResourceAdaptorNames.set(templates, CACHE_TIME);
 		    }
-		    return this.installedResourceAdaptorNames.get();
+		    return templates;
 		}
 
 		// :read-children-names(child-type=deployment)
@@ -1055,8 +1069,9 @@ public class AdminFactory {
 		}
 
 		private Set<String> getDeployedResourceAdaptorNames() throws AdminException {
-		    if (this.deployedResourceAdaptorNames.get() == null) {
-    			Set<String> templates = new HashSet<String>();
+		    Set<String> templates = this.deployedResourceAdaptorNames.get();
+			if (templates == null) {
+    			templates = new HashSet<String>();
     			List<String> deployments = getChildNodeNames(null, "deployment");
                 for (String deployment:deployments) {
                 	if (deployment.endsWith(".rar")) {
@@ -1065,7 +1080,7 @@ public class AdminFactory {
                 }
                 this.deployedResourceAdaptorNames.set(templates, CACHE_TIME);
 		    }
-			return this.deployedResourceAdaptorNames.get();
+			return templates;
 		}
 
 		public List<String> getDeployments(){
@@ -1925,6 +1940,12 @@ public class AdminFactory {
 				//ignore
 			}
 		}
+		
+		public void flush() {
+			this.connectionFactoryNames.set(null, 0);
+			this.deployedResourceAdaptorNames.set(null, 0);
+			this.installedResourceAdaptorNames.set(null, 0);
+		}
     }
     
     static class Expirable<T> {
@@ -1942,5 +1963,6 @@ public class AdminFactory {
             this.expires = System.currentTimeMillis()+cacheTimeInMillis;
             this.t = t;
         }
+        
     }
 }
