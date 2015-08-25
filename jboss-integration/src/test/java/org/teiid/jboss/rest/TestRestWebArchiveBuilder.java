@@ -27,6 +27,7 @@ import io.swagger.annotations.ApiParam;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -35,6 +36,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.Test;
 import org.objectweb.asm.ClassWriter;
@@ -53,20 +56,10 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class TestRestWebArchiveBuilder {
 
-//	@Test
+	@Test
 	public void testBuildArchive() throws Exception {
-		VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
-		MetadataStore ms = new MetadataStore();
-		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
-			MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());
-			ms.addSchema(mf.getSchema());
-		}
 		
-		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "Rest");
-		vdb.addAttchment(QueryMetadataInterface.class, metadata);
-		vdb.addAttchment(TransformationMetadata.class, metadata);
-		vdb.addAttchment(MetadataStore.class, ms);
-		
+		VDBMetaData vdb = getTestVDBMetaData();
 		RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
 		byte[] contents = builder.createRestArchive(vdb);
 		
@@ -75,55 +68,40 @@ public class TestRestWebArchiveBuilder {
 		files.add("WEB-INF/jboss-web.xml");
 		files.add("WEB-INF/classes/org/teiid/jboss/rest/View.class");
 		files.add("WEB-INF/classes/org/teiid/jboss/rest/TeiidRestApplication.class");
+		files.add("WEB-INF/classes/org/teiid/jboss/rest/BootstrapServlet.class");
+		files.add("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class");
 		files.add("META-INF/MANIFEST.MF");
 		
-		files.add("api-doc.html");
-		files.add("o2c.html");
-		files.add("swagger-ui.min.js");
-		files.add("swagger-ui.js");
+		files.add("api.html");
 		
-		files.add("css/print.css");
-		files.add("css/reset.css");
-        files.add("css/screen.css");
-        files.add("css/style.css");
-        files.add("css/typography.css");
+		files.add("swagger/swagger-ui.js");
+		
+		files.add("swagger/css/print.css");
+		files.add("swagger/css/reset.css");
+        files.add("swagger/css/screen.css");
+        files.add("swagger/css/style.css");
+        files.add("swagger/css/typography.css");
         
-        files.add("fonts/droid-sans-v6-latin-700.eot");
-        files.add("fonts/droid-sans-v6-latin-700.svg");
-        files.add("fonts/droid-sans-v6-latin-700.ttf");
-        files.add("fonts/droid-sans-v6-latin-700.woff");
-        files.add("fonts/droid-sans-v6-latin-700.woff2");
-        files.add("fonts/droid-sans-v6-latin-regular.eot");
-        files.add("fonts/droid-sans-v6-latin-regular.svg");
-        files.add("fonts/droid-sans-v6-latin-regular.ttf");
-        files.add("fonts/droid-sans-v6-latin-regular.woff");
-        files.add("fonts/droid-sans-v6-latin-regular.woff2");
+        files.add("swagger/images/favicon-16x16.png");
+        files.add("swagger/images/favicon-32x32.png");
         
-        files.add("images/explorer_icons.png");
-        files.add("images/favicon-16x16.png");
-        files.add("images/favicon-32x32.png");
-        files.add("images/favicon.ico");
-        files.add("images/logo_small.png");
-        files.add("images/pet_store_api.png");
-        files.add("images/wordnik_api.png");
+        files.add("swagger/lang/en.js");
+        files.add("swagger/lang/es.js");
+        files.add("swagger/lang/pt.js");
+        files.add("swagger/lang/ru.js");
+        files.add("swagger/lang/translator.js");
         
-        files.add("lang/en.js");
-        files.add("lang/es.js");
-        files.add("lang/pt.js");
-        files.add("lang/ru.js");
-        files.add("lang/translator.js");
-        
-        files.add("lib/backbone-min.js");
-        files.add("lib/handlebars-2.0.0.js");
-        files.add("lib/highlight.7.3.pack.js");
-        files.add("lib/jquery-1.8.0.min.js");
-        files.add("lib/jquery.ba-bbq.min.js");
-        files.add("lib/jquery.slideto.min.js");
-        files.add("lib/jquery.wiggle.min.js");
-        files.add("lib/marked.js");
-        files.add("lib/swagger-oauth.js");
-        files.add("lib/underscore-min.js");
-        files.add("lib/underscore-min.map");
+        files.add("swagger/lib/backbone-min.js");
+        files.add("swagger/lib/handlebars-2.0.0.js");
+        files.add("swagger/lib/highlight.7.3.pack.js");
+        files.add("swagger/lib/jquery-1.8.0.min.js");
+        files.add("swagger/lib/jquery.ba-bbq.min.js");
+        files.add("swagger/lib/jquery.slideto.min.js");
+        files.add("swagger/lib/jquery.wiggle.min.js");
+        files.add("swagger/lib/marked.js");
+        files.add("swagger/lib/swagger-oauth.js");
+        files.add("swagger/lib/underscore-min.js");
+        files.add("swagger/lib/underscore-min.map");
 		
 		ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(contents));
 		ZipEntry ze;
@@ -132,21 +110,11 @@ public class TestRestWebArchiveBuilder {
 			zipIn.closeEntry();
 		}
 	}
-	
-//	@Test
+
+    @Test
     public void testBuildArchiveSwagger() throws Exception {
-	    VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
-        MetadataStore ms = new MetadataStore();
-        for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
-            MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());
-            ms.addSchema(mf.getSchema());
-        }
         
-        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "Rest");
-        vdb.addAttchment(QueryMetadataInterface.class, metadata);
-        vdb.addAttchment(TransformationMetadata.class, metadata);
-        vdb.addAttchment(MetadataStore.class, ms);
-        
+        VDBMetaData vdb = getTestVDBMetaData();
         RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
         
         MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
@@ -185,14 +153,47 @@ public class TestRestWebArchiveBuilder {
                         ApiParam a = param.getAnnotation(ApiParam.class);
                         assertEquals("json", a.value());
                     }
-                }
-                                
+                }                
             }
         }
-        
 	}
 	
-	public static class ASMUtilities {
+	@Test
+	public void testApiOriginFilterClass() throws InstantiationException, IllegalAccessException {
+	    
+	    RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+	    byte[] bytes = builder.getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Content-Type");
+	    Class<?> cls = ASMUtilities.defineClass("org.teiid.jboss.rest.ApiOriginFilter", bytes);
+	    Object obj = cls.newInstance();
+        assertEquals(cls, obj.getClass());
+	}
+	
+	@Test
+	public void testBootstrapServletClass() throws InstantiationException, IllegalAccessException {
+	    
+	    RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+	    byte[] bytes = builder.getBootstrapServletClass("vdbName", "", "version", new String[]{"http"}, "baseUrl", "packages", true);
+	    Class<?> cls = ASMUtilities.defineClass("org.teiid.jboss.rest.BootstrapServlet", bytes);
+	    Object obj = cls.newInstance();
+        assertEquals(cls, obj.getClass());
+	}
+	
+	private VDBMetaData getTestVDBMetaData() throws FileNotFoundException, XMLStreamException {
+        VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+        MetadataStore ms = new MetadataStore();
+        for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
+            MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());
+            ms.addSchema(mf.getSchema());
+        }
+        
+        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "Rest");
+        vdb.addAttchment(QueryMetadataInterface.class, metadata);
+        vdb.addAttchment(TransformationMetadata.class, metadata);
+        vdb.addAttchment(MetadataStore.class, ms);
+        return vdb;
+    }
+	
+	private static class ASMUtilities {
 	    
 	    public static Class<?> defineClass(String name, byte[] bytes) {
 	        return new TestClassLoader(TestClassLoader.class.getClassLoader()).defineClassForName(name, bytes);

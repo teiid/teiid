@@ -24,7 +24,7 @@
         <module name="com.fasterxml.jackson" />
         <module name="com.google.guava" />  
         <module name="org.javassist" />  
-        <module name="org.apache.commons.lang" />
+        <module name="org.apache.commons.lang" slot="3.3.2"/>
         <module name="org.yaml.snakeyaml" />
         <module name="org.codehaus.woodstox" />
         <module name="org.joda.time" /> 

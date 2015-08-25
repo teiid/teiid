@@ -38,6 +38,7 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
@@ -100,7 +101,7 @@ public class RestASMBasedWebArchiveBuilder {
 		ZipOutputStream out = new ZipOutputStream(byteStream); 
 		writeEntry("WEB-INF/web.xml", out, replaceTemplates(getFileContents("rest-war/web.xml"), props).getBytes());
 		writeEntry("WEB-INF/jboss-web.xml", out, replaceTemplates(getFileContents("rest-war/jboss-web.xml"), props).getBytes());
-		
+				
 		writeSwagger(out, props, vdb);
 				
 		ArrayList<String> applicationViews = new ArrayList<String>();
@@ -119,58 +120,38 @@ public class RestASMBasedWebArchiveBuilder {
 		return byteStream.toByteArray();
 	}
 
-	private void writeSwagger(ZipOutputStream out, Properties props, VDBMetaData vdb) throws IOException {
-	    writeEntry("api-doc.html", out, replaceTemplates(getFileContents("swagger/api-doc.html"), props).getBytes());
-	    writeEntry("o2c.html", out, replaceTemplates(getFileContents("swagger/o2c.html"), props).getBytes());
-	    writeEntry("swagger-ui.min.js", out, replaceTemplates(getFileContents("swagger/swagger-ui.min.js"), props).getBytes());
-	    writeEntry("swagger-ui.js", out, replaceTemplates(getFileContents("swagger/swagger-ui.js"), props).getBytes());
+    private void writeSwagger(ZipOutputStream out, Properties props, VDBMetaData vdb) throws IOException {
+        
+        writeEntry("api.html", out, replaceTemplates(getFileContents("rest-war/api.html"), props).getBytes());
 	    
-	    writeEntry("css/print.css", out, replaceTemplates(getFileContents("swagger/css/print.css"), props).getBytes());
-	    writeEntry("css/reset.css", out, replaceTemplates(getFileContents("swagger/css/reset.css"), props).getBytes());
-	    writeEntry("css/screen.css", out, replaceTemplates(getFileContents("swagger/css/screen.css"), props).getBytes());
-	    writeEntry("css/style.css", out, replaceTemplates(getFileContents("swagger/css/style.css"), props).getBytes());
-	    writeEntry("css/typography.css", out, replaceTemplates(getFileContents("swagger/css/typography.css"), props).getBytes());
+	    writeEntry("swagger/swagger-ui.js", out, replaceTemplates(getFileContents("swagger/swagger-ui.js"), props).getBytes());
 	    
+	    writeEntry("swagger/css/print.css", out, replaceTemplates(getFileContents("swagger/css/print.css"), props).getBytes());
+	    writeEntry("swagger/css/reset.css", out, replaceTemplates(getFileContents("swagger/css/reset.css"), props).getBytes());
+	    writeEntry("swagger/css/screen.css", out, replaceTemplates(getFileContents("swagger/css/screen.css"), props).getBytes());
+	    writeEntry("swagger/css/style.css", out, replaceTemplates(getFileContents("swagger/css/style.css"), props).getBytes());
+	    writeEntry("swagger/css/typography.css", out, replaceTemplates(getFileContents("swagger/css/typography.css"), props).getBytes());
 	    
-	    writeEntry("fonts/droid-sans-v6-latin-700.eot", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.eot"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-700.svg", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.svg"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-700.ttf", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.ttf"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-700.woff", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.woff"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-700.woff2", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-700.woff2"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-regular.eot", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.eot"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-regular.svg", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.svg"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-regular.ttf", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.ttf"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-regular.woff", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.woff"), props).getBytes());
-	    writeEntry("fonts/droid-sans-v6-latin-regular.woff2", out, replaceTemplates(getFileContents("swagger/fonts/droid-sans-v6-latin-regular.woff2"), props).getBytes());
+	    writeEntry("swagger/images/favicon-16x16.png", out, replaceTemplates(getFileContents("swagger/images/favicon-16x16.png"), props).getBytes());
+	    writeEntry("swagger/images/favicon-32x32.png", out, replaceTemplates(getFileContents("swagger/images/favicon-32x32.png"), props).getBytes());
 	    
+	    writeEntry("swagger/lang/en.js", out, replaceTemplates(getFileContents("swagger/lang/en.js"), props).getBytes());
+	    writeEntry("swagger/lang/es.js", out, replaceTemplates(getFileContents("swagger/lang/es.js"), props).getBytes());
+	    writeEntry("swagger/lang/pt.js", out, replaceTemplates(getFileContents("swagger/lang/pt.js"), props).getBytes());
+	    writeEntry("swagger/lang/ru.js", out, replaceTemplates(getFileContents("swagger/lang/ru.js"), props).getBytes());
+	    writeEntry("swagger/lang/translator.js", out, replaceTemplates(getFileContents("swagger/lang/translator.js"), props).getBytes());
 	    
-	    writeEntry("images/explorer_icons.png", out, replaceTemplates(getFileContents("swagger/images/explorer_icons.png"), props).getBytes());
-	    writeEntry("images/favicon-16x16.png", out, replaceTemplates(getFileContents("swagger/images/favicon-16x16.png"), props).getBytes());
-	    writeEntry("images/favicon-32x32.png", out, replaceTemplates(getFileContents("swagger/images/favicon-32x32.png"), props).getBytes());
-	    writeEntry("images/favicon.ico", out, replaceTemplates(getFileContents("swagger/images/favicon.ico"), props).getBytes());
-	    writeEntry("images/logo_small.png", out, replaceTemplates(getFileContents("swagger/images/logo_small.png"), props).getBytes());
-	    writeEntry("images/pet_store_api.png", out, replaceTemplates(getFileContents("swagger/images/pet_store_api.png"), props).getBytes());
-	    writeEntry("images/wordnik_api.png", out, replaceTemplates(getFileContents("swagger/images/wordnik_api.png"), props).getBytes());
-	    
-	    
-	    writeEntry("lang/en.js", out, replaceTemplates(getFileContents("swagger/lang/en.js"), props).getBytes());
-	    writeEntry("lang/es.js", out, replaceTemplates(getFileContents("swagger/lang/es.js"), props).getBytes());
-	    writeEntry("lang/pt.js", out, replaceTemplates(getFileContents("swagger/lang/pt.js"), props).getBytes());
-	    writeEntry("lang/ru.js", out, replaceTemplates(getFileContents("swagger/lang/ru.js"), props).getBytes());
-	    writeEntry("lang/translator.js", out, replaceTemplates(getFileContents("swagger/lang/translator.js"), props).getBytes());
-	    
-	    
-	    writeEntry("lib/backbone-min.js", out, replaceTemplates(getFileContents("swagger/lib/backbone-min.js"), props).getBytes());
-	    writeEntry("lib/handlebars-2.0.0.js", out, replaceTemplates(getFileContents("swagger/lib/handlebars-2.0.0.js"), props).getBytes());
-	    writeEntry("lib/highlight.7.3.pack.js", out, replaceTemplates(getFileContents("swagger/lib/highlight.7.3.pack.js"), props).getBytes());
-	    writeEntry("lib/jquery-1.8.0.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery-1.8.0.min.js"), props).getBytes());
-	    writeEntry("lib/jquery.ba-bbq.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.ba-bbq.min.js"), props).getBytes());
-	    writeEntry("lib/jquery.slideto.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.slideto.min.js"), props).getBytes());
-	    writeEntry("lib/jquery.wiggle.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.wiggle.min.js"), props).getBytes());
-	    writeEntry("lib/marked.js", out, replaceTemplates(getFileContents("swagger/lib/marked.js"), props).getBytes());
-	    writeEntry("lib/swagger-oauth.js", out, replaceTemplates(getFileContents("swagger/lib/swagger-oauth.js"), props).getBytes());
-	    writeEntry("lib/underscore-min.js", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.js"), props).getBytes());
-	    writeEntry("lib/underscore-min.map", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.map"), props).getBytes());
+	    writeEntry("swagger/lib/backbone-min.js", out, replaceTemplates(getFileContents("swagger/lib/backbone-min.js"), props).getBytes());
+	    writeEntry("swagger/lib/handlebars-2.0.0.js", out, replaceTemplates(getFileContents("swagger/lib/handlebars-2.0.0.js"), props).getBytes());
+	    writeEntry("swagger/lib/highlight.7.3.pack.js", out, replaceTemplates(getFileContents("swagger/lib/highlight.7.3.pack.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery-1.8.0.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery-1.8.0.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery.ba-bbq.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.ba-bbq.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery.slideto.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.slideto.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery.wiggle.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.wiggle.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/marked.js", out, replaceTemplates(getFileContents("swagger/lib/marked.js"), props).getBytes());
+	    writeEntry("swagger/lib/swagger-oauth.js", out, replaceTemplates(getFileContents("swagger/lib/swagger-oauth.js"), props).getBytes());
+	    writeEntry("swagger/lib/underscore-min.js", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.js"), props).getBytes());
+	    writeEntry("swagger/lib/underscore-min.map", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.map"), props).getBytes());
 	    
 	    String desc = vdb.getDescription();
 	    if(null == desc) {
@@ -181,7 +162,7 @@ public class RestASMBasedWebArchiveBuilder {
 	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Content-Type"));
     }
 	
-	private byte[] getApiOriginFilterClass(String k1, String v1, String k2, String v2, String k3, String v3) {
+	protected byte[] getApiOriginFilterClass(String k1, String v1, String k2, String v2, String k3, String v3) {
         
 	    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         MethodVisitor mv;
@@ -255,8 +236,8 @@ public class RestASMBasedWebArchiveBuilder {
            
     }
 	
-	private byte[] getBootstrapServletClass(String vdbName, String desc, String version, String[] schamas, String baseUrl, String packages, Boolean scan) {
-	    ClassWriter cw = new ClassWriter(0);
+	protected byte[] getBootstrapServletClass(String vdbName, String desc, String version, String[] schamas, String baseUrl, String packages, Boolean scan) {
+	    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         MethodVisitor mv;
         AnnotationVisitor av0;
    
@@ -278,32 +259,44 @@ public class RestASMBasedWebArchiveBuilder {
             av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
             av0.visitEnd();
             mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKESPECIAL, "javax/servlet/http/HttpServlet", "init", "(Ljavax/servlet/ServletConfig;)V");
             mv.visitTypeInsn(NEW, "io/swagger/jaxrs/config/BeanConfig");
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/config/BeanConfig", "<init>", "()V");
             mv.visitVarInsn(ASTORE, 2);
             mv.visitVarInsn(ALOAD, 2);
             mv.visitLdcInsn(vdbName);
-            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setTitle", "(Ljava/lang/String;)V");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setTitle", "(Ljava/lang/String;)V");
             mv.visitVarInsn(ALOAD, 2);
             mv.visitLdcInsn(desc);
-            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setDescription", "(Ljava/lang/String;)V");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setDescription", "(Ljava/lang/String;)V");
             mv.visitVarInsn(ALOAD, 2);
             mv.visitLdcInsn(version);
-            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setVersion", "(Ljava/lang/String;)V");
-//            mv.visitVarInsn(ALOAD, 2);
-//            mv.visitLdcInsn(schamas);
-//            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setSchemes", "([Ljava/lang/String;)V");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setVersion", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitInsn(ICONST_1);
+            mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            Integer[] array = new Integer[]{ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
+            for(int i = 0 ; i < schamas.length ; i ++) {
+                mv.visitInsn(DUP);
+                mv.visitInsn(array[i]);
+                mv.visitLdcInsn(schamas[i]);
+                mv.visitInsn(AASTORE);
+            }
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setSchemes", "([Ljava/lang/String;)V");
             mv.visitVarInsn(ALOAD, 2);
             mv.visitLdcInsn(baseUrl);
-            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setBasePath", "(Ljava/lang/String;)V");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setBasePath", "(Ljava/lang/String;)V");
             mv.visitVarInsn(ALOAD, 2);
             mv.visitLdcInsn(packages);
-            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setResourcePackage", "(Ljava/lang/String;)V");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setResourcePackage", "(Ljava/lang/String;)V");
             mv.visitVarInsn(ALOAD, 2);
             mv.visitInsn(scan?ICONST_1:ICONST_0);
-            mv.visitMethodInsn(INVOKEINTERFACE, "io/swagger/jaxrs/config/BeanConfig", "setScan", "(Z)V");
-            mv.visitMaxs(6, 3);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setScan", "(Z)V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(3, 1);
             mv.visitEnd();
         }
         
@@ -323,16 +316,78 @@ public class RestASMBasedWebArchiveBuilder {
         }
         
         // doPost method
-        mv = cw.visitMethod(ACC_PUBLIC, "doPost", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
-        AnnotationVisitor av2 = mv.visitAnnotation("Ljava/lang/Override;", true);
-        av2.visitEnd();
-        mv.visitCode();
-//        mv.visitVarInsn(ALOAD, 0);
-//        mv.visitVarInsn(ALOAD, 1);
-//        mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/BootstrapServlet", "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V");
-        mv.visitInsn(RETURN);
-        mv.visitMaxs(3, 2);
-        mv.visitEnd();
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "doPost", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+            AnnotationVisitor av2 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av2.visitEnd();
+            mv.visitCode();
+            
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getContextPath", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 3);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getScheme", "()Ljava/lang/String;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("://");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getServerName", "()Ljava/lang/String;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn(":");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getServerPort", "()I");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 3);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("/");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 4);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitVarInsn(ALOAD, 3);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("/api.html");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 5);
+            mv.visitLdcInsn("swagger.json");
+            mv.visitVarInsn(ASTORE, 6);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitLdcInsn("/url=");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 6);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 7);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitVarInsn(ALOAD, 5);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("?");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 7);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 8);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitVarInsn(ALOAD, 8);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "sendRedirect", "(Ljava/lang/String;)V");
+            
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(8, 8);
+            mv.visitEnd();
+        }
         
         cw.visitEnd();
         

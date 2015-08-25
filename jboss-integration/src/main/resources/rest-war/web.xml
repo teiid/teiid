@@ -26,9 +26,9 @@
      
   	<servlet-mapping>
   		<servlet-name>BootstrapServlet</servlet-name>
-  		<url-pattern>/api-doc</url-pattern>
+  		<url-pattern>/api</url-pattern>
   	</servlet-mapping>
-  	 
+  	 <!--  -->
   	<filter>
         <filter-name>ApiOriginFilter</filter-name>
         <filter-class>org.teiid.jboss.rest.ApiOriginFilter</filter-class>
