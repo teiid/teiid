@@ -28,6 +28,7 @@
   		<servlet-name>BootstrapServlet</servlet-name>
   		<url-pattern>/api</url-pattern>
   	</servlet-mapping>
+
   	 <!--  -->
   	<filter>
         <filter-name>ApiOriginFilter</filter-name>
@@ -41,5 +42,9 @@
    
 
 ${security-content}
+
+	<welcome-file-list>
+		<welcome-file>api.html</welcome-file>
+	</welcome-file-list>
       
 </web-app>

@@ -194,8 +194,6 @@ public class RestASMBasedWebArchiveBuilder {
             av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
             av0.visitEnd();
             mv.visitCode();
-            mv.visitTypeInsn(NEW, "javax/servlet/http/HttpServletResponse");
-            mv.visitInsn(DUP);
             mv.visitVarInsn(ALOAD, 2);
             mv.visitTypeInsn(CHECKCAST, "javax/servlet/http/HttpServletResponse");
             mv.visitVarInsn(ASTORE, 4);
