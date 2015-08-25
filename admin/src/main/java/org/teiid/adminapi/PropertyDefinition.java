@@ -130,7 +130,11 @@ public interface PropertyDefinition extends AdminObject {
      */
     boolean isMasked();
 
-    
+    /**
+     * Get the category of the property
+     * @return if null, no category exists
+     */
+    String getCategory();
     
 }
 
