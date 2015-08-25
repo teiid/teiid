@@ -32,9 +32,19 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.CacheStatistics;
+import org.teiid.adminapi.EngineStatistics;
+import org.teiid.adminapi.PropertyDefinition;
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
+import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.EngineStatisticsMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -343,35 +353,48 @@ public class EmbeddedAdminFactory {
 					return null;
 				}
 				VDBTranslatorMetaData translator = TranslatorUtil.buildTranslatorMetadata(ef, null);
-				PropertyType propType = PropertyType.valueOf(type.toString().toUpperCase());
+				TranlatorPropertyType translatorPropertyType = TranlatorPropertyType.valueOf(type.toString().toUpperCase());
 				if (translator != null) {
-					ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);
-					for (ExtendedPropertyMetadata epm:properties) {
-					    if (PropertyType.valueOf(epm.category()).equals(propType)) {
-					    	PropertyDefinitionMetadata pdm = new PropertyDefinitionMetadata();
-					    	pdm.setAdvanced(epm.advanced() );
-					    	pdm.setAllowedValues(Arrays.asList(epm.allowed()));
-					    	pdm.setDefaultValue(epm.defaultValue());
-					    	pdm.setDescription(epm.description());
-					    	pdm.setDisplayName(epm.display());
-					    	pdm.setMasked(epm.masked());
-					    	pdm.setName(epm.name());
-					    	pdm.setPropertyTypeClassName(epm.datatype());
-					    	if(epm.readOnly()){
-					    		pdm.setModifiable(false);
-					    	} else {
-					    		pdm.setModifiable(true);
-					    	}
-					    	pdm.setRequired(epm.required());
-					    	list.add(pdm);
-					    }
-					}
+					ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);					
+		            if (translatorPropertyType.equals(TranlatorPropertyType.ALL)) {
+		                for (ExtendedPropertyMetadata epm:properties) {
+                            list.add(buildNode(epm));
+		                }
+		            } else {
+		                PropertyType propType = PropertyType.valueOf(type.toString().toUpperCase());
+	                    for (ExtendedPropertyMetadata epm:properties) {
+	                        if (PropertyType.valueOf(epm.category()).equals(propType)) {
+	                            list.add(buildNode(epm));
+	                        }
+	                    }    
+		            }
 				}
 			} catch (ConnectorManagerException e) {
 				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40138, translatorName, type, e));
 			}
 			return list;
 		}
+
+        private PropertyDefinitionMetadata buildNode(
+                ExtendedPropertyMetadata epm) {
+            PropertyDefinitionMetadata pdm = new PropertyDefinitionMetadata();
+            pdm.setAdvanced(epm.advanced() );
+            pdm.setAllowedValues(Arrays.asList(epm.allowed()));
+            pdm.setDefaultValue(epm.defaultValue());
+            pdm.setDescription(epm.description());
+            pdm.setDisplayName(epm.display());
+            pdm.setMasked(epm.masked());
+            pdm.setName(epm.name());
+            pdm.setPropertyTypeClassName(epm.datatype());
+            if(epm.readOnly()){
+            	pdm.setModifiable(false);
+            } else {
+            	pdm.setModifiable(true);
+            }
+            pdm.setRequired(epm.required());
+            pdm.setCategory(epm.category());
+            return pdm;
+        }
 
 		@Override
 		public Collection<? extends Transaction> getTransactions() throws AdminException {

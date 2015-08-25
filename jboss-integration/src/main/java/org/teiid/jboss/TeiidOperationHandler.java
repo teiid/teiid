@@ -63,6 +63,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Admin.SchemaObjectType;
+import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
@@ -1456,16 +1457,26 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
 
 		ModelNode result = context.getResult();
 		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME.getName()).asString();
-		PropertyType type = PropertyType.valueOf(operation.get(OperationsConstants.PROPERTY_TYPE.getName()).asString().toUpperCase());		
-		VDBTranslatorMetaData translator = repo.getTranslatorMetaData(translatorName);
-		if (translator != null) {
-			ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);
-			for (ExtendedPropertyMetadata epm:properties) {
-			    if (PropertyType.valueOf(epm.category()).equals(type)) {
-			        result.add(buildNode(epm));
-			    }
-			}
-		}
+		
+		String propertyType = operation.get(OperationsConstants.PROPERTY_TYPE.getName()).asString().toUpperCase();
+		TranlatorPropertyType translatorPropertyType = TranlatorPropertyType.valueOf(propertyType);
+
+        VDBTranslatorMetaData translator = repo.getTranslatorMetaData(translatorName);
+        if (translator != null) {
+            ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);
+            if (translatorPropertyType.equals(TranlatorPropertyType.ALL)) {
+                for (ExtendedPropertyMetadata epm:properties) {
+                    result.add(buildNode(epm));
+                }
+            } else {
+                PropertyType type = PropertyType.valueOf(propertyType);     
+                for (ExtendedPropertyMetadata epm:properties) {
+                    if (PropertyType.valueOf(epm.category()).equals(type)) {
+                        result.add(buildNode(epm));
+                    }
+                }    
+            }
+        }        
 	}
 	
 	static ModelNode buildNode(ExtendedPropertyMetadata prop) {
@@ -1512,6 +1523,10 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
 
         if (prop.defaultValue() != null) {
         	node.get(name, DEFAULT).set(prop.defaultValue());
+        }
+        
+        if (prop.category() != null) {
+            node.get(name, "category").set(prop.category()); //$NON-NLS-1$
         }
 		return node;
 	}	

@@ -194,12 +194,17 @@ public class AdminFactory {
 	}
 
     public class AdminImpl implements Admin{
+        private static final long CACHE_TIME = 5*1000;
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
     	private String profileName = "ha";
-
+    	
+    	Expirable<Map<String, String>> connectionFactoryNames = new Expirable<Map<String,String>>();
+    	Expirable<Set<String>> installedResourceAdaptorNames = new Expirable<Set<String>>();
+    	Expirable<Set<String>> deployedResourceAdaptorNames = new Expirable<Set<String>>();
+    	
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
             List<String> nodeTypes = Util.getNodeTypes(connection, new DefaultOperationRequestAddress());
@@ -986,12 +991,15 @@ public class AdminFactory {
 		}
 
 		private Map<String, String> getConnectionFactoryNames() throws AdminException {
-			HashMap<String, String> datasourceNames = new HashMap<String, String>();
-			Set<String> resourceAdapters = getInstalledResourceAdaptorNames();
-			for (String resource:resourceAdapters) {
-				getRAConnections(datasourceNames, resource);
-			}
-			return datasourceNames;
+		    if (this.connectionFactoryNames.get() == null) {
+    			HashMap<String, String> datasourceNames = new HashMap<String, String>();
+    			Set<String> resourceAdapters = getInstalledResourceAdaptorNames();
+    			for (String resource:resourceAdapters) {
+    				getRAConnections(datasourceNames, resource);
+    			}
+    			this.connectionFactoryNames.set(datasourceNames, CACHE_TIME);
+		    }
+			return this.connectionFactoryNames.get();
 		}
 
 		private void getRAConnections(final HashMap<String, String> datasourceNames, final String rarName) throws AdminException {
@@ -1022,9 +1030,12 @@ public class AdminFactory {
 		 * @throws AdminException
 		 */
 		private Set<String> getInstalledResourceAdaptorNames() throws AdminException {
-			Set<String> templates = new HashSet<String>();
-			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
-	        return templates;
+		    if (this.installedResourceAdaptorNames.get() == null) {
+    			Set<String> templates = new HashSet<String>();
+    			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
+    	        this.installedResourceAdaptorNames.set(templates, CACHE_TIME);
+		    }
+		    return this.installedResourceAdaptorNames.get();
 		}
 
 		// :read-children-names(child-type=deployment)
@@ -1044,14 +1055,17 @@ public class AdminFactory {
 		}
 
 		private Set<String> getDeployedResourceAdaptorNames() throws AdminException {
-			Set<String> templates = new HashSet<String>();
-			List<String> deployments = getChildNodeNames(null, "deployment");
-            for (String deployment:deployments) {
-            	if (deployment.endsWith(".rar")) {
-            		templates.add(deployment);
-            	}
-            }
-			return templates;
+		    if (this.deployedResourceAdaptorNames.get() == null) {
+    			Set<String> templates = new HashSet<String>();
+    			List<String> deployments = getChildNodeNames(null, "deployment");
+                for (String deployment:deployments) {
+                	if (deployment.endsWith(".rar")) {
+                		templates.add(deployment);
+                	}
+                }
+                this.deployedResourceAdaptorNames.set(templates, CACHE_TIME);
+		    }
+			return this.deployedResourceAdaptorNames.get();
 		}
 
 		public List<String> getDeployments(){
@@ -1206,20 +1220,25 @@ public class AdminFactory {
 	        		return builder.getPropertyDefinitions();
 				}
 			}
-			throw new AdminProcessingException(AdminPlugin.Event.TEIID70055, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70055, translatorName));
+			throw new AdminProcessingException(AdminPlugin.Event.TEIID70055, 
+			        AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70055, translatorName));
 	    }
 		
         @Override        
-        public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName, TranlatorPropertyType type) throws AdminException{
+        public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(
+                String translatorName, TranlatorPropertyType type) throws AdminException {
+
             BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
-            Collection<? extends Translator> translators = getTranslators();
-            for (Translator t:translators) {
-                if (t.getName().equalsIgnoreCase(translatorName)) {
-                    cliCall("read-translator-properties", new String[] {"subsystem", "teiid"}, new String[] {"translator-name", translatorName, "type", type.name()}, builder);
+            Translator translator = getTranslator(translatorName);
+            if (translator != null) {
+                if (translator.getName().equalsIgnoreCase(translatorName)) {
+                    cliCall("read-translator-properties", new String[] {"subsystem", "teiid"}, 
+                            new String[] {"translator-name", translatorName, "type", type.name()}, builder);
                     return builder.getPropertyDefinitions();
                 }
             }
-            throw new AdminProcessingException(AdminPlugin.Event.TEIID70055, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70055, translatorName));
+            throw new AdminProcessingException(AdminPlugin.Event.TEIID70055, 
+                    AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70055, translatorName));
         }
 
 		private class BuildPropertyDefinitions extends ResultCallback{
@@ -1300,14 +1319,18 @@ public class AdminFactory {
 	        		}
 
 	        		if (node.hasDefined("advanced")) {
-	        			String access = node.get("advanced").asString();
-	        			def.setAdvanced(Boolean.parseBoolean(access));
+	        			String advanced = node.get("advanced").asString();
+	        			def.setAdvanced(Boolean.parseBoolean(advanced));
 	        		}
 
 	        		if (node.hasDefined("masked")) {
-	        			String access = node.get("masked").asString();
-	        			def.setAdvanced(Boolean.parseBoolean(access));
+	        			String masked = node.get("masked").asString();
+	        			def.setMasked(Boolean.parseBoolean(masked));
 	        		}
+	        		
+                    if (node.hasDefined("category")) {
+                        def.setCategory(node.get("category").asString());
+                    }	        		
 
 	        		if (node.hasDefined("restart-required")) {
 	        			def.setRequiresRestart(RestartType.NONE);
@@ -1902,5 +1925,22 @@ public class AdminFactory {
 				//ignore
 			}
 		}
+    }
+    
+    static class Expirable<T> {
+        private long expires;
+        private T t;
+
+        public T get() {
+            if (this.t == null || System.currentTimeMillis() >= this.expires) {
+                this.t = null;
+            }
+            return this.t;
+        }
+
+        public void set(T t, long cacheTimeInMillis) {
+            this.expires = System.currentTimeMillis()+cacheTimeInMillis;
+            this.t = t;
+        }
     }
 }

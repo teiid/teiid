@@ -36,7 +36,7 @@ public interface Admin {
 
 	public enum SchemaObjectType {TABLES, PROCEDURES, FUNCTIONS};
 	
-	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA};
+	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA, ALL};
 
     /**
      * Assign a {@link Translator} and Data source to a {@link VDB}'s Model
