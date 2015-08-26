@@ -389,6 +389,7 @@ public class TestEmbeddedServerAdmin {
 	@AfterClass
 	public static void destory() throws SQLException {
 		admin.close();
+		server.stop();
 	}
 
 }
