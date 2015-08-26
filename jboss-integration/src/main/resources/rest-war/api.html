@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Teiid VDB Rest</title>
+  <title>Teiid VDB REST API</title>
   <link rel="icon" type="image/png" href="swagger/images/favicon-32x32.png" sizes="32x32" />
   <link rel="icon" type="image/png" href="swagger/images/favicon-16x16.png" sizes="16x16" />
   <link href='swagger/css/typography.css' media='screen' rel='stylesheet' type='text/css'/>
@@ -33,7 +33,7 @@
       if (url && url.length > 1) {
         url = decodeURIComponent(url[1]);
       } else {
-        url = "http://localhost:8080/petstore/rest/swagger.json";
+        log("SwaggerUI URL is NULL");
       }
 
       // Pre load translate...
@@ -45,15 +45,6 @@
         dom_id: "swagger-ui-container",
         supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
         onComplete: function(swaggerApi, swaggerUi){
-          if(typeof initOAuth == "function") {
-            initOAuth({
-              clientId: "your-client-id",
-              clientSecret: "your-client-secret",
-              realm: "your-realms",
-              appName: "your-app-name", 
-              scopeSeparator: ","
-            });
-          }
 
           if(window.SwaggerTranslator) {
             window.SwaggerTranslator.translate();
@@ -63,7 +54,6 @@
             hljs.highlightBlock(e)
           });
 
-          //addApiKeyAuthorization();
         },
         onFailure: function(data) {
           log("Unable to Load SwaggerUI");

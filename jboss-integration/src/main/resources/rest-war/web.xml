@@ -18,6 +18,11 @@
   		<servlet-class>org.teiid.jboss.rest.BootstrapServlet</servlet-class>
   		<load-on-startup>2</load-on-startup>
   	</servlet>
+  	<!--  -->
+  	<servlet>
+  		<servlet-name>welcome</servlet-name>
+  		<jsp-file>/api.html</jsp-file>
+	</servlet>
     
     <servlet-mapping>
         <servlet-name>RestDataservice</servlet-name>
@@ -28,8 +33,13 @@
   		<servlet-name>BootstrapServlet</servlet-name>
   		<url-pattern>/api</url-pattern>
   	</servlet-mapping>
+  	
+  	<!--  -->
+  	<servlet-mapping>
+  		<servlet-name>welcome</servlet-name>
+  		<url-pattern>/api.html</url-pattern>
+	</servlet-mapping>
 
-  	 <!--  -->
   	<filter>
         <filter-name>ApiOriginFilter</filter-name>
         <filter-class>org.teiid.jboss.rest.ApiOriginFilter</filter-class>
@@ -43,8 +53,5 @@
 
 ${security-content}
 
-	<welcome-file-list>
-		<welcome-file>api.html</welcome-file>
-	</welcome-file-list>
       
 </web-app>

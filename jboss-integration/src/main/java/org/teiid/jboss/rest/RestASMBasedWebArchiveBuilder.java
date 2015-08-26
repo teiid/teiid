@@ -22,6 +22,7 @@
 package org.teiid.jboss.rest;
 
 import static org.objectweb.asm.Opcodes.*;
+import io.swagger.annotations.ApiResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +39,6 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
@@ -159,7 +159,7 @@ public class RestASMBasedWebArchiveBuilder {
 	    }
 	    byte[] bytes = getBootstrapServletClass(vdb.getName(), desc, vdb.getVersion() + ".0", new String[]{"http"}, props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
 	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/BootstrapServlet.class", out, bytes);
-	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Content-Type"));
+	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Origin, X-Atmosphere-tracking-id, X-Atmosphere-Framework, X-Cache-Date, Content-Type, X-Atmosphere-Transport, *"));
     }
 	
 	protected byte[] getApiOriginFilterClass(String k1, String v1, String k2, String v2, String k3, String v3) {
@@ -527,16 +527,16 @@ public class RestASMBasedWebArchiveBuilder {
     	cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/"+modelName, null, "org/teiid/jboss/rest/TeiidRSProvider", null);
     	
     	{
-    	av0 = cw.visitAnnotation("Lio/swagger/annotations/Api;", true);
-        av0.visit("value", "/"+modelName.toLowerCase());
-        av0.visitEnd();
-    	}
-    	
-    	{
     	av0 = cw.visitAnnotation("Ljavax/ws/rs/Path;", true);
     	av0.visit("value", "/"+modelName.toLowerCase());
     	av0.visitEnd();
     	}
+    	
+    	{
+            av0 = cw.visitAnnotation("Lio/swagger/annotations/Api;", true);
+            av0.visit("value", "/"+modelName.toLowerCase());
+            av0.visitEnd();
+        }
     	
     	cw.visitInnerClass("javax/ws/rs/core/Response$Status", "javax/ws/rs/core/Response", "Status", ACC_PUBLIC + ACC_FINAL + ACC_STATIC + ACC_ENUM);
 
@@ -689,9 +689,14 @@ public class RestASMBasedWebArchiveBuilder {
     	}
     	
     	{
-//        av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
-//        av0.visit("value", new ApiResponse[]{});
-//        av0.visitEnd();
+    	    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
+            ApiResponse[] array = new ApiResponse[]{};
+            AnnotationVisitor av1 = av0.visitArray("value");
+            for(int i = 0 ; i < array.length ; i ++) {
+                av1.visit("value", array[i]);
+            }
+            av1.visitEnd();
+            av0.visitEnd();
         }
         
     	if(useMultipart)
@@ -829,9 +834,14 @@ public class RestASMBasedWebArchiveBuilder {
             av0.visitEnd();
 			}
 			{
-//	        av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
-//	        av0.visit("value", new ApiResponse[]{});
-//	        av0.visitEnd();
+			    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
+	            ApiResponse[] array = new ApiResponse[]{};
+	            AnnotationVisitor av1 = av0.visitArray("value");
+	            for(int i = 0 ; i < array.length ; i ++) {
+	                av1.visit("value", array[i]);
+	            }
+	            av1.visitEnd();
+	            av0.visitEnd();
 	        }
 			{
 	        av0 = mv.visitParameterAnnotation(0, "Lio/swagger/annotations/ApiParam;", true);

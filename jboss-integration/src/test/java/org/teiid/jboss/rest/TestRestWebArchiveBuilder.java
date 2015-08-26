@@ -40,7 +40,6 @@ import java.util.zip.ZipInputStream;
 import javax.xml.stream.XMLStreamException;
 
 import org.junit.Test;
-import org.objectweb.asm.ClassWriter;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
@@ -197,10 +196,6 @@ public class TestRestWebArchiveBuilder {
 	    
 	    public static Class<?> defineClass(String name, byte[] bytes) {
 	        return new TestClassLoader(TestClassLoader.class.getClassLoader()).defineClassForName(name, bytes);
-	    }
-
-	    public static Class<?> defineClass(String name, ClassWriter writer) {
-	        return defineClass(name, writer.toByteArray());
 	    }
 	    
 	    private static  class TestClassLoader extends ClassLoader {
