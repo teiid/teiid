@@ -1391,5 +1391,36 @@ public class TestEmbeddedServer {
 		mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
 		es.deployVDB("x", mmd);
 	}
+	
+	@Test public void testSystemSubquery() throws Exception {
+		//already working
+		String query = "SELECT t.Name FROM (select * from SYS.Tables AS t limit 10) as t, (SELECT DISTINCT c.TableName FROM SYS.Columns AS c where c.Name > 'A') AS X__1 WHERE t.Name = X__1.TableName";
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create view v as select 1 as c");
+		es.deployVDB("x", mmd);
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		extractRowCount(query, s, 10);
+
+		//was throwing exception
+		query = "SELECT t.Name FROM (select * from SYS.Tables AS t limit 10) as t, (SELECT DISTINCT c.TableName FROM SYS.Columns AS c) AS X__1 WHERE t.Name = X__1.TableName";
+		extractRowCount(query, s, 10);
+	}
+
+	private void extractRowCount(String query, Statement s, int count)
+			throws SQLException {
+		s.execute(query);
+		ResultSet rs = s.getResultSet();
+		int i = 0;
+		while (rs.next()) {
+			i++;
+		}
+		assertEquals(count, i);
+	}
+	
 
 }

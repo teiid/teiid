@@ -120,6 +120,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }            
             case NodeConstants.Types.PROJECT:
             {         
+            	if (CapabilitiesUtil.supports(Capability.NO_PROJECTION, modelID, metadata, capFinder)) {
+            		return null;
+            	}
+            	
                 // Check that the PROJECT contains only functions that can be pushed                               
                 List<Expression> projectCols = (List) parentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
                 
