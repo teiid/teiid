@@ -598,9 +598,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			int one_gig = 1 << 30;
 			if (maxMemory > one_gig) {
 				//assume 70% of the memory over the first gig
-				this.maxReserveBytes = (long)Math.max(0, (maxMemory - one_gig) * .7);
+				this.maxReserveBytes = (long)Math.max(0, (maxMemory - one_gig) * .5);
 			}
-			this.maxReserveBytes += Math.max(0, Math.min(one_gig, maxMemory) >> 1);
+			this.maxReserveBytes += Math.max(0, Math.min(one_gig, maxMemory) * .4);
     	}
 		this.reserveBatchBytes.set(maxReserveBytes);
 		if (this.maxProcessingBytesOrig == null) {
@@ -608,7 +608,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			this.maxProcessingBytesOrig = this.maxProcessingBytes;
 		}
 		if (this.maxProcessingBytesOrig < 0) {
-			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 16l, (.2 * maxMemory)/maxActivePlans),  Integer.MAX_VALUE);
+			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 16l, (.07 * maxMemory)/Math.pow(maxActivePlans, .8)),  Integer.MAX_VALUE);
 		} 
 		//make a guess at the max number of batches
 		long memoryBatches = maxMemory / (processorBatchSize * targetBytesPerRow);
