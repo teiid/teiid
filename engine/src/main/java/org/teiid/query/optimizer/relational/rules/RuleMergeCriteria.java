@@ -555,12 +555,21 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			}
 			
 			if (!isDistinct(plannedResult.query, plannedResult.rightExpressions, metadata)) {
-				if (!requiredExpressions.isEmpty()) {
+				if (plannedResult.type == ExistsCriteria.class) {
+					if (requiredExpressions.size() > plannedResult.leftExpressions.size()) {
+						return false; //not an equi join
+					}
+				} else if (!requiredExpressions.isEmpty() && !isDistinct(plannedResult.query, plannedResult.query.getProjectedSymbols(), metadata)) {
 					return false;
 				}
 				plannedResult.query.getSelect().setDistinct(true);
 				plannedResult.madeDistinct = true;
 			}
+		}
+		
+		//it doesn't matter what the select columns are
+		if (plannedResult.type == ExistsCriteria.class) {
+			plannedResult.query.getSelect().clearSymbols();
 		}
 
 		if (addGroupBy) {
@@ -578,7 +587,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		for (Expression ses : requiredExpressions) {
 			if (projectedSymbols.add(ses)) {
-				plannedResult.query.getSelect().addSymbol((Expression)ses);
+				plannedResult.query.getSelect().addSymbol((Expression)ses.clone());
 			}
 		}
 		for (Expression ses : (List<Expression>)plannedResult.rightExpressions) {

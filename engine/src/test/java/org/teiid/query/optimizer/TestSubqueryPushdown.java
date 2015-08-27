@@ -772,7 +772,7 @@ public class TestSubqueryPushdown {
     @Test public void testSubqueryRewriteToJoinDistinct() throws Exception {
     	CommandContext cc = new CommandContext();
     	cc.setOptions(new Options().subqueryUnnestDefault(true));
-        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example1Cached(), cc);
+        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example1Cached(), cc);
     }
     
     //won't rewrite since we need distinct and don't have all equi join predicates
@@ -788,7 +788,7 @@ public class TestSubqueryPushdown {
     @Test public void testSubqueryRewriteToJoinGroupBy() throws Exception {
     	CommandContext cc = new CommandContext();
     	cc.setOptions(new Options().subqueryUnnestDefault(true));
-        TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", RealMetadataFactory.example1Cached(), cc);
+        TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", RealMetadataFactory.example1Cached(), cc);
     }
     
     /**
@@ -821,7 +821,7 @@ public class TestSubqueryPushdown {
     @Test public void testSubqueryRewriteToJoin() throws Exception {
     	CommandContext cc = new CommandContext();
     	cc.setOptions(new Options().subqueryUnnestDefault(true));
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", RealMetadataFactory.example4(), cc);
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", RealMetadataFactory.example4(), cc);
     }
     
     @Test public void testSubqueryRewriteToJoin1() throws Exception {
@@ -892,7 +892,13 @@ public class TestSubqueryPushdown {
     @Test public void testSubqueryRewriteToJoinWithGroupingExpression() throws Exception {
     	CommandContext cc = new CommandContext();
     	cc.setOptions(new Options().subqueryUnnestDefault(true));
-        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm3.g1 where exists (select 1 FROM pm1.g1 group by e4 || 'x' HAVING min(e3) || (e4 || 'x') = pm3.g1.e3)", "SELECT DISTINCT e1 FROM pm3.g1, (SELECT 1 AS expr1, MIN(e3) AS expr2, concat(convert(e4, string), 'x') AS expr3, concat(convert(MIN(e3), string), concat(convert(e4, string), 'x')) AS expr FROM pm1.g1 GROUP BY concat(convert(e4, string), 'x')) AS X__1 WHERE convert(pm3.g1.e3, string) = X__1.expr", RealMetadataFactory.example4(), cc);
+        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm3.g1 where exists (select 1 FROM pm1.g1 group by e4 || 'x' HAVING min(e3) || (e4 || 'x') = pm3.g1.e3)", "SELECT DISTINCT e1 FROM pm3.g1, (SELECT MIN(e3) AS expr1, concat(convert(e4, string), 'x') AS expr2, concat(convert(MIN(e3), string), concat(convert(e4, string), 'x')) AS expr FROM pm1.g1 GROUP BY concat(convert(e4, string), 'x')) AS X__1 WHERE convert(pm3.g1.e3, string) = X__1.expr", RealMetadataFactory.example4(), cc);
+    }
+    
+    @Test public void testSubqueryRewriteToJoinExistsNoKey() throws Exception {
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm1.g1 x where exists (select 1 FROM pm1.g2 where pm1.g2.e1 = x.e1)", "SELECT e1 FROM pm1.g1 AS x, (SELECT DISTINCT pm1.g2.e1 FROM pm1.g2) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example4(), cc);
     }
 
     /**
