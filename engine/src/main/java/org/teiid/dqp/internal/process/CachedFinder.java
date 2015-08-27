@@ -61,6 +61,7 @@ public class CachedFinder implements CapabilitiesFinder {
 		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
 		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
 		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.NO_PROJECTION, true);
 		SYSTEM_CAPS.setFunctionSupport(SourceSystemFunctions.UCASE, true);
 		SYSTEM_CAPS.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
 		SYSTEM_CAPS.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
