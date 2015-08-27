@@ -70,7 +70,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	static final String COLUMN_DEFAULTED = MetadataFactory.SF_URI+"Defaulted on Create"; //$NON-NLS-1$
 	static final String COLUMN_CUSTOM = TABLE_CUSTOM;
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Calculated")
-	static final String COLUMN_CALCULATED = MetadataFactory.SF_URI+"calculated"; //$NON-NLS-1$
+	static final String COLUMN_CALCULATED = MetadataFactory.SF_URI+"Calculated"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=String.class, display="Picklist Values")
 	static final String COLUMN_PICKLIST_VALUES = MetadataFactory.SF_URI+"Picklist Values"; //$NON-NLS-1$
 	
