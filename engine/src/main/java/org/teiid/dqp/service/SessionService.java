@@ -126,5 +126,5 @@ public interface SessionService {
 	
 	SecurityHelper getSecurityHelper();
 	
-	GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
+	GSSResult negotiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
 }

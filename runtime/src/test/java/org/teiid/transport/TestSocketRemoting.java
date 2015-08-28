@@ -212,7 +212,7 @@ public class TestSocketRemoting {
 				}
 
 				@Override
-				public LogonResult neogitiateGssLogin(
+				public LogonResult negotiateGssLogin(
 						Properties connectionProperties, byte[] serviceToken, boolean createSession)
 						throws LogonException {
 					return null;

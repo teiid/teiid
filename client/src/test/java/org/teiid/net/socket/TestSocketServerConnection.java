@@ -113,7 +113,7 @@ public class TestSocketServerConnection {
 		}
 
 		@Override
-		public LogonResult neogitiateGssLogin(Properties connectionProperties,
+		public LogonResult negotiateGssLogin(Properties connectionProperties,
 				byte[] serviceToken, boolean createSession) throws LogonException {
 			return null;
 		}

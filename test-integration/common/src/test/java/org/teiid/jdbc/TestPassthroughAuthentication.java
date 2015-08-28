@@ -101,12 +101,20 @@ public class TestPassthroughAuthentication {
 		}
 		
 		@Override
+		public Subject getSubjectInContext(Object context) {
+			if (context != null) {
+				return new Subject();
+			}
+			return null;
+		}
+		
+		@Override
 		public Object authenticate(String securityDomain, String baseUserName,
 				Credentials credentials, String applicationName) throws LoginException {
-            return null;
+            return ctx;
         }
         @Override
-        public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+        public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
             return null;
         }
 	};

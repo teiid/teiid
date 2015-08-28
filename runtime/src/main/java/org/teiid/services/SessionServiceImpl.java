@@ -133,6 +133,9 @@ public class SessionServiceImpl implements SessionService {
                 LogManager.logWarning(LogConstants.CTX_SECURITY,e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40018));
             }
 		}
+		info.setSecurityContext(null);
+		info.setClosed();
+		info.getSessionVariables().clear();
 	}
 	
 	@Override
@@ -176,7 +179,7 @@ public class SessionServiceImpl implements SessionService {
         	} else {
         		userName = escapeName(baseUserName) + AT + securityDomain;
         		securityContext = this.securityHelper.authenticate(securityDomain, baseUserName, credentials, applicationName);
-        		subject = this.securityHelper.getSubjectInContext(securityDomain);
+        		subject = this.securityHelper.getSubjectInContext(securityContext);
         	}
 		}
 		else {
@@ -507,13 +510,13 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public GSSResult neogitiateGssLogin(String user, String vdbName,
+	public GSSResult negotiateGssLogin(String user, String vdbName,
 			String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException {
 		String securityDomain = getSecurityDomain(user, vdbName, vdbVersion, null);
 		if (securityDomain == null ) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40059, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40059));
 		}
-		return this.securityHelper.neogitiateGssLogin(securityDomain, serviceTicket);
+		return this.securityHelper.negotiateGssLogin(securityDomain, serviceTicket);
 	}
 	
 	public AuthenticationType getDefaultAuthenticationType() {

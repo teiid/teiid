@@ -162,7 +162,7 @@ public class LogonImpl implements ILogon {
 	}
 		
 	@Override
-	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
+	public LogonResult negotiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
 		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
 		String user = connProps.getProperty(BaseDataSource.USER_NAME);
@@ -174,7 +174,7 @@ public class LogonImpl implements ILogon {
 		}
 		
 		// Using SPENGO security domain establish a token and subject.
-		GSSResult result = neogitiateGssLogin(serviceTicket, vdbName, vdbVersion, user);
+		GSSResult result = negotiateGssLogin(serviceTicket, vdbName, vdbVersion, user);
 					
 		if (!result.isAuthenticated() || !createSession) {
 			LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -197,11 +197,11 @@ public class LogonImpl implements ILogon {
 		return logonResult;
 	}
 
-	public GSSResult neogitiateGssLogin(byte[] serviceTicket, String vdbName,
+	public GSSResult negotiateGssLogin(byte[] serviceTicket, String vdbName,
 			String vdbVersion, String user) throws LogonException {
 		GSSResult result;
 		try {
-			result = service.neogitiateGssLogin(user, vdbName, vdbVersion, serviceTicket);
+			result = service.negotiateGssLogin(user, vdbName, vdbVersion, serviceTicket);
 		} catch (LoginException e) {
 			throw new LogonException(RuntimePlugin.Event.TEIID40014, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 		}
@@ -237,9 +237,6 @@ public class LogonImpl implements ILogon {
 	public ResultsFuture<?> logoff() throws InvalidSessionException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		this.service.closeSession(workContext.getSessionId());
-		workContext.getSession().setSessionId(null);
-		workContext.getSession().setSecurityContext(null);
-		workContext.getSession().getSessionVariables().clear();
 		return ResultsFuture.NULL_FUTURE;
 	}
 

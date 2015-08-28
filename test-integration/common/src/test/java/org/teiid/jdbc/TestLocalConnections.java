@@ -86,6 +86,50 @@ import org.teiid.transport.LogonImpl;
 @SuppressWarnings("nls")
 public class TestLocalConnections {
 	
+	private static final class MockSecurityHelper implements SecurityHelper {
+
+		int calls;
+		
+		@Override
+		public Subject getSubjectInContext(String securityDomain) {
+			return currentContext;
+		}
+		
+		@Override
+		public Subject getSubjectInContext(Object context) {
+			return (Subject)context;
+		}
+
+		@Override
+		public Object getSecurityContext() {
+			calls++;
+			return currentContext;
+		}
+
+		@Override
+		public void clearSecurityContext() {
+		}
+
+		@Override
+		public Object associateSecurityContext(Object context) {
+			Object result = currentContext;
+			currentContext = (Subject)context;
+			return result;
+		}
+
+		@Override
+		public Object authenticate(String securityDomain, String baseUserName,
+				Credentials credentials, String applicationName) throws LoginException {
+		    return null;
+		}
+
+		@Override
+		public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+		    return null;
+		}
+	}
+
+
 	private final class SimpleUncaughtExceptionHandler implements
 			UncaughtExceptionHandler {
 		volatile Throwable t;
@@ -406,45 +450,10 @@ public class TestLocalConnections {
 		}
 	}
 
-	static int calls;
 	static Subject currentContext = new Subject();
 	
 	@Test public void testPassThroughDifferentUsers() throws Throwable {
-		SecurityHelper securityHelper = new SecurityHelper() {
-			
-			@Override
-			public Subject getSubjectInContext(String securityDomain) {
-				return currentContext;
-			}
-						
-			@Override
-			public Object getSecurityContext() {
-				calls++;
-				return currentContext;
-			}
-			
-			@Override
-			public void clearSecurityContext() {
-			}
-			
-			@Override
-			public Object associateSecurityContext(Object context) {
-				Object result = currentContext;
-				currentContext = (Subject)context;
-				return result;
-			}
-			
-			@Override
-			public Object authenticate(String securityDomain, String baseUserName,
-					Credentials credentials, String applicationName) throws LoginException {
-                return null;
-            }
-
-            @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
-                return null;
-            }
-		};
+		MockSecurityHelper securityHelper = new MockSecurityHelper();
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
 		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
 		server.getSessionService().setSecurityHelper(securityHelper);
@@ -461,7 +470,7 @@ public class TestLocalConnections {
 			rs.next();
 			String id = rs.getString(1);
 			rs.close();
-			assertEquals(4, calls);
+			assertEquals(4, securityHelper.calls);
 			server.getSessionService().pingServer(id);
 			currentContext = new Subject();
 			currentContext.getPrincipals().add(new SimplePrincipal("x"));
@@ -486,40 +495,7 @@ public class TestLocalConnections {
 	
 	
 	@Test public void testSimulateGSSWithODBC() throws Throwable {
-		SecurityHelper securityHelper = new SecurityHelper() {
-			
-			@Override
-			public Subject getSubjectInContext(String securityDomain) {
-				return new Subject();
-			}
-						
-			@Override
-			public Object getSecurityContext() {
-				return currentContext;
-			}
-			
-			@Override
-			public void clearSecurityContext() {
-			}
-			
-			@Override
-			public Object associateSecurityContext(Object context) {
-				Object result = currentContext;
-				currentContext = (Subject)context;
-				return result;
-			}
-			
-			@Override
-			public Object authenticate(String securityDomain, String baseUserName,
-					Credentials credentials, String applicationName) throws LoginException {
-                return null;
-            }
-
-            @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
-                return null;
-            }
-		};
+		SecurityHelper securityHelper = new MockSecurityHelper();
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
 		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
 		server.getSessionService().setSecurityHelper(securityHelper);

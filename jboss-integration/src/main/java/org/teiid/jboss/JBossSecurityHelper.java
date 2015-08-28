@@ -41,10 +41,10 @@ import org.jboss.security.SubjectInfo;
 import org.jboss.security.negotiation.Constants;
 import org.jboss.security.negotiation.common.NegotiationContext;
 import org.jboss.security.negotiation.spnego.KerberosMessage;
-import org.teiid.security.GSSResult;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
@@ -78,11 +78,20 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	public Subject getSubjectInContext(String securityDomain) {
 		SecurityContext sc = SecurityActions.getSecurityContext();
 		if (sc != null && sc.getSecurityDomain().equals(securityDomain)) {
-			SubjectInfo si = sc.getSubjectInfo();
-			Subject subject = si.getAuthenticatedSubject();
-			return subject;
+			return getSubjectInContext(sc);
 		}		
 		return null;
+	}
+	
+	@Override
+	public Subject getSubjectInContext(Object context) {
+		if (!(context instanceof SecurityContext)) {
+			return null;
+		}
+		SecurityContext sc = (SecurityContext)context;
+		SubjectInfo si = sc.getSubjectInfo();
+		Subject subject = si.getAuthenticatedSubject();
+		return subject;
 	}
 
 	@Override
@@ -108,7 +117,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
     }           
     
     @Override
-    public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+    public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
         
         SecurityDomainContext securityDomainContext = getSecurityDomainContext(securityDomain);
         if (securityDomainContext != null) {

@@ -43,7 +43,7 @@ public interface ILogon {
     throws LogonException, TeiidComponentException, CommunicationException;
 
 	@Secure
-    LogonResult neogitiateGssLogin(Properties connectionProperties, byte[] serviceToken, boolean createSession) throws LogonException;
+    LogonResult negotiateGssLogin(Properties connectionProperties, byte[] serviceToken, boolean createSession) throws LogonException;
     
    /**
     * Ping the server to see if the client-server connection is alive.

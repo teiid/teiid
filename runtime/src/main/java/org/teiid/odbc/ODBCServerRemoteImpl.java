@@ -228,7 +228,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 			else if (authType.equals(AuthenticationType.GSS)) {
 				byte[] serviceToken = data.readServiceToken();
-            	GSSResult result = this.logon.neogitiateGssLogin(serviceToken, databaseName, null, user);
+            	GSSResult result = this.logon.negotiateGssLogin(serviceToken, databaseName, null, user);
             	serviceToken = result.getServiceToken();
             	if (result.isAuthenticated()) {
                 	info.put(ILogon.KRB5TOKEN, serviceToken);

@@ -108,6 +108,10 @@ public class TestDQPWorkContext {
 				this.mycontext = context;
 				return old;
 			}
+			@Override
+			public Subject getSubjectInContext(Object context) {
+				return null;
+			}
             @Override
             public Subject getSubjectInContext(String securityDomain) {
                 return null;
@@ -118,7 +122,7 @@ public class TestDQPWorkContext {
                 return null;
             }
             @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+            public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
             }
 		};	

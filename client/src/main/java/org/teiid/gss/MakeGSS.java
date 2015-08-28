@@ -190,7 +190,7 @@ class GssAction implements PrivilegedAction {
                 	if (logger.isLoggable(Level.FINE)) {
                         logger.fine("Sending Service Token to Server (GSS Authentication Token)"); //$NON-NLS-1$
                 	}
-                	result = logon.neogitiateGssLogin(this.props, outToken, true);
+                	result = logon.negotiateGssLogin(this.props, outToken, true);
                 	inToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
                 }
 
