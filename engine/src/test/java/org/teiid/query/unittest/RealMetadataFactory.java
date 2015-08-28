@@ -494,7 +494,10 @@ public class RealMetadataFactory {
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
         //non-covering index
-        QueryNode vTrans5 = new QueryNode("SELECT x, 'z' || substring(x, 2) as y, 1 as z FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vTrans5 = new QueryNode("SELECT x, 'z' || substring(x, 2) as y, 1 as z FROM matsrc "
+        		+ "union all SELECT ifnull(x, ' ') || 'b', 'x' || substring(x, 2) as y, 1 as z FROM matsrc "
+        		+ "union all SELECT ifnull(x, ' ') || 'c', 'y' || substring(x, 2) as y, 1 as z FROM matsrc "
+        		+ "union all SELECT ifnull(x, ' ') || 'd', 'w' || substring(x, 2) as y, 1 as z FROM matsrc");         
         Table vGroup5 = createVirtualGroup("VGroup5", virtModel, vTrans5); //$NON-NLS-1$
         vGroup5.setMaterialized(true);
         List<Column> vElements5 = createElements(vGroup5,
