@@ -69,6 +69,7 @@ public class VDBRepository implements Serializable{
 	private static final String LIFECYCLE_CONTEXT = LogConstants.CTX_RUNTIME + ".VDBLifeCycleListener"; //$NON-NLS-1$
 	private static final long serialVersionUID = 312177538191772674L;
 	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
+	private static final boolean LOAD_PG_METADATA_ON_PG_TRANSPORT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.loadPgMetadataOnPgTransport", false); //$NON-NLS-1$
 	
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
 	private NavigableMap<VDBKey, VDBMetaData> pendingDeployments = new ConcurrentSkipListMap<VDBKey, VDBMetaData>();
@@ -95,15 +96,21 @@ public class VDBRepository implements Serializable{
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40143, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40143, vdb));
 		}
 		
-		if (this.odbcEnabled && odbcStore == null) {
-			this.odbcStore = getODBCMetadataStore();
+		boolean pgMetadataEnabled = true;
+		// check to make sure old default behavior is honored 
+		if (LOAD_PG_METADATA_ON_PG_TRANSPORT) {
+		    pgMetadataEnabled = this.odbcEnabled;
+		}
+		String excludePgMetadata = vdb.getPropertyValue("exclude-pg-metadata");
+		if (excludePgMetadata != null) {
+		    pgMetadataEnabled = !Boolean.parseBoolean(excludePgMetadata);
 		}
 
 		MetadataStore[] stores = null;
-		if (this.odbcStore == null) {
-			stores = new MetadataStore[] {this.systemStore};
+		if (pgMetadataEnabled) {
+		    stores = new MetadataStore[] {this.systemStore, odbcStore};
 		} else {
-			stores = new MetadataStore[] {this.systemStore, odbcStore};
+		    stores = new MetadataStore[] {this.systemStore};
 		}
 		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this, stores);
 		lock.lock();
@@ -280,9 +287,7 @@ public class VDBRepository implements Serializable{
 	
 	// this is called by mc
 	public void start() {
-		if (this.odbcEnabled) {
-			this.odbcStore = getODBCMetadataStore();
-		}
+	    this.odbcStore = getODBCMetadataStore();
 	}
 	
 	public void finishDeployment(String name, int version, boolean reload) {
