@@ -596,4 +596,16 @@ public class TestTempTables extends TempTableTestHarness {
 		
 	}
 	
+	@Test public void testIndexInPredicate() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+		//the issue is only apparent when the values are from different pages
+		for (int i = 0; i < 2048; i++) {
+			execute("insert into x (e2, e1) values ("+i+", '"+i+"')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		}
+
+		execute("select e2, e1 from x where e1 in ('2000', '1')", new List[] {Arrays.asList(1, "1"), Arrays.asList(2000, "2000")}); //$NON-NLS-1$
+		
+	}
+	
 }

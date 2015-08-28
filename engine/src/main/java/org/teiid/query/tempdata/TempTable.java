@@ -572,13 +572,15 @@ public class TempTable implements Cloneable, SearchableTable {
 			additionalCost = (64 - Long.numberOfLeadingZeros(initialCost - 1));
 			rowCost /= 3;
 		}
-		if (rowCost > 1 && (!ii.covering || (orderBy != null && ii.ordering == null))) {
+		if (rowCost > 1 && !ii.covering) {
+			//primary lookup
+			additionalCost += rowCost * (64 - Long.numberOfLeadingZeros(rowCost - 1));
+		}
+		if (rowCost > 1 && orderBy != null && ii.ordering != null) {
 			//pk order or non-covered ordering
-			rowCost *= (64 - Long.numberOfLeadingZeros(rowCost - 1));
-			if (!ii.covering) {
-				//primary lookup
-				rowCost *= 2;
-			}
+			//TODO: this should be based upon the filtered rowCost, but instead it is
+			//written as a bonus
+			additionalCost -= Math.min(additionalCost, rowCost * (64 - Long.numberOfLeadingZeros(rowCost - 1)));
 		}
 		return rowCost + additionalCost;
 	}
