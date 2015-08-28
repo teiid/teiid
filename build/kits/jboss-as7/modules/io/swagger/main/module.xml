@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="io.swagger">
+
+	<properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <resource-root path="swagger-annotations-${version.swagger-jaxrs}.jar" />
+        <resource-root path="swagger-core-${version.swagger-jaxrs}.jar" />
+        <resource-root path="swagger-jaxrs-${version.swagger-jaxrs}.jar" />
+        <resource-root path="swagger-models-${version.swagger-jaxrs}.jar" />
+        <resource-root path="jackson-dataformat-xml-${version.com.fasterxml.jackson.swagger}.jar" />
+        <resource-root path="jackson-dataformat-yaml-${version.com.fasterxml.jackson.swagger}.jar" />
+        <resource-root path="jackson-datatype-joda-${version.com.fasterxml.jackson.swagger}.jar" />
+        <resource-root path="jackson-jaxrs-json-provider-${version.com.fasterxml.jackson.swagger}.jar" />
+        <resource-root path="jackson-module-jaxb-annotations-${version.com.fasterxml.jackson.swagger}.jar" />
+        <resource-root path="jackson-jaxrs-base-${version.com.fasterxml.jackson.swagger}.jar" />
+        <resource-root path="reflections-${version.org.reflections}.jar" />
+        <resource-root path="annotations-${version.com.google.code.findbugs}.jar" />
+    </resources>
+    
+    <dependencies>
+        <module name="com.fasterxml.jackson" />
+        <module name="com.google.guava" />  
+        <module name="org.javassist" />  
+        <module name="org.apache.commons.lang" slot="3.3.2"/>
+        <module name="org.yaml.snakeyaml" />
+        <module name="org.codehaus.woodstox" />
+        <module name="org.joda.time" /> 
+        <module name="org.slf4j"/>
+        <module name="javax.ws.rs.api"/>
+        <module name="javax.servlet.api"/>
+        <module name="javax.xml.bind.api"/>
+    </dependencies>
+    
+</module>

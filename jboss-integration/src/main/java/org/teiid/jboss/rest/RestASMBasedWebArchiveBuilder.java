@@ -22,6 +22,7 @@
 package org.teiid.jboss.rest;
 
 import static org.objectweb.asm.Opcodes.*;
+import io.swagger.annotations.ApiResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -59,8 +60,6 @@ import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
 
-
-
 @SuppressWarnings("nls")
 public class RestASMBasedWebArchiveBuilder {
 	 
@@ -72,6 +71,7 @@ public class RestASMBasedWebArchiveBuilder {
 		props.setProperty("${context-name}", vdb.getName() + "_" + vdb.getVersion());
 		props.setProperty("${vdb-name}", vdb.getName());
 		props.setProperty("${vdb-version}", String.valueOf(vdb.getVersion()));
+		props.setProperty("${api-page-title}", vdb.getName() + "_" + vdb.getVersion() + " API");
 		
 		boolean passthroughAuth = false;
 		String securityType = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-type");
@@ -100,7 +100,9 @@ public class RestASMBasedWebArchiveBuilder {
 		ZipOutputStream out = new ZipOutputStream(byteStream); 
 		writeEntry("WEB-INF/web.xml", out, replaceTemplates(getFileContents("rest-war/web.xml"), props).getBytes());
 		writeEntry("WEB-INF/jboss-web.xml", out, replaceTemplates(getFileContents("rest-war/jboss-web.xml"), props).getBytes());
-		
+				
+		writeSwagger(out, props, vdb);
+				
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
@@ -117,7 +119,280 @@ public class RestASMBasedWebArchiveBuilder {
 		return byteStream.toByteArray();
 	}
 
-	private void writeEntry(String name, ZipOutputStream out, byte[] contents) throws IOException {
+    private void writeSwagger(ZipOutputStream out, Properties props, VDBMetaData vdb) throws IOException {
+        
+        writeEntry("api.html", out, replaceTemplates(getFileContents("rest-war/api.html"), props).getBytes());
+	    
+	    writeEntry("swagger/swagger-ui.js", out, replaceTemplates(getFileContents("swagger/swagger-ui.js"), props).getBytes());
+	    
+	    writeEntry("swagger/css/print.css", out, replaceTemplates(getFileContents("swagger/css/print.css"), props).getBytes());
+	    writeEntry("swagger/css/reset.css", out, replaceTemplates(getFileContents("swagger/css/reset.css"), props).getBytes());
+	    writeEntry("swagger/css/screen.css", out, replaceTemplates(getFileContents("swagger/css/screen.css"), props).getBytes());
+	    writeEntry("swagger/css/style.css", out, replaceTemplates(getFileContents("swagger/css/style.css"), props).getBytes());
+	    writeEntry("swagger/css/typography.css", out, replaceTemplates(getFileContents("swagger/css/typography.css"), props).getBytes());
+	    
+	    writeEntry("swagger/images/favicon-16x16.png", out, replaceTemplates(getFileContents("swagger/images/favicon-16x16.png"), props).getBytes());
+	    writeEntry("swagger/images/favicon-32x32.png", out, replaceTemplates(getFileContents("swagger/images/favicon-32x32.png"), props).getBytes());
+	    
+	    writeEntry("swagger/lang/en.js", out, replaceTemplates(getFileContents("swagger/lang/en.js"), props).getBytes());
+	    writeEntry("swagger/lang/es.js", out, replaceTemplates(getFileContents("swagger/lang/es.js"), props).getBytes());
+	    writeEntry("swagger/lang/pt.js", out, replaceTemplates(getFileContents("swagger/lang/pt.js"), props).getBytes());
+	    writeEntry("swagger/lang/ru.js", out, replaceTemplates(getFileContents("swagger/lang/ru.js"), props).getBytes());
+	    writeEntry("swagger/lang/translator.js", out, replaceTemplates(getFileContents("swagger/lang/translator.js"), props).getBytes());
+	    
+	    writeEntry("swagger/lib/backbone-min.js", out, replaceTemplates(getFileContents("swagger/lib/backbone-min.js"), props).getBytes());
+	    writeEntry("swagger/lib/handlebars-2.0.0.js", out, replaceTemplates(getFileContents("swagger/lib/handlebars-2.0.0.js"), props).getBytes());
+	    writeEntry("swagger/lib/highlight.7.3.pack.js", out, replaceTemplates(getFileContents("swagger/lib/highlight.7.3.pack.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery-1.8.0.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery-1.8.0.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery.ba-bbq.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.ba-bbq.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery.slideto.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.slideto.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/jquery.wiggle.min.js", out, replaceTemplates(getFileContents("swagger/lib/jquery.wiggle.min.js"), props).getBytes());
+	    writeEntry("swagger/lib/marked.js", out, replaceTemplates(getFileContents("swagger/lib/marked.js"), props).getBytes());
+	    writeEntry("swagger/lib/swagger-oauth.js", out, replaceTemplates(getFileContents("swagger/lib/swagger-oauth.js"), props).getBytes());
+	    writeEntry("swagger/lib/underscore-min.js", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.js"), props).getBytes());
+	    writeEntry("swagger/lib/underscore-min.map", out, replaceTemplates(getFileContents("swagger/lib/underscore-min.map"), props).getBytes());
+	    
+	    String desc = vdb.getDescription();
+	    if(null == desc) {
+	        desc = vdb.getName();
+	    }
+	    String baseUrl = "/" + props.getProperty("${context-name}");
+	    byte[] bytes = getBootstrapServletClass(vdb.getName(), desc, vdb.getVersion() + ".0", new String[]{"http"}, baseUrl, "org.teiid.jboss.rest", true);
+	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/BootstrapServlet.class", out, bytes);
+	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Origin, X-Atmosphere-tracking-id, X-Atmosphere-Framework, X-Cache-Date, Content-Type, X-Atmosphere-Transport, *"));
+    }
+	
+	protected byte[] getApiOriginFilterClass(String k1, String v1, String k2, String v2, String k3, String v3) {
+        
+	    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        MethodVisitor mv;
+        AnnotationVisitor av0;
+        
+        cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/ApiOriginFilter", null, "java/lang/Object", new String[]{"javax/servlet/Filter"});
+        
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL,"java/lang/Object", "<init>", "()V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/FilterConfig;)V", null, new String[] {"javax/servlet/ServletException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "doFilter", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;Ljavax/servlet/FilterChain;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitTypeInsn(CHECKCAST, "javax/servlet/http/HttpServletResponse");
+            mv.visitVarInsn(ASTORE, 4);
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitLdcInsn(k1);
+            mv.visitLdcInsn(v1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "addHeader", "(Ljava/lang/String;Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitLdcInsn(k2);
+            mv.visitLdcInsn(v2);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "addHeader", "(Ljava/lang/String;Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitLdcInsn(k3);
+            mv.visitLdcInsn(v3);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "addHeader", "(Ljava/lang/String;Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 3);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/FilterChain", "doFilter", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(6, 3);
+            mv.visitEnd();
+        }
+        
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "destroy", "()V", null, null);
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        
+        cw.visitEnd();
+        
+        return cw.toByteArray();
+           
+    }
+	
+	protected byte[] getBootstrapServletClass(String vdbName, String desc, String version, String[] schamas, String baseUrl, String packages, Boolean scan) {
+	    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        MethodVisitor mv;
+        AnnotationVisitor av0;
+   
+        cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/BootstrapServlet", null, "javax/servlet/http/HttpServlet", null);
+        
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "javax/servlet/http/HttpServlet", "<init>", "()V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        
+        //init method
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "init", "(Ljavax/servlet/ServletConfig;)V", null, new String[] {"javax/servlet/ServletException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKESPECIAL, "javax/servlet/http/HttpServlet", "init", "(Ljavax/servlet/ServletConfig;)V");
+            mv.visitTypeInsn(NEW, "io/swagger/jaxrs/config/BeanConfig");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/config/BeanConfig", "<init>", "()V");
+            mv.visitVarInsn(ASTORE, 2);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(vdbName);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setTitle", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(desc);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setDescription", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(version);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setVersion", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitInsn(ICONST_1);
+            mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            Integer[] array = new Integer[]{ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
+            for(int i = 0 ; i < schamas.length ; i ++) {
+                mv.visitInsn(DUP);
+                mv.visitInsn(array[i]);
+                mv.visitLdcInsn(schamas[i]);
+                mv.visitInsn(AASTORE);
+            }
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setSchemes", "([Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(baseUrl);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setBasePath", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitLdcInsn(packages);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setResourcePackage", "(Ljava/lang/String;)V");
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitInsn(scan?ICONST_1:ICONST_0);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "io/swagger/jaxrs/config/BeanConfig", "setScan", "(Z)V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(3, 1);
+            mv.visitEnd();
+        }
+        
+        // doGet method
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "doGet", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+            av0 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av0.visitEnd();
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/BootstrapServlet", "doPost", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V");
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(3, 1);
+            mv.visitEnd();
+        }
+        
+        // doPost method
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "doPost", "(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V", null, new String[] {"javax/servlet/ServletException", "java/io/IOException"});
+            AnnotationVisitor av2 = mv.visitAnnotation("Ljava/lang/Override;", true);
+            av2.visitEnd();
+            mv.visitCode();
+            
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getContextPath", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 3);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getScheme", "()Ljava/lang/String;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("://");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getServerName", "()Ljava/lang/String;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn(":");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletRequest", "getServerPort", "()I");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 3);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("/");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 4);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitVarInsn(ALOAD, 3);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("/api.html");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 5);
+            mv.visitLdcInsn("swagger.json");
+            mv.visitVarInsn(ASTORE, 6);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitLdcInsn("/url=");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 6);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 7);
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitVarInsn(ALOAD, 5);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn("?");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitVarInsn(ALOAD, 7);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitVarInsn(ASTORE, 8);
+            mv.visitVarInsn(ALOAD, 2);
+            mv.visitVarInsn(ALOAD, 8);
+            mv.visitMethodInsn(INVOKEINTERFACE, "javax/servlet/http/HttpServletResponse", "sendRedirect", "(Ljava/lang/String;)V");
+            
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(8, 8);
+            mv.visitEnd();
+        }
+        
+        cw.visitEnd();
+        
+        return cw.toByteArray();
+    }
+
+    private void writeEntry(String name, ZipOutputStream out, byte[] contents) throws IOException {
 		ZipEntry e = new ZipEntry(name); 
 		out.putNextEntry(e);
 		FileUtils.write(new ByteArrayInputStream(contents), out, 1024);
@@ -187,6 +462,22 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitFieldInsn(PUTFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "empty", "Ljava/util/Set;");
     	mv.visitVarInsn(ALOAD, 0);
     	
+    	mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
+        mv.visitTypeInsn(NEW, "io/swagger/jaxrs/listing/ApiListingResource");
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/listing/ApiListingResource", "<init>", "()V");
+        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "add", "(Ljava/lang/Object;)Z");
+        mv.visitInsn(POP);
+        mv.visitVarInsn(ALOAD, 0);
+        
+        mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
+        mv.visitTypeInsn(NEW, "io/swagger/jaxrs/listing/SwaggerSerializers");
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, "io/swagger/jaxrs/listing/SwaggerSerializers", "<init>", "()V");
+        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "add", "(Ljava/lang/Object;)Z");
+        mv.visitInsn(POP);
+        mv.visitVarInsn(ALOAD, 0);
+    	
     	for (int i = 0; i < models.size(); i++) {
 	    	mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
 	    	mv.visitTypeInsn(NEW, "org/teiid/jboss/rest/"+models.get(i));
@@ -227,19 +518,26 @@ public class RestASMBasedWebArchiveBuilder {
     	return cw.toByteArray();
     }
     
-    private byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
+    public byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
     	ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     	MethodVisitor mv;
     	AnnotationVisitor av0;
     	boolean hasValidProcedures = false;
     	
     	cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/"+modelName, null, "org/teiid/jboss/rest/TeiidRSProvider", null);
-
+    	
     	{
     	av0 = cw.visitAnnotation("Ljavax/ws/rs/Path;", true);
     	av0.visit("value", "/"+modelName.toLowerCase());
     	av0.visitEnd();
     	}
+    	
+    	{
+            av0 = cw.visitAnnotation("Lio/swagger/annotations/Api;", true);
+            av0.visit("value", "/"+modelName.toLowerCase());
+            av0.visitEnd();
+        }
+    	
     	cw.visitInnerClass("javax/ws/rs/core/Response$Status", "javax/ws/rs/core/Response", "Status", ACC_PUBLIC + ACC_FINAL + ACC_STATIC + ACC_ENUM);
 
     	{
@@ -383,6 +681,23 @@ public class RestASMBasedWebArchiveBuilder {
     	av0 = mv.visitAnnotation("Ljavax/annotation/security/PermitAll;", true);
     	av0.visitEnd();
     	}
+    	
+    	{
+    	av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiOperation;", true);
+    	av0.visit("value", procedure.getName());
+    	av0.visitEnd();
+    	}
+    	
+    	{
+    	    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
+            ApiResponse[] array = new ApiResponse[]{};
+            AnnotationVisitor av1 = av0.visitArray("value");
+            for(int i = 0 ; i < array.length ; i ++) {
+                av1.visit("value", array[i]);
+            }
+            av1.visitEnd();
+            av0.visitEnd();
+        }
         
     	if(useMultipart)
     	{
@@ -411,6 +726,10 @@ public class RestASMBasedWebArchiveBuilder {
         		av0 = mv.visitParameterAnnotation(i, paramType, true);
         		av0.visit("value", params.get(i).getName());
         		av0.visitEnd();
+        		
+        		av0 = mv.visitParameterAnnotation(i, "Lio/swagger/annotations/ApiParam;", true);
+                av0.visit("value", params.get(i).getName());
+                av0.visitEnd();
     		}
     	}
     	
@@ -510,10 +829,32 @@ public class RestASMBasedWebArchiveBuilder {
 			av0.visitEnd();
 			}
 			{
+			av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiOperation;", true);
+			av0.visit("value", context);
+            av0.visitEnd();
+			}
+			{
+			    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
+	            ApiResponse[] array = new ApiResponse[]{};
+	            AnnotationVisitor av1 = av0.visitArray("value");
+	            for(int i = 0 ; i < array.length ; i ++) {
+	                av1.visit("value", array[i]);
+	            }
+	            av1.visitEnd();
+	            av0.visitEnd();
+	        }
+			{
+	        av0 = mv.visitParameterAnnotation(0, "Lio/swagger/annotations/ApiParam;", true);
+	        av0.visit("value", context);
+	        av0.visitEnd();
+	        }
+			
+			{
 			av0 = mv.visitParameterAnnotation(0, "Ljavax/ws/rs/FormParam;", true);
 			av0.visit("value", "sql");
 			av0.visitEnd();
 			}
+			
 			mv.visitCode();
 			Label l0 = new Label();
 			Label l1 = new Label();

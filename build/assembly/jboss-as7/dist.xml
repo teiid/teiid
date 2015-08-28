@@ -192,8 +192,8 @@
           <outputDirectory>.</outputDirectory>
           <attachmentClassifier>dependencies</attachmentClassifier>
         </binaries>
-    </moduleSet>              
-
+    </moduleSet>    
+   
     <!-- These are Teiid internal dependencies; to make JCA work -->
     <moduleSet>
         <includeSubModules>true</includeSubModules>
@@ -225,6 +225,13 @@
                         <exclude>org.wololo:jts2geojson</exclude>
                         <exclude>org.osgeo:proj4j</exclude>
                         <exclude>com.vividsolutions:jts</exclude>
+                        <exclude>io.swagger:*</exclude>
+                        <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+                        <exclude>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</exclude>
+                        <exclude>com.fasterxml.jackson.datatype:jackson-datatype-joda</exclude>
+                        <exclude>com.fasterxml.jackson.jaxrs:*</exclude>
+                        <exclude>org.reflections:reflections</exclude>
+                        <exclude>com.google.code.findbugs:annotations</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
@@ -274,11 +281,29 @@
                         <include>com.vividsolutions:jts</include>
                     </includes>
                     <outputDirectory>${jbossas-module-root}/com/vividsolutions/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <includes>
+                         <include>io.swagger:swagger-jaxrs</include>
+                         <include>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</include>
+                         <include>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</include>
+                         <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
+                         <include>io.swagger:swagger-core</include>
+                         <include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
+                         <include>io.swagger:swagger-models</include>
+                         <include>io.swagger:swagger-annotations</include>
+                         <include>org.reflections:reflections</include>
+                         <include>com.google.code.findbugs:annotations</include>
+                         <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+                         <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/io/swagger/main</outputDirectory>
                 </dependencySet>                                                                                    
             </dependencySets>
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>
-    </moduleSet>
+    </moduleSet>    
     
     <!-- This is separated out so that we can avoid dragging in transitive dependencies, using pom build the adminshell correctly -->
     <moduleSet>

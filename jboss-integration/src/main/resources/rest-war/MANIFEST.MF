@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Dependencies: org.jboss.teiid, org.jboss.teiid.client
+Dependencies: org.jboss.teiid, org.jboss.teiid.client, io.swagger

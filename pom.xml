@@ -78,12 +78,16 @@
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.commons-codec>1.9</version.commons-codec>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
+	<version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
+	<version.org.reflections>0.9.9</version.org.reflections>
+	<version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
         <version.com.facebook.presto>0.89</version.com.facebook.presto>
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.4.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
+	<version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
 	    <version.narayana>5.0.4.Final</version.narayana>
 	</properties>
 	<scm>
@@ -1525,6 +1529,17 @@
                 <groupId>org.osgeo</groupId>
                 <artifactId>proj4j</artifactId>
                 <version>${version.proj4j}</version>
+            </dependency>
+	    <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-jaxrs</artifactId>
+                <version>${version.swagger-jaxrs}</version>
+		<exclusions>
+                    <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>jsr311-api</artifactId>
+                    </exclusion>
+		</exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jboss.narayana.jta</groupId>
