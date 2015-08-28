@@ -261,19 +261,19 @@
                     <includes>
                         <include>org.wololo:jts2geojson</include>
                     </includes>
-                    <outputDirectory>${jbossas-module-root}/org/wololo/main</outputDirectory>
+                    <outputDirectory>${jbossas-module-root}/org/wololo/jts2geojson/main</outputDirectory>
                 </dependencySet>
                 <dependencySet>
                     <includes>
                         <include>org.osgeo:proj4j</include>
                     </includes>
-                    <outputDirectory>${jbossas-module-root}/org/osgeo/main</outputDirectory>
+                    <outputDirectory>${jbossas-module-root}/org/osgeo/proj4j/main</outputDirectory>
                 </dependencySet>
                 <dependencySet>
                     <includes>
                         <include>com.vividsolutions:jts</include>
                     </includes>
-                    <outputDirectory>${jbossas-module-root}/com/vividsolutions/main</outputDirectory>
+                    <outputDirectory>${jbossas-module-root}/com/vividsolutions/jts/main</outputDirectory>
                 </dependencySet>                                                                                    
             </dependencySets>
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>

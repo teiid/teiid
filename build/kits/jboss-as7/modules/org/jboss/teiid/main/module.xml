@@ -54,9 +54,9 @@
         <module name="nu.xom"/>
         <module name="nux.nux"/>
         <module name="net.sf.saxon"/>
-        <module name="com.vividsolutions"/>
-        <module name="org.osgeo"/>
-        <module name="org.wololo"/>
+        <module name="com.vividsolutions.jts"/>
+        <module name="org.osgeo.proj4j"/>
+        <module name="org.wololo.jts2geojson"/>
         <module name="org.jaxen" />
         <module name="org.jboss.resteasy.resteasy-jaxrs"/> <!--  REST Web Service --> 
         <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service -->
