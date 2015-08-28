@@ -23,14 +23,12 @@ package org.teiid.jboss.rest;
 
 import static org.junit.Assert.*;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -133,24 +131,15 @@ public class TestRestWebArchiveBuilder {
                     if(m.getName().equals("g1Tableapplication_xml")){
                         ApiOperation annotation = m.getAnnotation(ApiOperation.class);
                         assertEquals("g1Table", annotation.value());
-                        Parameter[] params = m.getParameters();
-                        Parameter param = params[0];
-                        ApiParam a = param.getAnnotation(ApiParam.class);
-                        assertEquals("p1", a.value());
+                        
                     } else if(m.getName().equals("sqlQueryxml")){
                         ApiOperation annotation = m.getAnnotation(ApiOperation.class);
                         assertEquals("xml", annotation.value());
-                        Parameter[] params = m.getParameters();
-                        Parameter param = params[0];
-                        ApiParam a = param.getAnnotation(ApiParam.class);
-                        assertEquals("xml", a.value());
+                        
                     } else if(m.getName().equals("sqlQueryjson")){
                         ApiOperation annotation = m.getAnnotation(ApiOperation.class);
                         assertEquals("json", annotation.value());
-                        Parameter[] params = m.getParameters();
-                        Parameter param = params[0];
-                        ApiParam a = param.getAnnotation(ApiParam.class);
-                        assertEquals("json", a.value());
+                        
                     }
                 }                
             }

@@ -60,8 +60,6 @@ import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
 
-
-
 @SuppressWarnings("nls")
 public class RestASMBasedWebArchiveBuilder {
 	 
@@ -73,6 +71,7 @@ public class RestASMBasedWebArchiveBuilder {
 		props.setProperty("${context-name}", vdb.getName() + "_" + vdb.getVersion());
 		props.setProperty("${vdb-name}", vdb.getName());
 		props.setProperty("${vdb-version}", String.valueOf(vdb.getVersion()));
+		props.setProperty("${api-page-title}", vdb.getName() + "_" + vdb.getVersion() + " API");
 		
 		boolean passthroughAuth = false;
 		String securityType = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-type");
@@ -157,7 +156,8 @@ public class RestASMBasedWebArchiveBuilder {
 	    if(null == desc) {
 	        desc = vdb.getName();
 	    }
-	    byte[] bytes = getBootstrapServletClass(vdb.getName(), desc, vdb.getVersion() + ".0", new String[]{"http"}, props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
+	    String baseUrl = "/" + props.getProperty("${context-name}");
+	    byte[] bytes = getBootstrapServletClass(vdb.getName(), desc, vdb.getVersion() + ".0", new String[]{"http"}, baseUrl, "org.teiid.jboss.rest", true);
 	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/BootstrapServlet.class", out, bytes);
 	    writeEntry("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class", out, getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Origin, X-Atmosphere-tracking-id, X-Atmosphere-Framework, X-Cache-Date, Content-Type, X-Atmosphere-Transport, *"));
     }
