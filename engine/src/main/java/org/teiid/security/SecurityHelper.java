@@ -25,7 +25,7 @@ package org.teiid.security;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
-public interface  SecurityHelper {
+public interface SecurityHelper {
 
 	/**
 	 * Associate the given context and return the old context
@@ -46,11 +46,19 @@ public interface  SecurityHelper {
 	Object getSecurityContext();
 	
 	/**
-	 * Get the subject associated with the security context
+	 * Get the subject associated with the security context.
+	 * The security context must currently be associated with the thread.
 	 * @param securityDomain
 	 * @return
 	 */
 	Subject getSubjectInContext(String securityDomain);
+	
+	/**
+	 * Get the subject associated with the security context.
+	 * @param context
+	 * @return
+	 */
+	Subject getSubjectInContext(Object context);
 	
 	/**
 	 * Authenticate the user and return the security context
@@ -72,4 +80,5 @@ public interface  SecurityHelper {
 	 * @throws LoginException
 	 */
 	GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
+	
 }

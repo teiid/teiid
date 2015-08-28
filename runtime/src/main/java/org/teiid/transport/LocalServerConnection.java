@@ -160,7 +160,7 @@ public class LocalServerConnection implements ServerConnection {
 					// check to make sure the current security context same as logged one
 					if (passthrough && !logon 
 							&& !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
-							&& workContext.getSession().getSessionId() != null
+							&& !workContext.getSession().isClosed()
 							//if configured without a security domain the context will be null
 							&& workContext.getSession().getSecurityDomain() != null
 							&& !sameSubject(workContext)) {

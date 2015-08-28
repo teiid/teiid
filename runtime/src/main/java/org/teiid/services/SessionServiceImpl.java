@@ -133,6 +133,9 @@ public class SessionServiceImpl implements SessionService {
                 LogManager.logWarning(LogConstants.CTX_SECURITY,e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40018));
             }
 		}
+		info.setSecurityContext(null);
+		info.setClosed();
+		info.getSessionVariables().clear();
 	}
 	
 	@Override
@@ -176,7 +179,7 @@ public class SessionServiceImpl implements SessionService {
         	} else {
         		userName = escapeName(baseUserName) + AT + securityDomain;
         		securityContext = this.securityHelper.authenticate(securityDomain, baseUserName, credentials, applicationName);
-        		subject = this.securityHelper.getSubjectInContext(securityDomain);
+        		subject = this.securityHelper.getSubjectInContext(securityContext);
         	}
 		}
 		else {

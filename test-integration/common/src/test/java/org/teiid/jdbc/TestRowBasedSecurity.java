@@ -22,8 +22,7 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.security.Identity;
@@ -67,15 +66,20 @@ public class TestRowBasedSecurity {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		final Vector<Principal> v = new Vector<Principal>();
 		v.add(new Identity("myrole") {});
+		final Subject subject = new Subject();
+		Group g = Mockito.mock(Group.class);
+		Mockito.stub(g.getName()).toReturn("Roles");
+		Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
+		subject.getPrincipals().add(g);
 		ec.setSecurityHelper(new DoNothingSecurityHelper() {
 			@Override
 			public Subject getSubjectInContext(String securityDomain) {
-				Subject s = new Subject();
-				Group g = Mockito.mock(Group.class);
-				Mockito.stub(g.getName()).toReturn("Roles");
-				Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
-				s.getPrincipals().add(g);
-				return s;
+				return subject;
+			}
+			
+			@Override
+			public Subject getSubjectInContext(Object context) {
+				return subject;
 			}
 		});
 		es.start(ec);
