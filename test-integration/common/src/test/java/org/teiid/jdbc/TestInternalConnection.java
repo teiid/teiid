@@ -32,17 +32,69 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.CommandContext;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
+import org.teiid.security.SecurityHelper;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TestInternalConnection {
+	
+	public static class ThreadLocalSecurityHelper implements SecurityHelper {
+		
+		private static ThreadLocal<Subject> threadLocalContext = new ThreadLocal<Subject>();
+
+		@Override
+		public Object associateSecurityContext(Object context) {
+			Object previous = threadLocalContext.get();
+			threadLocalContext.set((Subject)context);
+			return previous;
+		}
+
+		@Override
+		public Object getSecurityContext() {
+			return threadLocalContext.get();
+		}
+
+		@Override
+		public void clearSecurityContext() {
+			threadLocalContext.remove();
+		}
+
+		@Override
+		public Subject getSubjectInContext(String securityDomain) {
+			return threadLocalContext.get();
+		}
+
+		@Override
+		public Object authenticate(String securityDomain,
+				String baseUserName, Credentials credentials,
+				String applicationName) throws LoginException {
+			return new Subject();
+		}
+
+		@Override
+		public Subject getSubjectInContext(Object context) {
+			return (Subject)context;
+		}
+
+		@Override
+		public GSSResult negotiateGssLogin(String securityDomain,
+				byte[] serviceTicket) throws LoginException {
+			return null;
+		}
+	    
+	}
 	
 	private static final String vdb = "<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA["
 			+ "CREATE VIEW helloworld as SELECT 'HELLO WORLD';"
@@ -77,6 +129,7 @@ public class TestInternalConnection {
 		s.setProtocol(WireProtocol.teiid);
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		config.addTransport(s);
+		config.setSecurityHelper(new ThreadLocalSecurityHelper());
 		es.start(config);
 		es.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		Connection conn = null;
@@ -97,6 +150,7 @@ public class TestInternalConnection {
 	
 	@Test public void testInternalLocal() throws Exception {
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.setSecurityHelper(new ThreadLocalSecurityHelper());
 		es.start(config);
 		es.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
 		Connection conn = null;

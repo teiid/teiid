@@ -129,7 +129,7 @@ public class TestLogonImpl {
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		p = buildProperties("GSS", "name");		
 		FakeGssLogonImpl fimpl = new FakeGssLogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
-		fimpl.addToken("bytes".getBytes(), "SecurityContext");
+		fimpl.addToken("bytes".getBytes(), new Subject());
 		p.put(ILogon.KRB5TOKEN, "bytes".getBytes());
 		result = fimpl.logon(p);
 		assertEquals("GSS@SC", result.getUserName());
@@ -174,7 +174,7 @@ public class TestLogonImpl {
 
 		p = buildProperties("GSS", "name1");
 		FakeGssLogonImpl fimpl = new FakeGssLogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
-		fimpl.addToken("bytes".getBytes(), "SecurityContext");
+		fimpl.addToken("bytes".getBytes(), new Subject());
 		p.put(ILogon.KRB5TOKEN, "bytes".getBytes());
 		result = fimpl.logon(p);
 		assertEquals("GSS@SC", result.getUserName());
@@ -228,7 +228,8 @@ public class TestLogonImpl {
 			super(service, clusterName);
 		}
 
-		public void addToken(byte[] token, Object securityContext) {
+		//DoNothingSecurityHelper expects Subjects as security contexts
+		public void addToken(byte[] token, Subject securityContext) {
 			this.gssServiceTickets.put(Base64.encodeBytes(MD5(token)), securityContext);
 		}
 	}

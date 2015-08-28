@@ -108,6 +108,10 @@ public class TestDQPWorkContext {
 				this.mycontext = context;
 				return old;
 			}
+			@Override
+			public Subject getSubjectInContext(Object context) {
+				return null;
+			}
             @Override
             public Subject getSubjectInContext(String securityDomain) {
                 return null;

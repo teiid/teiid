@@ -43,6 +43,7 @@ import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
@@ -59,6 +60,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -221,7 +223,13 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				Throwable exception = null;
 				try {
-					sessionService.validateSession(DQPWorkContext.getWorkContext().getSessionId());
+					if (DQPWorkContext.getWorkContext().getSession().isClosed()) {
+						String sessionID = DQPWorkContext.getWorkContext().getSession().getSessionId();
+						if (sessionID == null) {
+							 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041));
+						}
+						throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
+					}
 					return super.invoke(proxy, method, args);
 				} catch (InvocationTargetException e) {
 					exception = e.getTargetException();

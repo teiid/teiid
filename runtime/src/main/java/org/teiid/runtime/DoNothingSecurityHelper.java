@@ -66,5 +66,10 @@ public class DoNothingSecurityHelper implements SecurityHelper {
     public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
         return null;
     }
+
+	@Override
+	public Subject getSubjectInContext(Object context) {
+		return new Subject();
+	}
     
 }
