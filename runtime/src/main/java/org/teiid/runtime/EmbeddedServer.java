@@ -419,7 +419,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			};
 		}
 		else if (socketConfig.getProtocol() == WireProtocol.pg) {
-    		this.repo.odbcEnabled();
     		ODBCSocketListener odbc = new ODBCSocketListener(address, socketConfig, this.services, bm, maxODBCLobSize, this.logon, driver);
     		return odbc;
 		}
