@@ -157,8 +157,8 @@ public class TestMaterialization {
 	}
 	
 	@Test public void testNonCoveringSecondaryIndex() throws Exception {
-		execute("SELECT * from vgroup5 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo", 1), Arrays.asList("one", "zne", 1));
-		execute("SELECT * from vgroup5 where y is null", Arrays.asList((String)null, (String)null, 1));
+		execute("SELECT * from vgroup5 where y in ('zwo', 'zne') order by y desc", Arrays.asList("two", "zwo", 1), Arrays.asList("one", "zne", 1));
+		execute("SELECT * from vgroup5 where y is null", Arrays.asList((String)null, (String)null, 1), Arrays.asList(" b", (String)null, 1), Arrays.asList(" c", (String)null, 1), Arrays.asList(" d", (String)null, 1));
 		execute("SELECT * from vgroup5 where y is null and z = 2");
 	}
 	
