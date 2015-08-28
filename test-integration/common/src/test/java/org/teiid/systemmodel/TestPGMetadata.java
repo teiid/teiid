@@ -63,7 +63,7 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
     @Test 
     public void test_PG_MetadataOFF() throws Exception {
         VDBMetaData vdb = buildVDB("x");
-        vdb.addProperty("exclude-pg-metadata", "true");
+        vdb.addProperty("include-pg-metadata", "false");
         server.deployVDB(vdb);
         this.internalConnection = server.createConnection("jdbc:teiid:x"); //$NON-NLS-1$ //$NON-NLS-2$
         try {
@@ -75,7 +75,7 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
     @Test 
     public void test_PG_Metadata_ON() throws Exception {
         VDBMetaData vdb = buildVDB("y");
-        vdb.addProperty("exclude-pg-metadata", "false");
+        vdb.addProperty("include-pg-metadata", "true");
         server.deployVDB(vdb);
         this.internalConnection = server.createConnection("jdbc:teiid:y"); //$NON-NLS-1$ //$NON-NLS-2$
         try {

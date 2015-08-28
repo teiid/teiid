@@ -121,7 +121,6 @@ public class FakeServer extends EmbeddedServer {
 			this.transactionService.setWorkManager(new FakeWorkManager());
 			detectTxn = false;
 		}
-		this.repo.odbcEnabled();
 		this.realBufferManager = realBufferMangaer;
 		start(config);
 		this.transactionService.setDetectTransactions(detectTxn);

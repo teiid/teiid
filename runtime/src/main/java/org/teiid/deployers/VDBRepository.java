@@ -69,14 +69,13 @@ public class VDBRepository implements Serializable{
 	private static final String LIFECYCLE_CONTEXT = LogConstants.CTX_RUNTIME + ".VDBLifeCycleListener"; //$NON-NLS-1$
 	private static final long serialVersionUID = 312177538191772674L;
 	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
-	private static final boolean LOAD_PG_METADATA_ON_PG_TRANSPORT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.loadPgMetadataOnPgTransport", false); //$NON-NLS-1$
+	private static final boolean ADD_PG_METADATA = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.addPGMetadata", true); //$NON-NLS-1$
 	
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
 	private NavigableMap<VDBKey, VDBMetaData> pendingDeployments = new ConcurrentSkipListMap<VDBKey, VDBMetaData>();
 
 	private MetadataStore systemStore = SystemMetadata.getInstance().getSystemStore();
 	private MetadataStore odbcStore;
-	private boolean odbcEnabled = false;
 	private Set<VDBLifeCycleListener> listeners = Collections.newSetFromMap(new ConcurrentHashMap<VDBLifeCycleListener, Boolean>());
 	private SystemFunctionManager systemFunctionManager;
 	private Map<String, Datatype> datatypeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
@@ -96,14 +95,10 @@ public class VDBRepository implements Serializable{
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40143, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40143, vdb));
 		}
 		
-		boolean pgMetadataEnabled = true;
-		// check to make sure old default behavior is honored 
-		if (LOAD_PG_METADATA_ON_PG_TRANSPORT) {
-		    pgMetadataEnabled = this.odbcEnabled;
-		}
-		String excludePgMetadata = vdb.getPropertyValue("exclude-pg-metadata");
-		if (excludePgMetadata != null) {
-		    pgMetadataEnabled = !Boolean.parseBoolean(excludePgMetadata);
+		boolean pgMetadataEnabled = ADD_PG_METADATA;
+		String includePgMetadata = vdb.getPropertyValue("include-pg-metadata");
+		if (includePgMetadata != null) {
+		    pgMetadataEnabled = Boolean.parseBoolean(includePgMetadata);
 		}
 
 		MetadataStore[] stores = null;
@@ -258,10 +253,6 @@ public class VDBRepository implements Serializable{
 			LogManager.logError(LogConstants.CTX_DQP, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40002));
 		}
 		return null;
-	}
-	
-	public void odbcEnabled() {
-		this.odbcEnabled = true;
 	}
 	
 	public VDBMetaData removeVDB(String vdbName, int vdbVersion) {

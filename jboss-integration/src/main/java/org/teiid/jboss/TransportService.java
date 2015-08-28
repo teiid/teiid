@@ -156,7 +156,6 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), this.authenticationDomain)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
     		else if (socketConfig.getProtocol() == WireProtocol.pg) {
-        		getVdbRepository().odbcEnabled();
         		TeiidDriver driver = new TeiidDriver();
         		driver.setEmbeddedProfile(new ConnectionProfile() {
 					@Override
