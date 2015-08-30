@@ -168,12 +168,12 @@ public abstract class VDBStatusChecker {
 			boolean usesResourse = false;
 			for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 				if (!model.hasRuntimeMessages()) {
-					return;
+					continue;
 				}
 
 				String sourceName = getSourceName(resourceName, model);
 				if (sourceName == null) {
-					return;
+					continue;
 				}
 
 				usesResourse = true;
@@ -202,6 +202,7 @@ public abstract class VDBStatusChecker {
 	private void checkStatus(List<Runnable> runnables, VDBMetaData vdb,
 			ModelMetaData model, ConnectorManager cm) {
 		//get the pending metadata load
+		model.removeAttachment(VDBStatusChecker.class);
 		Runnable r = model.removeAttachment(Runnable.class);
 		if (r != null) {
 			runnables.add(r);
@@ -213,6 +214,10 @@ public abstract class VDBStatusChecker {
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, status);
 			} else if (vdb.getStatus() != Status.LOADING){
 				model.clearRuntimeMessages();
+			} else {
+				//mark the model to indicate that it should be reloaded if it
+				//is currently failing a load
+				model.addAttchment(VDBStatusChecker.class, this);
 			}
 		}
 	}
