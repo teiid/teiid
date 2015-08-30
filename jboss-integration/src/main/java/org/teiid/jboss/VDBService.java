@@ -400,8 +400,10 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						}
 					}
 				}
-		    					
+		    				
 				synchronized (vdb) {
+					VDBStatusChecker marked = model.removeAttachment(VDBStatusChecker.class);
+
 			    	if (ex == null) {
 			    		if (!cached) {
 				    		// cache the schema to disk
@@ -421,8 +423,12 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						if (ex instanceof RuntimeException) {
 							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, VDBService.this.shutdownListener.isBootInProgress());
 						} else {
-							//defer the load to the status checker if/when a source is available/redeployed
-							model.addAttchment(Runnable.class, this);
+							if (marked != null) {
+								getExecutor().execute(this);
+							} else {
+								//defer the load to the status checker if/when a source is available/redeployed
+								model.addAttchment(Runnable.class, this);
+							}
 						}
 			    	}
 		    	}
@@ -430,25 +436,20 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		};	    		
 		
 		Executor executor = getExecutor();
-		if (executor == null) {
-			job.run();
-		}
-		else {
-			//wrap the runnable to trap exceptions that may be caused by an asynch deployment issue
-    		executor.execute(new Runnable() {
-    			@Override
-    			public void run() {
-    				try {
-    					job.run();
-    				} catch (IllegalStateException e) {
-    					if (vdb.getStatus() != Status.FAILED && vdb.getStatus() != Status.REMOVED) {
-    						throw e;
-    					}
-    					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not load metadata for a removed or failed deployment.");
-    				}
-    			}
-    		});
-		}
+		//wrap the runnable to trap exceptions that may be caused by an asynch deployment issue
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					job.run();
+				} catch (IllegalStateException e) {
+					if (vdb.getStatus() != Status.FAILED && vdb.getStatus() != Status.REMOVED) {
+						throw e;
+					}
+					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not load metadata for a removed or failed deployment."); //$NON-NLS-1$
+				}
+			}
+		});
 	}	
     
 	private void cacheMetadataStore(final ModelMetaData model, MetadataFactory schema) {
