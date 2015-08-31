@@ -73,7 +73,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 		try {
 			ldapCtx = (LdapContext)this.ldapConnection.lookup("");  //$NON-NLS-1$
 		} catch (NamingException ne) {
-			throw new TranslatorException(LDAPPlugin.Util.getString("LDAPUpdateExecution.createContextError",ne.getExplanation()));//$NON-NLS-1$
+			throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.createContextError",ne.getExplanation()));//$NON-NLS-1$
 		}		
 
 		if (firstToken.equalsIgnoreCase("delete")) { // //$NON-NLS-1$
@@ -85,7 +85,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 				ldapCtx.destroySubcontext(theDN);
 				this.updateCount = 1;
 			} catch (NamingException ne) {
-				throw new TranslatorException(LDAPPlugin.Util.getString("LDAPUpdateExecution.deleteFailed",theDN,ne.getExplanation()));//$NON-NLS-1$
+				throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.deleteFailed",theDN,ne.getExplanation()));//$NON-NLS-1$
 			} catch (Exception e) {
 				throw new TranslatorException(e, LDAPPlugin.Util.getString("LDAPUpdateExecution.deleteFailedUnexpected",theDN));//$NON-NLS-1$
 			}			
@@ -104,7 +104,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 				ldapCtx.createSubcontext(theDN, attrs);
 				this.updateCount = 1;
 			} catch (NamingException ne) {
-				throw new TranslatorException(LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailed", theDN, ne.getExplanation()));//$NON-NLS-1$
+				throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailed", theDN, ne.getExplanation()));//$NON-NLS-1$
 			} catch (Exception e) {
 				throw new TranslatorException(e,LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailedUnexpected", theDN));//$NON-NLS-1$
 			}			
@@ -124,7 +124,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 				ldapCtx.modifyAttributes(theDN, updateMods);
 				this.updateCount = 1;
 			} catch (NamingException ne) {
-				throw new TranslatorException(LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailed", theDN, ne.getExplanation()));//$NON-NLS-1$
+				throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailed", theDN, ne.getExplanation()));//$NON-NLS-1$
 			} catch (Exception e) {
 				throw new TranslatorException(e, LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailedUnexpected",theDN));//$NON-NLS-1$
 			}			

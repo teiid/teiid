@@ -452,7 +452,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12004, modelAttrName) +" : "+ne.getExplanation(); //$NON-NLS-1$m
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
-			throw new TranslatorException(msg);
+			throw new TranslatorException(ne, msg);
 		}
 
 		return convertSingleValue(modelElement, modelAttrName,

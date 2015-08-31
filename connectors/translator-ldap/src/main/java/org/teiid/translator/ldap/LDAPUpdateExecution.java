@@ -96,7 +96,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			ldapCtx = (LdapContext)this.ldapConnection.lookup("");  //$NON-NLS-1$
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.createContextError",ne.getExplanation()); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(ne, msg);
 		}
 
 		if (command instanceof Update) {
@@ -197,7 +197,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			ldapCtx.createSubcontext(distinguishedName, insertAttrs);
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailed",distinguishedName,ne.getExplanation()); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(ne, msg);
 		} catch (Exception e) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailedUnexpected",distinguishedName); //$NON-NLS-1$
 			throw new TranslatorException(e, msg);
@@ -345,7 +345,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			ldapCtx.modifyAttributes(distinguishedName, updateMods);
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailed",distinguishedName,ne.getExplanation()); //$NON-NLS-1$
-			throw new TranslatorException(msg);
+			throw new TranslatorException(ne, msg);
 		// don't remember why I added this generic catch of Exception,
 		// but it does no harm...
 		} catch (Exception e) {
