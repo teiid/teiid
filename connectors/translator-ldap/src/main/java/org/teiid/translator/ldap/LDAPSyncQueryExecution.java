@@ -146,7 +146,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 			return (LdapContext) this.ldapConnection.lookup(contextName);
 		} catch (NamingException ne) {			
 			if (contextName != null) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12002, contextName));
+                            LogManager.logError(LogConstants.CTX_CONNECTOR, ne, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12002, contextName));
 			}
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.createContextError"); //$NON-NLS-1$
 			throw new TranslatorException(ne, msg); 
