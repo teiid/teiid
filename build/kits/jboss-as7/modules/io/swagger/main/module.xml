@@ -10,8 +10,6 @@
         <resource-root path="swagger-core-${version.swagger-jaxrs}.jar" />
         <resource-root path="swagger-jaxrs-${version.swagger-jaxrs}.jar" />
         <resource-root path="swagger-models-${version.swagger-jaxrs}.jar" />
-        <resource-root path="reflections-${version.org.reflections}.jar" />
-        <resource-root path="annotations-${version.com.google.code.findbugs}.jar" />
     </resources>
     
     <dependencies>
@@ -21,9 +19,8 @@
         <module name="com.fasterxml.jackson.datatype" />
         <module name="com.fasterxml.jackson.jaxrs" />
         <module name="com.google.guava" />  
-        <module name="org.javassist" />  
         <module name="org.apache.commons.lang" slot="3.3.2"/>
-        <module name="org.joda.time" /> 
+        <module name="org.reflections" /> 
         <module name="org.slf4j"/>
         <module name="javax.ws.rs.api"/>
         <module name="javax.servlet.api"/>

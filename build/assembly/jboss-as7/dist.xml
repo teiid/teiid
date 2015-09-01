@@ -289,9 +289,6 @@
                          <include>io.swagger:swagger-core</include>
                          <include>io.swagger:swagger-models</include>
                          <include>io.swagger:swagger-annotations</include>
-                         <include>org.reflections:reflections</include>
-                         <include>com.google.code.findbugs:annotations</include>
-                         
                     </includes>
                     <outputDirectory>${jbossas-module-root}/io/swagger/main</outputDirectory>
                 </dependencySet>
@@ -320,7 +317,19 @@
                         <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
                     </includes>
                     <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/jaxrs/main</outputDirectory>
-                </dependencySet>                                                                                         
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.google.code.findbugs:annotations</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/google/code/findbugs/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.reflections:reflections</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/reflections/main</outputDirectory>
+                </dependencySet>                                                                                           
             </dependencySets>
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>
