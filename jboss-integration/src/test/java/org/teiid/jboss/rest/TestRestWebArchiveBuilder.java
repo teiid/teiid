@@ -65,14 +65,14 @@ public class TestRestWebArchiveBuilder {
 		files.add("WEB-INF/jboss-web.xml");
 		files.add("WEB-INF/classes/org/teiid/jboss/rest/View.class");
 		files.add("WEB-INF/classes/org/teiid/jboss/rest/TeiidRestApplication.class");
-		files.add("WEB-INF/classes/org/teiid/jboss/rest/BootstrapServlet.class");
-		files.add("WEB-INF/classes/org/teiid/jboss/rest/ApiOriginFilter.class");
+		files.add("WEB-INF/classes/org/teiid/jboss/rest/Bootstrap.class");
 		files.add("META-INF/MANIFEST.MF");
 		
 		files.add("api.html");
 		
 		files.add("swagger/swagger-ui.js");
 		
+		files.add("swagger/css");
 		files.add("swagger/css/print.css");
 		files.add("swagger/css/reset.css");
         files.add("swagger/css/screen.css");
@@ -147,21 +147,11 @@ public class TestRestWebArchiveBuilder {
 	}
 	
 	@Test
-	public void testApiOriginFilterClass() throws InstantiationException, IllegalAccessException {
-	    
-	    RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-	    byte[] bytes = builder.getApiOriginFilterClass("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Methods", "GET, POST, DELETE, PUT", "Access-Control-Allow-Headers", "Content-Type");
-	    Class<?> cls = ASMUtilities.defineClass("org.teiid.jboss.rest.ApiOriginFilter", bytes);
-	    Object obj = cls.newInstance();
-        assertEquals(cls, obj.getClass());
-	}
-	
-	@Test
 	public void testBootstrapServletClass() throws InstantiationException, IllegalAccessException {
 	    
 	    RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
 	    byte[] bytes = builder.getBootstrapServletClass("vdbName", "", "version", new String[]{"http"}, "baseUrl", "packages", true);
-	    Class<?> cls = ASMUtilities.defineClass("org.teiid.jboss.rest.BootstrapServlet", bytes);
+	    Class<?> cls = ASMUtilities.defineClass("org.teiid.jboss.rest.Bootstrap", bytes);
 	    Object obj = cls.newInstance();
         assertEquals(cls, obj.getClass());
 	}

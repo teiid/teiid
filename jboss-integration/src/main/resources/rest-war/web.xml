@@ -14,7 +14,7 @@
 
     <servlet>
   		<servlet-name>BootstrapServlet</servlet-name>
-  		<servlet-class>org.teiid.jboss.rest.BootstrapServlet</servlet-class>
+  		<servlet-class>org.teiid.jboss.rest.Bootstrap</servlet-class>
   		<load-on-startup>2</load-on-startup>
   	</servlet>
      
