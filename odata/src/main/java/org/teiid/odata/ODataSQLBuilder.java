@@ -49,6 +49,7 @@ import org.odata4j.expression.OrderByExpression.Direction;
 import org.odata4j.producer.QueryInfo;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.Assertion;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
@@ -69,7 +70,7 @@ import org.teiid.translator.odata.ODataTypeManager;
 public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private Query query = new Query();
 	private OrderBy orderBy = new OrderBy();
-	private Criteria criteria;
+	private Criteria where;
 	private MetadataStore metadata;
 	private ArrayList<SQLParam> params = new ArrayList<SQLParam>();
 	private boolean prepared = true;
@@ -82,17 +83,12 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
 	private AtomicInteger groupCount = new AtomicInteger(1);
 	private boolean distinct = false;
-	private boolean useLimit = true;
 
 	public ODataSQLBuilder(MetadataStore metadata, boolean prepared) {
 		this.metadata = metadata;
 		this.prepared = prepared;
 	}
 	
-	public void setUseLimit(boolean useLimit) {
-		this.useLimit = useLimit;
-	}
-
 	public Query selectString(String entityName, QueryInfo info, OEntityKey key, String navProperty, boolean countStar) {
 		Select select = new Select();
 
@@ -109,7 +105,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		this.aliasTableNames.put("g0", entityTable.getFullName());
 		
 		if (key != null) {
-			this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
+			this.where = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
 		}
 		
 		this.fromCluse = new UnaryFromClause(this.resultEntityGroup);
@@ -183,12 +179,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	
 	            if (propSplit.length > 1) {
 	                key = OEntityKey.parse("("+ propSplit[1]);
-	                if (this.criteria != null) {
-	                	this.criteria = new CompoundCriteria(CompoundCriteria.AND, this.criteria, buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key));
-	                }
-	                else {
-	                	this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
-	                }
+                	this.where = Criteria.combineCriteria(this.where, buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key));
 	            }
 			}
 		}
@@ -202,7 +193,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		}
 		
 		if (info.filter != null) {
+			Assertion.assertTrue(this.stack.isEmpty());
 			visitNode(info.filter);
+			Expression ex = this.getExpression();
+			if (!(ex instanceof Criteria)) {
+				ex = new ExpressionCriteria(ex);
+			}
+			this.where = Criteria.combineCriteria(this.where, (Criteria) ex);
 		}
 
 		if (!countStar) {
@@ -234,7 +231,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		from.addClause(this.fromCluse);
 		query.setSelect(select);
 		query.setFrom(from);
-		query.setCriteria(this.criteria);
+		query.setCriteria(this.where);
 		return query;
 	}
 	
@@ -384,9 +381,6 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	@Override
 	public void visit(Direction direction) {
 		Expression expr = stack.pop();
-		if (expr instanceof CompareCriteria) {
-			expr = ((CompareCriteria)expr).getLeftExpression();
-		}
 		this.orderBy.addVariable(expr, direction == Direction.ASCENDING);
 	}
 
@@ -405,8 +399,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();
-		this.criteria = new CompoundCriteria(CompoundCriteria.AND, (Criteria)lhs, (Criteria)rhs);
-		stack.push(this.criteria);
+		Criteria criteria = new CompoundCriteria(CompoundCriteria.AND, (Criteria)lhs, (Criteria)rhs);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -481,8 +475,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		Expression target = stack.pop();
 		visitNode(expr.getValue());
 		Expression value = stack.pop();		
-		this.criteria = new CompareCriteria(new Function("ENDSWITH", new Expression[] {target, value}), CompareCriteria.EQ, new Constant(Boolean.TRUE));
-		stack.push(this.criteria);
+		Criteria criteria = new CompareCriteria(new Function("ENDSWITH", new Expression[] {target, value}), CompareCriteria.EQ, new Constant(Boolean.TRUE));
+		stack.push(criteria);
 	}
 
 	@Override
@@ -514,13 +508,14 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();
+		Criteria criteria = null;
 		if (rhs instanceof Constant && ((Constant)rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
-			this.criteria = new IsNullCriteria(lhs);
+			criteria = new IsNullCriteria(lhs);
 		}
 		else {
-			this.criteria = new CompareCriteria(lhs, CompareCriteria.EQ, rhs);
+			criteria = new CompareCriteria(lhs, CompareCriteria.EQ, rhs);
 		}
-		stack.push(this.criteria);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -529,8 +524,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.GE, rhs);
-		stack.push(this.criteria);
+		Criteria criteria = new CompareCriteria(lhs, CompareCriteria.GE, rhs);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -539,8 +534,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.GT, rhs);
-		stack.push(this.criteria);
+		Criteria criteria = new CompareCriteria(lhs, CompareCriteria.GT, rhs);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -651,8 +646,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.LE, rhs);
-		stack.push(this.criteria);
+		Criteria criteria = new CompareCriteria(lhs, CompareCriteria.LE, rhs);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -667,8 +662,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.LT, rhs);
-		stack.push(this.criteria);
+		Criteria criteria = new CompareCriteria(lhs, CompareCriteria.LT, rhs);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -695,15 +690,16 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();
+		Criteria criteria = null;
 		if (rhs instanceof Constant && ((Constant)rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
 			IsNullCriteria crit = new IsNullCriteria(lhs);
 			crit.setNegated(true);
-			this.criteria = crit;
+			criteria = crit;
 		}
 		else {
-			this.criteria = new CompareCriteria(lhs, CompareCriteria.NE, rhs);
+			criteria = new CompareCriteria(lhs, CompareCriteria.NE, rhs);
 		}
-		stack.push(this.criteria);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -716,8 +712,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	@Override
 	public void visit(NotExpression expr) {
 		visitNode(expr.getExpression());
-		this.criteria = new NotCriteria(new ExpressionCriteria(stack.pop()));
-		stack.push(this.criteria);
+		Criteria criteria = new NotCriteria(new ExpressionCriteria(stack.pop()));
+		stack.push(criteria);
 	}
 
 	@Override
@@ -731,8 +727,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();
-		this.criteria = new CompoundCriteria(CompoundCriteria.OR, (Criteria)lhs, (Criteria)rhs);
-		stack.push(this.criteria);
+		Criteria criteria = new CompoundCriteria(CompoundCriteria.OR, (Criteria)lhs, (Criteria)rhs);
+		stack.push(criteria);
 	}
 
 	@Override
@@ -767,8 +763,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		Expression target = stack.pop();
 		visitNode(expr.getValue());
 		Expression value = stack.pop();		
-		this.criteria = new CompareCriteria(new Function("LOCATE", new Expression[] {value, target, new Constant(1)}), compare, new Constant(1));
-		stack.push(this.criteria);
+		Criteria criteria = new CompareCriteria(new Function("LOCATE", new Expression[] {value, target, new Constant(1)}), compare, new Constant(1));
+		stack.push(criteria);
 	}
 
 	@Override
@@ -921,7 +917,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		
 		ODataAggregateAnyBuilder builder = new ODataAggregateAnyBuilder(expr,
 				this.resultEntityTable, this.resultEntityGroup, joinTable, joinGroup);
-		this.criteria = builder.getCriteria();
+		Criteria criteria = builder.getCriteria();
 		stack.push(criteria);
 	}
 	

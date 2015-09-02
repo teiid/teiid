@@ -307,10 +307,10 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testOrderByWithCriteria() throws Exception {
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID DESC",
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 ORDER BY g0.ShipperID = 12 DESC",
 				"nw.Shippers", null, null, "ShipperID eq 12 desc", -1, null,
 				null);
-	}	
+	}
 	
 	@Test
 	public void testAny() throws Exception {	
@@ -331,7 +331,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testMultiEntitykey() throws Exception {
 		OEntityKey key = OEntityKey.parse("(11044)");
-		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN nw.OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND ((g1.OrderID = 11044) AND (g1.ProductID = 62)) ORDER BY g1.OrderID, g1.ProductID",
+		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN nw.OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND (g1.OrderID = 11044) AND (g1.ProductID = 62) ORDER BY g1.OrderID, g1.ProductID",
 				"nw.Orders", null,
 				"OrderID", null, -1, "nw.OrderDetails(OrderID=11044L,ProductID=62L)", key);		
 	}
@@ -352,7 +352,7 @@ public class TestODataSQLStringVisitor {
 		Insert insert = visitor.insert(entitySet, entity);
 		assertEquals("INSERT INTO nw.Categories (Description) VALUES (?)", insert.toString());
 	}
-
+	
 }
 
 
