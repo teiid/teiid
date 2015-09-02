@@ -472,6 +472,16 @@ public class TestODataIntegration extends BaseResourceTest {
 	        response = request.get(String.class);
 	        assertFalse(response.getEntity().contains("('c')"));
 	        Assert.assertEquals(200, response.getStatus());
+	        
+	        //filter is not applicable to getEntity
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')?$filter=b eq 'd'"));
+	        response = request.get(String.class);
+	        Assert.assertEquals(200, response.getStatus());
+	        
+	        //ensure that a child is nav property works
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/y"));
+	        response = request.get(String.class);
+	        Assert.assertEquals(200, response.getStatus());
 		} finally {
 			es.stop();
 		}
