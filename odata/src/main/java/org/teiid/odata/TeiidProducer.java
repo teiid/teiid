@@ -82,9 +82,10 @@ public class TeiidProducer implements ODataProducer {
 	@Override
 	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, final QueryInfo queryInfo) {
 		checkExpand(queryInfo);
-		final EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
+		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
+		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
 		List<SQLParam> parameters = visitor.getParameters();
 		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), queryInfo);
 		return new EntitiesResponse() {
