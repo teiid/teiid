@@ -143,7 +143,7 @@ public class TeiidProducer implements ODataProducer {
 		List<SQLParam> parameters = visitor.getParameters();
 		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), null);
 		if (entityList.isEmpty()) {
-			return null;
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018, entityKey, entitySetName));
 		}
 		return Responses.entity(entityList.get(0));
 	}
