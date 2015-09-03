@@ -1531,6 +1531,11 @@
                 <artifactId>narayana-jta</artifactId>
                 <version>${version.narayana}</version>
             </dependency>
+	        <dependency>
+	            <groupId>org.picketbox</groupId>
+	            <artifactId>picketbox</artifactId>
+	            <version>${version.org.picketbox}</version>
+	        </dependency>             
         </dependencies>
 	</dependencyManagement>
 	<modules>

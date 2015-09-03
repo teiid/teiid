@@ -29,4 +29,9 @@ public interface OAuthCredential {
      * @return Authorization header for HTTP call. 
      */
     String getAuthorizationHeader(String resourceURI, String httpMethod);
+    
+    /**
+     * Get Authorization Token properties by Name
+     */
+    String getAuthrorizationProperty(String key);
 }

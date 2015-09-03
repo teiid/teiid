@@ -94,19 +94,8 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 			private static final long serialVersionUID = 5028356110047329135L;
 
 			@Override
-			public SalesforceConnectionImpl getConnection() throws ResourceException {
-				String userName = getUsername();
-				String password = getPassword();
-
-				// if security-domain is specified and caller identity is used; then use
-				// credentials from subject
-				Subject subject = ConnectionContext.getSubject();
-				if (subject != null) {
-					userName = ConnectionContext.getUserName(subject, SalesForceManagedConnectionFactory.this, userName);
-					password = ConnectionContext.getPassword(subject, SalesForceManagedConnectionFactory.this, userName, password);
-				}
-				
-				return new SalesforceConnectionImpl(userName, password, SalesForceManagedConnectionFactory.this);
+			public SalesforceConnectionImpl getConnection() throws ResourceException {				
+				return new SalesforceConnectionImpl(SalesForceManagedConnectionFactory.this);
 			}
 		};
 	}

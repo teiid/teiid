@@ -28,6 +28,11 @@
     <dependencies>
         <dependency>
           <groupId>org.jboss.teiid</groupId>
+          <artifactId>teiid-common-core</artifactId>
+          <scope>provided</scope>
+        </dependency>    
+        <dependency>
+          <groupId>org.jboss.teiid</groupId>
           <artifactId>teiid-api</artifactId>
           <scope>provided</scope>
         </dependency>
@@ -57,5 +62,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+		<dependency>
+		    <groupId>org.picketbox</groupId>
+		    <artifactId>picketbox</artifactId>
+		    <scope>provided</scope>
+		</dependency>        
     </dependencies>
 </project>

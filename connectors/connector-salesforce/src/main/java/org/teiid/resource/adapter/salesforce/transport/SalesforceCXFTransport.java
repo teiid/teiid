@@ -171,6 +171,7 @@ public class SalesforceCXFTransport extends JdkHttpTransport {
             clientPolicy.setProxyServer(addr.getHostName());
             clientPolicy.setProxyServerPort(addr.getPort());
         }
+                
         return this.payload;
     }    
 

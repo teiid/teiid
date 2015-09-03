@@ -7,6 +7,9 @@
         <resource-root path="teiid-jboss-security-${project.version}.jar" />
     </resources>
     <dependencies>
+        <module name="javax.api" />
+        <module name="org.jboss.teiid.common-core"/>
+        <module name="org.jboss.teiid.api"/>
         <module name="org.apache.cxf" /> <!-- for OAuth -->
         <module name="org.apache.cxf.impl" /> <!-- for OAuth -->
         <module name="org.apache.cxf.impl.frontend-jaxrs" />  <!-- for OAuth -->

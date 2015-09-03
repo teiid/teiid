@@ -39,11 +39,22 @@ public class OAuth20CredentialImpl implements OAuthCredential {
         if (this.accessToken == null || expired(this.accessToken)) {
             this.accessToken = getAccessToken();            
         }
-        return "Bearer "+accessToken.getTokenKey(); //$NON-NLS-1$
+        return "Bearer "+this.accessToken.getTokenKey(); //$NON-NLS-1$
     }
     
+    @Override
+    public String getAuthrorizationProperty(String key) {
+        if (this.accessToken == null || expired(this.accessToken)) {
+            this.accessToken = getAccessToken();            
+        }
+        return this.accessToken.getParameters().get(key);
+    }    
+    
     private boolean expired(ClientAccessToken token) {
-        return (((token.getIssuedAt()+token.getExpiresIn())-System.currentTimeMillis()) < 0);
+        if (token.getExpiresIn() != -1) {
+            return (((token.getIssuedAt()+token.getExpiresIn())-System.currentTimeMillis()) < 0);
+        }
+        return false;
     }
 
     protected ClientAccessToken getAccessToken() {

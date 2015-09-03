@@ -21,16 +21,27 @@
  */
 package org.teiid.resource.adapter.salesforce.transport;
 
+import java.util.HashMap;
+
 import com.sforce.ws.ConnectorConfig;
 
 public class SalesforceConnectorConfig extends ConnectorConfig {
     private String cxfConfigFile;
-
+    private HashMap<String, Object> credentialMap = new HashMap<String, Object>();
+    
     public String getCxfConfigFile() {
         return cxfConfigFile;
     }
 
     public void setCxfConfigFile(String cxfConfigFile) {
         this.cxfConfigFile = cxfConfigFile;
+    }
+
+    public Object getCredential(String name) {
+        return this.credentialMap.get(name);
+    }
+    
+    public void setCredential(String name, Object credential) {
+        this.credentialMap.put(name, credential);
     }
 }
