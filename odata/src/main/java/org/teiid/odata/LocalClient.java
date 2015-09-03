@@ -295,10 +295,10 @@ public class LocalClient implements Client {
 			
 			//build the results
 			for (int i = 0; i < size; i++) {
-				count++;
 				if (!rs.next()) {
 					break;
 				}
+				count++;
 				result.addEntity(rs, propertyTypes, projectedColumns, entitySet);
 			}
 			

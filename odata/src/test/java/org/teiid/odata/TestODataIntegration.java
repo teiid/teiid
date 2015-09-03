@@ -428,6 +428,55 @@ public class TestODataIntegration extends BaseResourceTest {
         
 	}	
 	
+	@Test
+	public void testGetEntity() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.addSourceMetadata("ddl", "create view x (a string primary key, b string) as select 'a', 'b' union all select 'c', 'd';"
+					+ " create view y (a1 string primary key, b1 string, foreign key (a1) references x (a)) as select 'a', 'b' union all select 'c', 'd';");
+			mmd.setModelType(Type.VIRTUAL);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')"));
+	        ClientResponse<String> response = request.get(String.class);
+	        assertTrue(response.getEntity().contains("('a')"));
+	        Assert.assertEquals(200, response.getStatus());
+	        
+	        //a missing entity should be a 404
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('v')"));
+	        response = request.get(String.class);
+	        Assert.assertEquals(404, response.getStatus());
+	        
+	        //filter is not applicable to getEntity
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')?$filter=b eq 'd'"));
+	        response = request.get(String.class);
+	        assertTrue(response.getEntity().contains("('a')"));
+	        Assert.assertEquals(200, response.getStatus());
+	        
+	        //ensure that a child is nav property works
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/y"));
+	        response = request.get(String.class);
+	        assertTrue(response.getEntity().contains("('a')"));
+	        Assert.assertEquals(200, response.getStatus());
+	        
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/y?$filter=a1 eq 'c'"));
+	        response = request.get(String.class);
+	        assertFalse(response.getEntity().contains("('c')"));
+	        Assert.assertEquals(200, response.getStatus());
+		} finally {
+			es.stop();
+		}
+	}
+	
 	@Test public void testInvalidCharacterReplacement() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
 		es.start(new EmbeddedConfiguration());
