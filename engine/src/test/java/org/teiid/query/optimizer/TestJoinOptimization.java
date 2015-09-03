@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
@@ -53,10 +54,12 @@ import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.JoinNode;
+import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -1210,4 +1213,74 @@ public class TestJoinOptimization {
         assertNotNull(joinNode.getJoinCriteria());
     }
 	
+	//doesn't modify the plan
+	@Test public void testLeftOuterAssocitivtyNullDependent() throws Exception {
+	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	   	TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 or pm2.g2.e1 is null left outer join pm2.g3 on pm2.g2.e2 = pm2.g3.e2", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_0.e2 AS c_0 FROM pm2.g3 AS g_0 ORDER BY c_0", 
+	   				"SELECT g_0.e1, g_0.e2 FROM pm2.g2 AS g_0", 
+	   				"SELECT g_0.e1, g_0.e3 FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	 }
+	
+	@Test public void testLeftOuterAssocitivtyLeftLinear() throws Exception {
+	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	   	TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 left outer join pm2.g3 on pm2.g2.e2 = pm2.g3.e2", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", 
+	   				"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 LEFT OUTER JOIN pm2.g3 AS g_1 ON g_0.e2 = g_1.e2 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	 }
+	
+	@Test public void testLeftOuterAssocitivtyLeftLinearSwap() throws Exception {
+	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	   	TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 left outer join pm1.g3 on pm1.g1.e2 = pm1.g3.e2", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+	   				"SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e2 = g_1.e2 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	 }
+	
+	//doesn't modify the plan
+	@Test public void testLeftOuterAssocitivtyLeftLinearInvalid() throws Exception {
+	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	   	TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 left outer join pm2.g3 on pm1.g1.e2 = pm2.g3.e2", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+	   				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0", 
+	   				"SELECT g_0.e2 AS c_0 FROM pm2.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	 }
+	
+	@Test public void testLeftOuterAssocitivtyRightLinear() throws Exception {
+		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	   	TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join (pm1.g2 left outer join pm2.g3 on pm1.g2.e2 = pm2.g3.e2) on pm1.g1.e1 = pm1.g2.e1", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_1.e2 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e1 = g_1.e1 ORDER BY c_0", 
+	   				"SELECT g_0.e2 AS c_0 FROM pm2.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	 }
+	
+	@Ignore("this requires more work as we will convert the child left outer join to an inner join")
+	@Test public void testLeftOuterAssocitivtyRightLinearSwap() throws Exception {
+		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	   	ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join (pm2.g2 left outer join pm1.g3 on pm2.g2.e2 = pm1.g3.e2) on pm1.g1.e1 = pm1.g3.e1", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g2 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+	    RelationalNode node = ((RelationalPlan)plan).getRootNode().getChildren()[0];
+	    assertTrue(node instanceof JoinNode);
+	    node = node.getChildren()[0];
+	    assertTrue(node instanceof JoinNode);
+	    assertEquals(JoinType.JOIN_INNER, ((JoinNode)node).getJoinType());
+	 }
+    
 }
