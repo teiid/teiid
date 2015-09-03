@@ -39,7 +39,7 @@ public class OAuthUtil {
     public static final String OAUTH1_0_DOMAIN = 
             "<security-domain name=\"oauth-security\">  \n" + 
             "    <authentication>  \n" + 
-            "        <login-module code=\"org.teiid.jboss.oauth.OAuth10LoginModule\" flag=\"required\" module=\"org.jboss.teiid\">  \n" + 
+            "        <login-module code=\"org.teiid.jboss.oauth.OAuth10LoginModule\" flag=\"required\" module=\"org.jboss.teiid.security\">  \n" + 
             "            <module-option name=\"consumer-key\" value=\"{0}\"/>  \n" + 
             "            <module-option name=\"consumer-secret\" value=\"{1}\"/>  \n" +
             "            <module-option name=\"access-key\" value=\"{2}\"/>  \n" + 
@@ -51,7 +51,7 @@ public class OAuthUtil {
     public static final String OAUTH2_0_DOMAIN = 
             "<security-domain name=\"oauth2-security\">  \n" + 
             "    <authentication>  \n" + 
-            "        <login-module code=\"org.teiid.jboss.oauth.OAuth20LoginModule\" flag=\"required\" module=\"org.jboss.teiid\">  \n" + 
+            "        <login-module code=\"org.teiid.jboss.oauth.OAuth20LoginModule\" flag=\"required\" module=\"org.jboss.teiid.security\">  \n" + 
             "            <module-option name=\"client-id\" value=\"{0}\"/>  \n" + 
             "            <module-option name=\"client-secret\" value=\"{1}\"/>  \n" +
             "            <module-option name=\"refresh-token\" value=\"{2}\"/>  \n" + 
@@ -135,12 +135,16 @@ public class OAuthUtil {
         String authorizeURL = getInput(in, "Enter the User Authorization URL = ");
         String scope = getInput(in, "Enter scope (hit enter for none) = ", true);
         
+        String callback = getInput(in, "Enter callback URL (default: urn:ietf:wg:oauth:2.0:oob) = ", true);
+        if (callback == null) {
+            callback = "urn:ietf:wg:oauth:2.0:oob";
+        }
+        
         URI authenticateURL = org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.getAuthorizationURI(authorizeURL, 
                 consumer.getKey(), 
-                "urn:ietf:wg:oauth:2.0:oob", 
+                callback, 
                 "Auth URL", 
                 scope);
-        
         
         System.out.println("Cut & Paste the URL in a web browser, and Authticate");
         System.out.println("Authorize URL  = " + authenticateURL.toASCIIString());
@@ -151,7 +155,7 @@ public class OAuthUtil {
         String accessTokenURL = getInput(in, "Enter the Access Token URL = ");
         WebClient client = WebClient.create(accessTokenURL);
         
-        AccessTokenGrant grant = new AuthorizationCodeGrant(authCode, new URI("urn:ietf:wg:oauth:2.0:oob"));
+        AccessTokenGrant grant = new AuthorizationCodeGrant(authCode, new URI(callback));
         ClientAccessToken clientToken = org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.getAccessToken(client, consumer, grant, null, false);
         System.out.println("Refresh Token="+clientToken.getRefreshToken());
         

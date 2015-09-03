@@ -22,6 +22,8 @@
 
 package org.teiid.core.util;
 
+import java.util.Arrays;
+
 /**
  * <p>Encodes and decodes to and from Base64 notation.</p>
  * <p>Homepage: <a href="http://iharder.net/base64">http://iharder.net/base64</a>.</p>
@@ -462,5 +464,31 @@ public class Base64
         return out;
     }   // end decode
     
+    public static String encodeUrlSafe(byte[] data) {
+        byte[] encode = encodeBytes(data).getBytes();
+        for (int i = 0; i < encode.length; i++) {
+            if (encode[i] == '+') {
+                encode[i] = '-';
+            } else if (encode[i] == '/') {
+                encode[i] = '_';
+            }
+        }
+        return new String(encode);
+    }
+
+    public static byte[] decodeUrlSafe(CharSequence data) {
+        StringBuilder encode = new StringBuilder();
+        for (int i = 0; i < data.length(); i++) {
+            char c = data.charAt(i);
+            if ( c == '-') {
+                encode.append('+');
+            } else if (c == '_') {
+                encode.append('/');
+            } else {
+                encode.append(c);
+            }
+        }
+        return decode(encode.toString());
+    }    
     
 }   // end class Base64

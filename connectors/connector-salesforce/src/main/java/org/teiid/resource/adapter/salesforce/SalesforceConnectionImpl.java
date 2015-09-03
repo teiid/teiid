@@ -39,14 +39,17 @@ import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
 import javax.resource.ResourceException;
+import javax.security.auth.Subject;
 
+import org.teiid.OAuthCredential;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.salesforce.transport.SalesforceConnectorConfig;
 import org.teiid.resource.adapter.salesforce.transport.SalesforceCXFTransport;
+import org.teiid.resource.adapter.salesforce.transport.SalesforceConnectorConfig;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ConnectionContext;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.DataPayload;
@@ -88,19 +91,36 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	private SalesforceConnectorConfig config;
 	private String restEndpoint;
 	
-	public SalesforceConnectionImpl(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
-		login(username, password, mcf);
+	public SalesforceConnectionImpl(SalesForceManagedConnectionFactory mcf) throws ResourceException {
+		login(mcf);
 	}
 	
 	SalesforceConnectionImpl(PartnerConnection partnerConnection) {
 		this.partnerConnection = partnerConnection;
 	}
 	
-	private void login(String username, String password, SalesForceManagedConnectionFactory mcf) throws ResourceException {
+	private void login(SalesForceManagedConnectionFactory mcf) throws ResourceException {
+	    config = new SalesforceConnectorConfig();
+        String username = mcf.getUsername();
+        String password = mcf.getPassword();
 
-		config = new SalesforceConnectorConfig();
+        // if security-domain is specified and caller identity is used; then use
+        // credentials from subject
+        boolean useCXFTransport = mcf.getConfigFile() != null;
+        Subject subject = ConnectionContext.getSubject();
+        if (subject != null) {
+            OAuthCredential oauthCredential = ConnectionContext.getSecurityCredential(subject, OAuthCredential.class);
+            if (oauthCredential != null) {
+                config.setCredential(OAuthCredential.class.getName(), oauthCredential);
+                useCXFTransport = true;
+            } else {
+                username = ConnectionContext.getUserName(subject, mcf, username);
+                password = ConnectionContext.getPassword(subject, mcf, username, password);
+            }
+        }
+		
 		config.setCxfConfigFile(mcf.getConfigFile());
-		if (mcf.getConfigFile() != null) {
+		if (useCXFTransport) {
 		    config.setTransport(SalesforceCXFTransport.class);
 		}
 		
@@ -142,7 +162,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
         }
         
         try {
-	        partnerConnection = new PartnerConnection(config);
+	        partnerConnection = new TeiidPartnerConnection(config);
 	        
 	        String endpoint = config.getServiceEndpoint();
 	        // The endpoint for the Bulk API service is the same as for the normal

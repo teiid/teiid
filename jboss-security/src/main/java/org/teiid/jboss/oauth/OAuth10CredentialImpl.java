@@ -42,6 +42,12 @@ public class OAuth10CredentialImpl implements OAuthCredential, Serializable {
         OAuthClientUtils.Token accessToken = new OAuthClientUtils.Token(this.accessToken, this.accessSecret);
         return OAuthClientUtils.createAuthorizationHeader(consumer, accessToken, httpMethod, resourceURI);        
     }
+    
+    @Override
+    public String getAuthrorizationProperty(String key) {
+        // for now only in OAUTH2
+        return null;
+    }    
 
     public String getConsumerKey() {
         return consumerKey;
