@@ -136,6 +136,8 @@ public class QueryRewriter {
     private final static Short SHORT_ZERO = new Short((short)0);
     private final static Byte BYTE_ZERO = new Byte((byte)0);
 	private boolean rewriteAggs = true;
+	
+	private boolean preserveUnknown;
     
     private QueryMetadataInterface metadata;
     private CommandContext context;
@@ -344,7 +346,10 @@ public class QueryRewriter {
 				// replaced in the processor with variable values
 				Expression expr = exprStmt.getExpression();
 				if (expr != null) {
+			        boolean preserveUnknownOld = preserveUnknown;
+			        preserveUnknown = true;
 					expr = rewriteExpressionDirect(expr);
+					preserveUnknown = preserveUnknownOld;
 	                exprStmt.setExpression(expr);
 				}
 				break;
@@ -427,7 +432,10 @@ public class QueryRewriter {
         		//because we aren't considering the xml pseudo-functions context, row limit, etc. 
         		rewriteExpressions(crit);
         	} else {
+        		boolean preserveUnknownOld = preserveUnknown;
+                preserveUnknown = false;
         		crit = rewriteCriteria(crit);
+        		preserveUnknown = preserveUnknownOld;
         	}
             if(crit == TRUE_CRITERIA) {
                 query.setCriteria(null);
@@ -447,7 +455,10 @@ public class QueryRewriter {
         // Rewrite having
         Criteria having = query.getHaving();
         if(having != null) {
+    		boolean preserveUnknownOld = preserveUnknown;
+            preserveUnknown = false;
             crit = rewriteCriteria(having);
+            preserveUnknown = preserveUnknownOld;
             if(crit == TRUE_CRITERIA) {
                 query.setHaving(null);
             } else {
@@ -468,12 +479,15 @@ public class QueryRewriter {
         	}
         }
         
+        boolean preserveUnknownOld = preserveUnknown;
+        preserveUnknown = true;
         rewriteExpressions(query.getSelect());
-
+        
         if (!query.getIsXML()) {
             query = (Query)rewriteOrderBy(query);
         }
-        
+        preserveUnknown = preserveUnknownOld;
+
         if (query.getLimit() != null) {
             query.setLimit(rewriteLimitClause(query.getLimit()));
         }
@@ -987,9 +1001,13 @@ public class QueryRewriter {
                         return converted;
                     }
                 } else if (UNKNOWN_CRITERIA.equals(converted)) {
-                    if (operator == CompoundCriteria.AND) {
-                        return FALSE_CRITERIA;
-                    } 
+                	if (preserveUnknown) {
+                		newCrits.add(converted);
+                	} else {
+                		if(operator == CompoundCriteria.AND) {
+                            return FALSE_CRITERIA;
+                        }	
+                	}
                 } else { 
                     if (operator == CompoundCriteria.AND) {
 	                	 converted = rewriteAndConjunct(converted, exprMap, newCrits);
@@ -1962,7 +1980,12 @@ public class QueryRewriter {
             Expression value = rewriteExpressionDirect( (Expression) valIter.next());
             if (isNull(value)) {
             	hasNull = true;
-            	continue;
+            	if (!preserveUnknown) {
+            		if (criteria.isNegated()) {
+            			return FALSE_CRITERIA;
+            		}
+            		continue;
+            	}
             }
             allConstants &= value instanceof Constant;
             newVals.add(value);
@@ -1970,6 +1993,9 @@ public class QueryRewriter {
         
         int size = newVals.size();
         if (size == 1) {
+        	if (preserveUnknown && hasNull) {
+        		return UNKNOWN_CRITERIA;
+        	}
             Expression value = (Expression)newVals.iterator().next();
             return rewriteCriteria(new CompareCriteria(criteria.getExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, value));
         } 
@@ -2685,6 +2711,8 @@ public class QueryRewriter {
         List expressions = insert.getValues();
         List evalExpressions = new ArrayList(expressions.size());
         Iterator expIter = expressions.iterator();
+        boolean preserveUnknownOld = preserveUnknown;
+        preserveUnknown = true;
         while(expIter.hasNext()) {
             Expression exp = (Expression) expIter.next();
             if (processing && exp instanceof ExpressionSymbol) {
@@ -2694,6 +2722,7 @@ public class QueryRewriter {
             	evalExpressions.add( rewriteExpressionDirect( exp ));
             }
         }
+        preserveUnknown = preserveUnknownOld;
 
         insert.setValues(evalExpressions);        
 		return insert;
@@ -2811,15 +2840,20 @@ public class QueryRewriter {
 			return rewriteInherentUpdate(update, info);
 		}
 		
+        boolean preserveUnknownOld = preserveUnknown;
+        preserveUnknown = true;
 		// Evaluate any function on the right side of set clauses
         for (SetClause entry : update.getChangeList().getClauses()) {
         	entry.setValue(rewriteExpressionDirect(entry.getValue()));
         }
+        preserveUnknown = preserveUnknownOld;
 
 		// Rewrite criteria
 		Criteria crit = update.getCriteria();
 		if(crit != null) {
+            preserveUnknown = false;
 			update.setCriteria(rewriteCriteria(crit));
+			preserveUnknown = preserveUnknownOld;
 		}
 
 		return update;
@@ -2980,7 +3014,10 @@ public class QueryRewriter {
 		// Rewrite criteria
 		Criteria crit = delete.getCriteria();
 		if(crit != null) {
+    		boolean preserveUnknownOld = preserveUnknown;
+            preserveUnknown = false;
 			delete.setCriteria(rewriteCriteria(crit));
+			preserveUnknown = preserveUnknownOld;
 		}
 
 		return delete;

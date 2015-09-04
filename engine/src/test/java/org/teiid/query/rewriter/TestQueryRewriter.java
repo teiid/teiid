@@ -220,6 +220,18 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("pm1.g1.e1 in (2, null)", "pm1.g1.e1 = '2'"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
+    @Test public void testRewriteUnknown9() {
+    	helpTestRewriteCriteria("pm1.g1.e1 not in (2, null)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteUnknown10() {
+    	helpTestRewriteCriteria("pm1.g1.e1 <> 'a' and pm1.g1.e2 <> null", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteUnknown11() {
+    	helpTestRewriteCommand("update pm1.g1 set e3 = pm1.g1.e1 <> 'a' and pm1.g1.e2 <> null", "UPDATE pm1.g1 SET e3 = (pm1.g1.e1 <> 'a') AND (null <> null)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testRewriteInCriteriaWithRepeats() {
         helpTestRewriteCriteria("pm1.g1.e1 in ('1', '1', '2')", "pm1.g1.e1 IN ('1', '2')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
