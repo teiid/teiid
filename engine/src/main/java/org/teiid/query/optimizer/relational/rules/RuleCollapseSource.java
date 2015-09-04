@@ -758,7 +758,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         }
         RulePushLimit.combineLimits(limitNode, metadata, limit, offset, childLimit, childOffset);
         Limit lim = new Limit((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT));
-        lim.setImplicit(node.hasBooleanProperty(Info.IS_IMPLICIT_LIMIT));
+        lim.setImplicit(node.hasBooleanProperty(Info.IS_IMPLICIT_LIMIT) && (query.getLimit() == null || query.getLimit().isImplicit()));
         query.setLimit(lim);
     }
 

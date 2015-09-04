@@ -1397,5 +1397,27 @@ public class TestSubqueryPushdown {
             new String[] { "SELECT g_1.e1 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE (g_1.e1 = g_0.e1) AND (g_1.e2 = ALL (SELECT MAX(g_2.e2) FROM pm1.g1 AS g_2 WHERE g_2.e1 = g_1.e1))" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
+    
+    /**
+     * Shows the default preference against on subquery
+     */
+    @Test public void testSubuqeryLimit() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+    	bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla WHERE EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE bqt1.smalla.intkey = bqt1.mediuma.intnum order by stringkey limit 1 )", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        bsc.setCapabilitySupport(Capability.SUBQUERY_CORRELATED_LIMIT, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla WHERE EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE bqt1.smalla.intkey = bqt1.mediuma.intnum order by stringkey limit 1 )", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT 1 FROM BQT1.SmallA AS g_0 WHERE EXISTS (SELECT 'Y' AS c_0 FROM BQT1.MediumA AS g_1 WHERE g_1.IntNum = g_0.IntKey ORDER BY g_1.StringKey LIMIT 1)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN);
+    }
+    
 
 }

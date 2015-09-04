@@ -977,6 +977,14 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
+     * @return true if a correlated subquery can support a limit clause
+     * @since 8.12
+     */
+    public boolean supportsCorrelatedSubqueryLimit() {
+    	return supportsCorrelatedSubqueries();
+    }
+    
+    /**
      * @return true if Advanced OLAP operations are supported
      *  including the aggregate function filter clause.
      * @since 7.5

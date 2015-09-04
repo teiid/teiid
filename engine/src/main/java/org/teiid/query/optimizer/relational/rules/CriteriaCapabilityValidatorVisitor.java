@@ -618,6 +618,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 if(! CapabilitiesUtil.supports(Capability.QUERY_SUBQUERIES_CORRELATED, critNodeModelID, metadata, capFinder)) {
                     return null;
                 }
+                if (!CapabilitiesUtil.supports(Capability.SUBQUERY_CORRELATED_LIMIT, critNodeModelID, metadata, capFinder)) { 
+    		    	QueryCommand command = (QueryCommand)subqueryContainer.getCommand();
+    		    	if (command.getLimit() != null && !command.getLimit().isImplicit()) {
+    		    		return null;
+    		    	}
+        		}
                 //TODO: this check sees as correlated references as coming from the containing scope
                 //but this is only an issue with deeply nested subqueries
                 if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(subqueryContainer.getCommand(), critNodeModelID, metadata, capFinder, analysisRecord )) {

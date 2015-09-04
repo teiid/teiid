@@ -524,4 +524,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsSubqueryCommonTableExpressions() {
 		return delegate.supportsSubqueryCommonTableExpressions();
 	}
+	@Override
+	public boolean supportsCorrelatedSubqueryLimit() {
+		return delegate.supportsCorrelatedSubqueryLimit();
+	}
 }

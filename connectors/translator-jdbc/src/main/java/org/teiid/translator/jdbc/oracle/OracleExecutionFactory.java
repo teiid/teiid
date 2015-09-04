@@ -1076,4 +1076,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	//doing an isvalid check seems to allow the connection to be safely reused
     	c.isValid(1);
     }
+    
+    @Override
+    public boolean supportsCorrelatedSubqueryLimit() {
+    	return false;
+    }
 }

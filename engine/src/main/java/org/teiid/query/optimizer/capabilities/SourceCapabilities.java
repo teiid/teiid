@@ -345,7 +345,8 @@ public interface SourceCapabilities {
         CRITERIA_COMPARE_ORDERED_EXCLUSIVE,
         PARTIAL_FILTERS, 
         DEPENDENT_JOIN_BINDINGS,
-        SUBQUERY_COMMON_TABLE_EXPRESSIONS, 
+        SUBQUERY_COMMON_TABLE_EXPRESSIONS,
+        SUBQUERY_CORRELATED_LIMIT,
         NO_PROJECTION;
         
         private final String toString;
