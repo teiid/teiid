@@ -190,25 +190,6 @@
           This profile is activated manually, as in "mvn ... -P release ..."
 		  -->
       <id>release</id>
-      <properties>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-      </properties>
-      <modules>
-        <module>build</module>        
-      </modules>
-      <build>
-        <plugins>
-       
-        </plugins>
-      </build>
-    </profile>
-        
-    <profile>
-      <id>releasewithjavadoc</id>
-      <properties>
-        <!--maven.javadoc.skip>true</maven.javadoc.skip-->
-        <skipTests>true</skipTests>
-      </properties>
       <modules>
         <module>build</module>        
       </modules>
