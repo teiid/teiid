@@ -43,6 +43,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 
 @Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase")
@@ -245,6 +246,22 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
 	    	}
         }
         return super.retrieveValue(results, columnIndex, expectedType);
+    }
+    
+    @Override
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+    	JDBCMetdataProcessor processor = new JDBCMetdataProcessor() {
+    		@Override
+    		protected boolean getIndexInfoForTable(String catalogName,
+    				String schemaName, String tableName, boolean uniqueOnly,
+    				boolean approximateIndexes, String tableType) {
+    			//unique returns an empty result set that is not reusable
+    			return !uniqueOnly;
+    		}
+    	};
+    	//same issue with foreign keys
+    	processor.setImportForeignKeys(false);
+    	return processor;
     }
     
 }
