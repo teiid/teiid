@@ -65,6 +65,9 @@
         <module name="org.jboss.as.cli"/> <!-- Admin -->
         <module name="org.jboss.as.controller-client"/> <!-- Admin -->
         <module name="org.jboss.as.controller"/> <!-- Admin -->
+        <module name="io.swagger"/>
+		<module name="javax.servlet.api"/>
+		<module name="org.apache.commons.io"/>
         
     </dependencies>
 
