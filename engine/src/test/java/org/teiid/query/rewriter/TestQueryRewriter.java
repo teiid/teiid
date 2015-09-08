@@ -68,7 +68,31 @@ import org.teiid.query.util.CommandContext;
 @SuppressWarnings("nls")
 public class TestQueryRewriter {
 
-    private static final String TRUE_STR = "1 = 1"; //$NON-NLS-1$
+    private static final class FakeObject implements Comparable<FakeObject> {
+    	
+    	private int hashCode;
+
+		public FakeObject(int hashCode) {
+    		this.hashCode = hashCode;
+		}
+    	
+		@Override
+		public int hashCode() {
+			return hashCode;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return true;
+		}
+		
+		@Override
+		public int compareTo(FakeObject o) {
+			return 0;
+		}
+	}
+
+	private static final String TRUE_STR = "1 = 1"; //$NON-NLS-1$
     private static final String FALSE_STR = "1 = 0"; //$NON-NLS-1$
 
     // ################################## TEST HELPERS ################################
@@ -260,6 +284,18 @@ public class TestQueryRewriter {
         crit.setNegated(true);
         
         actual = QueryRewriter.rewriteCriteria(crit, null, null);
+        
+        assertEquals(QueryRewriter.TRUE_CRITERIA, actual);
+    }
+    
+    @Test public void testRewriteInNotHashable() throws Exception {
+    	Constant c = new Constant(new FakeObject(0));
+    	SetCriteria crit = new SetCriteria(c, new ArrayList<Constant>()); //$NON-NLS-1$
+        
+    	crit.getValues().add(new Constant(new FakeObject(1)));
+    	crit.getValues().add(new Constant(new FakeObject(2)));
+    	
+        Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null);
         
         assertEquals(QueryRewriter.TRUE_CRITERIA, actual);
     }

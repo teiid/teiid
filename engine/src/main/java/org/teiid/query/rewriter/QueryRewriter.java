@@ -1045,7 +1045,7 @@ public class QueryRewriter {
 			                	} else {
 				                	newCrits.remove(crit);
 			                		CompareCriteria other = (CompareCriteria)crit;
-			                		SetCriteria sc = new SetCriteria(cc.getLeftExpression(), new LinkedHashSet<Expression>());
+			                		SetCriteria sc = new SetCriteria(cc.getLeftExpression(), DataTypeManager.isHashable(other.getRightExpression().getType())?new LinkedHashSet<Constant>():new TreeSet<Constant>());
 			                		sc.setAllConstants(true);
 			                		sc.getValues().add(cc.getRightExpression());
 			                		sc.getValues().add(other.getRightExpression());
@@ -2003,6 +2003,9 @@ public class QueryRewriter {
         criteria.setValues(newVals);
         if (allConstants) {
         	criteria.setAllConstants(true);
+        	if (!DataTypeManager.isHashable(criteria.getExpression().getType())) {
+    			criteria.setValues(new TreeSet(criteria.getValues()));
+        	}
         }        
         
         if (size == 0) {
