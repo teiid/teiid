@@ -197,7 +197,8 @@ public class TeiidProducer implements ODataProducer {
 		List<SQLParam> parameters = visitor.getParameters();
 		UpdateResponse response =  this.client.executeUpdate(query, parameters);
 		if (response.getUpdateCount() == 0) {
-			LogManager.log(MessageLevel.INFO, LogConstants.CTX_ODATA, null, "no entity to delete in = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "no entity to delete in = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018, entityKey, entitySetName));
 		} else if (response.getUpdateCount() == 1) {
 			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
@@ -219,6 +220,10 @@ public class TeiidProducer implements ODataProducer {
 		int updateCount = update(entitySetName, entity);
 		if (updateCount > 0) {
 			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "updated entity = ", entitySetName, " with key=", entity.getEntityKey().toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		} 
+		else {
+		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "no entity to update in = ", entitySetName, " with key=", entity.getEntityKey().toString()); //$NON-NLS-1$ //$NON-NLS-2$		    
+		    throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018, entity.getEntityKey(), entitySetName));
 		}
 	}
 

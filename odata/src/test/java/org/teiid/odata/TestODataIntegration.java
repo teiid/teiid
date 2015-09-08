@@ -702,12 +702,54 @@ public class TestODataIntegration extends BaseResourceTest {
 	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a',b='b')"));
 	        request.body("application/json", "{\"c\":5}");
 	        response = request.put(String.class);
-	        assertEquals(200, response.getStatus());
+	        assertEquals(204, response.getStatus());
 		} finally {
 			es.stop();
 		}
 	}
-		
+
+    @Test public void testUpdates() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+        };
+        hc.addUpdate("DELETE FROM x WHERE x.a = 'a'", new int[] {0});
+        hc.addUpdate("UPDATE x SET c = 5 WHERE x.a = 'a'", new int[] {0});
+        es.addTranslator("x", hc);
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a)) options (updatable true);");
+            mmd.addSourceMapping("x", "x", null);
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+            
+            ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a')"));
+            ClientResponse<String> response = request.delete(String.class);
+            assertEquals(404, response.getStatus());
+                        
+            //not supported
+            //request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a',b='b')/c/$value"));
+            //request.body("text/plain", "5");
+            //response = request.put(String.class);
+            
+            request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x(a='a',b='b')"));
+            request.body("application/json", "{\"c\":5}");
+            response = request.put(String.class);
+            assertEquals(404, response.getStatus());
+        } finally {
+            es.stop();
+        }
+    }	
 	@Test public void testBatch() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
 		HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
