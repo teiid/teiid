@@ -27,6 +27,7 @@ import static org.teiid.query.processor.TestProcessor.*;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -36,6 +37,10 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.transform.stax.StAXSource;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -51,6 +56,8 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -59,13 +66,17 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
+import org.teiid.util.StAXSQLXML;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestSQLXMLProcessing {
@@ -831,6 +842,27 @@ public class TestSQLXMLProcessing {
         "\"postalCode\": \"10021\" }, \"phoneNumber\": [ { \"type\": \"home\", \"number\": \"212 555-1234\" }, { \"type\": \"fax\", \"number\": \"646 555-4567\" } ] }").getBytes(Charset.forName("UTF-8")));
 		
 		processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(b));
+	}
+	
+	@Test public void testStaxComment() throws Exception {
+		String sql = "select * from xmltable('/*:Person/phoneNumber' passing cast(? as xml) columns x string path 'type', y string path 'number') as x"; //$NON-NLS-1$
+
+		List<?>[] expected = new List<?>[] {
+        		Arrays.asList(null, "8881112222"),
+        };    
+    
+		XMLInputFactory factory = XMLInputFactory.newFactory();
+		XMLEventReader reader = factory.createXMLEventReader(new StringReader("<Person><!--hello--><phoneNumber><number>8881112222</number></phoneNumber></Person>"));
+		XMLType value = new XMLType(new StAXSQLXML(new StAXSource(reader)));
+		value.setType(Type.DOCUMENT);
+		Command command = helpParse(sql);   
+        CommandContext context = createCommandContext();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        context.setMetadata(metadata);        
+        CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder();
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
+        setParameterValues(Arrays.asList(value), command, context);
+		doProcess(plan, dataManager, expected, context);
 	}
 	
 	@Test(expected=ExpressionEvaluationException.class) public void testExternalEntityResolving() throws Exception {

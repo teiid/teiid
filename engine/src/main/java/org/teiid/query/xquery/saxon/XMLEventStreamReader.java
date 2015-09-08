@@ -74,8 +74,9 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	public String getText() {
 		if (event.isCharacters()) {
 			return event.asCharacters().getData();
-		}
-		else {
+		} else if (event.getEventType() == COMMENT) {
+			return event.toString().substring(4, event.toString().length()-3);
+		} else {
 			throw new IllegalStateException();
 		}
 	}
