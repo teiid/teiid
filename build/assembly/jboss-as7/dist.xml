@@ -225,6 +225,13 @@
                         <exclude>org.wololo:jts2geojson</exclude>
                         <exclude>org.osgeo:proj4j</exclude>
                         <exclude>com.vividsolutions:jts</exclude>
+                        <exclude>io.swagger:*</exclude>
+                        <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+                        <exclude>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</exclude>
+                        <exclude>com.fasterxml.jackson.datatype:jackson-datatype-joda</exclude>
+                        <exclude>com.fasterxml.jackson.jaxrs:*</exclude>
+                        <exclude>org.reflections:reflections</exclude>
+                        <exclude>com.google.code.findbugs:annotations</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
@@ -274,7 +281,55 @@
                         <include>com.vividsolutions:jts</include>
                     </includes>
                     <outputDirectory>${jbossas-module-root}/com/vividsolutions/jts/main</outputDirectory>
-                </dependencySet>                                                                                    
+                </dependencySet>
+                <dependencySet>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <includes>
+                         <include>io.swagger:swagger-jaxrs</include>
+                         <include>io.swagger:swagger-core</include>
+                         <include>io.swagger:swagger-models</include>
+                         <include>io.swagger:swagger-annotations</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/io/swagger/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/dataformat/yaml/main</outputDirectory>
+                </dependencySet> 
+                <dependencySet>
+                    <includes>
+                        <include>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</include>
+                        <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/dataformat/xml/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/datatype/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+                        <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/fasterxml/jackson/jaxrs/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>com.google.code.findbugs:annotations</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/com/google/code/findbugs/main</outputDirectory>
+                </dependencySet>
+                <dependencySet>
+                    <includes>
+                        <include>org.reflections:reflections</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/org/reflections/main</outputDirectory>
+                </dependencySet>                                                                                     
             </dependencySets>
             <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main</outputDirectory>
         </binaries>
