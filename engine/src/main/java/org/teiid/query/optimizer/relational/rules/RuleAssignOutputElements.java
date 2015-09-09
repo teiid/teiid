@@ -176,13 +176,25 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	if (plan != null && (command == null || !RelationalNodeUtil.isUpdate(command))) {
 	            		//nested with clauses are handled as sub plans, which have a fixed set of output symbols
 	            		root.setProperty(NodeConstants.Info.OUTPUT_COLS, ResolverUtil.resolveElementsInGroup(root.getGroups().iterator().next(), metadata));
-	            	} if (checkSymbols) {
+	            	} 
+	            	if (checkSymbols) {
 		            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
 		            	for (Expression symbol : outputElements) {
 		                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
 		                    	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
 		                    } 
 						}
+	            	}
+	            	if (NodeEditor.findParent(root, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) != null) {
+	            		//there's a chance that partial projection was used.  we are not a defacto project node
+	            		//take credit for creating anything that is not an element symbol
+	            		List<Expression> filteredElements = new ArrayList<Expression>(outputElements.size());
+	                    for (Expression element : outputElements) {
+	                        if(element instanceof ElementSymbol) {
+	                            filteredElements.add(element);
+	                        }
+	                    }
+	                    outputElements = filteredElements;
 	            	}
 		    	}
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
