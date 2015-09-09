@@ -78,4 +78,12 @@ public class TestImpalaExecutionFactory {
         sqlVisitor.append(obj);
         assertEquals("SELECT g1.e1 FROM g2  JOIN g3 ON g2.e2 = g3.e2  JOIN g1 ON g1.e1 = g2.e1", sqlVisitor.toString());
     }
+    
+    @Test public void testStringLiteral() {
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        Command obj = commandBuilder.getCommand("select pm1.g1.e2 from pm1.g1 where pm1.g1.e1 = 'a''b\\c'");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT g1.e2 FROM g1 WHERE g1.e1 = 'a\\'b\\\\c'", sqlVisitor.toString());
+    }
 }
