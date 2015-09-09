@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.hive;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -39,7 +39,11 @@ import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -220,5 +224,13 @@ public class TestHiveExecutionFactory {
     	
     	hmp.process(mf, c);
     	Mockito.verify(mf, Mockito.times(0)).addTable("x");
+    }
+    
+    @Test public void testStringLiteral() {
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        Command obj = commandBuilder.getCommand("select pm1.g1.e2 from pm1.g1 where pm1.g1.e1 = 'a''b\\c'");
+        SQLConversionVisitor sqlVisitor = hiveTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT g1.e2 FROM g1 WHERE g1.e1 = 'a\\'b\\\\c'", sqlVisitor.toString());
     }
 }

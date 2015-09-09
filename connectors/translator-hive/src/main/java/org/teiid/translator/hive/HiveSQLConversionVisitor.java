@@ -25,8 +25,10 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.List;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class HiveSQLConversionVisitor extends SQLConversionVisitor {
@@ -180,5 +182,18 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 			}
     	}
     	super.visit(obj);
+    }
+    
+    @Override
+    protected void translateSQLType(Class<?> type, Object obj,
+    		StringBuilder valuesbuffer) {
+    	if (obj != null && type == TypeFacility.RUNTIME_TYPES.STRING) {
+    		String val = obj.toString();
+    		valuesbuffer.append(Tokens.QUOTE)
+	          .append(StringUtil.replaceAll(StringUtil.replaceAll(val, "\\", "\\\\"), "'", "\\'")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	          .append(Tokens.QUOTE);
+    	} else {
+    		super.translateSQLType(type, obj, valuesbuffer);
+    	}
     }
 }
