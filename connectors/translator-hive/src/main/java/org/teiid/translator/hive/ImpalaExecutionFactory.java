@@ -36,6 +36,8 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     
     public static String IMPALA = "impala"; //$NON-NLS-1$
+    public static final Version ONE_4 = Version.getVersion("1.4"); //$NON-NLS-1$
+    public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
     
     @Override
     public void start() throws TranslatorException {
@@ -50,10 +52,11 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
         convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-        convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        if (getVersion().compareTo(TWO_0) >= 0) {
+    		convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+    	}
         
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
-        
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
