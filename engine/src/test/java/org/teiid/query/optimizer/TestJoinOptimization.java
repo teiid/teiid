@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
@@ -1267,20 +1266,14 @@ public class TestJoinOptimization {
 	   				"SELECT g_0.e2 AS c_0 FROM pm2.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	 }
 	
-	@Ignore("this requires more work as we will convert the child left outer join to an inner join")
 	@Test public void testLeftOuterAssocitivtyRightLinearSwap() throws Exception {
 		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
-	   	ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join (pm2.g2 left outer join pm1.g3 on pm2.g2.e2 = pm1.g3.e2) on pm1.g1.e1 = pm1.g3.e1", //$NON-NLS-1$
+	   	TestOptimizer.helpPlan("SELECT pm1.g1.e3 from pm1.g1 left outer join (pm2.g2 left outer join pm1.g3 on pm2.g2.e2 = pm1.g3.e2) on pm1.g1.e1 = pm1.g3.e1", //$NON-NLS-1$
 	   			RealMetadataFactory.example1Cached(),
 	            new String[] {
-	   				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g2 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g3 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-
-	    RelationalNode node = ((RelationalPlan)plan).getRootNode().getChildren()[0];
-	    assertTrue(node instanceof JoinNode);
-	    node = node.getChildren()[0];
-	    assertTrue(node instanceof JoinNode);
-	    assertEquals(JoinType.JOIN_INNER, ((JoinNode)node).getJoinType());
+	   				"SELECT g_0.e2 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+	   				"SELECT g_1.e2 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	 }
     
 }

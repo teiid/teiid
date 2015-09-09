@@ -591,6 +591,7 @@ public class RelationalPlanner {
         }
         if(hints.hasJoin) {
             rules.push(RuleConstants.CHOOSE_JOIN_STRATEGY);
+            rules.push(RuleConstants.PLAN_OUTER_JOINS);
             rules.push(RuleConstants.RAISE_ACCESS);
             //after planning the joins, let the criteria be pushed back into place
             rules.push(RuleConstants.PUSH_SELECT_CRITERIA);

@@ -51,5 +51,6 @@ public final class RuleConstants {
     public static final OptimizerRule PLAN_SORTS = new RulePlanSorts();
     public static final OptimizerRule DECOMPOSE_JOIN = new RuleDecomposeJoin();
     public static final OptimizerRule SUBSTITUTE_EXPRESSIONS = new RuleSubstituteExpressions();
+    public static final OptimizerRule PLAN_OUTER_JOINS = new RulePlanOuterJoins();
     public static final OptimizerRule PUSH_LARGE_IN = new RulePushLargeIn();
 }
