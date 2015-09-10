@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -34,6 +36,7 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.FakeDataStore;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.LimitNode;
@@ -595,6 +598,15 @@ public class TestUnionPlanning {
     
     //TODO: enhancement for ordering over a partition
     
+    @Test public void testPreserveGroupingOverUnion() throws TeiidComponentException, TeiidProcessingException {
+    	String sql = "select y.col2 from ( select x.col2, min(x.col1) as col1 from ( select 1 as col2, col1 from "
+    			+ "(select 'a' as col1 UNION SELECT '' as col1) v1 union select 1 as col2, col1 from (select 'b' as col1 UNION SELECT '' as col1) v2) x group by x.col2 ) y";
+    	TransformationMetadata tm = RealMetadataFactory.example1Cached();
+    	ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, new DefaultCapabilitiesFinder(),//$NON-NLS-1$
+                new String[] {}, ComparisonMode.EXACT_COMMAND_STRING);
+
+    	TestProcessor.helpProcess(plan, new HardcodedDataManager(), new List[] {Arrays.asList(1)} );
+    }
     
 
 }
