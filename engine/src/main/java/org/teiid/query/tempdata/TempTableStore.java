@@ -369,8 +369,15 @@ public class TempTableStore {
 		return parentTempTableStore;
 	}
     
-    public boolean hasTempTable(String tempTableName) {
-    	return tempTables.containsKey(tempTableName) || foreignTempTables.containsKey(tempTableName);
+    public boolean hasTempTable(String tempTableName, boolean checkParent) {
+    	boolean local = tempTables.containsKey(tempTableName) || foreignTempTables.containsKey(tempTableName);
+    	if (local) {
+    		return true;
+    	}
+    	if (checkParent && parentTempTableStore != null) {
+    		return parentTempTableStore.hasTempTable(tempTableName, checkParent);
+    	}
+    	return false;
     }
     
     public void setProcessors(HashMap<String, TableProcessor> plans) {
@@ -619,12 +626,6 @@ public class TempTableStore {
         }
         return null;
 	}
-    
-    public Set<String> getAllTempTables() {
-        Set<String> result = new HashSet<String>(this.tempTables.keySet());
-        result.addAll(this.foreignTempTables.keySet());
-        return result;
-    }
     
     Map<String, TempTable> getTempTables() {
 		return tempTables;

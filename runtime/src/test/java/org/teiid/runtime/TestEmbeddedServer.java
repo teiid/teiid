@@ -1391,5 +1391,31 @@ public class TestEmbeddedServer {
 		mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
 		es.deployVDB("x", mmd);
 	}
+	
+	private void extractRowCount(String query, Statement s, int count)
+			throws SQLException {
+		s.execute(query);
+		ResultSet rs = s.getResultSet();
+		int i = 0;
+		while (rs.next()) {
+			i++;
+		}
+		assertEquals(count, i);
+	}
+	
+	@Test public void testTempVisibilityToExecuteImmediate() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create procedure p () as execute immediate 'select 1' as x integer into #temp;");
+		es.deployVDB("x", mmd);
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		s.execute("create local temporary table #temp (x integer)");
+		s.execute("exec p()");
+		extractRowCount("select * from #temp", s, 0);
+	}
 
 }
