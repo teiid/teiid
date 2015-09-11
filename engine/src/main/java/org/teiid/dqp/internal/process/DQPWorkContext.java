@@ -134,7 +134,7 @@ public class DQPWorkContext implements Serializable {
 		}
 	}
 
-	private SessionMetadata session = new SessionMetadata();
+	private volatile SessionMetadata session = new SessionMetadata();
     private String clientAddress;
     private String clientHostname;
     private SecurityHelper securityHelper;

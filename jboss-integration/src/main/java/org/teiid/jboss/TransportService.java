@@ -223,11 +223,13 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				Throwable exception = null;
 				try {
-					if (DQPWorkContext.getWorkContext().getSession().isClosed()) {
-						String sessionID = DQPWorkContext.getWorkContext().getSession().getSessionId();
+					DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+					if (workContext.getSession().isClosed() || workContext.getSessionId() == null) {
+						String sessionID = workContext.getSession().getSessionId();
 						if (sessionID == null) {
 							 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041));
 						}
+						workContext.setSession(new SessionMetadata());
 						throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
 					}
 					return super.invoke(proxy, method, args);
