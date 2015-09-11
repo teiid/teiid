@@ -325,7 +325,7 @@ public class TestODataIntegration extends BaseResourceTest {
         verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
         
         Assert.assertEquals("INSERT INTO nw.Customers (CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", insertCmd.getValue().toString());
-        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.ContactName, g0.ContactTitle, g0.Address, g0.City, g0.Region, g0.PostalCode, g0.Country, g0.Phone, g0.Fax FROM nw.Customers AS g0 WHERE g0.CustomerID = 1234 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.* FROM nw.Customers AS g0 WHERE g0.CustomerID = 1234 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(201, response.getStatus());
 	}	
 	
@@ -750,6 +750,32 @@ public class TestODataIntegration extends BaseResourceTest {
 			ConnectionImpl impl = lc.getConnection();
 			
 			assertEquals("true", impl.getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE));
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test
+	public void testUnselectable() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.addSourceMetadata("ddl", "create view x (a string primary key, b string options (selectable false)) as select 'a', 'hello';");
+			mmd.setModelType(Type.VIRTUAL);
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')"));
+	        ClientResponse<String> response = request.get(String.class);
+	        Assert.assertEquals(200, response.getStatus());
+	        assertFalse(response.getEntity().contains("hello"));
 		} finally {
 			es.stop();
 		}

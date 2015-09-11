@@ -245,7 +245,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testSelectQuery() throws Exception {
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20) ORDER BY g0.ShipperID",
+				"SELECT g0.* FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20) ORDER BY g0.ShipperID",
 				"nw.Shippers", "ShipperID ge 10 and ShipperID lt 20", null,
 				null, -1, null, null);
 		testSelect(
@@ -257,7 +257,7 @@ public class TestODataSQLStringVisitor {
 				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
 				"CompanyName desc, Phone", -1, null, null);
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 ORDER BY g0.ShipperID",
+				"SELECT g0.* FROM nw.Shippers AS g0 ORDER BY g0.ShipperID",
 				"nw.Shippers", null, null, null, 10, null, null);
 	}	
 	
@@ -279,7 +279,7 @@ public class TestODataSQLStringVisitor {
 	
 	@Test
 	public void testEntityKeyQuery() throws Exception {
-		testSelect("SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID", "nw.Shippers", null, null, null, -1, null, OEntityKey.create(12));
+		testSelect("SELECT g0.* FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID", "nw.Shippers", null, null, null, -1, null, OEntityKey.create(12));
 	}	
 	
 	@Test
@@ -299,7 +299,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testOrderByWithCriteria() throws Exception {
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 ORDER BY g0.ShipperID = 12 DESC",
+				"SELECT g0.* FROM nw.Shippers AS g0 ORDER BY g0.ShipperID = 12 DESC",
 				"nw.Shippers", null, null, "ShipperID eq 12 desc", -1, null,
 				null);
 	}

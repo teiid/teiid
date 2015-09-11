@@ -63,6 +63,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.odata.ODataTypeManager;
@@ -204,8 +205,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 		if (!countStar) {
 			// order by
-			List<OrderByExpression> orderBy = info.orderBy;
-			if (orderBy != null && !orderBy.isEmpty()) {
+			if (info.orderBy != null && !info.orderBy.isEmpty()) {
 				for (OrderByExpression expr:info.orderBy) {
 					visitNode(expr);
 				}
@@ -360,9 +360,11 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			}
 		} else {
 			for (Column c:table.getColumns()) {
-				select.addSymbol(new ElementSymbol(c.getName(), group));
 				selectColumns.put(c.getName(), Boolean.TRUE);
 			}
+			//use select x.* to avoid selecting unselectable columns
+			//and possibly to exclude columns that the user is not entitled to
+			select.addSymbol(new MultipleElementSymbol(group.getName()));
 		}
 		return select;
 	}
