@@ -1422,5 +1422,19 @@ public class TestEmbeddedServer {
 		assertEquals(count, i);
 	}
 	
+	@Test public void testTempVisibilityToExecuteImmediate() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create procedure p () as execute immediate 'select 1' as x integer into #temp;");
+		es.deployVDB("x", mmd);
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		s.execute("create local temporary table #temp (x integer)");
+		s.execute("exec p()");
+		extractRowCount("select * from #temp", s, 0);
+	}
 
 }

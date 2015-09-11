@@ -1987,6 +1987,29 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
+    @Test public void testOuterTempTableExecuteImmediateTarget() throws Exception {
+        String proc = "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
+        		"BEGIN " + //$NON-NLS-1$
+        		" create local temporary table t1 (e1 string);\n" + //$NON-NLS-1$
+        		" loop on (select 1 as a union all select 2) as c \n" +
+        		" begin \n" +
+        		" execute immediate 'select c.a' as e1 string into t1; \n" +
+        		" end \n" +
+                " select * from t1;\n" + //$NON-NLS-1$
+        		"END"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = createProcedureMetadata(proc);
+        String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
+        FakeDataManager dataMgr = exampleDataManager2(metadata);
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
+
+        List[] expected = new List[] {
+                Arrays.asList( "1" ),
+                Arrays.asList( "2" ),
+        };
+        helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+    
     @Test public void testUnambiguousVirtualProc() throws Exception {
         String userQuery = "EXEC MMSP6('1')"; //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();

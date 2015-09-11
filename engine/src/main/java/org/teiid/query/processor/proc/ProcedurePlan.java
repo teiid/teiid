@@ -828,7 +828,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
      */
     public TempTableStore getTempTableStore() {
     	if (this.programs.isEmpty()) {
-    		if (runInContext) {
+    		if (runInContext && params == null) {
     			return getContext().getTempTableStore();
     		}
     		return null;

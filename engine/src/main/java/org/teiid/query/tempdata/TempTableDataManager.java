@@ -248,7 +248,7 @@ public class TempTableDataManager implements ProcessorDataManager {
     	if (command instanceof Create) {
     		Create create = (Create)command;
     		String tempTableName = create.getTable().getName();
-    		if (contextStore.hasTempTable(tempTableName)) {
+    		if (contextStore.hasTempTable(tempTableName, true)) {
                  throw new QueryProcessingException(QueryPlugin.Event.TEIID30229, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30229, tempTableName));
             }
     		if (create.getTableMetadata() != null) {

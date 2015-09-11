@@ -214,7 +214,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
             if (dynamicCommand.getIntoGroup() != null) {
                 String groupName = dynamicCommand.getIntoGroup().getName();
-                if (!procEnv.getTempTableStore().getAllTempTables().contains(groupName)) {
+                if (!procEnv.getTempTableStore().hasTempTable(groupName, true)) {
                 	//create the temp table in the parent scope
                 	Create create = new Create();
                 	create.setTable(new GroupSymbol(groupName));
