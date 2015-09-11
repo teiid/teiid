@@ -302,7 +302,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
      */
     protected void checkStatement() throws TeiidSQLException {
         //Check to see the connection is closed and proceed if it is not
-        if ( isClosed ) {
+    	driverConnection.checkConnection();
+        if ( isClosed) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Stmt_closed")); //$NON-NLS-1$
         }
     }

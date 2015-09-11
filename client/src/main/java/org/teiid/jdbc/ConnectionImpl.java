@@ -713,7 +713,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * throws an exception if it is closed. </p>
      * @throws SQLException if the connection object is closed.
      */
-    void checkConnection() throws SQLException{
+    void checkConnection() throws TeiidSQLException{
         //Check to see the connection is closed and proceed if it is not
        if (closed) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMConnection.Cant_use_closed_connection")); //$NON-NLS-1$

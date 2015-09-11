@@ -45,6 +45,7 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
@@ -225,6 +226,11 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 				try {
 					DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 					if (workContext.getSession().isClosed() || workContext.getSessionId() == null) {
+						if (method.getName().equals("closeRequest")) { //$NON-NLS-1$
+							//the client can issue close request effectively concurrently with close session
+							//there's no need for this to raise an exception
+							return ResultsFuture.NULL_FUTURE;
+						}
 						String sessionID = workContext.getSession().getSessionId();
 						if (sessionID == null) {
 							 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041));
