@@ -26,9 +26,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.odata4j.core.*;
+import org.odata4j.core.OEntities;
+import org.odata4j.core.OEntity;
+import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OLink;
+import org.odata4j.core.OLinks;
+import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmNavigationProperty;
 import org.odata4j.edm.EdmProperty;
@@ -44,11 +50,11 @@ class EntityList extends ArrayList<OEntity>{
 	    this.invalidCharacterReplacement = invalidCharacterReplacement;
 	}
 	
-	void addEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
+	void addEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, LinkedHashMap<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
 		this.add(getEntity(rs, propertyTypes, columns, entitySet));
 	}
 
-	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
+	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, LinkedHashMap<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
 		HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
 		for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 			Object value = rs.getObject(i+1);
@@ -70,7 +76,7 @@ class EntityList extends ArrayList<OEntity>{
 		// filter those columns out.
 		ArrayList<OProperty<?>> projected = new ArrayList<OProperty<?>>();
 		for (Map.Entry<String,Boolean> entry:columns.entrySet()) {
-			if (entry.getValue() != null && entry.getValue()) {
+			if (entry.getValue() != null && entry.getValue() && properties.containsKey(entry.getKey())) {
 				projected.add(properties.get(entry.getKey()));
 			}
 		}
