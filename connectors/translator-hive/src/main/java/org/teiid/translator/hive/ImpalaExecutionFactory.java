@@ -23,6 +23,7 @@ package org.teiid.translator.hive;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,11 +32,13 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.Version;
 
 @Translator(name="impala", description="A translator for Coludera's Impala based database on HDFS")
 public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     
     public static String IMPALA = "impala"; //$NON-NLS-1$
+    public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
     
     @Override
     public void start() throws TranslatorException {
@@ -52,7 +55,6 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
-        
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
@@ -103,6 +105,15 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "regexp_replace", STRING, STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "group_concat", STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void initCapabilities(Connection connection)
+    		throws TranslatorException {
+    	super.initCapabilities(connection);
+    	if (getVersion().compareTo(TWO_0) >= 0) {
+    		convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+    	}
     }
     
     @Override
