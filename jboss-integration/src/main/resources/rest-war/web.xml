@@ -8,6 +8,11 @@
         <param-value>org.teiid.jboss.rest.TeiidRestApplication</param-value>
     </context-param>
     
+    <context-param>
+        <param-name>resteasy.providers</param-name>
+        <param-value>org.teiid.jboss.rest.TeiidRSExceptionHandler</param-value>
+	</context-param>
+    
     <listener>
         <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>
     </listener>
