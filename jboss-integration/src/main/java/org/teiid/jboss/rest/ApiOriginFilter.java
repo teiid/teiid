@@ -41,9 +41,9 @@ public class ApiOriginFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
         HttpServletResponse localHttpServletResponse = (HttpServletResponse)response;
-        localHttpServletResponse.addHeader("Access-Control-Allow-Origin", "*");
-        localHttpServletResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
-        localHttpServletResponse.addHeader("Access-Control-Allow-Headers", "Origin, X-Atmosphere-tracking-id, X-Atmosphere-Framework, X-Cache-Date, Content-Type, X-Atmosphere-Transport, *");
+        localHttpServletResponse.addHeader("Access-Control-Allow-Origin", "*"); //$NON-NLS-1$ //$NON-NLS-2$
+        localHttpServletResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT"); //$NON-NLS-1$ //$NON-NLS-2$
+        localHttpServletResponse.addHeader("Access-Control-Allow-Headers", "Origin, X-Atmosphere-tracking-id, X-Atmosphere-Framework, X-Cache-Date, Content-Type, X-Atmosphere-Transport, *"); //$NON-NLS-1$ //$NON-NLS-2$
         chain.doFilter(request, response);
     }
 

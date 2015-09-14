@@ -35,24 +35,24 @@ public class TeiidRSExceptionHandler implements ExceptionMapper<Exception> {
 	@Override
 	public Response toResponse(Exception e) {
 		
-		String code = "ERROR";
+	    String code = "ERROR";
 //		if(e instanceof NotFoundException){
 //			code = "404";
 //		} else if(e instanceof InternalServerErrorException){
 //			code = "500";
 //		}
-		String message = e.getMessage();
+	    String message = e.getMessage();
 		
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		e.printStackTrace(pw);
-		String details = sw.toString();
+	    StringWriter sw = new StringWriter();
+	    PrintWriter pw = new PrintWriter(sw);
+	    e.printStackTrace(pw);
+	    String details = sw.toString();
 		
-		StringBuilder response = new StringBuilder("<error>");
-        response.append("<code>" + code + "</code>");
-        response.append("<message>" + message + "</message>");
-        response.append("<details>" + details + "</details>");
-        response.append("</error>");
+	    StringBuilder response = new StringBuilder("<error>"); //$NON-NLS-1$ 
+        response.append("<code>" + code + "</code>"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.append("<message>" + message + "</message>"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.append("<details>" + details + "</details>"); //$NON-NLS-1$ //$NON-NLS-2$
+        response.append("</error>"); //$NON-NLS-1$ 
         return Response.serverError().entity(response.toString()).type(MediaType.APPLICATION_XML).build();
 	}
 
