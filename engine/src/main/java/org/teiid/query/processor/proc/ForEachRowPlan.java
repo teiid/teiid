@@ -23,7 +23,6 @@
 package org.teiid.query.processor.proc;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -134,13 +133,13 @@ public class ForEachRowPlan extends ProcessorPlan {
 					rowProcedure.reset();
 					CommandContext context = getContext().clone();
 					this.rowProcessor = new QueryProcessor(rowProcedure, context, this.bufferMgr, this.dataMgr);
-					Evaluator eval = new Evaluator(Collections.emptyMap(), dataMgr, context);
+					Evaluator eval = new Evaluator(lookupMap, dataMgr, context);
 					for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
 						Integer index = this.lookupMap.get(entry.getValue());
 						if (index != null) {
 							rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), this.currentTuple.get(index));
 						} else {
-							rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
+							rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), this.currentTuple));
 						}
 					}
 				}

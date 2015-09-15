@@ -36,6 +36,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.resolver.TestResolver;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.TestUpdateValidator;
 
@@ -247,5 +248,22 @@ public class TestTriggerActions {
     	helpProcess(plan, context, dm, expected);
     	assertEquals("UPDATE pm1.g1 SET e2 = 1 WHERE e2 = 2", dm.getQueries().get(0));
 	}
+	
+	@Test public void testUpdateSetExpression() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string, e2 integer) options (updatable true);"
+				+ " create view GX options (updatable true) as select '1' as x, 2 as y;"
+				+ " create trigger on GX instead of update as for each row begin update g1 set e1 = new.x, e2 = new.y where e2 = old.y; END", "x", "y");
+		
+		String sql = "update gx set x = x || 'a' where y = 2";
+		
+		HardcodedDataManager dm = new HardcodedDataManager();
+		dm.addData("UPDATE g1 SET e1 = '1a', e2 = 2 WHERE e2 = 2", new List[] {Arrays.asList(1)});
+		CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        List<?>[] expected = new List[] {Arrays.asList(1)};
+    	helpProcess(plan, context, dm, expected);
+	}
+
     
 }
