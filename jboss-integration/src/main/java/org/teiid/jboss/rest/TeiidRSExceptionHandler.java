@@ -29,6 +29,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.jboss.resteasy.spi.InternalServerErrorException;
+import org.jboss.resteasy.spi.NotFoundException;
+import org.jboss.resteasy.spi.UnauthorizedException;
+
 @Provider
 public class TeiidRSExceptionHandler implements ExceptionMapper<Exception> {
 
@@ -36,11 +40,14 @@ public class TeiidRSExceptionHandler implements ExceptionMapper<Exception> {
 	public Response toResponse(Exception e) {
 		
 	    String code = "ERROR";
-//		if(e instanceof NotFoundException){
-//			code = "404";
-//		} else if(e instanceof InternalServerErrorException){
-//			code = "500";
-//		}
+		if(e instanceof UnauthorizedException){
+			code = "401";
+		} else if(e instanceof NotFoundException){
+			code = "404";
+		} else if(e instanceof InternalServerErrorException) {
+			code = "500";
+		}
+		
 	    String message = e.getMessage();
 		
 	    StringWriter sw = new StringWriter();
