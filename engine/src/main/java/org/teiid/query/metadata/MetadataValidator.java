@@ -312,11 +312,11 @@ public class MetadataValidator {
     			GroupSymbol symbol = new GroupSymbol(t.getFullName());
     			ResolverUtil.resolveGroup(symbol, metadata);    			
     			String selectTransformation = t.getSelectTransformation();
-				if (t.isVirtual() && (t.getColumns() == null || t.getColumns().isEmpty())) {
+				if (t.isVirtual()) {
     				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(selectTransformation);
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
-    				if(!resolverReport.hasItems()) {
+    				if (!resolverReport.hasItems() && (t.getColumns() == null || t.getColumns().isEmpty())) {
     					List<Expression> symbols = command.getProjectedSymbols();
     					for (Expression column:symbols) {
     						try {
@@ -325,16 +325,18 @@ public class MetadataValidator {
 								log(report, model, e.getMessage());
 							}
     					}
-    				}
-    				determineDependencies(t, command);
-    				if (t.getInsertPlan() != null && t.isInsertPlanEnabled()) {
-	    				validateUpdatePlan(model, report, metadata, t, t.getInsertPlan());
-    				}
-    				if (t.getUpdatePlan() != null && t.isUpdatePlanEnabled()) {
-    					validateUpdatePlan(model, report, metadata, t, t.getUpdatePlan());
-    				}
-    				if (t.getDeletePlan() != null && t.isDeletePlanEnabled()) {
-    					validateUpdatePlan(model, report, metadata, t, t.getDeletePlan());
+					}
+    				if (t.getColumns() != null && !t.getColumns().isEmpty()) { 
+	    				determineDependencies(t, command);
+	    				if (t.getInsertPlan() != null && t.isInsertPlanEnabled()) {
+		    				validateUpdatePlan(model, report, metadata, t, t.getInsertPlan(), Command.TYPE_INSERT);
+	    				}
+	    				if (t.getUpdatePlan() != null && t.isUpdatePlanEnabled()) {
+	    					validateUpdatePlan(model, report, metadata, t, t.getUpdatePlan(), Command.TYPE_UPDATE);
+	    				}
+	    				if (t.getDeletePlan() != null && t.isDeletePlanEnabled()) {
+	    					validateUpdatePlan(model, report, metadata, t, t.getDeletePlan(), Command.TYPE_DELETE);
+	    				}
     				}
     			}
     			
@@ -415,10 +417,12 @@ public class MetadataValidator {
 	private void validateUpdatePlan(ModelMetaData model,
 			ValidatorReport report,
 			QueryMetadataInterface metadata, 
-			Table t, String plan) throws QueryParserException, QueryResolverException,
+			Table t, String plan, int type) throws QueryParserException, QueryResolverException,
 			TeiidComponentException {
-		QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(plan);
-		QueryResolver.resolveCommand(command, metadata);
+		Command command = QueryParser.getQueryParser().parseProcedure(plan, true);
+		
+		QueryResolver.resolveCommand(command, new GroupSymbol(t.getFullName()), type, metadata, false);
+		
 		//determineDependencies(t, command); -- these should be tracked against triggers
 		ValidatorReport resolverReport = Validator.validate(command, metadata);
 		processReport(model, t, report, resolverReport);

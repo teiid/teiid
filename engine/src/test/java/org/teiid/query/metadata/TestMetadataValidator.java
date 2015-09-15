@@ -134,6 +134,17 @@ public class TestMetadataValidator {
 		assertTrue(printError(report), report.hasItems());			
 	}
 	
+	@Test
+	public void testCreateTrigger() throws Exception {
+		String ddl = "create view g1 options (updatable true) AS select * from pm1.g1; " +
+				"create trigger on g1 INSTEAD OF UPDATE AS FOR EACH ROW BEGIN ATOMIC END; ";
+		buildModel("pm1", true, this.vdb, this.store, "create foreign table g1(e1 integer, e2 varchar(12));");
+		buildModel("vm1", false, this.vdb, this.store, ddl);
+		buildTransformationMetadata();
+		ValidatorReport report = new MetadataValidator().validate(vdb, store);
+		assertFalse(printError(report), report.hasItems());			
+	}
+	
 	@Test public void testProcWithMultipleReturn() throws Exception {
 		String ddl = "create foreign procedure x (out param1 string result, out param2 string result); ";
 		buildModel("pm1", true, this.vdb, this.store,ddl);

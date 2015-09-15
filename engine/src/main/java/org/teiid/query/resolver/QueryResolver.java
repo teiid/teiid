@@ -133,7 +133,6 @@ public class QueryResolver {
     	ResolverUtil.resolveGroup(container, metadata);
     	switch (type) {
 	    case Command.TYPE_QUERY:
-	    	ResolverUtil.resolveGroup(container, metadata);
 	        QueryNode queryNode = metadata.getVirtualPlan(container.getMetadataID());
             
 	        return resolveWithBindingMetadata(currentCommand, metadata, queryNode, false);
