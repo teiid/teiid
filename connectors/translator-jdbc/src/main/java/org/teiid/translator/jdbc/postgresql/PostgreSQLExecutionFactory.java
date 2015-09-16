@@ -176,6 +176,23 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 				return null;
 			}
 		});
+        registerFunctionModifier(SourceSystemFunctions.ROUND, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				if (function.getParameters().size() > 1) {
+					Expression ex = function.getParameters().get(0);
+					if (ex.getType() == TypeFacility.RUNTIME_TYPES.DOUBLE || ex.getType() == TypeFacility.RUNTIME_TYPES.FLOAT) {
+						if (function.getParameters().get(1) instanceof Literal && Integer.valueOf(0).equals(((Literal)function.getParameters().get(1)).getValue())) {
+							function.getParameters().remove(1);
+						} else {
+							function.getParameters().set(0, new Function(SourceSystemFunctions.CONVERT, Arrays.asList(ex, new Literal("bigdecimal", TypeFacility.RUNTIME_TYPES.STRING)), TypeFacility.RUNTIME_TYPES.BIG_DECIMAL)); //$NON-NLS-1$
+						}
+					}
+				}
+				return null;
+			}
+		});
                 
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();

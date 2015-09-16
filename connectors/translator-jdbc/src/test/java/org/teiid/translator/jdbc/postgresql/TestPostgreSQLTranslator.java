@@ -611,4 +611,13 @@ public class TestPostgreSQLTranslator {
             output);
     }
     
+    @Test public void testRound() throws Exception {
+        String input = "SELECT round(bigdecimalvalue, 2), round(doublenum, 3), round(doublenum, 0) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT round(SmallA.BigDecimalValue, 2), round(cast(SmallA.DoubleNum AS decimal), 3), round(SmallA.DoubleNum) FROM SmallA";  //$NON-NLS-1$
+
+        helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output);
+    }
+    
 }
