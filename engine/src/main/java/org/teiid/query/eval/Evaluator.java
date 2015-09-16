@@ -73,6 +73,7 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.JSONFunctionMethods.JSONBuilder;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.XMLTableNode;
 import org.teiid.query.sql.LanguageObject;
@@ -248,6 +249,56 @@ public class Evaluator {
         	return (Boolean)evaluate(((ExpressionCriteria)criteria).getExpression(), tuple);
         } else if (criteria instanceof XMLExists) {
         	return (Boolean) evaluateXMLQuery(tuple, ((XMLExists)criteria).getXmlQuery(), true);
+        } else if (criteria instanceof IsDistinctCriteria) {
+        	IsDistinctCriteria idc = (IsDistinctCriteria)criteria;
+        	TempMetadataID left = (TempMetadataID)idc.getLeftRowValue().getMetadataID();
+        	TempMetadataID right = (TempMetadataID)idc.getRightRowValue().getMetadataID();
+        	VariableContext vc = this.context.getVariableContext();
+        	List<TempMetadataID> cols = left.getElements();
+        	List<TempMetadataID> colsOther = right.getElements();
+        	if (cols.size() != colsOther.size()) {
+        		return !idc.isNegated();
+        	}
+        	for (int i = 0; i < cols.size(); i++) {
+        		Object l = vc.getValue(new ElementSymbol(cols.get(i).getName(), idc.getLeftRowValue()));
+        		Object r = vc.getValue(new ElementSymbol(colsOther.get(i).getName(), idc.getRightRowValue()));
+        		if (l == null) {
+        			if (r != null) {
+            			if (idc.isNegated()) {
+        					return false;
+        				} 
+    					return true;
+        			}
+        		} else if (r == null) {
+        			if (idc.isNegated()) {
+    					return false;
+    				} 
+					return true;
+        		}
+        		try {
+        			Boolean b = compare(CompareCriteria.EQ, l, r);
+            		if (b == null) {
+            			continue; //shouldn't happen
+            		}
+            		if (!b) {
+            			if (idc.isNegated()) {
+        					return false;
+        				} 
+    					return true;
+            		}
+        		} catch (Exception e) {
+        			//we'll consider this a difference
+        			//more than likely they are different types
+        			if (idc.isNegated()) {
+    					return false;
+    				} 
+					return true;
+        		}
+        	}
+        	if (idc.isNegated()) {
+				return true;
+			} 
+			return false;
 		} else {
              throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30311, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30311, criteria));
 		}
@@ -319,7 +370,7 @@ public class Evaluator {
 		}
 
 		// Compare two non-null values using specified operator
-		return compare(criteria, leftValue, rightValue);
+		return compare(criteria.getOperator(), leftValue, rightValue);
 	}
 
 	private Boolean evaluate(MatchCriteria criteria, List<?> tuple)
@@ -536,7 +587,7 @@ public class Evaluator {
             }
 
             if(value != null) {
-            	result = compare(criteria, leftValue, value);
+            	result = compare(criteria.getOperator(), leftValue, value);
 
                 switch(criteria.getPredicateQuantifier()) {
                     case SubqueryCompareCriteria.ALL:
@@ -563,7 +614,7 @@ public class Evaluator {
         return result;
     }
 
-	public static Boolean compare(AbstractCompareCriteria criteria, Object leftValue,
+	public static Boolean compare(int operator, Object leftValue,
 			Object value) throws AssertionError {
 		int compare = 0;
 		//TODO: we follow oracle style array comparison
@@ -582,7 +633,7 @@ public class Evaluator {
 		}
 		// Compare two non-null values using specified operator
 		Boolean result = null;
-		switch(criteria.getOperator()) {
+		switch(operator) {
 		    case CompareCriteria.EQ:
 		        result = Boolean.valueOf(compare == 0);
 		        break;

@@ -1198,11 +1198,24 @@ IfStatement ifStatement(ParseInfo info) :
     Criteria criteria = null;
     Statement ifStatement = null;
     Statement elseStatement = null;
+    String groupID = null;
+    String groupID2 = null;
+    boolean not = false;
 }
 {
     <IF>
-    <LPAREN>  
-    criteria = criteria(info)
+    <LPAREN>
+    (LOOKAHEAD(4) (groupID = id(null) <IS> [<NOT> {not = true;}] <DISTINCT> <FROM> groupID2 = id(null)
+      {
+        IsDistinctCriteria idc = new IsDistinctCriteria();
+        idc.setLeftRowValue(new GroupSymbol(groupID));
+        idc.setRightRowValue(new GroupSymbol(groupID2));
+        idc.setNegated(not);
+        criteria = idc;
+      }
+     )
+     | criteria = criteria(info)
+    )
     <RPAREN>
     ifStatement = statement(info)
     //else blocks will be associated with the closest if block

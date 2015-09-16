@@ -606,6 +606,20 @@ public class TestDDLParser {
 		assertEquals("FOR EACH ROW\nBEGIN ATOMIC\nINSERT INTO g1 (e1, e2) VALUES (1, 'trig');\nEND", s.getTable("G1").getInsertPlan());
 	}
 	
+	@Test
+	public void testInsteadOfTriggerIsDistinct() throws Exception {
+		String ddl = 	"CREATE VIEW G1( e1 integer, e2 varchar) AS select * from foo;" +
+						"CREATE TRIGGER ON G1 INSTEAD OF UPDATE AS " +
+						"FOR EACH ROW \n" +
+						"BEGIN ATOMIC \n" +
+						"if (\"new\" is not distinct from \"old\") raise sqlexception 'error';\n" +
+						"END;";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		
+		assertEquals("FOR EACH ROW\nBEGIN ATOMIC\nIF(\"new\" IS NOT DISTINCT FROM \"old\")\nBEGIN\nRAISE SQLEXCEPTION 'error';\nEND\nEND", s.getTable("G1").getUpdatePlan());
+	}
+	
 	@Test(expected=MetadataException.class)
 	public void testInsteadOfTriggerNoView() throws Exception {
 		String ddl = 	"CREATE TRIGGER ON G1 INSTEAD OF INSERT AS " +

@@ -1113,7 +1113,7 @@ public class QueryRewriter {
             	} else {
             		CompareCriteria cc = (CompareCriteria)crit;
             		for (Iterator<Constant> exprIter = sc.getValues().iterator(); exprIter.hasNext();) {
-						if (!Evaluator.compare(cc, exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+						if (!Evaluator.compare(cc.getOperator(), exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
 							exprIter.remove();
 						}
 					}
@@ -1142,7 +1142,7 @@ public class QueryRewriter {
             		SetCriteria sc = (SetCriteria)crit;
             		boolean modified = false;
             		for (Iterator<Constant> exprIter = sc.getValues().iterator(); exprIter.hasNext();) {
-						if (!Evaluator.compare(cc, exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+						if (!Evaluator.compare(cc.getOperator(), exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
 							if (!modified) {
 								modified = true;
 								newCrits.remove(sc);
@@ -1172,13 +1172,13 @@ public class QueryRewriter {
             		if (cc1.getOperator() == CompareCriteria.NE) {
                 		exprMap.put(cc.getLeftExpression(), cc);
             		} else if (cc1.getOperator() == CompareCriteria.EQ) {
-            			if (!Evaluator.compare(cc, ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+            			if (!Evaluator.compare(cc.getOperator(), ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
 							return FALSE_CRITERIA;
 						}
             			return null;
             		} 
             		if (cc.getOperator() == CompareCriteria.EQ) {
-            			if (!Evaluator.compare(cc1, ((Constant)cc.getRightExpression()).getValue(), ((Constant)cc1.getRightExpression()).getValue())) {
+            			if (!Evaluator.compare(cc1.getOperator(), ((Constant)cc.getRightExpression()).getValue(), ((Constant)cc1.getRightExpression()).getValue())) {
             				return FALSE_CRITERIA;
             			}
             			exprMap.put(cc.getLeftExpression(), cc);

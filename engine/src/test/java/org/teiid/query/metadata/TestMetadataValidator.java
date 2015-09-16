@@ -145,6 +145,17 @@ public class TestMetadataValidator {
 		assertFalse(printError(report), report.hasItems());			
 	}
 	
+	@Test
+	public void testCreateTriggerFails() throws Exception {
+		String ddl = "create view g1 options (updatable true) AS select * from pm1.g1; " +
+				"create trigger on g1 instead of update as for each row begin if (\"new\" is distinct from pm1.g1) select 1; END; ";
+		buildModel("pm1", true, this.vdb, this.store, "create foreign table g1(e1 integer, e2 varchar(12));");
+		buildModel("vm1", false, this.vdb, this.store, ddl);
+		buildTransformationMetadata();
+		ValidatorReport report = new MetadataValidator().validate(vdb, store);
+		assertTrue(printError(report), report.hasItems());			
+	}
+	
 	@Test public void testProcWithMultipleReturn() throws Exception {
 		String ddl = "create foreign procedure x (out param1 string result, out param2 string result); ";
 		buildModel("pm1", true, this.vdb, this.store,ddl);

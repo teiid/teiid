@@ -292,6 +292,18 @@ public class ResolverVisitor extends LanguageVisitor {
         }
     }
     
+    @Override
+    public void visit(IsDistinctCriteria isDistinctCriteria) {
+    	try {
+	    	ResolverUtil.resolveGroup(isDistinctCriteria.getLeftRowValue(), metadata);
+	    	ResolverUtil.resolveGroup(isDistinctCriteria.getRightRowValue(), metadata);
+    	} catch (QueryResolverException e) {
+            handleException(e);
+    	} catch (TeiidComponentException e) {
+            handleException(e);
+		}
+    }
+    
     public void visit(Function obj) {
         try {
             resolveFunction(obj, this.metadata.getFunctionLibrary());

@@ -2516,6 +2516,23 @@ public class SQLStringVisitor extends LanguageVisitor {
     		append(Tokens.RPAREN);
     	}
     }
+    
+    @Override
+    public void visit(IsDistinctCriteria isDistinctCriteria) {
+    	append(isDistinctCriteria.getLeftRowValue());
+    	append(SPACE);
+    	append(IS);
+    	append(SPACE);
+    	if (isDistinctCriteria.isNegated()) {
+    		append(NOT);
+    		append(SPACE);
+    	}
+    	append(DISTINCT);
+    	append(SPACE);
+    	append(FROM);
+    	append(SPACE);
+    	append(isDistinctCriteria.getRightRowValue());
+    }
 
     public static String escapeSinglePart( String part ) {
         if (isReservedWord(part)) {

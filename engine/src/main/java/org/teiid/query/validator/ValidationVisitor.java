@@ -58,6 +58,7 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -897,6 +898,23 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
 
+    @Override
+    public void visit(IsDistinctCriteria isDistinctCriteria) {
+    	try {
+			QueryMetadataInterface metadata = getMetadata();
+			if (!metadata.isScalarGroup(isDistinctCriteria.getLeftRowValue().getMetadataID())) {
+				handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31171, isDistinctCriteria.getLeftRowValue()), isDistinctCriteria.getLeftRowValue()); 
+			}
+			if (!metadata.isScalarGroup(isDistinctCriteria.getRightRowValue().getMetadataID())) {
+				handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31171, isDistinctCriteria.getRightRowValue()), isDistinctCriteria.getRightRowValue()); 
+			}
+		} catch (QueryMetadataException e) {
+			handleException(e);
+		} catch (TeiidComponentException e) {
+			handleException(e);
+		}
+    }
+    
     /** 
      * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.MatchCriteria)
      * @since 4.3
