@@ -23,11 +23,17 @@ package org.teiid.jboss.rest;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.resteasy.spi.InternalServerErrorException;
 import org.jboss.resteasy.spi.NotFoundException;
@@ -35,32 +41,88 @@ import org.jboss.resteasy.spi.UnauthorizedException;
 
 @Provider
 public class TeiidRSExceptionHandler implements ExceptionMapper<Exception> {
+	
+	@Context
+	protected HttpHeaders httpHeaders;
 
 	@Override
 	public Response toResponse(Exception e) {
 		
-	    String code = "ERROR";
-		if(e instanceof UnauthorizedException){
-			code = "401";
-		} else if(e instanceof NotFoundException){
-			code = "404";
-		} else if(e instanceof InternalServerErrorException) {
-			code = "500";
-		}
+		ResponseError error = new ResponseError();
 		
-	    String message = e.getMessage();
+	    String code = "ERROR"; //$NON-NLS-1$ 
+	    if(e instanceof UnauthorizedException){
+			code = "401"; //$NON-NLS-1$ 
+		} else if(e instanceof NotFoundException){
+			code = "404"; //$NON-NLS-1$ 
+		} else if(e instanceof InternalServerErrorException) {
+			code = "500"; //$NON-NLS-1$ 
+		}
+		error.setCode(code);
+		
+		error.setMessage(e.getMessage());
 		
 	    StringWriter sw = new StringWriter();
 	    PrintWriter pw = new PrintWriter(sw);
 	    e.printStackTrace(pw);
-	    String details = sw.toString();
+	    error.setDetails(sw.toString());
+        
+	    String type = MediaType.APPLICATION_XML;
+        List<MediaType> acceptTypes = httpHeaders.getAcceptableMediaTypes();
+        if(acceptTypes != null){
+        	for (MediaType acceptType : acceptTypes){
+        		if (isApplicationJsonWithParametersIgnored(acceptType)) {
+        			type = MediaType.APPLICATION_JSON;
+        			break;
+        		}
+        	}
+        }
+        
+        return Response.serverError().entity(error).type(type).build();
+	}
+	
+	private boolean isApplicationJsonWithParametersIgnored(MediaType acceptType) {
+	    return acceptType.getType().equals(MediaType.APPLICATION_JSON_TYPE.getType()) &&
+	        acceptType.getSubtype().equals(MediaType.APPLICATION_JSON_TYPE.getSubtype());
+	 }
+	
+	@XmlRootElement(name = "error") //$NON-NLS-1$ 
+	@XmlType(propOrder = { "code", "message", "details"}) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+	public static class ResponseError {
+
+		private String code;
 		
-	    StringBuilder response = new StringBuilder("<error>"); //$NON-NLS-1$ 
-        response.append("<code>" + code + "</code>"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.append("<message>" + message + "</message>"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.append("<details>" + details + "</details>"); //$NON-NLS-1$ //$NON-NLS-2$
-        response.append("</error>"); //$NON-NLS-1$ 
-        return Response.serverError().entity(response.toString()).type(MediaType.APPLICATION_XML).build();
+		private String message;
+		
+		private String details;
+
+		@XmlElement(name = "code") //$NON-NLS-1$ 
+		public String getCode() {
+			return code;
+		}
+
+		public void setCode(String code) {
+			this.code = code;
+		}
+
+		@XmlElement(name = "message") //$NON-NLS-1$ 
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+
+		@XmlElement(name = "details") //$NON-NLS-1$ 
+		public String getDetails() {
+			return details;
+		}
+
+		public void setDetails(String details) {
+			this.details = details;
+		}
+		
 	}
 
 }
