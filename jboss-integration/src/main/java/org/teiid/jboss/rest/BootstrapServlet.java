@@ -54,11 +54,11 @@ public class BootstrapServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)throws ServletException, IOException {
         String str1 = req.getContextPath();
-        String str2 = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() + str1 + "/";
-        String str3 = str1 + "/api.html";
-        String str4 = "swagger.json";
-        String str5 = "/url=" + str2 + str4;
-        String str6 = str3 + "?" + str5;
+        String str2 = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() + str1 + "/"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        String str3 = str1 + "/api.html"; //$NON-NLS-1$
+        String str4 = "swagger.json"; //$NON-NLS-1$
+        String str5 = "/url=" + str2 + str4; //$NON-NLS-1$
+        String str6 = str3 + "?" + str5; //$NON-NLS-1$
         resp.sendRedirect(str6);
     }
 
