@@ -11,7 +11,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>8.12.0.Beta3-SNAPSHOT</version>
+    <version>8.12.0.Beta3</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -94,7 +94,7 @@
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
         <developerConnection>scm:git:git@github.com:teiid/teiid.git</developerConnection>
         <url>http://github.com/teiid/teiid</url>
-	<tag>HEAD</tag>
+	<tag>teiid-parent-8.12.0.Beta3</tag>
   </scm>
 	<licenses>
 		<license>
@@ -206,6 +206,7 @@
 		            <configuration>
 		              <maxmemory>512m</maxmemory>
 		              <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames>
+		              <failOnError>false</failOnError>
 		            </configuration>
 		            <executions>
 		              <execution>
