@@ -309,10 +309,11 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		    				removeBuffer = false;
 		    				this.currentTuples += tb.getRowCount();
 		    				while (this.currentTuples > maxTuples && !cache.isEmpty()) {
-		    					Iterator<TupleBuffer> i = this.cache.values().iterator();
-		    					TupleBuffer buffer = i.next();
+		    					Iterator<Map.Entry<List<?>, TupleBuffer>> i = this.cache.entrySet().iterator();
+		    					Map.Entry<List<?>, TupleBuffer> entry = i.next();
+		    					TupleBuffer buffer = entry.getValue();
 		    					if (buffer.getRowCount() <= 2) {
-		    						this.smallCache.put(cacheKey, buffer);
+		    						this.smallCache.put(entry.getKey(), buffer);
 		    					} else {
 		    						buffer.remove();
 		    					}
