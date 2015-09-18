@@ -1436,5 +1436,28 @@ public class TestEmbeddedServer {
 		s.execute("exec p()");
 		extractRowCount("select * from #temp", s, 0);
 	}
+	
+	@Test public void testSubqueryCache() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("proc.sql")));
+		es.deployVDB("x", mmd);
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		String[] statements = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("data.sql")).split(";");
+		for (String statement:statements) {
+			s.execute(statement);
+		}
+		s.execute("set autoCommitTxn off");
+		s.execute("SELECT \"citmp.KoordX\" ,\"citmp.KoordY\" ,( SELECT \"store.insideFence\" FROM ( EXEC point_inside_store ( CAST ( \"citmp.KoordX\" AS float ) ,CAST ( \"citmp.KoordY\" AS float ) ) ) as \"store\" ) as \"insideStore\" ,( SELECT \"firstsection.insideFence\" FROM ( EXEC point_inside_store ( CAST ( \"citmp.KoordX\" AS float ) ,CAST ( \"citmp.KoordY\" AS float ) ) ) as \"firstsection\" ) as \"insideFirstsection\" FROM sample_coords as \"citmp\" ORDER BY insideStore ASC ,insideFirstsection DESC");
+		ResultSet rs = s.getResultSet();
+		while (rs.next()) {
+			//the last two columns should be identical
+			assertEquals(rs.getInt(3), rs.getInt(4));
+		}
+	}
 
 }
