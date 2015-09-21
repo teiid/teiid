@@ -917,7 +917,12 @@
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-jaxrs</artifactId>
                 <version>${version.org.jboss.resteasy}</version>
-            </dependency>            
+            </dependency>  
+			<dependency>
+			    <groupId>org.apache.httpcomponents</groupId>
+			    <artifactId>httpclient</artifactId>
+			    <version>${version.org.apache.httpcomponents.httpclient}</version>
+			</dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>tjws</artifactId>
@@ -1428,7 +1433,17 @@
               <groupId>org.apache.olingo</groupId>
               <artifactId>odata-server-core-ext</artifactId>
               <version>${version.org.apache.olingo}</version>  
-            </dependency>              
+            </dependency>
+            <dependency>
+              <groupId>org.apache.olingo</groupId>
+              <artifactId>odata-client-api</artifactId>
+              <version>${version.org.apache.olingo}</version>
+            </dependency>  
+            <dependency>
+              <groupId>org.apache.olingo</groupId>
+              <artifactId>odata-client-core</artifactId>
+              <version>${version.org.apache.olingo}</version>  
+            </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-server</artifactId>

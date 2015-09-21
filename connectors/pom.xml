@@ -112,6 +112,7 @@
     <module>translator-jpa</module>
     <module>translator-object</module>
     <module>translator-odata</module>
+    <module>translator-odata4</module>
     <module>translator-infinispan-dsl</module>
 
     <module>connector-file</module>

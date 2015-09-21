@@ -1,0 +1,143 @@
+{
+   "@odata.nextLink":"http://services.odata.org/V4/(S(z31kgmvh2n12nqn0l40cio5i))/TripPinServiceRW/People?%24skiptoken=8",
+   "value":[
+      {
+         "UserName":"russellwhyte",
+         "FirstName":"Russell",
+         "LastName":"Whyte",
+         "Emails":[
+            "Russell@example.com",
+            "Russell@contoso.com"
+         ],
+         "AddressInfo":[
+            {
+               "Address":"187 Suffolk Ln.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Boise",
+                  "Region":"ID"
+               }
+            }
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      },
+      {
+         "UserName":"scottketchum",
+         "FirstName":"Scott",
+         "LastName":"Ketchum",
+         "Emails":[
+            "Scott@example.com"
+         ],
+         "AddressInfo":[
+            {
+               "Address":"2817 Milton Dr.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Albuquerque",
+                  "Region":"NM"
+               }
+            }
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      },
+      {
+         "UserName":"ronaldmundy",
+         "FirstName":"Ronald",
+         "LastName":"Mundy",
+         "Emails":[
+            "Ronald@example.com",
+            "Ronald@contoso.com"
+         ],
+         "AddressInfo":[
+
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      },
+      {
+         "UserName":"javieralfred",
+         "FirstName":"Javier",
+         "LastName":"Alfred",
+         "Emails":[
+            "Javier@example.com",
+            "Javier@contoso.com"
+         ],
+         "AddressInfo":[
+            {
+               "Address":"89 Jefferson Way Suite 2",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Portland",
+                  "Region":"WA"
+               }
+            }
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      },
+      {
+         "UserName":"willieashmore",
+         "FirstName":"Willie",
+         "LastName":"Ashmore",
+         "Emails":[
+            "Willie@example.com",
+            "Willie@contoso.com"
+         ],
+         "AddressInfo":[
+
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      },
+      {
+         "UserName":"vincentcalabrese",
+         "FirstName":"Vincent",
+         "LastName":"Calabrese",
+         "Emails":[
+            "Vincent@example.com",
+            "Vincent@contoso.com"
+         ],
+         "AddressInfo":[
+            {
+               "Address":"55 Grizzly Peak Rd.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Butte",
+                  "Region":"MT"
+               }
+            }
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      },
+      {
+         "UserName":"clydeguess",
+         "FirstName":"Clyde",
+         "LastName":"Guess",
+         "Emails":[
+            "Clyde@example.com"
+         ],
+         "AddressInfo":[
+
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      },
+      {
+         "UserName":"keithpinckney",
+         "FirstName":"Keith",
+         "LastName":"Pinckney",
+         "Emails":[
+            "Keith@example.com",
+            "Keith@contoso.com"
+         ],
+         "AddressInfo":[
+
+         ],
+         "Gender":"Male",
+         "Concurrency":635782043405215418
+      }
+   ]
+}
