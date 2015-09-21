@@ -126,7 +126,6 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     		batchParameterList = new ArrayList<List<Object>>();
 		}
     	batchParameterList.add(getParameterValues());
-		clearParameters();
     }
 
     /**

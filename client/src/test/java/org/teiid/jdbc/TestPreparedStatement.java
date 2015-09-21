@@ -195,6 +195,8 @@ public class TestPreparedStatement {
 		statement.setInt(1, new Integer(5));
 		statement.addBatch();
 		assertEquals("MMPreparedStatement.ParameterValuesList does not match", expectedParameterValues, statement.getParameterValuesList()); //$NON-NLS-1$
+		
+		assertEquals(Arrays.asList(5), statement.getParameterValues());
 	}
 
 	@Test public void testSetBlob() throws Exception {
