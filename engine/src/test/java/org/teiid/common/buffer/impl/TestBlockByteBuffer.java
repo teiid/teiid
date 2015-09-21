@@ -29,12 +29,12 @@ import org.junit.Test;
 public class TestBlockByteBuffer {
 
 	@Test public void testBufferSizing() {
-		BlockByteBuffer bbb = new BlockByteBuffer(4, 100, 4, false, true);
+		BlockByteBuffer bbb = new BlockByteBuffer(4, 100, 4, false);
 		bbb.getByteBuffer(1);
 	}
 	
 	@Test public void testLargeSizing() {
-		BlockByteBuffer bbb = new BlockByteBuffer(30, 1000000, 13, false, false);
+		BlockByteBuffer bbb = new BlockByteBuffer(30, 1000000, 13, false);
 		assertEquals(8, bbb.getBuffers().length);
 	}
 	

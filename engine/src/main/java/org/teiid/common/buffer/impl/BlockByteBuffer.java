@@ -30,16 +30,37 @@ import java.nio.ByteBuffer;
  */
 public class BlockByteBuffer {
 	
+	private static class ByteBufferHolder {
+		int size;
+		volatile ByteBuffer buffer;
+		
+		public ByteBufferHolder(int size) {
+			this.size = size;
+		}
+
+		public ByteBuffer duplicate(boolean direct) {
+			if (buffer == null) {
+				synchronized (this) {
+					if (buffer == null) {
+						this.buffer = allocate(size, direct);
+					}
+				}
+			}
+			return buffer.duplicate();
+		}
+	}
+
 	private static class BlockByteBufferData {
 		int blockAddressBits;
 		int segmentAddressBits;
 		int segmentSize;
 		int blockSize;
 		int blockCount;
+		boolean direct;
+		ByteBufferHolder[] origBuffers;
 	}
-
+	
 	private BlockByteBufferData data;
-	private ByteBuffer[] origBuffers;
 	private ByteBuffer[] buffers;
 	
 	/**
@@ -50,7 +71,7 @@ public class BlockByteBuffer {
 	 * @param blockAddressBits
 	 * @param direct
 	 */
-	public BlockByteBuffer(int segmentAddressBits, int blockCount, int blockAddressBits, boolean direct, boolean allocate) {
+	public BlockByteBuffer(int segmentAddressBits, int blockCount, int blockAddressBits, boolean direct) {
 		this.data = new BlockByteBufferData();
 		this.data.segmentAddressBits = segmentAddressBits;
 		this.data.blockAddressBits = blockAddressBits;
@@ -64,15 +85,14 @@ public class BlockByteBuffer {
 		if (lastSegmentSize > 0) {
 			segments++;
 		}
-		origBuffers = new ByteBuffer[segments];
+		this.data.origBuffers = new ByteBufferHolder[segments];
+		this.data.direct = direct;
 		buffers = new ByteBuffer[segments];
-		if (allocate) {
-			for (int i = 0; i < fullSegments; i++) {
-				origBuffers[i] = allocate(data.segmentSize, direct);
-			}
-			if (lastSegmentSize > 0) {
-				origBuffers[fullSegments] = allocate(lastSegmentSize, direct);
-			}
+		for (int i = 0; i < fullSegments; i++) {
+			this.data.origBuffers[i] = new ByteBufferHolder(data.segmentSize);
+		}
+		if (lastSegmentSize > 0) {
+			this.data.origBuffers[fullSegments] = new ByteBufferHolder(lastSegmentSize);
 		}
 	}
 	
@@ -100,8 +120,7 @@ public class BlockByteBuffer {
 	public BlockByteBuffer duplicate() {
 		BlockByteBuffer dup = new BlockByteBuffer();
 		dup.data = data;
-		dup.origBuffers = origBuffers;
-		dup.buffers = new ByteBuffer[dup.origBuffers.length];
+		dup.buffers = new ByteBuffer[buffers.length];
 		return dup;
 	}
 	
@@ -119,7 +138,7 @@ public class BlockByteBuffer {
 		int segment = block>>(data.segmentAddressBits-data.blockAddressBits);
 		ByteBuffer bb = buffers[segment];
 		if (bb == null) {
-			bb = buffers[segment] = origBuffers[segment].duplicate();
+			bb = buffers[segment] = data.origBuffers[segment].duplicate(data.direct);
 		} else {
 			bb.rewind();	
 		}
