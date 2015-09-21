@@ -37,6 +37,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility.RUNTIME_NAMES;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
@@ -173,6 +174,43 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 
 		convertModifier.setWideningNumericImplicit(true);
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+		
+		if (sqlExtensionsInstalled) {
+			addPushDownFunction("netezza", "regexp_extract", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_extract", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_extract", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			
+			addPushDownFunction("netezza", "regexp_extract_all", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			addPushDownFunction("netezza", "regexp_extract_all", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			addPushDownFunction("netezza", "regexp_extract_all", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+			addPushDownFunction("netezza", "regexp_extract_all_sp", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			addPushDownFunction("netezza", "regexp_extract_all_sp", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			addPushDownFunction("netezza", "regexp_extract_all_sp", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+			addPushDownFunction("netezza", "regexp_extract_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_extract_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+			addPushDownFunction("netezza", "regexp_instr", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_instr", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_instr", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+			addPushDownFunction("netezza", "regexp_like", RUNTIME_NAMES.BOOLEAN, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_like", RUNTIME_NAMES.BOOLEAN, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_like", RUNTIME_NAMES.BOOLEAN, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+			addPushDownFunction("netezza", "regexp_match_count", RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_match_count", RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_match_count", RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+			addPushDownFunction("netezza", "regexp_replace", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_replace", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+			addPushDownFunction("netezza", "regexp_replace", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+			
+			addPushDownFunction("netezza", "regexp_replace_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING+"[]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			addPushDownFunction("netezza", "regexp_replace_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			addPushDownFunction("netezza", "regexp_replace_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		}
 	}
 
 	@Override
