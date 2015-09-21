@@ -21,39 +21,32 @@
  */
 package org.teiid.translator.odata4;
 
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
-import javax.ws.rs.core.Response.Status;
-
-import org.odata4j.core.ODataConstants;
-import org.odata4j.core.ODataConstants.Charsets;
-import org.odata4j.core.ODataVersion;
-import org.odata4j.core.OEntity;
-import org.odata4j.core.OError;
-import org.odata4j.core.OProperty;
-import org.odata4j.edm.EdmComplexType;
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.format.Entry;
-import org.odata4j.format.Feed;
-import org.odata4j.format.FormatParser;
-import org.odata4j.format.FormatParserFactory;
-import org.odata4j.format.FormatType;
-import org.odata4j.format.Settings;
-import org.odata4j.format.xml.AtomFeedFormatParser;
-import org.odata4j.stax2.XMLEvent2;
-import org.odata4j.stax2.XMLEventReader2;
-import org.odata4j.stax2.util.StaxUtil;
+import org.apache.commons.codec.Charsets;
+import org.apache.olingo.commons.api.ODataError;
+import org.apache.olingo.commons.api.data.ComplexValue;
+import org.apache.olingo.commons.api.data.Entity;
+import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.data.Property;
+import org.apache.olingo.commons.api.data.ResWrap;
+import org.apache.olingo.commons.api.format.AcceptType;
+import org.apache.olingo.commons.api.format.ContentType;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
+import org.apache.olingo.commons.api.serialization.ODataDeserializerException;
+import org.apache.olingo.commons.core.serialization.JsonDeserializer;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -63,10 +56,12 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class BaseQueryExecution {
@@ -75,150 +70,124 @@ public class BaseQueryExecution {
 	protected RuntimeMetadata metadata;
 	protected ExecutionContext executionContext;
 
-	public BaseQueryExecution(ODataExecutionFactory translator, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) {
+    public BaseQueryExecution(ODataExecutionFactory translator,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            WSConnection connection) {
 		this.metadata = metadata;
 		this.executionContext = executionContext;
 		this.translator = translator;
 		this.connection = connection;
 	}
-	
-	protected Feed parse(Blob blob, ODataVersion version, String entityTable, EdmDataServices edsMetadata) throws TranslatorException {
-		try {
-			// if parser is written to return raw objects; then we can avoid some un-necessary object creation
-			// due to time, I am not pursuing that now.
-			FormatParser<Feed> parser = FormatParserFactory.getParser(
-					Feed.class, FormatType.ATOM, new Settings(version, edsMetadata, entityTable, null));
-			return parser.parse(new InputStreamReader(blob.getBinaryStream()));
-		} catch (SQLException e) {
-			throw new TranslatorException(ODataPlugin.Event.TEIID17010, e, e.getMessage());
-		}
-	}
 
-	protected static ODataVersion getDataServiceVersion(String headerValue) {
-		ODataVersion version = ODataConstants.DATA_SERVICE_VERSION;
-		if (headerValue != null) {
-			String[] str = headerValue.split(";"); //$NON-NLS-1$
-			version = ODataVersion.parse(str[0]);
-		}
-		return version;
-	}
+    protected InputStream executeQuery(String method,
+            String uri, String payload, String eTag, HttpStatusCode... expectedStatus)
+            throws TranslatorException {
+        
+        Map<String, List<String>> headers = getDefaultHeaders();
+        if (eTag != null) {
+            headers.put("If-Match", Arrays.asList(eTag)); //$NON-NLS-1$
+        }
 
-	protected ODataEntitiesResponse executeWithReturnEntity(String method, String uri, String payload, String entityTable, EdmDataServices edsMetadata, String eTag, Status... expectedStatus) throws TranslatorException {
-		Map<String, List<String>> headers = getDefaultHeaders();
-		if (eTag != null) {
-			headers.put("If-Match", Arrays.asList(eTag)); //$NON-NLS-1$
-		}
+        if (payload != null) {
+            headers.put("Content-Type", Arrays.asList(ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
+        }
 
-		if (payload != null) {
-			headers.put("Content-Type", Arrays.asList("application/atom+xml")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-
-		BinaryWSProcedureExecution execution = executeDirect(method, uri, payload, headers);
-		for (Status status:expectedStatus) {
-			if (status.getStatusCode() == execution.getResponseCode()) {
-				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode() 
-						&& execution.getResponseCode() != Status.NOT_FOUND.getStatusCode()) {
-					Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-					ODataVersion version = getODataVersion(execution);
-					Feed feed = parse(blob, version, entityTable, edsMetadata);
-					return new ODataEntitiesResponse(uri, feed, entityTable, edsMetadata);
-				}
-				// this is success with no-data
-				return new ODataEntitiesResponse();
-			}
-		}
-		// throw an error
-		return new ODataEntitiesResponse(buildError(execution));
-	}
-
-	ODataVersion getODataVersion(BinaryWSProcedureExecution execution) {
-		return getDataServiceVersion(getHeader(execution, ODataConstants.Headers.DATA_SERVICE_VERSION));
+        BinaryWSProcedureExecution execution;
+        try {
+            execution = invokeHTTP(method, uri, payload, headers);
+            for (HttpStatusCode status:expectedStatus) {
+                if (status.getStatusCode() == execution.getResponseCode()) {
+                    if (execution.getResponseCode() != HttpStatusCode.NO_CONTENT.getStatusCode() 
+                            && execution.getResponseCode() != HttpStatusCode.NOT_FOUND.getStatusCode()) {
+                        Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+                        return blob.getBinaryStream();
+                    }
+                    // this is success with no-data
+                    return null;
+                }
+            }
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        }
+        // throw an error
+        throw buildError(execution);
+        
+    }
+    
+    protected ODataEntitiesResponse executeWithReturnEntity(String method,
+            String uri, String payload, String eTag, HttpStatusCode... expectedStatus)
+            throws TranslatorException {
+		
+        try {
+            InputStream result = executeQuery(method, uri, payload, eTag, expectedStatus);
+            if (result == null) {
+                // this is success with no-data
+                return new ODataEntitiesResponse();
+            }
+            JsonDeserializer parser = new JsonDeserializer(false);
+            ResWrap<EntityCollection> collection = parser.toEntitySet(result);
+            return new ODataEntitiesResponse(uri, collection.getPayload());            
+        } catch (TranslatorException e) {
+            return new ODataEntitiesResponse(e); 
+        } catch(ODataDeserializerException e) {
+            throw new TranslatorException(e);
+        }
 	}
 	
 	String getHeader(BinaryWSProcedureExecution execution, String header) {
 		Object value = execution.getResponseHeader(header);
 		if (value instanceof List) {
-			return (String)((List)value).get(0);
+			return (String)((List<?>)value).get(0);
 		}
 		return (String)value;
 	}	
-
-	protected ODataEntitiesResponse executeWithComplexReturn(String method, String uri, String payload, String complexTypeName, EdmDataServices edsMetadata, String eTag, Status... expectedStatus) throws TranslatorException {
-		Map<String, List<String>> headers = getDefaultHeaders();
-		if (eTag != null) {
-			headers.put("If-Match", Arrays.asList(eTag)); //$NON-NLS-1$
-		}
-
-		if (payload != null) {
-			headers.put("Content-Type", Arrays.asList("application/atom+xml")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-
-		BinaryWSProcedureExecution execution = executeDirect(method, uri, payload, headers);
-		for (Status status:expectedStatus) {
-			if (status.getStatusCode() == execution.getResponseCode()) {
-				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode()) {
-					Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-					//ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
-
-					EdmComplexType complexType = edsMetadata.findEdmComplexType(complexTypeName);
-					if (complexType == null) {
-						throw new RuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17016, complexType));
-					}
-					try {
-						return parserComplex(StaxUtil.newXMLEventReader(new InputStreamReader(blob.getBinaryStream())), complexType, edsMetadata);
-					} catch (SQLException e) {
-						throw new TranslatorException(ODataPlugin.Event.TEIID17010, e, e.getMessage());
-					}
-				}
-				// this is success with no-data
-				return new ODataEntitiesResponse();
-			}
-		}
-		// throw an error
-		return new ODataEntitiesResponse(buildError(execution));
-	}
-
-	private ODataEntitiesResponse parserComplex(XMLEventReader2 reader, EdmComplexType complexType, EdmDataServices edsMetadata) {
-		XMLEvent2 event = reader.nextEvent();
-		while (!event.isStartElement()) {
-			event = reader.nextEvent();
-		}
-		return new ODataEntitiesResponse(AtomFeedFormatParser.parseProperties(reader, event.asStartElement(), edsMetadata, complexType).iterator());
-	}
 
 	protected TranslatorException buildError(BinaryWSProcedureExecution execution) {
 		// do some error handling
 		try {
 			Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-			//FormatParser<OError> parser = FormatParserFactory.getParser(OError.class, FormatType.ATOM, null);
-			FormatParser<OError> parser = new AtomErrorFormatParser();
-			OError error = parser.parse(new InputStreamReader(blob.getBinaryStream(), Charset.forName("UTF-8"))); //$NON-NLS-1$
-			return new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17013, execution.getResponseCode(), error.getCode(), error.getMessage(), error.getInnerError()));
+			JsonDeserializer parser = new JsonDeserializer(false);
+			ODataError error = parser.toError(blob.getBinaryStream());			
+            return new TranslatorException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID17013, execution.getResponseCode(),
+                    error.getCode(), error.getMessage(), error.getInnerError()));
 		}
 		catch (Throwable t) {
 			return new TranslatorException(t);
 		}
 	}
 
-	protected BinaryWSProcedureExecution executeDirect(String method, String uri, String payload, Map<String, List<String>> headers) throws TranslatorException {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL)) {
+    protected BinaryWSProcedureExecution invokeHTTP(String method,
+            String uri, String payload, Map<String, List<String>> headers)
+            throws TranslatorException {
+
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL)) {
 			try {
-				LogManager.logDetail(LogConstants.CTX_ODATA, "Source-URL=", URLDecoder.decode(uri, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
+                LogManager.logDetail(LogConstants.CTX_ODATA,
+                        "Source-URL=", URLDecoder.decode(uri, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (UnsupportedEncodingException e) {
 			}
 		}
 
 		List<Argument> parameters = new ArrayList<Argument>();
-		parameters.add(new Argument(Direction.IN, new Literal(method, TypeFacility.RUNTIME_TYPES.STRING), null));
-		parameters.add(new Argument(Direction.IN, new Literal(payload, TypeFacility.RUNTIME_TYPES.STRING), null));
-		parameters.add(new Argument(Direction.IN, new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
-		parameters.add(new Argument(Direction.IN, new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
-		//the engine currently always associates out params at resolve time even if the values are not directly read by the call
+		parameters.add(new Argument(Direction.IN, 
+		        new Literal(method, TypeFacility.RUNTIME_TYPES.STRING), null));
+		parameters.add(new Argument(Direction.IN, 
+		        new Literal(payload, TypeFacility.RUNTIME_TYPES.STRING), null));
+		parameters.add(new Argument(Direction.IN, 
+		        new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
+		parameters.add(new Argument(Direction.IN, 
+		        new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
+		//the engine currently always associates out params at resolve time even if the 
+		// values are not directly read by the call
 		parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
 		
-		Call call = this.translator.getLanguageFactory().createCall(ODataExecutionFactory.INVOKE_HTTP, parameters, null);
+        Call call = this.translator.getLanguageFactory().createCall(
+                ODataExecutionFactory.INVOKE_HTTP, parameters, null);
 
-		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection);
+        BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(
+                call, this.metadata, this.executionContext, null,
+                this.connection);
 		execution.setUseResponseContext(true);
 		execution.setCustomHeaders(headers);
 		execution.execute();
@@ -227,39 +196,32 @@ public class BaseQueryExecution {
 
 	protected Map<String, List<String>> getDefaultHeaders() {
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
-		headers.put("Accept", Arrays.asList(FormatType.ATOM.getAcceptableMediaTypes())); //$NON-NLS-1$
-		headers.put("Content-Type", Arrays.asList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
+		headers.put("Accept", Arrays.asList(AcceptType.fromContentType(ContentType.APPLICATION_JSON).toString())); //$NON-NLS-1$
+		headers.put("Content-Type", Arrays.asList(ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
 		return headers;
 	}
 
 	class ODataEntitiesResponse {
-		private Feed feed;
+		private EntityCollection feed;
 		private String uri;
-		private Iterator<Entry> rowIter;
-		private String entityTypeName;
+		private Iterator<Entity> rowIter;
 		private TranslatorException exception;
-		private Status[] acceptedStatus;
-		private Iterator<OProperty<?>> complexValues;
-		private EdmDataServices edsMetadata;
+		private HttpStatusCode[] acceptedStatus;
+		private List<List<?>> currentRow;
 
-		public ODataEntitiesResponse(String uri, Feed feed, String entityTypeName, EdmDataServices edsMetadata, Status... accptedStatus) {
+        public ODataEntitiesResponse() {
+        }
+        
+        public ODataEntitiesResponse(String uri, EntityCollection feed,
+                HttpStatusCode... accptedStatus) {
 			this.uri = uri;
 			this.feed = feed;
-			this.entityTypeName = entityTypeName;
-			this.rowIter = this.feed.getEntries().iterator();
+			this.rowIter = this.feed.getEntities().iterator();
 			this.acceptedStatus = accptedStatus;
-			this.edsMetadata = edsMetadata;
 		}
 
 		public ODataEntitiesResponse(TranslatorException ex) {
 			this.exception = ex;
-		}
-
-		public ODataEntitiesResponse() {
-		}
-
-		public ODataEntitiesResponse(Iterator<OProperty<?>> complexValues) {
-			this.complexValues = complexValues;
 		}
 
 		public boolean hasRow() {
@@ -274,55 +236,187 @@ public class BaseQueryExecution {
 			return this.exception;
 		}
 
-		public List<?> getNextRow(Column[] columns, Class<?>[] expectedType) throws TranslatorException {
-			if (this.rowIter != null && this.rowIter.hasNext()) {
-				OEntity entity = this.rowIter.next().getEntity();
-				ArrayList results = new ArrayList();
-				for (int i = 0; i < columns.length; i++) {
-					boolean isComplex = true;
-					String colName = columns[i].getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
-					if (colName == null) {
-						colName = columns[i].getName();
-						isComplex = false;
-					}
-					Object value = entity.getProperty(colName).getValue();
-					if (isComplex) {
-						List<OProperty<?>> embeddedProperties = (List<OProperty<?>>)value;
-						for (OProperty prop:embeddedProperties) {
-							if (prop.getName().equals(columns[i].getSourceName())) {
-								value = prop.getValue();
-								break;
-							}
-						}
-					}
-					results.add(BaseQueryExecution.this.translator.retrieveValue(value, expectedType[i]));
-				}
-				fetchNextBatch(!this.rowIter.hasNext(), this.edsMetadata);
-				return results;
-			}
-			else if (this.complexValues != null) {
-				HashMap<String, Object> values = new HashMap<String, Object>();
-				while(this.complexValues.hasNext()) {
-					OProperty prop = this.complexValues.next();
-					values.put(prop.getName(), prop.getValue());
-				}
-				ArrayList results = new ArrayList();
-				for (int i = 0; i < columns.length; i++) {
-					results.add(BaseQueryExecution.this.translator.retrieveValue(values.get(columns[i].getName()), expectedType[i]));
-				}
-				this.complexValues = null;
-				return results;
+	    private boolean isComplexType(Table table) {
+	        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+	        return type == ODataType.COMPLEX || type == ODataType.COMPLEX_COLLECTION;
+	    }
+	    
+        private boolean isCollection(Table table) {
+            ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+            return type == ODataType.ENTITYSET
+                    || type == ODataType.COMPLEX_COLLECTION
+                    || type == ODataType.NAVIGATION_COLLECTION;
+        }	    
+	    
+	    public String getName(Table table) {
+	        if (table.getNameInSource() != null) {
+	            return table.getNameInSource();
+	        }
+	        return table.getName();
+	    }
+	    
+        public Property getProperty(final String name, final List<Property> properties) {
+            Property result = null;
+
+            for (Property property : properties) {
+                if (name.equals(property.getName())) {
+                    result = property;
+                    break;
+                }
+            }
+            return result;
+        }	    
+	    
+        private List<List<?>> walkEntity(Entity entity, Table entitySetTable, Column[] columns,
+                Class<?>[] expectedType) throws TranslatorException{
+            
+            // first read any complex values
+            List<LinkedHashMap<String, Object>> complexRows = null;
+            for (int i = 0; i < columns.length; i++) {
+                Column column = columns[i];
+                Table columnParent = (Table)column.getParent();
+                if (!columnParent.equals(entitySetTable)) {
+                    String complexColumn = getName(columnParent);
+                    if (complexColumn.indexOf('/') != -1) {
+                        complexColumn = complexColumn.substring(0, complexColumn.indexOf('/'));
+                    }
+                    Property property = entity.getProperty(complexColumn);
+                    if(isComplexType(columnParent)) {
+                        complexRows = unwindComplex(property, complexRows);
+                    }
+                }
+            }
+            
+            List<List<?>> results = new ArrayList<List<?>>();
+            if (complexRows != null) {
+                for (LinkedHashMap<String, Object> row:complexRows) {
+                    results.add(buildRow(entity, entitySetTable, columns, expectedType, row));
+                }
+            } else {
+                results.add(buildRow(entity, entitySetTable, columns, expectedType, null));
+            }
+            return results;
+        }
+        
+        private List<?> buildRow(Entity entity, Table entitySetTable, Column[] columns,
+                Class<?>[] expectedType, Map<String, Object> other) throws TranslatorException {
+            List<Object> results = new ArrayList<Object>();
+            for (int i = 0; i < columns.length; i++) {
+                Column column = columns[i];
+                Table columnParent = (Table)column.getParent();
+                List<Property> properties = entity.getProperties();
+                if (columnParent.equals(entitySetTable)) {
+                    Object value = ODataTypeManager.convertTeiidInput(
+                            getProperty(columns[i].getName(), properties).getValue(), expectedType[i]);
+                    results.add(value);
+                } else {
+                    Object value = null;
+                    if (other != null) {
+                        value = ODataTypeManager.convertTeiidInput(
+                                other.get(columns[i].getName()), expectedType[i]);
+                    }
+                    results.add(value);
+                }
+            }
+            return results;
+        }
+
+        private List<LinkedHashMap<String, Object>> unwindComplexValue(
+                final ComplexValue complexValue,
+                final List<LinkedHashMap<String, Object>> previousRows) {
+            
+            List<LinkedHashMap<String, Object>> rows = null;
+            if (previousRows != null) {
+                rows = new ArrayList<LinkedHashMap<String, Object>>();
+                rows.addAll(previousRows);
+            }
+            
+            // read all non-complex properties
+            LinkedHashMap<String, Object> row = new LinkedHashMap<String, Object>();
+            List<Property> complexProperties = complexValue.getValue();
+            for (Property p:complexProperties) {
+                if (p.isPrimitive()) {
+                    row.put(p.getName(), p.asPrimitive());
+                }
+            }
+
+            // now read all complex
+            Stack<List<LinkedHashMap<String, Object>>> stack = new Stack<List<LinkedHashMap<String,Object>>>();
+            for (Property p:complexProperties) {
+                if (p.isComplex()) {
+                    stack.push(unwindComplex(p, previousRows));
+                }
+            }
+
+            while (!stack.isEmpty()) {
+                if (previousRows == null) {
+                    rows = stack.pop();
+                } else {
+                    ArrayList<LinkedHashMap<String, Object>> crossjoin = new ArrayList<LinkedHashMap<String,Object>>();
+                    List<LinkedHashMap<String, Object>> inner = stack.pop();
+                    for (LinkedHashMap<String, Object> r1:rows) {                            
+                        for (LinkedHashMap<String, Object> r2:inner) {
+                            LinkedHashMap<String, Object> copy = new LinkedHashMap<String, Object>();
+                            copy.putAll(r2);
+                            copy.putAll(r1);
+                            crossjoin.add(copy);
+                        }
+                    }
+                    rows = crossjoin;
+                }
+            }
+            
+            if (rows == null) {
+                rows = new ArrayList<LinkedHashMap<String,Object>>();
+                rows.add(row);
+            } else {
+                for (LinkedHashMap<String,Object> r:rows) {
+                    r.putAll(row);
+                }
+            }
+            return rows;
+        }
+        
+        private List<LinkedHashMap<String, Object>> unwindComplex(
+                Property property, List<LinkedHashMap<String, Object>> rows) {
+            if (property.isCollection()) {
+                List<ComplexValue> complexRows = (List<ComplexValue>)property.asCollection();                 
+                for (ComplexValue complexRow : complexRows) {
+                    rows = unwindComplexValue(complexRow, rows);
+                }
+            } else {
+                rows = unwindComplexValue(property.asComplex(), rows);
+            }
+            return rows;
+        }
+
+        public List<?> getNextRow(Table entitySetTable, Column[] columns,
+                Class<?>[] expectedType) throws TranslatorException {
+
+            // we already walking a complex document, keep reading it
+            if (this.currentRow != null && !this.currentRow.isEmpty()) {
+                return this.currentRow.remove(0);
+            }
+            
+            // move on to next document in row.
+            if (this.rowIter != null && this.rowIter.hasNext()) {
+				Entity entity = this.rowIter.next();
+				this.currentRow = walkEntity(entity, entitySetTable, columns, expectedType);
+				fetchNextBatch(!this.rowIter.hasNext());
+	            if (this.currentRow != null && !this.currentRow.isEmpty()) {
+	                return this.currentRow.remove(0);
+	            }
 			}
 			return null;
 		}
 
 		// TODO:there is possibility here to async execute this feed
-		private void fetchNextBatch(boolean fetch, EdmDataServices edsMetadata) throws TranslatorException {
+		private void fetchNextBatch(boolean fetch) throws TranslatorException {
 			if (!fetch) {
 				return;
 			}
 
-			String next = this.feed.getNext();
+			String next = this.feed.getNext().toString();
 			if (next == null) {
 				this.feed = null;
 				this.rowIter = null;
@@ -331,11 +425,10 @@ public class BaseQueryExecution {
 
 			int idx = next.indexOf("$skiptoken="); //$NON-NLS-1$
 			if (idx != -1) {
-
 				String skip = null;
 				try {
 					skip = next.substring(idx + 11);
-					skip = URLDecoder.decode(skip, Charsets.Upper.UTF_8);
+					skip = URLDecoder.decode(skip, Charsets.UTF_8.name());
 				} catch (UnsupportedEncodingException e) {
 					throw new TranslatorException(e);
 				}
@@ -347,37 +440,34 @@ public class BaseQueryExecution {
 				else {
 					nextUri = this.uri + "&$skiptoken="+skip; //$NON-NLS-1$
 				}
-				BinaryWSProcedureExecution execution = executeDirect("GET", nextUri, null, getDefaultHeaders()); //$NON-NLS-1$
-				validateResponse(execution);
-				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-			    ODataVersion version = getODataVersion(execution);
-
-				this.feed = parse(blob, version, this.entityTypeName, edsMetadata);
-				this.rowIter = this.feed.getEntries().iterator();
-
+				getNext(nextUri, this.acceptedStatus);
 			} else if (next.toLowerCase().startsWith("http")) { //$NON-NLS-1$
-				BinaryWSProcedureExecution execution = executeDirect("GET", next, null, getDefaultHeaders()); //$NON-NLS-1$
-				validateResponse(execution);
-				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-			    ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
-
-				this.feed = parse(blob, version, this.entityTypeName, edsMetadata);
-				this.rowIter = this.feed.getEntries().iterator();
+			    getNext(next, this.acceptedStatus);
 			} else {
 				throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17001, next));
 			}
 		}
 
-		private void validateResponse(BinaryWSProcedureExecution execution) throws TranslatorException {
-			for (Status expected:this.acceptedStatus) {
-				if (execution.getResponseCode() != expected.getStatusCode()) {
-					throw buildError(execution);
-				}
-			}
-		}
-
-		Iterator<Entry> getResultsIter(){
-			return this.rowIter;
+		private void getNext(String uri, HttpStatusCode[] accptedCodes) throws TranslatorException {
+            try {
+                BinaryWSProcedureExecution execution = invokeHTTP("GET", uri, null, getDefaultHeaders()); //$NON-NLS-1$
+                for (HttpStatusCode expected : accptedCodes) {
+                    if (execution.getResponseCode() != expected.getStatusCode()) {
+                        throw buildError(execution);
+                    }
+                }
+                
+                Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+                JsonDeserializer parser = new JsonDeserializer(false);
+                ResWrap<EntityCollection> result = parser.toEntitySet(blob.getBinaryStream());
+                
+                this.feed = result.getPayload();                
+                this.rowIter = this.feed.getEntities().iterator();
+            } catch (ODataDeserializerException e) {
+                throw new TranslatorException(e);
+            } catch (SQLException e) {
+                throw new TranslatorException(e);
+            }
 		}
 	}
 }

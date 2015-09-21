@@ -29,9 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.ws.rs.core.Response.Status;
-
-import org.odata4j.edm.EdmDataServices;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
@@ -66,14 +64,14 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 
 	@Override
 	public void execute() throws TranslatorException {
-		String URI = this.visitor.buildURL();
+		String URI = this.visitor.buildURL("");
 
 		if (this.visitor.isCount()) {
 			Map<String, List<String>> headers = new TreeMap<String, List<String>>();
-			headers.put("Accept", Arrays.asList("text/xml", "text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			headers.put("Accept", Arrays.asList("text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			
-			BinaryWSProcedureExecution execution = executeDirect("GET", URI, null, headers); //$NON-NLS-1$
-			if (execution.getResponseCode() != Status.OK.getStatusCode()) {
+			BinaryWSProcedureExecution execution = invokeHTTP("GET", URI, null, headers); //$NON-NLS-1$
+			if (execution.getResponseCode() != HttpStatusCode.OK.getStatusCode()) {
 				throw buildError(execution);
 			}
 			
@@ -85,11 +83,12 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 			} catch (SQLException e) {
 				throw new TranslatorException(e);
 			}			
-		}
-		else {
-			Schema schema = visitor.getEnityTable().getParent();
-			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
-			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), edm, null, Status.OK, Status.NO_CONTENT, Status.NOT_FOUND); //$NON-NLS-1$
+		} else {
+            this.response = executeWithReturnEntity(
+                    "GET", URI, null, null, 
+                    HttpStatusCode.OK, 
+                    HttpStatusCode.NO_CONTENT, 
+                    HttpStatusCode.NOT_FOUND); //$NON-NLS-1$
 			if (this.response != null && this.response.hasError()) {
 				throw this.response.getError();
 			}
@@ -106,7 +105,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 
 		// Feed based response
 		if (this.response != null && !this.response.hasError()) {
-			return this.response.getNextRow(visitor.getSelect(), this.expectedColumnTypes);
+			return this.response.getNextRow(visitor.getEntitySetTable(), visitor.getProjectedColumns(), this.expectedColumnTypes);
 		}
 		return null;
 	}

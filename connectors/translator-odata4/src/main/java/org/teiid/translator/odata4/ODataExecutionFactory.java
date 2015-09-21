@@ -21,8 +21,8 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.teiid.language.SQLConstants.Reserved.NULL;
-
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,31 +32,28 @@ import java.util.TreeMap;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.core.types.DataTypeManager;
+import org.apache.olingo.client.api.edm.xml.XMLMetadata;
+import org.apache.olingo.client.core.serialization.ClientODataDeserializerImpl;
+import org.apache.olingo.commons.api.format.ODataFormat;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.Call;
-import org.teiid.language.Command;
-import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
-import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 /**
  * TODO:
@@ -77,9 +74,11 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	private boolean supportsOdataCount;
 	private boolean supportsOdataSkip;
 	private boolean supportsOdataTop;
+	private XMLMetadata serviceMatadata;
 
 	public ODataExecutionFactory() {
 		setSourceRequiredForMetadata(true);
+		setSupportsInnerJoins(true);
 		setSupportsOrderBy(true);
 		
 		setSupportsOdataCount(true);
@@ -94,7 +93,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("toupper")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
 		addPushDownFunction("odata", "startswith", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
-		addPushDownFunction("odata", "substringof", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+		addPushDownFunction("odata", "contains", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Override
@@ -103,7 +102,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		if(this.databaseTimeZone != null && this.databaseTimeZone.trim().length() > 0) {
         	TimeZone tz = TimeZone.getTimeZone(this.databaseTimeZone);
             if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
-        		this.timeZone = tz;;
+        		this.timeZone = tz;
             }
         }
     }
@@ -130,11 +129,34 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		return new ODataMetadataProcessor();
 	}
 
+    protected XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
+        if (this.serviceMatadata == null) {
+            try {
+                BaseQueryExecution execution = new BaseQueryExecution(this, null, null, conn);
+                BinaryWSProcedureExecution call = execution.invokeHTTP("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
+                if (call.getResponseCode() != HttpStatusCode.OK.getStatusCode()) {
+                    throw execution.buildError(call);
+                }
+    
+                Blob out = (Blob)call.getOutputParameterValues().get(0);
+                ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(false, ODataFormat.APPLICATION_XML);
+                this.serviceMatadata = deserializer.toMetadata(out.getBinaryStream());
+                return this.serviceMatadata;
+            } catch (SQLException e) {
+                throw new TranslatorException(e);
+            } catch (Exception e) {
+                throw new TranslatorException(e);
+            }
+        }
+        return this.serviceMatadata;
+    }
+    
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		return new ODataQueryExecution(this, command, executionContext, metadata, connection);
 	}
 
+	/*
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
@@ -148,6 +170,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		return new ODataUpdateExecution(command, this, executionContext, metadata, connection);
 	}
+	*/
 
 	@Override
 	public List<String> getSupportedFunctions() {
@@ -156,23 +179,29 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
         // String functions
         supportedFunctions.add(SourceSystemFunctions.ENDSWITH);
-        supportedFunctions.add(SourceSystemFunctions.REPLACE);
-        supportedFunctions.add(SourceSystemFunctions.TRIM);
-        supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
-        supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
+        supportedFunctions.add(SourceSystemFunctions.LOCATE); //indexof 
+        supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.LCASE); //tolower
+        supportedFunctions.add(SourceSystemFunctions.UCASE); //toupper        
+        supportedFunctions.add(SourceSystemFunctions.TRIM);        
+        supportedFunctions.add(SourceSystemFunctions.CONCAT);
+        supportedFunctions.add(SourceSystemFunctions.CONVERT);
 
         // date functions
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
+        supportedFunctions.add(SourceSystemFunctions.NOW);
         supportedFunctions.add(SourceSystemFunctions.HOUR);
         supportedFunctions.add(SourceSystemFunctions.MINUTE);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
-
+        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
+        
         // airthamatic functions
         supportedFunctions.add(SourceSystemFunctions.ROUND);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.CEILING);
+        supportedFunctions.add(SourceSystemFunctions.MOD);
 
         return supportedFunctions;
 	}
@@ -268,6 +297,10 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean supportsNotCriteria() {
     	return supportsOdataFilter;
     }
+	
+    public boolean supportsInCriteria() {
+        return supportsOdataFilter;
+    }
 
 	@Override
     public boolean supportsQuantifiedCompareCriteriaSome() {
@@ -319,65 +352,10 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean useAnsiJoin() {
     	return true;
     }
-
-	/**
-	 *
-	 * @param value
-	 * @param expectedType
-	 * @return
-	 */
-	public Object retrieveValue(Object value, Class<?> expectedType) {
-		if (value == null) {
-			return null;
-		}
-		if (value instanceof LocalDateTime) {
-    		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.timeZone));
-    		return new java.sql.Timestamp(dateTime.getMillis());
-    	}
-		if (value instanceof LocalTime) {
-    		return new java.sql.Timestamp(((LocalTime)value).toDateTimeToday().getMillis());
-    	}
-		if (value instanceof UnsignedByte) {
-			return Short.valueOf(((UnsignedByte)value).shortValue());
-		}
-		return value;
-	}
-
-	public void convertToODataInput(Literal obj, StringBuilder sb) {
-		if (obj.getValue() == null) {
-            sb.append(NULL);
-        } else {
-            Class<?> type = obj.getType();
-            Object val = obj.getValue();
-            if(Number.class.isAssignableFrom(type)) {
-                sb.append(val);
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-            	sb.append(obj.getValue().equals(Boolean.TRUE) ? true : false);
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-    			LocalDateTime date = new LocalDateTime(val);
-                sb.append("datetime'") //$NON-NLS-1$
-                      .append(InternalUtil.formatDateTimeForXml(date))
-                      .append("'"); //$NON-NLS-1$
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-    			LocalTime time = new LocalTime(((java.sql.Time)val).getTime());
-                sb.append("time'") //$NON-NLS-1$
-                      .append(InternalUtil.formatTimeForXml(time))
-                      .append("'"); //$NON-NLS-1$
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-                sb.append("date'") //$NON-NLS-1$
-                      .append(val)
-                      .append("'"); //$NON-NLS-1$
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-            	sb.append("X'") //$NON-NLS-1$
-            		  .append(val)
-            		  .append("'"); //$NON-NLS-1$
-            } else {
-                sb.append(Tokens.QUOTE)
-                      .append(escapeString(val.toString(), Tokens.QUOTE))
-                      .append(Tokens.QUOTE);
-            }
-        }
-	}
+	
+    public boolean supportsArrayType() {
+        return true;
+    }
 
     protected String escapeString(String str, String quote) {
         return StringUtil.replaceAll(str, quote, quote + quote);

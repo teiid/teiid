@@ -21,21 +21,20 @@
  */
 package org.teiid.translator.odata4;
 
-import java.sql.Blob;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
-import org.apache.olingo.client.core.serialization.ClientODataDeserializerImpl;
 import org.apache.olingo.commons.api.edm.provider.CsdlAction;
 import org.apache.olingo.commons.api.edm.provider.CsdlActionImport;
+import org.apache.olingo.commons.api.edm.provider.CsdlBindingTarget;
 import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntityContainer;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntitySet;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
+import org.apache.olingo.commons.api.edm.provider.CsdlEnumType;
 import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
 import org.apache.olingo.commons.api.edm.provider.CsdlFunctionImport;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
@@ -48,8 +47,6 @@ import org.apache.olingo.commons.api.edm.provider.CsdlReferentialConstraint;
 import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.edm.provider.CsdlSingleton;
-import org.apache.olingo.commons.api.format.ODataFormat;
-import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
@@ -63,107 +60,107 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.WSConnection;
-import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
-    
-    enum Association {ONE, MANY};
+    public enum ODataType {
+        COMPLEX, NAVIGATION, ENTITY, ENTITYSET, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION
+    };
     private static final String PARENT_TABLE = "PARENT_TABLE"; //$NON-NLS-1$
-    private static final String ASSOSIATION = "ASSOSIATION"; //$NON-NLS-1$
-    private static final String CONSTRAINT = "CONSTRAINT"; //$NON-NLS-1$
+    private static final String CONSTRAINT_PROPERTY = "CONSTRAINT_PROPERTY"; //$NON-NLS-1$
+    private static final String CONSTRAINT_REF_PROPERTY = "CONSTRAINT_REF_PROPERTY"; //$NON-NLS-1$
+    private static final String FK_NAME = "FK_NAME"; //$NON-NLS-1$
+    private static final String NAME_SEPARATOR = "_"; //$NON-NLS-1$
     
-    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Link Tables", 
-            description="Used to define navigation relationship in many to many case")    
-	public static final String LINK_TABLES = MetadataFactory.ODATA_URI+"LinkTables"; //$NON-NLS-1$
+    @ExtensionMetadataProperty(applicable = { Table.class, Procedure.class }, 
+            datatype = String.class, 
+            display = "Name in OData Schema", 
+            description = "Name in OData Schema", 
+            required = true)    
+	public static final String NAME_IN_SCHEMA = MetadataFactory.ODATA_URI+"NameInSchema"; //$NON-NLS-1$
 
-    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Http Method", 
-            description="Http method used for procedure invocation", required=true)
-    public static final String HTTP_METHOD = MetadataFactory.ODATA_URI+"HttpMethod"; //$NON-NLS-1$
-    
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=Boolean.class, display="Join Column", 
-            description="On Link tables this property defines the join column")    
-	public static final String JOIN_COLUMN = MetadataFactory.ODATA_URI+"JoinColumn"; //$NON-NLS-1$
-    
-    @ExtensionMetadataProperty(applicable = { Table.class, Procedure.class }, datatype = String.class, 
-            display = "Entity Type Name", description = "Name of the Entity Type in EDM", required = true)    
-	public static final String ENTITY_TYPE = MetadataFactory.ODATA_URI+"EntityType"; //$NON-NLS-1$
+    @ExtensionMetadataProperty(applicable = { Table.class, Procedure.class }, 
+            datatype = String.class, 
+            display = "OData Type", 
+            description = "Type of OData Schema Item",
+            allowed = "COMPLEX, NAVIGATION, ENTITY, ENTITYSET, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION",
+            required=true)
+    public static final String ODATA_TYPE = MetadataFactory.ODATA_URI+"Type"; //$NON-NLS-1$
 
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Complex Type Name", 
-            description="Name of the Complex Type in EDM")
-    public static final String COMPLEX_TYPE = MetadataFactory.ODATA_URI+"ComplexType"; //$NON-NLS-1$
+    private String schemaNamespace;
+    private ODataExecutionFactory ef;
 
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Column Group",
-            description="Name of the Column Group")
-	public static final String COLUMN_GROUP = MetadataFactory.ODATA_URI+"ColumnGroup"; //$NON-NLS-1$
-
-	private String schemaNamespace;
-	private ODataExecutionFactory ef;
-
-	public void setExecutionfactory(ODataExecutionFactory ef) {
+    void setExecutionfactory(ODataExecutionFactory ef) {
         this.ef = ef;
     }
-	
-    private XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
-        try {
-            BaseQueryExecution execution = new BaseQueryExecution(ef, null, null, conn);
-            BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
-            if (call.getResponseCode() != HttpStatusCode.OK.getStatusCode()) {
-                throw execution.buildError(call);
-            }
-
-            Blob out = (Blob)call.getOutputParameterValues().get(0);
-            ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(false, ODataFormat.APPLICATION_XML);
-            XMLMetadata metadata = deserializer.toMetadata(out.getBinaryStream());
-            return metadata;
-        } catch (SQLException e) {
-            throw new TranslatorException(e);
-        } catch (Exception e) {
-            throw new TranslatorException(e);
-        }
-	}
     
-	public void process(MetadataFactory mf, WSConnection conn) throws TranslatorException {
-	    XMLMetadata metadata = getSchema(conn);
-	    getMetadata(mf, metadata);
-	}
-	
-	public void getMetadata(MetadataFactory mf, XMLMetadata metadata) throws TranslatorException {
-	    CsdlSchema csdlSchema = getDefaultSchema(metadata);
-	    CsdlEntityContainer container = csdlSchema.getEntityContainer();
+    public void process(MetadataFactory mf, WSConnection conn)
+            throws TranslatorException {
+        XMLMetadata serviceMetadata = getSchema(conn);    
+        getMetadata(mf, serviceMetadata);
+    }
 
-		// add entity sets as tables
-		for (CsdlEntitySet entitySet:container.getEntitySets()) {
-			addTable(mf, entitySet.getName(), entitySet.getType(), metadata);
-		}
-		
+    protected XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
+        if (this.ef != null) {
+            return this.ef.getSchema(conn);
+        }
+        return null;
+    }
+    
+    void getMetadata(MetadataFactory mf, XMLMetadata metadata)
+            throws TranslatorException {
+        CsdlSchema csdlSchema = getDefaultSchema(metadata);
+        CsdlEntityContainer container = csdlSchema.getEntityContainer();
+
         // add entity sets as tables
-        for (CsdlSingleton singleton:container.getSingletons()) {
-            addTable(mf, singleton.getName(), singleton.getType(), metadata);
-        }		
+        for (CsdlEntitySet entitySet : container.getEntitySets()) {
+            addTable(mf, entitySet.getName(), entitySet.getType(), ODataType.ENTITYSET, metadata);
+        }
 
-		// build relations ships among tables
-		for (CsdlEntitySet entitySet:container.getEntitySets()) {
-			addNavigationProperties(mf, entitySet.getName(), entitySet, metadata);
-		}
+        // add singletons sets as tables
+        for (CsdlSingleton singleton : container.getSingletons()) {
+            addTable(mf, singleton.getName(), singleton.getType(), ODataType.ENTITYSET, metadata);
+        }
 
-		// add functions
-		for (CsdlFunctionImport function:container.getFunctionImports()) {
-			addFunctionImportAsProcedure(mf, function, metadata);
-		}
-		
-        // add actions
-        for (CsdlActionImport action:container.getActionImports()) {
-            addActionImportAsProcedure(mf, action, metadata);
+        // build relationships among tables
+        for (CsdlEntitySet entitySet : container.getEntitySets()) {
+            addNavigationProperties(mf, entitySet.getName(), entitySet,
+                    metadata);
         }
         
-        for (Table table:mf.getSchema().getTables().values()) {
+        for (CsdlSingleton singleton : container.getSingletons()) {
+            addNavigationProperties(mf, singleton.getName(), singleton,
+                    metadata);
+        }        
+        
+        // add PK colums for complex-types
+        for (Table table : mf.getSchema().getTables().values()) {
             String parentTable = table.getProperty(PARENT_TABLE, false);
             if (parentTable != null) {
+                addPrimaryKeyToComplexTables(mf, table, mf.getSchema().getTable(parentTable));
+            }
+        }        
+
+        // build relations between tables
+        for (Table table : mf.getSchema().getTables().values()) {
+            String parentTable = table.getProperty(PARENT_TABLE, false);
+            if (parentTable != null) {
+                table.setProperty(PARENT_TABLE, null);
                 addForeignKey(mf, table, mf.getSchema().getTable(parentTable));
             }
         }
         
-	}
+        // add functions
+        for (CsdlFunctionImport function : container.getFunctionImports()) {
+            addFunctionImportAsProcedure(mf, function, ODataType.FUNCTION, metadata);
+        }
+
+        // add actions
+        for (CsdlActionImport action : container.getActionImports()) {
+            addActionImportAsProcedure(mf, action, ODataType.ACTION, metadata);
+        }
+    }
+
+
 
     private CsdlSchema getDefaultSchema(XMLMetadata metadata) throws TranslatorException {
         CsdlSchema csdlSchema = null;
@@ -182,27 +179,35 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     }
 
     private Table buildTable(MetadataFactory mf, String name) {
-		Table table = mf.addTable(name);
-		table.setSupportsUpdate(true);
-		return table;
-	}
+        Table table = mf.addTable(name);
+        table.setSupportsUpdate(true);
+        return table;
+    }
 
 	private boolean isSimple(String type) {
 	    return type.startsWith("Edm");
 	}
 	
-	private boolean isComplexType(XMLMetadata metadata, String type) throws TranslatorException {
-	    return getComplexType(metadata, type) != null;
-	}
-	
+    private boolean isEnum(XMLMetadata metadata, String type)
+            throws TranslatorException {
+        return getEnumType(metadata, type) != null;
+    }
+
+    private boolean isComplexType(XMLMetadata metadata, String type)
+            throws TranslatorException {
+        return getComplexType(metadata, type) != null;
+    }
+
     private boolean isEntityType(XMLMetadata metadata, String type) throws TranslatorException {
         return getEntityType(metadata, type) != null;
     }
-	
-    private Table addTable(MetadataFactory mf, String tableName, String entityType, XMLMetadata metadata) 
+
+    private Table addTable(MetadataFactory mf, String tableName,
+            String entityType, ODataType odataType, XMLMetadata metadata) 
             throws TranslatorException {
         Table table = buildTable(mf, tableName);
-        table.setProperty(ENTITY_TYPE, entityType);
+        table.setProperty(ODATA_TYPE, odataType.name());
+        table.setProperty(NAME_IN_SCHEMA, entityType);
         
         CsdlEntityType type = getEntityType(metadata, entityType);
         addEntityTypeProperties(mf, metadata, table, type);
@@ -210,44 +215,60 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     }	
 	
     private void addEntityTypeProperties(MetadataFactory mf,
-            XMLMetadata metadata, Table table, CsdlEntityType entityType) throws TranslatorException {
-        // add columns; add complex types as child tables with 1-1 or 1-many relation
-		for (CsdlProperty property:entityType.getProperties()) {
-			addProperty(mf, metadata, table, property);
-		}
-		
-		// add properties from base type; if any to flatten the model
-		String baseType = entityType.getBaseType();
-		while(baseType != null) {
-		    CsdlEntityType baseEntityType = getEntityType(metadata, baseType);
-	        for (CsdlProperty property:baseEntityType.getProperties()) {
-	            addProperty(mf, metadata, table, property);
-	        }
-	        baseType = baseEntityType.getBaseType();
-		}
+            XMLMetadata metadata, Table table, CsdlEntityType entityType)
+            throws TranslatorException {
+        // add columns; add complex types as child tables with 1-1 or 1-many
+        // relation
+        for (CsdlProperty property : entityType.getProperties()) {
+            addProperty(mf, metadata, table, property);
+        }
 
-		// add PK
-		addPrimaryKey(mf, table, entityType.getKey()); //$NON-NLS-1$
+        // add properties from base type; if any to flatten the model
+        String baseType = entityType.getBaseType();
+        while (baseType != null) {
+            CsdlEntityType baseEntityType = getEntityType(metadata, baseType);
+            for (CsdlProperty property : baseEntityType.getProperties()) {
+                addProperty(mf, metadata, table, property);
+            }
+            baseType = baseEntityType.getBaseType();
+        }
+
+        // add PK
+        addPrimaryKey(mf, table, entityType.getKey()); //$NON-NLS-1$
     }
-	
+
     private void addProperty(MetadataFactory mf, XMLMetadata metadata,
             Table table, CsdlProperty property) throws TranslatorException {
-        if (isSimple(property.getType())) {
+        if (isSimple(property.getType()) || isEnum(metadata, property.getType())) {
             addPropertyAsColumn(mf, table, property);
         }
         else {
-            CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());
-            addComplexPropertyAsTable(mf, childType, metadata, table, property.isCollection());
+            CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());            
+            addComplexPropertyAsTable(mf, property, childType, metadata, table);
         }
     }
     
-    private void addComplexPropertyAsTable(MetadataFactory mf, CsdlComplexType complexType, 
-            XMLMetadata metadata, Table parentTable, boolean collection) throws TranslatorException {
-	    
-        Table childTable = buildTable(mf, parentTable.getName()+"."+complexType.getName());
-        childTable.setProperty(COMPLEX_TYPE, complexType.getName()); // complex type
-        childTable.setProperty(PARENT_TABLE, parentTable.getFullName());
-        childTable.setProperty(ASSOSIATION, collection?Association.MANY.name():Association.ONE.name());
+    private boolean isComplexType(Table table) {
+        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        return type == ODataType.COMPLEX || type == ODataType.COMPLEX_COLLECTION;
+    }
+    
+    private void addComplexPropertyAsTable(MetadataFactory mf, CsdlProperty parentProperty, 
+            CsdlComplexType complexType, XMLMetadata metadata, Table parentTable) 
+            throws TranslatorException {
+        
+        String tableName = parentTable.getName()+NAME_SEPARATOR+parentProperty.getName();
+        Table childTable = buildTable(mf, tableName);
+        childTable.setProperty(NAME_IN_SCHEMA, parentProperty.getType()); // complex type
+        childTable.setProperty(ODATA_TYPE, 
+                parentProperty.isCollection() ? 
+                ODataType.COMPLEX_COLLECTION.name() : ODataType.COMPLEX.name()); // complex type
+        childTable.setProperty(PARENT_TABLE, parentTable.getName());
+        if (isComplexType(parentTable)) {
+            childTable.setNameInSource(parentTable.getNameInSource()+"/"+parentProperty.getName());
+        } else {
+            childTable.setNameInSource(parentProperty.getName());
+        }
         
 	    for (CsdlProperty property:complexType.getProperties()) {
 	        addProperty(mf, metadata, childTable, property);
@@ -264,21 +285,28 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
     }
 
-    void addPrimaryKey(MetadataFactory mf, Table table, List<CsdlPropertyRef> keys) throws TranslatorException {
-	    List<String> pkNames = new ArrayList<String>();
-	    for (CsdlPropertyRef ref: keys) {
-	        pkNames.add(ref.getName());
-	        if (ref.getAlias() != null) {
-                throw new TranslatorException(ODataPlugin.Util.gs(
-                        ODataPlugin.Event.TEIID17018, table.getName(),ref.getName()));
-	        }
-	    }
-	}
-    
-    private CsdlNavigationPropertyBinding getNavigationPropertyBinding(CsdlEntitySet entitySet, String name) {
+    void addPrimaryKey(MetadataFactory mf, Table table,
+            List<CsdlPropertyRef> keys) throws TranslatorException {
+        List<String> pkNames = new ArrayList<String>();
+        for (CsdlPropertyRef ref : keys) {
+            pkNames.add(ref.getName());
+            if (ref.getAlias() != null) {
+                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17018, 
+                        table.getName(),ref.getName()));
+            }
+        }
+        mf.addPrimaryKey("PK", pkNames, table);
+    }
+
+    private CsdlNavigationPropertyBinding getNavigationPropertyBinding(CsdlBindingTarget entitySet, String name) {
         List<CsdlNavigationPropertyBinding> bindings = entitySet.getNavigationPropertyBindings();
         for (CsdlNavigationPropertyBinding binding:bindings) {
-            if (binding.getPath().equals(name)) {
+            String path = binding.getPath();
+            int index = path.lastIndexOf('/');
+            if (index != -1) {
+                path = path.substring(index+1);
+            }
+            if (path.equals(name)) {
                 return binding;
             }
         }
@@ -286,6 +314,10 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     }
     
     private CsdlEntityType getEntityType(XMLMetadata metadata, String name) throws TranslatorException {
+        if(name == null) {
+            return null;
+        }
+        
         if (name.contains(".")) {
             int idx = name.lastIndexOf('.');
             CsdlSchema schema = metadata.getSchema(name.substring(0, idx));
@@ -331,142 +363,246 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             return schema.getComplexType(name.substring(idx+1));
         }
         return getDefaultSchema(metadata).getComplexType(name);
+    }
+    
+    private CsdlEnumType getEnumType(XMLMetadata metadata, String name) throws TranslatorException {
+        if (name.contains(".")) {
+            int idx = name.lastIndexOf('.');
+            CsdlSchema schema = metadata.getSchema(name.substring(0, idx));
+            if (schema == null) {
+                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17021, name));
+            }
+            return schema.getEnumType(name.substring(idx+1));
+        }
+        return getDefaultSchema(metadata).getEnumType(name);
     }    
 
-	void addNavigationProperties(MetadataFactory mf, String tableName, CsdlEntitySet entitySet, XMLMetadata metadata) 
-	        throws TranslatorException {
-	    
-		Table fromTable = mf.getSchema().getTable(tableName);
-		CsdlEntityType fromEntityType = getEntityType(metadata, entitySet.getType());
+    void addNavigationProperties(MetadataFactory mf, String tableName,
+            CsdlBindingTarget entitySet, XMLMetadata metadata)
+            throws TranslatorException {
 
-		Table toTable = null; 
-		for(CsdlNavigationProperty property:fromEntityType.getNavigationProperties()) {
-		    CsdlNavigationPropertyBinding binding = getNavigationPropertyBinding(entitySet, property.getName());
-		    if (binding != null) {
-		        String target = binding.getTarget();
-		        if (target.contains("/")) {
-		            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17020, target));
-		        }
-		        else {
-		            toTable = mf.getSchema().getTable(target);
-		        }
-		    }
-		    else {
-		        // this means there is no EntitySet defined for this EntityType, thus there will be
-		        // no table for this. Need to create a one.
-		        toTable = addTable(mf, property.getName(), property.getType(), metadata);
-		        toTable.setProperty(PARENT_TABLE, fromTable.getFullName());
-		    }
-		    
-			// support for self-joins
-			if (same(fromTable, toTable)) {
-			    StringBuilder name = new StringBuilder().append(fromTable.getName())
-			            .append(".").append(property.getName());
-				toTable = addTable(mf, name.toString(), fromEntityType.getName(), metadata);
-				toTable.setProperty(PARENT_TABLE, fromTable.getFullName());							
-			}
+        Table fromTable = mf.getSchema().getTable(tableName);
+        CsdlEntityType fromEntityType = getEntityType(metadata,entitySet.getType());
 
-			toTable.setProperty(ASSOSIATION, property.isCollection()?Association.MANY.name():Association.ONE.name());
-			int i = 0;
-			for (CsdlReferentialConstraint constraint : property.getReferentialConstraints()) {
-			    toTable.setProperty(CONSTRAINT+i, constraint.getReferencedProperty()+","+constraint.getProperty());
-			}
-		}
-	}
-	
-	private KeyRecord getPK(MetadataFactory mf, Table table) throws TranslatorException {
-	    KeyRecord record = table.getPrimaryKey();
-	    if (record == null) {
-	        String parentTable = table.getProperty(PARENT_TABLE, false);
-	        if (parentTable == null) {
-	            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17024, table.getName()));
-	        }
-	        return getPK(mf, mf.getSchema().getTable(parentTable));
-	    }
-	    return record;
-	}
-	
-    private void addForeignKey(MetadataFactory mf, Table childTable, Table table) throws TranslatorException {
-        Association association = Association.valueOf(childTable.getProperty(ASSOSIATION, false));
-        childTable.setProperty(ASSOSIATION, null);
-        if (association == Association.ONE) {
-            KeyRecord record = getPK(mf, table);
-            if (record != null) {
-                ArrayList<String> pkColumns = new ArrayList<String>(); 
-                for (Column column:record.getColumns()) {
-                    Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(column.getName());
-                    if (c == null) {
-                        c = mf.addColumn(column.getName(), column.getRuntimeType(), childTable);
-                    }
-                    pkColumns.add(c.getName());
+        Table toTable = null;
+        for (CsdlNavigationProperty property : fromEntityType.getNavigationProperties()) {
+            CsdlNavigationPropertyBinding binding = getNavigationPropertyBinding(
+                    entitySet, property.getName());
+
+            if (binding != null) {
+                String target = binding.getTarget();
+                int index = target.lastIndexOf('/');
+                if (index != -1) {
+                    target = target.substring(index+1);
                 }
-                mf.addPrimaryKey("PK0", pkColumns, childTable); //$NON-NLS-1$
-                mf.addForiegnKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
+                toTable = mf.getSchema().getTable(target);
+                if(index != -1) {
+                    toTable.setNameInSource(binding.getTarget());
+                }
+            } else {
+                // this means there is no EntitySet defined for this EntityType,
+                // or even if it is defined the set of rows are specific to this EntitySet
+                StringBuilder name = new StringBuilder()
+                        .append(fromTable.getName()).append(NAME_SEPARATOR)
+                        .append(property.getName());
+                toTable = addTable(mf, name.toString(), property.getType(), 
+                        property.isCollection()?ODataType.NAVIGATION_COLLECTION:ODataType.NAVIGATION, 
+                        metadata);
+                toTable.setNameInSource(property.getName());
+            }
+
+            // support for self-joins
+            if (same(fromTable, toTable)) {
+                StringBuilder name = new StringBuilder()
+                        .append(fromTable.getName()).append(NAME_SEPARATOR)
+                        .append(property.getName());
+                toTable = addTable(mf, name.toString(), fromEntityType.getName(), 
+                        property.isCollection()?ODataType.NAVIGATION_COLLECTION:ODataType.NAVIGATION, 
+                        metadata);
+                toTable.setNameInSource(property.getName());
+            }
+            toTable.setProperty(PARENT_TABLE, fromTable.getName());
+            
+            toTable.setProperty(FK_NAME, property.getName());
+            
+            int i = 0;
+            for (CsdlReferentialConstraint constraint : property.getReferentialConstraints()) {
+                toTable.setProperty(CONSTRAINT_PROPERTY + i, constraint.getReferencedProperty());
+                toTable.setProperty(CONSTRAINT_REF_PROPERTY + i, constraint.getProperty());
+                i++;
             }
         }
-        else {
-            KeyRecord record = getPK(mf,table);
-            if (record != null) {
-                ArrayList<String> pkColumns = new ArrayList<String>(); 
-                for (Column column:record.getColumns()) {
-                    Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(table.getName()+"_"+column.getName()); //$NON-NLS-1$
-                    if (c == null) {
-                        c = mf.addColumn(table.getName()+"_"+column.getName(), column.getRuntimeType(), childTable); //$NON-NLS-1$
-                    }
-                    pkColumns.add(c.getName());
-                }
-                mf.addForiegnKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$                
-            }            
+    }
+    
+    private KeyRecord getPK(MetadataFactory mf, Table table) throws TranslatorException {
+        KeyRecord record = table.getPrimaryKey();
+        if (record == null) {
+            String parentTable = table.getProperty(PARENT_TABLE, false);
+            if (parentTable == null) {
+                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17024, 
+                        table.getName()));
+            }
+            return getPK(mf, mf.getSchema().getTable(parentTable));
         }
+        return record;
+    }
+    
+    private void addPrimaryKeyToComplexTables(MetadataFactory mf, Table childTable, Table parentTable) 
+            throws TranslatorException {
+        KeyRecord record = null;
+        ODataType type = ODataType.valueOf(childTable.getProperty(ODATA_TYPE, false));
+        boolean isComplexType = (type == ODataType.COMPLEX || type == ODataType.COMPLEX_COLLECTION);
+        boolean isCollection = (type == ODataType.COMPLEX_COLLECTION
+                || type == ODataType.NAVIGATION_COLLECTION || type == ODataType.ENTITYSET);
+        boolean isNavigation = (type == ODataType.NAVIGATION_COLLECTION || type == ODataType.NAVIGATION);
+        
+        if (isComplexType) {
+            // these are complex type based tables.
+            record = getPK(mf, parentTable);
+        } else {
+            // this is entity types now.
+            record = parentTable.getPrimaryKey();
+        }
+        
+        if (record == null) {
+            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17025, 
+                    parentTable.getName()));
+        }
+
+        int i = 0;
+        List<String> columnNames = new ArrayList<String>();
+        for (Column column:record.getColumns()) {
+            String targetColumnName = isCollection ? parentTable.getName() + "_" + column.getName():column.getName();
+            if (isNavigation) {
+                Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(targetColumnName);
+                if (c == null) {
+                    c = addColumn(mf, childTable, column, targetColumnName);
+                    c.setSelectable(false);
+                } else {
+                    targetColumnName = column.getName();
+                }
+                
+            } else {
+                Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(column.getName());
+                if (c == null) {
+                    c = addColumn(mf, childTable, column, targetColumnName);
+                    c.setSelectable(false);
+                } else {
+                    targetColumnName = column.getName();
+                }
+            }
+            columnNames.add(targetColumnName);
+            
+            // if there are no constraints are available then, define some implicit ones 
+            if (childTable.getProperty(CONSTRAINT_PROPERTY + i, false) == null) {
+                childTable.setProperty(CONSTRAINT_PROPERTY + i, targetColumnName);
+                childTable.setProperty(CONSTRAINT_REF_PROPERTY + i, column.getName());
+            }
+            i++;
+        }
+        
+        if (isComplexType) {
+            mf.addPrimaryKey("PK0", columnNames, childTable);
+        }
+    }     
+
+    private void addForeignKey(MetadataFactory mf, Table childTable, Table parentTable) 
+            throws TranslatorException {
+        String fkName = childTable.getProperty(FK_NAME, false);
+        childTable.setProperty(FK_NAME, null);
+        if (fkName == null) {
+            fkName = "FK0";
+        }
+        
+        int i = 0;
+        ArrayList<String> keyColumns = new ArrayList<String>();
+        ArrayList<String> refColumns = new ArrayList<String>();
+        while(true) {
+            if (childTable.getProperty(CONSTRAINT_PROPERTY + i, false) == null) {
+                break;
+            }
+            keyColumns.add(childTable.getProperty(CONSTRAINT_PROPERTY + i, false));
+            refColumns.add(childTable.getProperty(CONSTRAINT_REF_PROPERTY + i, false));
+            
+            childTable.setProperty(CONSTRAINT_PROPERTY + i, null);
+            childTable.setProperty(CONSTRAINT_REF_PROPERTY + i, null);
+            
+            i++;
+        }
+        mf.addForiegnKey(fkName, keyColumns, refColumns, parentTable.getName(), childTable); //$NON-NLS-1$
     }	
 
-	boolean same(Table x, Table y) {
-		return (x.getFullName().equalsIgnoreCase(y.getFullName()));
-	}
+    boolean same(Table x, Table y) {
+        return (x.getFullName().equalsIgnoreCase(y.getFullName()));
+    }
 
-	boolean keyMatches(List<String> names, KeyRecord record) {
-		if (names.size() != record.getColumns().size()) {
-			return false;
-		}
-		Set<String> keyNames = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		for (Column c: record.getColumns()) {
-			keyNames.add(c.getName());
-		}
-		for (int i = 0; i < names.size(); i++) {
-			if (!keyNames.contains(names.get(i))) {
-				return false;
-			}
-		}
-		return true;
-	}
+    boolean keyMatches(List<String> names, KeyRecord record) {
+        if (names.size() != record.getColumns().size()) {
+            return false;
+        }
+        Set<String> keyNames = new TreeSet<String>(
+                String.CASE_INSENSITIVE_ORDER);
+        for (Column c : record.getColumns()) {
+            keyNames.add(c.getName());
+        }
+        for (int i = 0; i < names.size(); i++) {
+            if (!keyNames.contains(names.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    private Column addPropertyAsColumn(MetadataFactory mf, Table table, CsdlProperty property) {
-		
+    private Column addPropertyAsColumn(MetadataFactory mf, Table table,
+            CsdlProperty property) {
+
         Column c = buildColumn(mf, table, property);
-		
-		c.setNullType(property.isNullable()?NullType.Nullable:NullType.No_Nulls);
-		
-		if (property.getMaxLength() != null) {
-			c.setLength(property.getMaxLength());
-		}
-		c.setPrecision(property.getPrecision());
-		c.setScale(property.getScale());
-		
-		if (property.getDefaultValue() != null) {
-		    c.setDefaultValue(property.getDefaultValue());
-		}
-		
-		if (property.getMimeType() != null) {
-		    c.setProperty("MIME-TYPE", property.getMimeType());
-		}
-		
-		if (property.getSrid() != null) {
-		    c.setProperty("SRID", property.getSrid().toString());
-		}
-		return c;
-	}
+
+        c.setNullType(property.isNullable() ? NullType.Nullable
+                : NullType.No_Nulls);
+
+        if (property.getMaxLength() != null) {
+            c.setLength(property.getMaxLength());
+        }
+        if (property.getPrecision() != null) {
+            c.setPrecision(property.getPrecision());
+        }
+        if (property.getScale() != null) {
+            c.setScale(property.getScale());
+        }
+        if (property.getDefaultValue() != null) {
+            c.setDefaultValue(property.getDefaultValue());
+        }
+
+        if (property.getMimeType() != null) {
+            c.setProperty("MIME-TYPE", property.getMimeType());
+        }
+
+        if (property.getSrid() != null) {
+            c.setProperty("SRID", property.getSrid().toString());
+        }
+        if (!property.getType().equals("Edm.String")) {
+            c.setProperty("NATIVE_TYPE", property.getType());
+        }        
+        return c;
+    }
     
-    private ProcedureParameter addPrameterAsColumn(MetadataFactory mf, Procedure procedure, CsdlParameter parameter) {
+    private Column addColumn(MetadataFactory mf, Table table, Column property, String newName) {
+        Column c = mf.addColumn(newName, property.getRuntimeType(),table);
+        c.setUpdatable(true);
+        c.setNullType(property.getNullType());
+        c.setLength(property.getLength());
+        c.setPrecision(property.getPrecision());
+        c.setScale(property.getScale());
+        c.setDefaultValue(property.getDefaultValue());
+        c.setProperty("MIME-TYPE", c.getProperty("MIME-TYPE", false));
+        c.setProperty("SRID", property.getProperty("SRID", false));
+        c.setProperty("NATIVE_TYPE", property.getProperty("NATIVE_TYPE", false));
+        return c;
+    }
+
+    private ProcedureParameter addPrameterAsColumn(MetadataFactory mf,
+            Procedure procedure, CsdlParameter parameter) {
         ProcedureParameter p = mf.addProcedureParameter(
                 parameter.getName(),
                 ODataTypeManager.teiidType(parameter.getType(),parameter.isCollection()), 
@@ -478,9 +614,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (parameter.getMaxLength() != null) {
             p.setLength(parameter.getMaxLength());
         }
-        p.setPrecision(parameter.getPrecision());
-        p.setScale(parameter.getScale());
-        
+        if (parameter.getPrecision() != null) {
+            p.setPrecision(parameter.getPrecision());
+        }
+        if (parameter.getScale() != null) {
+            p.setScale(parameter.getScale());
+        }
         if (parameter.getSrid() != null) {
             p.setProperty("SRID", parameter.getSrid().toString());
         }
@@ -501,97 +640,114 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             addPrameterAsColumn(mf, procedure, parameter);
         }
         else {
-            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17022, parameter.getName()));
+            throw new TranslatorException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID17022, parameter.getName()));
         }
     }
     
-    void addFunctionImportAsProcedure(MetadataFactory mf, CsdlFunctionImport functionImport, XMLMetadata metadata)
+    void addFunctionImportAsProcedure(MetadataFactory mf,
+            CsdlFunctionImport functionImport, ODataType odataType, XMLMetadata metadata)
             throws TranslatorException {
-		List<CsdlFunction> functions = getFunctions(metadata, functionImport.getFunction());
-		for (CsdlFunction function : functions) {
-	        Procedure procedure = mf.addProcedure(function.getName());
-	        procedure.setProperty(HTTP_METHOD, "GET");
-	        addOperation(mf, metadata, function, procedure);
-		}
-	}
+        List<CsdlFunction> functions = getFunctions(metadata,
+                functionImport.getFunction());
+        for (CsdlFunction function : functions) {
+            Procedure procedure = mf.addProcedure(function.getName());
+            addOperation(mf, metadata, odataType, function, procedure);
+        }
+    }
 
-    private void addProcedureTableReturn(MetadataFactory mf, Procedure procedure, CsdlComplexType type)
-            throws TranslatorException {
+    private void addProcedureTableReturn(MetadataFactory mf, XMLMetadata metadata, Procedure procedure, 
+            CsdlComplexType type, String namePrefix) throws TranslatorException {
         for (CsdlProperty property:type.getProperties()) {
-            if (isSimple(property.getType())) {
+            if (isSimple(property.getType()) || isEnum(metadata, property.getType())) {                 
                 mf.addProcedureResultSetColumn(
-                        property.getName(),
+                        namePrefix == null? property.getName():namePrefix+"_"+property.getName(),
                         ODataTypeManager.teiidType(property.getType(), property.isCollection()), procedure);
             }
+            else if (isComplexType(metadata, property.getType())) {
+                CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());
+                addProcedureTableReturn(mf, metadata, procedure, childType, property.getName());
+            }
             else {
-                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17023, procedure.getName()));
+                throw new TranslatorException(ODataPlugin.Util.gs(
+                        ODataPlugin.Event.TEIID17023, procedure.getName()));
             }
         }
     }
     
-    
-    private void addProcedureTableReturn(MetadataFactory mf, Procedure procedure, CsdlEntityType type)
-            throws TranslatorException {
+    private void addProcedureTableReturn(MetadataFactory mf, XMLMetadata metadata, Procedure procedure, 
+            CsdlEntityType type, String namePrefix) throws TranslatorException {
         for (CsdlProperty property:type.getProperties()) {
-            if (isSimple(property.getType())) {
+            if (isSimple(property.getType()) || isEnum(metadata, property.getType())) {
                 mf.addProcedureResultSetColumn(
-                        property.getName(),
+                        namePrefix == null? property.getName():namePrefix+"_"+property.getName(),
                         ODataTypeManager.teiidType(property.getType(), property.isCollection()), procedure);
             }
+            else if (isComplexType(metadata, property.getType())) {
+                CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());
+                addProcedureTableReturn(mf, metadata, procedure, childType, property.getName());
+            }            
             else {
-                throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17023, procedure.getName()));
+                throw new TranslatorException(ODataPlugin.Util.gs(
+                        ODataPlugin.Event.TEIID17023, procedure.getName()));
             }
         }
     }
+    
     private void addActionImportAsProcedure(MetadataFactory mf, CsdlActionImport actionImport, 
-            XMLMetadata metadata) throws TranslatorException {
+            ODataType odataType, XMLMetadata metadata) throws TranslatorException {
         List<CsdlAction> actions = getActions(metadata, actionImport.getAction());
         
-        for (CsdlAction function : actions) {
-            Procedure procedure = mf.addProcedure(function.getName());
-            procedure.setProperty(HTTP_METHOD, "POST");
-            
-            addOperation(mf, metadata, function, procedure);
+        for (CsdlAction action : actions) {
+            Procedure procedure = mf.addProcedure(action.getName());
+            addOperation(mf, metadata, odataType, action, procedure);
         }
         
     }
 
-    private void addOperation(MetadataFactory mf, XMLMetadata metadata,
+    private void addOperation(MetadataFactory mf, XMLMetadata metadata, ODataType odataType,
             CsdlOperation function, Procedure procedure)
             throws TranslatorException {
+        
+        procedure.setProperty(ODATA_TYPE, odataType.name());
+        
         for (CsdlParameter parameter : function.getParameters()) {
             addParameter(mf, metadata, procedure, parameter);
         }
         
         CsdlReturnType returnType = function.getReturnType();
-        if (isSimple(returnType.getType())) {
-            mf.addProcedureParameter("return", ODataTypeManager.teiidType(returnType.getType(), 
-                    returnType.isCollection()), ProcedureParameter.Type.ReturnValue, procedure); //$NON-NLS-1$              
-        } 
-        else if (isComplexType(metadata, returnType.getType())) {
-            procedure.setProperty(COMPLEX_TYPE, function.getReturnType().getType());
-            addProcedureTableReturn(mf, procedure, getComplexType(metadata, returnType.getType()));
-        }
-        else if (isEntityType(metadata, returnType.getType())){
-            procedure.setProperty(ENTITY_TYPE, function.getReturnType().getType());
-            addProcedureTableReturn(mf, procedure, getEntityType(metadata, returnType.getType()));              
-        }
-        else {
-            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, function.getName(), returnType.getType()));
+        if (returnType != null) {
+            if (isSimple(returnType.getType())) {
+                mf.addProcedureParameter("return", ODataTypeManager.teiidType(returnType.getType(), 
+                        returnType.isCollection()), ProcedureParameter.Type.ReturnValue, procedure);               
+            } 
+            else if (isComplexType(metadata, returnType.getType())) {
+                addProcedureTableReturn(mf, metadata, procedure,
+                        getComplexType(metadata, returnType.getType()), null);
+            }
+            else if (isEntityType(metadata, returnType.getType())){
+                addProcedureTableReturn(mf, metadata, procedure,
+                        getEntityType(metadata, returnType.getType()), null);              
+            }
+            else {
+                throw new TranslatorException(ODataPlugin.Util.gs(
+                        ODataPlugin.Event.TEIID17005, function.getName(),
+                        returnType.getType()));
+            }
         }
     }
 
-	public void setSchemaNamespace(String namespace) {
-		this.schemaNamespace = namespace;
-	}
+    public void setSchemaNamespace(String namespace) {
+        this.schemaNamespace = namespace;
+    }
 
-	List<String> getColumnNames(List<Column> columns){
-		ArrayList<String> names = new ArrayList<String>();
-		for (Column c:columns) {
-			names.add(c.getName());
-		}
-		return names;
-	}
+    List<String> getColumnNames(List<Column> columns) {
+        ArrayList<String> names = new ArrayList<String>();
+        for (Column c : columns) {
+            names.add(c.getName());
+        }
+        return names;
+    }
 
 	@TranslatorProperty(display="Schema Namespace", category=PropertyType.IMPORT, description="Namespace of the schema to import")
     public String getSchemaNamespace() {
