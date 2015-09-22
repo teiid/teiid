@@ -522,5 +522,11 @@ public class TestSQLConversionVisitor {
                         "SELECT 10000000000.0, -100.0", //$NON-NLS-1$
                         true);
     }
-
+    
+    @Test public void testDecimalFormat() {
+        helpTestVisitor(getTestVDB(),
+                        "select 100000000000.0, -.0000001", //$NON-NLS-1$
+                        "SELECT 100000000000.0, -0.0000001", //$NON-NLS-1$
+                        true);
+    }
 }

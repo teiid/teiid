@@ -323,4 +323,9 @@ public class TestVisitors {
 		
 	}
 	
+	@Test public void testFloatingLiteral() throws Exception {
+		String sql = "SELECT COUNT(*) FROM Opportunity where amount > 100000000";
+		String source = "SELECT COUNT(Id) FROM Opportunity WHERE Opportunity.Amount > 100000000";
+		helpTest(sql, source);
+	}
 }

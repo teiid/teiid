@@ -21,6 +21,7 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +47,9 @@ import org.teiid.translator.salesforce.Util;
  * Parses Criteria in support of all of the ExecutionImpl classes.
  */
 public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisitor {
+	
+	private static final double SCIENTIFIC_LOW = Math.pow(10, -3);
+    private static final double SCIENTIFIC_HIGH = Math.pow(10, 7);
 
     private static final String RESTRICTEDMULTISELECTPICKLIST = "restrictedmultiselectpicklist"; //$NON-NLS-1$
 	private static final String MULTIPICKLIST = "multipicklist"; //$NON-NLS-1$
@@ -353,6 +357,24 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 			result.append(literal.getValue()).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
 		} else if (literal.getValue().getClass().equals(java.sql.Date.class)) {
 			result.append(literal.getValue());
+		} else if (literal.getValue() instanceof Double) {
+			Double doubleVal = (Double)literal.getValue();
+			double value = Math.abs(doubleVal.doubleValue());
+            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) { 
+            	result.append(BigDecimal.valueOf(doubleVal).toPlainString());
+            } else {
+            	result.append(literal.toString());
+            }
+		} else if (literal.getValue() instanceof Float) {
+			Float floatVal = (Float)literal.getValue();
+			float value = Math.abs(floatVal);
+            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) { 
+            	result.append(BigDecimal.valueOf(floatVal).toPlainString());
+            } else {
+            	result.append(literal.toString());
+            }
+		} else if (literal.getValue() instanceof BigDecimal) {
+			result.append(((BigDecimal)literal.getValue()).toPlainString());
 		} else {
 			result.append(literal.toString());
 		}

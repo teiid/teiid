@@ -26,6 +26,7 @@ package org.teiid.translator.jdbc;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
+import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
@@ -148,6 +149,9 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	                else if (Float.class.isAssignableFrom(type)){
 	                    float value = Math.abs(((Float)obj).floatValue());
 	                    useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH);
+	                } else if (BigDecimal.class.isAssignableFrom(type)) {
+	                	valuesbuffer.append(((BigDecimal)obj).toPlainString());
+	                	return;
 	                }
             	}
                 // The formatting is to avoid the so-called "scientic-notation"
