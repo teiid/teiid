@@ -36,6 +36,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.controller.ModelController;
 import org.jboss.as.controller.OperationFailedException;
+import org.jboss.msc.service.LifecycleContext;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceContainer;
@@ -177,6 +178,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			// add transformation metadata to the repository.
 			getVDBRepository().addVDB(this.vdb, store, vdbResources.getEntriesPlusVisibilities(), udf, cmr, this.shutdownListener.isBootInProgress());
 		} catch (VirtualDatabaseException e) {
+		    cleanup(context);
 			throw new StartException(e);
 		}		
 		
@@ -184,6 +186,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		try {
 			loadMetadata(this.vdb, cmr, store, this.vdbResources, this.shutdownListener.isBootInProgress());
 		} catch (TranslatorException e) {
+		    cleanup(context);
 			throw new StartException(e);
 		}
 				
@@ -252,26 +255,30 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         return serviceContainer.addService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()), createVoidService());
 	}
 
-	@Override
-	public void stop(StopContext context) {
-		ServiceController<?> switchSvc = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbSwitchServiceName(vdb.getName(), vdb.getVersion()));
+    void cleanup(LifecycleContext context) {
+        ServiceController<?> switchSvc = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbSwitchServiceName(vdb.getName(), vdb.getVersion()));
         if (switchSvc != null) {
             switchSvc.setMode(ServiceController.Mode.REMOVE);
         }
                 
-		// stop object replication
-		if (this.objectReplicatorInjector.getValue() != null) {
-			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
-			this.objectReplicatorInjector.getValue().stop(gts);
-		}		
-		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
-		getVDBRepository().removeListener(this.vdbListener);
-		getVDBRepository().removeListener(this.restEasyListener);
-		final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
+        // stop object replication
+        if (this.objectReplicatorInjector.getValue() != null) {
+            GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
+            this.objectReplicatorInjector.getValue().stop(gts);
+        }       
+        getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
+        getVDBRepository().removeListener(this.vdbListener);
+        getVDBRepository().removeListener(this.restEasyListener);
+        final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);
-        }	        
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50026, this.vdb));
+        }           
+        LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50026, this.vdb));
+    }
+    
+	@Override
+	public void stop(StopContext context) {
+	    cleanup(context);
 	}
 
 	@Override
