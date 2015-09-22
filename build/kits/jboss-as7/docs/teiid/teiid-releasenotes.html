@@ -313,7 +313,11 @@ temporary table access.
 <ul>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-2981'>TEIID-2981</a>] -  Add an OData query parameter that caches the resultset
 </li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3658'>TEIID-3658</a>] -  VDBs may start before transport service
+</li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-3483'>TEIID-3483</a>] -  Add an option to use DatabaseMetaData for hive/impala import
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3553'>TEIID-3553</a>] -  Odata - if table name is ambiguous, teiid returns result from first table
 </li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-3628'>TEIID-3628</a>] -  Server socket setting issues
 </li>
@@ -321,8 +325,19 @@ temporary table access.
 </li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-3640'>TEIID-3640</a>] -  Improper initialization when memory buffer size is over 2 GB.
 </li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3662'>TEIID-3662</a>] -  IN predicate against a materialized/temp table index without an order by returns wrong results
+</li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-3671'>TEIID-3671</a>] -  filter on child table not working
 </li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3692'>TEIID-3692</a>] -  Impala/Hive string literals
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3696'>TEIID-3696</a>] -  Duplicates are not always removed when UNION and GROUP BY clauses are used in a subquery
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3698'>TEIID-3698</a>] -  non-selectable columns will cause OData failures
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3707'>TEIID-3707</a>] -  Wrong Data returned when a procedure is executed in the SELECT clause
+</li>
+</ul>
 </ul>
 
 <h4>from 8.7.4</h4>
@@ -335,17 +350,8 @@ temporary table access.
 </li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-3558'>TEIID-3558</a>] -  Duplicate records being for formed for Internal Materialized View cluster
 </li>
-<li>[<a href='https://issues.jboss.org/browse/TEIID-3658'>TEIID-3658</a>] -  VDBs may start before transport service
-</li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-3662'>TEIID-3662</a>] -  IN predicate against a materialized/temp table index without an order by returns wrong results
 </li>
-<li>[<a href='https://issues.jboss.org/browse/TEIID-3696'>TEIID-3696</a>] -  Duplicates are not always removed when UNION and GROUP BY clauses are used in a subquery
-</li>
-<li>[<a href='https://issues.jboss.org/browse/TEIID-3698'>TEIID-3698</a>] -  non-selectable columns will cause OData failures
-</li>
-<li>[<a href='https://issues.jboss.org/browse/TEIID-3707'>TEIID-3707</a>] -  Wrong Data returned when a procedure is executed in the SELECT clause
-</li>
-</ul>
 
 <h4>from 8.7.3</h4>
 <ul>
