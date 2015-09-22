@@ -56,7 +56,7 @@ import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
 import org.apache.olingo.commons.api.edm.provider.CsdlReferentialConstraint;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
-import org.apache.olingo.commons.api.format.ODataFormat;
+import org.apache.olingo.commons.api.format.ContentType;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -99,7 +99,7 @@ public class TestODataMetadataProcessor {
             protected XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
                 try {
                     ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(
-                            false, ODataFormat.APPLICATION_XML);
+                            false, ContentType.APPLICATION_XML);
                     XMLMetadata metadata = deserializer.toMetadata(
                             new FileInputStream(UnitTestUtil.getTestDataFile("trippin.xml")));
                     return metadata;

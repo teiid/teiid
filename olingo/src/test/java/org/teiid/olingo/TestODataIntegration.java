@@ -164,21 +164,20 @@ public class TestODataIntegration {
 
     @Test
     public void testServiceMetadata() throws Exception {
-        String ls = System.getProperty("line.separator");
         ContentResponse response = http.GET(baseURL + "/loopy/VM1");
         assertEquals(200, response.getStatus());
-        String expected = "{" +  ls +
-                "  \"@odata.context\" : \""+baseURL+"/loopy/VM1/$metadata\"," +ls+ 
-                "  \"value\" : [ {" + ls +
-                "    \"name\" : \"G1\"," + ls + 
-                "    \"url\" : \"G1\"" + ls +
-                "  }, {" + ls +
-                "    \"name\" : \"G2\"," + ls + 
-                "    \"url\" : \"G2\"" + ls + 
-                "  }, {" + ls + 
-                "    \"name\" : \"G4\"," + ls + 
-                "    \"url\" : \"G4\"" + ls + 
-                "  } ]" + ls + 
+        String expected = "{" +  
+                "\"@odata.context\":\""+baseURL+"/loopy/VM1/$metadata\"," +
+                "\"value\":[{" +
+                "\"name\":\"G1\"," +
+                "\"url\":\"G1\"" +
+                "},{" +
+                "\"name\":\"G2\"," +
+                "\"url\":\"G2\"" +
+                "},{" +
+                "\"name\":\"G4\"," +
+                "\"url\":\"G4\"" +
+                "}]" +
                 "}";
         assertEquals(expected, response.getContentAsString());
     }
@@ -710,6 +709,7 @@ public class TestODataIntegration {
         hc.addUpdate("DELETE FROM x WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
         hc.addUpdate("INSERT INTO x (a, b, c) VALUES ('a', 'b', 5)", new int[] {1});
         hc.addUpdate("UPDATE x SET c = 10 WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
+        hc.addData("SELECT x.a, x.b, x.c FROM x WHERE x.a = 'a' AND x.b = 'b'", Arrays.asList(Arrays.asList("a", "b", 1)));
         teiid.addTranslator("x1", hc);
         
         try {

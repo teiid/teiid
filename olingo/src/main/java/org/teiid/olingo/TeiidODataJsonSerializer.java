@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.apache.olingo.commons.api.Constants;
 import org.apache.olingo.commons.api.data.ContextURL;
-import org.apache.olingo.commons.api.format.ODataFormat;
+import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.api.serializer.SerializerResult;
@@ -41,8 +41,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 public class TeiidODataJsonSerializer extends ODataJsonSerializer {
     
-    public TeiidODataJsonSerializer(ODataFormat format) {
-        super(format);
+    public TeiidODataJsonSerializer(ContentType contentType) {
+        super(contentType);
     }
 
     public SerializerResult complexCollection(final ServiceMetadata metadata,

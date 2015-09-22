@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.format.ContentType;
-import org.apache.olingo.commons.api.format.ODataFormat;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.ODataLibraryException;
 import org.apache.olingo.server.api.ODataResponse;
@@ -57,7 +56,7 @@ public class EdmComplexResponse extends ServiceResponse {
             ODataResponse response) throws ContentNegotiatorException,
             SerializerException {
         return new EdmComplexResponse(request.getServiceMetaData(), response,
-                new TeiidODataJsonSerializer(ODataFormat.fromContentType(request.getResponseContentType())), 
+                new TeiidODataJsonSerializer(request.getResponseContentType()), 
                 request.getResponseContentType(), request.getPreferences(), contextURL);
     }
 
@@ -74,7 +73,7 @@ public class EdmComplexResponse extends ServiceResponse {
         this.response.setContent(this.serializer.complexCollection(metadata,
                         complexResult.getResults(), this.contextURL, next)
                         .getContent());
-        writeOK(this.responseContentType.toContentTypeString());
+        writeOK(this.responseContentType);
         close();
     }
 

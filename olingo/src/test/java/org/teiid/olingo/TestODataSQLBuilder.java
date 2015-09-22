@@ -140,7 +140,7 @@ public class TestODataSQLBuilder {
         Hashtable<String, String> headers = new Hashtable<String, String>();
         headers.put("Content-Type", "application/json");
 
-        Mockito.stub(client.getMetadataStore()).toReturn(store);
+        Mockito.stub(client.getMetadataStore()).toReturn(store);        
         Mockito.stub(client.executeCount(Mockito.any(Query.class), Mockito.anyListOf(SQLParameter.class))).toReturn(new CountResponse() {
             @Override
             public int getCount() {
@@ -541,7 +541,7 @@ public class TestODataSQLBuilder {
     public void testUpdate() throws Exception {
         String payload = "{ \"e1\":\"teiid\", \"e3\":3.0}";
         helpInsert("/odata4/vdb/PM1/G1(1)",
-                "UPDATE PM1.G1 SET e1 = 'teiid', e3 = 3.0 WHERE PM1.G1.e2 = 1",  
+                "INSERT INTO PM1.G1 (e1, e3) VALUES ('teiid', 3.0)",  
                 new StringServletInputStream(payload),"PATCH");
     }    
     

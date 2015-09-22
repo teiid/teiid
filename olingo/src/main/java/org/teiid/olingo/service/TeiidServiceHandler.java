@@ -30,6 +30,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -477,7 +478,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                 updateResponse = getClient().executeUpdate(delete, visitor.getParameters());
                 
                 // insert
-                ODataJsonDeserializer deserializer = new ODataJsonDeserializer();
+                ODataJsonDeserializer deserializer = new ODataJsonDeserializer(ContentType.JSON);
                              
                 visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
                         request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
@@ -805,7 +806,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                 try {
                     InputStream content = ((BlobType)XMLSystemFunctions.serialize(serialize, new XMLType((SQLXML)result))).getBinaryStream();
                     response.writeContent(content, 200, false);
-                    response.writeOK(ContentType.APPLICATION_OCTET_STREAM.toContentTypeString());
+                    response.writeOK(ContentType.APPLICATION_OCTET_STREAM);
                 } catch (TransformationException e) {
                     throw new SQLException(e);
                 }
@@ -813,23 +814,50 @@ public class TeiidServiceHandler implements ServiceHandler {
             else {
                 InputStream content = ((SQLXML)result).getBinaryStream();
                 response.writeContent(content, 200, false);
-                response.writeOK(ContentType.APPLICATION_XML.toContentTypeString());
+                response.writeOK(ContentType.APPLICATION_XML);
             }
         }
         else if (result instanceof Blob) {
             InputStream content =  ((Blob)result).getBinaryStream();
             response.writeContent(content, 200, false);
-            response.writeOK(ContentType.APPLICATION_OCTET_STREAM.toContentTypeString());            
+            response.writeOK(ContentType.APPLICATION_OCTET_STREAM);            
         }
         else if (result instanceof Clob) {
             InputStream content =  new ReaderInputStream(((Clob)result).getCharacterStream(), charSet==null?Charset.defaultCharset():Charset.forName(charSet));
             response.writeContent(content, 200, false);
-            response.writeOK(ContentType.TEXT_PLAIN.toContentTypeString());                        
+            response.writeOK(ContentType.TEXT_PLAIN);                        
         }
         else {
             InputStream content =  new ByteArrayInputStream(result.toString().getBytes(charSet==null?Charset.defaultCharset():Charset.forName(charSet)));
             response.writeContent(content, 200, false);
-            response.writeOK(ContentType.APPLICATION_OCTET_STREAM.toContentTypeString());                        
+            response.writeOK(ContentType.APPLICATION_OCTET_STREAM);                        
+        }
+    }
+
+    @Override
+    public void upsertEntity(DataRequest request, Entity entity, boolean merge,
+            String entityETag, EntityResponse response)
+            throws ODataLibraryException, ODataApplicationException {
+        
+        final ODataSQLBuilder visitor = new ODataSQLBuilder(
+                getClient().getMetadataStore(), this.prepared, true, 
+                request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+        visitor.visit(request.getUriInfo());
+        
+        final EntityList queryResponse;
+        try {
+            Query query = visitor.selectQuery();
+            queryResponse = (EntityList)executeQuery(request, visitor, query);
+        } catch (Exception e) {
+            throw new ODataApplicationException(e.getMessage(),
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    Locale.getDefault(), e);
+        }        
+        
+        if (!queryResponse.getEntities().isEmpty()) {
+            updateEntity(request, entity, merge, entityETag, response);
+        } else {
+            createEntity(request, entity, response);
         }
     }
 }
