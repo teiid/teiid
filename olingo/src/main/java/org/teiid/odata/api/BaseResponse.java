@@ -19,15 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo.api;
+package org.teiid.odata.api;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-public interface QueryResponse extends BaseResponse {
-    void addRow(ResultSet rs) throws SQLException;
-    long size();
-    void setCount(long count);
-    void setNextToken(String token);
-    String getNextToken();
+public interface BaseResponse {
 }

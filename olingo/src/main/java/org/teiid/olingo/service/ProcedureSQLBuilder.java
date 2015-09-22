@@ -54,10 +54,10 @@ import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
+import org.teiid.odata.api.ProcedureReturnType;
+import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.LiteralParser;
-import org.teiid.olingo.api.ODataTypeManager;
-import org.teiid.olingo.api.ProcedureReturnType;
-import org.teiid.olingo.api.SQLParameter;
+import org.teiid.olingo.ODataTypeManager;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 import com.fasterxml.jackson.core.JsonFactory;

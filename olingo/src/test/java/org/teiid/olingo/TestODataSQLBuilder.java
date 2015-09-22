@@ -42,15 +42,14 @@ import org.apache.olingo.server.api.edmx.EdmxReference;
 import org.apache.olingo.server.core.OData4Impl;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.olingo.api.Client;
-import org.teiid.olingo.api.CountResponse;
-import org.teiid.olingo.api.OperationResponse;
-import org.teiid.olingo.api.SQLParameter;
+import org.teiid.odata.api.Client;
+import org.teiid.odata.api.CountResponse;
+import org.teiid.odata.api.OperationResponse;
+import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.service.EntityList;
 import org.teiid.olingo.service.OData4EntitySchemaBuilder;
 import org.teiid.olingo.service.TeiidServiceHandler;
@@ -141,7 +140,7 @@ public class TestODataSQLBuilder {
         Hashtable<String, String> headers = new Hashtable<String, String>();
         headers.put("Content-Type", "application/json");
 
-        Mockito.stub(client.getMetadataStore()).toReturn(store);
+        Mockito.stub(client.getMetadataStore()).toReturn(store);        
         Mockito.stub(client.executeCount(Mockito.any(Query.class), Mockito.anyListOf(SQLParameter.class))).toReturn(new CountResponse() {
             @Override
             public int getCount() {
@@ -297,10 +296,9 @@ public class TestODataSQLBuilder {
         Assert.assertEquals(expected, state.arg1.getValue().toString());
     }
     
-    @Ignore
     @Test
     public void test$CountAnd$Filter() throws Exception {
-        String expected = "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1) = 2 ORDER BY g0.e2";
+        String expected = "SELECT COUNT(*) FROM PM1.G1 AS g0 WHERE g0.e3 < 10";
         QueryState state = helpTest("/odata4/vdb/PM1/G1/$count?$filter="+Encoder.encode("e3 lt 10"), null);
 
         Mockito.verify(state.client).executeCount(state.arg1.capture(), Mockito.eq(state.parameters));
@@ -315,18 +313,23 @@ public class TestODataSQLBuilder {
         Mockito.verify(state.client).executeCount(state.arg1.capture(), Mockito.eq(state.parameters));
         Assert.assertEquals(expected, state.arg1.getValue().toString());
     }
-
+    
     @Test
     public void test$CountIn$FilterWithCount() throws Exception {
         String expected = "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) = 2 ORDER BY g0.e2";
         helpTest("/odata4/vdb/PM1/G1?$filter=G4_FKX/$count eq 2&$select=e1", expected);
     }
     
-    @Ignore
     @Test
     public void test$CountIn$FilterOnExpression() throws Exception {
-        String expected = "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1) = 2 ORDER BY g0.e2";
-        helpTest("/odata4/vdb/PM1/G1?$filter=G4_FKX/e2 eq 2&$select=e1", expected);
+        String expected = "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) = 2 ORDER BY g0.e2";
+        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/$count eq 2"), expected);
+    }
+    
+    @Test
+    public void test$CountIn$orderby() throws Exception {
+        String expected = "SELECT (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) AS \"_orderByAlias\", g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 ORDER BY \"_orderByAlias\"";
+        helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", expected);
     }    
         
     @Test
@@ -538,7 +541,7 @@ public class TestODataSQLBuilder {
     public void testUpdate() throws Exception {
         String payload = "{ \"e1\":\"teiid\", \"e3\":3.0}";
         helpInsert("/odata4/vdb/PM1/G1(1)",
-                "UPDATE PM1.G1 SET e1 = 'teiid', e3 = 3.0 WHERE PM1.G1.e2 = 1",  
+                "INSERT INTO PM1.G1 (e1, e3) VALUES ('teiid', 3.0)",  
                 new StringServletInputStream(payload),"PATCH");
     }    
     
@@ -649,21 +652,6 @@ public class TestODataSQLBuilder {
         helpTest("/odata4/vdb/PM1/G1(0)/G4_FKX", "SELECT g1.e1, g1.e2 FROM PM1.G1 AS g0 "
                 + "INNER JOIN PM1.G4 AS g1 ON g0.e2 = g1.e2 WHERE g0.e2 = 0 ORDER BY g1.e1");
     }
-
-    @Ignore // (Olingo parsing error OLINGO-635)
-    @Test
-    public void testFilterBasedAssosiation() throws Exception {
-        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/e1 eq '1'"), "SELECT g1.e1, g1.e2 FROM PM1.G1 AS g0 "
-                + "INNER JOIN PM1.G4 AS g1 ON g0.e2 = g1.e2 WHERE g0.e2 = 0 ORDER BY g1.e1");
-
-    }
-    
-    @Ignore // (Olingo parsing error OLINGO-635)
-    @Test
-    public void test$it_OverPath() throws Exception {
-        helpTest("/odata4/vdb/PM1/G1?$filter=$it/G4_FKX/e1 eq e1",
-                "");
-    }    
     
     @Test
     public void test$RootOverPath() throws Exception {
@@ -696,6 +684,16 @@ public class TestODataSQLBuilder {
                 + "ON g0.e2 = g1.e2 "
                 + "ORDER BY g0.e2");        
     }
+    
+    @Test
+    public void testExpandSimple_OneToOne() throws Exception {
+        helpTest("/odata4/vdb/PM1/G2?$expand=FK0",
+                "SELECT g0.e1, g0.e2, g1.e1, g1.e2, g1.e3 "
+                + "FROM PM1.G2 AS g0 "
+                + "LEFT OUTER JOIN PM1.G1 AS g1 "
+                + "ON g1.e2 = g0.e2 "
+                + "ORDER BY g0.e2");   
+    }    
     
     @Test
     public void testExpandSimpleWithSelect() throws Exception {
@@ -760,13 +758,40 @@ public class TestODataSQLBuilder {
                 + "ORDER BY g0.e2, g1.e1 DESC");        
     }
     
-//    @Test
-//    public void testSimpleCrossJoin() throws Exception {
-//        helpTest("/odata4/vdb/PM1/$crossjoin(G1, G2)",
-//                "SELECT g0.e1, g0.e2, g0.e3, g1.e1, g1.e2 "
-//                + "FROM PM1.G1 AS g0 "
-//                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-//                + "ON g0.e2 = g1.e2 "
-//                + "ORDER BY g0.e2, g1.e1 DESC");        
-//    }    
+    @Test
+    public void testSimpleCrossJoin() throws Exception {
+        helpTest("/odata4/vdb/PM1/$crossjoin(G1, G2)",
+                "SELECT g0.e2, g1.e2 "
+                + "FROM PM1.G1 AS g0, "
+                + "PM1.G2 AS g1 "
+                + "ORDER BY g0.e2, g1.e2");        
+    } 
+    
+    @Test
+    public void testSimpleCrossJoinWithFilter() throws Exception {
+        helpTest("/odata4/vdb/PM1/$crossjoin(G1, G2)?$filter="+Encoder.encode("G1/e1 eq G2/e2"),
+                "SELECT g0.e2, g1.e2 "
+                + "FROM PM1.G1 AS g0, "
+                + "PM1.G2 AS g1 "
+                + "WHERE g0.e1 = g1.e2 "
+                + "ORDER BY g0.e2, g1.e2");        
+    }
+    
+    @Test
+    public void testSimpleCrossJoinWith$Orderby() throws Exception {
+        helpTest("/odata4/vdb/PM1/$crossjoin(G1, G2)?$orderby=G1/e1,G2/e2",
+                "SELECT g0.e2, g0.e1, g1.e2 "
+                + "FROM PM1.G1 AS g0, "
+                + "PM1.G2 AS g1 "
+                + "ORDER BY g0.e1, g1.e2");        
+    }
+    
+    @Test
+    public void testSimpleCrossJoinWith$expand() throws Exception {
+        helpTest("/odata4/vdb/PM1/$crossjoin(G1, G2)?$expand=G1",
+                "SELECT g0.e1, g0.e3, g0.e2, g1.e2 "
+                + "FROM PM1.G1 AS g0, "
+                + "PM1.G2 AS g1 "
+                + "ORDER BY g0.e2, g1.e2");        
+    }    
 }

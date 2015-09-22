@@ -36,17 +36,17 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.codec.Charsets;
-import org.apache.olingo.commons.api.ODataError;
+import org.apache.olingo.client.api.data.ResWrap;
+import org.apache.olingo.client.api.serialization.ODataDeserializerException;
+import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.data.ComplexValue;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.data.Property;
-import org.apache.olingo.commons.api.data.ResWrap;
+import org.apache.olingo.commons.api.ex.ODataError;
 import org.apache.olingo.commons.api.format.AcceptType;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
-import org.apache.olingo.commons.api.serialization.ODataDeserializerException;
-import org.apache.olingo.commons.core.serialization.JsonDeserializer;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -196,7 +196,7 @@ public class BaseQueryExecution {
 
 	protected Map<String, List<String>> getDefaultHeaders() {
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
-		headers.put("Accept", Arrays.asList(AcceptType.fromContentType(ContentType.APPLICATION_JSON).toString())); //$NON-NLS-1$
+		headers.put("Accept", Arrays.asList(AcceptType.fromContentType(ContentType.JSON_NO_METADATA).toString())); //$NON-NLS-1$
 		headers.put("Content-Type", Arrays.asList(ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
 		return headers;
 	}

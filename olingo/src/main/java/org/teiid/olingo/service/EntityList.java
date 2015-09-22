@@ -50,29 +50,22 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.odata.api.QueryResponse;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.api.ODataTypeManager;
-import org.teiid.olingo.api.ProjectedColumn;
-import org.teiid.olingo.api.QueryResponse;
+import org.teiid.olingo.ODataTypeManager;
+import org.teiid.olingo.ProjectedColumn;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityList extends EntityCollection implements QueryResponse {
     private final String invalidCharacterReplacement;
-    private final List<ProjectedColumn> projectedColumns;
     private String nextToken;
-    private EdmEntityType entityType;
-    private ExpandResource expandInfo;
     private Entity currentEntity;
+    private EntityResource resource;
 
     public EntityList(String invalidCharacterReplacement,
             EntityResource resource) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
-        this.projectedColumns = resource.getAllProjectedColumns();
-        this.entityType = resource.getEdmEntityType();
-        
-        if (resource.getExpands() != null && !resource.getExpands().isEmpty()) {
-            this.expandInfo = (ExpandResource)resource.getExpands().get(0);
-        }
+        this.resource = resource;
     }
     
     @Override
@@ -81,33 +74,41 @@ public class EntityList extends EntityCollection implements QueryResponse {
         boolean add = true;
         
         if (this.currentEntity == null) {
-            entity = createEntity(rs, this.entityType, this.projectedColumns, this.invalidCharacterReplacement);
+            entity = createEntity(rs, this.resource.getEdmEntityType(),
+                    this.resource.getAllProjectedColumns(),
+                    this.invalidCharacterReplacement);
             this.currentEntity = entity;
         }
-        else if(isSameRow(rs, this.projectedColumns, this.entityType, this.currentEntity)) {
+        else if(isSameRow(rs, this.resource.getAllProjectedColumns(),
+                this.resource.getEdmEntityType(), this.currentEntity)) {
             entity = this.currentEntity;
             add = false;
         }
         
-        if (this.expandInfo != null) {
-            Entity expand = createEntity(rs, this.expandInfo.getEdmEntityType(),
-                    this.expandInfo.getProjectedColumns(),
-                    this.invalidCharacterReplacement);
-            
-            Link link = entity.getNavigationLink(this.expandInfo.getNavigationName());
-            if (this.expandInfo.isCollection()) {
-                if (link.getInlineEntitySet() == null) {
-                    link.setInlineEntitySet(new EntityCollection());
+        if (this.resource.getExpands() != null && !this.resource.getExpands().isEmpty()) {
+            for (EntityResource resource : this.resource.getExpands()) {
+                ExpandResource expandResource = (ExpandResource)resource;
+                Entity expand = createEntity(rs, expandResource.getEdmEntityType(),
+                        expandResource.getProjectedColumns(),
+                        this.invalidCharacterReplacement);
+                
+                Link link = entity.getNavigationLink(expandResource.getNavigationName());
+                if (expandResource.isCollection()) {
+                    if (link.getInlineEntitySet() == null) {
+                        link.setInlineEntitySet(new EntityCollection());
+                    }
+                    link.getInlineEntitySet().getEntities().add(expand);
                 }
-                link.getInlineEntitySet().getEntities().add(expand);
+                else {
+                    link.setInlineEntity(expand);  
+                }   
             }
-            else {
-                link.setInlineEntity(expand);  
-            }            
         }
         else if (!add) {
             // this is property update incase of collection return 
-            updateEntity(rs, entity, this.entityType, this.projectedColumns, this.invalidCharacterReplacement);
+            updateEntity(rs, entity, this.resource.getEdmEntityType(),
+                    this.resource.getAllProjectedColumns(),
+                    this.invalidCharacterReplacement);
         }
         
         if (add) {
@@ -137,7 +138,7 @@ public class EntityList extends EntityCollection implements QueryResponse {
         return null;
     }
 
-    private static Entity createEntity(ResultSet rs, EdmEntityType entityType,
+    static Entity createEntity(ResultSet rs, EdmEntityType entityType,
             List<ProjectedColumn> projected, String invalidChar)
             throws SQLException {
         
@@ -385,7 +386,7 @@ public class EntityList extends EntityCollection implements QueryResponse {
     }
     
     public static String buildId(Entity entity, EdmEntityType type) {
-        String location = "/" + type.getName() + "(";
+        String location = type.getName() + "(";
         int i = 0;
         boolean usename = type.getKeyPredicateNames().size() > 1;
 

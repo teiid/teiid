@@ -19,11 +19,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo.api;
+package org.teiid.olingo;
 
-public interface OperationResponse extends QueryResponse {
+import org.apache.olingo.commons.api.data.Entity;
+import org.apache.olingo.commons.api.edm.EdmEntityType;
 
-    Object getResult();
+public class ComplexReturnType {
+    private Entity entity;
+    private String name;
+    private boolean expand;
+    private EdmEntityType type;
     
-    void addPrimitive(Object value);
+    public ComplexReturnType(String name, EdmEntityType type, Entity entity, boolean expand) {
+        this.name = name;
+        this.type = type;
+        this.entity = entity;
+        this.expand = expand;
+    }
+
+    public Entity getEntity() {
+        return entity;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isExpand() {
+        return expand;
+    }
+
+    public EdmEntityType getEdmEntityType() {
+        return type;
+    }
 }

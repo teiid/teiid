@@ -19,31 +19,47 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo.web;
+package org.teiid.olingo;
 
-import java.io.IOException;
+import org.apache.olingo.commons.api.edm.EdmType;
+import org.teiid.query.sql.symbol.Expression;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.olingo.server.api.ODataHttpHandler;
-import org.teiid.odata.api.Client;
-import org.teiid.olingo.service.TeiidServiceHandler;
-
-@SuppressWarnings("serial")
-public class ODataServlet extends HttpServlet {
-    @Override
-    public void service(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        ODataHttpHandler handler = (ODataHttpHandler) request.getAttribute(ODataHttpHandler.class.getName());
-        Client client = (Client) request.getAttribute(Client.class.getName());
-        
-        try {
-            TeiidServiceHandler.setClient(client);
-            handler.process(request, response);
-        } finally {
-            TeiidServiceHandler.setClient(null);    
-        }
+public class ProjectedColumn {
+    private Expression expr;
+    private boolean visible;
+    private EdmType edmType;
+    private boolean collection;
+    private int ordinal;
+    
+    public ProjectedColumn(Expression expr, boolean visible, EdmType edmType, boolean collection) {
+        this.expr = expr; 
+        this.visible = visible;
+        this.edmType = edmType;
+        this.collection = collection;
     }
+    
+    public Expression getExpression() {
+        return this.expr;
+    }
+    
+    public boolean isVisible() {
+        return this.visible;
+    }
+    
+    public EdmType getEdmType() {
+        return this.edmType;
+    }
+    
+    public boolean isCollection() {
+        return collection;
+    }
+
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    public void setOrdinal(int ordinal) {
+        this.ordinal = ordinal;
+    }
+    
 }
