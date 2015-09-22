@@ -34,7 +34,7 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.client.core.serialization.ClientODataDeserializerImpl;
-import org.apache.olingo.commons.api.format.ODataFormat;
+import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
@@ -139,7 +139,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
                 }
     
                 Blob out = (Blob)call.getOutputParameterValues().get(0);
-                ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(false, ODataFormat.APPLICATION_XML);
+                ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(false, ContentType.APPLICATION_XML);
                 this.serviceMatadata = deserializer.toMetadata(out.getBinaryStream());
                 return this.serviceMatadata;
             } catch (SQLException e) {

@@ -26,7 +26,7 @@
         <version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
         <version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as> <!--  same in BOM -->
         <version.commons-codec>1.9</version.commons-codec>
-        <version.org.antlr>4.1</version.org.antlr>
+        <version.org.antlr>4.5</version.org.antlr>
         <version.org.apache.commons>3.3.2</version.org.apache.commons>
 	    <version.org.codehaus.btm>2.1.3</version.org.codehaus.btm>
         
@@ -74,11 +74,11 @@
         <version.org.infinispan.protostream>3.0.0.Alpha8-redhat-1</version.org.infinispan.protostream>
         <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
         <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
-        <version.org.apache.olingo>4.0.0-beta-03</version.org.apache.olingo>
+        <version.org.apache.olingo>4.0.0</version.org.apache.olingo>
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.commons-codec>1.9</version.commons-codec>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
-	<version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
+	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
         <version.org.reflections>0.9.9</version.org.reflections>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
@@ -87,8 +87,8 @@
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.4.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
-	<version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
-	<version.narayana>5.0.4.Final</version.narayana>
+	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
+	    <version.narayana>5.0.4.Final</version.narayana>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>

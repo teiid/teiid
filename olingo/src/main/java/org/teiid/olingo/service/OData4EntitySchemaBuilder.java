@@ -45,7 +45,7 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.api.ODataTypeManager;
+import org.teiid.olingo.ODataTypeManager;
 
 public class OData4EntitySchemaBuilder {
 

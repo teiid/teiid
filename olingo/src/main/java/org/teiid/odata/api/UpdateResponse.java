@@ -19,34 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo.api;
+package org.teiid.odata.api;
 
-public class SQLParameter {
-    final Object value;
-    final Integer sqlType;
-    final String name;
+import java.util.Map;
 
-    public SQLParameter(Object value, Integer sqlType) {
-        this.name = null;
-        this.value = value;
-        this.sqlType = sqlType;
-    }
-    
-    public SQLParameter(String name, Object value, Integer sqlType) {
-        this.name = name;
-        this.value = value;
-        this.sqlType = sqlType;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public Object getValue() {
-        return value;
-    }
-
-    public Integer getSqlType() {
-        return sqlType;
-    }
+public interface UpdateResponse extends BaseResponse {
+    Map<String, Object> getGeneratedKeys();
+    int getUpdateCount();
 }

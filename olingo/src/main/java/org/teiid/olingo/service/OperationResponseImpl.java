@@ -20,8 +20,8 @@ import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
+import org.teiid.odata.api.OperationResponse;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.api.OperationResponse;
 
 public class OperationResponseImpl implements OperationResponse {
     private final String invalidCharacterReplacement;
