@@ -222,12 +222,16 @@ public class EntityResource {
     void addAllColumns(boolean onlyPK) {
         if (onlyPK) {
             for (final Column column : getTable().getPrimaryKey().getColumns()) {
-                addVisibleColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
+                if (column.isSelectable()) {
+                    addVisibleColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
+                }
             }            
         }
         else {
             for (final Column column : getTable().getColumns()) {
-                addVisibleColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
+                if (column.isSelectable()) {
+                    addVisibleColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
+                }
             }
         }
     }
