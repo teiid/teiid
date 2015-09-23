@@ -4805,8 +4805,20 @@ Constant nonNumericLiteral() :
 	        	} catch (TransformationException e) {
 	        		throw new ParseException(e.getMessage()); //$NON-NLS-1$
 	        	}
-	        } <RBRACE> ) 
-
+	        } <RBRACE> )
+	    | (
+	      (<DATE> {escapeType = DataTypeManager.DefaultDataClasses.DATE;}
+	       | <TIME> {escapeType = DataTypeManager.DefaultDataClasses.TIME;}
+	       | <TIMESTAMP> {escapeType = DataTypeManager.DefaultDataClasses.TIMESTAMP;}
+	      )
+	      strVal=stringVal() { 
+                try {
+                    constant = new Constant(DataTypeManager.transformValue(strVal, escapeType), escapeType);
+                } catch (TransformationException e) {
+                    throw new ParseException(e.getMessage()); //$NON-NLS-1$
+                }
+            }
+	    ) 
 	)
 	{
 		return constant;
