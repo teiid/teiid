@@ -89,6 +89,11 @@ public class TestODataSQLBuilder {
             "    CONSTRAINT FKX FOREIGN KEY (e2) REFERENCES G1(e2)\n" +
             ") OPTIONS (UPDATABLE 'true');" +
             "\n"+
+            "CREATE FOREIGN TABLE G5 (\n" +
+            "    e1 string OPTIONS (SELECTABLE 'FALSE'), \n" +
+            "    e2 integer PRIMARY KEY, \n" +
+            "    e3 double\n" +
+            ");\n" +            
             "CREATE FOREIGN PROCEDURE getCustomers("
             + "IN p2 timestamp, "
             + "IN p3 decimal"
@@ -794,4 +799,22 @@ public class TestODataSQLBuilder {
                 + "PM1.G2 AS g1 "
                 + "ORDER BY g0.e2, g1.e2");        
     }    
+    
+    @Test
+    public void testSelectStarWithNonSelectableColumn() throws Exception {
+        helpTest("/odata4/vdb/PM1/G5",
+                "SELECT g0.e2, g0.e3 FROM PM1.G5 AS g0 ORDER BY g0.e2");        
+    }
+    
+    @Test
+    public void testSelectStarWithNonSelectableColumn2() throws Exception {
+        helpTest("/odata4/vdb/PM1/G5?$select=*",
+                "SELECT g0.e2, g0.e3 FROM PM1.G5 AS g0 ORDER BY g0.e2");        
+    }
+    
+    @Test
+    public void testSelectStarWithNonSelectableColumn3() throws Exception {
+        helpTest("/odata4/vdb/PM1/G5?$filter=e1 eq 1",
+                "SELECT g0.e2, g0.e3 FROM PM1.G5 AS g0 WHERE g0.e1 = 1 ORDER BY g0.e2");        
+    }     
 }
