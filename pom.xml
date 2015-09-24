@@ -88,6 +88,7 @@
         <version.jts2geojson>0.4.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
 	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
+	    <version.swagger-parser>1.0.10</version.swagger-parser>
 	    <version.narayana>5.0.4.Final</version.narayana>
 	</properties>
 	<scm>
@@ -1554,6 +1555,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+	    <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-parser</artifactId>
+                <version>${version.swagger-parser}</version>
+            </dependency> 
             <dependency>
                 <groupId>org.jboss.narayana.jta</groupId>
                 <artifactId>narayana-jta</artifactId>

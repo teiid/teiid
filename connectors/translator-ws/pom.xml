@@ -41,6 +41,11 @@
           <groupId>wsdl4j</groupId>
           <artifactId>wsdl4j</artifactId>
           <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-parser</artifactId>
+            <scope>provided</scope>
         </dependency>        
     </dependencies>
 
