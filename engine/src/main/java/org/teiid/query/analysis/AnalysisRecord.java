@@ -68,6 +68,7 @@ public class AnalysisRecord {
     public static final String PROP_CRITERIA = "Criteria"; //$NON-NLS-1$
     public static final String PROP_SELECT_COLS = "Select Columns"; //$NON-NLS-1$
     public static final String PROP_GROUP_COLS = "Grouping Columns"; //$NON-NLS-1$
+    public static final String PROP_GROUP_MAPPING = "Grouping Mapping"; //$NON-NLS-1$
     public static final String PROP_SQL = "Query"; //$NON-NLS-1$
     public static final String PROP_MODEL_NAME = "Model Name"; //$NON-NLS-1$
     public static final String PROP_SHARING_ID = "Sharing ID"; //$NON-NLS-1$
