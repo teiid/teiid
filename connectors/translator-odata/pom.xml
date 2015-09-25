@@ -37,15 +37,17 @@
           <groupId>org.jboss.teiid.connectors</groupId>
           <artifactId>translator-jdbc</artifactId>
           <scope>provided</scope>
-        </dependency>              
-        <dependency>
-            <groupId>org.odata4j</groupId>
-            <artifactId>odata4j-core</artifactId>
         </dependency>
         <dependency>
-            <artifactId>core4j</artifactId>
-            <groupId>org.core4j</groupId>
-        </dependency>    
+          <groupId>org.jboss.oreva</groupId>
+          <artifactId>common</artifactId>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.oreva</groupId>
+          <artifactId>odata-core</artifactId>
+          <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jaxrs</artifactId>

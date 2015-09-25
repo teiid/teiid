@@ -40,7 +40,7 @@
         <!--version.wsdl4j>1.6.3</version.wsdl4j-->
       
 		<version.javax.ws.rs>2.0-m10</version.javax.ws.rs> <!-- override eap to resolve classNotFoundException -->
-	    
+	    <version.javax.ws.rs.jsr311-api>1.1.1</version.javax.ws.rs.jsr311-api>
         <version.org.jboss.logging.jboss-logging>${version.org.jboss.logging}</version.org.jboss.logging.jboss-logging>
         <version.sun.jaxb>${version.com.sun.xml.bind.jaxb}</version.sun.jaxb>
         <version.ant.plugin>${version.org.apache.ant}</version.ant.plugin>
@@ -97,8 +97,8 @@
         <version.connector-api>1.5</version.connector-api>
         <arquillian-container-version>7.2.2.Final-redhat-4</arquillian-container-version>
         <jbossas-test-version>jboss-eap-6.3</jbossas-test-version>
-        <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
-        <version.core4j>0.5</version.core4j>        
+        <version.org.jboss.oreva.common>0.8.7</version.org.jboss.oreva.common>
+        <version.org.jboss.oreva.odata-core>0.8.7</version.org.jboss.oreva.odata-core>        
         <version.com.force.api>26.0.0</version.com.force.api>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
@@ -878,16 +878,16 @@
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>javax.ws.rs-api</artifactId>
                 <version>${version.javax.ws.rs}</version>
-            </dependency>                 
+            </dependency>    
             <dependency>
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>jsr311-api</artifactId>
-                <version>${version.javax.ws.rs}</version>
+                <version>${version.javax.ws.rs.jsr311-api}</version>
             </dependency>
             <dependency>
-              <groupId>org.odata4j</groupId>
-              <artifactId>odata4j-core</artifactId>
-              <version>${version.org.odata4j}</version>
+              <groupId>org.jboss.oreva</groupId>
+              <artifactId>common</artifactId>
+              <version>${version.org.jboss.oreva.common}</version>
               <exclusions>                
                     <exclusion>
                         <groupId>org.eclipse.persistence</groupId>
@@ -910,10 +910,10 @@
                 </exclusions>              
             </dependency>
             <dependency>
-                <artifactId>core4j</artifactId>
-                <groupId>org.core4j</groupId>
-                <version>${version.core4j}</version>
-            </dependency>
+              <groupId>org.jboss.oreva</groupId>
+              <artifactId>odata-core</artifactId>
+              <version>${version.org.jboss.oreva.odata-core}</version>
+            </dependency> 
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-jaxrs</artifactId>

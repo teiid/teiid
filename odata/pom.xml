@@ -78,11 +78,13 @@
     </dependency>
     
     <dependency>
-        <groupId>org.odata4j</groupId>
-        <artifactId>odata4j-core</artifactId>
-        <scope>provided</scope>
+      <groupId>org.jboss.oreva</groupId>
+      <artifactId>common</artifactId>
     </dependency>
-    
+    <dependency>
+      <groupId>org.jboss.oreva</groupId>
+      <artifactId>odata-core</artifactId>
+    </dependency>
     
     <dependency>
         <groupId>commons-logging</groupId>
@@ -90,12 +92,6 @@
         <scope>provided</scope>
     </dependency>
     
-    <dependency>
-        <artifactId>core4j</artifactId>
-        <groupId>org.core4j</groupId>
-        <scope>provided</scope>
-    </dependency>
-
     <dependency>
         <groupId>org.jboss.spec.javax.servlet</groupId>
         <artifactId>jboss-servlet-api_3.0_spec</artifactId>
