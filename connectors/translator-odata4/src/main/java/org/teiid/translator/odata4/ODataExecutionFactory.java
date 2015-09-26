@@ -38,12 +38,15 @@ import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
+import org.teiid.language.Call;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -156,7 +159,6 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		return new ODataQueryExecution(this, command, executionContext, metadata, connection);
 	}
 
-	/*
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
@@ -166,6 +168,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		return new ODataProcedureExecution(command, this, executionContext, metadata, connection);
 	}
 
+	/*
 	@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		return new ODataUpdateExecution(command, this, executionContext, metadata, connection);

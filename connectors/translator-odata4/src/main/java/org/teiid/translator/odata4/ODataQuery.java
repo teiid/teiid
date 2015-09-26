@@ -248,7 +248,7 @@ public class ODataQuery {
     
     private boolean isEntitySet(Table table) {
         ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
-        return type == ODataType.ENTITYSET;
+        return type == ODataType.ENTITY_COLLECTION;
     }    
 
     public void setSkip(Integer integer) {

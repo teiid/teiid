@@ -68,8 +68,8 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         this.odataQuery = new ODataQuery(executionFactory);
     }
     
-	public Column[] getProjectedColumns(){
-		return this.projectedColumns.toArray(new Column[this.projectedColumns.size()]);
+	public List<Column> getProjectedColumns(){
+		return this.projectedColumns;
 	}
 	
 	public Table getEntitySetTable() {

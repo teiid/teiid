@@ -63,8 +63,17 @@ import org.teiid.translator.WSConnection;
 
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     public enum ODataType {
-        COMPLEX, NAVIGATION, ENTITY, ENTITYSET, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION
+        COMPLEX, 
+        NAVIGATION, 
+        ENTITY, 
+        ENTITY_COLLECTION, 
+        ACTION, 
+        FUNCTION, 
+        COMPLEX_COLLECTION, 
+        NAVIGATION_COLLECTION
     };
+    
+    // local planning properties
     private static final String PARENT_TABLE = "PARENT_TABLE"; //$NON-NLS-1$
     private static final String CONSTRAINT_PROPERTY = "CONSTRAINT_PROPERTY"; //$NON-NLS-1$
     private static final String CONSTRAINT_REF_PROPERTY = "CONSTRAINT_REF_PROPERTY"; //$NON-NLS-1$
@@ -82,10 +91,10 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             datatype = String.class, 
             display = "OData Type", 
             description = "Type of OData Schema Item",
-            allowed = "COMPLEX, NAVIGATION, ENTITY, ENTITYSET, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION",
+            allowed = "COMPLEX, NAVIGATION, ENTITY, ENTITY_COLLECTION, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION",
             required=true)
     public static final String ODATA_TYPE = MetadataFactory.ODATA_URI+"Type"; //$NON-NLS-1$
-
+    
     private String schemaNamespace;
     private ODataExecutionFactory ef;
 
@@ -113,12 +122,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
         // add entity sets as tables
         for (CsdlEntitySet entitySet : container.getEntitySets()) {
-            addTable(mf, entitySet.getName(), entitySet.getType(), ODataType.ENTITYSET, metadata);
+            addTable(mf, entitySet.getName(), entitySet.getType(), ODataType.ENTITY_COLLECTION, metadata);
         }
 
         // add singletons sets as tables
         for (CsdlSingleton singleton : container.getSingletons()) {
-            addTable(mf, singleton.getName(), singleton.getType(), ODataType.ENTITYSET, metadata);
+            addTable(mf, singleton.getName(), singleton.getType(), ODataType.ENTITY_COLLECTION, metadata);
         }
 
         // build relationships among tables
@@ -453,7 +462,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         ODataType type = ODataType.valueOf(childTable.getProperty(ODATA_TYPE, false));
         boolean isComplexType = (type == ODataType.COMPLEX || type == ODataType.COMPLEX_COLLECTION);
         boolean isCollection = (type == ODataType.COMPLEX_COLLECTION
-                || type == ODataType.NAVIGATION_COLLECTION || type == ODataType.ENTITYSET);
+                || type == ODataType.NAVIGATION_COLLECTION || type == ODataType.ENTITY_COLLECTION);
         boolean isNavigation = (type == ODataType.NAVIGATION_COLLECTION || type == ODataType.NAVIGATION);
         
         if (isComplexType) {
@@ -601,7 +610,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         return c;
     }
 
-    private ProcedureParameter addPrameterAsColumn(MetadataFactory mf,
+    private ProcedureParameter addParameterAsColumn(MetadataFactory mf,
             Procedure procedure, CsdlParameter parameter) {
         ProcedureParameter p = mf.addProcedureParameter(
                 parameter.getName(),
@@ -637,7 +646,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     private void addParameter(MetadataFactory mf, XMLMetadata metadata,
             Procedure procedure, CsdlParameter parameter) throws TranslatorException {
         if (isSimple(parameter.getType())) {
-            addPrameterAsColumn(mf, procedure, parameter);
+            addParameterAsColumn(mf, procedure, parameter);
         }
         else {
             throw new TranslatorException(ODataPlugin.Util.gs(
@@ -719,15 +728,19 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (returnType != null) {
             if (isSimple(returnType.getType())) {
                 mf.addProcedureParameter("return", ODataTypeManager.teiidType(returnType.getType(), 
-                        returnType.isCollection()), ProcedureParameter.Type.ReturnValue, procedure);               
+                        returnType.isCollection()), ProcedureParameter.Type.ReturnValue, procedure); 
             } 
             else if (isComplexType(metadata, returnType.getType())) {
                 addProcedureTableReturn(mf, metadata, procedure,
                         getComplexType(metadata, returnType.getType()), null);
+                procedure.getResultSet().setProperty(ODATA_TYPE, 
+                        returnType.isCollection()?ODataType.COMPLEX_COLLECTION.name():ODataType.COMPLEX.name());
             }
             else if (isEntityType(metadata, returnType.getType())){
                 addProcedureTableReturn(mf, metadata, procedure,
-                        getEntityType(metadata, returnType.getType()), null);              
+                        getEntityType(metadata, returnType.getType()), null);
+                procedure.getResultSet().setProperty(ODATA_TYPE, 
+                        returnType.isCollection()?ODataType.ENTITY_COLLECTION.name():ODataType.ENTITY.name());                
             }
             else {
                 throw new TranslatorException(ODataPlugin.Util.gs(

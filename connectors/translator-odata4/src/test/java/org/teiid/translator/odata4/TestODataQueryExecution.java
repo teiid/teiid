@@ -43,6 +43,8 @@ import javax.xml.ws.Service.Mode;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
+import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
+import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -50,38 +52,35 @@ import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataQueryExecution {
-	private ODataExecutionFactory translator;
-	private TranslationUtility utility;
-	
-    @Before
-    public void setUp() throws Exception {
-        this.translator = new ODataExecutionFactory();
-        this.translator.start();
 
-        MetadataFactory mf = TestODataMetadataProcessor.tripPinMetadata();
-        this.utility = new TranslationUtility(
-                TestODataMetadataProcessor.getTransformationMetadata(mf,this.translator));
-    }
-
-    private ResultSetExecution helpExecute(String query,
+    private ResultSetExecution helpExecute(MetadataFactory mf, String query,
             final String resultJson, String expectedURL) throws Exception {
-        return helpExecute(query, resultJson, expectedURL, 200);
+        return helpExecute(mf, query, resultJson, expectedURL, 200);
     }
 	
-    private ResultSetExecution helpExecute(String query,
+    private ResultSetExecution helpExecute(MetadataFactory mf, String query,
             final String resultJson, String expectedURL, int responseCode)
             throws Exception {
-		Command cmd = this.utility.parseCommand(query);
+
+        ODataExecutionFactory translator = new ODataExecutionFactory();
+        translator.start();
+        
+        TranslationUtility utility = new TranslationUtility(
+                TestODataMetadataProcessor.getTransformationMetadata(mf,translator));
+        
+		Command cmd = utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		WSConnection connection = Mockito.mock(WSConnection.class);
 		
@@ -117,9 +116,9 @@ public class TestODataQueryExecution {
 		};
 		Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
 		
-        ResultSetExecution execution = this.translator
+        ResultSetExecution execution = translator
                 .createResultSetExecution((QueryExpression) cmd, context,
-                        this.utility.createRuntimeMetadata(), connection);
+                        utility.createRuntimeMetadata(), connection);
 		execution.execute();
 		
 		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
@@ -132,13 +131,75 @@ public class TestODataQueryExecution {
 		return execution;
 	}
 
+    private ProcedureExecution helpProcedureExecute(MetadataFactory mf, String query,
+            final String resultJson, String expectedURL, int responseCode)
+            throws Exception {
+
+        ODataExecutionFactory translator = new ODataExecutionFactory();
+        translator.start();
+        
+        TranslationUtility utility = new TranslationUtility(
+                TestODataMetadataProcessor.getTransformationMetadata(mf,translator));
+        
+        Command cmd = utility.parseCommand(query);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        WSConnection connection = Mockito.mock(WSConnection.class);
+        
+        Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
+        headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
+        
+        Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
+        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
+        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        
+        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(), 
+                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        
+        DataSource ds = new DataSource() {
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+            @Override
+            public String getName() {
+                return "result";
+            }
+            @Override
+            public InputStream getInputStream() throws IOException {
+                ByteArrayInputStream in = new ByteArrayInputStream(resultJson.getBytes());
+                return in;
+            }
+            @Override
+            public String getContentType() {
+                return "application/xml";
+            }
+        };
+        Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
+        
+        ProcedureExecution execution = translator
+                .createProcedureExecution((Call) cmd, context,
+                        utility.createRuntimeMetadata(), connection);
+        execution.execute();
+        
+        ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
+        
+        Mockito.verify(connection).createDispatch(binding.capture(),
+                endpoint.capture(), Mockito.eq(DataSource.class),
+                Mockito.eq(Mode.MESSAGE));
+        assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
+        return execution;
+    }    
+    
 	@Test
 	public void testSimpleSelectNoAssosiations() throws Exception {
 		String query = "SELECT UserName,FirstName,LastName FROM People";
 		String expectedURL = "People?$select=UserName,FirstName,LastName";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+		ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+		        query, ObjectConverterUtil.convertToString(reader), expectedURL);
 		
 		assertArrayEquals(new Object[] {"russellwhyte", "Russell", "Whyte"}, 
 		        excution.next().toArray(new Object[3]));
@@ -155,7 +216,8 @@ public class TestODataQueryExecution {
         String expectedURL = "People?$select=Emails";
         
         FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
-        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
 
         assertArrayEquals(new String[] {"Russell@example.com", "Russell@contoso.com"}, 
                 (String[])excution.next().get(0));        
@@ -173,7 +235,8 @@ public class TestODataQueryExecution {
 		String expectedURL = "People?$select=UserName,AddressInfo";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+		ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+		        query, ObjectConverterUtil.convertToString(reader), expectedURL);
 		reader.close();
 
 		assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln."}, 
@@ -192,7 +255,8 @@ public class TestODataQueryExecution {
         String expectedURL = "People?$select=UserName,AddressInfo,AddressInfo/City";
         
         FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
-        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
         reader.close();
 
         assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "Boise"}, 
@@ -202,5 +266,142 @@ public class TestODataQueryExecution {
         assertArrayEquals(new Object[] {"ronaldmundy", null, null}, 
                 excution.next().toArray(new Object[3]));
         
+    }
+    
+    @Test
+    public void testExpand() throws Exception {
+        String query = "select p.UserName, pf.UserName from People p JOIN People_Friends pf "
+                + "ON p.UserName = pf.People_UserName WHERE p.UserName= 'russellwhyte'";
+        String expectedURL = "People?$select=UserName&$filter=UserName eq 'russellwhyte'"
+                + "&$expand=Friends($select=UserName)";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("russel-friends.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+        
+        assertArrayEquals(new Object[] {"russellwhyte", "scottketchum"}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"russellwhyte", "ronaldmundy"}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"russellwhyte", "javieralfred"}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"russellwhyte", "angelhuffman"}, 
+                excution.next().toArray(new Object[2]));
+    }    
+    
+    @Test
+    public void testFunctionReturnsPrimitive() throws Exception {
+        String query = "exec invoke(1, 'foo')";
+        String expectedURL = "invoke?e1=1&e2='foo'";
+        String response = "{\"value\":\"returnX\"}";
+        
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("Edm.String");
+        
+        MetadataFactory mf = TestODataMetadataProcessor.functionMetadata("invoke", returnType, null);
+
+        ProcedureExecution excution = helpProcedureExecute(mf, query, response, expectedURL, 200);
+        
+        assertArrayEquals(new Object[] {"returnX"}, 
+                excution.getOutputParameterValues().toArray(new Object[1]));
+    }
+    
+    @Test
+    public void testFunctionReturnsPrimitiveCollection() throws Exception {
+        String query = "exec invoke(1, 'foo')";
+        String expectedURL = "invoke?e1=1&e2='foo'";
+        String response = "{\"value\": [\"returnX\", \"returnY\"]}";
+        
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("Edm.String");
+        returnType.setCollection(true);
+        
+        MetadataFactory mf = TestODataMetadataProcessor.functionMetadata("invoke", returnType, null);
+
+        ProcedureExecution excution = helpProcedureExecute(mf, query, response, expectedURL, 200);
+        
+        assertArrayEquals(new Object[] {"returnX", "returnY"}, 
+                ((List)excution.getOutputParameterValues().get(0)).toArray());        
+        
     }   
+    
+    @Test
+    public void testFunctionReturnsComplex() throws Exception {
+        String query = "exec invoke(1, 'foo')";
+        String expectedURL = "invoke?e1=1&e2='foo'";
+        String response = "{\"value\":{\n" + 
+                "            \"street\":\"United States\",\n" + 
+                "            \"city\":\"Boise\",\n" + 
+                "            \"state\":\"ID\"\n" + 
+                "         }}";
+        
+        CsdlComplexType complex = TestODataMetadataProcessor.complexType("Address");
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("namespace.Address");
+        MetadataFactory mf = TestODataMetadataProcessor.functionMetadata("invoke", returnType, complex);
+        
+        ProcedureExecution excution = helpProcedureExecute(mf, query, response, expectedURL, 200);
+        
+        assertArrayEquals(new Object[] {"United States", "Boise", "ID"}, 
+                excution.next().toArray(new Object[3]));
+        assertNull(excution.next());
+    }    
+    @Test
+    public void testFunctionReturnsComplexCollection() throws Exception {
+        String query = "exec invoke(1, 'foo')";
+        String expectedURL = "invoke?e1=1&e2='foo'";
+        String response = "{\"value\":[{\n" + 
+                "            \"street\":\"United States\",\n" + 
+                "            \"city\":\"Boise\",\n" + 
+                "            \"state\":\"ID\"\n" +
+                "           }," +
+                "           {" +
+                "            \"street\":\"China\",\n" + 
+                "            \"city\":\"Newyork\",\n" + 
+                "            \"state\":\"NY\"\n" + 
+                "         }]}";
+        
+        CsdlComplexType complex = TestODataMetadataProcessor.complexType("Address");
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("namespace.Address");
+        MetadataFactory mf = TestODataMetadataProcessor.functionMetadata("invoke", returnType, complex);
+        
+        ProcedureExecution excution = helpProcedureExecute(mf, query, response, expectedURL, 200);
+        
+        assertArrayEquals(new Object[] {"United States", "Boise", "ID"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"China", "Newyork", "NY"}, 
+                excution.next().toArray(new Object[3]));
+        assertNull(excution.next());
+    }
+    
+    @Test
+    public void testActionReturnsComplexCollection() throws Exception {
+        String query = "exec invoke(1, 'foo')";
+        String expectedURL = "invoke";
+        String response = "{\"value\":[{\n" + 
+                "            \"street\":\"United States\",\n" + 
+                "            \"city\":\"Boise\",\n" + 
+                "            \"state\":\"ID\"\n" +
+                "           }," +
+                "           {" +
+                "            \"street\":\"China\",\n" + 
+                "            \"city\":\"Newyork\",\n" + 
+                "            \"state\":\"NY\"\n" + 
+                "         }]}";
+        
+        CsdlComplexType complex = TestODataMetadataProcessor.complexType("Address");
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("namespace.Address");
+        MetadataFactory mf = TestODataMetadataProcessor.actionMetadata("invoke", returnType, complex);
+        
+        ProcedureExecution excution = helpProcedureExecute(mf, query, response, expectedURL, 200);
+        
+        assertArrayEquals(new Object[] {"United States", "Boise", "ID"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"China", "Newyork", "NY"}, 
+                excution.next().toArray(new Object[3]));
+        assertNull(excution.next());
+    }     
 }
