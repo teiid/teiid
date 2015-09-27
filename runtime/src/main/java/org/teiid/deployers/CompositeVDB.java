@@ -37,6 +37,7 @@ import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
@@ -56,6 +57,9 @@ import org.teiid.vdb.runtime.VDBKey;
  * Represents the runtime state of a vdb that may aggregate several vdbs.
  */
 public class CompositeVDB {
+	
+	private static final boolean WIDEN_COMPARISON_TO_STRING = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.widenComparisonToString", true); //$NON-NLS-1$
+	
 	private VDBMetaData vdb;
 	private MetadataStore store;
 	private LinkedHashMap<String, VDBResources.Resource> visibilityMap;
@@ -111,7 +115,8 @@ public class CompositeVDB {
 		}
 		
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);
-		metadata.setUseOutputNames(false);		
+		metadata.setUseOutputNames(false);
+		metadata.setWidenComparisonToString(WIDEN_COMPARISON_TO_STRING);
 		return metadata;
 	}
 

@@ -1471,28 +1471,21 @@ public class TestResolver {
     // special test for both sides are String
     @Test public void testSetCriteriaCastFromExpression_9657() {
         // parse
-        Criteria expected = null;
         Criteria actual = null;
         try { 
             actual = QueryParser.getQueryParser().parseCriteria("bqt1.smalla.shortvalue IN (1, 2)"); //$NON-NLS-1$
-            expected = QueryParser.getQueryParser().parseCriteria("convert(bqt1.smalla.shortvalue, integer) IN (1, 2)"); //$NON-NLS-1$
-           
         } catch(TeiidException e) { 
             fail("Exception during parsing (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
         }   
    
         // resolve
         try { 
-            QueryResolver.resolveCriteria(expected, RealMetadataFactory.exampleBQTCached());
             QueryResolver.resolveCriteria(actual, RealMetadataFactory.exampleBQTCached());
         } catch(TeiidException e) { 
             fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
         } 
         
-        // Tweak expected to hide convert function - this is expected
-        ((Function) ((SetCriteria)expected).getExpression()).makeImplicit();
-        
-        assertEquals("Did not match expected criteria", expected, actual); //$NON-NLS-1$
+        assertEquals("Did not match expected criteria", ((SetCriteria)actual).getExpression().getType(), DataTypeManager.DefaultDataClasses.SHORT); //$NON-NLS-1$
     }    
     
     /** select e1 from pm1.g1 where e2 BETWEEN 1000 AND 2000 */
@@ -2930,6 +2923,58 @@ public class TestResolver {
     @Test public void testForeignTempInvalidModel1() {
         String sql = "create foreign temporary table x (y string) on vm1"; //$NON-NLS-1$
         helpResolveException(sql, "TEIID31135 Could not create foreign temporary table, since schema vm1 is not physical."); //$NON-NLS-1$ 
+    }
+    
+    @Test public void testInvalidDateLiteral() {
+    	helpTestWidenToString("select * from bqt1.smalla where timestampvalue > 'a'");
+    }
+        
+    @Test public void testInvalidDateLiteral1() {
+    	helpTestWidenToString("select * from bqt1.smalla where timestampvalue between 'a' and 'b'");
+    }
+    
+    @Test public void testDateNullBetween() {
+    	helpResolve("select * from bqt1.smalla where null between timestampvalue and null", RealMetadataFactory.exampleBQTCached());
+    }
+    
+    @Test public void testNullComparison() {
+    	helpResolve("select * from bqt1.smalla where null > null", RealMetadataFactory.exampleBQTCached());
+    }
+    
+    @Test public void testNullIn() {
+    	helpResolve("select * from bqt1.smalla where null in (timestampvalue, null)", RealMetadataFactory.exampleBQTCached());
+    }
+    
+    @Test public void testNullIn1() {
+    	helpResolve("select * from bqt1.smalla where timestampvalue in (null, null)", RealMetadataFactory.exampleBQTCached());
+    }
+    
+    @Test public void testInvalidComparison() {
+    	helpTestWidenToString("select * from bqt1.smalla where timestampvalue > stringkey");
+    }
+    
+    @Test public void testInvalidComparison1() {
+    	helpTestWidenToString("select * from bqt1.smalla where stringkey > 1000");
+    }
+    
+    @Test public void testInvalidIn() {
+    	helpTestWidenToString("select * from bqt1.smalla where stringkey in (timestampvalue, 1)");
+    }
+    
+    @Test public void testInvalidIn1() {
+    	helpTestWidenToString("select * from bqt1.smalla where timestampvalue in (stringkey, 1)");
+    }
+    
+    @Test public void testInvalidIn2() {
+    	helpTestWidenToString("select * from bqt1.smalla where timestampvalue in (select stringkey from bqt1.smallb)");
+    }
+    
+    private void helpTestWidenToString(String sql) {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolveException(sql, tm);
+    	tm.setWidenComparisonToString(true);
+    	helpResolve(sql, tm);
     }
 
 }

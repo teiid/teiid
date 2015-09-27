@@ -306,7 +306,7 @@ public class TestCriteriaCapabilityValidatorVisitor {
         caps.setFunctionSupport("curtime", false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); 
         
-        helpTestVisitor("curtime() = '{t'10:00:00'}", modelID, metadata, capFinder, true, false); 
+        helpTestVisitor("curtime() = {t'10:00:00'}", modelID, metadata, capFinder, true, false); 
     }
     
     /**

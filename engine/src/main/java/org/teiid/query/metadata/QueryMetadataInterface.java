@@ -675,4 +675,6 @@ public interface QueryMetadataInterface {
 	boolean useOutputName();
 
 	boolean findShortName();
+	
+	boolean widenComparisonToString();
 }

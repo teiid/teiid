@@ -805,6 +805,9 @@ public class ResolverUtil {
 		String subqueryTypeName = DataTypeManager.getDataTypeName(subqueryType);
 		Expression result = null;
 	    try {
+	    	if (!metadata.widenComparisonToString() && ResolverVisitor.isCharacter(subqueryType, true) && !ResolverVisitor.isCharacter(expression, true)) {
+	    		throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, crit));
+	    	}
 	        result = convertExpression(expression, exprTypeName, subqueryTypeName, metadata);
 	    } catch (QueryResolverException qre) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30094, qre, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30094, crit));

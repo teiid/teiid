@@ -147,6 +147,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Map<String, Object> groupInfoCache = Collections.synchronizedMap(new LRUCache<String, Object>(250));
     private Map<String, Collection<Table>> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, Collection<Table>>(1000));
     private Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
+
+	private boolean widenComparisonToString = true;
     /**
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
@@ -1066,7 +1068,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	}
 	
 	@Override
-	public QueryMetadataInterface getDesignTimeMetadata() {
+	public TransformationMetadata getDesignTimeMetadata() {
 		TransformationMetadata tm = new TransformationMetadata(store, functionLibrary);
 		tm.groupInfoCache = this.groupInfoCache;
 		tm.metadataCache = this.metadataCache;
@@ -1075,6 +1077,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.scriptEngineManager = this.scriptEngineManager;
 		tm.importedModels = this.importedModels;
 		tm.allowedLanguages = this.allowedLanguages;
+		tm.widenComparisonToString = this.widenComparisonToString;
 		return tm;
 	}
 	
@@ -1153,6 +1156,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	
 	public void setUseOutputNames(boolean useOutputNames) {
 		this.useOutputNames = useOutputNames;
+	}
+	
+	@Override
+	public boolean widenComparisonToString() {
+		return widenComparisonToString;
+	}
+	
+	public void setWidenComparisonToString(boolean widenComparisonToString) {
+		this.widenComparisonToString = widenComparisonToString;
 	}
 	
 }
