@@ -192,5 +192,10 @@ public class JoinQueryVisitor extends SelectVisitor {
 			result.append(", "); //$NON-NLS-1$
 		}
 	}
+	
+	@Override
+	public boolean canRetrieve() {
+		return false;
+	}
 
 }

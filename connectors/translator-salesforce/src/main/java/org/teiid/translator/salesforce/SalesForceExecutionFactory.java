@@ -62,6 +62,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	private static final String INCLUDES = "includes";//$NON-NLS-1$
 	private boolean auditModelFields = false;
 	private int maxInsertBatchSize = 2048;
+	private boolean supportsGroupBy = true;
 	
 	public SalesForceExecutionFactory() {
 	    // http://jira.jboss.org/jira/browse/JBEDSP-306
@@ -192,9 +193,10 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     	return true;
     }
     
+    @TranslatorProperty(display="Supports Group By", description="Defaults to true. Set to false to have Teiid process group by aggregations, such as those returning more than 2000 rows which error in SOQL", advanced=true)
     @Override
     public boolean supportsGroupBy() {
-    	return true;
+    	return this.supportsGroupBy ;
     }
     
     @Override
@@ -258,5 +260,9 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     		throw new AssertionError("Max bulk insert batch size must be greater than 0"); //$NON-NLS-1$
     	}
 		this.maxInsertBatchSize = maxInsertBatchSize;
+	}
+    
+    public void setSupportsGroupBy(boolean supportsGroupBy) {
+		this.supportsGroupBy = supportsGroupBy;
 	}
 }

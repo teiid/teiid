@@ -129,24 +129,19 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		try {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble(), "Incoming Query:", query); //$NON-NLS-1$
 			List<TableReference> from = ((Select)query).getFrom();
-			String finalQuery;
 			if(from.get(0) instanceof Join) {
 				visitor = new JoinQueryVisitor(metadata);
-				visitor.visitNode(query);
-				finalQuery = visitor.getQuery().trim();
-				LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
-				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 			} else {
 				visitor = new SelectVisitor(metadata);
-				visitor.visitNode(query);
-				if(visitor.canRetrieve()) {
-					results = connection.retrieve(visitor.getRetrieveFieldList(),
-							visitor.getTableName(), visitor.getIdInCriteria());
-				} else {
-					finalQuery = visitor.getQuery().trim();
-					LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
-					results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
-				}
+			}
+			visitor.visitNode(query);
+			if(visitor.canRetrieve()) {
+				results = connection.retrieve(visitor.getRetrieveFieldList(),
+						visitor.getTableName(), visitor.getIdInCriteria());
+			} else {
+				String finalQuery = visitor.getQuery().trim();
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
+				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 			}
 		} catch (ResourceException e) {
 			throw new TranslatorException(e);
