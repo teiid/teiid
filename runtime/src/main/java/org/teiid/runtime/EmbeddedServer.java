@@ -133,6 +133,10 @@ import org.xml.sax.SAXException;
  */
 @SuppressWarnings("serial")
 public class EmbeddedServer extends AbstractVDBDeployer implements EventDistributorFactory, ExecutionFactoryProvider {
+	
+	static {
+		LogManager.setLogListener(new JBossLogger());
+	}
 
 	private EmbeddedProfile embeddedProfile = new EmbeddedProfile() {
 		@Override

@@ -130,7 +130,7 @@ public final class LogManager {
 		}
 	}
 
-    static Logger logListener = new JavaLogger(); // either injected or manually set using the set methods
+    static volatile Logger logListener = new JavaLogger(); // either injected or manually set using the set methods
 
     /**
      * Send a critical message to the log.  This level of message is generally

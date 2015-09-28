@@ -34,7 +34,7 @@ import org.teiid.core.util.StringUtil;
  */
 public class JavaLogger implements org.teiid.logging.Logger {
 	
-	private ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
+	private static ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
 	
 	@Override
 	public boolean isEnabled(String context, int msgLevel) {

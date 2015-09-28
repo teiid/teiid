@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.jboss;
+package org.teiid.runtime;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +32,7 @@ import org.teiid.logging.MessageLevel;
 
 public class JBossLogger implements org.teiid.logging.Logger {
 	
-	private ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
+	private static ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
 
 	@Override
 	public boolean isEnabled(String context, int level) {
