@@ -4943,6 +4943,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
     Statement stmt = null; 	
     ParsedDataType returnDataType = null;
     Token comment = null;    
+    Column c = new Column();
 }
 {
 	<CREATE> [<VIRTUAL> | <FOREIGN> {virtual = false;}] (<PROCEDURE> | <FUNCTION> {function = true;})
@@ -4957,10 +4958,10 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		(<COMMA> procedureParameter(factory, proc))*]	
 		<RPAREN>
 		
-		[<RETURNS> (([<TABLE>] <LPAREN>
+		[<RETURNS> [optionsClause(c, factory)] (([<TABLE>] <LPAREN>
 	        procedureRsColumn(factory, proc)
 	        (<COMMA> procedureRsColumn(factory, proc))*
-	    <RPAREN>)
+	    <RPAREN> )
 	     |
 	     returnDataType = parseDataType())
 	    ]
@@ -4982,7 +4983,10 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 			}
 			
 	        if (returnDataType != null){
-				addProcColumn(factory, proc, "return", returnDataType, false);
+				BaseColumn result = addProcColumn(factory, proc, "return", returnDataType, false);
+				result.setProperties(c.getProperties());
+	        } else if (proc.getResultSet() != null) {
+	            proc.getResultSet().setProperties(c.getProperties());
 	        }
 	        if (function) {
 	        	replaceProcedureWithFunction(factory, proc);

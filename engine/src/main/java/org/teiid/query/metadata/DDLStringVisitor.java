@@ -579,7 +579,9 @@ public class DDLStringVisitor {
 		append(RPAREN);
 		
 		if (procedure.getResultSet() != null) {
-			append(SPACE).append(RETURNS).append(SPACE).append(TABLE).append(SPACE);
+			append(SPACE).append(RETURNS);
+			appendOptions(procedure.getResultSet());
+			append(SPACE).append(TABLE).append(SPACE);
 			addColumns(procedure.getResultSet().getColumns(), true);
 		}
 		/* The parser treats the RETURN clause as optional for a procedure if using the RESULT param
@@ -675,7 +677,9 @@ public class DDLStringVisitor {
 		}
 		append(RPAREN);
 		
-		append(SPACE).append(RETURNS).append(SPACE);
+		append(SPACE).append(RETURNS);
+		appendOptions(function.getOutputParameter());
+		append(SPACE);
 		append(function.getOutputParameter().getType());
 		
 		//options

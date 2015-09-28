@@ -241,13 +241,24 @@ public class TestDDLStringVisitor {
 	@Test
 	public void testSourceProcedure() throws Exception {
 		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean options(foo 'bar'), p2 varchar, INOUT p3 decimal) " +
-				"RETURNS (r1 varchar, r2 decimal)" +
+				"RETURNS options(x 'y') (r1 varchar, r2 decimal)" +
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');";
 		
-		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean OPTIONS (foo 'bar'), IN p2 string, INOUT p3 bigdecimal) RETURNS TABLE (r1 string, r2 bigdecimal)\n" + 
+		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean OPTIONS (foo 'bar'), IN p2 string, INOUT p3 bigdecimal) RETURNS OPTIONS (x 'y') TABLE (r1 string, r2 bigdecimal)\n" + 
 				"OPTIONS (UUID 'uuid', ANNOTATION 'desc', NAMEINSOURCE 'nis', UPDATECOUNT 2, RANDOM 'any')";
 		helpTest(ddl, expected);		
-	}	
+	}
+	
+	@Test
+	public void testSourceFunction() throws Exception {
+		String ddl = "CREATE FOREIGN Function myProc(p1 boolean options(foo 'bar'), p2 varchar) " +
+				"RETURNS options(x 'y') varchar " +
+				"OPTIONS(RANDOM 'any');";
+		
+		String expected = "CREATE FOREIGN FUNCTION myProc(p1 boolean, p2 string) RETURNS OPTIONS (x 'y') string\n"
+				+ "OPTIONS (RANDOM 'any');";
+		helpTest(ddl, expected);		
+	}
 	
 	@Test
 	public void testPushdownFunctionNoArgs() throws Exception {
