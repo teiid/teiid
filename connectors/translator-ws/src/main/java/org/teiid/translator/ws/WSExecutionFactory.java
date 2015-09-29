@@ -122,6 +122,9 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     	if (command.getProcedureName().equalsIgnoreCase(INVOKE_HTTP)) {
     		return new BinaryWSProcedureExecution(command, metadata, executionContext, this, connection);
     	}
+    	if(connection != null && connection.getSwagger() != null){
+    	    return new SwaggerProcedureExecution(command, metadata, executionContext, this, connection);
+    	}
     	if (command.getArguments().size() > 2 || command.getProcedureName().equalsIgnoreCase(INVOKE)) {
     		return new WSProcedureExecution(command, metadata, executionContext, this, connection);
     	}
@@ -195,6 +198,12 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl().toString());
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getMetadata(metadataFactory, conn);
+		}
+		
+		if(conn != null && conn.getSwagger() != null) {
+		    SwaggerMetadataProcessor metadataProcessor = new SwaggerMetadataProcessor(conn.getSwagger());
+		    PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+		    metadataProcessor.process(metadataFactory, conn);
 		}
 		
 	}
