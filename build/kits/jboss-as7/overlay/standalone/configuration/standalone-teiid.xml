@@ -416,6 +416,7 @@
             <translator name="ucanaccess" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="vertica" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="actian-vector" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="osisoft-pi" module="org.jboss.teiid.translator.jdbc"/>
         </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <unbounded-queue-thread-pool name="teiid-async">
