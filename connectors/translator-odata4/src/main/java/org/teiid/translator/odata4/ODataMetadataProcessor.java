@@ -87,7 +87,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             display = "Name in OData Schema", 
             description = "Name in OData Schema", 
             required = true)    
-	public static final String NAME_IN_SCHEMA = MetadataFactory.ODATA_URI+"NameInSchema"; //$NON-NLS-1$
+    public static final String NAME_IN_SCHEMA = MetadataFactory.ODATA_URI+"NameInSchema"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable = { Table.class, Procedure.class }, 
             datatype = String.class, 
@@ -202,10 +202,10 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         return table;
     }
 
-	private boolean isSimple(String type) {
-	    return type.startsWith("Edm");
-	}
-	
+    private boolean isSimple(String type) {
+        return type.startsWith("Edm");
+    }
+    
     private boolean isEnum(XMLMetadata metadata, String type)
             throws TranslatorException {
         return getEnumType(metadata, type) != null;
@@ -230,8 +230,8 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         CsdlEntityType type = getEntityType(metadata, entityType);
         addEntityTypeProperties(mf, metadata, table, type);
         return table;
-    }	
-	
+    }    
+    
     private void addEntityTypeProperties(MetadataFactory mf,
             XMLMetadata metadata, Table table, CsdlEntityType entityType)
             throws TranslatorException {
@@ -289,10 +289,10 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             childTable.setNameInSource(parentProperty.getName());
         }
         
-	    for (CsdlProperty property:complexType.getProperties()) {
-	        addProperty(mf, metadata, childTable, property);
+        for (CsdlProperty property:complexType.getProperties()) {
+            addProperty(mf, metadata, childTable, property);
         }
-	    
+        
         // add properties from base type; if any to flatten the model
         String baseType = complexType.getBaseType();
         while(baseType != null) {
@@ -558,7 +558,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             i++;
         }
         mf.addForiegnKey(fkName, keyColumns, refColumns, parentTable.getName(), childTable); //$NON-NLS-1$
-    }	
+    }    
 
     boolean same(Table x, Table y) {
         return (x.getFullName().equalsIgnoreCase(y.getFullName()));
@@ -655,12 +655,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     }    
 
     private Column buildColumn(MetadataFactory mf, Table table, CsdlProperty property) {
-		String columnName = property.getName();
-		Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(property.getType(), 
-		        property.isCollection()), table);
-		c.setUpdatable(true);
-		return c;
-	}
+        String columnName = property.getName();
+        Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(property.getType(), 
+                property.isCollection()), table);
+        c.setUpdatable(true);
+        return c;
+    }
 
     private void addParameter(MetadataFactory mf, XMLMetadata metadata,
             Procedure procedure, CsdlParameter parameter) throws TranslatorException {
@@ -781,7 +781,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         return names;
     }
 
-	@TranslatorProperty(display="Schema Namespace", category=PropertyType.IMPORT, description="Namespace of the schema to import")
+    @TranslatorProperty(display="Schema Namespace", category=PropertyType.IMPORT, description="Namespace of the schema to import")
     public String getSchemaNamespace() {
         return schemaNamespace;
     }

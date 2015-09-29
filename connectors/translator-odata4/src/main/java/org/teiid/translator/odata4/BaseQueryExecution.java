@@ -56,19 +56,19 @@ import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class BaseQueryExecution {
-	protected WSConnection connection;
-	protected ODataExecutionFactory translator;
-	protected RuntimeMetadata metadata;
-	protected ExecutionContext executionContext;
+    protected WSConnection connection;
+    protected ODataExecutionFactory translator;
+    protected RuntimeMetadata metadata;
+    protected ExecutionContext executionContext;
 
     public BaseQueryExecution(ODataExecutionFactory translator,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             WSConnection connection) {
-		this.metadata = metadata;
-		this.executionContext = executionContext;
-		this.translator = translator;
-		this.connection = connection;
-	}
+        this.metadata = metadata;
+        this.executionContext = executionContext;
+        this.translator = translator;
+        this.connection = connection;
+    }
 
     protected InputStream executeQuery(String method,
             String uri, String payload, String eTag, HttpStatusCode[] expectedStatus)
@@ -106,78 +106,78 @@ public class BaseQueryExecution {
         
     }
     
-	String getHeader(BinaryWSProcedureExecution execution, String header) {
-		Object value = execution.getResponseHeader(header);
-		if (value instanceof List) {
-			return (String)((List<?>)value).get(0);
-		}
-		return (String)value;
-	}	
+    String getHeader(BinaryWSProcedureExecution execution, String header) {
+        Object value = execution.getResponseHeader(header);
+        if (value instanceof List) {
+            return (String)((List<?>)value).get(0);
+        }
+        return (String)value;
+    }    
 
-	protected TranslatorException buildError(BinaryWSProcedureExecution execution) {
-		// do some error handling
-		try {
-			Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-			JsonDeserializer parser = new JsonDeserializer(false);
-			ODataError error = parser.toError(blob.getBinaryStream());			
+    protected TranslatorException buildError(BinaryWSProcedureExecution execution) {
+        // do some error handling
+        try {
+            Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+            JsonDeserializer parser = new JsonDeserializer(false);
+            ODataError error = parser.toError(blob.getBinaryStream());            
             return new TranslatorException(ODataPlugin.Util.gs(
                     ODataPlugin.Event.TEIID17013, execution.getResponseCode(),
                     error.getCode(), error.getMessage(), error.getInnerError()));
-		}
-		catch (Throwable t) {
-			return new TranslatorException(t);
-		}
-	}
+        }
+        catch (Throwable t) {
+            return new TranslatorException(t);
+        }
+    }
 
     protected BinaryWSProcedureExecution invokeHTTP(String method,
             String uri, String payload, Map<String, List<String>> headers)
             throws TranslatorException {
 
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL)) {
-			try {
+            try {
                 LogManager.logDetail(LogConstants.CTX_ODATA,
                         "Source-URL=", URLDecoder.decode(uri, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
-			} catch (UnsupportedEncodingException e) {
-			}
-		}
+            } catch (UnsupportedEncodingException e) {
+            }
+        }
 
-		List<Argument> parameters = new ArrayList<Argument>();
-		parameters.add(new Argument(Direction.IN, 
-		        new Literal(method, TypeFacility.RUNTIME_TYPES.STRING), null));
-		parameters.add(new Argument(Direction.IN, 
-		        new Literal(payload, TypeFacility.RUNTIME_TYPES.STRING), null));
-		parameters.add(new Argument(Direction.IN, 
-		        new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
-		parameters.add(new Argument(Direction.IN, 
-		        new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
-		//the engine currently always associates out params at resolve time even if the 
-		// values are not directly read by the call
-		parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
-		
+        List<Argument> parameters = new ArrayList<Argument>();
+        parameters.add(new Argument(Direction.IN, 
+                new Literal(method, TypeFacility.RUNTIME_TYPES.STRING), null));
+        parameters.add(new Argument(Direction.IN, 
+                new Literal(payload, TypeFacility.RUNTIME_TYPES.STRING), null));
+        parameters.add(new Argument(Direction.IN, 
+                new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
+        parameters.add(new Argument(Direction.IN, 
+                new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
+        //the engine currently always associates out params at resolve time even if the 
+        // values are not directly read by the call
+        parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
+        
         Call call = this.translator.getLanguageFactory().createCall(
                 ODataExecutionFactory.INVOKE_HTTP, parameters, null);
 
         BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(
                 call, this.metadata, this.executionContext, null,
                 this.connection);
-		execution.setUseResponseContext(true);
-		execution.setCustomHeaders(headers);
-		execution.execute();
-		return execution;
-	}
+        execution.setUseResponseContext(true);
+        execution.setCustomHeaders(headers);
+        execution.execute();
+        return execution;
+    }
 
-	protected Map<String, List<String>> getDefaultHeaders() {
-		Map<String, List<String>> headers = new HashMap<String, List<String>>();
-		headers.put("Accept", Arrays.asList(
-		        AcceptType.fromContentType(ContentType.JSON_NO_METADATA).toString())); //$NON-NLS-1$
-		headers.put("Content-Type", Arrays.asList(
-		        ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
-		if (this.executionContext != null) {
-		    headers.put("Prefer", Arrays.asList("odata.maxpagesize="+this.executionContext.getBatchSize()));
-		}
-		return headers;
-	}
-	
+    protected Map<String, List<String>> getDefaultHeaders() {
+        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        headers.put("Accept", Arrays.asList(
+                AcceptType.fromContentType(ContentType.JSON_NO_METADATA).toString())); //$NON-NLS-1$
+        headers.put("Content-Type", Arrays.asList(
+                ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
+        if (this.executionContext != null) {
+            headers.put("Prefer", Arrays.asList("odata.maxpagesize="+this.executionContext.getBatchSize()));
+        }
+        return headers;
+    }
+    
     protected InputStream executeSkipToken(URI nextURL, String baseURL,
             HttpStatusCode[] accepeted) throws TranslatorException {
         String next = nextURL.toString();
@@ -205,9 +205,9 @@ public class BaseQueryExecution {
             return executeQuery("GET", nextUri, null, null, accepeted);
         } else {
             throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17001, next));
-        }	    
-	}
-	
+        }        
+    }
+    
     @SuppressWarnings("unchecked")
     <T extends AbstractMetadataRecord> List<?> buildRow(T record, List<Column> columns,
             Class<?>[] expectedType, Map<String, Object> values) throws TranslatorException {
@@ -224,7 +224,7 @@ public class BaseQueryExecution {
         }
         return results;
     }     
-	
+    
     public String getName(AbstractMetadataRecord table) {
         if (table.getNameInSource() != null) {
             return table.getNameInSource();

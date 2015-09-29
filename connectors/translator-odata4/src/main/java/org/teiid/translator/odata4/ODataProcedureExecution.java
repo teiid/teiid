@@ -45,19 +45,19 @@ import org.teiid.translator.WSConnection;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
-	private Object returnValue;
-	private ODataResponse response;
-	private Class<?>[] expectedColumnTypes;
-	private Call command;
+    private Object returnValue;
+    private ODataResponse response;
+    private Class<?>[] expectedColumnTypes;
+    private Call command;
 
     public ODataProcedureExecution(Call command,
             ODataExecutionFactory translator,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             WSConnection connection) throws TranslatorException {
-		super(translator, executionContext, metadata, connection);
-		this.command = command;
-		this.expectedColumnTypes = command.getResultSetColumnTypes();
-	}
+        super(translator, executionContext, metadata, connection);
+        this.command = command;
+        this.expectedColumnTypes = command.getResultSetColumnTypes();
+    }
     
     private boolean isFunction(Procedure proc) {
         ODataType type = ODataType.valueOf(proc.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
@@ -105,9 +105,9 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         return sb.toString();
     }
     
-	@Override
-	public void execute() throws TranslatorException {
-	    String  parameters = getQueryParameters(this.command); 
+    @Override
+    public void execute() throws TranslatorException {
+        String  parameters = getQueryParameters(this.command); 
         try {
             
             InputStream response = null;
@@ -124,7 +124,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         } catch (ODataDeserializerException e) {
             throw new TranslatorException(e);
         }
-	}
+    }
 
     private void handleResponse(final Procedure procedure, final String baseUri, final InputStream payload)
             throws TranslatorException, ODataDeserializerException {
@@ -150,30 +150,30 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         }
     }
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-	    Procedure procedure = this.command.getMetadataObject();
-	    if (this.response != null) {
-	        Map<String, Object> row = this.response.getNext();
-	        if (row != null) {
-	            return buildRow(procedure.getResultSet(), 
-	                    procedure.getResultSet().getColumns(), 
-	                    this.expectedColumnTypes, row);
-	        }
-	    }
-		return null;
-	}
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        Procedure procedure = this.command.getMetadataObject();
+        if (this.response != null) {
+            Map<String, Object> row = this.response.getNext();
+            if (row != null) {
+                return buildRow(procedure.getResultSet(), 
+                        procedure.getResultSet().getColumns(), 
+                        this.expectedColumnTypes, row);
+            }
+        }
+        return null;
+    }
 
-	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return Arrays.asList(this.returnValue);
-	}
+    @Override
+    public List<?> getOutputParameterValues() throws TranslatorException {
+        return Arrays.asList(this.returnValue);
+    }
 
-	@Override
-	public void close() {
-	}
+    @Override
+    public void close() {
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-	}
+    @Override
+    public void cancel() throws TranslatorException {
+    }
 }

@@ -40,17 +40,17 @@ import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 public class ODataUpdateVisitor extends HierarchyVisitor {
     protected enum OperationType {INSERT, UPDATE, DELETE}; 
-	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();	
-	private ODataUpdateQuery odataQuery;
-	private Table updatedTable;
-	private RuntimeMetadata metadata;
-	private OperationType operationType;
+    protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();    
+    private ODataUpdateQuery odataQuery;
+    private Table updatedTable;
+    private RuntimeMetadata metadata;
+    private OperationType operationType;
 
     public ODataUpdateVisitor(ODataExecutionFactory ef, RuntimeMetadata metadata) {
-	    this.odataQuery = new ODataUpdateQuery(ef, metadata);
-	    this.metadata = metadata;
-	}
-	
+        this.odataQuery = new ODataUpdateQuery(ef, metadata);
+        this.metadata = metadata;
+    }
+    
     public OperationType getOperationType() {
         return this.operationType;
     }
@@ -63,35 +63,35 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
     public void visit(Insert obj) {
         try {
             this.operationType = OperationType.INSERT;
-    		visitNode(obj.getTable());
-    		Table table = obj.getTable().getMetadataObject();
-    		this.updatedTable = getParentTable(table);
-    		if (isComplexType(table) || isNavigationType(table)) {
-    		    this.odataQuery.addTable(this.updatedTable);
+            visitNode(obj.getTable());
+            Table table = obj.getTable().getMetadataObject();
+            this.updatedTable = getParentTable(table);
+            if (isComplexType(table) || isNavigationType(table)) {
+                this.odataQuery.addTable(this.updatedTable);
 
-    		} 
-    		// read the properties
+            } 
+            // read the properties
             int elementCount = obj.getColumns().size();
             for (int i = 0; i < elementCount; i++) {
                 Column column = obj.getColumns().get(i).getMetadataObject();
-            	List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
-            	String type = ODataTypeManager.odataType(column.getRuntimeType())
+                List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
+                String type = ODataTypeManager.odataType(column.getRuntimeType())
                         .getFullQualifiedName().getFullQualifiedNameAsString();
-            	Object value = ((Literal)values.get(i)).getValue();
-            	this.odataQuery.addInsertProperty(this.updatedTable, column, type, value);
+                Object value = ((Literal)values.get(i)).getValue();
+                this.odataQuery.addInsertProperty(this.updatedTable, column, type, value);
             }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
         } 
-	}	
-	
+    }    
+    
     @Override
     public void visit(Update obj) {
         try {
             this.operationType = OperationType.UPDATE;
-    		visitNode(obj.getTable());
-    		this.odataQuery.setCondition(obj.getWhere());
-    		this.updatedTable = getParentTable(obj.getTable().getMetadataObject());
+            visitNode(obj.getTable());
+            this.odataQuery.setCondition(obj.getWhere());
+            this.updatedTable = getParentTable(obj.getTable().getMetadataObject());
             
             // read the properties
             int elementCount = obj.getChanges().size();
@@ -105,19 +105,19 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
         } catch (TranslatorException e) {
             this.exceptions.add(e);
         }
-	}
+    }
 
-	@Override
+    @Override
     public void visit(Delete obj) {
-		try {
-		    this.operationType = OperationType.DELETE;
+        try {
+            this.operationType = OperationType.DELETE;
             visitNode(obj.getTable());
             this.odataQuery.setCondition(obj.getWhere());
             this.updatedTable = getParentTable(obj.getTable().getMetadataObject());
         } catch (TranslatorException e) {
             this.exceptions.add(e);
         }
-	}
+    }
 
     @Override
     public void visit(NamedTable obj) {

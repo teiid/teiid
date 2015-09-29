@@ -85,6 +85,7 @@
         <version.commons-codec>1.9</version.commons-codec>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
 	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
+	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <version.org.reflections>0.9.9</version.org.reflections>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
@@ -1583,7 +1584,12 @@
 	            <groupId>org.picketbox</groupId>
 	            <artifactId>picketbox</artifactId>
 	            <version>${version.org.picketbox}</version>
-	        </dependency>             
+	        </dependency> 
+			<dependency>
+			    <groupId>com.fasterxml</groupId>
+			    <artifactId>aalto-xml</artifactId>
+			    <version>${version.com.fasterxml.aalto-xml}</version>
+			</dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>
