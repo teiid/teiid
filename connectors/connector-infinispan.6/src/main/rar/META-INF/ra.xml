@@ -37,7 +37,7 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory</managedconnectionfactory-class>
   
             <config-property>
-               <description>{$display:"Cache Type Mapping",$description:"Cache Type Map(cacheName:className[;pkFieldName][,cacheName:className[;pkFieldName]...])",$required="true"}</description>
+                <description>{$display:"Cache Type Mapping",$description:"Cache Type Map(cacheName:className[;pkFieldName[:cacheKeyJavaType]])",$required="true"}</description>
                <config-property-name>CacheTypeMap</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>  
@@ -55,7 +55,7 @@
             </config-property>  
             
             <config-property>
-               <description>{$display:"Config File for Local Cache",$description:"Infinispan Configuration File for configuring local cache"}</description>
+               <description>{$display:"[Deprecated] Config File for Local Cache",$description:"[Deprecated] Infinispan Configuration File for configuring local cache"}</description>
                <config-property-name>ConfigurationFileNameForLocalCache</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>      

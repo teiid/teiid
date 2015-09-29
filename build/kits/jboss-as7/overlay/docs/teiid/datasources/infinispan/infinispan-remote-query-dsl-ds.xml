@@ -10,7 +10,7 @@
                     <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.dsl"/>
                     <connection-definitions>
                         <connection-definition class-name="org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteDSL" enabled="true" use-java-context="true" pool-name="infinispanRemoteDSL">
-                            <!-- comma separate list of cache name to cache class;primary key -->
+                            <!-- cacheName:className[;pkFieldName[:cacheKeyJavaType]]) -->
                             <config-property name="CacheTypeMap">
                                 addressbook_indexed:org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;id
                             </config-property>

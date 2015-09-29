@@ -26,13 +26,19 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.language.Delete;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
-import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
+import org.teiid.translator.object.simpleMap.SearchByKey;
 
 
 /**
@@ -42,7 +48,7 @@ import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
  * @author vhalbert
  * 
  */
-@Translator(name = "map-cache", description = "Searches a Map for Objects")
+@Translator(name = "map-cache", description = "Translator for managing a cache of Objects")
 public class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
@@ -59,6 +65,7 @@ public class ObjectExecutionFactory extends
 		setSupportsInnerJoins(false);
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(false);
+		
 	}
 
 	@Override
@@ -67,6 +74,14 @@ public class ObjectExecutionFactory extends
 			ObjectConnection connection) throws TranslatorException {
 		return new ObjectExecution((Select) command, metadata, this, connection, executionContext);
 	}
+	
+    @Override
+	public UpdateExecution createUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			ObjectConnection connection) throws TranslatorException {
+    	return new ObjectUpdateExecution(command, connection, executionContext, this);
+	}
+    
 
 	@Override
     public boolean supportsCompareCriteriaEquals() {
@@ -96,25 +111,14 @@ public class ObjectExecutionFactory extends
 	    return new JavaBeanMetadataProcessor();
 	}
 	
-	public List<Object> search(Select command, String cacheName, ObjectConnection connection, ExecutionContext executionContext)
+	public List<Object> search(ObjectSelectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
 			throws TranslatorException {
-		return searchType.performSearch(command, cacheName, connection);
+		return searchType.performSearch(visitor,connection);
 	}
-	
-	public List<Object> search(Delete command, String cacheName, ObjectConnection connection, ExecutionContext executionContext)
-				throws TranslatorException {   
-		return searchType.performSearch(command, cacheName, connection);
-	}
-	
-	public List<Object> search(Update command, String cacheName, ObjectConnection connection, ExecutionContext executionContext)
-			throws TranslatorException {   
-		return searchType.performSearch(command, cacheName, connection);
-	}	
 	
 	/**
 	 * The searchByKey is used by update operations that need to obtain a specific object, but don't need
 	 * to create a Select command in order to find a single object.
-	 * @param cacheName
 	 * @param columnName
 	 * @param value
 	 * @param connection
@@ -122,8 +126,18 @@ public class ObjectExecutionFactory extends
 	 * @return Object
 	 * @throws TranslatorException
 	 */
-	public Object performKeySearch(String cacheName, String columnName, Object value, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
-		return searchType.performKeySearch(cacheName, columnName, value, connection);
-	}		
+	public Object performKeySearch(String columnName, Object value, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
+		return searchType.performKeySearch(columnName, value, connection);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.ExecutionFactory#supportsRowLimit()
+	 */
+	@Override
+	public boolean supportsRowLimit() {
+		return true;
+	}
 
 }

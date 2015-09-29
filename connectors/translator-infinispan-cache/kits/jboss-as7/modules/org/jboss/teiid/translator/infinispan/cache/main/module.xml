@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.translator.infinispan.cache">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <resource-root path="translator-infinispan-cache-${project.version}.jar" />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <!-->module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" /> 
+        <module name="org.jboss.teiid" />
+        <module name="org.jboss.modules" export="true"/-->
+        
+        <module name="org.jboss.teiid.translator.object" export="true" />        
+
+        <module name="org.infinispan" slot="${jdg.slot}" optional="true"  export="true"  services="import" />
+        <module name="org.infinispan.query" slot="${jdg.slot}" optional="true" export="true"  services="import" />
+        <!-->module name="org.infinispan.commons" slot="${jdg.slot}" optional="true"  export="true" /-->
+        <module name="org.infinispan.query.dsl" slot="${jdg.slot}" optional="true"  export="true" /> 
+          
+        <module name="org.infinispan.lucene-directory" slot="${jdg.slot}" optional="true"  export="true" /> 
+      
+        <!--       
+        This "your.pojo.module" would be used when the infinispan-cache translator is used.
+		The "your.pojo.module" name needs to be replaced with the module name that has
+		the java class(s) that's being stored in the JDG cache  
+		-->
+	
+		<module name="your.pojo.module"  optional="true"  export="true" />
+
+    </dependencies>
+</module>
+  

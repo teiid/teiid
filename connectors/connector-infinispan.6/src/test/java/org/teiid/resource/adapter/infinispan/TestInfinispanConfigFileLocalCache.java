@@ -21,19 +21,17 @@
  */
 package org.teiid.resource.adapter.infinispan;
 
-import static org.junit.Assert.*;
-
-import java.util.Collections;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.core.util.ReflectionHelper;
-import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.testdata.trades.Trade;
 
 @SuppressWarnings("nls")
+@Ignore
 public class TestInfinispanConfigFileLocalCache {
     
     private static InfinispanManagedConnectionFactory factory = null;
@@ -44,19 +42,12 @@ public class TestInfinispanConfigFileLocalCache {
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "java.lang.Long;longValue");
+		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
 		
 	}
 	
-    @AfterClass
+	@AfterClass
     public static void closeConnection() throws Exception {    	    
-    	    CacheContainerWrapper ccw = factory.getCacheContainer();
-    	    
-    	    ReflectionHelper h = new ReflectionHelper(ccw.getClass());
-    	    
-    	    (h.findBestMethodWithSignature("cleanUp", Collections.EMPTY_LIST)).invoke(ccw);
-    	    
-    	    factory.cleanUp();
     	    
         RemoteInfinispanTestHelper.releaseServer();
     }
@@ -65,15 +56,16 @@ public class TestInfinispanConfigFileLocalCache {
     public void testConnection() throws Exception {
     	
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-    		Map<?, ?> m = conn.getCacheNameClassTypeMapping();
+    		Class<?> clz = conn.getCacheClassType();
     		
-    		assertNotNull(m);
+    		assertEquals(Trade.class, clz);
     		
-    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
+    		Class<?> t = conn.getCacheKeyClassType();
     		
-    		assertEquals(Long.class, t);
+    		assertEquals(long.class, t);
     		
-    		assertEquals("longValue", conn.getPkField(RemoteInfinispanTestHelper.TEST_CACHE_NAME));
-
+    		assertEquals("longValue", conn.getPkField());
+    		
+    		conn.cleanUp();
     }
 }
