@@ -21,7 +21,6 @@
  */
 package org.teiid.translator.odata4;
 
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +28,6 @@ import java.util.Set;
 import org.apache.olingo.client.core.ConfigurationImpl;
 import org.apache.olingo.client.core.uri.URIBuilderImpl;
 import org.teiid.language.Condition;
-import org.teiid.language.LanguageUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -91,7 +89,7 @@ public class ODataSelectQuery extends ODataQuery {
         LinkedHashSet<String> columns = new LinkedHashSet<String>();
         for (Column column: projectedColumns) {
             UriSchemaElement use = getSchemaElement((Table)column.getParent());
-            use.appendSelect(column);
+            use.appendSelect(column.getName());
         }
         
         columns.addAll(this.entitySetTable.getSelects());        
@@ -101,39 +99,15 @@ public class ODataSelectQuery extends ODataQuery {
         return columns;
     }    
     
-    private String processFilter(Condition condition) throws TranslatorException {
-        List<Condition> crits = LanguageUtil.separateCriteriaByAnd(condition);
-        if (!crits.isEmpty()) {
-            for(Iterator<Condition> iter = crits.iterator(); iter.hasNext();) {
-                Condition crit = iter.next();
-                ODataFilterVisitor visitor = new ODataFilterVisitor(this.executionFactory, this);
-                visitor.appendFilter(crit);
-            }
-        }
-        StringBuilder sb = new StringBuilder();
-        if (this.entitySetTable.getFilter() != null) {
-            sb.append(this.entitySetTable.getFilter());
-        }
-        for (UriSchemaElement use:this.complexTables) {
-            if (use.getFilter() != null) {
-                if (sb.length() > 0) {
-                    sb.append(" and ");
-                }
-                sb.append(use.getFilter());
-            }
-        }
-        return sb.length() == 0?null:sb.toString();
-    }    
-    
     public void setSkip(Integer integer) {
         this.skip = integer;
-     }
+    }
 
-     public void setTop(Integer integer) {
-         this.top = integer;
-     }
+    public void setTop(Integer integer) {
+        this.top = integer;
+    }
 
-     public void setAsCount() {
-         this.count = true;
-     }    
+    public void setAsCount() {
+        this.count = true;
+    }   
 }

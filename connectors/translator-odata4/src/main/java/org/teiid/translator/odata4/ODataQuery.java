@@ -22,6 +22,7 @@
 package org.teiid.translator.odata4;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -99,6 +100,30 @@ public class ODataQuery {
     public UriSchemaElement getEntitySetTable() {
         return this.entitySetTable;
     }
+    
+    protected String processFilter(Condition condition) throws TranslatorException {
+        List<Condition> crits = LanguageUtil.separateCriteriaByAnd(condition);
+        if (!crits.isEmpty()) {
+            for(Iterator<Condition> iter = crits.iterator(); iter.hasNext();) {
+                Condition crit = iter.next();
+                ODataFilterVisitor visitor = new ODataFilterVisitor(this.executionFactory, this);
+                visitor.appendFilter(crit);
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        if (this.entitySetTable.getFilter() != null) {
+            sb.append(this.entitySetTable.getFilter());
+        }
+        for (UriSchemaElement use:this.complexTables) {
+            if (use.getFilter() != null) {
+                if (sb.length() > 0) {
+                    sb.append(" and ");
+                }
+                sb.append(use.getFilter());
+            }
+        }
+        return sb.length() == 0?null:sb.toString();
+    }     
     
     public Condition addNavigation(Condition obj, Table... tables) throws TranslatorException {
         for (Table table:tables) {
@@ -234,11 +259,11 @@ class UriSchemaElement {
         return type == SchemaElementType.PRIMARY;
     }
     
-    public void appendSelect(Column column) {
+    public void appendSelect(String columnName) {
         if (isComplexType()) {
             this.columns.add(getName());
         } else {
-            this.columns.add(column.getName());
+            this.columns.add(columnName);
         }
     }
     
@@ -271,5 +296,16 @@ class UriSchemaElement {
     
     public String getFilter() {
         return this.filterStr;
+    }
+    
+    public List<String> getIdentityColumns(){
+        if (this.table.getPrimaryKey() == null) {
+            return Collections.emptyList();
+        }
+        ArrayList<String> keys = new ArrayList<String>();
+        for (Column column:this.table.getPrimaryKey().getColumns()) {
+            keys.add(column.getName());
+        }
+        return keys;
     }
 }

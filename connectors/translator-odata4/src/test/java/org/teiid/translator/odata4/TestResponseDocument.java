@@ -40,7 +40,7 @@ public class TestResponseDocument {
         doc.addChildDocuments(Arrays.asList(c4, c5));
                 
         List<Map<String, Object>> result = doc.flatten();
-        System.out.println(result);
+        //System.out.println(result);
         
         List<Map<String, Object>> expected = Arrays.asList(
                 map("A", "AA", "B", "BB", "c1/1", "11", "c2/4","44"), 

@@ -24,10 +24,6 @@ package org.teiid.translator.odata4;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.olingo.commons.api.data.Entity;
-import org.apache.olingo.commons.api.data.Property;
-import org.apache.olingo.commons.api.data.ValueType;
-import org.teiid.language.Condition;
 import org.teiid.language.Delete;
 import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
@@ -44,8 +40,7 @@ import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 public class ODataUpdateVisitor extends HierarchyVisitor {
     protected enum OperationType {INSERT, UPDATE, DELETE}; 
-	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
-	private Condition condition;
+	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();	
 	private ODataUpdateQuery odataQuery;
 	private Table updatedTable;
 	private RuntimeMetadata metadata;
@@ -83,7 +78,7 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
             	String type = ODataTypeManager.odataType(column.getRuntimeType())
                         .getFullQualifiedName().getFullQualifiedNameAsString();
             	Object value = ((Literal)values.get(i)).getValue();
-            	this.odataQuery.addPayloadProperty(this.updatedTable, column, type, value);
+            	this.odataQuery.addInsertProperty(this.updatedTable, column, type, value);
             }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
@@ -95,21 +90,18 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
         try {
             this.operationType = OperationType.UPDATE;
     		visitNode(obj.getTable());
-    		this.condition = obj.getWhere();
+    		this.odataQuery.setCondition(obj.getWhere());
     		this.updatedTable = getParentTable(obj.getTable().getMetadataObject());
-		
-            Entity entity = new Entity();
+            
+            // read the properties
             int elementCount = obj.getChanges().size();
             for (int i = 0; i < elementCount; i++) {
-            	Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();
-            	Literal value = (Literal)obj.getChanges().get(i).getValue();
+                Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();
+                Literal value = (Literal)obj.getChanges().get(i).getValue();
                 String type = ODataTypeManager.odataType(column.getRuntimeType())
                         .getFullQualifiedName().getFullQualifiedNameAsString();
-                entity.addProperty(new Property(type, 
-                        column.getName(), 
-                        ValueType.PRIMITIVE, 
-                        ODataTypeManager.convertToODataInput(value, type)));
-            }
+                this.odataQuery.addInsertProperty(this.updatedTable, column, type, value);
+            }            
         } catch (TranslatorException e) {
             this.exceptions.add(e);
         }
@@ -120,7 +112,7 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
 		try {
 		    this.operationType = OperationType.DELETE;
             visitNode(obj.getTable());
-            this.condition = obj.getWhere();
+            this.odataQuery.setCondition(obj.getWhere());
             this.updatedTable = getParentTable(obj.getTable().getMetadataObject());
         } catch (TranslatorException e) {
             this.exceptions.add(e);

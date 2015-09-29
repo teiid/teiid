@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
@@ -37,8 +36,6 @@ public class TestODataSQLVistor {
 
     private void helpExecute(String query, String expected) throws Exception {
         MetadataFactory mf = TestODataMetadataProcessor.tripPinMetadata();
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl); 
         
         helpExecute(mf, query, expected);
     }

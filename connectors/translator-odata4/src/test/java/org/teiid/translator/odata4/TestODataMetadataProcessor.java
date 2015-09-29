@@ -122,8 +122,8 @@ public class TestODataMetadataProcessor {
         props.setProperty("schemaNamespace", "Microsoft.OData.SampleService.Models.TripPin");
         MetadataFactory mf = new MetadataFactory("vdb", 1, "trippin", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         processor.process(mf, null);
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);    
+        //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        //System.out.println(ddl);    
         
         return mf;
     }
@@ -137,7 +137,7 @@ public class TestODataMetadataProcessor {
     	TransformationMetadata metadata = getTransformationMetadata(mf, this.translator);
     	
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);    
+        //System.out.println(ddl);    
 		
 		MetadataFactory mf2 = new MetadataFactory(null, 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf2, ddl);	
@@ -307,8 +307,6 @@ public class TestODataMetadataProcessor {
                 buildPersonEntity(address), address);
         processor.getMetadata(mf, metadata);
         
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);
         return mf;
     }
 
@@ -532,9 +530,6 @@ public class TestODataMetadataProcessor {
         XMLMetadata metadata = buildXmlMetadata(funcImport, func, other);
         processor.getMetadata(mf, metadata);
         
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);    
-        
         return mf;
     }    
 	
@@ -576,8 +571,6 @@ public class TestODataMetadataProcessor {
     @Test
     public void testOneToManyAssosiation() throws Exception {
         MetadataFactory mf = oneToManyRelationMetadata();
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl);
         
         Table g1 = mf.getSchema().getTable("G1");
         Table g2 = mf.getSchema().getTable("G2");
@@ -615,8 +608,6 @@ public class TestODataMetadataProcessor {
         
         XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set);
         processor.getMetadata(mf, metadata);
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);
         
         return mf;
     }	
@@ -691,8 +682,6 @@ public class TestODataMetadataProcessor {
         XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set);
         processor.getMetadata(mf, metadata);
 		
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl); 
         
 		Table g1 = mf.getSchema().getTable("G1");
 		Table g2 = mf.getSchema().getTable("G2");

@@ -37,6 +37,7 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.format.ContentType;
+import org.teiid.language.Condition;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
@@ -48,6 +49,7 @@ public class ODataUpdateQuery extends ODataQuery {
     private Map<String, Object> expandKeys = new LinkedHashMap<String, Object>();
     private List<Property> payloadProperties = new ArrayList<Property>();
     private String method = "POST"; //$NON-NLS-1$
+    private Condition condition;
     
     public ODataUpdateQuery(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
         super(executionFactory, metadata);
@@ -168,14 +170,96 @@ public class ODataUpdateQuery extends ODataQuery {
         return table.getName();
     }    
     
-    public void addPayloadProperty(Table parentTable, Column column, String type, Object value) {
+    public void addInsertProperty(Table parentTable, Column column, String type, Object value) {
         buildKeyColumns(parentTable, (Table)column.getParent(), column.getName(), value);
         if (column.isSelectable()) {
             this.payloadProperties.add(new Property(type, column.getName(), ValueType.PRIMITIVE, value));
         }
     }
+    
+    public void addUpdateProperty(Table parentTable, Column column, String type, Object value) {
+        if (column.isSelectable()) {
+            this.payloadProperties.add(new Property(type, column.getName(), ValueType.PRIMITIVE, value));
+        }
+    }    
 
     public String getMethod() {
         return this.method;
+    }
+
+    public void setCondition(Condition where) {
+        this.condition = where;
     }   
+    
+    public String buildUpdateSelectionURL(String serviceRoot) throws TranslatorException {
+        handleMissingEntitySet();
+
+        URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
+        uriBuilder.appendEntitySetSegment(this.entitySetTable.getName());
+        
+        List<String> selection = this.entitySetTable.getIdentityColumns();
+        uriBuilder.select(selection.toArray(new String[selection.size()]));
+        
+        if (!this.expandTables.isEmpty()) {
+            UriSchemaElement use = this.expandTables.get(0);
+            List<String> keys = use.getIdentityColumns();
+            for (String key:keys) {
+                use.appendSelect(key);
+            }
+            uriBuilder.expandWithOptions(use.getName(), use.getOptions());            
+        }
+        
+        String filter = processFilter(condition);
+        if (filter != null) {
+            uriBuilder.filter(filter);
+        }
+        URI uri = uriBuilder.build();
+        return uri.toString();        
+    }
+
+    public String buildUpdateURL(String serviceRoot, List<?> row) {
+        this.method = "PATCH";
+        URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
+        uriBuilder.appendEntitySetSegment(this.entitySetTable.getName());
+        
+        List<String> selection = this.entitySetTable.getIdentityColumns();
+        if (selection.size() == 1) {
+            uriBuilder.appendKeySegment(row.get(0));
+        } else if (!selection.isEmpty()) {
+            LinkedHashMap<String, Object> keys = new LinkedHashMap<String, Object>();
+            for (int i = 0; i < selection.size(); i++) {
+                keys.put(selection.get(i), row.get(i));
+            }
+            uriBuilder.appendKeySegment(keys);
+        }
+        
+        if (!this.complexTables.isEmpty()) {
+            if (this.complexTables.get(0).isCollection()) {
+                this.method = "PUT";
+            } else {
+                this.method = "PATCH";
+            }
+            uriBuilder.appendPropertySegment(this.complexTables.get(0).getName());
+        }
+        if (!this.expandTables.isEmpty()) {
+            if (!this.expandTables.get(0).isCollection()) {
+                this.method = "PUT";
+            }
+            uriBuilder.appendPropertySegment(this.expandTables.get(0).getName());
+
+            // add keys if present
+            UriSchemaElement use = this.expandTables.get(0);
+            List<String> expandSelection = use.getIdentityColumns();
+            LinkedHashMap<String, Object> keys = new LinkedHashMap<String, Object>();
+            for (int i = 0; i < expandSelection.size(); i++) {
+                keys.put(expandSelection.get(i), row.get(selection.size()+i));
+            }
+            if (!keys.isEmpty()) {
+                uriBuilder.appendKeySegment(keys);
+            }
+        }
+
+        URI uri = uriBuilder.build();
+        return uri.toString();        
+    }
 }

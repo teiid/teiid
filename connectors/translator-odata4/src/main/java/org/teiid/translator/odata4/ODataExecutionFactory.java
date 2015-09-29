@@ -25,6 +25,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -34,6 +35,7 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.client.core.serialization.ClientODataDeserializerImpl;
+import org.apache.olingo.commons.api.format.AcceptType;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.PropertiesUtils;
@@ -138,7 +140,10 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         if (this.serviceMatadata == null) {
             try {
                 BaseQueryExecution execution = new BaseQueryExecution(this, null, null, conn);
-                BinaryWSProcedureExecution call = execution.invokeHTTP("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
+                Map<String, List<String>> headers = new HashMap<String, List<String>>();
+                headers.put("Accept", Arrays.asList(
+                        AcceptType.fromContentType(ContentType.JSON).toString())); //$NON-NLS-1$
+                BinaryWSProcedureExecution call = execution.invokeHTTP("GET", "$metadata", null, headers); //$NON-NLS-1$ //$NON-NLS-2$
                 if (call.getResponseCode() != HttpStatusCode.OK.getStatusCode()) {
                     throw execution.buildError(call);
                 }

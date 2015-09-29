@@ -136,7 +136,7 @@ public class TestODataUpdateExecution {
 
     
 	@Test
-	public void testEntitySetInsert() throws Exception {
+	public void testInsertEntitySet() throws Exception {
 		String query = "INSERT INTO People(UserName,FirstName,LastName) values ('jdoe', 'John', 'Doe')";
 		String expectedURL = "People";
 		String returnResponse = "{\n" + 
@@ -154,7 +154,7 @@ public class TestODataUpdateExecution {
 	}
 	
 	@Test
-	public void testComplexType() throws Exception {
+	public void testInsertComplexType() throws Exception {
 		String query = "INSERT INTO Persons_address(street, city, state, ssn) "
 		        + "VALUES('sesame street', 'Newyork', 'NY', 1234)";
 		String expectedURL = "Persons(1234)/address";
@@ -176,7 +176,7 @@ public class TestODataUpdateExecution {
 	}
 	
     @Test
-    public void testComplexTypeTripPin() throws Exception {
+    public void testInsertComplexTypeTripPin() throws Exception {
         String query = "INSERT INTO People_AddressInfo(Address, People_UserName) "
                 + "VALUES('sesame street', 'russel')";
         String expectedURL = "People('russel')/AddressInfo";
@@ -195,7 +195,7 @@ public class TestODataUpdateExecution {
     }	
 
     @Test
-    public void testExpand() throws Exception {
+    public void testInsertNavigation() throws Exception {
         String query = "INSERT INTO People_Friends(UserName, FirstName, LastName, People_UserName) "
                 + "VALUES('jdoe', 'John', 'Doe', 'russel')";
         String expectedURL = "People('russel')/Friends";
@@ -212,5 +212,5 @@ public class TestODataUpdateExecution {
         
         UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
                 query, expectedPayload, returnResponse, expectedURL, "POST", 201);
-    }   
+    }
 }
