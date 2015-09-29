@@ -1,4 +1,8 @@
 <infinispan>
+    <global>
+        <globalJmxStatistics enabled="false" allowDuplicateDomains="true"/>
+    </global>
+
   <namedCache name="Trades">
   </namedCache>
 </infinispan>

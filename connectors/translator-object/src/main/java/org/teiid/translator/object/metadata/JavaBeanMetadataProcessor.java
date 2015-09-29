@@ -46,8 +46,6 @@ import org.teiid.translator.object.ObjectPlugin;
  * The BaseMetadataProcess is the core logic for providing metadata to the translator.
  */
 public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnection>{
-    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
-    public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class"; //$NON-NLS-1$
 	
 	public static final String GET = "get"; //$NON-NLS-1$
 	public static final String IS = "is"; //$NON-NLS-1$
@@ -59,15 +57,19 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 	@Override
 	public void process(MetadataFactory mf, ObjectConnection conn) throws TranslatorException {
-		Map<String, Class<?>> cacheTypes = conn.getCacheNameClassTypeMapping();
-		for (String cacheName : cacheTypes.keySet()) {
-			Class<?> type = cacheTypes.get(cacheName);
-			String pkField = conn.getPkField(cacheName);
-			createSourceTable(mf, type, cacheName, pkField, conn.getClassRegistry());
-		}
+		String cacheName = conn.getCacheName();			
+
+		Class<?> type = conn.getCacheClassType();
+		createSourceTable(mf, type, cacheName, conn);
 	}
 	
-	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, String pkField, ClassRegistry registry) {
+	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, ObjectConnection conn ) {
+
+		ClassRegistry registry = conn.getClassRegistry();
+		
+		String pkField = conn.getPkField();
+		setIsUpdateable(pkField != null ? true : false);
+			
 		String tableName = getTableName(entity);
 		Table table = mf.getSchema().getTable(tableName);
 		if (table != null) {
@@ -75,10 +77,8 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			return table;
 		}
 		table = mf.addTable(tableName);
-		table.setSupportsUpdate(isUpdateable(entity));
+		table.setSupportsUpdate(this.isUpdatable);
 		table.setNameInSource(cacheName); 
-
-		table.setProperty(ENTITYCLASS, entity.getName());
 		
 		String columnName = tableName + OBJECT_COL_SUFFIX;
 		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, true); //$NON-NLS-1$
@@ -143,23 +143,10 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		return entity.getSimpleName();
 	}
 	
-	/**
-	 * @param entity  
-	 * @return boolean
-	 */
-	protected boolean isUpdateable(Class<?> entity) {
-		return this.isUpdatable;
+	protected void setIsUpdateable(boolean isUpdateable) {
+		this.isUpdatable = isUpdateable;
 	}
-
-	/**
-	 * @param entity  
-	 * @param columnName 
-	 * @return boolean
-	 */
-	protected boolean isUpdateable(Class<?> entity, String columnName) {
-		return this.isUpdatable;
-	}
-
+	
 	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable) {
 		Column c = entityTable.getColumnByName(attributeName);
 		if (c != null) {
@@ -180,9 +167,8 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			c.setNativeType(type.getName());
 		}
 		
-		c.setUpdatable(isUpdateable(entity, attributeName));
+		c.setUpdatable(this.isUpdatable);
 		c.setSearchType(searchType);
-//		c.setNativeType(type.getName());
 		c.setSelectable(selectable);
 		if (type.isPrimitive()) {
 			c.setNullType(NullType.No_Nulls);

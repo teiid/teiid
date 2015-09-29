@@ -37,9 +37,9 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.util.VDBUtility;
+import org.teiid.translator.object.testdata.trades.Trade;
+import org.teiid.translator.object.testdata.trades.TradesCacheSource;
+import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestObjectExecutionFactory {

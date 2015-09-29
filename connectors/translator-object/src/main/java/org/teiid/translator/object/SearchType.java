@@ -23,9 +23,6 @@ package org.teiid.translator.object;
 
 import java.util.List;
 
-import org.teiid.language.Delete;
-import org.teiid.language.Select;
-import org.teiid.language.Update;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -36,43 +33,21 @@ public interface SearchType {
 	
 	/**
 	 * Perform key search to return zero or 1 object based on the key value
-	 * @param cacheName
 	 * @param columnNameInSource
 	 * @param value
 	 * @param conn
 	 * @return Object
 	 * @throws TranslatorException
 	 */
-	Object performKeySearch(String cacheName, String columnNameInSource, Object value, ObjectConnection conn) throws TranslatorException ;
+	Object performKeySearch(String columnNameInSource, Object value, ObjectConnection conn) throws TranslatorException ;
 
 	/**
 	 * Perform an update
-	 * @param command
-	 * @param cacheName
+	 * @param visitor
 	 * @param conn
 	 * @return List of Objects impacted by the update
 	 * @throws TranslatorException
 	 */
-	List<Object> performSearch(Update command, String cacheName, ObjectConnection conn) throws TranslatorException;
-	
-	/**
-	 * Perform a delete
-	 * @param command
-	 * @param cacheName
-	 * @param conn
-	 * @return List of Objects impacted by the delete
-	 * @throws TranslatorException
-	 */
-	List<Object> performSearch(Delete command, String cacheName, ObjectConnection conn) throws TranslatorException;
-
-	/**
-	 * Perform Select
-	 * @param command
-	 * @param cacheName
-	 * @param conn
-	 * @return List of Objects found by the search
-	 * @throws TranslatorException
-	 */
-	List<Object> performSearch(Select command, String cacheName, ObjectConnection conn) throws TranslatorException;
-	
+	List<Object> performSearch(ObjectSelectVisitor visitor, ObjectConnection conn) throws TranslatorException;	
+		
 }

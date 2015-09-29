@@ -21,6 +21,7 @@
  */
 package org.teiid.translator.object;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.teiid.translator.TranslatorException;
@@ -31,42 +32,114 @@ import org.teiid.translator.TranslatorException;
  * @author vhalbert
  *
  */
-public interface ObjectConnection  {
-	
-	CacheContainerWrapper getCacheContainer() throws TranslatorException;
-		
+public interface ObjectConnection {
+
 	/**
-	 * Return the root class type stored in the specified cache
-	 * @param cacheName 
-	 * @return Class
-	 * @throws TranslatorException
+	 * Call to check the status of the connection
+	 * @return boolean true if the connection is alive.
 	 */
-	Class<?> getType(String cacheName) throws TranslatorException;
+	public boolean isAlive();
 	
+	/**
+	 * Call to obtain the cache object
+	 * @return Map object cache
+	 */
+	public Map<Object, Object> getCache();  
+		
 	/**
 	 * Returns the name of the primary key to the cache
-	 * @param cacheName
 	 * @return String key name
 	 */
-	String getPkField(String cacheName);
-		
-	/**
-	 * Returns a map of all defined caches, and their respective root object class type,
-	 * that are accessible using this connection.
-	 * @return Map<String, Class>  --> CacheName, ClassType
-	 */
-	Map<String, Class<?>> getCacheNameClassTypeMapping();
+	public String getPkField();	
 	
 	/**
-	 * Return the ClassRegistry that contains which classes and their methods.
-	 * @return ClassRegistry
+	 * Returns the class type of the key to the cache.
+	 * If the primary key class type is different from the 
+	 * cache key type, then the value will be converted
+	 * to the cache key class type before performing a get/put on the cache.
+	 * @return Class<?>
+	 * @throws TranslatorException
 	 */
-	ClassRegistry getClassRegistry();	
+	public Class<?> getCacheKeyClassType() throws TranslatorException;
+	
+	
+	/**
+	 * Returns the name of the cache
+	 * @return String cacheName
+	 * @throws TranslatorException 
+	 */
+	public String getCacheName() throws TranslatorException;
+	
+		
+	/**
+	 * Returns root object class type
+	 * that is defined for the cache.
+	 * @return Cache ClassType
+	 * @throws TranslatorException 
+	 */
+	public Class<?> getCacheClassType() throws TranslatorException;
+		
+	
+	/**
+	 * Call to add an object to the cache
+	 * @param key
+	 * @param value
+	 * @throws TranslatorException
+	 */
+	public void add(Object key, Object value) throws TranslatorException;
+	
+	
+	/**
+	 * Call to remove an object from the cache
+	 * @param key
+	 * @return Object that was removed
+	 * @throws TranslatorException
+	 */
+	public Object remove(Object key) throws TranslatorException;
+	
+	/**
+	 * Call to update an object in the cache
+	 * @param key
+	 * @param value
+	 * @throws TranslatorException
+	 */
+	public void update(Object key, Object value)  throws TranslatorException;
 
 	
 	/** 
 	 * Called to enable the connection to cleanup after use
 	 */
 	public void cleanUp();
+	
+	
+	/**
+	 * Return the ClassRegistry that contains which classes and their methods.
+	 * @return ClassRegistry
+	 */
+	public ClassRegistry getClassRegistry();
+	
+	/**
+	 * Call to obtain an object from the cache based on the specified key
+	 * @param key to use to get the object from the cache
+	 * @return Object
+	 * @throws TranslatorException 
+	 */
+	public Object get(Object key) throws TranslatorException;
+	
+	/**
+	 * Call to obtain all the objects from the cache
+	 * @return List of all the objects in the cache
+	 * @throws TranslatorException 
+	 */
+	public Collection<Object> getAll() throws TranslatorException;
+
+	/**
+	 * Call to obtain all the first number of objects based on limit
+	 * @param limit is the number of objects to return 
+	 * @return List of the objects to return
+	 * @throws TranslatorException 
+	 */
+	public Collection<Object> getFirst(int limit) throws TranslatorException;
+
 	
 }
