@@ -1,0 +1,21 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:/pi-ds" pool-name="PIDS">
+        <connection-url> jdbc:pisql://{das_node}/{oledb_provider_string}</connection-url>
+        <driver>PIJDBCDriver.jar</driver>
+        <pool>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+        </pool>
+        <security>
+            <user-name>user</user-name>
+            <password>password</password>
+        </security>
+    </datasource> 
+    <drivers>
+       <driver name="osisoft-pi" module="com.osisoft">
+           <driver-class>com.osisoft.jdbc.Driver</driver-class>
+       </driver>    
+    </drivers>   
+</datasources>
