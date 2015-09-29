@@ -154,6 +154,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 
     public void setShouldEvaluateExpressions(boolean shouldEvaluate) {
+    	if (shouldEvaluate && projection != null) {
+    		//restore the original as we'll minimize each time
+    		((Query)this.command).getSelect().setSymbols(this.originalSelect);
+    		this.projection = null;
+    	}
         this.shouldEvaluate = shouldEvaluate;
     }
     
