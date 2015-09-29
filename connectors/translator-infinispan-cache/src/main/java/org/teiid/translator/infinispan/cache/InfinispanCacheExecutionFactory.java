@@ -21,9 +21,18 @@
  */
 package org.teiid.translator.infinispan.cache;
 
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.ObjectSelectVisitor;
 
 /**
  * InfinispanExecutionFactory is the "infinispan-cache" translator that is used to access an Infinispan cache.
@@ -61,6 +70,18 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 		
 		setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
 
+	}
+	
+	@Override
+	public ResultSetExecution createResultSetExecution(QueryExpression command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			ObjectConnection connection) throws TranslatorException {
+		return new ObjectExecution((Select) command, metadata, this, connection, executionContext) {
+			@Override
+			protected ObjectSelectVisitor createQueryVisitor() {
+				return new SearchByInfinispanVisitor();
+			}
+		};
 	}
 	
 	public boolean isFullQuerySupported() {
