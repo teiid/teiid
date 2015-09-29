@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Dependencies: org.jboss.teiid.client,org.jboss.teiid.common-core,org.jboss.teiid.admin,org.jboss.teiid,org.odata4j.core,org.jboss.teiid.translator.odata,org.joda.time
+Dependencies: org.jboss.teiid.client,org.jboss.teiid.common-core,org.jboss.teiid.admin,org.jboss.teiid,org.jboss.oreva,org.jboss.teiid.translator.odata,org.joda.time
