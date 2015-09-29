@@ -22,10 +22,7 @@
 
 package org.teiid.translator.jdbc.pi;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,14 +56,9 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("Int16", FunctionModifier.SHORT); //$NON-NLS-1$
         convert.addTypeMapping("Int32", FunctionModifier.INTEGER); //$NON-NLS-1$
         convert.addTypeMapping("Int64", FunctionModifier.LONG); //$NON-NLS-1$
-        convert.addTypeMapping("UInt8", FunctionModifier.BYTE); //$NON-NLS-1$
-        convert.addTypeMapping("UInt16", FunctionModifier.SHORT); //$NON-NLS-1$
-        convert.addTypeMapping("UInt32", FunctionModifier.INTEGER); //$NON-NLS-1$
-        convert.addTypeMapping("UInt64", FunctionModifier.LONG); //$NON-NLS-1$
         convert.addTypeMapping("Single", FunctionModifier.FLOAT); //$NON-NLS-1$
         convert.addTypeMapping("Double", FunctionModifier.DOUBLE); //$NON-NLS-1$
         convert.addTypeMapping("Boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
-        convert.addTypeMapping("AnsiString", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("String", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("DateTime", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("Time", FunctionModifier.TIME); //$NON-NLS-1$
@@ -82,9 +74,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
                 if (function.getParameters().get(2) == null) {
                     return Arrays.asList(function.getParameters().get(1), function.getParameters().get(0));
                 }
-                else {
-                    return Arrays.asList(function.getParameters().get(1), function.getParameters().get(0), function.getParameters().get(2));
-                }
+                return Arrays.asList(function.getParameters().get(1), function.getParameters().get(0), function.getParameters().get(2));
             }
         });        
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
@@ -97,8 +87,8 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PI, "FORMAT", STRING, FLOAT, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "FORMAT", STRING, INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "ParentName", STRING, STRING, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(PI, "List", STRING, STRING)
-            .setVarArgs(true); //$NON-NLS-1$
+        addPushDownFunction(PI, "List", STRING, STRING) //$NON-NLS-1$
+            .setVarArgs(true); 
         addPushDownFunction(PI, "DIGCODE", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "DIGSTRING", STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PI, "PE", STRING, OBJECT); //$NON-NLS-1$
