@@ -68,7 +68,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     private ODataQuery query;
     private UriSchemaElement filterOnElement;
     
-    public ODataFilterVisitor(ODataExecutionFactory ef, ODataQuery query) {
+    public ODataFilterVisitor(ODataExecutionFactory ef, ODataSelectQuery query) {
         this.ef = ef;
         this.query = query;
     }

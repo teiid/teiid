@@ -172,6 +172,7 @@ public class BaseQueryExecution {
 		        AcceptType.fromContentType(ContentType.JSON_NO_METADATA).toString())); //$NON-NLS-1$
 		headers.put("Content-Type", Arrays.asList(
 		        ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
+		headers.put("Prefer", Arrays.asList("odata.maxpagesize="+this.executionContext.getBatchSize()));
 		return headers;
 	}
 	

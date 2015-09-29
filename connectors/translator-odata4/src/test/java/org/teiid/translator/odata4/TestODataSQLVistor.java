@@ -226,15 +226,15 @@ public class TestODataSQLVistor {
     	helpExecute("SELECT count(*) FROM People", "People/$count");
     }  
     
-    @Test(expected=TranslatorException.class)
+    @Test
     public void testSelectFromNavigationTable() throws Exception {
         helpExecute("SELECT UserName FROM People_Friends WHERE UserName is NULL", 
-                "does not matter");
+                "People?$select=UserName&$expand=Friends($select=UserName;$filter=UserName eq null)");
     }
-    @Test(expected=TranslatorException.class)
+    @Test
     public void testSelectFromComplexTable() throws Exception {
-        helpExecute("SELECT * FROM People_AddressInfo", 
-                "does not matter");
+        helpExecute("SELECT * FROM People_AddressInfo where Address = 'foo'", 
+                "People?$select=AddressInfo&$filter=AddressInfo/Address eq 'foo'");
     }     
     
 }

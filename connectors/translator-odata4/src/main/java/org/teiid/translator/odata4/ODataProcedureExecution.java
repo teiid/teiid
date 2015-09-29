@@ -45,7 +45,6 @@ import org.teiid.translator.WSConnection;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
-	private ODataProcedureVisitor visitor;
 	private Object returnValue;
 	private ODataResponse response;
 	private Class<?>[] expectedColumnTypes;
@@ -56,13 +55,6 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
             ExecutionContext executionContext, RuntimeMetadata metadata,
             WSConnection connection) throws TranslatorException {
 		super(translator, executionContext, metadata, connection);
-
-		this.visitor = new ODataProcedureVisitor(translator, metadata);
-		this.visitor.visitNode(command);
-		
-		if (!this.visitor.exceptions.isEmpty()) {
-			throw this.visitor.exceptions.get(0);
-		}
 		this.command = command;
 		this.expectedColumnTypes = command.getResultSetColumnTypes();
 	}

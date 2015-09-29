@@ -23,22 +23,20 @@
   
   <dependencySets>
         <dependencySet>
-          <outputDirectory>${jbossas-module-root}/org/jboss/oreva/main</outputDirectory>
+          <outputDirectory>${jbossas-module-root}/org/apache/olingo/client/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
-              <include>org.jboss.oreva:common</include>
-              <include>org.jboss.oreva:odata-core</include>
+              <include>org.apache.olingo:odata-client-api</include>
+              <include>org.apache.olingo:odata-client-core</include>
           </includes>
       </dependencySet>
       
       <dependencySet>
-          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/odata/main</outputDirectory>
+          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/odata4/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
-              <include>org.jboss.teiid.connectors:translator-odata</include>
+              <include>org.jboss.teiid.connectors:translator-odata4</include>
           </includes>
       </dependencySet>
   </dependencySets>
-  
-  
 </assembly>

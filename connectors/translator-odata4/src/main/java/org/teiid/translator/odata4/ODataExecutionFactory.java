@@ -39,6 +39,7 @@ import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.Call;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
@@ -53,6 +54,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -155,25 +157,30 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     }
     
 	@Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		return new ODataQueryExecution(this, command, executionContext, metadata, connection);
-	}
+    public ResultSetExecution createResultSetExecution(QueryExpression command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            WSConnection connection) throws TranslatorException {
+        return new ODataQueryExecution(this, command, executionContext, metadata, connection);
+    }
 
 	@Override
-	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+    public ProcedureExecution createProcedureExecution(Call command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            WSConnection connection) throws TranslatorException {
+        String nativeQuery = command.getMetadataObject().getProperty(
+                SQLStringVisitor.TEIID_NATIVE_QUERY, false);
 		if (nativeQuery != null) {
 			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17014));
 		}
 		return new ODataProcedureExecution(command, this, executionContext, metadata, connection);
 	}
 
-	/*
-	@Override
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		return new ODataUpdateExecution(command, this, executionContext, metadata, connection);
-	}
-	*/
+    @Override
+    public UpdateExecution createUpdateExecution(Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            WSConnection connection) throws TranslatorException {
+        return new ODataUpdateExecution(command, this, executionContext,metadata, connection);
+    }
 
 	@Override
 	public List<String> getSupportedFunctions() {

@@ -56,7 +56,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	protected ODataExecutionFactory executionFactory;
 	protected RuntimeMetadata metadata;
 	protected ArrayList<Column> projectedColumns = new ArrayList<Column>();
-	private ODataQuery odataQuery;
+	private ODataSelectQuery odataQuery;
 	private StringBuilder orderBy = new StringBuilder();
 	private boolean count = false;
 	private ArrayList<Condition> conditionFragments = new ArrayList<Condition>();
@@ -65,7 +65,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             RuntimeMetadata metadata) {
         this.executionFactory = executionFactory;
         this.metadata = metadata;
-        this.odataQuery = new ODataQuery(executionFactory);
+        this.odataQuery = new ODataSelectQuery(executionFactory, metadata);
     }
     
 	public List<Column> getProjectedColumns(){
@@ -106,7 +106,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     public void visit(NamedTable obj) {
 		this.odataQuery.addTable(obj.getMetadataObject());
 	}
-
 
 	@Override
     public void visit(Join obj) {

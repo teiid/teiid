@@ -22,6 +22,7 @@
 package org.teiid.translator.odata4;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -51,6 +52,7 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -94,6 +96,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             allowed = "COMPLEX, NAVIGATION, ENTITY, ENTITY_COLLECTION, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION",
             required=true)
     public static final String ODATA_TYPE = MetadataFactory.ODATA_URI+"Type"; //$NON-NLS-1$
+    
+    @ExtensionMetadataProperty(applicable=Table.class, 
+            datatype=String.class, 
+            display="Merge Into Table", 
+            description="Declare the name of table that this table needs to be merged into.")
+    public static final String MERGE = MetadataFactory.ODATA_URI+"MERGE"; //$NON-NLS-1$
+    
     
     private String schemaNamespace;
     private ODataExecutionFactory ef;
@@ -273,6 +282,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 parentProperty.isCollection() ? 
                 ODataType.COMPLEX_COLLECTION.name() : ODataType.COMPLEX.name()); // complex type
         childTable.setProperty(PARENT_TABLE, parentTable.getName());
+        childTable.setProperty(MERGE, parentTable.getFullName());
         if (isComplexType(parentTable)) {
             childTable.setNameInSource(parentTable.getNameInSource()+"/"+parentProperty.getName());
         } else {
@@ -417,7 +427,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 toTable = addTable(mf, name.toString(), property.getType(), 
                         property.isCollection()?ODataType.NAVIGATION_COLLECTION:ODataType.NAVIGATION, 
                         metadata);
-                toTable.setNameInSource(property.getName());
+                toTable.setNameInSource(property.getName());                
             }
 
             // support for self-joins
@@ -425,13 +435,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 StringBuilder name = new StringBuilder()
                         .append(fromTable.getName()).append(NAME_SEPARATOR)
                         .append(property.getName());
-                toTable = addTable(mf, name.toString(), fromEntityType.getName(), 
+                toTable = addTable(mf, name.toString(), toTable.getProperty(NAME_IN_SCHEMA, false), 
                         property.isCollection()?ODataType.NAVIGATION_COLLECTION:ODataType.NAVIGATION, 
                         metadata);
                 toTable.setNameInSource(property.getName());
             }
             toTable.setProperty(PARENT_TABLE, fromTable.getName());
-            
+            toTable.setProperty(MERGE, fromTable.getFullName());
             toTable.setProperty(FK_NAME, property.getName());
             
             int i = 0;
@@ -487,6 +497,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if (c == null) {
                     c = addColumn(mf, childTable, column, targetColumnName);
                     c.setSelectable(false);
+                    addAccessPattern(childTable, c);
                 } else {
                     targetColumnName = column.getName();
                 }
@@ -496,6 +507,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if (c == null) {
                     c = addColumn(mf, childTable, column, targetColumnName);
                     c.setSelectable(false);
+                    addAccessPattern(childTable, c);
                 } else {
                     targetColumnName = column.getName();
                 }
@@ -513,6 +525,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (isComplexType) {
             mf.addPrimaryKey("PK0", columnNames, childTable);
         }
+    }
+
+    private void addAccessPattern(Table childTable, Column c) {
+        KeyRecord accessPattern = new KeyRecord(Type.AccessPattern);
+        accessPattern.setName("AP0");
+        accessPattern.addColumn(c);
+        childTable.setAccessPatterns(Arrays.asList(accessPattern));
     }     
 
     private void addForeignKey(MetadataFactory mf, Table childTable, Table parentTable) 
