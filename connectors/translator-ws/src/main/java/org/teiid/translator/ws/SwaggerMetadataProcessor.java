@@ -52,10 +52,14 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private String pathSeparator = File.separator; 
     private String paramParenthesis = "{"; //$NON-NLS-1$
     private String catalogSeparator = "_"; //$NON-NLS-1$
+    private String httpHost = "http://localhost:8080"; //$NON-NLS-1$
+    
     private String isPathParamPropertyKey = "isPathParam"; //$NON-NLS-1$
     private String actionPropertyKey = "httpAction"; //$NON-NLS-1$
     private String baseUrlPropertyKey = "restBaseUrl"; //$NON-NLS-1$
-    private String httpHost = "http://localhost:8080"; //$NON-NLS-1$
+    private String pathSeparatorPropertyKey = "pathSeparator"; //$NON-NLS-1$
+    private String catalogSeparatorPropertyKey = "catalogSeparator"; //$NON-NLS-1$
+    private String httpHostPropertyKey = "httpHost"; //$NON-NLS-1$
     
     private Swagger swagger;
     
@@ -69,14 +73,24 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         Map<String, Path> pathMap = swagger.getPaths();
         
         for(String key : pathMap.keySet()) {
+            Path path = pathMap.get(key);
+            String action = getHttpAction(path);
+            if(null == action){
+                continue;
+            }
             String procName = formProcName(key);
             Procedure procedure = mf.addProcedure(procName);
             procedure.setVirtual(false);
             procedure.setNameInSource(procName);
+            procedure.setProperty(actionPropertyKey, action);
+            procedure.setProperty(baseUrlPropertyKey, swagger.getBasePath());
+            procedure.setProperty(pathSeparatorPropertyKey, pathSeparator);
+            procedure.setProperty(catalogSeparatorPropertyKey, catalogSeparator);
+            procedure.setProperty(httpHostPropertyKey, httpHost);
             
             mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, procedure); //$NON-NLS-1$
             
-            for(Parameter parameter : getApiParams(pathMap.get(key))) {
+            for(Parameter parameter : getApiParams(path)) {
                 String name = parameter.getName();
                 String dataType = TypeFacility.RUNTIME_NAMES.STRING;
                 String isPathParam = "true"; //$NON-NLS-1$
@@ -99,6 +113,16 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         }
     }
     
+    private String getHttpAction(Path path) {
+        if(path.getGet() != null) {
+            return "GET";
+        } else if (path.getPost() != null) {
+            return "POST";
+        }
+        //TODO-- add support more action
+        return null;
+    }
+
     private List<Parameter> getApiParams(Path path) {
         
         for(Operation operation : path.getOperations()) {
