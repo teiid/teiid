@@ -164,7 +164,7 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 	 *  see https://issues.jboss.org/browse/TEIID-3573
 	 * Discusses issue with trying to support NOT;
 	 */
-	@TranslatorProperty(display="NotCriteria", description="If true, translator can support the NOT operators: 'GT' or 'LT' ",advanced=true)	
+	@TranslatorProperty(display="NotCriteria", description="If true, translator can support the NOT operators' ",advanced=true)	
 	@Override
 	public boolean supportsNotCriteria() {
 		return this.supportNotCriteria;

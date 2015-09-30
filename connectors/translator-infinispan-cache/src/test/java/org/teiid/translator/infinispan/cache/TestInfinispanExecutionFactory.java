@@ -36,7 +36,7 @@ import org.teiid.translator.object.simpleMap.SearchByKey;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
-public class TestInfnispanExecutionFactory extends TestObjectExecutionFactory {
+public class TestInfinispanExecutionFactory extends TestObjectExecutionFactory {
 	
 
 	public class TestFactory extends InfinispanCacheExecutionFactory {
