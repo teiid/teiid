@@ -9,7 +9,7 @@
 	<artifactId>translator-infinispan-cache</artifactId>
 	<groupId>org.jboss.teiid.connectors</groupId>
 	<name>Infinispan Cache Translator</name>
-	<description>This is the Infinispan Cache tranlator</description>
+	<description>This is the Infinispan Cache translator</description>
 	<packaging>bundle</packaging>
 
     <dependencyManagement>

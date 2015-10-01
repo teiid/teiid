@@ -67,8 +67,7 @@ public class TestInfinispanConnection  {
 		mapping.entity(Trade.class).indexed().providedId().
 		property("name", ElementType.FIELD).field().analyze(Analyze.NO).
 		property("settled", ElementType.FIELD).field().analyze(Analyze.NO).
-		property("tradeDate", ElementType.FIELD).field().analyze(Analyze.NO).
-		property("tradeId", ElementType.FIELD).field().analyze(Analyze.NO);
+		property("tradeDate", ElementType.FIELD).field().analyze(Analyze.NO);
 
 		Properties properties = new Properties();
 		properties.put(org.hibernate.search.Environment.MODEL_MAPPING, mapping);

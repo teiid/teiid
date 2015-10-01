@@ -23,7 +23,6 @@
 package org.teiid.translator.object;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -371,7 +370,6 @@ public class ObjectExecution implements ResultSetExecution {
 		//		its assumed they all map to the same collection
 		
 		Object[] cols = new Object[colSize];
-		Arrays.fill(cols,null);
 
 		int rows = 0;
 		if (this.depth > 0) {

@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.testdata.trades.TradeObjectConnection;
 
 
 /**
@@ -92,7 +91,7 @@ public class TradesAnnotatedCacheSource extends HashMap <Object, Object> {
 	}
 	
 	public static void loadCache(Map <Object, Object> cache) {
-		for (int i = 1; i <= 200; i++) {
+		for (long i = 1; i <= 200; i++) {
 			
 			List<Leg> legs = new ArrayList<Leg>();
 			double d = 0;
@@ -120,7 +119,7 @@ public class TradesAnnotatedCacheSource extends HashMap <Object, Object> {
 				trade.setSettled(true);
 			}
 			
-			cache.put(new Long(i).longValue(), trade);
+			cache.put(i, trade);
 
 		}
 	}

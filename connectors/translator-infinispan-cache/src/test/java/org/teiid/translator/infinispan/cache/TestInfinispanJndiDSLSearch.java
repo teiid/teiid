@@ -21,14 +21,13 @@
  */
 package org.teiid.translator.infinispan.cache;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;

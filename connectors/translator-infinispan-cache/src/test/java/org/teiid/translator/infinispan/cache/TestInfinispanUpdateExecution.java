@@ -1,10 +1,7 @@
 package org.teiid.translator.infinispan.cache;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -14,12 +11,12 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectUpdateExecution;
 import org.teiid.translator.object.testdata.annotated.Trade;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
+@SuppressWarnings("nls")
 public class TestInfinispanUpdateExecution {
 	private static ObjectConnection CONNECTION;
 	private static TranslationUtility translationUtility = VDBUtility.TRANSLATION_UTILITY;
@@ -70,7 +67,7 @@ public class TestInfinispanUpdateExecution {
 	public void testInsertRootClass() throws Exception {
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(new Long("599").longValue());
+		Object o = CONNECTION.getCache().get(Long.valueOf(599));
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -81,7 +78,7 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Trade p = (Trade) CONNECTION.getCache().get(new Long("599").longValue());
+		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(599));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("TestName"));
@@ -119,8 +116,8 @@ public class TestInfinispanUpdateExecution {
 
 	public void testUpdateByKey() throws Exception {
 		
-		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(new Long("1").longValue());
+		// check the object exists
+		Object o = CONNECTION.getCache().get(Long.valueOf(1));
 		assertNotNull(o);
 		
 		Command command = translationUtility
@@ -130,7 +127,7 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Trade p = (Trade) CONNECTION.getCache().get(new Long("1").longValue());
+		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(1));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("Person 1 Changed"));
@@ -148,12 +145,12 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Trade p = (Trade) CONNECTION.getCache().get(new Long("2").longValue());
+		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(2));
 
 		assertNotNull(p);
 		assertFalse(p.isSettled());
 		
-		p = (Trade) CONNECTION.getCache().get(new Long("99").longValue());
+		p = (Trade) CONNECTION.getCache().get(Long.valueOf(99));
 
 		assertNotNull(p);
 		assertFalse(p.isSettled());
@@ -162,7 +159,7 @@ public class TestInfinispanUpdateExecution {
 
 	public void testDeleteRootByKey() throws Exception {
 		
-		Object o = CONNECTION.getCache().get(new Long("99").longValue());
+		Object o = CONNECTION.getCache().get(Long.valueOf(99));
 		assertNotNull(o);
 
 		Command command = translationUtility
@@ -175,7 +172,7 @@ public class TestInfinispanUpdateExecution {
 		// sleep so that the async delete is completed
 		Thread.sleep(3000);
 
-		Trade p = (Trade) CONNECTION.getCache().get(new Long("99").longValue());
+		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(99));
 
 		assertNull(p);
 
@@ -183,8 +180,8 @@ public class TestInfinispanUpdateExecution {
 
 	public void testDeleteRootByValue() throws Exception {
 
-		assertNotNull(CONNECTION.getCache().get(new Long("2").longValue()));
-		assertNotNull(CONNECTION.getCache().get(new Long("3").longValue()));
+		assertNotNull(CONNECTION.getCache().get(Long.valueOf(2)));
+		assertNotNull(CONNECTION.getCache().get(Long.valueOf(3)));
 		
 		Command command = translationUtility
 				.parseCommand("Delete From Trade Where settled = 'false'");
@@ -198,8 +195,8 @@ public class TestInfinispanUpdateExecution {
 		Thread.sleep(3000);
 
 		
-		assertNull(CONNECTION.getCache().get(new Long("2").longValue()));
-		assertNull(CONNECTION.getCache().get(new Long("3").longValue()));
+		assertNull(CONNECTION.getCache().get(Long.valueOf(2)));
+		assertNull(CONNECTION.getCache().get(Long.valueOf(3)));
 
 	}
 //
