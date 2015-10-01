@@ -53,8 +53,8 @@
         <jbossas-test-version>jboss-eap-6.4</jbossas-test-version>
         <version.org.jboss.oreva>0.8.8</version.org.jboss.oreva>
         <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
-
         <version.com.force.api>22.0.0</version.com.force.api>
+        <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
@@ -440,7 +440,13 @@
             	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-salesforce</artifactId>
             	<version>${project.version}</version>
-        	</dependency>  
+        	</dependency>
+	        <dependency>
+	            <groupId>org.jboss.teiid.connectors</groupId>
+	            <artifactId>connector-salesforce</artifactId>
+	            <type>rar</type>
+	            <version>${project.version}</version>
+	        </dependency>        	
       		<dependency>
             	<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
@@ -950,26 +956,6 @@
                 <artifactId>resteasy-multipart-provider</artifactId>
                 <version>${version.org.jboss.resteasy}</version>
             </dependency>                             
-            <dependency>
-                <groupId>com.force.api</groupId>
-                <artifactId>force-wsc</artifactId>
-                <version>${version.com.force.api}</version>
-              <exclusions>                
-                    <exclusion>
-                        <groupId>com.google.code.gson</groupId>
-                        <artifactId>gson</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>rhino</groupId>
-                        <artifactId>js</artifactId>
-                    </exclusion>
-               </exclusions>                
-            </dependency>
-            <dependency>
-                <groupId>com.force.api</groupId>
-                <artifactId>force-partner-api</artifactId>
-                <version>${version.com.force.api}</version>
-            </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-core</artifactId>

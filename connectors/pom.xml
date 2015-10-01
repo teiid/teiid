@@ -100,6 +100,7 @@
     <module>translator-loopback</module>
     <module>translator-file</module>
     <module>translator-salesforce</module>
+    <module>translator-salesforce-34</module>
     <module>translator-mongodb</module>
     <module>translator-cassandra</module>
     <module>translator-simpledb</module>
@@ -119,6 +120,7 @@
     <module>connector-file</module>
     <module>connector-google</module>
     <module>connector-salesforce</module>
+    <module>connector-salesforce-34</module>    
     <module>connector-ldap</module>
     <module>connector-ws</module>
     <module>connector-mongodb</module>
