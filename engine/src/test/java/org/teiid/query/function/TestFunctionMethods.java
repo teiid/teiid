@@ -137,6 +137,10 @@ public class TestFunctionMethods {
                 "fooBXRbXz",
                 FunctionMethods.regexpReplace(null, "fooBARbaz", "a", "X", "gi")
         );
+        assertEquals(
+                "xxbye Wxx",
+                FunctionMethods.regexpReplace(TestProcessor.createCommandContext(), "Goodbye World", "[g-o].", "x", "gi")
+        );
     }
 
     @Test(expected=FunctionExecutionException.class)
@@ -214,10 +218,6 @@ public class TestFunctionMethods {
     
     @Test(expected=FunctionExecutionException.class) public void testMultIntBounds2() throws FunctionExecutionException {
     	FunctionMethods.multiply(Integer.MIN_VALUE, -2);
-    }
-    
-    @Test public void testSomething() throws FunctionExecutionException {
-    	System.out.println(FunctionMethods.regexpReplace(TestProcessor.createCommandContext(), "Goodbye World", "[g-o].", "x", "gi"));
     }
     
 }

@@ -1299,12 +1299,6 @@ public class TestResolver {
 		// Resolve the query and check against expected objects
 		CompareCriteria actual = (CompareCriteria) helpResolveCriteria("pm3.g1.e2='2003-02-27'");	 //$NON-NLS-1$
 	
-		//if (! actual.getLeftExpression().equals(expected.getLeftExpression())) {
-		//	fail("left exprs not equal");
-		//} else if (!actual.getRightExpression().equals(expected.getRightExpression())) {
-		//	fail("right not equal");
-		//}
-		
 		assertEquals("Did not match expected criteria", expected, actual); //$NON-NLS-1$
     }
 		
@@ -2967,6 +2961,13 @@ public class TestResolver {
     
     @Test public void testInvalidIn2() {
     	helpTestWidenToString("select * from bqt1.smalla where timestampvalue in (select stringkey from bqt1.smallb)");
+    }
+    
+    @Test public void testTimestampDateLiteral() {
+    	metadata = RealMetadataFactory.exampleBQTCached();
+    	Criteria crit = helpResolveCriteria("bqt1.smalla.timestampvalue = '2000-01-01'");
+    	assertTrue(((CompareCriteria)crit).getRightExpression().getType() == DataTypeManager.DefaultDataClasses.TIMESTAMP); 
+    	assertEquals("bqt1.smalla.timestampvalue = {ts'2000-01-01 00:00:00.0'}", crit.toString());
     }
     
     private void helpTestWidenToString(String sql) {

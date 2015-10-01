@@ -22,6 +22,7 @@
 
 package org.teiid.query.resolver.util;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -213,9 +214,18 @@ public class ResolverUtil {
             return sourceExpression;
         }
         
-        if(canImplicitlyConvert(sourceTypeName, targetTypeName) 
-                        || (sourceExpression instanceof Constant && convertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression) != null)) {
+        if(canImplicitlyConvert(sourceTypeName, targetTypeName)) {
             return getConversion(sourceExpression, sourceTypeName, targetTypeName, true, metadata.getFunctionLibrary());
+        }
+        
+        if (sourceExpression instanceof Constant) {
+        	Expression result = convertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression);
+        	if (result != null) {
+        		if (result.getType() == DataTypeManager.DefaultDataClasses.TIMESTAMP) {
+        			return result;
+        		}
+            	return getConversion(sourceExpression, sourceTypeName, targetTypeName, true, metadata.getFunctionLibrary());
+        	}
         }
 
         //Expression is wrong type and can't convert
@@ -516,13 +526,21 @@ public class ResolverUtil {
      * @throws QueryResolverException if TransformationException is encountered
      * @since 4.3
      */
-    private static Constant getProperlyTypedConstant(Object defaultValue,
+    static Constant getProperlyTypedConstant(Object defaultValue,
                                                 Class<?> parameterType)
     throws QueryResolverException{
         try {
             Object newValue = DataTypeManager.transformValue(defaultValue, parameterType);
             return new Constant(newValue, parameterType);
         } catch (TransformationException e) {
+        	//timestamp literals also allow date format
+        	if (parameterType == DataTypeManager.DefaultDataClasses.TIMESTAMP) {
+        		try {
+					Object newValue = DataTypeManager.transformValue(defaultValue, DataTypeManager.DefaultDataClasses.DATE);
+					return new Constant(new Timestamp(((Date)newValue).getTime()), parameterType);
+				} catch (TransformationException e1) {
+				}
+        	}
              throw new QueryResolverException(QueryPlugin.Event.TEIID30090, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30090, defaultValue, defaultValue.getClass(), parameterType));
         }
     }

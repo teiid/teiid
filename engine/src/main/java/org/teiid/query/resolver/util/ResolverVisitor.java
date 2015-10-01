@@ -722,7 +722,12 @@ public class ResolverVisitor extends LanguageVisitor {
 		                                
 		            //only currently typed expressions need conversions
 		            if (types[i] != null && newType != DataTypeManager.DefaultDataClasses.OBJECT) {
-		                function.insertConversion(i, conversions[i]);
+		            	//directly resolve constants
+		            	if (args[i] instanceof Constant && newType == DataTypeManager.DefaultDataClasses.TIMESTAMP) {
+	            			args[i] = ResolverUtil.getProperlyTypedConstant(((Constant)args[i]).getValue(), newType);
+		            	} else {
+		            		function.insertConversion(i, conversions[i]);
+		            	}
 		            }
 		        } 
 		                    
