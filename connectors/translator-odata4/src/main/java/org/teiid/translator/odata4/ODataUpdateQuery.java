@@ -153,7 +153,7 @@ public class ODataUpdateQuery extends ODataQuery {
         if (!this.expandTables.isEmpty()) {
             if (childTable.getPrimaryKey() != null) {
                 for (Column column:childTable.getPrimaryKey().getColumns()) {
-                    if (column.isSelectable()) {
+                    if (!isPseudo(column)) {
                         if (column.getName().equals(columnName)) {
                             this.expandKeys.put(columnName, value);
                         }
@@ -161,6 +161,11 @@ public class ODataUpdateQuery extends ODataQuery {
                 }
             }
         }
+    }
+    
+    private boolean isPseudo(Column column) {
+        String property = column.getProperty(ODataMetadataProcessor.PSEUDO, false);
+        return property != null;
     }
     
     private String getName(Table table) {
@@ -172,13 +177,13 @@ public class ODataUpdateQuery extends ODataQuery {
     
     public void addInsertProperty(Table parentTable, Column column, String type, Object value) {
         buildKeyColumns(parentTable, (Table)column.getParent(), column.getName(), value);
-        if (column.isSelectable()) {
+        if (!isPseudo(column)) {
             this.payloadProperties.add(new Property(type, column.getName(), ValueType.PRIMITIVE, value));
         }
     }
     
     public void addUpdateProperty(Table parentTable, Column column, String type, Object value) {
-        if (column.isSelectable()) {
+        if (!isPseudo(column)) {
             this.payloadProperties.add(new Property(type, column.getName(), ValueType.PRIMITIVE, value));
         }
     }    

@@ -168,8 +168,7 @@ public class BaseQueryExecution {
 
     protected Map<String, List<String>> getDefaultHeaders() {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        headers.put("Accept", Arrays.asList(
-                AcceptType.fromContentType(ContentType.JSON_NO_METADATA).toString())); //$NON-NLS-1$
+        headers.put("Accept", Arrays.asList(ContentType.JSON_NO_METADATA.toContentTypeString())); //$NON-NLS-1$
         headers.put("Content-Type", Arrays.asList(
                 ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
         if (this.executionContext != null) {

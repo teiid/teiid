@@ -35,7 +35,6 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.client.core.serialization.ClientODataDeserializerImpl;
-import org.apache.olingo.commons.api.format.AcceptType;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.core.util.PropertiesUtils;
@@ -58,6 +57,7 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
@@ -75,7 +75,6 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
     private String databaseTimeZone;
-    private TimeZone timeZone = DEFAULT_TIME_ZONE;
     private boolean supportsOdataFilter;
     private boolean supportsOdataOrderBy;
     private boolean supportsOdataCount;
@@ -87,6 +86,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         setSourceRequiredForMetadata(true);
         setSupportsInnerJoins(true);
         setSupportsOrderBy(true);
+        setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
         
         setSupportsOdataCount(true);
         setSupportsOdataFilter(true);
@@ -99,8 +99,10 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("toupper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
-        addPushDownFunction("odata", "startswith", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
-        addPushDownFunction("odata", "contains", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction("odata", "startswith", TypeFacility.RUNTIME_NAMES.BOOLEAN, 
+                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction("odata", "contains", TypeFacility.RUNTIME_NAMES.BOOLEAN, 
+                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Override
@@ -108,13 +110,13 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         super.start();
         if(this.databaseTimeZone != null && this.databaseTimeZone.trim().length() > 0) {
             TimeZone tz = TimeZone.getTimeZone(this.databaseTimeZone);
-            if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
-                this.timeZone = tz;
-            }
+            //TODO: Convert the dates accordingly
         }
     }
 
-    @TranslatorProperty(display="Database time zone", description="Time zone of the database, if different than Integration Server", advanced=true)
+    @TranslatorProperty(display="Database time zone", 
+            description="Time zone of the database, if different than Integration Server", 
+            advanced=true)
     public String getDatabaseTimeZone() {
         return this.databaseTimeZone;
     }
@@ -147,7 +149,8 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
                 }
     
                 Blob out = (Blob)call.getOutputParameterValues().get(0);
-                ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(false, ContentType.APPLICATION_XML);
+                ClientODataDeserializerImpl deserializer = 
+                        new ClientODataDeserializerImpl(false, ContentType.APPLICATION_XML);
                 this.serviceMatadata = deserializer.toMetadata(out.getBinaryStream());
                 return this.serviceMatadata;
             } catch (SQLException e) {
@@ -326,7 +329,8 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     }
 
     @Override
-    @TranslatorProperty(display="Supports ORDER BY", description="True, if this connector supports ORDER BY", advanced=true)
+    @TranslatorProperty(display="Supports ORDER BY", 
+        description="True, if this connector supports ORDER BY", advanced=true)
     public boolean supportsOrderBy() {
         return supportsOdataOrderBy;
     }

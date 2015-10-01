@@ -71,7 +71,9 @@ public class ODataResponseDocument {
         List<Map<String, Object>> joined = new ArrayList<Map<String, Object>>();
 
         LinkedHashMap<String, Object> row = new LinkedHashMap<String, Object>();
-        row.putAll(this.properties);
+        if (this.properties != null) {
+            row.putAll(this.properties);
+        }
         joined.add(row);            
         
         if (this.children != null && !this.children.isEmpty()) {

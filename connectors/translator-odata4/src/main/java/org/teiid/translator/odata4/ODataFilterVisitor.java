@@ -45,6 +45,7 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
@@ -66,11 +67,13 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     private Stack<String> exprType = new Stack<String>();
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     private ODataQuery query;
+    private RuntimeMetadata metadata;
     private UriSchemaElement filterOnElement;
     
-    public ODataFilterVisitor(ODataExecutionFactory ef, ODataQuery query) {
+    public ODataFilterVisitor(ODataExecutionFactory ef, RuntimeMetadata metadata, ODataQuery query) {
         this.ef = ef;
         this.query = query;
+        this.metadata = metadata;
     }
     
     public void appendFilter(Condition condition) throws TranslatorException{
@@ -174,22 +177,51 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     @Override
     public void visit(ColumnReference obj) {
         Column column = obj.getMetadataObject();
+        // check if the column on psedo column, then move it to the parent.
+        String pseudo = getPseudo(column);
+        
         this.exprType.push(odataType(column.getNativeType(), column.getRuntimeType()));
         
         UriSchemaElement schemaElement = this.query.getSchemaElement((Table)column.getParent());
+        if (pseudo != null) {
+            try {
+                Table columnParent = (Table)column.getParent();
+                Table pseudoColumnParent = this.metadata.getTable(getMerge(columnParent));
+                schemaElement = this.query.getSchemaElement(pseudoColumnParent);
+            } catch (TranslatorException e) {
+                this.exceptions.add(e);
+            }
+        }
+        
         if (this.filterOnElement == null) {
             this.filterOnElement = schemaElement;
         } else if (schemaElement.isExpandType() && (!this.filterOnElement.isExpandType())) {
             this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17026)));
         }
         
-        if (this.filterOnElement.isComplexType()) {
-            this.filter.append(this.filterOnElement.getName()).append("/").append(column.getName());
+        if (this.filterOnElement.isComplexType()) {            
+            if (pseudo == null) {
+                this.filter.append(this.filterOnElement.getName()).append("/").append(column.getName());
+            } else {
+                this.filter.append(pseudo);
+            }
         } else {
-            this.filter.append(column.getName());
+            if (pseudo == null) {
+                this.filter.append(column.getName());
+            } else {
+                this.filter.append(pseudo);
+            }
         }        
     }
 
+    private String getPseudo(Column column) {
+        return column.getProperty(ODataMetadataProcessor.PSEUDO, false);
+    }
+    
+    private String getMerge(Table table) {
+        return table.getProperty(ODataMetadataProcessor.MERGE, false);
+    }    
+    
     protected boolean isInfixFunction(String function) {
         return infixFunctions.containsKey(function);
     }

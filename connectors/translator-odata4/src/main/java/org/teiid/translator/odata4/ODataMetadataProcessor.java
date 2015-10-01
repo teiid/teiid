@@ -103,6 +103,11 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             description="Declare the name of table that this table needs to be merged into.")
     public static final String MERGE = MetadataFactory.ODATA_URI+"MERGE"; //$NON-NLS-1$
     
+    @ExtensionMetadataProperty(applicable=Column.class, 
+            datatype=String.class, 
+            display="Pseudo Column", 
+            description="Pseudo column for join purposes")
+    public static final String PSEUDO = MetadataFactory.ODATA_URI+"PSEUDO"; //$NON-NLS-1$    
     
     private String schemaNamespace;
     private ODataExecutionFactory ef;
@@ -497,6 +502,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if (c == null) {
                     c = addColumn(mf, childTable, column, targetColumnName);
                     c.setSelectable(false);
+                    c.setProperty(PSEUDO, column.getName());
                     addAccessPattern(childTable, c);
                 } else {
                     targetColumnName = column.getName();
@@ -507,6 +513,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if (c == null) {
                     c = addColumn(mf, childTable, column, targetColumnName);
                     c.setSelectable(false);
+                    c.setProperty(PSEUDO, column.getName());
                     addAccessPattern(childTable, c);
                 } else {
                     targetColumnName = column.getName();

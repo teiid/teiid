@@ -6,4 +6,8 @@
     <resources>
         <resource-root path="aalto-xml-${version.com.fasterxml.aalto-xml}.jar" />
     </resources>
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="org.codehaus.woodstox"/>
+    </dependencies>      
 </module>

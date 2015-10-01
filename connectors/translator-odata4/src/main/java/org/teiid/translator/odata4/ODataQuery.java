@@ -32,6 +32,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.olingo.client.api.uri.QueryOption;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
@@ -76,24 +77,11 @@ public class ODataQuery {
                 table = this.expandTables.get(0).getTable();
             }
             String parentTable = table.getProperty(ODataMetadataProcessor.MERGE, false);
+            if (parentTable == null) {
+                throw new TranslatorException(ODataPlugin.Event.TEIID17028, 
+                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17028, table.getName()));
+            }
             addTable(this.metadata.getTable(parentTable));
-        }
-        
-        if(this.entitySetTable == null) {
-            StringBuilder sb = new StringBuilder();
-            for (UriSchemaElement use: this.complexTables) {
-                if (sb.length() != 0) {
-                    sb.append(",");
-                }
-                sb.append(use.getTable().getName());
-            }
-            for (UriSchemaElement use: this.expandTables) {
-                if (sb.length() != 0) {
-                    sb.append(",");
-                }                
-                sb.append(use.getTable().getName());                
-            }
-            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17027, sb));
         }
     }    
     
@@ -106,7 +94,7 @@ public class ODataQuery {
         if (!crits.isEmpty()) {
             for(Iterator<Condition> iter = crits.iterator(); iter.hasNext();) {
                 Condition crit = iter.next();
-                ODataFilterVisitor visitor = new ODataFilterVisitor(this.executionFactory, this);
+                ODataFilterVisitor visitor = new ODataFilterVisitor(this.executionFactory, this.metadata, this);
                 visitor.appendFilter(crit);
             }
         }
@@ -276,8 +264,7 @@ class UriSchemaElement {
         
         if (isExpandType()) {
             if (!columns.isEmpty()) {
-                options.put(QueryOption.SELECT, StringUtils.join(
-                        this.columns.toArray(new String[this.columns.size()]), ","));
+                options.put(QueryOption.SELECT, StringUtil.join(this.columns, ","));
             }
             if (this.filterStr != null) {
                 options.put(QueryOption.FILTER, this.filterStr);
@@ -285,7 +272,7 @@ class UriSchemaElement {
         }
         return options;
     }
-
+    
     public void addFilter(String string) {
         if (this.filterStr == null) {
             this.filterStr = string;
