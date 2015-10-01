@@ -64,16 +64,8 @@ import com.sforce.async.BulkConnection;
 import com.sforce.async.ContentType;
 import com.sforce.async.JobInfo;
 import com.sforce.async.OperationEnum;
-import com.sforce.soap.partner.DeleteResult;
-import com.sforce.soap.partner.DeletedRecord;
-import com.sforce.soap.partner.DescribeGlobalResult;
-import com.sforce.soap.partner.DescribeSObjectResult;
+import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.Error;
-import com.sforce.soap.partner.GetDeletedResult;
-import com.sforce.soap.partner.GetUpdatedResult;
-import com.sforce.soap.partner.PartnerConnection;
-import com.sforce.soap.partner.QueryResult;
-import com.sforce.soap.partner.SaveResult;
 import com.sforce.soap.partner.fault.InvalidFieldFault;
 import com.sforce.soap.partner.fault.InvalidIdFault;
 import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
@@ -90,6 +82,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	private PartnerConnection partnerConnection;
 	private SalesforceConnectorConfig config;
 	private String restEndpoint;
+	private String apiVersion;
 	
 	public SalesforceConnectionImpl(SalesForceManagedConnectionFactory mcf) throws ResourceException {
 		login(mcf);
@@ -169,7 +162,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	        // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
 	        int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
 	        int endIndex = endpoint.indexOf('/', index+7);
-	        String apiVersion = endpoint.substring(index+7,endIndex);
+	        apiVersion = endpoint.substring(index+7,endIndex);
 	        String bulkEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
 	        config.setRestEndpoint(bulkEndpoint);
 			// This value identifies Teiid as a SF certified solution.
@@ -574,5 +567,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			throw new ResourceException(e);
 		}
 	}	
+	
+	@Override
+	public String getVersion() {
+		return apiVersion;
+	}
 	
 }

@@ -394,7 +394,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
 		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
-				"accumulo", "file", "cassandra", "salesforce", "mongodb", "solr", "webservice", "simpledb", "h2"}));
+				"accumulo", "file", "cassandra", "salesforce", "salesforce-34", "mongodb", "solr", "webservice", "simpledb", "h2"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
 		assertEquals(vals, templates);
