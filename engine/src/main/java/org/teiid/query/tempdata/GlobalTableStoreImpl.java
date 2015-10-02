@@ -374,7 +374,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			return;
 		}
 		//TODO: be stricter about the update strategy (needs synchronized or something better than ms resolution)
-		Command c = QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand();
+		Command c = QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata, false).getCommand();
 		CacheHint hint = c.getCacheHint();
 		if (hint != null) {
 			hint = hint.clone();

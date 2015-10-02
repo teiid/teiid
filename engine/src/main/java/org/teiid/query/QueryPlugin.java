@@ -582,6 +582,7 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31169,  // out of range
     	TEIID31170, 
     	TEIID31171, 
-    	TEIID31172
+    	TEIID31172,
+    	TEIID31173
 	}
 }

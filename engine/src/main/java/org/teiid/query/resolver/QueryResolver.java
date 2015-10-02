@@ -37,11 +37,14 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.Request;
+import org.teiid.language.SQLConstants;
+import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -409,7 +412,7 @@ public class QueryResolver {
 	}
 	
 	public static QueryNode resolveView(GroupSymbol virtualGroup, QueryNode qnode,
-			String cacheString, QueryMetadataInterface qmi) throws TeiidComponentException,
+			String cacheString, QueryMetadataInterface qmi, boolean logValidation) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
 			QueryValidatorException {
 		qmi = qmi.getDesignTimeMetadata();
@@ -454,6 +457,17 @@ public class QueryResolver {
 	    		UpdateValidator validator = new UpdateValidator(qmi, determineType(insertPlan), determineType(updatePlan), determineType(deletePlan));
 				validator.validate(result, elements);
 	    		UpdateInfo info = validator.getUpdateInfo();
+	    		if (logValidation && qmi.groupSupports(virtualGroup.getMetadataID(), SupportConstants.Group.UPDATE)) {
+	    			if (info.isInherentInsert() && validator.getInsertReport().hasItems()) {
+	    				LogManager.logInfo(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getInsertReport().getFailureMessage(), SQLConstants.Reserved.INSERT, qmi.getFullName(virtualGroup.getMetadataID())));
+	    			}
+	    			if (info.isInherentUpdate() && validator.getUpdateReport().hasItems()) {
+	    				LogManager.logInfo(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getUpdateReport().getFailureMessage(), SQLConstants.Reserved.UPDATE, qmi.getFullName(virtualGroup.getMetadataID())));
+	    			}
+	    			if (info.isInherentDelete() && validator.getDeleteReport().hasItems()) {
+	    				LogManager.logInfo(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getDeleteReport().getFailureMessage(), SQLConstants.Reserved.DELETE, qmi.getFullName(virtualGroup.getMetadataID())));
+	    			}
+	    		}
 	    		cachedNode.setUpdateInfo(info);
 			}
 	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), cacheString, cachedNode);
