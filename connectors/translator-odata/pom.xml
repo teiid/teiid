@@ -41,12 +41,10 @@
         <dependency>
           <groupId>org.jboss.oreva</groupId>
           <artifactId>common</artifactId>
-          <scope>provided</scope>
         </dependency>
         <dependency>
           <groupId>org.jboss.oreva</groupId>
           <artifactId>odata-core</artifactId>
-          <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>

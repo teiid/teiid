@@ -26,7 +26,8 @@
           <outputDirectory>${jbossas-module-root}/org/jboss/oreva/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
-              <include>org.jboss.oreva</include>
+              <include>org.jboss.oreva:common</include>
+              <include>org.jboss.oreva:odata-core</include>
           </includes>
       </dependencySet>
       
