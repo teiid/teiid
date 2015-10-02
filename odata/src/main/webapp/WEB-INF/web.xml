@@ -21,6 +21,18 @@
         <param-name>resteasy.document.expand.entity.references</param-name>
         <param-value>false</param-value>
     </context-param>
+    <context-param>
+        <param-name>resteasy.scan</param-name>
+        <param-value>false</param-value>
+    </context-param>
+    <context-param>
+        <param-name>resteasy.scan.providers</param-name>
+        <param-value>false</param-value>
+    </context-param>
+    <context-param>
+        <param-name>resteasy.scan.resources</param-name>
+        <param-value>false</param-value>
+    </context-param>
     
     <!--
     If you want to restrict access to single VDB, uncomment and provide the VDB name(must be in format vdbName.vdbVersion), 
