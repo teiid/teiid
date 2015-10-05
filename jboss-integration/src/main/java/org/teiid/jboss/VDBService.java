@@ -256,11 +256,6 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	}
 
     void cleanup(LifecycleContext context) {
-        ServiceController<?> switchSvc = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbSwitchServiceName(vdb.getName(), vdb.getVersion()));
-        if (switchSvc != null) {
-            switchSvc.setMode(ServiceController.Mode.REMOVE);
-        }
-                
         // stop object replication
         if (this.objectReplicatorInjector.getValue() != null) {
             GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
