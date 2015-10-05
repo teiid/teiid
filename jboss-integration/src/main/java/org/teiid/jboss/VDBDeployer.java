@@ -336,7 +336,12 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			}		
 		}
 		this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
-	
+
+		ServiceController<?> switchSvc = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion()));
+        if (switchSvc != null) {
+            switchSvc.setMode(ServiceController.Mode.REMOVE);
+        }
+
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (SourceMappingMetadata smm:model.getSources().values()) {
 				String dsName = smm.getConnectionJndiName();
