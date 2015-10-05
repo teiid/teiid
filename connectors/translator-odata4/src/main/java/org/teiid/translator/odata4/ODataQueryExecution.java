@@ -92,7 +92,8 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
                             HttpStatusCode.NO_CONTENT,                    
                             HttpStatusCode.NOT_FOUND                            
                     }); 
-            this.response = new ODataResponse(payload, ODataType.ENTITY_COLLECTION) {
+            this.response = new ODataResponse(payload,
+                    ODataType.ENTITY_COLLECTION, this.visitor.getODataQuery().getRootDocument()) {
                 @Override
                 public InputStream nextBatch(java.net.URI uri) throws TranslatorException {
                     return executeSkipToken(uri, URI.toString(), 
@@ -118,7 +119,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
         if (this.response != null) {
             Map<String, Object> row = this.response.getNext();
             if (row != null) {
-                return buildRow(visitor.getEntitySetTable(), 
+                return buildRow(visitor.getODataQuery().getRootDocument().getTable(), 
                         visitor.getProjectedColumns(), 
                         this.expectedColumnTypes, row);
             }

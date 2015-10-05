@@ -46,11 +46,9 @@ public class ODataSelectQuery extends ODataQuery {
             List<Column> projectedColumns, Condition condition)
             throws TranslatorException {
         
-        handleMissingEntitySet();
-        
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
-        if (!this.entitySetTable.isComplexType()) {
-            uriBuilder.appendEntitySetSegment(this.entitySetTable.getName());
+        if (!this.rootDocument.isComplexType()) {
+            uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
         }
         
         if (this.count) {
@@ -58,7 +56,7 @@ public class ODataSelectQuery extends ODataQuery {
         } else {
             Set<String> columns = processSelect(projectedColumns);
             if (columns.isEmpty()) {
-                uriBuilder.select(this.entitySetTable.getTable().getPrimaryKey().getColumns().get(0).getName());
+                uriBuilder.select(this.rootDocument.getTable().getPrimaryKey().getColumns().get(0).getName());
             } else {
                 uriBuilder.select(columns.toArray(new String[columns.size()]));
             }
@@ -70,7 +68,7 @@ public class ODataSelectQuery extends ODataQuery {
         }
 
         // process navigation tables
-        for (UriSchemaElement use:this.expandTables) {
+        for (ODataDocumentNode use:this.expandTables) {
             uriBuilder.expandWithOptions(use.getName(), use.getOptions());
         }
 
@@ -88,12 +86,12 @@ public class ODataSelectQuery extends ODataQuery {
     private Set<String> processSelect(List<Column> projectedColumns) {
         LinkedHashSet<String> columns = new LinkedHashSet<String>();
         for (Column column: projectedColumns) {
-            UriSchemaElement use = getSchemaElement((Table)column.getParent());
+            ODataDocumentNode use = getSchemaElement((Table)column.getParent());
             use.appendSelect(column.getName());
         }
         
-        columns.addAll(this.entitySetTable.getSelects());        
-        for (UriSchemaElement use:this.complexTables) {
+        columns.addAll(this.rootDocument.getSelects());        
+        for (ODataDocumentNode use:this.complexTables) {
             columns.addAll(use.getSelects());
         }
         return columns;

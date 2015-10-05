@@ -72,8 +72,8 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         return this.projectedColumns;
     }
     
-    public Table getEntitySetTable() {
-        return this.odataQuery.getEntitySetTable().getTable();
+    public ODataSelectQuery getODataQuery() {
+        return this.odataQuery;
     }
 
     public boolean isCount() {
@@ -104,7 +104,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     
     @Override
     public void visit(NamedTable obj) {
-        this.odataQuery.addTable(obj.getMetadataObject());
+        try {
+            this.odataQuery.addRootDocument(obj.getMetadataObject());
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
     }
 
     @Override
@@ -115,7 +119,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             append(obj.getLeftItem());
             Table right = ((NamedTable)obj.getRightItem()).getMetadataObject();
             try {
-                updated = this.odataQuery.addNavigation(obj.getCondition(), right);
+                updated = this.odataQuery.addNavigation(obj.getCondition(), obj.getJoinType(), right);
                 obj.setCondition(updated);
                 if (updated != null) {
                     this.conditionFragments.add(obj.getCondition());
@@ -129,7 +133,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             append(obj.getRightItem());
             Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
             try {
-                updated = this.odataQuery.addNavigation(obj.getCondition(), left);
+                if (ODataMetadataProcessor.isComplexType(left) || 
+                        ODataMetadataProcessor.isNavigationType(left)) {
+                    throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17027, left.getName()));
+                }                
+                updated = this.odataQuery.addNavigation(obj.getCondition(), obj.getJoinType(), left);
                 obj.setCondition(updated);
                 if (updated != null) {
                     this.conditionFragments.add(obj.getCondition());
@@ -143,7 +151,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
             Table right = ((NamedTable)obj.getRightItem()).getMetadataObject();
             try {
-                updated = this.odataQuery.addNavigation(obj.getCondition(), left, right);
+                if (ODataMetadataProcessor.isComplexType(left) || 
+                        ODataMetadataProcessor.isNavigationType(left)) {
+                    throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17027, left.getName()));
+                }
+                updated = this.odataQuery.addNavigation(obj.getCondition(), obj.getJoinType(), left, right);
                 obj.setCondition(updated);
                 if (updated != null) {
                     this.conditionFragments.add(obj.getCondition());

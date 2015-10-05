@@ -36,47 +36,51 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.data.Property;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.document.DocumentNode;
+import org.teiid.translator.document.ODataDocument;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 
 public abstract class ODataResponse {
     private URI nextUri;
-    private Iterator<ODataResponseDocument> results;
+    private Iterator<ODataDocument> results;
     private ODataType resultsType;
     private List<Map<String, Object>> currentDocumentRows;
+    private DocumentNode rootNode;
     
-    public ODataResponse(InputStream payload, ODataType type) throws TranslatorException {
+    public ODataResponse(InputStream payload, ODataType type, DocumentNode rootNode) throws TranslatorException {
         this.resultsType = type;
+        this.rootNode = rootNode;
         this.results = parsePayload(payload);        
     }
 
-    private Iterator<ODataResponseDocument> parsePayload(InputStream payload) throws TranslatorException {
+    private Iterator<ODataDocument> parsePayload(InputStream payload) throws TranslatorException {
         try {
             JsonDeserializer parser = new JsonDeserializer(false);
             if (this.resultsType == ODataType.ENTITY) {
                 Entity entity = parser.toEntity(payload).getPayload();
-                ODataResponseDocument document = ODataResponseDocument.createDocument(entity);
+                ODataDocument document = ODataDocument.createDocument(entity);
                 return Arrays.asList(document).iterator();
             } else if (this.resultsType == ODataType.ENTITY_COLLECTION) {
                 EntityCollection entityCollection = parser.toEntitySet(payload).getPayload();
                 this.nextUri = entityCollection.getNext();
-                ArrayList<ODataResponseDocument> documents = new ArrayList<ODataResponseDocument>();
+                ArrayList<ODataDocument> documents = new ArrayList<ODataDocument>();
                 for (Entity entity : entityCollection.getEntities()) {
-                    documents.add(ODataResponseDocument.createDocument(entity));
+                    documents.add(ODataDocument.createDocument(entity));
                 }
                 return documents.iterator();            
             } else {
                 // complex
                 Property property = parser.toProperty(payload).getPayload();
                 if (property.isCollection()) {
-                    ArrayList<ODataResponseDocument> documents = new ArrayList<ODataResponseDocument>();
+                    ArrayList<ODataDocument> documents = new ArrayList<ODataDocument>();
                     for (Object obj : property.asCollection()) {
                         ComplexValue complexValue = (ComplexValue)obj;
-                        documents.add(ODataResponseDocument.createDocument(complexValue));
+                        documents.add(ODataDocument.createDocument(complexValue));
                     }
                     return documents.iterator();
                 } else {
-                    ODataResponseDocument document = ODataResponseDocument.createDocument(property.asComplex());
+                    ODataDocument document = ODataDocument.createDocument(property.asComplex());
                     return Arrays.asList(document).iterator();                
                 }
             }
@@ -92,7 +96,7 @@ public abstract class ODataResponse {
         }
         
         if (this.results.hasNext()) {
-            this.currentDocumentRows = this.results.next().flatten();
+            this.currentDocumentRows = this.rootNode.tuples(this.results.next());
             return getNext();
         } else {
             if (this.nextUri != null) {
@@ -103,7 +107,7 @@ public abstract class ODataResponse {
         return null;
     }
 
-    private Iterator<ODataResponseDocument> fetchSkipToken(URI uri) throws TranslatorException {
+    private Iterator<ODataDocument> fetchSkipToken(URI uri) throws TranslatorException {
         return parsePayload(nextBatch(uri));
     }
     

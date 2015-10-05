@@ -57,7 +57,6 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.WSConnection;
-import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
@@ -86,6 +85,8 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         setSourceRequiredForMetadata(true);
         setSupportsInnerJoins(true);
         setSupportsOrderBy(true);
+        setSupportsOuterJoins(true);
+        setSupportsFullOuterJoins(true);
         setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
         
         setSupportsOdataCount(true);

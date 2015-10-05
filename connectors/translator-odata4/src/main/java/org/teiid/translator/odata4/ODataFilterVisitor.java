@@ -68,7 +68,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     private ODataQuery query;
     private RuntimeMetadata metadata;
-    private UriSchemaElement filterOnElement;
+    private ODataDocumentNode filterOnElement;
     
     public ODataFilterVisitor(ODataExecutionFactory ef, RuntimeMetadata metadata, ODataQuery query) {
         this.ef = ef;
@@ -182,7 +182,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
         
         this.exprType.push(odataType(column.getNativeType(), column.getRuntimeType()));
         
-        UriSchemaElement schemaElement = this.query.getSchemaElement((Table)column.getParent());
+        ODataDocumentNode schemaElement = this.query.getSchemaElement((Table)column.getParent());
         if (pseudo != null) {
             try {
                 Table columnParent = (Table)column.getParent();

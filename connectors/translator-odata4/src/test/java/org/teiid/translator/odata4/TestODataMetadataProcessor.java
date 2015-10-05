@@ -23,6 +23,7 @@ package org.teiid.translator.odata4;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -291,6 +292,8 @@ public class TestODataMetadataProcessor {
         assertEquals(4, addressTable.getColumns().size());
 		
 		assertNotNull(addressTable.getColumnByName("ssn"));
+		assertNotNull(addressTable.getColumnByName("ssn").getProperty(ODataMetadataProcessor.PSEUDO, false));
+		assertFalse(addressTable.getColumnByName("ssn").isSelectable());
         assertEquals(1, addressTable.getForeignKeys().size());
         assertEquals("Persons", addressTable.getForeignKeys().get(0).getReferenceTableName());
 	}

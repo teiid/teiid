@@ -43,6 +43,7 @@ import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.document.DocumentNode;
 
 public class ODataUpdateQuery extends ODataQuery {
     private Map<String, Object> keys = new LinkedHashMap<String, Object>();
@@ -56,9 +57,8 @@ public class ODataUpdateQuery extends ODataQuery {
     }
 
     public String buildInsertURL(String serviceRoot) throws TranslatorException {
-        handleMissingEntitySet();
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
-        uriBuilder.appendEntitySetSegment(this.entitySetTable.getName());
+        uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
         if (this.keys.size() == 1) {
             uriBuilder.appendKeySegment(this.keys.values().iterator().next());
         } else if (!this.keys.isEmpty()){
@@ -119,7 +119,7 @@ public class ODataUpdateQuery extends ODataQuery {
                 serializer.write(writer, entity);
             } else {
                 Entity entity = new Entity();
-                entity.setType(this.entitySetTable.getTable().getProperty(
+                entity.setType(this.rootDocument.getTable().getProperty(
                         ODataMetadataProcessor.NAME_IN_SCHEMA, false));            
                 for (Property p:this.payloadProperties) {
                     entity.addProperty(p);
@@ -175,8 +175,8 @@ public class ODataUpdateQuery extends ODataQuery {
         return table.getName();
     }    
     
-    public void addInsertProperty(Table parentTable, Column column, String type, Object value) {
-        buildKeyColumns(parentTable, (Table)column.getParent(), column.getName(), value);
+    public void addInsertProperty(Column column, String type, Object value) {
+        buildKeyColumns(getRootDocument().getTable(), (Table)column.getParent(), column.getName(), value);
         if (!isPseudo(column)) {
             this.payloadProperties.add(new Property(type, column.getName(), ValueType.PRIMITIVE, value));
         }
@@ -197,16 +197,14 @@ public class ODataUpdateQuery extends ODataQuery {
     }   
     
     public String buildUpdateSelectionURL(String serviceRoot) throws TranslatorException {
-        handleMissingEntitySet();
-
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
-        uriBuilder.appendEntitySetSegment(this.entitySetTable.getName());
+        uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
         
-        List<String> selection = this.entitySetTable.getIdentityColumns();
+        List<String> selection = this.rootDocument.getIdentityColumns();
         uriBuilder.select(selection.toArray(new String[selection.size()]));
         
         if (!this.expandTables.isEmpty()) {
-            UriSchemaElement use = this.expandTables.get(0);
+            ODataDocumentNode use = this.expandTables.get(0);
             List<String> keys = use.getIdentityColumns();
             for (String key:keys) {
                 use.appendSelect(key);
@@ -225,9 +223,9 @@ public class ODataUpdateQuery extends ODataQuery {
     public String buildUpdateURL(String serviceRoot, List<?> row) {
         this.method = "PATCH";
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
-        uriBuilder.appendEntitySetSegment(this.entitySetTable.getName());
+        uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
         
-        List<String> selection = this.entitySetTable.getIdentityColumns();
+        List<String> selection = this.rootDocument.getIdentityColumns();
         if (selection.size() == 1) {
             uriBuilder.appendKeySegment(row.get(0));
         } else if (!selection.isEmpty()) {
@@ -253,7 +251,7 @@ public class ODataUpdateQuery extends ODataQuery {
             uriBuilder.appendPropertySegment(this.expandTables.get(0).getName());
 
             // add keys if present
-            UriSchemaElement use = this.expandTables.get(0);
+            DocumentNode use = this.expandTables.get(0);
             List<String> expandSelection = use.getIdentityColumns();
             LinkedHashMap<String, Object> keys = new LinkedHashMap<String, Object>();
             for (int i = 0; i < expandSelection.size(); i++) {

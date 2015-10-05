@@ -42,6 +42,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.document.DocumentNode;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
@@ -131,7 +132,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         if (procedure.getResultSet() != null) {
             ODataType type = ODataType.valueOf(procedure.getResultSet().getProperty(
                     ODataMetadataProcessor.ODATA_TYPE, false));
-            this.response = new ODataResponse(payload, type) {
+            this.response = new ODataResponse(payload, type, new DocumentNode()) {
                 @Override
                 public InputStream nextBatch(java.net.URI uri) throws TranslatorException {
                     return executeSkipToken(uri, baseUri,

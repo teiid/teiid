@@ -229,7 +229,7 @@ public class TestODataQueryExecution {
     }	
 
 	@Test
-	public void testComplexType() throws Exception {
+	public void testComplexType_InnerJoin() throws Exception {
 		String query = "select p.UserName, pa.Address from People p JOIN People_AddressInfo pa "
 		        + "ON p.UserName = pa.People_UserName";
 		String expectedURL = "People?$select=UserName,AddressInfo";
@@ -243,12 +243,47 @@ public class TestODataQueryExecution {
                 excution.next().toArray(new Object[2]));
         assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr."}, 
                 excution.next().toArray(new Object[2]));
-        assertArrayEquals(new Object[] {"ronaldmundy", null}, 
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2"}, 
                 excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"vincentcalabrese", "55 Grizzly Peak Rd."}, 
+                excution.next().toArray(new Object[2]));
+        assertNull(excution.next());
+        
 	}
 	
     @Test
-    public void testComplexType2() throws Exception {
+    public void testComplexType_LeftOuterJoin() throws Exception {
+        String query = "select p.UserName, pa.Address from People p LEFT JOIN People_AddressInfo pa "
+                + "ON p.UserName = pa.People_UserName";
+        String expectedURL = "People?$select=UserName,AddressInfo";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln."}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr."}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"ronaldmundy", null}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2"}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"willieashmore", null}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"vincentcalabrese", "55 Grizzly Peak Rd."}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"clydeguess", null}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"keithpinckney", null}, 
+                excution.next().toArray(new Object[2]));
+        assertNull(excution.next());
+        
+    }	
+	
+    @Test
+    public void testComplexType_InnerJoin_3way_decendentChildren() throws Exception {
         String query = "select p.UserName, pa.Address, pc.Name from People p JOIN People_AddressInfo pa "
                 + "ON p.UserName = pa.People_UserName JOIN People_AddressInfo_City pc "
                 + "ON p.UserName = pc.People_UserName";
@@ -263,13 +298,175 @@ public class TestODataQueryExecution {
                 excution.next().toArray(new Object[3]));
         assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr.", "Albuquerque"}, 
                 excution.next().toArray(new Object[3]));
-        assertArrayEquals(new Object[] {"ronaldmundy", null, null}, 
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "Portland"}, 
                 excution.next().toArray(new Object[3]));
-        
+        assertArrayEquals(new Object[] {"vincentcalabrese", "55 Grizzly Peak Rd.", "Butte"}, 
+                excution.next().toArray(new Object[3]));
+        assertNull(excution.next());        
     }
     
     @Test
-    public void testExpand() throws Exception {
+    public void testComplexType_InnerJoin_3way_Sibiling() throws Exception {
+        String query = "select p.UserName, pa.Address, pf.UserName from People p JOIN People_AddressInfo pa "
+                + "ON p.UserName = pa.People_UserName JOIN People_Friends pf "
+                + "ON p.UserName = pf.People_UserName";
+        String expectedURL = "People?$select=UserName,AddressInfo&$expand=Friends($select=UserName)";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people-friends.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "scottketchum"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "ronaldmundy"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "javieralfred"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "angelhuffman"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr.", "russellwhyte"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr.", "ronaldmundy"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "willieashmore"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "vincentcalabrese"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "georginabarlow"}, 
+                excution.next().toArray(new Object[3]));
+        assertNull(excution.next());        
+    }  
+    
+    @Test
+    public void testComplexType_3Way_MIXEDJoin_Sibiling() throws Exception {
+        String query = "select p.UserName, pa.Address, pf.UserName from People p "
+                + "LEFT OUTER JOIN People_AddressInfo pa "
+                + "ON p.UserName = pa.People_UserName "
+                + "INNER JOIN People_Friends pf "
+                + "ON p.UserName = pf.People_UserName";
+        String expectedURL = "People?$select=UserName,AddressInfo&$expand=Friends($select=UserName)";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people-friends.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "scottketchum"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "ronaldmundy"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "javieralfred"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "angelhuffman"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr.", "russellwhyte"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr.", "ronaldmundy"}, 
+                excution.next().toArray(new Object[3]));
+
+        assertArrayEquals(new Object[] {"ronaldmundy", null, "russellwhyte"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"ronaldmundy", null, "scottketchum"}, 
+                excution.next().toArray(new Object[3]));
+        
+        
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "willieashmore"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "vincentcalabrese"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "georginabarlow"}, 
+                excution.next().toArray(new Object[3]));
+
+        assertArrayEquals(new Object[] {"willieashmore", null, "javieralfred"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"willieashmore", null, "vincentcalabrese"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"clydeguess", null, "keithpinckney"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"clydeguess", null, "ursulabright"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"keithpinckney", null, "clydeguess"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"keithpinckney", null, "marshallgaray"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertNull(excution.next());
+        
+        
+        assertNull(excution.next());        
+    }   
+    
+    @Test
+    public void testComplexType_3Way_LeftOuterJoin() throws Exception {
+        String query = "select p.UserName, pa.Address, pf.UserName from People p "
+                + "LEFT OUTER JOIN People_AddressInfo pa "
+                + "ON p.UserName = pa.People_UserName "
+                + "LEFT OUTER JOIN People_Friends pf "
+                + "ON p.UserName = pf.People_UserName";
+        String expectedURL = "People?$select=UserName,AddressInfo&$expand=Friends($select=UserName)";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people-friends.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "scottketchum"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "ronaldmundy"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "javieralfred"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln.", "angelhuffman"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr.", "russellwhyte"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr.", "ronaldmundy"}, 
+                excution.next().toArray(new Object[3]));
+
+        assertArrayEquals(new Object[] {"ronaldmundy", null, "russellwhyte"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"ronaldmundy", null, "scottketchum"}, 
+                excution.next().toArray(new Object[3]));
+        
+        
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "willieashmore"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "vincentcalabrese"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2", "georginabarlow"}, 
+                excution.next().toArray(new Object[3]));
+
+        assertArrayEquals(new Object[] {"willieashmore", null, "javieralfred"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"willieashmore", null, "vincentcalabrese"}, 
+                excution.next().toArray(new Object[3]));
+        
+        // extra row from test from above
+        assertArrayEquals(new Object[] {"vincentcalabrese", "55 Grizzly Peak Rd.", null}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"clydeguess", null, "keithpinckney"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"clydeguess", null, "ursulabright"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertArrayEquals(new Object[] {"keithpinckney", null, "clydeguess"}, 
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"keithpinckney", null, "marshallgaray"}, 
+                excution.next().toArray(new Object[3]));
+        
+        assertNull(excution.next());        
+    }     
+    
+    @Test
+    public void testExpandBasedInnerJoin() throws Exception {
         String query = "select p.UserName, pf.UserName from People p JOIN People_Friends pf "
                 + "ON p.UserName = pf.People_UserName WHERE p.UserName= 'russellwhyte'";
         String expectedURL = "People?$select=UserName&$filter=UserName eq 'russellwhyte'"

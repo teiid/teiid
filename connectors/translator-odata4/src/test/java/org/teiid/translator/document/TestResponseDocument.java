@@ -1,4 +1,4 @@
-package org.teiid.translator.odata4;
+package org.teiid.translator.document;
 
 import static org.junit.Assert.*;
 
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.teiid.translator.document.ODataDocument;
 
 public class TestResponseDocument {
 
@@ -22,22 +23,22 @@ public class TestResponseDocument {
     @SuppressWarnings("unchecked")
     @Test
     public void testFlatten() {
-        ODataResponseDocument doc = new ODataResponseDocument();
+        ODataDocument doc = new ODataDocument();
         doc.addProperty("A", "AA");
         doc.addProperty("B", "BB");
         
-        ODataResponseDocument c1 = new ODataResponseDocument("c1", doc);
+        ODataDocument c1 = new ODataDocument("c1", doc);
         c1.addProperty("1", "11");
-        ODataResponseDocument c2 = new ODataResponseDocument("c1", doc);
+        ODataDocument c2 = new ODataDocument("c1", doc);
         c2.addProperty("2", "22");
         
-        doc.addChildDocuments(Arrays.asList(c1, c2));
+        doc.addChildDocuments("c1", Arrays.asList(c1, c2));
         
-        ODataResponseDocument c4 = new ODataResponseDocument("c2", doc);
+        ODataDocument c4 = new ODataDocument("c2", doc);
         c4.addProperty("4", "44");
-        ODataResponseDocument c5 = new ODataResponseDocument("c2", doc);
+        ODataDocument c5 = new ODataDocument("c2", doc);
         c5.addProperty("5", "55");
-        doc.addChildDocuments(Arrays.asList(c4, c5));
+        doc.addChildDocuments("c2", Arrays.asList(c4, c5));
                 
         List<Map<String, Object>> result = doc.flatten();
         //System.out.println(result);

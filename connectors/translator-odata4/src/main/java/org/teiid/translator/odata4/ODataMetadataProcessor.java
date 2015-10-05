@@ -22,7 +22,6 @@
 package org.teiid.translator.odata4;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -52,7 +51,6 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -271,10 +269,27 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
     }
     
-    private boolean isComplexType(Table table) {
+    static boolean isComplexType(Table table) {
         ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
         return type == ODataType.COMPLEX || type == ODataType.COMPLEX_COLLECTION;
     }
+    
+    static boolean isNavigationType(Table table) {
+        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        return type == ODataType.NAVIGATION || type == ODataType.NAVIGATION_COLLECTION;
+    }    
+    
+    static boolean isCollection(Table table) {
+        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        return type == ODataType.ENTITY_COLLECTION
+                || type == ODataType.COMPLEX_COLLECTION
+                || type == ODataType.NAVIGATION_COLLECTION;
+    }    
+    
+    static boolean isEntitySet(Table table) {
+        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        return type == ODataType.ENTITY_COLLECTION;
+    }    
     
     private void addComplexPropertyAsTable(MetadataFactory mf, CsdlProperty parentProperty, 
             CsdlComplexType complexType, XMLMetadata metadata, Table parentTable) 
@@ -474,13 +489,8 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     private void addPrimaryKeyToComplexTables(MetadataFactory mf, Table childTable, Table parentTable) 
             throws TranslatorException {
         KeyRecord record = null;
-        ODataType type = ODataType.valueOf(childTable.getProperty(ODATA_TYPE, false));
-        boolean isComplexType = (type == ODataType.COMPLEX || type == ODataType.COMPLEX_COLLECTION);
-        boolean isCollection = (type == ODataType.COMPLEX_COLLECTION
-                || type == ODataType.NAVIGATION_COLLECTION || type == ODataType.ENTITY_COLLECTION);
-        boolean isNavigation = (type == ODataType.NAVIGATION_COLLECTION || type == ODataType.NAVIGATION);
         
-        if (isComplexType) {
+        if (isComplexType(childTable)) {
             // these are complex type based tables.
             record = getPK(mf, parentTable);
         } else {
@@ -496,14 +506,14 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         int i = 0;
         List<String> columnNames = new ArrayList<String>();
         for (Column column:record.getColumns()) {
-            String targetColumnName = isCollection ? parentTable.getName() + "_" + column.getName():column.getName();
-            if (isNavigation) {
+            String targetColumnName = isCollection(childTable) ? 
+                    parentTable.getName() + "_" + column.getName() : column.getName();
+            if (isNavigationType(childTable)) {
                 Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(targetColumnName);
                 if (c == null) {
                     c = addColumn(mf, childTable, column, targetColumnName);
                     c.setSelectable(false);
                     c.setProperty(PSEUDO, column.getName());
-                    addAccessPattern(childTable, c);
                 } else {
                     targetColumnName = column.getName();
                 }
@@ -514,7 +524,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                     c = addColumn(mf, childTable, column, targetColumnName);
                     c.setSelectable(false);
                     c.setProperty(PSEUDO, column.getName());
-                    addAccessPattern(childTable, c);
                 } else {
                     targetColumnName = column.getName();
                 }
@@ -529,17 +538,10 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             i++;
         }
         
-        if (isComplexType) {
+        if (isComplexType(childTable)) {
             mf.addPrimaryKey("PK0", columnNames, childTable);
         }
     }
-
-    private void addAccessPattern(Table childTable, Column c) {
-        KeyRecord accessPattern = new KeyRecord(Type.AccessPattern);
-        accessPattern.setName("AP0");
-        accessPattern.addColumn(c);
-        childTable.setAccessPatterns(Arrays.asList(accessPattern));
-    }     
 
     private void addForeignKey(MetadataFactory mf, Table childTable, Table parentTable) 
             throws TranslatorException {
@@ -766,7 +768,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 addProcedureTableReturn(mf, metadata, procedure,
                         getEntityType(metadata, returnType.getType()), null);
                 procedure.getResultSet().setProperty(ODATA_TYPE, 
-                        returnType.isCollection()?ODataType.ENTITY_COLLECTION.name():ODataType.ENTITY.name());                
+                        returnType.isCollection()?ODataType.ENTITY_COLLECTION.name():ODataType.ENTITY.name());
             }
             else {
                 throw new TranslatorException(ODataPlugin.Util.gs(

@@ -22,71 +22,103 @@
 package org.teiid.translator.odata4;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.olingo.client.api.uri.QueryOption;
-import org.teiid.core.util.StringUtil;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
+import org.teiid.language.Join.JoinType;
 import org.teiid.language.LanguageUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
-import org.teiid.translator.odata4.UriSchemaElement.SchemaElementType;
+import org.teiid.translator.document.DocumentNode;
+import org.teiid.translator.odata4.ODataDocumentNode.ODataDocumentType;
 
 public class ODataQuery {
     protected ODataExecutionFactory executionFactory;
     protected RuntimeMetadata metadata;
-    protected UriSchemaElement entitySetTable;
-    protected ArrayList<UriSchemaElement> complexTables = new ArrayList<UriSchemaElement>();
-    protected ArrayList<UriSchemaElement> expandTables = new ArrayList<UriSchemaElement>();
-
+    protected ODataDocumentNode rootDocument;
+    protected DocumentNode joinNode;
+    
+    protected ArrayList<ODataDocumentNode> complexTables = new ArrayList<ODataDocumentNode>();
+    protected ArrayList<ODataDocumentNode> expandTables = new ArrayList<ODataDocumentNode>();
     
     public ODataQuery(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
         this.executionFactory = executionFactory;
         this.metadata = metadata;
     }
 
-    public void addTable(Table table) {
-        if (isComplexType(table)) {
-            this.complexTables.add(new UriSchemaElement(table, SchemaElementType.COMPLEX, isCollection(table)));
-        } else if (this.entitySetTable == null && isEntitySet(table)) {
-            this.entitySetTable = new UriSchemaElement(table, SchemaElementType.PRIMARY, isCollection(table));
+    public void addRootDocument(Table table) throws TranslatorException {
+        ODataDocumentNode node = null;
+        
+        if (this.rootDocument == null) {
+            if (ODataMetadataProcessor.isEntitySet(table)) {
+                node = new ODataDocumentNode(table, ODataDocumentType.PRIMARY, 
+                        ODataMetadataProcessor.isCollection(table));
+                this.rootDocument = node;
+                this.joinNode = node;
+            } else {
+                // add the complex or expand tables                
+                String parentTable = table.getProperty(ODataMetadataProcessor.MERGE, false);
+                if (parentTable == null) {
+                    throw new TranslatorException(ODataPlugin.Event.TEIID17028, 
+                            ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17028, table.getName()));
+                }
+                addRootDocument(this.metadata.getTable(parentTable));
+                // if this is not complex/navigation we already added 
+                // this as the parent document; no need to join
+                if (ODataMetadataProcessor.isComplexType(table)
+                        || ODataMetadataProcessor.isNavigationType(table)) {
+                    joinChildDocument(table, JoinType.INNER_JOIN);
+                } 
+            }
         } else {
-            this.expandTables.add(new UriSchemaElement(table, SchemaElementType.EXPAND, isCollection(table)));
+            joinChildDocument(table, JoinType.INNER_JOIN);
+        }               
+    }
+
+    private ODataDocumentNode addComplexOrNavigation(Table table) {
+        ODataDocumentNode node;
+        if (ODataMetadataProcessor.isComplexType(table)) {
+            node = new ODataDocumentNode(table, ODataDocumentType.COMPLEX, 
+                    ODataMetadataProcessor.isCollection(table));            
+            this.complexTables.add(node);
+        } else if (ODataMetadataProcessor.isNavigationType(table)){
+            node = new ODataDocumentNode(table, ODataDocumentType.EXPAND, 
+                    ODataMetadataProcessor.isCollection(table));            
+            this.expandTables.add(node);
+        } else {
+            node = new ODataDocumentNode(table, ODataDocumentType.EXPAND, 
+                    ODataMetadataProcessor.isCollection(table));            
+            this.expandTables.add(node);            
         }
+        return node;
     }
     
-    protected void handleMissingEntitySet() throws TranslatorException {
-        if (this.entitySetTable == null) {
-            Table table = null;
-            if (!this.complexTables.isEmpty()) {
-                table = this.complexTables.get(0).getTable();
-            } else if (!this.expandTables.isEmpty()) {
-                table = this.expandTables.get(0).getTable();
-            }
-            String parentTable = table.getProperty(ODataMetadataProcessor.MERGE, false);
-            if (parentTable == null) {
-                throw new TranslatorException(ODataPlugin.Event.TEIID17028, 
-                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17028, table.getName()));
-            }
-            addTable(this.metadata.getTable(parentTable));
-        }
-    }    
+    private void joinChildDocument(Table table, JoinType joinType) throws TranslatorException {
+        ODataDocumentNode node = addComplexOrNavigation(table);
+        this.joinNode = this.joinNode.joinWith(joinType, node);
+    }
     
-    public UriSchemaElement getEntitySetTable() {
-        return this.entitySetTable;
+    public Condition addNavigation(Condition obj, JoinType joinType, Table right) 
+            throws TranslatorException {
+        joinChildDocument(right, joinType);
+        return parseKeySegmentFromCondition(obj);        
+    }
+    
+    public Condition addNavigation(Condition obj, JoinType joinType, Table left, Table right) 
+            throws TranslatorException {
+        addRootDocument(left);  
+        joinChildDocument(right, joinType);
+        return parseKeySegmentFromCondition(obj);
+    }
+    
+    public DocumentNode getRootDocument() {
+        return this.rootDocument;
     }
     
     protected String processFilter(Condition condition) throws TranslatorException {
@@ -99,10 +131,10 @@ public class ODataQuery {
             }
         }
         StringBuilder sb = new StringBuilder();
-        if (this.entitySetTable.getFilter() != null) {
-            sb.append(this.entitySetTable.getFilter());
+        if (this.rootDocument.getFilter() != null) {
+            sb.append(this.rootDocument.getFilter());
         }
-        for (UriSchemaElement use:this.complexTables) {
+        for (ODataDocumentNode use:this.complexTables) {
             if (use.getFilter() != null) {
                 if (sb.length() > 0) {
                     sb.append(" and ");
@@ -112,15 +144,9 @@ public class ODataQuery {
         }
         return sb.length() == 0?null:sb.toString();
     }     
-    
-    public Condition addNavigation(Condition obj, Table... tables) throws TranslatorException {
-        for (Table table:tables) {
-            addTable(table);    
-        }       
-        return parseKeySegmentFromCondition(obj);
-    }
-    
-    protected Condition parseKeySegmentFromCondition(Condition obj) throws TranslatorException {
+        
+    protected Condition parseKeySegmentFromCondition(Condition obj)
+            throws TranslatorException {
         List<Condition> crits = LanguageUtil.separateCriteriaByAnd(obj);
         if (!crits.isEmpty()) {
             boolean modified = false;
@@ -158,16 +184,16 @@ public class ODataQuery {
         return false;
     }
     
-    UriSchemaElement getSchemaElement(Table table) {
-        if (this.entitySetTable != null && this.entitySetTable.getTable().equals(table)) {
-            return this.entitySetTable;
+    ODataDocumentNode getSchemaElement(Table table) {
+        if (this.rootDocument != null && this.rootDocument.getTable().equals(table)) {
+            return this.rootDocument;
         }
-        for (UriSchemaElement schemaElement:this.complexTables) {
+        for (ODataDocumentNode schemaElement:this.complexTables) {
             if (schemaElement.getTable().equals(table)) {
                 return schemaElement;
             }
         }
-        for (UriSchemaElement schemaElement:this.expandTables) {
+        for (ODataDocumentNode schemaElement:this.expandTables) {
             if (schemaElement.getTable().equals(table)) {
                 return schemaElement;
             }
@@ -186,113 +212,5 @@ public class ODataQuery {
             }
         }
         return isKey;
-    }
-    
-    private boolean isComplexType(Table table) {
-        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
-        return type == ODataType.COMPLEX || type == ODataType.COMPLEX_COLLECTION;
-    }
-    
-    private boolean isCollection(Table table) {
-        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
-        return type == ODataType.ENTITY_COLLECTION
-                || type == ODataType.COMPLEX_COLLECTION
-                || type == ODataType.NAVIGATION_COLLECTION;
-    }    
-    
-    private boolean isEntitySet(Table table) {
-        ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
-        return type == ODataType.ENTITY_COLLECTION;
-    }    
-}
-
-class UriSchemaElement {
-    enum SchemaElementType {PRIMARY, COMPLEX, EXPAND};
-    private Table table;
-    private final SchemaElementType type; 
-    private LinkedHashSet<String> columns = new LinkedHashSet<String>();
-    private String filterStr;
-    private boolean collection;
-    
-    public UriSchemaElement(Table t, SchemaElementType type, boolean collection) {
-        this.table = t;
-        this.type = type;
-        this.collection = collection;
-    }
-    
-    public Table getTable() {
-        return this.table;
-    }
-    
-    public String getName() {
-        if (this.table.getNameInSource() != null) {
-            return this.table.getNameInSource();
-        }
-        return this.table.getName();
-    }
-    
-    boolean isCollection() {
-        return this.collection;
-    }
-    
-    boolean isComplexType() {
-        return type == SchemaElementType.COMPLEX;
-    }
-    
-    boolean isExpandType() {
-        return type == SchemaElementType.EXPAND;
-    }
-
-    boolean isPrimaryType() {
-        return type == SchemaElementType.PRIMARY;
-    }
-    
-    public void appendSelect(String columnName) {
-        if (isComplexType()) {
-            this.columns.add(getName());
-        } else {
-            this.columns.add(columnName);
-        }
-    }
-    
-    public Set<String> getSelects(){
-        return this.columns;
-    }
-    
-    public Map<QueryOption, Object> getOptions() {
-        Map<QueryOption, Object> options = new LinkedHashMap<QueryOption, Object>();        
-        
-        if (isExpandType()) {
-            if (!columns.isEmpty()) {
-                options.put(QueryOption.SELECT, StringUtil.join(this.columns, ","));
-            }
-            if (this.filterStr != null) {
-                options.put(QueryOption.FILTER, this.filterStr);
-            }
-        }
-        return options;
-    }
-    
-    public void addFilter(String string) {
-        if (this.filterStr == null) {
-            this.filterStr = string;
-        } else {
-            this.filterStr = this.filterStr +" and " + string; //$NON-NLS-1$
-        }
-    }
-    
-    public String getFilter() {
-        return this.filterStr;
-    }
-    
-    public List<String> getIdentityColumns(){
-        if (this.table.getPrimaryKey() == null) {
-            return Collections.emptyList();
-        }
-        ArrayList<String> keys = new ArrayList<String>();
-        for (Column column:this.table.getPrimaryKey().getColumns()) {
-            keys.add(column.getName());
-        }
-        return keys;
     }
 }
