@@ -11,7 +11,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>8.12.0.CR2-SNAPSHOT</version>
+    <version>9.0.0.Alpha1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -582,11 +582,6 @@
 			  <version>${project.version}</version>
 			  <type>test-jar</type>
 			</dependency>
-            <dependency>
-            	<groupId>org.jboss.teiid</groupId>
-            	<artifactId>teiid-client-jdk15</artifactId>
-            	<version>${project.version}</version>
-        	</dependency>
 			<dependency>
 				<groupId>org.jboss.teiid.connectors</groupId>
 				<artifactId>translator-infinispan-dsl</artifactId>
@@ -1583,7 +1578,6 @@
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>test-integration</module>
-		<module>client-jdk15</module>
 		<module>admin</module>
 		<module>jboss-admin</module>
 		<module>odata</module>
