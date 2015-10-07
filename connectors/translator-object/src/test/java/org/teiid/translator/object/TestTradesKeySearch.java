@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
@@ -41,7 +42,7 @@ public class TestTradesKeySearch extends BasicSearchTest {
 	
 	@Before public void beforeEach() throws Exception{	
 		 
-		factory = new ObjectExecutionFactory();
+		factory = new SimpleMapCacheExecutionFactory();
 
 		factory.start();
 

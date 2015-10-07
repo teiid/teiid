@@ -37,6 +37,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
 import org.teiid.translator.object.testdata.trades.Trade;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
@@ -46,7 +47,7 @@ public class TestObjectExecutionFactory {
 	
 	protected static ObjectConnection conn = TradesCacheSource.createConnection();
 	
-	public class TestFactory extends ObjectExecutionFactory {
+	public class TestFactory extends SimpleMapCacheExecutionFactory {
 		public TestFactory() {
 			
 		}

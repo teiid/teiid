@@ -24,23 +24,21 @@ package org.teiid.translator.object;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.language.AndOr;
 import org.teiid.language.BaseLanguageObject;
 import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
+import org.teiid.language.Delete;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
-import org.teiid.language.In;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
-import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.OrderBy;
 import org.teiid.language.Select;
+import org.teiid.language.Update;
 import org.teiid.language.visitor.HierarchyVisitor;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.translator.TranslatorException;
@@ -50,13 +48,12 @@ import org.teiid.translator.object.util.ObjectUtil;
  * @author vanhalbert
  *
  */
-public class ObjectSelectVisitor extends HierarchyVisitor {
+public class ObjectVisitor extends HierarchyVisitor {
 	
 
 	private List<DerivedColumn> projectedColumns = new ArrayList<DerivedColumn>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 	
-	private ArrayList<Object> values = new ArrayList<Object>();
 	private NamedTable table;
 	
 	// will be non-null only when a child table is being processed
@@ -71,6 +68,11 @@ public class ObjectSelectVisitor extends HierarchyVisitor {
 
 	protected Condition condition=null;
 	protected OrderBy orderBy=null;
+	
+	private Insert insert;
+	private Update update;
+	private Delete delete;
+
 
 	public List<DerivedColumn> getProjectedColumns() {
 		return projectedColumns;
@@ -109,10 +111,6 @@ public class ObjectSelectVisitor extends HierarchyVisitor {
 		return rootTableName;
 	}
 	
-	public List<Object> getCriteriaValues() {
-		return values;
-	}
-	
 	public Column getPrimaryKeyCol() {
 		return pkkeyCol;
 	}
@@ -127,6 +125,18 @@ public class ObjectSelectVisitor extends HierarchyVisitor {
 	
 	public boolean isSelectCommand(){
 		return this.isSelect;
+	}
+		
+	public Insert getInsert() {
+		return insert;
+	}
+	
+	public Update getUpdate() {
+		return update;
+	}
+	
+	public Delete getDelete() {
+		return delete;
 	}
 
 	@Override
@@ -167,85 +177,7 @@ public class ObjectSelectVisitor extends HierarchyVisitor {
 		}		
 	}
 
-	@Override
-    public void visit(AndOr obj) {
-        visitNode(obj.getLeftCondition());
-        visitNode(obj.getRightCondition());
-    }
 	
-	@Override
-	public void visit(Comparison obj) {
-		super.visit(obj);
-		
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-		"Parsing Comparison criteria."); //$NON-NLS-1$
-
-		Expression lhs = obj.getLeftExpression();
-		Expression rhs = obj.getRightExpression();
-
-		// joins between the objects is assumed as if no criteria, and therefore, return all
-		if (lhs instanceof ColumnReference && rhs instanceof ColumnReference) {
-			return;
-		} else if (lhs instanceof Literal && rhs instanceof Literal) {
-			return;
-		}
-
-		Object value=null;
-		Column mdIDElement = null;
-		Literal literal = null;
-		if (lhs instanceof ColumnReference) {
-
-			mdIDElement = ((ColumnReference) lhs).getMetadataObject();
-			literal = (Literal) rhs;
-			value = literal.getValue();
-
-		} else if (rhs instanceof ColumnReference ){
-			mdIDElement = ((ColumnReference) rhs).getMetadataObject();
-			literal = (Literal) lhs;
-			value = literal.getValue();
-		}	
-		
-		Object criteria;
-		try {
-			criteria = ObjectUtil.convertValueToObjectType(value, mdIDElement);
-			values.add(criteria);
-		} catch (TranslatorException e) {
-			exceptions.add(e);
-		}
-
-	}
-	
-	@Override
-	public void visit(In obj) {
-		super.visit(obj);
-		if (obj.isNegated()) {
-			this.addException(new TranslatorException("ObjectQueryVisitor: Not In criteria is not supported"));
-			return;
-		}
-
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
-		
-		Expression lhs = obj.getLeftExpression();
-		Column col = ((ColumnReference) lhs).getMetadataObject();
-		
-		List<Expression> rhsList = obj.getRightExpressions();
-		
-		for (Expression expr : rhsList) {
-
-			Literal literal = (Literal) expr;
-			
-			Object criteria;
-			try {
-				criteria = ObjectUtil.convertValueToObjectType(literal.getValue(), col);
-				values.add(criteria);
-			} catch (TranslatorException e) {
-				exceptions.add(e);
-			}
-			
-		}				
-	
-	}
-
 	@Override
 	public void visit(Limit obj) {
 		this.limit = obj.getRowLimit();
@@ -264,15 +196,6 @@ public class ObjectSelectVisitor extends HierarchyVisitor {
 		
 	}
 
-//	@Override
-//	public void visitNode(Command obj) {
-//		super.visitNode(obj);
-//	}
-	
-
-
-
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -285,6 +208,50 @@ public class ObjectSelectVisitor extends HierarchyVisitor {
 		this.isSelect = true;
 		super.visit(obj);
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.language.visitor.HierarchyVisitor#visit(org.teiid.language.Insert)
+	 */
+	@Override
+	public void visit(Insert obj) {
+		super.visit(obj);
+		this.insert = obj;
+		
+		List<ColumnReference> columns = obj.getColumns();
+		List<Expression> values = ((ExpressionValueSource) obj
+				.getValueSource()).getValues();
+		if (columns.size() != values.size()) {
+			this.addException(new TranslatorException(
+					"Program error, Column Metadata Size [" + columns.size() + "] and Value Size [" + values.size() + "] don't match"));
+		}
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.language.visitor.HierarchyVisitor#visit(org.teiid.language.Delete)
+	 */
+	@Override
+	public void visit(Delete obj) {
+		this.condition = obj.getWhere();
+		this.delete = obj;
+		super.visit(obj);
+	}	
+	
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.language.visitor.HierarchyVisitor#visit(org.teiid.language.Update)
+	 */
+	@Override
+	public void visit(Update obj) {
+		this.condition = obj.getWhere();
+		this.update = obj;
+		super.visit(obj);
+	}		
 	
 	protected String getForeignKeyNIS(NamedTable table, ForeignKey fk)  {
 
@@ -300,6 +267,22 @@ public class ObjectSelectVisitor extends HierarchyVisitor {
 		}
 		
 		return fkeyColNIS;
+
+	}
+	
+	public void cleanUp() {
+		if (projectedColumns != null) projectedColumns.clear();
+		projectedColumns = null;
+		if (exceptions != null) exceptions.clear();
+		exceptions = null;
+		
+		
+		fk = null;	
+		pkkeyCol = null;
+		command=null;
+
+		condition=null;
+		orderBy=null;
 
 	}
 

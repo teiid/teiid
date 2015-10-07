@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 
@@ -112,7 +111,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	 * @see org.teiid.translator.object.ObjectConnection#add(java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public void add(Object key, Object value) throws TranslatorException {
+	public void add(Object key, Object value) {
 		this.getCache().put(key, value);
 	}
 
@@ -157,20 +156,6 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		Map<Object, Object> c = getCache();
 		for (Object k : c.keySet()) {
 			objs.add(c.get(k));
-		}
-		return objs;
-	}
-	
-	@Override
-	public Collection<Object> getFirst(int limit) throws TranslatorException {
-		Collection<Object> objs = new ArrayList<Object>();
-		Map<Object, Object> c = getCache();
-		int i = 0;
-		
-		for (Object k : c.keySet()) {
-			objs.add(c.get(k));
-			++i;
-			if (i >= limit) break;
 		}
 		return objs;
 	}

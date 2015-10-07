@@ -128,25 +128,6 @@ public class LocalCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
 		}
 		return objs;
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper#getFirst(int)
-	 */
-	@Override
-	public Collection<Object> getFirst(int limit) {
-		Collection<Object> objs = new ArrayList<Object>();
-		Cache c = getCache();
-		int i = 0;
-		
-		for (Object k : c.keySet()) {
-			objs.add(c.get(k));
-			++i;
-			if (i >= limit) break;
-		}
-		return objs;
-	}	
 
 	/* split out for testing purposes */
 	protected Object performJNDICacheLookup(String jndiName) throws Exception {
