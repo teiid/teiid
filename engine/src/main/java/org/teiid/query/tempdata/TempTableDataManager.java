@@ -236,8 +236,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 		        		final Criteria crit = delete.getCriteria();
 		        		if (crit == null) {
 		        			//TODO: we'll add a real truncate later
-		        			int rows = table.truncate(false);
-		                    return CollectionTupleSource.createUpdateCountTupleSource(rows);
+		        			long rows = table.truncate(false);
+		                    return CollectionTupleSource.createUpdateCountTupleSource((int)Math.min(Integer.MAX_VALUE, rows));
 		        		}
 		        		return table.delete(crit);
 		        	}
@@ -711,7 +711,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			@Override
 			protected TupleSource createTupleSource() throws TeiidComponentException,
 					TeiidProcessingException {
-				int rowCount = -1;
+				long rowCount = -1;
 				try {
 					if (insertTupleSource == null) {
 						String fullName = metadata.getFullName(group.getMetadataID());
@@ -743,7 +743,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					globalStore.loaded(tableName, table);
 					success = true;
 					LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30014, tableName, rowCount));
-					return CollectionTupleSource.createUpdateCountTupleSource(rowCount);
+					return CollectionTupleSource.createUpdateCountTupleSource((int)Math.min(Integer.MAX_VALUE, rowCount));
 				} catch (BlockedException e) {
 					throw e;
 				} catch (Exception e) {

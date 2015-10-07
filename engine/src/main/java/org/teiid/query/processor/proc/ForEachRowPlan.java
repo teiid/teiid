@@ -61,7 +61,7 @@ public class ForEachRowPlan extends ProcessorPlan {
     private TupleSource tupleSource;
     private QueryProcessor rowProcessor;
     private List<?> currentTuple;
-    private int updateCount;
+    private long updateCount;
     
     private TransactionContext planContext;
 
@@ -124,7 +124,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 							ts.commit(this.planContext);
 							this.planContext = null;
 						}
-						TupleBatch result = new TupleBatch(1, new List[] {Arrays.asList(updateCount)});
+						TupleBatch result = new TupleBatch(1, new List[] {Arrays.asList((int)Math.min(Integer.MAX_VALUE, updateCount))});
 						result.setTerminationFlag(true);
 						return result;
 					}

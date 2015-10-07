@@ -96,7 +96,7 @@ public class TempTable implements Cloneable, SearchableTable {
 		}
 		
 		@Override
-		int process() throws ExpressionEvaluationException,
+		long process() throws ExpressionEvaluationException,
 				TeiidComponentException, TeiidProcessingException {
 			tree.setBatchInsert(addRowId);
 			return super.process();
@@ -233,7 +233,7 @@ public class TempTable implements Cloneable, SearchableTable {
 		private TupleSource ts;
 		protected Evaluator eval;
 		private Criteria crit;
-		protected int updateCount = 0;
+		protected long updateCount = 0;
 		protected List currentTuple;
 		
 		protected TupleBuffer undoLog;
@@ -247,7 +247,7 @@ public class TempTable implements Cloneable, SearchableTable {
 			}
 		}
 		
-		int process() throws ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException {
+		long process() throws ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException {
 			int reserved = reserveBuffers();
 			lock.writeLock().lock();
 			boolean success = false;
@@ -318,7 +318,7 @@ public class TempTable implements Cloneable, SearchableTable {
 	
 	private Long id = ID_GENERATOR.getAndIncrement();
 	private STree tree;
-	private AtomicInteger rowId;
+	private AtomicLong rowId;
 	private List<ElementSymbol> columns;
 	private BufferManager bm;
 	private String sessionID;
@@ -344,9 +344,9 @@ public class TempTable implements Cloneable, SearchableTable {
 		if (primaryKeyLength == 0) {
 			startIndex = 1;
             ElementSymbol rid = new ElementSymbol("rowId"); //$NON-NLS-1$
-    		rid.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+    		rid.setType(DataTypeManager.DefaultDataClasses.LONG);
     		columns.add(0, rid);
-    		rowId = new AtomicInteger();
+    		rowId = new AtomicLong();
         	tree = bm.createSTree(columns, sessionID, 1);
         } else {
         	this.uniqueColIndex = primaryKeyLength;
@@ -456,8 +456,8 @@ public class TempTable implements Cloneable, SearchableTable {
 		}
 		if (agg) {
 			if (condition == null) {
-				int count = this.getRowCount();
-				return new CollectionTupleSource(Arrays.asList(Collections.nCopies(projectedCols.size(), count)).iterator());
+				long count = this.getRowCount();
+				return new CollectionTupleSource(Arrays.asList(Collections.nCopies(projectedCols.size(), (int)Math.min(Integer.MAX_VALUE, count))).iterator());
 			}
 			orderBy = null;
 		}
@@ -465,7 +465,7 @@ public class TempTable implements Cloneable, SearchableTable {
 		IndexInfo ii = primary;
 		if (indexTables != null && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Considering indexes on table", this, "for query", projectedCols, condition, orderBy); //$NON-NLS-1$ //$NON-NLS-2$
-			int rowCost = this.tree.getRowCount();
+			long rowCost = this.tree.getRowCount();
 			long bestCost = estimateCost(orderBy, ii, rowCost);
 			for (TempTable table : this.indexTables.values()) {
 				IndexInfo secondary = new IndexInfo(table, projectedCols, condition, orderBy, false);
@@ -591,11 +591,11 @@ public class TempTable implements Cloneable, SearchableTable {
 		return ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder());
 	}
 	
-	public int getRowCount() {
+	public long getRowCount() {
 		return tree.getRowCount();
 	}
 	
-	public int truncate(boolean force) {
+	public long truncate(boolean force) {
 		this.tid.getTableData().dataModified(tree.getRowCount());
 		return tree.truncate(force);
 	}
@@ -682,7 +682,7 @@ public class TempTable implements Cloneable, SearchableTable {
 		        up.setGeneratedKeys(keys);
 			}
 		}
-        int updateCount = up.process();
+        long updateCount = up.process();
         tid.setCardinality(tree.getRowCount());
         tid.getTableData().dataModified(updateCount);
         return CollectionTupleSource.createUpdateCountArrayTupleSource(updateCount);
@@ -748,9 +748,9 @@ public class TempTable implements Cloneable, SearchableTable {
 			}
 			
 		};
-		int updateCount = up.process();
+		long updateCount = up.process();
 		tid.getTableData().dataModified(updateCount);
-		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
+		return CollectionTupleSource.createUpdateCountTupleSource((int)Math.min(Integer.MAX_VALUE, updateCount));
 	}
 
 	private boolean canChangePrimaryKey(final SetClauseList update) {
@@ -780,10 +780,10 @@ public class TempTable implements Cloneable, SearchableTable {
 				insertTuple(tuple, false, true);
 			}
 		};
-		int updateCount = up.process();
+		long updateCount = up.process();
 		tid.setCardinality(tree.getRowCount());
 		tid.getTableData().dataModified(updateCount);
-		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
+		return CollectionTupleSource.createUpdateCountTupleSource((int)Math.min(Integer.MAX_VALUE, updateCount));
 	}
 	
 	boolean insertTuple(List<?> list, boolean ordered, boolean checkDuplidate) throws TeiidComponentException, TeiidProcessingException {

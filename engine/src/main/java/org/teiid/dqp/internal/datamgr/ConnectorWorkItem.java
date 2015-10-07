@@ -105,7 +105,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         
     /* End state information */    
     private boolean lastBatch;
-    private int rowCount;
+    private long rowCount;
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
 	private org.teiid.language.Command translatedCommand;
@@ -190,7 +190,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	try {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
             if (this.isCancelled.compareAndSet(false, true)) {
-        		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1, null);
+        		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1l, null);
     	        if(execution != null) {
     	            execution.cancel();
     	        }            
