@@ -21,6 +21,7 @@
  */
 package org.teiid.translator.infinispan.cache;
 
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
@@ -29,10 +30,14 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.ObjectSelectVisitor;
+import org.teiid.translator.object.ObjectUpdateExecution;
+import org.teiid.translator.object.ObjectVisitor;
+import org.teiid.translator.object.simpleMap.SearchByKey;
+import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
 
 /**
  * InfinispanExecutionFactory is the "infinispan-cache" translator that is used to access an Infinispan cache.
@@ -69,7 +74,14 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 		setSupportsOuterJoins(true);
 		
 		setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
+		
+		// default search is by key type
+		setSearchType(new SearchByKey());
 
+	}
+	
+	public boolean isFullQuerySupported() {
+		return this.supportsDSLSearching || this.supportsLuceneSearching ;
 	}
 	
 	@Override
@@ -78,15 +90,35 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 			ObjectConnection connection) throws TranslatorException {
 		return new ObjectExecution((Select) command, metadata, this, connection, executionContext) {
 			@Override
-			protected ObjectSelectVisitor createQueryVisitor() {
-				return new SearchByInfinispanVisitor();
-			}
+			protected ObjectVisitor createVisitor() {
+				// us the base object visitor when perform DSL or Lucence searching
+				// because the visitor doesn't need to overhead of capturing the values used when doing key searches
+				if (isFullQuerySupported()) {
+					return super.createVisitor();
+				}
+		    	return new SimpleKeyVisitor();
+
+		    }
 		};
 	}
 	
-	public boolean isFullQuerySupported() {
-		return this.supportsDSLSearching || this.supportsLuceneSearching ;
-	}
+    @Override
+	public UpdateExecution createUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			ObjectConnection connection) throws TranslatorException {
+    	return new ObjectUpdateExecution(command, connection, executionContext, this) {
+			@Override
+			protected ObjectVisitor createVisitor() {
+				// us the base object visitor when perform DSL or Lucence searching
+				// because the visitor doesn't need to overhead of capturing the values used when doing key searches
+				if (isFullQuerySupported()) {
+					return super.createVisitor();
+				}
+		    	return new SimpleKeyVisitor();
+
+		    }  		
+    	};
+	}		
 
 	/**
 	 * Indicates if Hibernate Search and Apache Lucene were used to index and

@@ -24,12 +24,13 @@ package org.teiid.translator.object.simpleMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.ObjectSelectVisitor;
+import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.SearchType;
 
 /**
@@ -46,31 +47,54 @@ public  class SearchByKey implements SearchType  {
 	}
 
 	@Override
-	public List<Object> performSearch(ObjectSelectVisitor visitor,
+	public List<Object> performSearch(ObjectVisitor visitor,
 			ObjectConnection conn) throws TranslatorException  {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Perform search by key."); //$NON-NLS-1$
 		
-		List<Object> values = visitor.getCriteriaValues();
+		List<Object> values = ( (SimpleKeyVisitor) visitor).getCriteriaValues();
 		List<Object> results = new ArrayList<Object>();
 
+		boolean hasLimit = (visitor.getLimit() > 0);
+		
 		if (values == null || values.isEmpty()) {
-			if (visitor.getLimit() > 0) {
-				results.addAll(conn.getFirst(visitor.getLimit()));
-			} else {
-				results.addAll(conn.getAll());
-			}
+			if (hasLimit) {
+				
+				return getFirst(conn, visitor.getLimit());
+			} 
+			
+			results.addAll(conn.getAll());
+			
 			return results;
 		}
-		
+		int x = 0;
 		for (Object value:values) {
+			x++;
 			Object cv = conn.get(value);
-			results.add(cv);
+			if (cv != null) {
+				results.add(cv);
+			}		
+			if (hasLimit && x >= visitor.getLimit()) {
+				break;
+			}
 		
 		}
 
 		return results;
 
+	}
+	
+	private List<Object> getFirst(ObjectConnection conn, int limit) throws TranslatorException {
+		List<Object> objs = new ArrayList<Object>();
+		Map<Object, Object> c = conn.getCache();
+		int i = 0;
+		
+		for (Object k : c.keySet()) {
+			objs.add(c.get(k));
+			++i;
+			if (i >= limit) break;
+		}
+		return objs;
 	}
 }

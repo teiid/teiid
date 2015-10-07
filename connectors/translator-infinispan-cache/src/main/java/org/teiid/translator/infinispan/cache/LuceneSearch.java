@@ -41,7 +41,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.ObjectSelectVisitor;
+import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.SearchType;
 
 
@@ -70,10 +70,10 @@ public class LuceneSearch implements SearchType  {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.translator.object.ObjectSelectVisitor, org.teiid.translator.object.ObjectConnection)
+	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.translator.object.ObjectVisitor, org.teiid.translator.object.ObjectConnection)
 	 */
 	@Override
-	public List<Object> performSearch(ObjectSelectVisitor visitor,
+	public List<Object> performSearch(ObjectVisitor visitor,
 			ObjectConnection connection) throws TranslatorException {
 //		return performSearch(visitor.getWhereCriteria(), visitor.getOrderBy(), conn);
 //	}	
