@@ -95,6 +95,8 @@
         <version.proj4j>0.1.0</version.proj4j>
 	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
 	    <version.narayana>5.0.4.Final</version.narayana>
+	    <version.org.apache.httpcomponents.httpcore-nio>4.2.4</version.org.apache.httpcomponents.httpcore-nio>
+	    <version.org.apache.httpcomponents.httpasyncclient>4.0-beta3</version.org.apache.httpcomponents.httpasyncclient>	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1135,6 +1137,21 @@
                     </exclusion>                                   
                 </exclusions>                
             </dependency>
+			<dependency>
+			    <groupId>org.apache.cxf</groupId>
+			    <artifactId>cxf-rt-transports-http-hc</artifactId>
+			    <version>${version.org.apache.cxf}</version>
+			</dependency>
+	        <dependency>
+	            <groupId>org.apache.httpcomponents</groupId>
+	            <artifactId>httpcore-nio</artifactId>
+	            <version>${version.org.apache.httpcomponents.httpcore-nio}</version>
+	        </dependency>
+			<dependency>
+			    <groupId>org.apache.httpcomponents</groupId>
+			    <artifactId>httpasyncclient</artifactId>
+			    <version>${version.org.apache.httpcomponents.httpasyncclient}</version>
+			</dependency>
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-bundle</artifactId>
