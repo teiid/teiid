@@ -51,48 +51,48 @@ import org.teiid.translator.TranslatorException;
 
 public class ODataSQLVisitor extends HierarchyVisitor {
 
-	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
-	protected QueryExpression command;
-	protected ODataExecutionFactory executionFactory;
-	protected RuntimeMetadata metadata;
-	protected ArrayList<Column> projectedColumns = new ArrayList<Column>();
-	private ODataQuery odataQuery;
-	private StringBuilder orderBy = new StringBuilder();
-	private boolean count = false;
-	private ArrayList<Condition> conditionFragments = new ArrayList<Condition>();
+    protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
+    protected QueryExpression command;
+    protected ODataExecutionFactory executionFactory;
+    protected RuntimeMetadata metadata;
+    protected ArrayList<Column> projectedColumns = new ArrayList<Column>();
+    private ODataSelectQuery odataQuery;
+    private StringBuilder orderBy = new StringBuilder();
+    private boolean count = false;
+    private ArrayList<Condition> conditionFragments = new ArrayList<Condition>();
 
     public ODataSQLVisitor(ODataExecutionFactory executionFactory,
             RuntimeMetadata metadata) {
         this.executionFactory = executionFactory;
         this.metadata = metadata;
-        this.odataQuery = new ODataQuery(executionFactory);
+        this.odataQuery = new ODataSelectQuery(executionFactory, metadata);
     }
     
-	public Column[] getProjectedColumns(){
-		return this.projectedColumns.toArray(new Column[this.projectedColumns.size()]);
-	}
-	
-	public Table getEntitySetTable() {
-	    return this.odataQuery.getEntitySetTable().getTable();
-	}
+    public List<Column> getProjectedColumns(){
+        return this.projectedColumns;
+    }
+    
+    public ODataSelectQuery getODataQuery() {
+        return this.odataQuery;
+    }
 
-	public boolean isCount() {
-		return this.count;
-	}
+    public boolean isCount() {
+        return this.count;
+    }
 
-	public String buildURL(String serviceRoot) throws TranslatorException {
+    public String buildURL(String serviceRoot) throws TranslatorException {
 
-	    URIBuilderImpl uriBuilder = this.odataQuery.buildURL(serviceRoot,
+        URIBuilderImpl uriBuilder = this.odataQuery.buildURL(serviceRoot,
                 this.projectedColumns,
                 LanguageUtil.combineCriteria(this.conditionFragments));
-    	
-    	if (this.orderBy.length() > 0) {
-    	    uriBuilder.orderBy(this.orderBy.toString());
-    	}
+        
+        if (this.orderBy.length() > 0) {
+            uriBuilder.orderBy(this.orderBy.toString());
+        }
 
-    	URI uri = uriBuilder.build();
+        URI uri = uriBuilder.build();
         return uri.toString();
-	}
+    }
 
     List<String> getColumnNames(List<Column> columns) {
         ArrayList<String> names = new ArrayList<String>();
@@ -100,23 +100,26 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             names.add(c.getName());
         }
         return names;
-    }	
-	
-	@Override
+    }    
+    
+    @Override
     public void visit(NamedTable obj) {
-		this.odataQuery.addTable(obj.getMetadataObject());
-	}
+        try {
+            this.odataQuery.addRootDocument(obj.getMetadataObject());
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
+    }
 
-
-	@Override
+    @Override
     public void visit(Join obj) {
-		// joins are not used currently
+        // joins are not used currently
         if (obj.getLeftItem() instanceof Join) {
             Condition updated = obj.getCondition();
             append(obj.getLeftItem());
             Table right = ((NamedTable)obj.getRightItem()).getMetadataObject();
             try {
-                updated = this.odataQuery.addNavigation(obj.getCondition(), right);
+                updated = this.odataQuery.addNavigation(obj.getCondition(), obj.getJoinType(), right);
                 obj.setCondition(updated);
                 if (updated != null) {
                     this.conditionFragments.add(obj.getCondition());
@@ -130,7 +133,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             append(obj.getRightItem());
             Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
             try {
-                updated = this.odataQuery.addNavigation(obj.getCondition(), left);
+                updated = this.odataQuery.addNavigation(obj.getCondition(), obj.getJoinType(), left);
                 obj.setCondition(updated);
                 if (updated != null) {
                     this.conditionFragments.add(obj.getCondition());
@@ -144,7 +147,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
             Table right = ((NamedTable)obj.getRightItem()).getMetadataObject();
             try {
-                updated = this.odataQuery.addNavigation(obj.getCondition(), left, right);
+                if (ODataMetadataProcessor.isComplexType(left) || 
+                        ODataMetadataProcessor.isNavigationType(left)) {
+                    throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17027, left.getName()));
+                }
+                updated = this.odataQuery.addNavigation(obj.getCondition(), obj.getJoinType(), left, right);
                 obj.setCondition(updated);
                 if (updated != null) {
                     this.conditionFragments.add(obj.getCondition());
@@ -153,72 +160,95 @@ public class ODataSQLVisitor extends HierarchyVisitor {
                 this.exceptions.add(e);
             }
         }
-	}
-	
-	@Override
+    }
+    
+    @Override
     public void visit(Limit obj) {
-		if (obj.getRowOffset() != 0) {
-		    this.odataQuery.setSkip(new Integer(obj.getRowOffset()));
-		}
-		if (obj.getRowLimit() != 0) {
-		    this.odataQuery.setTop(new Integer(obj.getRowLimit()));
-		}
-	}
-	
-
-	@Override
-    public void visit(OrderBy obj) {
-		 append(obj.getSortSpecifications());
-	}
-
-	@Override
-    public void visit(SortSpecification obj) {
-		if (this.orderBy.length() > 0) {
-			this.orderBy.append(Tokens.COMMA);
-		}
-		ColumnReference column = (ColumnReference)obj.getExpression();
-		this.orderBy.append(column.getMetadataObject().getName());
-		// default is ascending
-        if (obj.getOrdering() == Ordering.DESC) {
-        	this.orderBy.append(Tokens.SPACE).append(DESC.toLowerCase());
+        if (obj.getRowOffset() != 0) {
+            this.odataQuery.setSkip(new Integer(obj.getRowOffset()));
         }
-	}
+        if (obj.getRowLimit() != 0) {
+            this.odataQuery.setTop(new Integer(obj.getRowLimit()));
+        }
+    }
 
-	@Override
+    @Override
+    public void visit(OrderBy obj) {
+         append(obj.getSortSpecifications());
+    }
+
+    @Override
+    public void visit(SortSpecification obj) {
+        if (this.orderBy.length() > 0) {
+            this.orderBy.append(Tokens.COMMA);
+        }
+        ColumnReference column = (ColumnReference)obj.getExpression();
+        try {
+            Column c = normalizePseudoColumn(column.getMetadataObject());
+            this.orderBy.append(c.getName());
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
+        // default is ascending
+        if (obj.getOrdering() == Ordering.DESC) {
+            this.orderBy.append(Tokens.SPACE).append(DESC.toLowerCase());
+        }
+    }
+
+    @Override
     public void visit(Select obj) {
         visitNodes(obj.getFrom());
         this.conditionFragments.add(obj.getWhere());
         visitNode(obj.getOrderBy());
         visitNode(obj.getLimit());
         visitNodes(obj.getDerivedColumns());
-	}
+    }
 
-	@Override
+    @Override
     public void visit(DerivedColumn obj) {
-		if (obj.getExpression() instanceof ColumnReference) {
-			Column column = ((ColumnReference)obj.getExpression()).getMetadataObject();
-			if (!column.isSelectable()) {
-				this.exceptions.add(new TranslatorException(ODataPlugin.Util
-				        .gs(ODataPlugin.Event.TEIID17006, column.getName())));
-			}
-			this.projectedColumns.add(column);
-		}
-		else if (obj.getExpression() instanceof AggregateFunction) {
-			AggregateFunction func = (AggregateFunction)obj.getExpression();
-			if (func.getName().equalsIgnoreCase("COUNT")) { //$NON-NLS-1$
-				this.odataQuery.setAsCount();
-			}
-			else {
-				this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17007, func.getName())));
-			}
-		}
-		else {
-			this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17008)));
-		}
-	}
+        if (obj.getExpression() instanceof ColumnReference) {
+            Column column = ((ColumnReference)obj.getExpression()).getMetadataObject();
+            if (!column.isSelectable()) {
+                this.exceptions.add(new TranslatorException(ODataPlugin.Util
+                        .gs(ODataPlugin.Event.TEIID17006, column.getName())));
+            }
+            try {
+                this.projectedColumns.add(normalizePseudoColumn(column));
+            } catch (TranslatorException e) {
+                this.exceptions.add(e);
+            }
+        }
+        else if (obj.getExpression() instanceof AggregateFunction) {
+            AggregateFunction func = (AggregateFunction)obj.getExpression();
+            if (func.getName().equalsIgnoreCase("COUNT")) { //$NON-NLS-1$
+                this.odataQuery.setAsCount();
+            }
+            else {
+                this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17007, func.getName())));
+            }
+        }
+        else {
+            this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17008)));
+        }
+    }
+    
+    private Column normalizePseudoColumn(Column column) throws TranslatorException {
+        String pseudo = ODataMetadataProcessor.getPseudo(column);
+        if (pseudo != null) {
+            try {
+                Table columnParent = (Table)column.getParent();
+                Table pseudoColumnParent = this.metadata.getTable(
+                        ODataMetadataProcessor.getMerge(columnParent));
+                return pseudoColumnParent.getColumnByName(pseudo);
+            } catch (TranslatorException e) {
+                this.exceptions.add(e);
+            }
+        }
+        return column;
+    }
 
-	public void append(LanguageObject obj) {
-    	visitNode(obj);
+    public void append(LanguageObject obj) {
+        visitNode(obj);
     }
 
     protected void append(List<? extends LanguageObject> items) {

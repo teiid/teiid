@@ -22,7 +22,7 @@
   
   <dependencySets>
      <dependencySet>
-         <outputDirectory>optional/odata</outputDirectory>
+         <outputDirectory>optional/odata4</outputDirectory>
          <unpack>false</unpack>
          <useTransitiveDependencies>false</useTransitiveDependencies>
      </dependencySet>

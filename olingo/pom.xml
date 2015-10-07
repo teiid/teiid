@@ -175,7 +175,11 @@
             <artifactId>jboss-servlet-api_3.0_spec</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>com.fasterxml</groupId>
+            <artifactId>aalto-xml</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.jboss.teiid</groupId>
