@@ -61,17 +61,55 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
         this.operationType = OperationType.INSERT;
         visitNode(obj.getTable());
     
-        // read the properties
-        int elementCount = obj.getColumns().size();
-        for (int i = 0; i < elementCount; i++) {
-            Column column = obj.getColumns().get(i).getMetadataObject();
-            List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
-            String type = ODataTypeManager.odataType(column.getRuntimeType())
-                    .getFullQualifiedName().getFullQualifiedNameAsString();
-            Object value = ((Literal)values.get(i)).getValue();
-            this.odataQuery.addInsertProperty(column, type, value);
+        try {
+            // read the properties
+            int elementCount = obj.getColumns().size();
+            for (int i = 0; i < elementCount; i++) {
+                Column column = obj.getColumns().get(i).getMetadataObject();
+                List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
+                getNativeType(column);
+                Expression expr = values.get(i);
+                Object value = resolveExpressionValue(expr);
+                this.odataQuery.addInsertProperty(column, getNativeType(column), value);
+            }
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
         }
-    }    
+    }
+
+    private String getNativeType(Column column) {
+        String nativeType = column.getNativeType();
+        if (nativeType == null) {
+            nativeType = "Edm.String";
+        }
+        return nativeType;
+    }
+    
+    private Object resolveExpressionValue(Expression expr) throws TranslatorException {
+        Object value = null;
+        if (expr instanceof Literal) {
+            value = ((Literal)expr).getValue();
+        }
+        else if (expr instanceof org.teiid.language.Array) {
+            org.teiid.language.Array contents = (org.teiid.language.Array)expr;
+            List<Expression> arrayExprs = contents.getExpressions();
+            List<Object> values = new ArrayList<Object>();
+            for (Expression exp:arrayExprs) {
+                if (exp instanceof Literal) {
+                    values.add(((Literal)exp).getValue());
+                }
+                else {
+                    this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17029)));
+                }
+            }
+            value = values;
+        }
+        else {
+            this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17029)));
+        }
+        return value;
+    }
+    
     
     @Override
     public void visit(Update obj) {
@@ -79,17 +117,22 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
         visitNode(obj.getTable());
         this.odataQuery.setCondition(obj.getWhere());
         
-        // read the properties
-        int elementCount = obj.getChanges().size();
-        for (int i = 0; i < elementCount; i++) {
-            Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();
-            Literal value = (Literal)obj.getChanges().get(i).getValue();
-            String type = ODataTypeManager.odataType(column.getRuntimeType())
-                    .getFullQualifiedName().getFullQualifiedNameAsString();
-            this.odataQuery.addInsertProperty(column, type, value);
+        try {
+            // read the properties
+            int elementCount = obj.getChanges().size();
+            for (int i = 0; i < elementCount; i++) {
+                Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();            
+                String type = ODataTypeManager.odataType(column.getRuntimeType())
+                        .getFullQualifiedName().getFullQualifiedNameAsString();
+                Expression expr = obj.getChanges().get(i).getValue();
+                Object value = resolveExpressionValue(expr);
+                this.odataQuery.addUpdateProperty(column, type, value);
+            }
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
         }            
     }
-
+    
     @Override
     public void visit(Delete obj) {
         this.operationType = OperationType.DELETE;

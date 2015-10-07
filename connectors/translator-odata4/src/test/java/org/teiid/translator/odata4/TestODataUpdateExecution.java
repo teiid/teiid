@@ -137,7 +137,8 @@ public class TestODataUpdateExecution {
     
 	@Test
 	public void testInsertEntitySet() throws Exception {
-		String query = "INSERT INTO People(UserName,FirstName,LastName) values ('jdoe', 'John', 'Doe')";
+		String query = "INSERT INTO People(UserName,FirstName,LastName, EMails, Gender, Concurrency) "
+		        + "values ('jdoe', 'John', 'Doe', ('jdoe@cantfind.ws',), 'Male', 1234)";
 		String expectedURL = "People";
 		String returnResponse = "{\n" + 
 		        "   \"UserName\":\"russellwhyte\",\n" + 
@@ -147,7 +148,11 @@ public class TestODataUpdateExecution {
 		String expectedPayload = "{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Person\","
 		        + "\"UserName@odata.type\":\"String\",\"UserName\":\"jdoe\","
 		        + "\"FirstName@odata.type\":\"String\",\"FirstName\":\"John\","
-		        + "\"LastName@odata.type\":\"String\",\"LastName\":\"Doe\"}";
+		        + "\"LastName@odata.type\":\"String\",\"LastName\":\"Doe\","
+		        + "\"Emails@odata.type\":\"#Collection(String)\",\"Emails\":[\"jdoe@cantfind.ws\"],"
+		        + "\"Gender@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.PersonGender\","
+		        + "\"Gender\":\"Male\","
+		        + "\"Concurrency@odata.type\":\"Int64\",\"Concurrency\":1234}";
 		UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
 		        query, expectedPayload, returnResponse, expectedURL, "POST", 201);
 		
@@ -187,7 +192,9 @@ public class TestODataUpdateExecution {
                 "   \"LastName\":\"Whyte\"\n" + 
                 "}";
         String expectedPayload = "{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Location\","
-                + "\"Address@odata.type\":\"String\",\"Address\":\"sesame street\"}";
+                + "\"value\":[{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Location\","
+                + "\"Address@odata.type\":\"String\","
+                + "\"Address\":\"sesame street\"}]}";
         
         //collection needs PUT
         UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),

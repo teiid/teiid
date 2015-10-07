@@ -118,11 +118,16 @@ public class BaseQueryExecution {
         // do some error handling
         try {
             Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-            JsonDeserializer parser = new JsonDeserializer(false);
-            ODataError error = parser.toError(blob.getBinaryStream());            
-            return new TranslatorException(ODataPlugin.Util.gs(
-                    ODataPlugin.Event.TEIID17013, execution.getResponseCode(),
-                    error.getCode(), error.getMessage(), error.getInnerError()));
+            if (blob != null) {
+                JsonDeserializer parser = new JsonDeserializer(false);
+                ODataError error = parser.toError(blob.getBinaryStream());            
+                return new TranslatorException(ODataPlugin.Util.gs(
+                        ODataPlugin.Event.TEIID17013, execution.getResponseCode(),
+                        error.getCode(), error.getMessage(), error.getInnerError()));
+            } else {
+                return new TranslatorException(ODataPlugin.Util.gs(
+                        ODataPlugin.Event.TEIID17031));
+            }
         }
         catch (Throwable t) {
             return new TranslatorException(t);
@@ -168,7 +173,7 @@ public class BaseQueryExecution {
 
     protected Map<String, List<String>> getDefaultHeaders() {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        headers.put("Accept", Arrays.asList(ContentType.JSON_NO_METADATA.toContentTypeString())); //$NON-NLS-1$
+        headers.put("Accept", Arrays.asList(ContentType.JSON.toContentTypeString())); //$NON-NLS-1$
         headers.put("Content-Type", Arrays.asList(
                 ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
         if (this.executionContext != null) {

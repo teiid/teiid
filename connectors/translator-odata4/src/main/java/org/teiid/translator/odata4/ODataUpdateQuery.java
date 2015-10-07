@@ -24,6 +24,7 @@ package org.teiid.translator.odata4;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,6 @@ public class ODataUpdateQuery extends ODataQuery {
     private Map<String, Object> keys = new LinkedHashMap<String, Object>();
     private Map<String, Object> expandKeys = new LinkedHashMap<String, Object>();
     private List<Property> payloadProperties = new ArrayList<Property>();
-    private String method = "POST"; //$NON-NLS-1$
     private Condition condition;
     
     public ODataUpdateQuery(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
@@ -65,33 +65,36 @@ public class ODataUpdateQuery extends ODataQuery {
             uriBuilder.appendKeySegment(this.keys);
         }
         
-        this.method = "POST";
         if (!this.complexTables.isEmpty()) {
-            if (this.complexTables.get(0).isCollection()) {
-                this.method = "PUT";
-            } else {
-                this.method = "PATCH";
-            }
             uriBuilder.appendPropertySegment(this.complexTables.get(0).getName());
         }
         if (!this.expandTables.isEmpty()) {
-            if (!this.expandTables.get(0).isCollection()) {
-                this.method = "PUT";
-            }
             uriBuilder.appendPropertySegment(this.expandTables.get(0).getName());
         }
-//        
-//        if (this.expandKeys.size() == 1) {
-//            uriBuilder.appendKeySegment(this.expandKeys.values().iterator().next());
-//        } else if (!this.expandKeys.isEmpty()){
-//            uriBuilder.appendKeySegment(this.expandKeys);
-//        }
 
         URI uri = uriBuilder.build();
         return uri.toString();
     }
 
-    public String getPayload() throws TranslatorException {
+    public String getInsertMethod() {
+        String method = "POST";
+        if (!this.complexTables.isEmpty()) {
+            if (this.complexTables.get(0).isCollection()) {
+                method = "PUT";
+            } else {
+                method = "PATCH";
+            }
+        }
+        if (!this.expandTables.isEmpty()) {
+            if (!this.expandTables.get(0).isCollection()) {
+                method = "PUT";
+            }
+        }
+        return method;
+    }
+    
+    
+    public String getPayload(Entity parentEntity) throws TranslatorException {
         JsonSerializer serializer = new JsonSerializer(false, ContentType.APPLICATION_JSON);
         StringWriter writer = new StringWriter();
         
@@ -106,7 +109,11 @@ public class ODataUpdateQuery extends ODataQuery {
                 for (Property p:this.payloadProperties) {
                     value.getValue().add(p);
                 }
-                complexProperty.setValue(ValueType.COMPLEX, value);
+                if (this.complexTables.get(0).isCollection()) {
+                    complexProperty.setValue(ValueType.COLLECTION_COMPLEX, Arrays.asList(value));
+                } else {
+                    complexProperty.setValue(ValueType.COMPLEX, value);
+                }
                 serializer.write(writer, complexProperty);                
             } else if (!this.expandTables.isEmpty()) {
                 Table table = this.expandTables.get(0).getTable();
@@ -123,6 +130,14 @@ public class ODataUpdateQuery extends ODataQuery {
                         ODataMetadataProcessor.NAME_IN_SCHEMA, false));            
                 for (Property p:this.payloadProperties) {
                     entity.addProperty(p);
+                }
+                // for updates
+                if (parentEntity != null) {
+                    // add all the key properties.
+                    List<Column> keys = this.rootDocument.getTable().getPrimaryKey().getColumns();
+                    for (Column key: keys) {
+                        entity.addProperty(parentEntity.getProperty(key.getName()));
+                    }
                 }
                 serializer.write(writer, entity);
             }
@@ -177,20 +192,17 @@ public class ODataUpdateQuery extends ODataQuery {
     
     public void addInsertProperty(Column column, String type, Object value) {
         buildKeyColumns(getRootDocument().getTable(), (Table)column.getParent(), column.getName(), value);
-        if (!isPseudo(column)) {
-            this.payloadProperties.add(new Property(type, column.getName(), ValueType.PRIMITIVE, value));
-        }
+        addUpdateProperty(column, type, value);
     }
     
-    public void addUpdateProperty(Table parentTable, Column column, String type, Object value) {
+    public void addUpdateProperty(Column column, String type, Object value) {
+        boolean collection = (value instanceof List<?>);
         if (!isPseudo(column)) {
-            this.payloadProperties.add(new Property(type, column.getName(), ValueType.PRIMITIVE, value));
+            this.payloadProperties.add(new Property(type, column.getName(),
+                    collection ? ValueType.COLLECTION_PRIMITIVE
+                            : ValueType.PRIMITIVE, value));
         }
     }    
-
-    public String getMethod() {
-        return this.method;
-    }
 
     public void setCondition(Condition where) {
         this.condition = where;
@@ -220,8 +232,24 @@ public class ODataUpdateQuery extends ODataQuery {
         return uri.toString();        
     }
 
+    public String getUpdateMethod() {
+        String method = "PATCH";
+        if (!this.complexTables.isEmpty()) {
+            if (this.complexTables.get(0).isCollection()) {
+                method = "PUT";
+            } else {
+                method = "PATCH";
+            }
+        }
+        if (!this.expandTables.isEmpty()) {
+            if (!this.expandTables.get(0).isCollection()) {
+                method = "PUT";
+            }
+        }
+        return method;
+    }
+    
     public String buildUpdateURL(String serviceRoot, List<?> row) {
-        this.method = "PATCH";
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
         uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
         
@@ -237,17 +265,9 @@ public class ODataUpdateQuery extends ODataQuery {
         }
         
         if (!this.complexTables.isEmpty()) {
-            if (this.complexTables.get(0).isCollection()) {
-                this.method = "PUT";
-            } else {
-                this.method = "PATCH";
-            }
             uriBuilder.appendPropertySegment(this.complexTables.get(0).getName());
         }
         if (!this.expandTables.isEmpty()) {
-            if (!this.expandTables.get(0).isCollection()) {
-                this.method = "PUT";
-            }
             uriBuilder.appendPropertySegment(this.expandTables.get(0).getName());
 
             // add keys if present

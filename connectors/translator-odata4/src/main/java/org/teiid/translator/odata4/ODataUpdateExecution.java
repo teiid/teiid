@@ -22,6 +22,7 @@
 package org.teiid.translator.odata4;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -34,8 +35,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.olingo.client.api.serialization.ODataDeserializerException;
 import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.data.Entity;
+import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.Property;
-import org.apache.olingo.commons.api.format.AcceptType;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.GeneratedKeys;
@@ -53,7 +55,7 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 public class ODataUpdateExecution extends BaseQueryExecution implements UpdateExecution {
     private ODataUpdateVisitor visitor;
     private Entity createdEntity;
-    private AtomicInteger updateCount;
+    private AtomicInteger updateCount = new AtomicInteger();
     
     public ODataUpdateExecution(Command command, ODataExecutionFactory translator,
             ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -80,73 +82,86 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
     public void execute() throws TranslatorException {
         ODataUpdateQuery odataQuery = this.visitor.getODataQuery();
         if (this.visitor.getOperationType() == OperationType.DELETE) { //$NON-NLS-1$
-            handleDelete(odataQuery);
+            performUpdateOperation(odataQuery, "DELETE");
         }
         else if(this.visitor.getOperationType() == OperationType.UPDATE) { //$NON-NLS-1$
-            handleUpdate(odataQuery);
+            performUpdateOperation(odataQuery, odataQuery.getUpdateMethod());
         }
         else if (this.visitor.getOperationType() == OperationType.INSERT) { //$NON-NLS-1$
             handleInsert(odataQuery);
         }
     }
 
-    private void handleUpdate(ODataUpdateQuery odataQuery) throws TranslatorException {
+    // TODO: this needs to be submitted as BATCH to be transactionally safe.
+    private void performUpdateOperation(ODataUpdateQuery odataQuery, String method)
+            throws TranslatorException {
         String uri = odataQuery.buildUpdateSelectionURL("");
-        BinaryWSProcedureExecution execution = invokeHTTP("GET",uri,null,getDefaultHeaders());
-        if (execution.getResponseCode() == HttpStatusCode.OK.getStatusCode()) {
-            // TODO: This loop needs to be executed in batch mode, to be transactionally safe
-            while (true) {
-                List<?> row = execution.next();
-                if (row == null) {
-                    break;
+        while (uri != null) {
+            BinaryWSProcedureExecution execution = invokeHTTP("GET",uri,null, getDefaultHeaders());
+            if (execution.getResponseCode() == HttpStatusCode.OK.getStatusCode()) {
+                EntityCollection entities = null;
+                Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+                try {
+                    InputStream response = blob.getBinaryStream();                
+                    if (response != null){
+                        JsonDeserializer serializer = new JsonDeserializer(false);
+                        entities = serializer.toEntitySet(response).getPayload();
+                        URI nextUri = entities.getNext();
+                        if (nextUri != null) {
+                            uri = nextUri.toString();
+                        } else {
+                            uri = null;
+                        }
+                    }
+                } catch (ODataDeserializerException e) {
+                    throw new TranslatorException(e);
+                } catch (SQLException e) {
+                    throw new TranslatorException(e);
                 }
-                String updateUri = odataQuery.buildUpdateURL("", row);
-                executeQuery(odataQuery.getMethod(), updateUri,
-                        odataQuery.getPayload(), null,
-                        new HttpStatusCode[] { HttpStatusCode.NO_CONTENT });
-                this.updateCount.incrementAndGet();
+                
+                if (entities != null && !entities.getEntities().isEmpty()) {
+                    for (Entity entity:entities.getEntities()) {
+                        Link editLink = entity.getEditLink();
+                        Map<String, List<String>> headers = getDefaultUpdateHeaders();
+                        if (entity.getETag() != null) {
+                            headers.put("If-Match", Arrays.asList(entity.getETag())); //$NON-NLS-1$
+                        }
+                        BinaryWSProcedureExecution update = invokeHTTP(
+                                method, 
+                                editLink.getHref(),
+                                method.equals("DELETE")?null:odataQuery.getPayload(entity), 
+                                headers);
+                        if (HttpStatusCode.NO_CONTENT.getStatusCode() == update.getResponseCode()) {
+                            this.updateCount.incrementAndGet();
+                        } else {
+                            throw buildError(update);
+                        }
+                    }
+                }
+            } else {
+                throw buildError(execution);
             }
-        } else {
-            throw buildError(execution);
         }
     }
-    
-    private void handleDelete(ODataUpdateQuery odataQuery) throws TranslatorException {
-        String uri = odataQuery.buildUpdateSelectionURL("");
-        BinaryWSProcedureExecution execution = invokeHTTP("GET",uri,null,getDefaultHeaders());
-        if (execution.getResponseCode() == HttpStatusCode.OK.getStatusCode()) {
-            // TODO: This loop needs to be executed in batch mode, to be transactionally safe
-            while (true) {
-                List<?> row = execution.next();
-                if (row == null) {
-                    break;
-                }
-                String updateUri = odataQuery.buildUpdateURL("", row);
-                executeQuery("DELETE", updateUri,
-                        odataQuery.getPayload(), null,
-                        new HttpStatusCode[] { HttpStatusCode.NO_CONTENT });
-                this.updateCount.incrementAndGet();
-            }
-        } else {
-            throw buildError(execution);
-        }
-    }    
 
+    private Map<String, List<String>> getDefaultUpdateHeaders() {
+        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        headers.put("Accept", Arrays.asList(ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$
+        headers.put("Content-Type", Arrays.asList(ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
+        return headers;
+    }
+    
     private void handleInsert(ODataUpdateQuery odataQuery)
             throws TranslatorException {
         try {
-            Map<String, List<String>> headers = new HashMap<String, List<String>>();
-            headers.put("Accept", Arrays.asList( //$NON-NLS-1$
-                    AcceptType.fromContentType(ContentType.JSON).toString())); 
-            headers.put("Content-Type", Arrays.asList( //$NON-NLS-1$
-                    ContentType.APPLICATION_JSON.toContentTypeString()));  
+            Map<String, List<String>> headers = getDefaultUpdateHeaders();
             headers.put("Prefer", Arrays.asList("return=representation")); //$NON-NLS-1$ 
               
             String uri = odataQuery.buildInsertURL("");
             InputStream response = null;
-            BinaryWSProcedureExecution execution = invokeHTTP(odataQuery.getMethod(), 
+            BinaryWSProcedureExecution execution = invokeHTTP(odataQuery.getInsertMethod(), 
                     uri, 
-                    odataQuery.getPayload(), 
+                    odataQuery.getPayload(null), 
                     headers);
             
             // 201 - the created entity returned

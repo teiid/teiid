@@ -178,7 +178,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     public void visit(ColumnReference obj) {
         Column column = obj.getMetadataObject();
         // check if the column on psedo column, then move it to the parent.
-        String pseudo = getPseudo(column);
+        String pseudo = ODataMetadataProcessor.getPseudo(column);
         
         this.exprType.push(odataType(column.getNativeType(), column.getRuntimeType()));
         
@@ -186,7 +186,8 @@ public class ODataFilterVisitor extends HierarchyVisitor {
         if (pseudo != null) {
             try {
                 Table columnParent = (Table)column.getParent();
-                Table pseudoColumnParent = this.metadata.getTable(getMerge(columnParent));
+                Table pseudoColumnParent = this.metadata.getTable(
+                        ODataMetadataProcessor.getMerge(columnParent));
                 schemaElement = this.query.getSchemaElement(pseudoColumnParent);
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
@@ -213,15 +214,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
             }
         }        
     }
-
-    private String getPseudo(Column column) {
-        return column.getProperty(ODataMetadataProcessor.PSEUDO, false);
-    }
-    
-    private String getMerge(Table table) {
-        return table.getProperty(ODataMetadataProcessor.MERGE, false);
-    }    
-    
+        
     protected boolean isInfixFunction(String function) {
         return infixFunctions.containsKey(function);
     }

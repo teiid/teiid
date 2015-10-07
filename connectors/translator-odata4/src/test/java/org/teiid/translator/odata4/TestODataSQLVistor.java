@@ -236,7 +236,7 @@ public class TestODataSQLVistor {
     @Test
     public void testSelectFromComplexTable() throws Exception {
         helpExecute("SELECT * FROM People_AddressInfo where Address = 'foo'", 
-                "People?$select=AddressInfo&$filter=AddressInfo/Address eq 'foo'");
+                "People?$select=UserName,AddressInfo&$filter=AddressInfo/Address eq 'foo'");
     }     
     
 }

@@ -133,10 +133,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             append(obj.getRightItem());
             Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
             try {
-                if (ODataMetadataProcessor.isComplexType(left) || 
-                        ODataMetadataProcessor.isNavigationType(left)) {
-                    throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17027, left.getName()));
-                }                
                 updated = this.odataQuery.addNavigation(obj.getCondition(), obj.getJoinType(), left);
                 obj.setCondition(updated);
                 if (updated != null) {
@@ -175,7 +171,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             this.odataQuery.setTop(new Integer(obj.getRowLimit()));
         }
     }
-    
 
     @Override
     public void visit(OrderBy obj) {
@@ -188,7 +183,12 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             this.orderBy.append(Tokens.COMMA);
         }
         ColumnReference column = (ColumnReference)obj.getExpression();
-        this.orderBy.append(column.getMetadataObject().getName());
+        try {
+            Column c = normalizePseudoColumn(column.getMetadataObject());
+            this.orderBy.append(c.getName());
+        } catch (TranslatorException e) {
+            this.exceptions.add(e);
+        }
         // default is ascending
         if (obj.getOrdering() == Ordering.DESC) {
             this.orderBy.append(Tokens.SPACE).append(DESC.toLowerCase());
@@ -212,7 +212,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
                 this.exceptions.add(new TranslatorException(ODataPlugin.Util
                         .gs(ODataPlugin.Event.TEIID17006, column.getName())));
             }
-            this.projectedColumns.add(column);
+            try {
+                this.projectedColumns.add(normalizePseudoColumn(column));
+            } catch (TranslatorException e) {
+                this.exceptions.add(e);
+            }
         }
         else if (obj.getExpression() instanceof AggregateFunction) {
             AggregateFunction func = (AggregateFunction)obj.getExpression();
@@ -226,6 +230,21 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         else {
             this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17008)));
         }
+    }
+    
+    private Column normalizePseudoColumn(Column column) throws TranslatorException {
+        String pseudo = ODataMetadataProcessor.getPseudo(column);
+        if (pseudo != null) {
+            try {
+                Table columnParent = (Table)column.getParent();
+                Table pseudoColumnParent = this.metadata.getTable(
+                        ODataMetadataProcessor.getMerge(columnParent));
+                return pseudoColumnParent.getColumnByName(pseudo);
+            } catch (TranslatorException e) {
+                this.exceptions.add(e);
+            }
+        }
+        return column;
     }
 
     public void append(LanguageObject obj) {

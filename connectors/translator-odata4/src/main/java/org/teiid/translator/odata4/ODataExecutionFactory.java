@@ -79,6 +79,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     private boolean supportsOdataCount;
     private boolean supportsOdataSkip;
     private boolean supportsOdataTop;
+    private boolean supportsUpdates = true;
     private XMLMetadata serviceMatadata;
 
     public ODataExecutionFactory() {
@@ -92,8 +93,8 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         setSupportsOdataCount(true);
         setSupportsOdataFilter(true);
         setSupportsOdataOrderBy(true);
-        setSupportsOdataSkip(true);
-        setSupportsOdataTop(true);
+        setSupportsOdataSkip(false); // based on document based on cursoring, this will not be correct 
+        setSupportsOdataTop(false);
         
         registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("indexof")); //$NON-NLS-1$
@@ -186,7 +187,11 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public UpdateExecution createUpdateExecution(Command command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             WSConnection connection) throws TranslatorException {
-        return new ODataUpdateExecution(command, this, executionContext,metadata, connection);
+        if (supportsUpdates()) {
+            return new ODataUpdateExecution(command, this, executionContext,metadata, connection);
+        } else {
+            throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17030));
+        }
     }
 
     @Override
@@ -288,7 +293,18 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     
     public void setSupportsOdataTop(boolean supports) {
         this.supportsOdataTop = supports;
-    }    
+    }   
+    
+    @TranslatorProperty(display="Supports Updates", 
+            description="True, if(PUT,PATCH,DELETE) operations supported", 
+            advanced=true)
+    public boolean supportsUpdates() {
+        return supportsUpdates;
+    }
+    
+    public void setSupportsUpdates(boolean supports) {
+        this.supportsUpdates = supports;
+    }     
     
     @Override
     public boolean supportsCompareCriteriaEquals() {

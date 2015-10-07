@@ -600,5 +600,27 @@ public class TestODataQueryExecution {
         assertArrayEquals(new Object[] {"China", "Newyork", "NY"}, 
                 excution.next().toArray(new Object[3]));
         assertNull(excution.next());
-    }     
+    }
+
+    @Test
+    public void testReadComplexType() throws Exception {
+        String query = "select pa.People_UserName, pa.Address from People_AddressInfo pa ";
+        String expectedURL = "People?$select=UserName,AddressInfo";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln."}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr."}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"javieralfred", "89 Jefferson Way Suite 2"}, 
+                excution.next().toArray(new Object[2]));
+        assertArrayEquals(new Object[] {"vincentcalabrese", "55 Grizzly Peak Rd."}, 
+                excution.next().toArray(new Object[2]));
+        assertNull(excution.next());
+        
+    }    
 }

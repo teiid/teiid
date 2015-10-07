@@ -123,8 +123,8 @@ public class TestODataMetadataProcessor {
         props.setProperty("schemaNamespace", "Microsoft.OData.SampleService.Models.TripPin");
         MetadataFactory mf = new MetadataFactory("vdb", 1, "trippin", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         processor.process(mf, null);
-        //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl);    
+//        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+//        System.out.println(ddl);    
         
         return mf;
     }
@@ -293,7 +293,7 @@ public class TestODataMetadataProcessor {
 		
 		assertNotNull(addressTable.getColumnByName("ssn"));
 		assertNotNull(addressTable.getColumnByName("ssn").getProperty(ODataMetadataProcessor.PSEUDO, false));
-		assertFalse(addressTable.getColumnByName("ssn").isSelectable());
+		assertTrue(addressTable.getColumnByName("ssn").isSelectable());
         assertEquals(1, addressTable.getForeignKeys().size());
         assertEquals("Persons", addressTable.getForeignKeys().get(0).getReferenceTableName());
 	}

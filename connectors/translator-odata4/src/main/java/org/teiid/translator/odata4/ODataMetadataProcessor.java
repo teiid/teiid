@@ -49,6 +49,7 @@ import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.edm.provider.CsdlSingleton;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataFactory;
@@ -268,6 +269,14 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             addComplexPropertyAsTable(mf, property, childType, metadata, table);
         }
     }
+    
+    static String getPseudo(Column column) {
+        return column.getProperty(ODataMetadataProcessor.PSEUDO, false);
+    }
+    
+    static String getMerge(Table table) {
+        return table.getProperty(ODataMetadataProcessor.MERGE, false);
+    }    
     
     static boolean isComplexType(Table table) {
         ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
@@ -512,7 +521,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(targetColumnName);
                 if (c == null) {
                     c = addColumn(mf, childTable, column, targetColumnName);
-                    c.setSelectable(false);
                     c.setProperty(PSEUDO, column.getName());
                 } else {
                     targetColumnName = column.getName();
@@ -522,7 +530,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 Column c = mf.getSchema().getTable(childTable.getName()).getColumnByName(column.getName());
                 if (c == null) {
                     c = addColumn(mf, childTable, column, targetColumnName);
-                    c.setSelectable(false);
                     c.setProperty(PSEUDO, column.getName());
                 } else {
                     targetColumnName = column.getName();
@@ -619,7 +626,14 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             c.setProperty("SRID", property.getSrid().toString());
         }
         if (!property.getType().equals("Edm.String")) {
-            c.setProperty("NATIVE_TYPE", property.getType());
+            if (property.isCollection()) {
+                c.setNativeType("Collection("+property.getType()+")");
+            } else {
+                c.setNativeType(property.getType());
+            }
+        }
+        if (property.getType().equals("Edm.String") && property.isCollection()) {
+            c.setNativeType("Collection("+property.getType()+")");
         }        
         return c;
     }
@@ -667,6 +681,9 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         String columnName = property.getName();
         Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(property.getType(), 
                 property.isCollection()), table);
+        if(property.isCollection()) {
+            c.setSearchType(SearchType.Unsearchable);
+        }
         c.setUpdatable(true);
         return c;
     }
