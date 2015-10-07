@@ -31,6 +31,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.util.CommandContext;
 
 
@@ -98,7 +99,7 @@ public class Sum extends SingleArgumentAggregateFunction {
     	
         switch(this.accumulatorType) {        
             case LONG:
-                this.sumLong += ((Number)input).longValue();
+                this.sumLong = FunctionMethods.plus(this.sumLong, ((Number)input).longValue());
                 break;
             case DOUBLE:
                 this.sumDouble += ((Number)input).doubleValue();
