@@ -81,21 +81,20 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
     @Override
     public void execute() throws TranslatorException {
         
-        String method = this.procedure.getMetadataObject().getProperty("httpAction", false);
+        String method = this.procedure.getMetadataObject().getProperty("httpAction", false); //$NON-NLS-1$
+        Object payload = null;
         
         List<Argument> arguments = this.procedure.getArguments();
-        Object payload = arguments.size() > 0 ? arguments.get(0).getArgumentValue().getValue() : null ;
-        String endpoint = formPath(this.procedure.getMetadataObject().getProperty("httpHost", false), 
-                                   this.procedure.getMetadataObject().getProperty("restBaseUrl", false),
+        if(!method.equals("GET")){ //$NON-NLS-1$
+            payload = arguments.size() > 0 ? arguments.get(0).getArgumentValue().getValue() : null ;
+        }
+        String endpoint = formPath(this.procedure.getMetadataObject().getProperty("httpHost", false), //$NON-NLS-1$
+                                   this.procedure.getMetadataObject().getProperty("restBaseUrl", false), //$NON-NLS-1$
                                    this.procedure.getProcedureName(),
                                    arguments);
         
         try {
             Dispatch<DataSource> dispatch = this.conn.createDispatch(HTTPBinding.HTTP_BINDING, endpoint, DataSource.class, Mode.MESSAGE);
-
-            if (method == null) {
-                method = "POST"; //$NON-NLS-1$
-            }
 
             dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, method);
             if (payload != null && !"POST".equalsIgnoreCase(method) && !"PUT".equalsIgnoreCase(method) && !"PATCH".equalsIgnoreCase(method)) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -156,8 +155,8 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
     private String formPath(String httpHost, String baseUrl, String procedureName, List<Argument> arguments) {
         String path = null;
-        String pathSeparator = this.procedure.getMetadataObject().getProperty("pathSeparator", false);
-        String catalogSeparator = this.procedure.getMetadataObject().getProperty("catalogSeparator", false);
+        String pathSeparator = this.procedure.getMetadataObject().getProperty("pathSeparator", false); //$NON-NLS-1$
+        String catalogSeparator = this.procedure.getMetadataObject().getProperty("catalogSeparator", false); //$NON-NLS-1$
         
         if(httpHost.endsWith(pathSeparator)) {
             httpHost = httpHost.substring(0, httpHost.length() -1);
@@ -180,7 +179,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         
         for(Argument argument : arguments){
             ProcedureParameter parameter = argument.getMetadataObject();
-            String isPathParam = parameter.getProperty("isPathParam", false);
+            String isPathParam = parameter.getProperty("isPathParam", false); //$NON-NLS-1$
             if(isPathParam.equals("true")){
                 if(!path.endsWith(pathSeparator)){
                     path += pathSeparator;
@@ -215,7 +214,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
-        return Arrays.asList(result, this.returnValue.getContentType());
+        return Arrays.asList(result/*, this.returnValue.getContentType()*/);
     }
     
     public void setCustomHeaders(Map<String, List<String>> customHeaders) {

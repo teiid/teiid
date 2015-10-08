@@ -17,6 +17,7 @@
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid" />
         <module name="javax.wsdl4j.api"/>
+        <module name="io.swagger.parser"/>
         <module name="org.springframework.spring" optional="true"/>  
     </dependencies>
 </module>

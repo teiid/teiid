@@ -49,10 +49,11 @@ import io.swagger.parser.SwaggerParser;
 
 public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>{
     
+    private String httpHost = "http://localhost:8080"; //$NON-NLS-1$
+    
     private String pathSeparator = File.separator; 
     private String paramParenthesis = "{"; //$NON-NLS-1$
     private String catalogSeparator = "_"; //$NON-NLS-1$
-    private String httpHost = "http://localhost:8080"; //$NON-NLS-1$
     
     private String isPathParamPropertyKey = "isPathParam"; //$NON-NLS-1$
     private String actionPropertyKey = "httpAction"; //$NON-NLS-1$
@@ -88,7 +89,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             procedure.setProperty(catalogSeparatorPropertyKey, catalogSeparator);
             procedure.setProperty(httpHostPropertyKey, httpHost);
             
-            mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, procedure); //$NON-NLS-1$
+            mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, procedure); //$NON-NLS-1$            
             
             for(Parameter parameter : getApiParams(path)) {
                 String name = parameter.getName();
@@ -119,7 +120,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         } else if (path.getPost() != null) {
             return "POST";
         }
-        //TODO-- add support more action
+        //TODO-- add support more action: PATCH, PUT
         return null;
     }
 
@@ -151,32 +152,15 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return path.replace(pathSeparator, catalogSeparator);
     }
 
-    @TranslatorProperty(display = "API Path Separator", category = PropertyType.IMPORT, description = "Path Separator, '\' for windows, '/' for linux")
-    public String getPathSeparator() {
-        return pathSeparator;
+    @TranslatorProperty(display = "HttpHost", category = PropertyType.IMPORT, description = "Rest Service Server Http Host")
+    public String getHttpHost() {
+        return httpHost;
     }
 
-    public void setPathSeparator(String pathSeparator) {
-        this.pathSeparator = pathSeparator;
+    public void setHttpHost(String httpHost) {
+        this.httpHost = httpHost;
     }
 
-    @TranslatorProperty(display = "Catalog Separator", category = PropertyType.IMPORT, description = "Default is a dot '.', which determine the procedure pattern, for example, by default, rest api '/customer/getById/{id}' will be convert to 'customer.getById(String id)'")
-    public String getCatalogSeparator() {
-        return catalogSeparator;
-    }
-
-    public void setCatalogSeparator(String catalogSeparator) {
-        this.catalogSeparator = catalogSeparator;
-    }
-
-    @TranslatorProperty(display = "PathParam Property Key", category = PropertyType.IMPORT, description = "Can be any String constant, used to set ProcedureParameter's Property Key, which determine whether API paramter is PathParam or QueryParam")
-    public String getIsPathParamPropertyKey() {
-        return isPathParamPropertyKey;
-    }
-
-    public void setIsPathParamPropertyKey(String isPathParamPropertyKey) {
-        this.isPathParamPropertyKey = isPathParamPropertyKey;
-    }
 
     
 }

@@ -94,7 +94,7 @@
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.4.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
-	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
+	    <version.swagger-jaxrs>1.5.3</version.swagger-jaxrs>
 	    <version.swagger-parser>1.0.10</version.swagger-parser>
 	    <version.narayana>5.0.4.Final</version.narayana>
 	    <version.org.apache.httpcomponents.httpcore-nio>4.2.4</version.org.apache.httpcomponents.httpcore-nio>

@@ -23,6 +23,14 @@
   
   <dependencySets>
       <dependencySet>
+          <includes>
+              <include>io.swagger:swagger-parser</include>
+          </includes>
+          <outputDirectory>${jbossas-module-root}/io/swagger/parser/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <useTransitiveFiltering>false</useTransitiveFiltering>
+      </dependencySet>
+      <dependencySet>
           <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/ws/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>

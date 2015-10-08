@@ -6,22 +6,17 @@
     </properties>
     
     <resources>
-        <resource-root path="swagger-annotations-${version.swagger-jaxrs}.jar" />
-        <resource-root path="swagger-core-${version.swagger-jaxrs}.jar" />
         <resource-root path="swagger-jaxrs-${version.swagger-jaxrs}.jar" />
-        <resource-root path="swagger-models-${version.swagger-jaxrs}.jar" />
     </resources>
     
     <dependencies>
+        <module name="io.swagger.core" export="true" />
         <module name="com.fasterxml.jackson" />
         <module name="com.fasterxml.jackson.dataformat.yaml" />
         <module name="com.fasterxml.jackson.dataformat.xml" />
-        <module name="com.fasterxml.jackson.datatype" />
         <module name="com.fasterxml.jackson.jaxrs" />
         <module name="com.google.guava" />  
-        <module name="org.apache.commons.lang" slot="3.3.2"/>
         <module name="org.reflections" /> 
-        <module name="org.slf4j"/>
         <module name="javax.ws.rs.api"/>
         <module name="javax.servlet.api"/>
         <module name="javax.xml.bind.api"/>
