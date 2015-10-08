@@ -232,7 +232,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     	if (command instanceof Select) {
     		Select select = (Select)command;
     		//compensate for an impala issue - https://issues.jboss.org/browse/TEIID-3743
-    		if (select.getGroupBy() == null) {
+    		if (select.getGroupBy() == null && select.getHaving() == null) {
     			boolean rewrite = false;
     			String distinctVal = null;
     			for (DerivedColumn col : select.getDerivedColumns()) {
@@ -254,7 +254,8 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     				Select viewSelect = new Select();
     				viewSelect.setFrom(select.getFrom());
     				viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
-        			distinctVal = null;
+    				viewSelect.setWhere(select.getWhere());
+    				distinctVal = null;
         			int viewCount = 0;
         			NamedTable view = new NamedTable("v" + viewCount++, null, null); //$NON-NLS-1$
         			for (int i = 0; i < select.getDerivedColumns().size(); i++) {
@@ -274,6 +275,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         						viewSelect = new Select();
         						viewSelect.setFrom(select.getFrom());
         						viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
+        						viewSelect.setWhere(select.getWhere());
         						distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
         					}
         				}
