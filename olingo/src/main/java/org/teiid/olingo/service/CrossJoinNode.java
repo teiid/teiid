@@ -21,44 +21,35 @@
  */
 package org.teiid.olingo.service;
 
+import java.util.List;
+
 import org.apache.olingo.commons.api.edm.EdmEntityType;
-import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.server.api.uri.UriInfo;
+import org.apache.olingo.server.api.uri.UriParameter;
 import org.teiid.core.TeiidException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 
 
-public class ExpandResource extends EntityResource{
-    private String navigationName;
-    private boolean collection;
-    
-    public static ExpandResource buildExpand(EdmNavigationProperty property,
-            MetadataStore metadata, UniqueNameGenerator nameGenerator,
-            boolean useAlias, UriInfo uriInfo, URLParseService parseService) throws TeiidException {
-        
-        EdmEntityType type = property.getType();
-        ExpandResource resource = new ExpandResource();
+public class CrossJoinNode extends DocumentNode {
+    private boolean expand;
+
+    public static CrossJoinNode buildCrossJoin(EdmEntityType type,
+            List<UriParameter> keyPredicates, MetadataStore metadata,
+            UniqueNameGenerator nameGenerator, boolean useAlias,
+            UriInfo uriInfo, URLParseService parseService, boolean expand) throws TeiidException {
+        CrossJoinNode resource = new CrossJoinNode();
         build(resource, type, null, metadata, nameGenerator, useAlias, uriInfo, parseService);
-        resource.setNavigationName(property.getName());
-        resource.setCollection(property.isCollection());
+        resource.setExpand(expand);
         return resource;
     }
     
-    public String getNavigationName() {
-        return navigationName;
+    public boolean hasExpand() {
+        return expand;
     }
-    
-    public void setNavigationName(String navigationName) {
-        this.navigationName = navigationName;
+
+    public void setExpand(boolean expand) {
+        this.expand = expand;
     }
-    
-    public boolean isCollection() {
-        return collection;
-    }
-    
-    public void setCollection(boolean collection) {
-        this.collection = collection;
-    } 
 }

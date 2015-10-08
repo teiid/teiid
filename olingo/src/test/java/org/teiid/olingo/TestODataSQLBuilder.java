@@ -50,8 +50,8 @@ import org.teiid.odata.api.Client;
 import org.teiid.odata.api.CountResponse;
 import org.teiid.odata.api.OperationResponse;
 import org.teiid.odata.api.SQLParameter;
-import org.teiid.olingo.service.EntityList;
-import org.teiid.olingo.service.OData4EntitySchemaBuilder;
+import org.teiid.olingo.service.EntityCollectionResponse;
+import org.teiid.olingo.service.ODataSchemaBuilder;
 import org.teiid.olingo.service.TeiidServiceHandler;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.ParseInfo;
@@ -102,7 +102,7 @@ public class TestODataSQLBuilder {
     static class QueryState extends BaseState {
         List<SQLParameter> parameters;
         ArgumentCaptor<Query> arg1;
-        ArgumentCaptor<EntityList> arg6;        
+        ArgumentCaptor<EntityCollectionResponse> arg6;        
     }
     
     static class UpdateState extends BaseState {
@@ -135,7 +135,7 @@ public class TestODataSQLBuilder {
 
         OData odata = OData4Impl.newInstance();
         org.teiid.metadata.Schema teiidSchema = store.getSchema("PM1");
-        CsdlSchema schema = OData4EntitySchemaBuilder.buildMetadata("vdb", teiidSchema);
+        CsdlSchema schema = ODataSchemaBuilder.buildMetadata("vdb", teiidSchema);
         SchemaBasedEdmProvider edmProvider = new SchemaBasedEdmProvider();
         edmProvider.addSchema(schema);
         
@@ -201,7 +201,7 @@ public class TestODataSQLBuilder {
         Client client = state.client;
         
         ArgumentCaptor<Query> arg1 = ArgumentCaptor.forClass(Query.class);
-        ArgumentCaptor<EntityList> arg6 = ArgumentCaptor.forClass(EntityList.class);
+        ArgumentCaptor<EntityCollectionResponse> arg6 = ArgumentCaptor.forClass(EntityCollectionResponse.class);
         List<SQLParameter> parameters = new ArrayList<SQLParameter>();
         
         if (sqlExpected != null) {

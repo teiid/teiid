@@ -59,7 +59,7 @@ public class OperationResponseImpl implements OperationResponse {
             EdmPropertyImpl edmProperty = (EdmPropertyImpl) element;
             Property property;
             try {
-                property = EntityList.buildPropery(propName,
+                property = EntityCollectionResponse.buildPropery(propName,
                         (SingletonPrimitiveType) edmProperty.getType(), edmProperty.isCollection(), value,
                         invalidCharacterReplacement);
                 properties.put(i, property);

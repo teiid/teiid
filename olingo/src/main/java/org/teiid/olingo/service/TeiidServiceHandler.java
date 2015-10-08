@@ -30,7 +30,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -264,7 +263,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             response.writeHeader(PREFERENCE_APPLIED,
                     ODATA_MAXPAGESIZE+"="+ request.getPreference(ODATA_MAXPAGESIZE)); //$NON-NLS-1$
         }
-        EntityList result = (EntityList)queryResponse;
+        EntityCollectionResponse result = (EntityCollectionResponse)queryResponse;
         if (result.getNextToken() != null) {
             try {
                 result.setNext(new URI(request.getODataRequest().getRawRequestUri()
@@ -315,12 +314,12 @@ public class TeiidServiceHandler implements ServiceHandler {
                 }
             }
 
-            QueryResponse result = new EntityList(getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
+            QueryResponse result = new EntityCollectionResponse(getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
                     visitor.getContext());
             
-            if (visitor.getContext() instanceof CrossJoinResource) {
+            if (visitor.getContext() instanceof CrossJoinNode) {
                 result = new CrossJoinResult(getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
-                        (CrossJoinResource)visitor.getContext());
+                        (CrossJoinNode)visitor.getContext());
             }
 
             getClient().executeSQL(query, visitor.getParameters(),
@@ -410,7 +409,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                                 entity, updateResponse.getGeneratedKeys(), deepInsertNames(entityType, entity));
                 LogManager.logDetail(LogConstants.CTX_ODATA, null, "created entity = ", entityType.getName(), " with key=", query.getCriteria().toString()); //$NON-NLS-1$ //$NON-NLS-2$
                 
-                EntityList result = new EntityList(getClient().getProperty(
+                EntityCollectionResponse result = new EntityCollectionResponse(getClient().getProperty(
                         Client.INVALID_CHARACTER_REPLACEMENT),
                         visitor.getContext());
                 
@@ -844,10 +843,10 @@ public class TeiidServiceHandler implements ServiceHandler {
                 request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
         visitor.visit(request.getUriInfo());
         
-        final EntityList queryResponse;
+        final EntityCollectionResponse queryResponse;
         try {
             Query query = visitor.selectQuery();
-            queryResponse = (EntityList)executeQuery(request, visitor, query);
+            queryResponse = (EntityCollectionResponse)executeQuery(request, visitor, query);
         } catch (Exception e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),

@@ -56,16 +56,16 @@ import org.teiid.olingo.ODataTypeManager;
 import org.teiid.olingo.ProjectedColumn;
 import org.teiid.query.sql.symbol.Symbol;
 
-public class EntityList extends EntityCollection implements QueryResponse {
+public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
     private final String invalidCharacterReplacement;
     private String nextToken;
     private Entity currentEntity;
-    private EntityResource resource;
+    private DocumentNode documentNode;
 
-    public EntityList(String invalidCharacterReplacement,
-            EntityResource resource) {
+    public EntityCollectionResponse(String invalidCharacterReplacement,
+            DocumentNode resource) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
-        this.resource = resource;
+        this.documentNode = resource;
     }
     
     @Override
@@ -74,50 +74,50 @@ public class EntityList extends EntityCollection implements QueryResponse {
         boolean add = true;
         
         if (this.currentEntity == null) {
-            entity = createEntity(rs, this.resource.getEdmEntityType(),
-                    this.resource.getAllProjectedColumns(),
-                    this.invalidCharacterReplacement);
+            entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
             this.currentEntity = entity;
-        }
-        else if(isSameRow(rs, this.resource.getAllProjectedColumns(),
-                this.resource.getEdmEntityType(), this.currentEntity)) {
-            entity = this.currentEntity;
-            add = false;
+        } else {
+            if(isSameRow(rs, this.documentNode, this.currentEntity)) {
+                entity = this.currentEntity;
+                add = false;
+            } else {
+                entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
+                this.currentEntity = entity;            
+            }
         }
         
-        if (this.resource.getExpands() != null && !this.resource.getExpands().isEmpty()) {
-            for (EntityResource resource : this.resource.getExpands()) {
-                ExpandResource expandResource = (ExpandResource)resource;
-                Entity expand = createEntity(rs, expandResource.getEdmEntityType(),
-                        expandResource.getProjectedColumns(),
-                        this.invalidCharacterReplacement);
+        if (this.documentNode.getExpands() != null && !this.documentNode.getExpands().isEmpty()) {
+            // right now it can do only one expand, when more than one this logic
+            // need to be re-done.
+            for (DocumentNode resource : this.documentNode.getExpands()) {
+                ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
+                Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement);
                 
-                Link link = entity.getNavigationLink(expandResource.getNavigationName());
-                if (expandResource.isCollection()) {
+                Link link = entity.getNavigationLink(expandNode.getNavigationName());
+                if (expandNode.isCollection()) {
                     if (link.getInlineEntitySet() == null) {
                         link.setInlineEntitySet(new EntityCollection());
                     }
-                    link.getInlineEntitySet().getEntities().add(expand);
+                    link.getInlineEntitySet().getEntities().add(expandEntity);
                 }
                 else {
-                    link.setInlineEntity(expand);  
+                    link.setInlineEntity(expandEntity);  
                 }   
             }
-        }
-        else if (!add) {
-            // this is property update incase of collection return 
-            updateEntity(rs, entity, this.resource.getEdmEntityType(),
-                    this.resource.getAllProjectedColumns(),
-                    this.invalidCharacterReplacement);
         }
         
         if (add) {
             getEntities().add(entity);
+        } else {
+            // this is property update incase of collection return 
+            updateEntity(rs, entity, this.documentNode, this.invalidCharacterReplacement);            
         }
     }
     
-    private boolean isSameRow(ResultSet rs, List<ProjectedColumn> projected,
-            EdmEntityType entityType, Entity other) throws SQLException {
+    private boolean isSameRow(ResultSet rs,  DocumentNode node, Entity other) throws SQLException {
+        
+        List<ProjectedColumn> projected = node.getAllProjectedColumns();
+        EdmEntityType entityType = node.getEdmEntityType();
         
         for (String name:entityType.getKeyPredicateNames()) {
             ProjectedColumn pc = getProjectedColumn(name, projected);
@@ -138,9 +138,11 @@ public class EntityList extends EntityCollection implements QueryResponse {
         return null;
     }
 
-    static Entity createEntity(ResultSet rs, EdmEntityType entityType,
-            List<ProjectedColumn> projected, String invalidChar)
+    static Entity createEntity(ResultSet rs, DocumentNode node, String invalidChar)
             throws SQLException {
+        
+        List<ProjectedColumn> projected = node.getAllProjectedColumns();
+        EdmEntityType entityType = node.getEdmEntityType();
         
         LinkedHashMap<String, Link> streamProperties = new LinkedHashMap<String, Link>();
         
@@ -208,9 +210,11 @@ public class EntityList extends EntityCollection implements QueryResponse {
         return entity;
     }    
     
-    private static void updateEntity(ResultSet rs, Entity entity, EdmEntityType entityType,
-            List<ProjectedColumn> projected, String invalidChar)
+    private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node, String invalidChar)
             throws SQLException {
+        
+        List<ProjectedColumn> projected = node.getAllProjectedColumns();
+        EdmEntityType entityType = node.getEdmEntityType();
         
         for (ProjectedColumn column: projected) {
 

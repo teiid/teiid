@@ -491,7 +491,9 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
-            mmd.addSourceMetadata("DDL", "create view x (a string primary key, b integer[], c string[][]) as select 'x', (1, 2, 3), (('a','b'),('c','d'));");
+            mmd.addSourceMetadata("DDL", "create view x (a string primary key, b integer[], c string[][]) "
+                    + "as select 'x', (1, 2, 3), (('a','b'),('c','d')) union "
+                    + "select 'y', (4, 5, 6), (('x','y'),('z','u'));");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -499,7 +501,10 @@ public class TestODataIntegration {
 
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json&$select=a,b");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x(a,b)\",\"value\":[{\"a\":\"x\",\"b\":[1,2,3]}]}", response.getContentAsString());
+            assertEquals(
+                    "{\"@odata.context\":\"$metadata#x(a,b)\","
+                    + "\"value\":[{\"a\":\"x\",\"b\":[1,2,3]},{\"a\":\"y\",\"b\":[4,5,6]}]}",
+                    response.getContentAsString());
 
             response = http.GET(baseURL + "/northwind/vw/x?$format=json");
             assertEquals(500, response.getStatus());
@@ -527,11 +532,11 @@ public class TestODataIntegration {
 
             localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
 
-//            ContentResponse response = http.GET(baseURL + "/northwind/vw/x('x')/c?$filter=endswith($it,'com')");
-//            assertEquals(200, response.getStatus());
-//            assertEquals("{\"@odata.context\":\"$metadata#x('x')/c\",\"value\":[\"google.com\"]}", response.getContentAsString());
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x('x')/c?$filter=endswith($it,'com')");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x('x')/c\",\"value\":[\"google.com\"]}", response.getContentAsString());
 
-            ContentResponse response = http.GET(baseURL + "/northwind/vw/x('y')/c?$filter=startswith($it,'example')");
+            response = http.GET(baseURL + "/northwind/vw/x('y')/c?$filter=startswith($it,'example')");
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#x('y')/c\",\"value\":[\"example.net\",\"example.com\"]}", response.getContentAsString());
         } finally {
@@ -918,13 +923,11 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#z\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
             
-            /* OLINGO-650
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX/a&$select=a")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#z(a,FKX/a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
-            */            
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -975,30 +978,32 @@ public class TestODataIntegration {
                     .send();
 
             assertEquals(202, response.getStatus());
-//            String expected = "--batch_d06279e4-c510-46ed-a778-e4e941dfd6f1\n" + 
-//                    "Content-Type: application/http\n" + 
-//                    "Content-Transfer-Encoding: binary\n" + 
-//                    "\n" + 
-//                    "HTTP/1.1 200 OK\n" + 
-//                    "Content-Type: application/json;odata.metadata=minimal\n" + 
-//                    "Content-Length: 78\n" + 
-//                    "\n" + 
-//                    "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"c\":0}]}\n" + 
-//                    "--batch_d06279e4-c510-46ed-a778-e4e941dfd6f1\n" + 
-//                    "Content-Type: multipart/mixed; boundary=changeset_5a1cba47-b51f-46c2-b0ac-ead23fa7706d\n" + 
-//                    "\n" + 
-//                    "--changeset_5a1cba47-b51f-46c2-b0ac-ead23fa7706d\n" + 
-//                    "Content-Type: application/http\n" + 
-//                    "Content-Transfer-Encoding: binary\n" + 
-//                    "Content-Id: 1\n" + 
-//                    "\n" + 
-//                    "HTTP/1.1 204 No Content\n" + 
-//                    "Content-Length: 0\n" + 
-//                    "\n" + 
-//                    "\n" + 
-//                    "--changeset_5a1cba47-b51f-46c2-b0ac-ead23fa7706d--\n" + 
-//                    "--batch_d06279e4-c510-46ed-a778-e4e941dfd6f1--";
-//            assertEquals(expected, response.getContentAsString());
+            /*
+            String expected = "--batch_d06279e4-c510-46ed-a778-e4e941dfd6f1\n" + 
+                    "Content-Type: application/http\n" + 
+                    "Content-Transfer-Encoding: binary\n" + 
+                    "\n" + 
+                    "HTTP/1.1 200 OK\n" + 
+                    "Content-Type: application/json;odata.metadata=minimal\n" + 
+                    "Content-Length: 78\n" + 
+                    "\n" + 
+                    "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"c\":0}]}\n" + 
+                    "--batch_d06279e4-c510-46ed-a778-e4e941dfd6f1\n" + 
+                    "Content-Type: multipart/mixed; boundary=changeset_5a1cba47-b51f-46c2-b0ac-ead23fa7706d\n" + 
+                    "\n" + 
+                    "--changeset_5a1cba47-b51f-46c2-b0ac-ead23fa7706d\n" + 
+                    "Content-Type: application/http\n" + 
+                    "Content-Transfer-Encoding: binary\n" + 
+                    "Content-Id: 1\n" + 
+                    "\n" + 
+                    "HTTP/1.1 204 No Content\n" + 
+                    "Content-Length: 0\n" + 
+                    "\n" + 
+                    "\n" + 
+                    "--changeset_5a1cba47-b51f-46c2-b0ac-ead23fa7706d--\n" + 
+                    "--batch_d06279e4-c510-46ed-a778-e4e941dfd6f1--";
+            assertEquals(expected, response.getContentAsString());
+            */
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

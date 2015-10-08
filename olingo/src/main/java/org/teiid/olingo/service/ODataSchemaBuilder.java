@@ -47,7 +47,7 @@ import org.teiid.metadata.Table;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
 
-public class OData4EntitySchemaBuilder {
+public class ODataSchemaBuilder {
 
     public static CsdlSchema buildMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
         try {
@@ -181,7 +181,11 @@ public class OData4EntitySchemaBuilder {
                 || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
             property.setPrecision(c.getPrecision());
             property.setScale(c.getScale());
-        } else {
+        } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
+                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIME)) {
+            property.setPrecision(c.getPrecision() == 0?new Integer(4):c.getPrecision());
+        }
+        else {
             if (c.getDefaultValue() != null) {
                 property.setDefaultValue(c.getDefaultValue());
             }

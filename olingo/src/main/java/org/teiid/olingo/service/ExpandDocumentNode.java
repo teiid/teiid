@@ -21,35 +21,44 @@
  */
 package org.teiid.olingo.service;
 
-import java.util.List;
-
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.server.api.uri.UriInfo;
-import org.apache.olingo.server.api.uri.UriParameter;
 import org.teiid.core.TeiidException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 
 
-public class CrossJoinResource extends EntityResource {
-    private boolean expand;
-
-    public static CrossJoinResource buildCrossJoin(EdmEntityType type,
-            List<UriParameter> keyPredicates, MetadataStore metadata,
-            UniqueNameGenerator nameGenerator, boolean useAlias,
-            UriInfo uriInfo, URLParseService parseService, boolean expand) throws TeiidException {
-        CrossJoinResource resource = new CrossJoinResource();
+public class ExpandDocumentNode extends DocumentNode {
+    private String navigationName;
+    private boolean collection;
+    
+    public static ExpandDocumentNode buildExpand(EdmNavigationProperty property,
+            MetadataStore metadata, UniqueNameGenerator nameGenerator,
+            boolean useAlias, UriInfo uriInfo, URLParseService parseService) throws TeiidException {
+        
+        EdmEntityType type = property.getType();
+        ExpandDocumentNode resource = new ExpandDocumentNode();
         build(resource, type, null, metadata, nameGenerator, useAlias, uriInfo, parseService);
-        resource.setExpand(expand);
+        resource.setNavigationName(property.getName());
+        resource.setCollection(property.isCollection());
         return resource;
     }
     
-    public boolean hasExpand() {
-        return expand;
+    public String getNavigationName() {
+        return navigationName;
     }
-
-    public void setExpand(boolean expand) {
-        this.expand = expand;
+    
+    public void setNavigationName(String navigationName) {
+        this.navigationName = navigationName;
     }
+    
+    public boolean isCollection() {
+        return collection;
+    }
+    
+    public void setCollection(boolean collection) {
+        this.collection = collection;
+    } 
 }
