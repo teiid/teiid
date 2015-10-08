@@ -49,7 +49,6 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
-import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
@@ -268,9 +267,9 @@ public class PlanToProcessConverter {
                 } else if (stype == JoinStrategyType.NESTED_TABLE) {
                 	NestedTableJoinStrategy ntjStrategy = new NestedTableJoinStrategy();
                 	jnode.setJoinStrategy(ntjStrategy);
-                	SymbolMap references = (SymbolMap)FrameUtil.findJoinSourceNode(node.getFirstChild()).getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                	SymbolMap references = (SymbolMap)node.getProperty(Info.LEFT_NESTED_REFERENCES);
             		ntjStrategy.setLeftMap(references);
-                	references = (SymbolMap)FrameUtil.findJoinSourceNode(node.getLastChild()).getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                	references = (SymbolMap)node.getProperty(Info.RIGHT_NESTED_REFERENCES);
             		ntjStrategy.setRightMap(references);
                 } else {
                     NestedLoopJoinStrategy nljStrategy = new NestedLoopJoinStrategy();

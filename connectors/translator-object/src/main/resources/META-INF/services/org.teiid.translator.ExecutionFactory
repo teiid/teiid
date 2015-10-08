@@ -1,3 +1,2 @@
-org.teiid.translator.object.infinispan.InfinispanExecutionFactory
 org.teiid.translator.object.ObjectExecutionFactory
 

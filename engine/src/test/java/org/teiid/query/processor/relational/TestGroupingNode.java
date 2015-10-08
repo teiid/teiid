@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -51,6 +52,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
@@ -435,6 +437,15 @@ public class TestGroupingNode {
         groupingElements.add(col1); 
         node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
 		return node;
+	}
+	
+	@Test public void testDescriptionProperties() {
+		GroupingNode node = getExampleGroupingNode();
+		SymbolMap outputMapping = new SymbolMap();
+		outputMapping.addMapping(new ElementSymbol("agg0"), new AggregateSymbol("count", false, null));
+		node.setOutputMapping(outputMapping);
+		PlanNode pn = node.getDescriptionProperties();
+		assertTrue(pn.toString().contains("agg0=count(*)"));
 	}
     
 }

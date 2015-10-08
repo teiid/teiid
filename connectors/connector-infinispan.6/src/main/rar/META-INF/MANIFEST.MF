@@ -1,1 +1,1 @@
-Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api,org.jboss.teiid.translator.object,org.infinispan export,org.infinispan.client.hotrod,org.infinispan.cachestore.remote,org.jboss.as.clustering.infinispan,org.jboss.modules	
+Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api,org.jboss.teiid.translator.infinispan.cache, org.infinispan:jdg-6.5 services, org.infinispan.query:jdg-6.5 services,org.jboss.modules	

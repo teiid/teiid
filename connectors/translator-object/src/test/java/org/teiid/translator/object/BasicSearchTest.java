@@ -29,7 +29,8 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.util.VDBUtility;
+import org.teiid.translator.object.testdata.trades.TradesCacheSource;
+import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 /**
  * BasicSearchTest represent a common core set of test that are run for all the configuration/search combinations.  
@@ -37,27 +38,36 @@ import org.teiid.translator.object.util.VDBUtility;
  *
  */
 public abstract class BasicSearchTest {
+	private static int SELECT_STAR_COL_COUNT = TradesCacheSource.NUM_OF_ALL_COLUMNS;
+
 
 	@Test public void testQueryGetAllTrades() throws Exception {						
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T"); //$NON-NLS-1$
 		
 	
-		performTest(command, 3, 4);
+		performTest(command, 3, SELECT_STAR_COL_COUNT);
 	}	
 	
 	@Test public void testQueryGetEQ1Trade() throws Exception {						
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T where TradeID = '1'"); //$NON-NLS-1$
 		
 	
-		performTest(command, 1, 4);
+		performTest(command, 1, SELECT_STAR_COL_COUNT);
 	}	
 	
 	@Test public void testQueryGetIn1Trade() throws Exception {						
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T where TradeID in ('2', '3')"); //$NON-NLS-1$
 		
 	
-		performTest(command, 2, 4);
-	}		
+		performTest(command, 2, SELECT_STAR_COL_COUNT);
+	}	
+	
+	@Test public void testQueryLimit() throws Exception {						
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade LIMIT 3"); //$NON-NLS-1$
+		
+	
+		performTest(command, 3, SELECT_STAR_COL_COUNT);
+	}	
 	
 	protected List<Object> performTest(Select command, int rowcnt, int colCount) throws Exception {
 
@@ -77,7 +87,7 @@ public abstract class BasicSearchTest {
 	
 		while (row != null) {
 			rows.add(row);
-			assertEquals(colCount, row.size());
+			assertEquals("column count doesnt match", colCount, row.size());
 			++cnt;
 			row = exec.next();
 		}

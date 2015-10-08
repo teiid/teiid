@@ -3,7 +3,7 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>8.12.0.Beta4-SNAPSHOT</version>
+        <version>8.12.0.CR2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-infinispan.6</artifactId>
@@ -12,8 +12,7 @@
     <description>This connector creates the connection to the Infinispan Cache</description>
     	
     <properties>
-        <!-- slot defined in the module  -->
-        <jdg.slot>jdg-6.4</jdg.slot>
+
     </properties>   
 
     <dependencyManagement>
@@ -34,6 +33,26 @@
                 <artifactId>infinispan-core</artifactId>
                 <version>${version.org.infinispan.6}</version>
             </dependency>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-commons</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency> 
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-query</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>  
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-query-dsl</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>                           
+             <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-search-engine</artifactId>
+                <version>${version.org.infinispan.hibernate.search}</version>
+            </dependency>                        
         </dependencies>
     </dependencyManagement>
 
@@ -50,6 +69,17 @@
             <artifactId>teiid-common-core</artifactId>
             <scope>provided</scope>
         </dependency>
+         <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-infinispan-cache</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-infinispan-cache</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>       
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
@@ -70,7 +100,7 @@
 
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search</artifactId>
+            <artifactId>hibernate-search-engine</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -79,6 +109,11 @@
             <artifactId>jboss-modules</artifactId>
             <scope>provided</scope>
         </dependency>
+         <dependency>
+            <groupId>org.jboss.marshalling</groupId>
+            <artifactId>jboss-marshalling</artifactId>
+            <scope>provided</scope>
+        </dependency>       
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
@@ -95,6 +130,21 @@
             <artifactId>infinispan-core</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-commons</artifactId>
+            <scope>provided</scope>
+        </dependency>   
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-query</artifactId>
+            <scope>provided</scope>
+        </dependency>             
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-query-dsl</artifactId>
+            <scope>provided</scope>
+        </dependency>                
     </dependencies>
 
 	<build>

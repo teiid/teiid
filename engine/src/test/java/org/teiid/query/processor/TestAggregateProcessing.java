@@ -34,6 +34,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.UserDefinedAggregate;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.ArrayImpl;
@@ -1182,6 +1183,14 @@ public class TestAggregateProcessing {
 				new String[] {"SELECT (g_0.e2 / 2), g_0.e1 FROM pm1.g1 AS g_0 GROUP BY (g_0.e2 / 2), g_0.e1 HAVING g_0.e1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = (g_0.e2 / 2))"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
 	}
-
 	
+	@Test(expected=FunctionExecutionException.class) public void testSumOverflow() throws Exception {
+		String sql = "SELECT sum(x) FROM (select cast(9223372036854775807 as long) as x union all select 1) as x"; //$NON-NLS-1$
+
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, null);
+	}
+
 }

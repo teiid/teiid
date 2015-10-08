@@ -99,6 +99,8 @@ public final class NodeConstants {
         IS_RIGHT_DISTINCT, 	// Boolean
         IS_SEMI_DEP,		// Boolean
         PRESERVE,
+        RIGHT_NESTED_REFERENCES,
+        LEFT_NESTED_REFERENCES,
 
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>

@@ -441,4 +441,9 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.useOutputName();
 	}
 	
+	@Override
+	public boolean widenComparisonToString() {
+		return actualMetadata.widenComparisonToString();
+	}
+	
 }

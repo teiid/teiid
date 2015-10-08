@@ -582,4 +582,9 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 		return true;
 	}
 	
+	@Override
+	public boolean widenComparisonToString() {
+		return true;
+	}
+	
 }

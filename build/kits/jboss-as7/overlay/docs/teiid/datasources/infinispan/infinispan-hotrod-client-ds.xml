@@ -13,7 +13,7 @@
                             <config-property name="Module">
                                 com.client.quickstart.order.pojos
                             </config-property>
-                            <!-- comma separate list of cache name to cache class;primary key -->
+                            <!-- cacheName:className[;pkFieldName[:cacheKeyJavaType]]) -->
                             <config-property name="CacheTypeMap">
                                 local-quickstart-cache:com.client.quickstart.pojo.Order;id
                             </config-property>

@@ -39,6 +39,13 @@ public class Select extends QueryExpression {
     private GroupBy groupBy;
     private Condition having;
     private Map<String, List<? extends List<?>>> dependentValues;
+    
+    /**
+     * Constructs an empty select.  This is not valid until at least the {@link DerivedColumn}s have been set.
+     */
+    public Select() {
+    	
+    }
         
     public Select(List<DerivedColumn> derivedColumns, boolean distinct, List<TableReference> from, Condition where,
                      GroupBy groupBy, Condition having, OrderBy orderBy) {

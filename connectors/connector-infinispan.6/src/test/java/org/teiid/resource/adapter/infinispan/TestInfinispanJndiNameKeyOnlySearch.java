@@ -21,23 +21,20 @@
  */
 package org.teiid.resource.adapter.infinispan;
 
-import static org.mockito.Mockito.*;
 
-import java.util.Collections;
+import static org.mockito.Mockito.mock;
 
 import org.infinispan.manager.DefaultCacheManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.BasicSearchTest;
-import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.infinispan.InfinispanExecutionFactory;
-import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.util.VDBUtility;
+import org.teiid.translator.object.testdata.trades.Trade;
+import org.teiid.translator.object.testdata.trades.TradesCacheSource;
+import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
@@ -48,7 +45,7 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
     
     private static InfinispanManagedConnectionFactory factory = null;
     
-    private static InfinispanExecutionFactory tfactory;
+    private static InfinispanCacheExecutionFactory tfactory;
 	
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
@@ -58,34 +55,34 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
 		final DefaultCacheManager container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml", true);
         
         TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
-  
+        
 		factory = new InfinispanManagedConnectionFactory() {
+			
+			/**
+			 */
+			private static final long serialVersionUID = 6241061876834919893L;
+
 			@Override
-			protected Object performJNDICacheLookup(String jndiName) throws Exception {
+			protected Object performJNDICacheLookup(String jnidName) throws Exception {
 				return container;
 			}
+
 		};
+
 		
 		factory.setCacheJndiName(JNDI_NAME);
 		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TRADE_CACHE_NAME + ":" + Trade.class.getName());
 
-		tfactory = new InfinispanExecutionFactory();
+		tfactory = new InfinispanCacheExecutionFactory();
 
 		tfactory.start();
 
 	}
 	
-    @AfterClass
+	@AfterClass
     public static void closeConnection() throws Exception {
-   	    CacheContainerWrapper ccw = factory.getCacheContainer();
-	    
-	    ReflectionHelper h = new ReflectionHelper(ccw.getClass());
-	    
-	    (h.findBestMethodWithSignature("cleanUp", Collections.EMPTY_LIST)).invoke(ccw);
-
-      	factory.cleanUp();
     	
-        RemoteInfinispanTestHelper.releaseServer();
+ //       RemoteInfinispanTestHelper.releaseServer();
     }
     
 	@Override

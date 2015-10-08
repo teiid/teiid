@@ -23,6 +23,7 @@
 package org.teiid.query.processor.eval;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.resolver.TestFunctionResolving.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -48,7 +49,6 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.resolver.TestFunctionResolving;
-import static org.teiid.query.resolver.TestFunctionResolving.assertEval;
 import org.teiid.query.sql.lang.CollectionValueIterator;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
@@ -514,4 +514,9 @@ public class TestExpressionEvaluator {
         assertEval("regexp_replace('foo\nbar\nbaz', '(b[\\d\\w\\s]+?)$', 'X', 'g')", "foo\nX");
         assertEval("regexp_replace('foo\nbar\nbaz', '(b[\\d\\w\\s]+?)$', 'X', 'gm')", "foo\nX\nX");
     }
+    
+    @Test public void testTimestampResolving() throws Exception {
+    	assertEval("TIMESTAMPDIFF(SQL_TSI_YEAR, '2000-01-01', '2002-01-01')", "2");
+	}
+
 }

@@ -52,13 +52,17 @@ import javax.xml.ws.http.HTTPBinding;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
+import org.apache.cxf.bus.spring.SpringBusFactory;
 import org.apache.cxf.configuration.security.AuthorizationPolicy;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
+import org.apache.cxf.jaxrs.client.JAXRSClientFactoryBean;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.jaxws.DispatchImpl;
 import org.apache.cxf.transport.http.HTTPConduit;
+import org.apache.cxf.transport.http.HTTPConduitFactory;
+import org.apache.cxf.transport.http.asyncclient.AsyncHTTPConduitFactory;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
@@ -123,23 +127,44 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		private HashMap<String, Object> responseContext = new HashMap<String, Object>();
 		private WebClient client;
 		private String endpoint;
+		private String configFile;
 
 		public HttpDispatch(String endpoint, String configFile, @SuppressWarnings("unused") String configName) {
-			this.endpoint = endpoint;
-			if (configFile == null) {
-			    this.client = WebClient.create(this.endpoint);
-			}
-			else {
-			    this.client = WebClient.create(this.endpoint, configFile);
-			}
+		    this.endpoint = endpoint;
+		    this.configFile = configFile;
 		}
 
+	    WebClient createWebClient(String baseAddress, Bus bus) {
+	        JAXRSClientFactoryBean bean = new JAXRSClientFactoryBean();
+            bean.setBus(bus);
+	        bean.setAddress(baseAddress);
+	        return bean.createWebClient();
+	    }	
+	    
+	    Bus getBus(String configLocation) {
+            if (configLocation != null) {
+                SpringBusFactory bf = new SpringBusFactory();
+                return bf.createBus(configLocation);
+            } else {
+                return BusFactory.getThreadDefaultBus();
+            }
+        }   	    
+		
 		@Override
 		public DataSource invoke(DataSource msg) {
 			try {
 				final URL url = new URL(this.endpoint);
 				final String httpMethod = (String)this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD);
-				
+
+                // see to use patch
+                // http://stackoverflow.com/questions/32067687/how-to-use-patch-method-in-cxf
+				Bus bus = getBus(this.configFile);
+                if (httpMethod.equals("PATCH")) {
+                    bus.setProperty("use.async.http.conduit", Boolean.TRUE);
+                    bus.setExtension(new AsyncHTTPConduitFactory(bus), HTTPConduitFactory.class);
+                }
+                this.client = createWebClient(this.endpoint, bus);
+                
 				Map<String, List<String>> header = (Map<String, List<String>>)this.requestContext.get(MessageContext.HTTP_REQUEST_HEADERS);
 				for (Map.Entry<String, List<String>> entry : header.entrySet()) {
 					this.client.header(entry.getKey(), entry.getValue().toArray());

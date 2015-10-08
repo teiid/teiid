@@ -187,7 +187,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 50, translators.size());
+		assertEquals(translators.toString(), 53, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -394,7 +394,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
 		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
-				"accumulo", "file", "cassandra", "salesforce", "mongodb", "solr", "webservice", "simpledb", "h2"}));
+				"accumulo", "file", "cassandra", "salesforce", "salesforce-34", "mongodb", "solr", "webservice", "simpledb", "h2"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
 		assertEquals(vals, templates);

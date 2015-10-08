@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
@@ -37,8 +36,6 @@ public class TestODataSQLVistor {
 
     private void helpExecute(String query, String expected) throws Exception {
         MetadataFactory mf = TestODataMetadataProcessor.tripPinMetadata();
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl); 
         
         helpExecute(mf, query, expected);
     }
@@ -226,15 +223,20 @@ public class TestODataSQLVistor {
     	helpExecute("SELECT count(*) FROM People", "People/$count");
     }  
     
-    @Test(expected=TranslatorException.class)
+    @Test
     public void testSelectFromNavigationTable() throws Exception {
-        helpExecute("SELECT UserName FROM People_Friends WHERE UserName is NULL", 
-                "does not matter");
+        helpExecute("SELECT UserName FROM People_Friends WHERE People_UserName = 'russelwhyte'", 
+                "People?$select=UserName&$filter=UserName eq 'russelwhyte'&$expand=Friends($select=UserName)");
     }
-    @Test(expected=TranslatorException.class)
+    @Test
+    public void testSelectFromNavigationTable2() throws Exception {
+        helpExecute("SELECT UserName FROM People_Friends WHERE People_UserName = 'russelwhyte' and UserName= 'jdoe'", 
+                "People?$select=UserName&$filter=UserName eq 'russelwhyte'&$expand=Friends($select=UserName;$filter=UserName eq 'jdoe')");
+    }    
+    @Test
     public void testSelectFromComplexTable() throws Exception {
-        helpExecute("SELECT * FROM People_AddressInfo", 
-                "does not matter");
+        helpExecute("SELECT * FROM People_AddressInfo where Address = 'foo'", 
+                "People?$select=UserName,AddressInfo&$filter=AddressInfo/Address eq 'foo'");
     }     
     
 }

@@ -706,6 +706,13 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
             }
             props.addProperty(PROP_GROUP_COLS, groupCols);
         }
+        if (outputMapping != null) {
+            List<String> groupCols = new ArrayList<String>(outputMapping.asMap().size());
+            for(Map.Entry<ElementSymbol, Expression> entry  : outputMapping.asMap().entrySet()) {
+                groupCols.add(entry.toString());
+            }
+            props.addProperty(PROP_GROUP_MAPPING, groupCols);
+        }
         props.addProperty(PROP_SORT_MODE, String.valueOf(this.removeDuplicates));
         if (rollup) {
         	props.addProperty(PROP_ROLLUP, Boolean.TRUE.toString());

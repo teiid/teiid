@@ -199,7 +199,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 			return null;
 		}
 		try {
-			return QueryResolver.resolveView(group, metadata.getVirtualPlan(group.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getUpdateInfo();
+			return QueryResolver.resolveView(group, metadata.getVirtualPlan(group.getMetadataID()), SQLConstants.Reserved.SELECT, metadata, false).getUpdateInfo();
 		} catch (QueryValidatorException e) {
 			 throw new QueryResolverException(e);
 		}

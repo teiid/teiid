@@ -82,12 +82,23 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	        	Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(references.getValues());
 	        	PlanNode joinNode = NodeEditor.findParent(sourceNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
 	        	while (joinNode != null) {
-	        		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.NESTED_TABLE);
-	        		if (joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null) {
-	        			//sanity check
-	        			throw new AssertionError("Cannot use a depenedent join when the join involves a correlated nested table.");  //$NON-NLS-1$
-	        		}
 	        		if (joinNode.getGroups().containsAll(groups)) {
+	        			joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.NESTED_TABLE);
+	        			SymbolMap map = null;
+	        			Info info = Info.RIGHT_NESTED_REFERENCES;
+	        			if (!FrameUtil.findJoinSourceNode(joinNode.getFirstChild()).getGroups().containsAll(groups)) {
+	        				info = Info.LEFT_NESTED_REFERENCES;
+	        			}
+        				map = (SymbolMap) joinNode.getProperty(info);
+        				if (map == null) {
+        					map = new SymbolMap();
+        				}
+        				joinNode.setProperty(info, map);
+	        			map.asUpdatableMap().putAll(references.asMap());
+		        		if (joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null) {
+		        			//sanity check
+		        			throw new AssertionError("Cannot use a depenedent join when the join involves a correlated nested table.");  //$NON-NLS-1$
+		        		}
 	        			break;
 	        		}
 	        		joinNode = NodeEditor.findParent(joinNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);

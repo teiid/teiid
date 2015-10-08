@@ -1,0 +1,39 @@
+{
+   "value":[
+      {
+         "UserName":"russellwhyte",
+         "FirstName":"Russell",
+         "LastName":"Whyte",
+         "Emails":[
+            "Russell@example.com",
+            "Russell@contoso.com"
+         ],
+         "AddressInfo":[
+            {
+               "Address":"187 Suffolk Ln.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Boise",
+                  "Region":"ID"
+               }
+            }
+         ],
+         "Gender":"Male",
+         "Concurrency":635786316485648640,
+         "Friends":[
+            {
+               "UserName":"scottketchum"
+            },
+            {
+               "UserName":"ronaldmundy"
+            },
+            {
+               "UserName":"javieralfred"
+            },
+            {
+               "UserName":"angelhuffman"
+            }
+         ]
+      }
+   ]
+}

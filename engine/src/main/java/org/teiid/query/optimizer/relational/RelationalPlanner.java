@@ -1836,7 +1836,7 @@ public class RelationalPlanner {
             qnode = metadata.getVirtualPlan(metadataID); 
         }
 
-        Command result = (Command)QueryResolver.resolveView(virtualGroup, qnode, cacheString, metadata).getCommand().clone();   
+        Command result = (Command)QueryResolver.resolveView(virtualGroup, qnode, cacheString, metadata, false).getCommand().clone();   
         return QueryRewriter.rewrite(result, metadata, context);
     }
     

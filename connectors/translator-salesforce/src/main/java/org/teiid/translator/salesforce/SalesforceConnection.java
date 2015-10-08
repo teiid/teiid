@@ -74,5 +74,7 @@ public interface SalesforceConnection extends Connection {
 	JobInfo createBulkJob(String objectName) throws ResourceException;
 
 	Long getCardinality(String sobject) throws ResourceException;
+	
+	String getVersion();
 
 }

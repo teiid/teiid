@@ -3,7 +3,7 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>8.12.0.Beta4-SNAPSHOT</version>
+        <version>8.12.0.CR2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-ws</artifactId>
@@ -67,6 +67,18 @@
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxrs</artifactId>
         </dependency>
+		<dependency>
+		    <groupId>org.apache.cxf</groupId>
+		    <artifactId>cxf-rt-transports-http-hc</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpcore-nio</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>            
+        </dependency>				        
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>

@@ -22,7 +22,11 @@
 package org.teiid.translator.salesforce.execution.visitors;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.teiid.language.*;
 import org.teiid.language.AndOr.Operator;
@@ -236,6 +240,10 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	
 	public boolean canRetrieve() {
 		return objectSupportsRetrieve && hasOnlyIDCriteria() && this.limitClause.length() == 0 && groupByClause.length() == 0;
+	}
+
+	public boolean hasGroupBy() {
+		return groupByClause.length() > 0;
 	}
 
 }

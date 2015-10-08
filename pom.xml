@@ -11,7 +11,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>8.12.0.Beta4-SNAPSHOT</version>
+    <version>8.12.0.CR2-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -21,7 +21,13 @@
 	            
         <!-- jboss bom overrides -->
         <version.com.google.guava>14.0.1</version.com.google.guava>
-        <version.org.hibernate.search>4.5.0.Final</version.org.hibernate.search> <!-- versions required by infinispan 6.1 --> 
+ 
+        <version.org.infinispan.hibernate.search>4.6.1.Final-redhat-1</version.org.infinispan.hibernate.search> <!-- versions required by infinispan  --> 
+        <version.org.infinispan.6>6.3.0.Final-redhat-5</version.org.infinispan.6>  
+        <version.org.apache.lucene.infinispan>3.6.2.redhat-8</version.org.apache.lucene.infinispan>
+        <!-- JDG module slot to use  -->
+        <jdg.slot>jdg-6.5</jdg.slot>  
+        
         <version.jaxen>1.1.4</version.jaxen> <!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
         <version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
         <version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as> <!--  same in BOM -->
@@ -48,10 +54,10 @@
         <version.org.jboss.oreva>0.8.8</version.org.jboss.oreva>
         <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
         <version.com.force.api>22.0.0</version.com.force.api>
+        <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
-        <version.org.infinispan.6>6.2.0.Final-redhat-4</version.org.infinispan.6>                
         <version.olap4j>1.1.0</version.olap4j>
         <version.accumulo>1.5.0</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
@@ -79,6 +85,7 @@
         <version.commons-codec>1.9</version.commons-codec>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
 	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
+	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <version.org.reflections>0.9.9</version.org.reflections>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
@@ -90,6 +97,8 @@
 	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
 	    <version.swagger-parser>1.0.10</version.swagger-parser>
 	    <version.narayana>5.0.4.Final</version.narayana>
+	    <version.org.apache.httpcomponents.httpcore-nio>4.2.4</version.org.apache.httpcomponents.httpcore-nio>
+	    <version.org.apache.httpcomponents.httpasyncclient>4.0-beta3</version.org.apache.httpcomponents.httpasyncclient>	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -435,7 +444,13 @@
             	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-salesforce</artifactId>
             	<version>${project.version}</version>
-        	</dependency>  
+        	</dependency>
+	        <dependency>
+	            <groupId>org.jboss.teiid.connectors</groupId>
+	            <artifactId>connector-salesforce</artifactId>
+	            <type>rar</type>
+	            <version>${project.version}</version>
+	        </dependency>        	
       		<dependency>
             	<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
@@ -587,6 +602,17 @@
 				<type>test-jar</type>
                 <version>${project.version}</version>
 			</dependency>
+             <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>translator-infinispan-cache</artifactId>
+                <version>${project.version}</version>
+            </dependency>   			
+	         <dependency>
+	            <groupId>org.jboss.teiid.connectors</groupId>
+	            <artifactId>translator-infinispan-cache</artifactId>
+                <type>test-jar</type>
+                <version>${project.version}</version>
+	        </dependency>			
 	       <dependency>
                <groupId>org.jboss.teiid.connectors</groupId>
                <artifactId>translator-file</artifactId>
@@ -724,11 +750,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>  
-	    	<dependency>
+	    	<!--dependency>
 	      		<groupId>org.infinispan</groupId>
 	      		<artifactId>infinispan-server-hotrod</artifactId>
-	      		<version>${version.org.infinispan}</version>
-	    	</dependency>		    	                      
+	      		<version>${version.org.infinispan.6}</version>
+	    	</dependency-->		    	                      
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-spi</artifactId>
@@ -919,11 +945,11 @@
                 <artifactId>resteasy-jaxrs</artifactId>
                 <version>${version.org.jboss.resteasy}</version>
             </dependency>  
-			<dependency>
+			<!--dependency>
 			    <groupId>org.apache.httpcomponents</groupId>
 			    <artifactId>httpclient</artifactId>
 			    <version>${version.org.apache.httpcomponents.httpclient}</version>
-			</dependency>
+			</dependency-->
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>tjws</artifactId>
@@ -934,26 +960,6 @@
                 <artifactId>resteasy-multipart-provider</artifactId>
                 <version>${version.org.jboss.resteasy}</version>
             </dependency>                             
-            <dependency>
-                <groupId>com.force.api</groupId>
-                <artifactId>force-wsc</artifactId>
-                <version>${version.com.force.api}</version>
-              <exclusions>                
-                    <exclusion>
-                        <groupId>com.google.code.gson</groupId>
-                        <artifactId>gson</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>rhino</groupId>
-                        <artifactId>js</artifactId>
-                    </exclusion>
-               </exclusions>                
-            </dependency>
-            <dependency>
-                <groupId>com.force.api</groupId>
-                <artifactId>force-partner-api</artifactId>
-                <version>${version.com.force.api}</version>
-            </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-core</artifactId>
@@ -1133,6 +1139,21 @@
                     </exclusion>                                   
                 </exclusions>                
             </dependency>
+			<dependency>
+			    <groupId>org.apache.cxf</groupId>
+			    <artifactId>cxf-rt-transports-http-hc</artifactId>
+			    <version>${version.org.apache.cxf}</version>
+			</dependency>
+	        <dependency>
+	            <groupId>org.apache.httpcomponents</groupId>
+	            <artifactId>httpcore-nio</artifactId>
+	            <version>${version.org.apache.httpcomponents.httpcore-nio}</version>
+	        </dependency>
+			<dependency>
+			    <groupId>org.apache.httpcomponents</groupId>
+			    <artifactId>httpasyncclient</artifactId>
+			    <version>${version.org.apache.httpcomponents.httpasyncclient}</version>
+			</dependency>
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-bundle</artifactId>
@@ -1263,10 +1284,10 @@
                 <artifactId>xmlbeans</artifactId>
                 <version>${version.org.apache.xmlbeans}</version>
             </dependency>
-            <dependency>
+            <!--dependency>
               <groupId>org.infinispan</groupId>
               <artifactId>infinispan-query</artifactId>
-              <version>${version.org.infinispan}</version>
+              <version>${version.org.infinispan.6}</version-->
               <!-- 
                 <exclusions>                
                     <exclusion>
@@ -1279,7 +1300,7 @@
                     </exclusion>                    
                 </exclusions>
                  -->
-            </dependency>
+            <!--/dependency-->
             <dependency>
             	<groupId>org.fusesource.jansi</groupId>
             	<artifactId>jansi</artifactId>
@@ -1316,26 +1337,26 @@
                 <artifactId>noggit</artifactId>
                 <version>${version.noggit}</version>
             </dependency>
-            <dependency>
+            <!--dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-search</artifactId>
-                <version>${version.org.hibernate.search}</version>
+                <version>${version.org.infinispan.hibernate.search}</version>
             </dependency>
             <dependency>
                <groupId>org.hibernate</groupId>
                <artifactId>hibernate-search-engine</artifactId>
-               <version>${version.org.hibernate.search}</version>
-            </dependency>
-            <dependency>
+               <version>${version.org.infinispan.hibernate.search}</version>
+            </dependency-->
+            <!--dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-search-infinispan</artifactId>
-                <version>${version.org.hibernate.search}</version>
-            </dependency>            
-            <dependency>
+                <version>${version.org.hibernate}</version>
+            </dependency-->            
+            <!--dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-client-hotrod</artifactId>
-                <version>${version.org.infinispan}</version>
-            </dependency>
+                <version>${version.org.infinispan.6}</version>
+            </dependency-->
             <dependency>
               <groupId>org.mongodb</groupId>
               <artifactId>mongo-java-driver</artifactId>
@@ -1569,7 +1590,12 @@
 	            <groupId>org.picketbox</groupId>
 	            <artifactId>picketbox</artifactId>
 	            <version>${version.org.picketbox}</version>
-	        </dependency>             
+	        </dependency> 
+			<dependency>
+			    <groupId>com.fasterxml</groupId>
+			    <artifactId>aalto-xml</artifactId>
+			    <version>${version.com.fasterxml.aalto-xml}</version>
+			</dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>

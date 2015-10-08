@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <artifactId>connectors</artifactId>
+        <groupId>org.jboss.teiid</groupId>
+        <version>8.12.0.CR2-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>connector-salesforce-34</artifactId>
+    <groupId>org.jboss.teiid.connectors</groupId>    
+	<name>Salesforce Resource Adapter API 34</name>
+	<description>Integrates the query engine with Salesforce.com.</description>
+    
+	<dependencies>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-salesforce</artifactId>
+			<type>rar</type>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+                            <includeGroupIds>org.jboss.teiid.connectors</includeGroupIds>
+                            <includeArtifactIds>connector-salesforce</includeArtifactIds>
+                            <includeTypes>rar</includeTypes>
+                            <includeScope>provided</includeScope>
+							<outputDirectory>${project.build.directory}/rar-unpack</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+							<excludeTransitive>true</excludeTransitive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptors>
+						<descriptor>kits/jboss-as7-dist.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<id>create-assemblies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+</project>

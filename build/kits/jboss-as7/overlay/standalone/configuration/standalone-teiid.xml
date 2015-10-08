@@ -297,6 +297,9 @@
                 <resource-adapter id="salesforce">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.salesforce"/>
                 </resource-adapter>
+                <resource-adapter id="salesforce-34">
+                    <module slot="34" id="org.jboss.teiid.resource-adapter.salesforce"/>
+                </resource-adapter>                
                 <resource-adapter id="webservice">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
                 </resource-adapter>
@@ -398,6 +401,7 @@
             <translator name="olap" module="org.jboss.teiid.translator.olap"/>
             <translator name="ws" module="org.jboss.teiid.translator.ws"/>
             <translator name="salesforce" module="org.jboss.teiid.translator.salesforce"/>
+            <translator name="salesforce-34" module="org.jboss.teiid.translator.salesforce" slot="34"/>
             <translator name="hive" module="org.jboss.teiid.translator.hive"/>
             <translator name="jpa2" module="org.jboss.teiid.translator.jpa"/>
             <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
@@ -416,6 +420,8 @@
             <translator name="ucanaccess" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="vertica" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="actian-vector" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="osisoft-pi" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="odata4" module="org.jboss.teiid.translator.odata4"/>
         </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <unbounded-queue-thread-pool name="teiid-async">

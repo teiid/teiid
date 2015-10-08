@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>connectors</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-        <version>8.12.0.Beta4-SNAPSHOT</version>
+        <version>8.12.0.CR2-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>translator-salesforce</artifactId>
@@ -11,6 +11,32 @@
 	<name>Salesforce Translator</name>
 	<description>Integrates the query engine with Salesforce.com.</description>
     <packaging>bundle</packaging>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.force.api</groupId>
+                <artifactId>force-wsc</artifactId>
+                <version>${version.com.force.api}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.gson</groupId>
+                        <artifactId>gson</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>rhino</groupId>
+                        <artifactId>js</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.force.api</groupId>
+                <artifactId>force-partner-api</artifactId>
+                <version>${version.com.force.api}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement> 
+        
 	<dependencies>
         <dependency>
           <groupId>org.jboss.teiid</groupId>

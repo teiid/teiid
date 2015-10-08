@@ -28,6 +28,7 @@ import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
 import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.teiid.logging.LogManager;
+import org.teiid.runtime.JBossLogger;
 
 public class TeiidExtension implements Extension {
 		

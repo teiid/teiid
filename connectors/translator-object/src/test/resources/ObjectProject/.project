@@ -6,6 +6,11 @@
 	</projects>
 	<buildSpec>
 		<buildCommand>
+			<name>org.teiid.designer.vdb.ui.vdbBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
 			<name>org.teiid.designer.core.modelBuilder</name>
 			<arguments>
 			</arguments>

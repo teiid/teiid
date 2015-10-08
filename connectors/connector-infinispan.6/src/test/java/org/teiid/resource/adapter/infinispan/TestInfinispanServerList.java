@@ -22,29 +22,26 @@
 
 package org.teiid.resource.adapter.infinispan;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import java.util.Collections;
-import java.util.Map;
-
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.core.util.ReflectionHelper;
-import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectConnection;
 
 
+
 @SuppressWarnings("nls")
-@Ignore
 public class TestInfinispanServerList {
 	    private static InfinispanManagedConnectionFactory factory = null;
 			
 		@BeforeClass
 	    public static void beforeEachClass() throws Exception { 
-			RemoteInfinispanTestHelper.loadCacheSimple();
+			RemoteInfinispanTestHelper.loadCacheTrades();
+			
+			Thread.sleep(10000);
 	
 		}
 
@@ -53,33 +50,33 @@ public class TestInfinispanServerList {
 			factory = new InfinispanManagedConnectionFactory();
 
 			factory.setRemoteServerList(RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
-			factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "java.lang.String");
-	    }
-		
-	    @AfterClass
-	    public static void closeConnection() throws Exception { 
-	   	    CacheContainerWrapper ccw = factory.getCacheContainer();
-	    	    
-	    	    ReflectionHelper h = new ReflectionHelper(ccw.getClass());
-	    	    
-	    	    (h.findBestMethodWithSignature("cleanUp", Collections.EMPTY_LIST)).invoke(ccw);
-	
-	    	    
-		    	factory.cleanUp();
-	        RemoteInfinispanTestHelper.releaseServer();
+			factory.setCacheTypeMap(RemoteInfinispanTestHelper.TRADE_CACHE_NAME + ":" + RemoteInfinispanTestHelper.TRADE_CLASS.getName()+ ";" + RemoteInfinispanTestHelper.PKEY_COLUMN);
 	    }
 
 	    @Test
 	    public void testRemoteConnection() throws Exception {
-	    	
+	    	try {
 	    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-	    		Map<?, ?> m = conn.getCacheNameClassTypeMapping();
-	    	
-	    		assertNotNull(m);
+	    		Class<?> clz = conn.getCacheClassType();
+	    
+	    		assertEquals(RemoteInfinispanTestHelper.TRADE_CLASS, clz);
 	    		
-	    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
+	    		Class<?> t = conn.getCacheKeyClassType();
 	    		
-	    		 assertEquals(String.class, t);
+	    		 assertNull(t);
+	    		 
+	    		 assertEquals(RemoteInfinispanTestHelper.PKEY_COLUMN, conn.getPkField());
+	    		
+	    		 assertNotNull(conn.getCache());
+	    		 
+	    		 conn.cleanUp();
+	    		 
+	    		 
+	
+	    	} finally {
+		    	factory.cleanUp();
+		    	RemoteInfinispanTestHelper.releaseServer();
+	    	}
 	    }
 
 

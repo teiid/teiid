@@ -135,6 +135,10 @@
         <includes>
             <include>org.jboss.teiid.connectors:connector-*</include>
         </includes>
+        
+        <excludes>
+            <exclude>org.jboss.teiid.connectors:connector-salesforce-34</exclude>
+        </excludes>
                 
         <binaries> 
           <includeDependencies>false</includeDependencies>
@@ -155,6 +159,10 @@
         <includes>
             <include>org.jboss.teiid.connectors:translator-*</include>
         </includes>
+        
+        <excludes>
+            <exclude>org.jboss.teiid.connectors:translator-salesforce-34</exclude>
+        </excludes>
                 
         <binaries> 
           <includeDependencies>false</includeDependencies>

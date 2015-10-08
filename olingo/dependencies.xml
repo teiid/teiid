@@ -41,8 +41,7 @@
         <include>com.fasterxml.jackson.core:jackson-core</include>
       </includes>
       <useProjectArtifact>false</useProjectArtifact>
-    </dependencySet>         
-    
+    </dependencySet>            
   </dependencySets>  
   
 </assembly>

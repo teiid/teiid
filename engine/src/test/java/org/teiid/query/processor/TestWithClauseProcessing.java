@@ -570,5 +570,22 @@ public class TestWithClauseProcessing {
 	    
 	    helpProcess(plan, cc, dataManager, expected);
 	}
+	
+	@Test public void testWithPushdownAndConstants() throws Exception {
+		String sql = "WITH tmp as (SELECT * FROM pm1.g1 ) SELECT 123 as col2, tmp.* FROM tmp";
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    dataManager.addData("WITH tmp (e1, e2, e3, e4) AS (SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g1 AS g_0) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM tmp AS g_0", Arrays.asList("a", 1, true, 1.1));
+		CommandContext cc = TestProcessor.createCommandContext();
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    
+	    List<?>[] expected = new List[] { 
+		        Arrays.asList(123, "a", 1, true, 1.1),
+		    };
+	    
+	    helpProcess(plan, cc, dataManager, expected);
+	}
 }
 

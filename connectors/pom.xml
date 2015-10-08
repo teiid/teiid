@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.12.0.Beta4-SNAPSHOT</version>
+    <version>8.12.0.CR2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>connectors</artifactId>
@@ -100,6 +100,7 @@
     <module>translator-loopback</module>
     <module>translator-file</module>
     <module>translator-salesforce</module>
+    <module>translator-salesforce-34</module>
     <module>translator-mongodb</module>
     <module>translator-cassandra</module>
     <module>translator-simpledb</module>
@@ -113,11 +114,13 @@
     <module>translator-object</module>
     <module>translator-odata</module>
     <module>translator-odata4</module>
+    <module>translator-infinispan-cache</module>
     <module>translator-infinispan-dsl</module>
 
     <module>connector-file</module>
     <module>connector-google</module>
     <module>connector-salesforce</module>
+    <module>connector-salesforce-34</module>    
     <module>connector-ldap</module>
     <module>connector-ws</module>
     <module>connector-mongodb</module>

@@ -14,19 +14,14 @@
 				jndi-name="java:/infinispanLocal" 
 				enabled="true" 
 				use-java-context="true" 
-				pool-name="infinispanLocal">
-				<!-- module name to load the cache classes from -->
-					<config-property name="Module">
-						com.client.quickstart.pojos
-					</config-property>
-					
-					<!-- comma separate list of cache name to cache class;primary key -->
+				pool-name="infinispanLocal">					
+					<!-- cacheName:className[;pkFieldName[:cacheKeyJavaType]]) -->
 					<config-property name="CacheTypeMap">
-						local-quickstart-cache:com.client.quickstart.pojo.Orders;id
+						local-quickstart-cache:com.client.quickstart.pojo.Stock;productId
 					</config-property>
 					
-					<!-- JNDI lookup name of the Infinispan cache container.  other options include remote hot rod access and
-                           using a configuration file to access a local cache -->
+					<!-- JNDI lookup name of the Infinispan cache container.  other options include remote hot rod access,
+					   host:port server list, to access a jdg cache -->
 					<config-property name="CacheJndiName">
 						java:jboss/teiid/jdg-quickstart
 					</config-property>
