@@ -47,6 +47,8 @@ public interface WSConnection extends Connection {
 	
 	URL getWsdl();
 	
+	String getSwagger();
+	
 	QName getServiceQName();
 	
 	QName getPortQName();
