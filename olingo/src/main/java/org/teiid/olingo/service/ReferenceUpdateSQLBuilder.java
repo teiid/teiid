@@ -44,7 +44,7 @@ import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
 import org.teiid.odata.api.SQLParameter;
-import org.teiid.olingo.LiteralParser;
+import org.teiid.olingo.ODataTypeManager;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.Constant;
@@ -153,7 +153,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 if (!delete) {
                     UriParameter parameter = getParameter(this.updateTable.getFk().getReferenceColumns().get(i),
                             this.referenceTable.getKeyPredicates());
-                    value = LiteralParser.parseLiteral(edmProperty, column.getJavaType(), parameter.getText());
+                    value = ODataTypeManager.parseLiteral(edmProperty, column.getJavaType(), parameter.getText());
                 }
                 
                 if (prepared) {

@@ -441,7 +441,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16035, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16035)));
     }
     
-    public Insert insert(EdmEntityType entityType, Entity entity, boolean prepared) {
+    public Insert insert(EdmEntityType entityType, Entity entity, boolean prepared) throws TeiidException {
         Table entityTable = findTable(entityType.getName(), this.metadata);
         DocumentNode resource = new DocumentNode(entityTable, new GroupSymbol(entityTable.getFullName()), entityType);
         
@@ -474,13 +474,14 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         return insert;
     }
     
-    static SQLParameter asParam(EdmProperty edmProp, Object value) {
+    static SQLParameter asParam(EdmProperty edmProp, Object value) throws TeiidException {
         String teiidType = ODataTypeManager.teiidType((SingletonPrimitiveType)edmProp.getType(), edmProp.isCollection());
         int sqlType = JDBCSQLTypeInfo.getSQLType(teiidType);
         if (value == null) {
             return new SQLParameter(null, sqlType);
         }
-        return new SQLParameter(ODataTypeManager.convertToTeiidRuntimeType(DataTypeManager.getDataTypeClass(teiidType), value), sqlType);
+        return new SQLParameter(ODataTypeManager.convertToTeiidRuntimeType(
+                DataTypeManager.getDataTypeClass(teiidType), value), sqlType);
     }    
     
     private Table findTable(String tableName, MetadataStore store) {
@@ -569,7 +570,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         return query;
     }
     
-    public Update update(EdmEntityType entityType, Entity entity, boolean prepared) {
+    public Update update(EdmEntityType entityType, Entity entity, boolean prepared) throws TeiidException {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
         
@@ -599,7 +600,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         return update;
     }
     
-    public Update updateProperty(EdmProperty edmProperty, Property property, boolean prepared) {
+    public Update updateProperty(EdmProperty edmProperty, Property property,
+            boolean prepared) throws TeiidException {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
 

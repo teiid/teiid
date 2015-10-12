@@ -23,6 +23,7 @@ package org.teiid.olingo.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -266,14 +267,40 @@ public class TeiidServiceHandler implements ServiceHandler {
         EntityCollectionResponse result = (EntityCollectionResponse)queryResponse;
         if (result.getNextToken() != null) {
             try {
-                result.setNext(new URI(request.getODataRequest().getRawRequestUri()
-                        + (request.getODataRequest().getRawQueryPath() == null ?"?$skiptoken=":"&$skiptoken=")
-                        + result.getNextToken()));
+                String nextUri = request.getODataRequest().getRawBaseUri()
+                        +request.getODataRequest().getRawODataPath()
+                        + "?"
+                        +buildNextToken(request.getODataRequest().getRawQueryPath(), result.getNextToken());
+                result.setNext(new URI(nextUri));
             } catch (URISyntaxException e) {
+                throw new ODataApplicationException(e.getMessage(), 500, Locale.getDefault(), e);
+            } catch (MalformedURLException e) {
                 throw new ODataApplicationException(e.getMessage(), 500, Locale.getDefault(), e);
             }
         }
         response.writeReadEntitySet(visitor.getContext().getEdmEntityType(), result);
+    }
+
+    String buildNextToken(final String queryPath, String nextToken)
+            throws URISyntaxException, MalformedURLException {
+        StringBuilder sb = new StringBuilder();
+        String[] pairs = queryPath.split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf("=");
+            String key = pair.substring(0, idx);
+            if (!key.equals("$skiptoken")) {
+                if (sb.length()>0) {
+                    sb.append("&");
+                }
+                sb.append(pair);
+            }
+        }
+        if (sb.length() > 0) {
+            sb.append("&$skiptoken=").append(nextToken);
+        } else {
+            sb.append("$skiptoken=").append(nextToken);            
+        }
+        return sb.toString();
     }
     
     private void sendResults(final DataRequest request,
@@ -337,7 +364,7 @@ public class TeiidServiceHandler implements ServiceHandler {
     }
     
     private UpdateResponse performInsert(String rawURI, UriInfo uriInfo,
-            EdmEntityType entityType, Entity entity) throws SQLException {
+            EdmEntityType entityType, Entity entity) throws SQLException, TeiidException {
         ODataSQLBuilder visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
                 rawURI, this.serviceMetadata, this.nameGenerator);
         visitor.visit(uriInfo);
@@ -346,7 +373,7 @@ public class TeiidServiceHandler implements ServiceHandler {
     }
     
     private UpdateResponse performDeepInsert(String rawURI, UriInfo uriInfo,
-            EdmEntityType entityType, Entity entity) throws SQLException {
+            EdmEntityType entityType, Entity entity) throws SQLException, TeiidException {
         String txn = getClient().startTransaction();
         try {
             UpdateResponse response = performInsert(rawURI, uriInfo, entityType, entity);
@@ -371,6 +398,13 @@ public class TeiidServiceHandler implements ServiceHandler {
                 // ignore
             }
             throw e;
+        } catch (TeiidException e) {
+            try {
+                getClient().rollback(txn);
+            } catch (SQLException e1) {
+                // ignore
+            }
+            throw e;            
         }
     }
 
@@ -380,11 +414,13 @@ public class TeiidServiceHandler implements ServiceHandler {
         for (String navigationName:entityType.getNavigationPropertyNames()) {
             EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
             Link navLink = entity.getNavigationLink(navigationName);
-            if (navLink.getInlineEntity() != null) {
-               expand.add(navProperty);
-            }
-            if (navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
-                expand.add(navProperty);
+            if (navLink != null) {
+                if (navLink.getInlineEntity() != null) {
+                   expand.add(navProperty);
+                }
+                if (navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
+                    expand.add(navProperty);
+                }
             }
         }
         return expand;
@@ -464,6 +500,10 @@ public class TeiidServiceHandler implements ServiceHandler {
                 throw new ODataApplicationException(e.getMessage(),
                         HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                         Locale.getDefault(), e);
+            }  catch (TeiidException e) {
+                throw new ODataApplicationException(e.getMessage(),
+                        HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                        Locale.getDefault(), e);
             }
         }
         else {
@@ -500,6 +540,11 @@ public class TeiidServiceHandler implements ServiceHandler {
                 throw new ODataApplicationException(e.getMessage(),
                         HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                         Locale.getDefault(), e);                
+            } catch (TeiidException e) {
+                rollback(txn);
+                throw new ODataApplicationException(e.getMessage(),
+                        HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                        Locale.getDefault(), e);            
             }
         }
         
@@ -571,6 +616,10 @@ public class TeiidServiceHandler implements ServiceHandler {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
+        } catch (TeiidException e) {
+            throw new ODataApplicationException(e.getMessage(),
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    Locale.getDefault(), e);            
         }
         
         if (updateResponse != null && updateResponse.getUpdateCount() > 0) {

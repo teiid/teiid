@@ -374,7 +374,17 @@ public class TestODataIntegration {
         assertEquals(200, response.getStatus());
         assertEquals("<name>foo2</name>", 
                 response.getContentAsString());        
-    }    
+    } 
+    @Test
+    public void testActionSimpleParameters() throws Exception {
+        ContentResponse response = http.newRequest(baseURL + "/loopy/vm1/procActionJSON")
+                .method("POST")
+                .content(new StringContentProvider("{\"x\": \"foo\", \"y\": 4.5}"), "application/json")
+                .send();
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"x1\":\"foo\",\"y1\":4.5}", 
+                response.getContentAsString());        
+    }     
 
     @Test
     public void testMetadataVisibility() throws Exception {
@@ -618,7 +628,8 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
             String ends = "--1\"}";
-            assertTrue(response.getContentAsString().startsWith(starts));
+            System.out.println(baseURL);
+            assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
             assertTrue(response.getContentAsString().endsWith(ends));
             
             JsonNode node = getJSONNode(response);

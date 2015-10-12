@@ -47,6 +47,8 @@ import org.apache.olingo.commons.api.edm.provider.CsdlReferentialConstraint;
 import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.edm.provider.CsdlSingleton;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -299,6 +301,14 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         ODataType type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
         return type == ODataType.ENTITY_COLLECTION;
     }    
+    
+    static String getNativeType(Column column) {
+        String nativeType = column.getNativeType();
+        if (nativeType == null) {
+            nativeType = "Edm.String";
+        }
+        return nativeType;
+    }
     
     private void addComplexPropertyAsTable(MetadataFactory mf, CsdlProperty parentProperty, 
             CsdlComplexType complexType, XMLMetadata metadata, Table parentTable) 
@@ -753,10 +763,24 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         List<CsdlAction> actions = getActions(metadata, actionImport.getAction());
         
         for (CsdlAction action : actions) {
-            Procedure procedure = mf.addProcedure(action.getName());
-            addOperation(mf, metadata, odataType, action, procedure);
+            if (!hasComplexParameters(action.getParameters())) { 
+                Procedure procedure = mf.addProcedure(action.getName());
+                addOperation(mf, metadata, odataType, action, procedure);
+            } else {
+                LogManager.logInfo(LogConstants.CTX_ODATA, 
+                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17033, action.getName()));
+            }
         }
         
+    }
+
+    private boolean hasComplexParameters(List<CsdlParameter> parameters) {
+        for (CsdlParameter parameter:parameters) {
+            if (!isSimple(parameter.getType())) {
+                return false;
+            }
+        }
+        return false;
     }
 
     private void addOperation(MetadataFactory mf, XMLMetadata metadata, ODataType odataType,

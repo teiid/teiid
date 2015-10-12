@@ -21,15 +21,21 @@
  */
 package org.teiid.olingo.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,14 +48,21 @@ import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.core.Encoder;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.odata.api.QueryResponse;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
@@ -314,7 +327,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 ValueType.COLLECTION_PRIMITIVE, values);
     }
 
-    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
+/*    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
             Object value, String invalidCharacterReplacement)
             throws TransformationException, SQLException, IOException {
         if (value == null) {
@@ -340,7 +353,56 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
         return value;
     }
+*/
+    
+    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
+            Object value, String invalidCharacterReplacement)
+            throws TransformationException, SQLException, IOException {
+        if (value == null) {
+            return null;
+        }
+                
+        Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
+        if (sourceType.isAssignableFrom(expectedType.getDefaultType())) {
+            return replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+        }
+        
+        if (expectedType instanceof EdmDate && sourceType == Date.class) {
+            return value;
+        } else if (expectedType instanceof EdmDateTimeOffset && sourceType == Timestamp.class){
+            return value;
+        } else if (expectedType instanceof EdmTimeOfDay && sourceType == Time.class){
+            return value;
+        } else if (expectedType instanceof EdmBinary) {
+            // there could be memory implications here, should have been modeled as EdmStream
+            LogManager.logDetail(LogConstants.CTX_ODATA, "Possible OOM when inlining the stream based values");
+            if (sourceType == ClobType.class) {
+                return ClobType.getString((Clob) value).getBytes();
+            }
+            if (sourceType == SQLXML.class) {
+                return ((SQLXML) value).getString().getBytes();
+            }
+            if (sourceType == BlobType.class) {
+                return ObjectConverterUtil.convertToByteArray(((Blob)value).getBinaryStream());
+            }
+            if (value instanceof Serializable) {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeObject(value);
+                oos.close();
+                bos.close();
+                return bos.toByteArray(); 
+            }
+        }
 
+        Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType, isArray));
+        if (sourceType != targetType) {
+            Transform t = DataTypeManager.getTransform(sourceType, targetType);
+            value = t != null ? t.transform(value, targetType) : value;
+        }
+        value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+        return value;
+    }    
     static Object replaceInvalidCharacters(EdmPrimitiveType expectedType,
             Object value, String invalidCharacterReplacement) {
         if (!(expectedType instanceof EdmString)  || invalidCharacterReplacement == null) {

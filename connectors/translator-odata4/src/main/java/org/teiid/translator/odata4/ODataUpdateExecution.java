@@ -32,7 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.olingo.client.api.serialization.ODataDeserializer;
 import org.apache.olingo.client.api.serialization.ODataDeserializerException;
+import org.apache.olingo.client.core.serialization.AtomDeserializer;
 import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
@@ -49,6 +51,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.odata4.ODataUpdateExecution.EntityCollectionIterator.NotSupportedAccepts;
 import org.teiid.translator.odata4.ODataUpdateVisitor.OperationType;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
@@ -82,67 +85,152 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
     public void execute() throws TranslatorException {
         ODataUpdateQuery odataQuery = this.visitor.getODataQuery();
         if (this.visitor.getOperationType() == OperationType.DELETE) { //$NON-NLS-1$
-            performUpdateOperation(odataQuery, "DELETE");
+            EntityCollectionIterator ecv = new JsonEntityCollectionIterator(odataQuery, "DELETE");
+            try {
+                ecv.performUpdateQuery();
+            } catch (NotSupportedAccepts e) {
+                ecv = new XMLEntityCollectionIterator(odataQuery, "DELETE");
+                try {
+                    ecv.performUpdateQuery();
+                } catch (NotSupportedAccepts e1) {
+                    throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17032));
+                }
+            }
         }
         else if(this.visitor.getOperationType() == OperationType.UPDATE) { //$NON-NLS-1$
-            performUpdateOperation(odataQuery, odataQuery.getUpdateMethod());
+            EntityCollectionIterator ecv = new JsonEntityCollectionIterator(odataQuery, odataQuery.getUpdateMethod());
+            try {
+                ecv.performUpdateQuery();
+            } catch (NotSupportedAccepts e) {
+                ecv = new XMLEntityCollectionIterator(odataQuery, odataQuery.getUpdateMethod());
+                try {
+                    ecv.performUpdateQuery();
+                } catch (NotSupportedAccepts e1) {
+                    throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17032));
+                }
+            }
+            
         }
         else if (this.visitor.getOperationType() == OperationType.INSERT) { //$NON-NLS-1$
             handleInsert(odataQuery);
         }
     }
+    
 
     // TODO: this needs to be submitted as BATCH to be transactionally safe.
-    private void performUpdateOperation(ODataUpdateQuery odataQuery, String method)
-            throws TranslatorException {
-        String uri = odataQuery.buildUpdateSelectionURL("");
-        while (uri != null) {
-            BinaryWSProcedureExecution execution = invokeHTTP("GET",uri,null, getDefaultHeaders());
-            if (execution.getResponseCode() == HttpStatusCode.OK.getStatusCode()) {
-                EntityCollection entities = null;
-                Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-                try {
-                    InputStream response = blob.getBinaryStream();                
-                    if (response != null){
-                        JsonDeserializer serializer = new JsonDeserializer(false);
-                        entities = serializer.toEntitySet(response).getPayload();
-                        URI nextUri = entities.getNext();
-                        if (nextUri != null) {
-                            uri = nextUri.toString();
-                        } else {
-                            uri = null;
+    abstract class EntityCollectionIterator {
+        private ODataUpdateQuery odataQuery;
+        private String method;
+        private String uri;
+        
+        public EntityCollectionIterator(ODataUpdateQuery odataQuery, String method) throws TranslatorException {
+            this.odataQuery = odataQuery;
+            this.method = method;
+            // fyi, the below is not immutable method
+            this.uri = odataQuery.buildUpdateSelectionURL("");
+        }
+        
+        public void performUpdateQuery() throws TranslatorException, NotSupportedAccepts {
+            while (this.uri != null) {
+                // this needs to be full metadata, to get to the Entity edit URL, but note Olingo 
+                // currently does not support as of 4.0.0
+                BinaryWSProcedureExecution execution = invokeHTTP("GET",uri,null, headers());
+                if (execution.getResponseCode() == HttpStatusCode.OK.getStatusCode()) {
+                    EntityCollection entities = null;
+                    Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+                    try {
+                        InputStream response = blob.getBinaryStream();                
+                        if (response != null){
+                            ODataDeserializer serializer = getDeSerializer();
+                            entities = serializer.toEntitySet(response).getPayload();
+                            URI nextUri = entities.getNext();
+                            if (nextUri != null) {
+                                this.uri = nextUri.toString();
+                            } else {
+                                this.uri = null;
+                            }
+                        }
+                    } catch (ODataDeserializerException e) {
+                        throw new TranslatorException(e);
+                    } catch (SQLException e) {
+                        throw new TranslatorException(e);
+                    }
+                    
+                    if (entities != null && !entities.getEntities().isEmpty()) {
+                        for (Entity entity:entities.getEntities()) {
+                            onEntity(entity, method);
                         }
                     }
-                } catch (ODataDeserializerException e) {
-                    throw new TranslatorException(e);
-                } catch (SQLException e) {
-                    throw new TranslatorException(e);
+                } else {
+                    throw new NotSupportedAccepts();
                 }
-                
-                if (entities != null && !entities.getEntities().isEmpty()) {
-                    for (Entity entity:entities.getEntities()) {
-                        Link editLink = entity.getEditLink();
-                        Map<String, List<String>> headers = getDefaultUpdateHeaders();
-                        if (entity.getETag() != null) {
-                            headers.put("If-Match", Arrays.asList(entity.getETag())); //$NON-NLS-1$
-                        }
-                        BinaryWSProcedureExecution update = invokeHTTP(
-                                method, 
-                                editLink.getHref(),
-                                method.equals("DELETE")?null:odataQuery.getPayload(entity), 
-                                headers);
-                        if (HttpStatusCode.NO_CONTENT.getStatusCode() == update.getResponseCode()) {
-                            this.updateCount.incrementAndGet();
-                        } else {
-                            throw buildError(update);
-                        }
-                    }
-                }
-            } else {
-                throw buildError(execution);
             }
         }
+        
+        public void onEntity(Entity entity, String method) throws TranslatorException {
+            Link editLink = entity.getEditLink();
+            Map<String, List<String>> updateHeaders = getDefaultUpdateHeaders();
+            if (entity.getETag() != null) {
+                updateHeaders.put("If-Match", Arrays.asList(entity.getETag())); //$NON-NLS-1$
+            }
+            BinaryWSProcedureExecution update = invokeHTTP(
+                    method, 
+                    editLink.getHref(),
+                    method.equals("DELETE")?null:odataQuery.getPayload(entity), 
+                    updateHeaders);
+            if (HttpStatusCode.NO_CONTENT.getStatusCode() == update.getResponseCode()) {
+                updateCount.incrementAndGet();
+            } else {
+                throw buildError(update);
+            }
+            
+        }
+        
+        public abstract Map<String, List<String>> headers();
+        
+        public abstract ODataDeserializer getDeSerializer();
+        
+        class NotSupportedAccepts extends Exception {}
     }
+    
+    class JsonEntityCollectionIterator extends EntityCollectionIterator {
+
+        public JsonEntityCollectionIterator(ODataUpdateQuery odataQuery,
+                String method) throws TranslatorException {
+            super(odataQuery, method);
+        }
+        
+        @Override
+        public Map<String, List<String>> headers() {
+            Map<String, List<String>> headers = new HashMap<String, List<String>>();
+            headers.put("Accept", Arrays.asList(ContentType.JSON_FULL_METADATA.toContentTypeString())); //$NON-NLS-1$
+            return headers;
+        }  
+        
+        @Override
+        public ODataDeserializer getDeSerializer() {
+            return new JsonDeserializer(false);
+        }
+    }
+    
+    class XMLEntityCollectionIterator extends EntityCollectionIterator {
+        public XMLEntityCollectionIterator(ODataUpdateQuery odataQuery,
+                String method) throws TranslatorException {
+            super(odataQuery, method);
+        }
+        
+        @Override
+        public Map<String, List<String>> headers() {
+            Map<String, List<String>> headers = new HashMap<String, List<String>>();
+            headers.put("Accept", Arrays.asList(ContentType.APPLICATION_ATOM_XML.toContentTypeString())); //$NON-NLS-1$
+            return headers;
+        }  
+        
+        @Override
+        public ODataDeserializer getDeSerializer() {
+            return new AtomDeserializer();
+        }
+    }    
 
     private Map<String, List<String>> getDefaultUpdateHeaders() {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
@@ -216,16 +304,24 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
         int cols = table.getPrimaryKey().getColumns().size();
         Class<?>[] columnDataTypes = new Class<?>[cols];
         String[] columnNames = new String[cols];
-        //this is typically expected to be an int/long, but we'll be general here.  we may eventual need the type logic off of the metadata importer
+        String[] odataTypes = new String[cols];
+
+        // this is typically expected to be an int/long, but we'll be general here.  
+        // we may eventual need the type logic off of the metadata importer
         for (int i = 0; i < cols; i++) {
             columnDataTypes[i] = table.getPrimaryKey().getColumns().get(i).getJavaType();
             columnNames[i] = table.getPrimaryKey().getColumns().get(i).getName();
+            odataTypes[i] = ODataMetadataProcessor.getNativeType(table
+                    .getPrimaryKey().getColumns().get(i));
         }
-        GeneratedKeys generatedKeys = this.executionContext.getCommandContext().returnGeneratedKeys(columnNames, columnDataTypes);
+        GeneratedKeys generatedKeys = this.executionContext.getCommandContext()
+                .returnGeneratedKeys(columnNames, columnDataTypes);
+        
         List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
         for (int i = 0; i < columnDataTypes.length; i++) {
             Property prop = entity.getProperty(columnNames[i]);
-            Object value = ODataTypeManager.convertTeiidInput(prop.getValue(), columnDataTypes[i]);
+            Object value = ODataTypeManager.convertTeiidRuntimeType(prop.getValue(),
+                    odataTypes[i], columnDataTypes[i]);
             vals.add(value); 
         }
         generatedKeys.addKey(vals);

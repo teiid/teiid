@@ -23,10 +23,15 @@ package org.teiid.olingo;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
@@ -45,6 +50,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.Client;
 import org.teiid.odata.api.CountResponse;
@@ -355,10 +361,22 @@ public class TestODataSQLBuilder {
 
     @Test
     public void testAlias() throws Exception {
-        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=1",
-                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = 1 ORDER BY g0.e2");
+        helpTest("/odata4/vdb/PM1/G1?$filter=e2 eq @p1&@p1=1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e2 = 1 ORDER BY g0.e2");
     }
+    
+    @Test
+    public void testAlias2() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = '1' ORDER BY g0.e2");
+    }    
 
+    @Test
+    public void testAlias3() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1='1'",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = '1' ORDER BY g0.e2");
+    }
+    
     @Test
     public void testAliasWithExpression() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=$root/G2(1)/e1",
@@ -392,9 +410,50 @@ public class TestODataSQLBuilder {
         te("e1 eq 'foo'", "g0.e1 = 'foo'");
         te("e1 eq true", "g0.e1 = TRUE");
         te("e1 eq false", "g0.e1 = FALSE");
-        te("e1 eq 13:20:00", "g0.e1 = {t'13:20:00'}");
-        te("e1 eq 2008-10-13T00:00:00Z", "g0.e1 = {ts'2008-10-13 00:00:00.0'}");
-//        te("e1 eq datetimeoffset'2008-10-13T00:00:00.1234-04:00'", "g0.e1 = {ts '2008-10-13T00:00:00.000'}");
+        
+        Calendar gmt = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        gmt.clear();
+        gmt.set(Calendar.HOUR, 8);
+        gmt.set(Calendar.MINUTE, 20);
+        gmt.set(Calendar.SECOND, 02);
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+        sdf.setTimeZone(TimeZone.getDefault());
+        String time = sdf.format(new Time(gmt.getTimeInMillis()));
+        String expected = "g0.e1 = {t'"+time+"'}";
+        te("e1 eq 08:20:02", expected);
+        
+        
+        gmt = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        gmt.clear();
+        gmt.set(Calendar.YEAR, 2008);
+        gmt.set(Calendar.MONTH, Calendar.OCTOBER);
+        gmt.set(Calendar.DAY_OF_MONTH, 12);
+        gmt.set(Calendar.HOUR, 8);
+        gmt.set(Calendar.MINUTE, 20);
+        gmt.set(Calendar.SECOND, 02);
+        
+        sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+        sdf.setTimeZone(TimeZone.getDefault());
+        time = sdf.format(new Time(gmt.getTimeInMillis()));
+        expected = "g0.e1 = {ts '"+time+"'}";        
+        te("e1 eq 2008-10-12T08:20:02Z", expected);
+        
+        gmt = Calendar.getInstance(TimeZone.getTimeZone("GMT-04:00"));
+        gmt.clear();
+        gmt.set(Calendar.YEAR, 2008);
+        gmt.set(Calendar.MONTH, Calendar.OCTOBER);
+        gmt.set(Calendar.DAY_OF_MONTH, 12);
+        gmt.set(Calendar.HOUR, 8);
+        gmt.set(Calendar.MINUTE, 20);
+        gmt.set(Calendar.SECOND, 02);
+        gmt.set(Calendar.MILLISECOND, 235);
+        
+        sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+        sdf.setTimeZone(TimeZone.getDefault());
+        time = sdf.format(new Time(gmt.getTimeInMillis()));
+        expected = "g0.e1 = {ts '"+time+"'}";        
+        te("e1 eq 2008-10-12T08:20:02.235-04:00", expected);        
     }
 
     @Test
@@ -468,7 +527,22 @@ public class TestODataSQLBuilder {
     @Test
     public void testTimeMethods() throws Exception {
         te("year(e1) eq 2000", "YEAR(g0.e1) = 2000");
-        te("year(2008-10-13T00:00:00Z) eq 2008", "YEAR({ts'2008-10-13 00:00:00.0'}) = 2008");
+        
+        Calendar gmt = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        gmt.clear();
+        gmt.set(Calendar.YEAR, 2008);
+        gmt.set(Calendar.MONTH, Calendar.OCTOBER);
+        gmt.set(Calendar.DAY_OF_MONTH, 13);
+        gmt.set(Calendar.HOUR, 8);
+        gmt.set(Calendar.MINUTE, 20);
+        gmt.set(Calendar.SECOND, 2);
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+        sdf.setTimeZone(TimeZone.getDefault());
+        String time = sdf.format(new Time(gmt.getTimeInMillis()));
+        String expected = "YEAR({ts'"+time+"'}) = 2008"; 
+        
+        te("year(2008-10-13T08:20:02Z) eq 2008", expected);
         te("month(e1) gt 1", "MONTH(g0.e1) > 1");
         te("day(e1) ne 1", "DAYOFMONTH(g0.e1) != 1");
         te("hour(e1) eq 12", "HOUR(g0.e1) = 12");
