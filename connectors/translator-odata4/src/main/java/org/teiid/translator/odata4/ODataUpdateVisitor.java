@@ -67,22 +67,13 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
             for (int i = 0; i < elementCount; i++) {
                 Column column = obj.getColumns().get(i).getMetadataObject();
                 List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
-                getNativeType(column);
                 Expression expr = values.get(i);
                 Object value = resolveExpressionValue(expr);
-                this.odataQuery.addInsertProperty(column, getNativeType(column), value);
+                this.odataQuery.addInsertProperty(column, ODataMetadataProcessor.getNativeType(column), value);
             }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
         }
-    }
-
-    private String getNativeType(Column column) {
-        String nativeType = column.getNativeType();
-        if (nativeType == null) {
-            nativeType = "Edm.String";
-        }
-        return nativeType;
     }
     
     private Object resolveExpressionValue(Expression expr) throws TranslatorException {

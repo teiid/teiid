@@ -21,19 +21,17 @@
  */
 package org.teiid.olingo.service;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.olingo.commons.api.Constants;
+import org.apache.olingo.commons.api.data.Parameter;
 import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmParameter;
 import org.apache.olingo.commons.api.edm.EdmReturnType;
 import org.apache.olingo.commons.api.edm.EdmType;
-import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.apache.olingo.server.api.deserializer.DeserializerException;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.requests.ActionRequest;
 import org.apache.olingo.server.core.requests.FunctionRequest;
@@ -48,7 +46,6 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.Procedure;
@@ -56,19 +53,8 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.odata.api.ProcedureReturnType;
 import org.teiid.odata.api.SQLParameter;
-import org.teiid.olingo.LiteralParser;
 import org.teiid.olingo.ODataTypeManager;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ProcedureSQLBuilder {
     private List<SQLParameter> sqlParameters = new ArrayList<SQLParameter>();
@@ -121,7 +107,7 @@ public class ProcedureSQLBuilder {
         }
         else {
             ActionRequest actionRequest = (ActionRequest)request;
-            this.parameterValueProvider = new ActionParameterValueProvider(actionRequest.getPayload());
+            this.parameterValueProvider = new ActionParameterValueProvider(actionRequest.getPayload(), actionRequest);
             visit(actionRequest.getAction());
         }        
     }
@@ -192,12 +178,11 @@ public class ProcedureSQLBuilder {
         return null;
     }
 
-    private void visit(EdmParameter parameter) throws TeiidException {
-        Class<?> runtimeType = resolveParameterType(this.procedure.getName(), parameter.getName());
+    private void visit(EdmParameter edmParameter) throws TeiidException {
+        Class<?> runtimeType = resolveParameterType(this.procedure.getName(), edmParameter.getName());
         Integer sqlType = JDBCSQLTypeInfo.getSQLType(DataTypeManager.getDataTypeName(runtimeType));
-        Object value = this.parameterValueProvider.getValue(parameter, runtimeType);
-        this.sqlParameters.add(new SQLParameter(parameter.getName(), 
-                ODataTypeManager.convertToTeiidRuntimeType(runtimeType, value), sqlType));
+        Object value = this.parameterValueProvider.getValue(edmParameter, runtimeType);
+        this.sqlParameters.add(new SQLParameter(edmParameter.getName(), value, sqlType));
     }
     
     public String buildProcedureSQL() {
@@ -245,10 +230,12 @@ public class ProcedureSQLBuilder {
     static class ActionParameterValueProvider implements ParameterValueProvider {
         private InputStream payload;
         private boolean alreadyConsumed;
-        private byte[] jsonPayload;
+        private ActionRequest actionRequest;
+        private List<Parameter> parameters;
         
-        public ActionParameterValueProvider(InputStream payload) {
+        public ActionParameterValueProvider(InputStream payload, ActionRequest actionRequest) {
             this.payload = payload;
+            this.actionRequest = actionRequest;
         }
 
         @Override
@@ -270,61 +257,25 @@ public class ProcedureSQLBuilder {
                         return new BlobImpl(isf);
                     }
                 } else {
-                    this.jsonPayload = convertToByteArray(this.payload);
-                }
-            }
-            List<?> values = parseParameter(new ByteArrayInputStream((byte[]) this.jsonPayload), 
-                    edmParameter, runtimeType);
-            if (edmParameter.isCollection()) {
-                return values;
-            } else {
-                return values.get(0);
-            }
-        }
-        
-        private List<?> parseParameter(InputStream stream, EdmParameter parameter, 
-                Class<?> runtimeType) throws TeiidException {
-            try {
-                ArrayList<Object> parsedValues = new ArrayList<Object>();
-                ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true);
-                JsonParser parser = new JsonFactory(objectMapper).createParser(stream);
-                final ObjectNode tree = parser.getCodec().readTree(parser);
-                JsonNode jsonNode = tree.get(Constants.VALUE);
-                if (jsonNode != null) {
-                    if (jsonNode.isArray()) {
-                        ArrayNode arrayNode = (ArrayNode) jsonNode;
-                        Iterator<JsonNode> it = arrayNode.iterator();
-                        while (it.hasNext()) {
-                            String value = it.next().get(parameter.getName()).asText();
-                            parsedValues.add(LiteralParser.parseLiteral(parameter, runtimeType, value));
-                        }
-                    } else {
-                        String value = jsonNode.asText();
-                        parsedValues.add(LiteralParser.parseLiteral(parameter, runtimeType, value));
+                    try {
+                        this.parameters = this.actionRequest.getParameters();
+                    } catch (DeserializerException e) {
+                        throw new TeiidException(e);
                     }
-                    tree.remove(Constants.VALUE);
-                    // if this is value there can be only one property
-                    return parsedValues;
                 }
-                String value = tree.get(parameter.getName()).asText();
-                parsedValues.add(LiteralParser.parseLiteral(parameter, runtimeType, value));
-                return parsedValues;
-            } catch (JsonParseException e) {
-                throw new TeiidException(e);
-            } catch (JsonMappingException e) {
-                throw new TeiidException(e);
-            } catch (IOException e) {
-                throw new TeiidException(e);
             }
-        }
-        
-        private byte[] convertToByteArray(InputStream payload) throws TeiidException {
-            try {
-                return ObjectConverterUtil.convertToByteArray(payload);
-            } catch (IOException e) {
-                throw new TeiidException(e);
+            
+            if (this.parameters != null && !this.parameters.isEmpty()) {
+                for (Parameter parameter : this.parameters) {
+                    if (parameter.getName().equals(edmParameter.getName())) {
+                        // In Teiid one can only pass simple literal values, not complex
+                        // types, no complex parsing required. And LOBs can not be inlined 
+                        // for Function
+                        return parameter.getValue();
+                    }                    
+                }
             }
+            return null;
         }
     }  
     
@@ -342,7 +293,8 @@ public class ProcedureSQLBuilder {
                     // In Teiid one can only pass simple literal values, not complex
                     // types, no complex parsing required. And LOBs can not be inlined 
                     // for Function
-                    return LiteralParser.parseLiteral(edmParameter, runtimeType, parameter.getText());
+                    return ODataTypeManager.parseLiteral(edmParameter,
+                            runtimeType, parameter.getText());
                 }
             }
             return null;

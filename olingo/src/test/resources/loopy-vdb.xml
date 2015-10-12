@@ -51,7 +51,11 @@
             CREATE VIRTUAL PROCEDURE procComposableXML (x string) returns TABLE(load XML) OPTIONS (UPDATECOUNT 0) AS
             BEGIN
                 SELECT XMLELEMENT("name", x);
-            END            
+            END
+            CREATE VIRTUAL PROCEDURE procActionJSON (x string, y double) returns TABLE(load CLOB) OPTIONS (UPDATECOUNT 1) AS
+            BEGIN
+                SELECT jsonObject(x as "x1", y as "y1");
+            END                         
             CREATE VIRTUAL PROCEDURE actionXML (x XML) returns XML OPTIONS (UPDATECOUNT 0) AS
             BEGIN
                 return x;

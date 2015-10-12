@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Stack;
 
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
@@ -56,10 +57,10 @@ import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.SQLParameter;
-import org.teiid.olingo.LiteralParser;
 import org.teiid.olingo.ODataExpressionVisitor;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
@@ -99,13 +100,14 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private final List<TeiidException> exceptions = new ArrayList<TeiidException>();
     private final UriInfo uriInfo;
     private MetadataStore metadata;
-    private EntityResource ctxQuery;
-    private EntityResource ctxExpression;
+    private DocumentNode ctxQuery;
+    private DocumentNode ctxExpression;
     private UniqueNameGenerator nameGenerator;
     private URLParseService parseService;
     private ExpressionType exprType = ExpressionType.ANY;
+    private String lastPropertyType;
     
-    public ODataExpressionToSQLVisitor(EntityResource resource,
+    public ODataExpressionToSQLVisitor(DocumentNode resource,
             boolean prepared, UriInfo info, MetadataStore metadata,
             UniqueNameGenerator nameGenerator, 
             List<SQLParameter> params, URLParseService parseService) {
@@ -135,33 +137,40 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         return this.stack.pop();
     }
     
-    public EntityResource getEntityResource() {
+    public DocumentNode getEntityResource() {
         return this.ctxQuery;
     }
 
-    public EntityResource getExpresionEntityResource() {
+    public DocumentNode getExpresionEntityResource() {
         return this.ctxExpression;
     }
     
     @Override
     public void visit(Alias expr) {
         String strValue = this.uriInfo.getValueForAlias(expr.getParameterName());
-        if (strValue.startsWith("$root")) {
-            try {
+        try {
+            if (strValue.startsWith("$root")) {
                 this.stack.add(new ScalarSubquery(this.parseService.parse(strValue)));
-            } catch (TeiidException e) {
-                this.exceptions.add(e);
             }
-        }
-        else {
-            Object value = LiteralParser.parseLiteral(strValue);
-            if (this.prepared) {
-                stack.add(new Reference(this.params.size()));
-                this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
-            } else {
-                this.stack.add(new Constant(value));
+            else {
+                String type = "Edm.String";
+                if (this.lastPropertyType != null) {
+                    EdmPrimitiveTypeKind kind = ODataTypeManager.odataType(this.lastPropertyType);
+                    type = kind.getFullQualifiedName().getFullQualifiedNameAsString();
+                    this.lastPropertyType = null;
+                }
+                Object value = ODataTypeManager.parseLiteral(type, strValue);
+                if (this.prepared) {
+                    stack.add(new Reference(this.params.size()));
+                    this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
+                } else {
+                    this.stack.add(new Constant(value));
+                }
             }
+        } catch (TeiidException e) {
+            this.exceptions.add(e);
         }
+        
     }
 
     @Override
@@ -283,12 +292,20 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
     @Override
     public void visit(Literal expr) {
-        Object value = LiteralParser.parseLiteral(expr.getText());
-        if (this.prepared) {
-            stack.add(new Reference(this.params.size()));
-            this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
-        } else {
-            this.stack.add(new Constant(value));
+        try {
+            Object value = null;
+            if (expr.getText() != null && !expr.getText().equalsIgnoreCase("null")) {
+                String type = expr.getType().getFullQualifiedName().getFullQualifiedNameAsString();
+                value = ODataTypeManager.parseLiteral(type, expr.getText());
+            }
+            if (this.prepared) {
+                stack.add(new Reference(this.params.size()));
+                this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
+            } else {
+                this.stack.add(new Constant(value));
+            }
+        } catch (TeiidException e) {
+            this.exceptions.add(e);
         }
     }
 
@@ -441,6 +458,10 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         else {
             this.stack.add(new ElementSymbol(info.getProperty().getName(), this.ctxExpression.getGroupSymbol()));
         }
+        
+        // hack to resolve the property type.
+        Column c = this.ctxExpression.getTable().getColumnByName(info.getProperty().getName());
+        this.lastPropertyType = c.getRuntimeType();
     }
     
     @Override
@@ -450,7 +471,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     @Override
     public void visit(UriResourceNavigation info) {
         try {
-            EntityResource navigationResource = EntityResource.build(
+            DocumentNode navigationResource = DocumentNode.build(
                     (EdmEntityType) info.getType(), info.getKeyPredicates(), this.metadata,
                     this.nameGenerator, true, getUriInfo(), this.parseService);
 
@@ -461,14 +482,14 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             Criteria criteria = null;
             ForeignKey fk = null;
             if (info.isCollection()) {
-                fk = EntityResource.joinFK(navigationResource.getTable(), this.ctxQuery.getTable());    
+                fk = DocumentNode.joinFK(navigationResource.getTable(), this.ctxQuery.getTable());    
             }
             else {
-                fk = EntityResource.joinFK(this.ctxQuery.getTable(), navigationResource.getTable());
+                fk = DocumentNode.joinFK(this.ctxQuery.getTable(), navigationResource.getTable());
             }
             
             if (fk != null) {
-                List<String> lhsColumns = EntityResource.getColumnNames(fk.getColumns());
+                List<String> lhsColumns = DocumentNode.getColumnNames(fk.getColumns());
                 List<String> rhsColumns = fk.getReferenceColumns();
                 for (int i = 0; i < lhsColumns.size(); i++) {
                     if (criteria == null) {
@@ -508,7 +529,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     @Override
     public void visit(UriResourceLambdaVariable resource) {
         try {
-            EntityResource lambda = EntityResource.build(
+            DocumentNode lambda = DocumentNode.build(
                     (EdmEntityType) resource.getType(), null, this.metadata,
                     this.nameGenerator, false, this.uriInfo,
                     this.parseService);
@@ -522,7 +543,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 //ANY - Needs to be joined to resource.
                 this.ctxQuery.joinTable(
                         lambda, 
-                        (EntityResource.joinFK(this.ctxQuery.getTable(), lambda.getTable()) == null), 
+                        (DocumentNode.joinFK(this.ctxQuery.getTable(), lambda.getTable()) == null), 
                         JoinType.JOIN_INNER);
                 lambda.addCriteria(this.ctxQuery.getCriteria());
                 lambda.setDistinct(true);
@@ -534,7 +555,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         }
     }    
     
-    private QueryCommand buildSubquery(EntityResource eResource,
+    private QueryCommand buildSubquery(DocumentNode eResource,
             org.teiid.query.sql.symbol.Expression projected) {
         Select s1 = new Select();
         s1.addSymbol(projected); 
@@ -543,7 +564,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         From from = new From();
         from.addGroup(eResource.getGroupSymbol());
         q.setFrom(from);    
-        q.setCriteria(EntityResource.buildJoinCriteria(eResource, this.ctxQuery));
+        q.setCriteria(DocumentNode.buildJoinCriteria(eResource, this.ctxQuery));
         
         q.setSelect(s1);
         return q;
@@ -573,7 +594,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
             fromClause.setTable(true);
             
-            EntityResource itResource = new EntityResource();
+            DocumentNode itResource = new DocumentNode();
             AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), castFunction);
             itResource.setFromClause(fromClause);
             itResource.setGroupSymbol(groupSymbol);            
@@ -597,7 +618,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         EdmEntityType edmEntityType = info.getEntitySet().getEntityType();
         if (this.exprType == ExpressionType.ROOT) {
             try {
-                this.ctxExpression = EntityResource.build(edmEntityType,
+                this.ctxExpression = DocumentNode.build(edmEntityType,
                         info.getKeyPredicates(), this.metadata, this.nameGenerator,
                         true, getUriInfo(), null);
             } catch (TeiidException e) {
@@ -609,7 +630,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 this.ctxExpression = this.ctxQuery;
             }
             else {
-                for (EntityResource er: this.ctxQuery.getSibilings()) {
+                for (DocumentNode er: this.ctxQuery.getSibilings()) {
                     if (er.getEdmEntityType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
                         this.ctxExpression = er;
                         break;
@@ -619,7 +640,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         }
     }
     
-    public QueryCommand buildRootSubQuery(String element, EntityResource resource) {
+    public QueryCommand buildRootSubQuery(String element, DocumentNode resource) {
         Select s1 = new Select();
         s1.addSymbol(new ElementSymbol(element, resource.getGroupSymbol())); 
         From f1 = new From();
