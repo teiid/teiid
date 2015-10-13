@@ -2970,6 +2970,30 @@ public class TestResolver {
     	assertEquals("bqt1.smalla.timestampvalue = {ts'2000-01-01 00:00:00.0'}", crit.toString());
     }
     
+    @Test public void testCharInString() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue in ('a', 'b')", tm);
+    }
+    
+    @Test public void testStringInChar() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where 'a' in (bqt1.smalla.charValue, cast('a' as char))", tm);
+    }
+    
+    @Test public void testCharBetweenString() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue between 'a' and 'b'", tm);
+    }
+    
+    @Test public void testCharCompareString() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue = 'a'", tm);
+    }
+    
     private void helpTestWidenToString(String sql) {
     	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
     	tm.setWidenComparisonToString(false);
