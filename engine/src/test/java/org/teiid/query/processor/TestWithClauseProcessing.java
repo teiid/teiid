@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
@@ -586,6 +587,46 @@ public class TestWithClauseProcessing {
 		    };
 	    
 	    helpProcess(plan, cc, dataManager, expected);
+	}
+	
+	/**
+	 * Expected to fail as we shouldn't allow a reference to p.e2 in the windowed sum
+	 * @throws Exception
+	 */
+	@Test(expected=QueryValidatorException.class) public void testWithAggregation() throws Exception {
+		String sql = "WITH x as (SELECT e1 FROM pm1.g1) SELECT p.e1, SUM(p.e2) OVER (partition by p.e1) as y FROM pm1.g1 p JOIN x ON x.e1 = p.e1 GROUP BY p.e1";
+		
+		CommandContext cc = TestProcessor.createCommandContext();
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	}
+	
+	@Test public void testWithAggregation1() throws Exception {
+		String sql = "WITH x as (SELECT e1 FROM pm1.g1) SELECT p.e1, SUM(max(p.e2)) OVER (partition by p.e1) as y FROM pm1.g1 p JOIN x ON x.e1 = p.e1 GROUP BY p.e1";
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+		dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("a"));
+		dataManager.addData("SELECT g_0.e1, g_0.e2 FROM g1 AS g_0 WHERE g_0.e1 IN ('a', 'b')", Arrays.asList("a", 1), Arrays.asList("a", 2), Arrays.asList("b", 3)); 
+		CommandContext cc = TestProcessor.createCommandContext();
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    
+	    List<?>[] expected = new List[] { 
+		        Arrays.asList("a", 2l),
+		        Arrays.asList("b", 3l),
+		    };
+	    
+	    helpProcess(plan, cc, dataManager, expected);
+	    
+	    //full push down
+	    cc = TestProcessor.createCommandContext();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+		bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+		bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+		bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+	    plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    TestOptimizer.checkAtomicQueries(new String[] {"WITH x (e1) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT g_0.e1, SUM(MAX(g_0.e2)) OVER (PARTITION BY g_0.e1) FROM pm1.g1 AS g_0, x AS g_1 WHERE g_1.e1 = g_0.e1 GROUP BY g_0.e1"}, plan);
 	}
 }
 

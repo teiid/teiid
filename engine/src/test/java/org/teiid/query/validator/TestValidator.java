@@ -1758,7 +1758,7 @@ public class TestValidator {
 	}
 
 	@Test public void testWindowFunctionWithNestedaggAllowed1() {
-		helpValidate("SELECT max(min(e1)) over (order by max(e2)) from pm1.g1 group by e1", new String[] {"MIN(e1)"}, RealMetadataFactory.example1Cached());		
+		helpValidate("SELECT max(min(e1)) over (order by max(e2)) from pm1.g1 group by e1", new String[] {}, RealMetadataFactory.example1Cached());		
 	}
 	
 	@Test public void testWindowFunctionWithoutFrom() {

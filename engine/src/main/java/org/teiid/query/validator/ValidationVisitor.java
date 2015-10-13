@@ -1168,10 +1168,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Expression[] aggExps = obj.getArgs();
         
         for (Expression expression : aggExps) {
-            validateNoNestedAggs(expression);
+            validateNoNestedAggs(expression, obj.isWindowed());
 		}
-        validateNoNestedAggs(obj.getOrderBy());
-        validateNoNestedAggs(obj.getCondition());
+        validateNoNestedAggs(obj.getOrderBy(), false);
+        validateNoNestedAggs(obj.getCondition(), false);
         
         // Verify data type of aggregate expression
         Type aggregateFunction = obj.getAggregateFunction();
@@ -1234,11 +1234,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
 	}
     
-	private void validateNoNestedAggs(LanguageObject aggExp) {
+	private void validateNoNestedAggs(LanguageObject aggExp, boolean windowOnly) {
 		// Check for any nested aggregates (which are not allowed)
         if(aggExp != null) {
         	HashSet<Expression> nestedAggs = new LinkedHashSet<Expression>();
-            AggregateSymbolCollectorVisitor.getAggregates(aggExp, nestedAggs, null, null, nestedAggs, null);
+            AggregateSymbolCollectorVisitor.getAggregates(aggExp, windowOnly?null:nestedAggs, null, null, nestedAggs, null);
             if(!nestedAggs.isEmpty()) {
                 handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0039", nestedAggs), nestedAggs); //$NON-NLS-1$
             }
