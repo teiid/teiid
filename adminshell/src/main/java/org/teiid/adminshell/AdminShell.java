@@ -108,19 +108,6 @@ public class AdminShell {
 		getAdmin().addDataRoleMapping(vdbName, vdbVersion, policyName, role);
 	}
 
-	@Doc(text = "Assign a translator and data source to a source Model")
-	@Deprecated
-	public static void assignToModel(
-			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
-			@Doc(text = "model name") String modelName,
-			@Doc(text = "source name") String sourceName,
-			@Doc(text = "translator name") String translatorName,
-			@Doc(text = "jndi name") String jndiName)
-			throws AdminException {
-		getAdmin().assignToModel(vdbName, vdbVersion, modelName, sourceName, translatorName, jndiName);
-	}
-	
 	@Doc(text = "Update a translator and data source for a given source")
 	public static void updateSource(
 			@Doc(text = "vdb name") String vdbName,

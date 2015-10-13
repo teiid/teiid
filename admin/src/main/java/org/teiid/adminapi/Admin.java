@@ -39,21 +39,6 @@ public interface Admin {
 	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA, ALL};
 
     /**
-     * Assign a {@link Translator} and Data source to a {@link VDB}'s Model
-     *
-     * @param vdbName Name of the VDB
-     * @param vdbVersion Version of the VDB
-     * @param modelName  Name of the Model
-     * @param sourceName source name
-     * @param translatorName
-     * @param dsName data source name that can found in the JNDI map.
-     * @throws AdminException
-     * @deprecated
-     */
-    @Deprecated
-	void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException;
-    
-    /**
      * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
      *
      * @param vdbName Name of the VDB

@@ -32,19 +32,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.CacheStatistics;
-import org.teiid.adminapi.EngineStatistics;
-import org.teiid.adminapi.PropertyDefinition;
-import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Session;
-import org.teiid.adminapi.Transaction;
-import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.EngineStatisticsMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -115,13 +105,6 @@ public class EmbeddedAdminFactory {
 			this.embeddedServer = embeddedServer;
 		}
 		
-		@Override
-		public void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException {
-			// assignToModel is Deprecated
-			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40130, "assignToModel")); //$NON-NLS-1$
-			
-		}
-
 		@Override
 		public void removeSource(String vdbName, int vdbVersion, String modelName, String sourceName) throws AdminException {
 

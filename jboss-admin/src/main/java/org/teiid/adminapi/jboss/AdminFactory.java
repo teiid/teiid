@@ -1747,26 +1747,6 @@ public class AdminFactory {
 		}
 
 		@Override
-		public void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName,
-				String dsName) throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "assign-datasource",
-	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
-	        		"model-name", modelName,
-	        		"source-name", sourceName,
-	        		"translator-name", translatorName,
-	        		"ds-name", dsName);//$NON-NLS-1$ 
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70047, Util.getFailureDescription(outcome));
-	            }
-	        } catch (IOException e) {
-	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70048, e);
-	        }
-		}
-		
-		@Override
 		public void updateSource(String vdbName, int vdbVersion, String sourceName, String translatorName,
 				String dsName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "update-source",
