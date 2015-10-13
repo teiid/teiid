@@ -793,38 +793,46 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    boolean exprChar = isCharacter(exp, true);
 	    
-	    if ((exp.getType() != DataTypeManager.DefaultDataClasses.NULL && !exprChar) || metadata.widenComparisonToString()) {
+	    if (exp.getType() != DataTypeManager.DefaultDataClasses.NULL) {
 	    	boolean success = true;
             // try to apply cast
         	// Apply cast and replace current value
-            try {
-            	criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, expTypeName, metadata) );
-            	lower = criteria.getLowerExpression();
-            	lowerTypeName = DataTypeManager.getDataTypeName(lower.getType());
-            } catch (QueryResolverException e) {
-            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
-	            	throw e;
+	    	if (!exprChar || metadata.widenComparisonToString() || isCharacter(lower, true)) { 
+	            try {
+	            	criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, expTypeName, metadata) );
+	            	lower = criteria.getLowerExpression();
+	            	lowerTypeName = DataTypeManager.getDataTypeName(lower.getType());
+	            } catch (QueryResolverException e) {
+	            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
+		            	throw e;
+		            }
+	            	if (type == null) {
+	            		type = lower.getType();
+	            	}
+	            	success = false;
 	            }
-            	if (type == null) {
-            		type = lower.getType();
-            	}
-            	success = false;
-            }
+	    	} else {
+	    		success = false;
+	    	}
             // try to apply cast
         	// Apply cast and replace current value
-            try {
-            	criteria.setUpperExpression(ResolverUtil.convertExpression(upper, upperTypeName, expTypeName, metadata) );
-            	upper = criteria.getUpperExpression();
-            	upperTypeName = DataTypeManager.getDataTypeName(upper.getType());
-            } catch (QueryResolverException e) {
-            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
-	            	throw e;
+	    	if (!exprChar || metadata.widenComparisonToString() || isCharacter(upper, true)) {
+	            try {
+	            	criteria.setUpperExpression(ResolverUtil.convertExpression(upper, upperTypeName, expTypeName, metadata) );
+	            	upper = criteria.getUpperExpression();
+	            	upperTypeName = DataTypeManager.getDataTypeName(upper.getType());
+	            } catch (QueryResolverException e) {
+	            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
+		            	throw e;
+		            }
+	            	if (type == null) {
+	            		type = upper.getType();
+	            	}
+	            	success = false;
 	            }
-            	if (type == null) {
-            		type = upper.getType();
-            	}
-            	success = false;
-            }
+	    	} else {
+	    		success = false;
+	    	}
             if (success) {
             	return;
             }
@@ -1022,8 +1030,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	    
+	    boolean attemptConvert = !isCharacter(exprType, true) || metadata.widenComparisonToString();
+	    
 	    List<Expression> newVals = new ArrayList<Expression>(scrit.getValues().size());
-	    if ((scrit.getExpression().getType() != DataTypeManager.DefaultDataClasses.NULL && !isCharacter(exprType, true)) || metadata.widenComparisonToString()) {
+	    if (scrit.getExpression().getType() != DataTypeManager.DefaultDataClasses.NULL) {
 		    valIter = scrit.getValues().iterator();
 		    while(valIter.hasNext()) {
 		        Expression value = (Expression) valIter.next();
@@ -1032,16 +1042,18 @@ public class ResolverVisitor extends LanguageVisitor {
 		            String valTypeName = DataTypeManager.getDataTypeName(value.getType());
 		            // try to apply cast
 		        	// Apply cast and replace current value
-		            try {
-		            	newVals.add(ResolverUtil.convertExpression(value, valTypeName, exprTypeName, metadata) );
-		            } catch (QueryResolverException e) {
-		            	if (value instanceof Constant && isCharacter(value, true) && !metadata.widenComparisonToString()) {
-			            	throw e;
+		            if (attemptConvert || isCharacter(value.getType(), true)) {
+			            try {
+			            	newVals.add(ResolverUtil.convertExpression(value, valTypeName, exprTypeName, metadata) );
+			            } catch (QueryResolverException e) {
+			            	if (value instanceof Constant && isCharacter(value, true) && !metadata.widenComparisonToString()) {
+				            	throw e;
+				            }
+			            	if (type == null) {
+			            		type = value.getType();
+			            	}
+			                break;
 			            }
-		            	if (type == null) {
-		            		type = value.getType();
-		            	}
-		                break;
 		            }
 		        } else {
 		            newVals.add(value);
