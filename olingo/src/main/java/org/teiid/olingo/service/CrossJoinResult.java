@@ -33,12 +33,12 @@ import org.teiid.olingo.ComplexReturnType;
 public class CrossJoinResult implements QueryResponse {
     private final String invalidCharacterReplacement;
     private String nextToken;
-    private CrossJoinResource resource;
+    private CrossJoinNode documentNode;
     private List<List<ComplexReturnType>> out = new ArrayList<List<ComplexReturnType>>();
     
-    public CrossJoinResult(String invalidCharacterReplacement, CrossJoinResource context) {
+    public CrossJoinResult(String invalidCharacterReplacement, CrossJoinNode context) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
-        this.resource = context;
+        this.documentNode = context;
     }
 
     @Override
@@ -46,21 +46,26 @@ public class CrossJoinResult implements QueryResponse {
 
         ArrayList<ComplexReturnType> row = new ArrayList<ComplexReturnType>();
         
-        Entity entity = EntityList.createEntity(rs, this.resource.getEdmEntityType(),
-                this.resource.getAllProjectedColumns(),
-                this.invalidCharacterReplacement);
-        row.add(new ComplexReturnType(this.resource.getTable().getName(), this.resource.getEdmEntityType(), entity, this.resource.hasExpand()));
-        for (EntityResource er:this.resource.getSibilings()) {
-            Entity sibiling = EntityList.createEntity(rs, er.getEdmEntityType(),
-                    er.getAllProjectedColumns(),
+        Entity entity = EntityCollectionResponse.createEntity(rs,
+                this.documentNode, this.invalidCharacterReplacement);
+        
+        row.add(new ComplexReturnType(this.documentNode.getTable().getName(),
+                this.documentNode.getEdmEntityType(), entity, this.documentNode
+                        .hasExpand()));
+        
+        for (DocumentNode node : this.documentNode.getSibilings()) {
+            Entity sibiling = EntityCollectionResponse.createEntity(rs, node,
                     this.invalidCharacterReplacement);
-            row.add(new ComplexReturnType(er.getTable().getName(), this.resource.getEdmEntityType(), sibiling, ((CrossJoinResource)er).hasExpand()));
+            
+            row.add(new ComplexReturnType(node.getTable().getName(),
+                    this.documentNode.getEdmEntityType(), sibiling,
+                    ((CrossJoinNode) node).hasExpand()));
         }
         this.out.add(row);
     }
     
-    public CrossJoinResource getResource() {
-        return this.resource;
+    public CrossJoinNode getResource() {
+        return this.documentNode;
     }
 
     public List<List<ComplexReturnType>> getResults(){

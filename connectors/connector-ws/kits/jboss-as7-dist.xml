@@ -42,11 +42,20 @@
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <includes>
                 <include>org.apache.cxf:cxf-rt-frontend-jaxrs</include>
+                <include>org.apache.cxf:cxf-rt-transports-http-hc</include>
                 <include>org.apache.cxf:cxf-rt-rs-security-oauth</include>
                 <include>org.apache.cxf:cxf-rt-rs-security-oauth2</include>
                 <include>org.apache.cxf:cxf-rt-rs-security-oauth2-saml</include>
             </includes>
         </dependencySet>
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/org/apache/httpcomponents/async/main</outputDirectory>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>org.apache.httpcomponents:httpcore-nio</include>
+                <include>org.apache.httpcomponents:httpasyncclient</include>
+            </includes>
+        </dependencySet>        
         <dependencySet>
             <outputDirectory>${jbossas-module-root}/javax/ws/rs/api/2.0</outputDirectory>
             <useTransitiveDependencies>false</useTransitiveDependencies>

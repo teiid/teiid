@@ -10,6 +10,10 @@
         <resource-root path="cxf-rt-rs-security-oauth-${version.org.apache.cxf}.jar"/>
         <resource-root path="cxf-rt-rs-security-oauth2-${version.org.apache.cxf}.jar"/>
         <resource-root path="cxf-rt-rs-security-oauth2-saml-${version.org.apache.cxf}.jar"/>
+        <!-- Remove below patch after https://issues.apache.org/jira/browse/CXF-6638 -->
+        <resource-root path="cxf-rt-transports-http-hc-patch.jar"/>
+        <!-- Patch done --> 
+        <resource-root path="cxf-rt-transports-http-hc-${version.org.apache.cxf}.jar"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
@@ -21,5 +25,7 @@
         <module name="org.apache.cxf.impl"/>
         <module name="javax.ws.rs.api" services="export" export="true" slot="2.0"/>
         <module name="net.oauth.core"/>
+        <module name="org.apache.httpcomponents"/>
+        <module name="org.apache.httpcomponents.async"/>
     </dependencies>
 </module>

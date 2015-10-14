@@ -187,7 +187,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 52, translators.size());
+		assertEquals(translators.toString(), 53, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -702,5 +702,11 @@ public class IntegrationTestDeployment {
 		s.executeQuery("select ST_AsText(ST_Transform(ST_GeomFromText('POLYGON((743238 2967416,743238 2967450,743265 2967450,743265.625 2967416,743238 2967416))',2249),4326))");
 		s.executeQuery("select ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))");
 		s.executeQuery("select ST_AsText(ST_GeomFromGeoJSON('{\"coordinates\":[-48.23456,20.12345],\"type\":\"Point\"}'))");
+	}
+	
+	@Test(expected=AdminProcessingException.class) public void testAmbigiousDeployment() throws Exception {
+		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
+		admin.deploy("bqt2-1.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
 	}
 }

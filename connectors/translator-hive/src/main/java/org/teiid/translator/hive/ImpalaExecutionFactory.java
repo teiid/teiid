@@ -25,8 +25,12 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.*;
+import org.teiid.language.Join.JoinType;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -221,6 +225,72 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     @Override
     public boolean requiresLeftLinearJoin() {
     	return true;
+    }
+    
+    @Override
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (command instanceof Select) {
+    		Select select = (Select)command;
+    		//compensate for an impala issue - https://issues.jboss.org/browse/TEIID-3743
+    		if (select.getGroupBy() == null && select.getHaving() == null) {
+    			boolean rewrite = false;
+    			String distinctVal = null;
+    			for (DerivedColumn col : select.getDerivedColumns()) {
+    				if (col.getExpression() instanceof AggregateFunction && ((AggregateFunction)col.getExpression()).isDistinct()) {
+    					if (distinctVal == null) {
+    						distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
+    					} else if (!((AggregateFunction)col.getExpression()).getParameters().toString().equals(distinctVal)){
+    						rewrite = true;
+    						break;
+    					}
+    				}
+    			}
+    			if (rewrite) {
+    				Select top = new Select();
+    				top.setWith(select.getWith());
+    				top.setDerivedColumns(new ArrayList<DerivedColumn>());
+    				top.setFrom(new ArrayList<TableReference>());
+    				//rewrite as a cross join of single groups
+    				Select viewSelect = new Select();
+    				viewSelect.setFrom(select.getFrom());
+    				viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
+    				viewSelect.setWhere(select.getWhere());
+    				distinctVal = null;
+        			int viewCount = 0;
+        			NamedTable view = new NamedTable("v" + viewCount++, null, null); //$NON-NLS-1$
+        			for (int i = 0; i < select.getDerivedColumns().size(); i++) {
+        				DerivedColumn col = select.getDerivedColumns().get(i);
+        				if (col.getExpression() instanceof AggregateFunction && ((AggregateFunction)col.getExpression()).isDistinct()) {
+        					if (distinctVal == null) {
+        						distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
+        					} else if (!((AggregateFunction)col.getExpression()).getParameters().toString().equals(distinctVal)){
+        						DerivedTable dt = new DerivedTable(viewSelect, view.getName());
+        						if (top.getFrom().isEmpty()) {
+        							top.getFrom().add(dt);
+        						} else {
+        							Join join = new Join(top.getFrom().remove(0), dt, JoinType.CROSS_JOIN, null);
+        							top.getFrom().add(join);
+        						}
+        						view = new NamedTable("v" + viewCount++, null, null); //$NON-NLS-1$
+        						viewSelect = new Select();
+        						viewSelect.setFrom(select.getFrom());
+        						viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
+        						viewSelect.setWhere(select.getWhere());
+        						distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
+        					}
+        				}
+        				col.setAlias("c" + i); //$NON-NLS-1$
+        				top.getDerivedColumns().add(new DerivedColumn(null, new ColumnReference(view, col.getAlias(), null, col.getExpression().getType())));
+        				viewSelect.getDerivedColumns().add(col);
+        			}
+        			DerivedTable dt = new DerivedTable(viewSelect, view.getName());
+        			Join join = new Join(top.getFrom().remove(0), dt, JoinType.CROSS_JOIN, null);
+					top.getFrom().add(join);
+					return Arrays.asList(top);
+    			}
+    		}
+    	}
+    	return super.translateCommand(command, context);
     }
     
 }

@@ -85,6 +85,7 @@
         <version.commons-codec>1.9</version.commons-codec>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
 	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
+	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <version.org.reflections>0.9.9</version.org.reflections>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
@@ -95,6 +96,8 @@
         <version.proj4j>0.1.0</version.proj4j>
 	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
 	    <version.narayana>5.0.4.Final</version.narayana>
+	    <version.org.apache.httpcomponents.httpcore-nio>4.2.4</version.org.apache.httpcomponents.httpcore-nio>
+	    <version.org.apache.httpcomponents.httpasyncclient>4.0-beta3</version.org.apache.httpcomponents.httpasyncclient>	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1130,6 +1133,21 @@
                     </exclusion>                                   
                 </exclusions>                
             </dependency>
+			<dependency>
+			    <groupId>org.apache.cxf</groupId>
+			    <artifactId>cxf-rt-transports-http-hc</artifactId>
+			    <version>${version.org.apache.cxf}</version>
+			</dependency>
+	        <dependency>
+	            <groupId>org.apache.httpcomponents</groupId>
+	            <artifactId>httpcore-nio</artifactId>
+	            <version>${version.org.apache.httpcomponents.httpcore-nio}</version>
+	        </dependency>
+			<dependency>
+			    <groupId>org.apache.httpcomponents</groupId>
+			    <artifactId>httpasyncclient</artifactId>
+			    <version>${version.org.apache.httpcomponents.httpasyncclient}</version>
+			</dependency>
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-bundle</artifactId>
@@ -1561,7 +1579,12 @@
 	            <groupId>org.picketbox</groupId>
 	            <artifactId>picketbox</artifactId>
 	            <version>${version.org.picketbox}</version>
-	        </dependency>             
+	        </dependency> 
+			<dependency>
+			    <groupId>com.fasterxml</groupId>
+			    <artifactId>aalto-xml</artifactId>
+			    <version>${version.com.fasterxml.aalto-xml}</version>
+			</dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>

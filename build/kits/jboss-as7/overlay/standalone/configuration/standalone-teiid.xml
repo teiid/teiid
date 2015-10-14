@@ -421,6 +421,7 @@
             <translator name="vertica" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="actian-vector" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="osisoft-pi" module="org.jboss.teiid.translator.jdbc"/>
+            <translator name="odata4" module="org.jboss.teiid.translator.odata4"/>
         </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <unbounded-queue-thread-pool name="teiid-async">

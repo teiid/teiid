@@ -1,0 +1,148 @@
+{
+   "value":[
+      {
+         "UserName":"russellwhyte",
+         "AddressInfo":[
+            {
+               "Address":"187 Suffolk Ln.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Boise",
+                  "Region":"ID"
+               }
+            }
+         ],
+         "Friends":[
+            {
+               "UserName":"scottketchum"
+            },
+            {
+               "UserName":"ronaldmundy"
+            },
+            {
+               "UserName":"javieralfred"
+            },
+            {
+               "UserName":"angelhuffman"
+            }
+         ]
+      },
+      {
+         "UserName":"scottketchum",
+         "AddressInfo":[
+            {
+               "Address":"2817 Milton Dr.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Albuquerque",
+                  "Region":"NM"
+               }
+            }
+         ],
+         "Friends":[
+            {
+               "UserName":"russellwhyte"
+            },
+            {
+               "UserName":"ronaldmundy"
+            }
+         ]
+      },
+      {
+         "UserName":"ronaldmundy",
+         "AddressInfo":[
+
+         ],
+         "Friends":[
+            {
+               "UserName":"russellwhyte"
+            },
+            {
+               "UserName":"scottketchum"
+            }
+         ]
+      },
+      {
+         "UserName":"javieralfred",
+         "AddressInfo":[
+            {
+               "Address":"89 Jefferson Way Suite 2",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Portland",
+                  "Region":"WA"
+               }
+            }
+         ],
+         "Friends":[
+            {
+               "UserName":"willieashmore"
+            },
+            {
+               "UserName":"vincentcalabrese"
+            },
+            {
+               "UserName":"georginabarlow"
+            }
+         ]
+      },
+      {
+         "UserName":"willieashmore",
+         "AddressInfo":[
+
+         ],
+         "Friends":[
+            {
+               "UserName":"javieralfred"
+            },
+            {
+               "UserName":"vincentcalabrese"
+            }
+         ]
+      },
+      {
+         "UserName":"vincentcalabrese",
+         "AddressInfo":[
+            {
+               "Address":"55 Grizzly Peak Rd.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Butte",
+                  "Region":"MT"
+               }
+            }
+         ],
+         "Friends":[
+
+         ]
+      },
+      {
+         "UserName":"clydeguess",
+         "AddressInfo":[
+
+         ],
+         "Friends":[
+            {
+               "UserName":"keithpinckney"
+            },
+            {
+               "UserName":"ursulabright"
+            }
+         ]
+      },
+      {
+         "UserName":"keithpinckney",
+         "AddressInfo":[
+
+         ],
+         "Friends":[
+            {
+               "UserName":"clydeguess"
+            },
+            {
+               "UserName":"marshallgaray"
+            }
+         ]
+      }
+   ]
+}

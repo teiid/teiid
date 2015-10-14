@@ -23,6 +23,7 @@ package org.teiid.translator.odata4;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -46,23 +47,31 @@ import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.edm.EdmReferentialConstraint;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
+import org.apache.olingo.commons.api.edm.provider.CsdlAction;
+import org.apache.olingo.commons.api.edm.provider.CsdlActionImport;
 import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntityContainer;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntitySet;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunctionImport;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
+import org.apache.olingo.commons.api.edm.provider.CsdlParameter;
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
 import org.apache.olingo.commons.api.edm.provider.CsdlReferentialConstraint;
+import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
@@ -80,6 +89,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.odata4.ODataExecutionFactory;
 import org.teiid.translator.odata4.ODataMetadataProcessor;
+import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataMetadataProcessor {
@@ -113,8 +123,8 @@ public class TestODataMetadataProcessor {
         props.setProperty("schemaNamespace", "Microsoft.OData.SampleService.Models.TripPin");
         MetadataFactory mf = new MetadataFactory("vdb", 1, "trippin", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         processor.process(mf, null);
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);    
+//        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+//        System.out.println(ddl);    
         
         return mf;
     }
@@ -128,7 +138,7 @@ public class TestODataMetadataProcessor {
     	TransformationMetadata metadata = getTransformationMetadata(mf, this.translator);
     	
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);    
+        //System.out.println(ddl);    
 		
 		MetadataFactory mf2 = new MetadataFactory(null, 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf2, ddl);	
@@ -142,6 +152,10 @@ public class TestODataMetadataProcessor {
 	    return new CsdlProperty().setName(name).setType(type.getFullQualifiedName());
 	}
 	
+    static CsdlParameter createParameter(String name, EdmPrimitiveTypeKind type) {        
+        return new CsdlParameter().setName(name).setType(type.getFullQualifiedName());
+    }
+    
 	static XMLMetadata buildXmlMetadata(Object... schemaElements) {
         final CsdlSchema schema = new CsdlSchema();
         schema.setNamespace("namespace");
@@ -149,6 +163,11 @@ public class TestODataMetadataProcessor {
         ArrayList<CsdlEntitySet> entitySets = new ArrayList<CsdlEntitySet>();
         ArrayList<CsdlEntityType> entityTypes = new ArrayList<CsdlEntityType>();
         ArrayList<CsdlComplexType> complexTypes = new ArrayList<CsdlComplexType>();
+        
+        ArrayList<CsdlFunctionImport> functionImports = new ArrayList<CsdlFunctionImport>();
+        ArrayList<CsdlFunction> functions = new ArrayList<CsdlFunction>();
+        ArrayList<CsdlActionImport> actionImports = new ArrayList<CsdlActionImport>();
+        ArrayList<CsdlAction> actions = new ArrayList<CsdlAction>();
         
         for (Object obj:schemaElements) {
             if (obj instanceof CsdlEntitySet) {
@@ -159,12 +178,24 @@ public class TestODataMetadataProcessor {
             }
             else if (obj instanceof CsdlComplexType) {
                 complexTypes.add((CsdlComplexType)obj);
+            } else if (obj instanceof CsdlFunctionImport) {
+                functionImports.add((CsdlFunctionImport)obj);
+            } else if (obj instanceof CsdlFunction) {
+                functions.add((CsdlFunction)obj);
+            } else if (obj instanceof CsdlActionImport) {
+                actionImports.add((CsdlActionImport)obj);
+            } else if (obj instanceof CsdlAction) {
+                actions.add((CsdlAction)obj);
             }
         }
         
         schema.setEntityTypes(entityTypes);
         schema.setComplexTypes(complexTypes);
+        schema.setActions(actions);
+        schema.setFunctions(functions);
         schema.getEntityContainer().setEntitySets(entitySets);
+        schema.getEntityContainer().setFunctionImports(functionImports);
+        schema.getEntityContainer().setActionImports(actionImports);
         
 	    ClientCsdlEdmx edmx = new ClientCsdlEdmx();
 	    edmx.setVersion("1.0");
@@ -261,6 +292,8 @@ public class TestODataMetadataProcessor {
         assertEquals(4, addressTable.getColumns().size());
 		
 		assertNotNull(addressTable.getColumnByName("ssn"));
+		assertNotNull(addressTable.getColumnByName("ssn").getProperty(ODataMetadataProcessor.PSEUDO, false));
+		assertTrue(addressTable.getColumnByName("ssn").isSelectable());
         assertEquals(1, addressTable.getForeignKeys().size());
         assertEquals("Persons", addressTable.getForeignKeys().get(0).getReferenceTableName());
 	}
@@ -268,15 +301,15 @@ public class TestODataMetadataProcessor {
     static MetadataFactory getEntityWithComplexProperty()
             throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
 		
-		CsdlComplexType address = buildAddressComplexType();
+		CsdlComplexType address = complexType("Address");
         XMLMetadata metadata = buildXmlMetadata(createES("Persons", "namespace.Person"), 
                 buildPersonEntity(address), address);
         processor.getMetadata(mf, metadata);
         
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);
         return mf;
     }
 
@@ -284,9 +317,11 @@ public class TestODataMetadataProcessor {
 	@Test
 	public void testMultipleEnititySetWithSameComplexType() throws Exception {
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
 
-        CsdlComplexType address = buildAddressComplexType();
+        CsdlComplexType address = complexType("Address");
         XMLMetadata metadata = buildXmlMetadata(
                 createES("Persons", "namespace.Person"),
                 buildPersonEntity(address), address,
@@ -329,10 +364,116 @@ public class TestODataMetadataProcessor {
 		assertNotNull(fk.getColumnByName("e1"));
 	}
 
+	@Test
+	public void testFunction() throws Exception {
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("Edm.String");
+        
+        MetadataFactory mf = functionMetadata("invoke", returnType, null);
+	    Procedure p = mf.getSchema().getProcedure("invoke");
+	    assertNotNull(p);
+	    assertEquals(3, p.getParameters().size());
+	    assertNull(p.getResultSet());
+	    assertNotNull(getReturnParameter(p));
+	    ProcedureParameter pp = getReturnParameter(p);
+	    assertEquals("string", pp.getRuntimeType());
+	    ODataType type = ODataType.valueOf(p.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+	    assertEquals(ODataType.FUNCTION, type);
+	}
+	
+    @Test
+    public void testAction() throws Exception {
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("Edm.String");
+        
+        MetadataFactory mf = actionMetadata("invoke", returnType, null);
+        Procedure p = mf.getSchema().getProcedure("invoke");
+        assertNotNull(p);
+        assertEquals(3, p.getParameters().size());
+        assertNull(p.getResultSet());
+        assertNotNull(getReturnParameter(p));
+        ProcedureParameter pp = getReturnParameter(p);
+        assertEquals("string", pp.getRuntimeType());
+        ODataType type = ODataType.valueOf(p.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        assertEquals(ODataType.ACTION, type);
+    }	
+
+    @Test
+    public void testFunctionReturnPrimitiveCollection() throws Exception {
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("Edm.String");
+        returnType.setCollection(true);
+        
+        MetadataFactory mf = functionMetadata("invoke", returnType, null);
+        Procedure p = mf.getSchema().getProcedure("invoke");
+        assertNotNull(p);
+        assertEquals(3, p.getParameters().size());
+        assertNull(p.getResultSet());
+        assertNotNull(getReturnParameter(p));
+        ProcedureParameter pp = getReturnParameter(p);
+        assertEquals("string[]", pp.getRuntimeType());        
+        ODataType type = ODataType.valueOf(p.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        assertEquals(ODataType.FUNCTION, type);
+    }
+    
+    @Test
+    public void testFunctionReturnComplex() throws Exception {
+        CsdlComplexType complex = complexType("Address");
+        
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("namespace.Address");
+        
+        MetadataFactory mf = functionMetadata("invoke", returnType, complex);
+        Procedure p = mf.getSchema().getProcedure("invoke");
+        assertNotNull(p);
+        assertEquals(2, p.getParameters().size());
+        assertNotNull(p.getResultSet());
+        assertNull(getReturnParameter(p));
+        ColumnSet<Procedure> table = p.getResultSet();
+        ODataType type = ODataType.valueOf(p.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        assertEquals(ODataType.FUNCTION, type);
+        
+        type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        assertEquals(ODataType.COMPLEX, type);
+    }  
+    
+    @Test
+    public void testFunctionReturnComplexCollection() throws Exception {
+        CsdlComplexType complex = complexType("Address");
+        
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("namespace.Address");
+        returnType.setCollection(true);
+        
+        MetadataFactory mf = functionMetadata("invoke", returnType, complex);
+        Procedure p = mf.getSchema().getProcedure("invoke");
+        assertNotNull(p);
+        assertEquals(2, p.getParameters().size());
+        assertNotNull(p.getResultSet());
+        assertNull(getReturnParameter(p));
+        ColumnSet<Procedure> table = p.getResultSet();
+        ODataType type = ODataType.valueOf(p.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        assertEquals(ODataType.FUNCTION, type);
+        
+        type = ODataType.valueOf(table.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        assertEquals(ODataType.COMPLEX_COLLECTION, type);
+    }    
+	
+    private ProcedureParameter getReturnParameter(Procedure procedure) {
+        for (ProcedureParameter pp:procedure.getParameters()) {
+            if (pp.getType() == ProcedureParameter.Type.ReturnValue) {
+                return pp;
+            }
+        }
+        return null;
+    }
+    
     static MetadataFactory oneToOneRelationMetadata()
             throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
 		
 		CsdlEntityType g1Entity = entityType("g1");
 		CsdlEntityType g2Entity = entityType("g2");
@@ -357,11 +498,50 @@ public class TestODataMetadataProcessor {
 		processor.getMetadata(mf, metadata);
         return mf;
     }
+    
+    static MetadataFactory functionMetadata(String name, CsdlReturnType returnType, Object other)
+            throws TranslatorException {
+        ODataMetadataProcessor processor = new ODataMetadataProcessor();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
+                
+        CsdlFunction func = function(name, returnType);
+        
+        CsdlFunctionImport funcImport = new CsdlFunctionImport();
+        funcImport.setFunction(new FullQualifiedName("namespace."+name));
+        funcImport.setName(name);
+        
+        XMLMetadata metadata = buildXmlMetadata(funcImport, func, other);
+        processor.getMetadata(mf, metadata);
+        return mf;
+    }
+    
+    static MetadataFactory actionMetadata(String name, CsdlReturnType returnType, Object other)
+            throws TranslatorException {
+        ODataMetadataProcessor processor = new ODataMetadataProcessor();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
+                
+        CsdlAction func = action(name, returnType);
+        
+        CsdlActionImport funcImport = new CsdlActionImport();
+        funcImport.setAction(new FullQualifiedName("namespace."+name));
+        funcImport.setName(name);
+        
+        XMLMetadata metadata = buildXmlMetadata(funcImport, func, other);
+        processor.getMetadata(mf, metadata);
+        
+        return mf;
+    }    
 	
     @Test
     public void testSelfJoin() throws Exception {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
-        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
         
         CsdlEntityType g1Entity = entityType("g1");
         
@@ -383,10 +563,7 @@ public class TestODataMetadataProcessor {
         
         XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set);
         processor.getMetadata(mf, metadata);
-        
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);    
-        
+                
         Table g1 = mf.getSchema().getTable("G1_self");
         assertNotNull(g1);
         assertEquals("self", g1.getForeignKeys().get(0).getName());
@@ -397,8 +574,6 @@ public class TestODataMetadataProcessor {
     @Test
     public void testOneToManyAssosiation() throws Exception {
         MetadataFactory mf = oneToManyRelationMetadata();
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl);
         
         Table g1 = mf.getSchema().getTable("G1");
         Table g2 = mf.getSchema().getTable("G2");
@@ -410,7 +585,9 @@ public class TestODataMetadataProcessor {
 
     static MetadataFactory oneToManyRelationMetadata() throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
-        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
         
         CsdlEntityType g1Entity = entityType("g1");
         CsdlEntityType g2Entity = multipleKeyEntityType("g2");
@@ -434,15 +611,15 @@ public class TestODataMetadataProcessor {
         
         XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set);
         processor.getMetadata(mf, metadata);
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);
         
         return mf;
     }	
     
     static MetadataFactory multiplePKMetadata() throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor();
-        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
         CsdlEntityType entityType = multipleKeyEntityType("g1");
         CsdlEntitySet entitySet = createES("G1", "namespace.g1");
         XMLMetadata metadata = buildXmlMetadata(entityType, entitySet);
@@ -477,7 +654,9 @@ public class TestODataMetadataProcessor {
 	@Test
 	public void testAssosiationWithReferentialContriant() throws Exception {
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);
 		
         CsdlEntityType g1Entity = entityType("g1");
         g1Entity.getProperties().add(createProperty("g2e2", EdmPrimitiveTypeKind.String));
@@ -489,7 +668,9 @@ public class TestODataMetadataProcessor {
         navProperty.setType("namespace.g2");
         navProperty.setNullable(false);
         navProperty.setPartner("PartnerPath");
-        navProperty.setReferentialConstraints(Arrays.asList(new CsdlReferentialConstraint().setProperty("g2e2").setReferencedProperty("e2")));
+        navProperty.setReferentialConstraints(Arrays
+                .asList(new CsdlReferentialConstraint().setProperty("g2e2")
+                        .setReferencedProperty("e2")));
         
         g1Entity.setNavigationProperties(Arrays.asList(navProperty));
         
@@ -504,8 +685,6 @@ public class TestODataMetadataProcessor {
         XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set);
         processor.getMetadata(mf, metadata);
 		
-        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        //System.out.println(ddl); 
         
 		Table g1 = mf.getSchema().getTable("G1");
 		Table g2 = mf.getSchema().getTable("G2");
@@ -530,6 +709,30 @@ public class TestODataMetadataProcessor {
         entityType.setKey(Arrays.asList(new CsdlPropertyRef().setName("e1")));
         return entityType;        
 	}
+	
+    static CsdlFunction function(String name, CsdlReturnType returnType) {
+        ArrayList<CsdlParameter> parameters = new ArrayList<CsdlParameter>();
+        parameters.add(createParameter("e1", EdmPrimitiveTypeKind.Int32));
+        parameters.add(createParameter("e2", EdmPrimitiveTypeKind.String).setNullable(false));
+        
+        CsdlFunction function = new CsdlFunction();
+        function.setName(name);
+        function.setParameters(parameters);
+        function.setReturnType(returnType);
+        return function;        
+    }
+    
+    static CsdlAction action(String name, CsdlReturnType returnType) {
+        ArrayList<CsdlParameter> parameters = new ArrayList<CsdlParameter>();
+        parameters.add(createParameter("e1", EdmPrimitiveTypeKind.Int32));
+        parameters.add(createParameter("e2", EdmPrimitiveTypeKind.String).setNullable(false));
+        
+        CsdlAction action = new CsdlAction();
+        action.setName(name);
+        action.setParameters(parameters);
+        action.setReturnType(returnType);
+        return action;        
+    }    
 	
     private CsdlEntityType buildBusinessEntity(CsdlComplexType address) {
         ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
@@ -557,14 +760,14 @@ public class TestODataMetadataProcessor {
 		return entityType;
 	}
 	
-	static CsdlComplexType buildAddressComplexType() {
+	static CsdlComplexType complexType(String name) {
         ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
         properties.add(createProperty("street", EdmPrimitiveTypeKind.String));
         properties.add(createProperty("city", EdmPrimitiveTypeKind.String));
         properties.add(createProperty("state", EdmPrimitiveTypeKind.String));
 
 	    CsdlComplexType type = new CsdlComplexType();
-	    type.setName("Address").setProperties(properties);
+	    type.setName(name).setProperties(properties);
 	    
 	    return type;
 	}	
