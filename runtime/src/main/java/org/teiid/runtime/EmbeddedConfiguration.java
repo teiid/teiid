@@ -38,6 +38,7 @@ import org.teiid.dqp.internal.process.DataRolePolicyDecider;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.SocketConfiguration;
@@ -74,6 +75,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int memoryBufferSpace ;
 	
 	private DefaultCacheManager manager;
+	private AuthenticationType authenticationType;
 	
 	public EmbeddedConfiguration() {
 		processorBatchSize = -1;
@@ -322,5 +324,13 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 
 	public void setMemoryBufferSpace(int memoryBufferSpace) {
 		this.memoryBufferSpace = memoryBufferSpace;
+	}
+	
+	public AuthenticationType getAuthenticationType() {
+		return this.authenticationType;
+	}
+	
+	public void setAuthenticationType(AuthenticationType authenticationType) {
+		this.authenticationType = authenticationType;
 	}
 }
