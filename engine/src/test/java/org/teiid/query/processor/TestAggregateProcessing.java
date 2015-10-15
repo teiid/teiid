@@ -58,6 +58,7 @@ import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 import org.teiid.query.validator.TestValidator;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -1182,6 +1183,32 @@ public class TestAggregateProcessing {
 				new String[] {"SELECT (g_0.e2 / 2), g_0.e1 FROM pm1.g1 AS g_0 GROUP BY (g_0.e2 / 2), g_0.e1 HAVING g_0.e1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e2 = (g_0.e2 / 2))"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
 	}
+	
+	@Test() public void testAggregateOrderByPushdown() throws Exception {
+		String sql = "SELECT string_agg(e1, ' ' order by e1) FROM pm1.g1"; //$NON-NLS-1$
 
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+		
+		hdm.addData("SELECT STRING_AGG(g_0.e1, ' ' ORDER BY g_0.e1) FROM g1 AS g_0", Arrays.asList('a'));
+		
+		BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+		bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, true);
+		
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List[] {Arrays.asList('a')});
+		
+        bsc.setSourceProperty(Capability.COLLATION_LOCALE, "foo");
+
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().requireTeiidCollation(true));
+        CommandContext.pushThreadLocalContext(cc);
+        try {
+			plan = TestProcessor.helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+			TestOptimizer.checkAtomicQueries(new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, plan);
+        } finally {
+        	CommandContext.popThreadLocalContext();
+        }
+	}
 	
 }
