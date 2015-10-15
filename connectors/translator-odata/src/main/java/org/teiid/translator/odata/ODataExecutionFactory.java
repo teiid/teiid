@@ -31,6 +31,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
+import org.odata4j.core.OCollection;
+import org.odata4j.core.OSimpleObject;
 import org.odata4j.core.UnsignedByte;
 import org.odata4j.internal.InternalUtil;
 import org.teiid.core.types.DataTypeManager;
@@ -326,6 +328,19 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     	}
 		if (value instanceof UnsignedByte) {
 			return Short.valueOf(((UnsignedByte)value).shortValue());
+		}
+		
+		if(expectedType.isArray() && value instanceof OCollection<?>) {
+		    ArrayList<Object> result = new ArrayList<Object>();
+		    OCollection<?> arrayValues = (OCollection<?>)value;
+		    Iterator<?> it = arrayValues.iterator();
+		    while(it.hasNext()) {
+		        OSimpleObject<?> item = (OSimpleObject<?>)it.next();
+		        result.add(retrieveValue(item.getValue(),expectedType.getComponentType()));
+		    }
+		    Object target = java.lang.reflect.Array.newInstance(expectedType.getComponentType(), result.size());
+		    System.arraycopy(result.toArray(), 0, target, 0, result.size());
+		    value = target;
 		}
 		return value;
 	}

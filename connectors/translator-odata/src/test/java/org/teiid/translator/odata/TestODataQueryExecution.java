@@ -21,7 +21,9 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,18 +43,29 @@ import javax.xml.ws.Service.Mode;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.odata4j.core.OError;
+import org.odata4j.edm.EdmDataServices;
 import org.odata4j.format.FormatParser;
+import org.odata4j.format.xml.EdmxFormatParser;
+import org.odata4j.stax2.util.StaxUtil;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
@@ -60,23 +73,27 @@ import org.teiid.translator.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataQueryExecution {
-	private ODataExecutionFactory translator;
-	private TranslationUtility utility;
+
+    private ResultSetExecution helpExecute(String query,
+            final String resultXML, String expectedURL) throws Exception {
+	    TransformationMetadata metadata = TestDataEntitySchemaBuilder.getNorthwindMetadataFromODataXML();
+		return helpExecute(query, resultXML, expectedURL, 200, metadata);
+	}
 	
-    @Before
-    public void setUp() throws Exception {
-    	this.translator = new ODataExecutionFactory();
-    	this.translator.start();
-
-    	TransformationMetadata metadata = TestDataEntitySchemaBuilder.getNorthwindMetadataFromODataXML();
-    	this.utility = new TranslationUtility(metadata);
+    private ResultSetExecution helpExecute(String query,
+            final String resultXML, String expectedURL, int responseCode)
+            throws Exception {
+        TransformationMetadata metadata = TestDataEntitySchemaBuilder.getNorthwindMetadataFromODataXML();
+        return helpExecute(query, resultXML, expectedURL, responseCode, metadata);
     }
-
-	private ResultSetExecution helpExecute(String query, final String resultXML, String expectedURL) throws Exception {
-		return helpExecute(query, resultXML, expectedURL, 200);
-	}    
-	private ResultSetExecution helpExecute(String query, final String resultXML, String expectedURL, int responseCode) throws Exception {
-		Command cmd = this.utility.parseCommand(query);
+    
+    private ResultSetExecution helpExecute(String query,
+            final String resultXML, String expectedURL, int responseCode,
+            TransformationMetadata metadata) throws Exception {
+        ODataExecutionFactory translator = new ODataExecutionFactory();
+        translator.start();        
+        TranslationUtility utility = new TranslationUtility(metadata);
+		Command cmd = utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		WSConnection connection = Mockito.mock(WSConnection.class);
 		
@@ -111,7 +128,7 @@ public class TestODataQueryExecution {
 		};
 		Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
 		
-		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context, this.utility.createRuntimeMetadata(), connection);
+		ResultSetExecution execution = translator.createResultSetExecution((QueryExpression)cmd, context, utility.createRuntimeMetadata(), connection);
 		execution.execute();
 		
 		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
@@ -175,6 +192,67 @@ public class TestODataQueryExecution {
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
 		reader.close();
 	}
+	
+    @Test
+    public void testArrayType() throws Exception {
+        ModelMetaData model = new ModelMetaData();
+        model.setName("nw");
+        model.setModelType(Type.PHYSICAL);
+        MetadataFactory mf = new MetadataFactory("northwind", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), model);
+        
+        EdmDataServices edm = new EdmxFormatParser().parseMetadata(
+                StaxUtil.newXMLEventReader(new FileReader(UnitTestUtil.getTestDataFile("arraytest.xml"))));
+        ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
+        PropertiesUtils.setBeanProperties(metadataProcessor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
+        metadataProcessor.getMetadata(mf, edm);
+        
+        Column c = mf.getSchema().getTable("G2").getColumnByName("e3");
+        assertEquals("integer[]", c.getRuntimeType());
+        
+        Procedure p = mf.getSchema().getProcedure("ARRAYITERATE");
+        assertEquals("varbinary[]", p.getParameters().get(0).getRuntimeType());
+        assertEquals("varbinary",  p.getResultSet().getColumns().get(0).getRuntimeType());
+       
+        
+        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        System.out.println(ddl);
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");        
+        
+        String query = "SELECT * FROM G2";
+        String expectedURL = "G2?$select=e1,e3";
+        
+        String result = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
+                "<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" xml:base=\"http://localhost:8080/odata/loopy/\">\n" + 
+                "   <title type=\"text\">VM1.x</title>\n" + 
+                "   <id>http://localhost:8080/odata/loopy/VM1.x</id>\n" + 
+                "   <updated>2015-10-14T19:36:58Z</updated>\n" + 
+                "   <link rel=\"self\" title=\"VM1.x\" href=\"VM1.x\" />\n" + 
+                "   <entry>\n" + 
+                "      <id>http://localhost:8080/odata/loopy/VM1.x('x')</id>\n" + 
+                "      <title type=\"text\" />\n" + 
+                "      <updated>2015-10-14T19:36:58Z</updated>\n" + 
+                "      <author>\n" + 
+                "         <name />\n" + 
+                "      </author>\n" + 
+                "      <link rel=\"edit\" title=\"x\" href=\"VM1.x('x')\" />\n" + 
+                "      <category term=\"PM1.G2\" scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\" />\n" + 
+                "      <content type=\"application/xml\">\n" + 
+                "         <m:properties>\n" + 
+                "            <d:e1>32</d:e1>\n" + 
+                "            <d:e3 m:type=\"Collection(Edm.Int32)\">\n" + 
+                "               <d:element>1</d:element>\n" + 
+                "               <d:element>2</d:element>\n" + 
+                "               <d:element>3</d:element>\n" + 
+                "            </d:e3>\n" + 
+                "         </m:properties>\n" + 
+                "      </content>\n" + 
+                "   </entry>\n" + 
+                "</feed>";
+        ResultSetExecution excution = helpExecute(query, result, expectedURL, 200, metadata);
+        assertArrayEquals(new Object[] {32, new Integer[] {1,2,3}}, 
+                excution.next().toArray(new Object[2]));
+
+    }	
 	
 	@Test(expected=TranslatorException.class)
 	public void testError() throws Exception {

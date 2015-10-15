@@ -26,6 +26,7 @@ import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.core4j.Enumerable;
 import org.odata4j.edm.*;
 import org.odata4j.edm.EdmFunctionParameter.Mode;
 import org.odata4j.edm.EdmProperty.CollectionKind;
@@ -415,5 +416,34 @@ public class ODataEntitySchemaBuilder {
 			}
 		}
 		return true;
+	}
+	
+	static EdmEntitySet removeModelName(EdmEntitySet src) {
+	    EdmEntityType srcType = src.getType();
+	    String schemaName = srcType.getName().substring(0, srcType.getName().indexOf('.'));
+	    String name = srcType.getName().substring(srcType.getName().indexOf('.')+1);
+	    
+        EdmEntityType.Builder targetType = EdmEntityType
+                .newBuilder().setName(name)
+                .setNamespace(schemaName);
+        
+        targetType.addKeys(srcType.getKeys());
+        
+        Enumerable<EdmProperty> properties = srcType.getProperties();
+        for (EdmProperty srcProperty:properties.toList()) {
+
+            EdmProperty.Builder tgtProperty = EdmProperty.newBuilder(srcProperty.getName())
+                    .setType(srcProperty.getType())
+                    .setNullable(srcProperty.isNullable())
+                    .setFixedLength(srcProperty.getFixedLength())
+                    .setMaxLength(srcProperty.getMaxLength())
+                    .setUnicode(true);
+            targetType.addProperties(tgtProperty);
+        }
+	    
+        EdmEntitySet.Builder target = EdmEntitySet.newBuilder()
+                .setName(src.getName())
+                .setEntityType(targetType);
+        return target.build();
 	}
 }
