@@ -69,6 +69,7 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
+        public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	

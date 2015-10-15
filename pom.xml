@@ -100,7 +100,7 @@
         <arquillian-container-version>7.2.2.Final-redhat-4</arquillian-container-version>
         <jbossas-test-version>jboss-eap-6.4</jbossas-test-version>
         <version.com.force.api>26.0.0</version.com.force.api>
-        <version.org.jboss.oreva>0.8.8</version.org.jboss.oreva>
+        <version.org.jboss.oreva>0.8.10</version.org.jboss.oreva>
         <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
         <version.nux>1.6</version.nux>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>

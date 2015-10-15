@@ -21,7 +21,6 @@
  */
 package org.teiid.odata;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,27 +29,42 @@ import org.odata4j.core.OEntityId;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.core.OExtension;
 import org.odata4j.core.OFunctionParameter;
-import org.odata4j.core.OSimpleObject;
+import org.odata4j.core.OProperty;
+import org.odata4j.edm.EdmCollectionType;
+import org.odata4j.edm.EdmComplexType;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntityContainer;
 import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmEntityType;
 import org.odata4j.edm.EdmFunctionImport;
-import org.odata4j.edm.EdmFunctionParameter;
+import org.odata4j.edm.EdmMultiplicity;
+import org.odata4j.edm.EdmNavigationProperty;
+import org.odata4j.edm.EdmProperty;
 import org.odata4j.edm.EdmSchema;
+import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.exceptions.NotAcceptableException;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.NotImplementedException;
-import org.odata4j.producer.*;
+import org.odata4j.producer.BaseResponse;
+import org.odata4j.producer.CountResponse;
+import org.odata4j.producer.EntitiesResponse;
+import org.odata4j.producer.EntityIdResponse;
+import org.odata4j.producer.EntityQueryInfo;
+import org.odata4j.producer.EntityResponse;
+import org.odata4j.producer.ODataContext;
+import org.odata4j.producer.ODataProducer;
+import org.odata4j.producer.QueryInfo;
+import org.odata4j.producer.Responses;
 import org.odata4j.producer.edm.MetadataProducer;
-import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.translator.odata.ODataTypeManager;
 
 public class TeiidProducer implements ODataProducer {
 	private Client client;
@@ -76,47 +90,85 @@ public class TeiidProducer implements ODataProducer {
 
 	@Override
 	public EntitiesResponse getEntities(ODataContext context, String entitySetName, QueryInfo queryInfo) {
-		return getNavProperty(context, entitySetName, null, null, queryInfo);
+		return (EntitiesResponse)getNavProperty(context, entitySetName, null, null, queryInfo);
 	}
 
 	@Override
-	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, final QueryInfo queryInfo) {
-		checkExpand(queryInfo);
-		getEntitySet(entitySetName); // validate entity
+    public BaseResponse getNavProperty(ODataContext context,
+            String entitySetName, OEntityKey entityKey, String navProp,
+            final QueryInfo queryInfo) {
+		
+	    EdmEntitySet edmEntitySet = getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
-		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
-		List<SQLParam> parameters = visitor.getParameters();
-		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), queryInfo);
-		return new EntitiesResponse() {
-			@Override
-			public List<OEntity> getEntities() {
-				return entities;
-			}
-			@Override
-			public EdmEntitySet getEntitySet() {
-				return entitySet;
-			}
-			@Override
-			public Integer getInlineCount() {
-				if (queryInfo.inlineCount == InlineCount.ALLPAGES) {
-					return entities.getCount();
-				}
-				return null;
-			}
-			@Override
-			public String getSkipToken() {
-				return entities.nextToken();
-			}
-		};
-	}
-
-	private void checkExpand(QueryInfo queryInfo) {
-		if (queryInfo != null && queryInfo.expand != null && !queryInfo.expand.isEmpty()) {
-			throw new UnsupportedOperationException("Expand is not supported"); //$NON-NLS-1$
+		
+		boolean value = false;
+		boolean propertyResponse = false;
+		if (navProp != null && navProp.endsWith("/$value")) {
+		    navProp = navProp.replace("/$value", "");
+		    value = true;
 		}
+		
+		// check if the property is simple pr navigation proeprty 
+		EdmEntityType edmEntityType = edmEntitySet.getType();
+		for (EdmProperty edmProperty:edmEntityType.getProperties()) {
+		    if (edmProperty.getName().equals(navProp)) {
+		        propertyResponse = true;
+		        break;
+		    }
+		}
+		
+		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
+		List<SQLParam> parameters = visitor.getParameters();
+		
+		EntityList results = new EntityList(visitor.getDocumentNode(), getMetadata(), queryInfo);
+		EntityList response = (EntityList)this.client.executeSQL(query, parameters, queryInfo, results);
+		if (navProp != null) {
+    		if (propertyResponse) {
+    		    OProperty<?> property = response.get(0).getProperty(navProp);
+    		    if (value) {
+    		        return Responses.raw((EdmSimpleType<?>)property.getType(), navProp, property.getValue());
+    		    }
+    		    return Responses.property(property);
+    		} else {
+    		    for (EdmNavigationProperty edmNavProperty :edmEntityType.getNavigationProperties()) {
+    		        if (edmNavProperty.getName().equals(navProp)) {
+    		            if (edmNavProperty.getToRole().getMultiplicity().equals(EdmMultiplicity.ZERO_TO_ONE)){
+    		                if (!response.isEmpty()) {
+    		                    return Responses.entity(response.get(0));
+    		                } else {
+                                throw new NotFoundException(ODataPlugin.Util.gs(
+                                        ODataPlugin.Event.TEIID16018, entityKey,
+                                        entitySetName));
+    		                }
+    		            }
+    		        }
+    		    }
+    		}
+		}
+		return response;
 	}
 
+    private boolean hasQueryOptions(QueryInfo queryInfo) {
+        if (queryInfo != null) {
+            if (queryInfo.top != null) {
+                return true;
+            }
+            if (queryInfo.skip != null) {
+                return true;
+            }
+            if (queryInfo.filter != null) {
+                return true;
+            }
+            if (queryInfo.orderBy != null) {
+                return true;
+            }
+            if (queryInfo.select != null & !queryInfo.select.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }	
+	
 	private EdmEntitySet getEntitySet(String entitySetName) {
 		EdmDataServices eds = getMetadata();
 		EdmEntitySet entity =  eds.findEdmEntitySet(entitySetName);
@@ -136,16 +188,19 @@ public class TeiidProducer implements ODataProducer {
 	}
 
 	@Override
-	public EntityResponse getEntity(ODataContext context, String entitySetName, OEntityKey entityKey, EntityQueryInfo queryInfo) {
-		EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
+    public EntityResponse getEntity(ODataContext context, String entitySetName,
+            OEntityKey entityKey, EntityQueryInfo queryInfo) {
+		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, null, false);
 		List<SQLParam> parameters = visitor.getParameters();
-		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), null);
-		if (entityList.isEmpty()) {
-			return null;
+		EntityList results = new EntityList(visitor.getDocumentNode(), getMetadata(), queryInfo);
+		EntitiesResponse response = (EntitiesResponse)this.client.executeSQL(query, parameters, null, results);
+		if (response.getEntities().isEmpty()) {
+            throw new NotFoundException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID16018, entityKey, entitySetName));
 		}
-		return Responses.entity(entityList.get(0));
+		return Responses.entity(response.getEntities().get(0));
 	}
 
 	@Override
@@ -175,14 +230,17 @@ public class TeiidProducer implements ODataProducer {
 		if (response.getUpdateCount()  == 1) {
 			visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		    OEntityKey entityKey = visitor.buildEntityKey(entitySet, entity, response.getGeneratedKeys());
-		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "created entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, 
+		            "created entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		    return getEntity(context, entitySetName, entityKey, EntityQueryInfo.newBuilder().build());
 		}
 		return null;
 	}
 
 	@Override
-	public EntityResponse createEntity(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, OEntity entity) {
+    public EntityResponse createEntity(ODataContext context,
+            String entitySetName, OEntityKey entityKey, String navProp,
+            OEntity entity) {
 		// deep inserts are not currently supported.
 		throw new UnsupportedOperationException("Deep inserts are not supported"); //$NON-NLS-1$
 	}
@@ -197,13 +255,18 @@ public class TeiidProducer implements ODataProducer {
 		List<SQLParam> parameters = visitor.getParameters();
 		UpdateResponse response =  this.client.executeUpdate(query, parameters);
 		if (response.getUpdateCount() == 0) {
-			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "no entity to delete in = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
-			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018, entityKey, entitySetName));
+			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, 
+			        "no entity to delete in = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new NotFoundException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID16018, entityKey, entitySetName));
 		} else if (response.getUpdateCount() == 1) {
-			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, 
+			        "deleted entity = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
-			//TODO: should this be an exception (a little too late, may need validation that we are dealing with a single entity first)
-			LogManager.log(MessageLevel.WARNING, LogConstants.CTX_ODATA, null, "deleted multiple entities = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+			//TODO: should this be an exception (a little too late, may need validation 
+		    // that we are dealing with a single entity first)
+			LogManager.log(MessageLevel.WARNING, LogConstants.CTX_ODATA, null, 
+			        "deleted multiple entities = ", entitySetName, " with key=", entityKey.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -273,41 +336,37 @@ public class TeiidProducer implements ODataProducer {
 	@Override
 	public BaseResponse callFunction(ODataContext context,
 			EdmFunctionImport function, Map<String, OFunctionParameter> params,
-			QueryInfo queryInfo) {
-		checkExpand(queryInfo);
-		EdmEntityContainer eec = findEntityContainer(function);
-		StringBuilder sql = new StringBuilder();
-		// fully qualify the procedure name
-		if (function.getReturnType() != null && function.getReturnType().isSimple()) {
-			sql.append("{? = "); //$NON-NLS-1$
-		}
-		else {
-			sql.append("{"); //$NON-NLS-1$
-		}
-		sql.append("call ").append(eec.getName()+"."+SQLStringVisitor.escapeSinglePart(function.getName())); //$NON-NLS-1$ //$NON-NLS-2$
-		sql.append("("); //$NON-NLS-1$
-		List<SQLParam> sqlParams = new ArrayList<SQLParam>();
-		if (!params.isEmpty()) {
-			List<EdmFunctionParameter> metadataParams = function.getParameters();
-			boolean first = true;
-			for (EdmFunctionParameter edmFunctionParameter : metadataParams) {
-				OFunctionParameter param = params.get(edmFunctionParameter.getName());
-				if (param == null) {
-					continue;
-				}
-				if (!first) {
-					sql.append(","); //$NON-NLS-1$
-				}
-				sql.append(SQLStringVisitor.escapeSinglePart(edmFunctionParameter.getName())).append("=>?"); //$NON-NLS-1$
-				first = false;
-				Object value = ((OSimpleObject<?>)(param.getValue())).getValue();
-				Integer sqlType = JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(param.getType().getFullyQualifiedTypeName()));
-				sqlParams.add(new SQLParam(ODataTypeManager.convertToTeiidRuntimeType(value), sqlType));
-			}
-		}
-		sql.append(")"); //$NON-NLS-1$
-		sql.append("}"); //$NON-NLS-1$
-		return this.client.executeCall(sql.toString(), sqlParams, function.getReturnType());
+			final QueryInfo queryInfo) {
+	    
+	    EdmEntityContainer eec = findEntityContainer(function);
+	    boolean hasQueryInfo = hasQueryOptions(queryInfo);
+        boolean hasScalarOrNoReturn = (function.getReturnType() == null)
+                || (function.getReturnType() != null && function.getReturnType().isSimple());
+	    String procedureName = eec.getName()+"."+SQLStringVisitor.escapeSinglePart(function.getName());
+	    
+	    if (hasScalarOrNoReturn) {	        
+	        if (hasQueryInfo) {
+	            throw new NotAcceptableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019, function.getName()));
+	        }
+            // fully qualify the procedure name
+            ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
+            StoredProcedure sp = visitor.storedProcedure(procedureName, function, params);
+
+            StringBuilder sql = new StringBuilder(sp.toString());
+            sql.replace(0, 4, "CALL");
+            if (function.getReturnType() != null) {
+                sql.insert(0, "{ ? = ");
+                sql.append(" }");
+            }
+            return this.client.executeCall(sql.toString(), visitor.getParameters(), function.getReturnType());	        
+	    } else {
+	        ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
+	        Query query = visitor.callFunctionQuery(procedureName, function, params, queryInfo);
+	        List<SQLParam> parameters = visitor.getParameters();
+	        EdmComplexType type = (EdmComplexType)((EdmCollectionType)function.getReturnType()).getItemType();
+	        ComplexCollection result = new ComplexCollection(type, visitor.getDocumentNode(), queryInfo);
+	        return this.client.executeSQL(query, parameters, queryInfo, result);
+	    }
 	}
 
 	EdmEntityContainer findEntityContainer(EdmFunctionImport function) {

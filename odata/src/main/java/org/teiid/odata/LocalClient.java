@@ -32,22 +32,25 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.odata4j.core.OCollection;
 import org.odata4j.core.OCollection.Builder;
+import org.odata4j.core.OCollection;
 import org.odata4j.core.OCollections;
-import org.odata4j.core.OComplexObject;
-import org.odata4j.core.OComplexObjects;
 import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
 import org.odata4j.core.OSimpleObjects;
-import org.odata4j.edm.*;
+import org.odata4j.edm.EdmCollectionType;
+import org.odata4j.edm.EdmDataServices;
+import org.odata4j.edm.EdmEntityContainer;
+import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmFunctionImport;
+import org.odata4j.edm.EdmSchema;
+import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.edm.EdmType;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.ServerErrorException;
 import org.odata4j.internal.EdmDataServicesDecorator;
@@ -173,7 +176,8 @@ public class LocalClient implements Client {
 
 			int i = 1;
 			if (returnType != null && returnType.isSimple()) {
-				stmt.registerOutParameter(i++, JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(returnType.getFullyQualifiedTypeName())));
+                stmt.registerOutParameter(i++, JDBCSQLTypeInfo
+                        .getSQLType(ODataTypeManager.teiidType(returnType.getFullyQualifiedTypeName())));
 			}
 
 			if (!parameters.isEmpty()) {
@@ -183,29 +187,9 @@ public class LocalClient implements Client {
 			}
 
 			boolean results = stmt.execute();
-			if (results) {
-				final ResultSet rs = stmt.getResultSet();
-                OCollection.Builder resultRows = OCollections.newBuilder((EdmComplexType)((EdmCollectionType)returnType).getItemType());
-                while (rs.next()) {
-                	int idx = 1;
-                	List<OProperty<?>> row = new ArrayList<OProperty<?>>();
-                	Iterator<EdmProperty> props = ((EdmComplexType)((EdmCollectionType)returnType).getItemType()).getProperties().iterator();
-                	while (props.hasNext()) {
-                		EdmProperty prop = props.next();
-                		row.add(buildPropery(prop.getName(), prop.getType(), rs.getObject(idx++), invalidCharacterReplacement));
-                	}
-                	OComplexObject erow = OComplexObjects.create((EdmComplexType)((EdmCollectionType)returnType).getItemType(), row);
-                	resultRows.add(erow);
-                }
-                String collectionName = returnType.getFullyQualifiedTypeName();
-                collectionName = collectionName.replace("(", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-                collectionName = collectionName.replace(")", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-				return Responses.collection(resultRows.build(), null, null, null, collectionName);
-			}
-
-            if (returnType != null) {
+			if (returnType != null && !results) {
             	Object result = stmt.getObject(1);
-            	OProperty prop = buildPropery("return", returnType, result, invalidCharacterReplacement); //$NON-NLS-1$
+            	OProperty<?> prop = buildPropery("return", returnType, result, invalidCharacterReplacement); //$NON-NLS-1$
             	return Responses.property(prop); 
             }
 			return Responses.simple(EdmSimpleType.INT32, 1);
@@ -227,7 +211,8 @@ public class LocalClient implements Client {
 	}
 
 	@Override
-	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, QueryInfo queryInfo) {
+    public BaseResponse executeSQL(Query query, List<SQLParam> parameters,
+            QueryInfo queryInfo, EntityCollector<?> collector) {
 	    ConnectionImpl connection = null;
 		try {
 			boolean cache = queryInfo != null && this.batchSize > 0; 
@@ -270,7 +255,10 @@ public class LocalClient implements Client {
 			}
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 			
-			final PreparedStatement stmt = connection.prepareStatement(sql, cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            final PreparedStatement stmt = connection.prepareStatement(sql,
+                    cache ? ResultSet.TYPE_SCROLL_INSENSITIVE
+                            : ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
 			if (parameters!= null && !parameters.isEmpty()) {
 				for (int i = 0; i < parameters.size(); i++) {
 					stmt.setObject(i+1, parameters.get(i).value, parameters.get(i).sqlType);
@@ -279,26 +267,8 @@ public class LocalClient implements Client {
 
 			final ResultSet rs = stmt.executeQuery();
 			
-			if (projectedColumns == null) {
-				projectedColumns = new LinkedHashMap<String, Boolean>();
-				for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-					projectedColumns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
-				}
-			}
-			
-			EntityList result = new EntityList(invalidCharacterReplacement);
-			
-			HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
-			
-			EdmEntityType entityType = entitySet.getType();
-			Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
-			while(propIter.hasNext()) {
-				EdmProperty prop = propIter.next();
-				propertyTypes.put(prop.getName(), prop);
-			}
-			
 			//skip to the initial position
-			int count = 0;
+			int skipcount = 0;
 			int skipSize = 0;
 			//skip based upon the skip value
 			if (getCount && queryInfo.skip != null) {
@@ -309,7 +279,7 @@ public class LocalClient implements Client {
 				skipSize += Integer.parseInt(skipToken);
 			}
 			if (skipSize > 0) {
-				count += skip(cache, rs, skipSize);
+				skipcount += skip(cache, rs, skipSize);
 			}
 
 			//determine the number of records to return
@@ -326,41 +296,64 @@ public class LocalClient implements Client {
 			}
 			
 			//build the results
+			Object previous = null;
 			for (int i = 0; i < size; i++) {
-				count++;
-				if (!rs.next()) {
-					break;
+			    if (!rs.next()) {
+			        break;
+			    }
+				if (previous != null) {
+				    boolean sameRow = true;
+				    // this needs to be done because, we do not want break the expand nodes
+				    // in between
+				    while(sameRow) {				        
+				        Object current = collector.addRow(previous, rs, this.invalidCharacterReplacement);
+				        sameRow = collector.isSameRow(previous, current);
+				        previous = current;
+				        if (sameRow) {
+				            // advance cursor
+			                if (!rs.next()) {
+			                    break;
+			                }
+			                skipcount++;
+			                i++; // keep the total count or rows
+				        } else {
+				            break;
+				        }
+				    };
+				} else {
+				    previous = collector.addRow(previous, rs, this.invalidCharacterReplacement);
+				    skipcount++;
 				}
-				result.addEntity(rs, propertyTypes, projectedColumns, entitySet);
 			}
+			collector.lastRow(previous);
 			
 			//set the count
 			if (getCount) {
 				if (!cache) {
 					while (rs.next()) {
-						count++;
+						skipcount++;
 					}
 				} else {
 					rs.last();
-					count = rs.getRow();
+					skipcount = rs.getRow();
 				}
 			}
-			result.setCount(count);
+			collector.setInlineCount(skipcount);
 			
 			//set the skipToken if needed
-			if (cache && result.size() == this.batchSize) {
-				int end = skipSize + result.size();
+			if (cache && collector.size() == this.batchSize) {
+				int end = skipSize + collector.size();
 				if (getCount) {
-					if (end < Math.min(top, count)) {
-						result.setNextToken(nextToken(cache, sessionId, end));
+					if (end < Math.min(top, skipcount)) {
+					    collector.setSkipToken(nextToken(cache, sessionId, end));
 					}
 				} else if (rs.next()) {
-				    result.setNextToken(nextToken(cache, sessionId, end));
+				    collector.setSkipToken(nextToken(cache, sessionId, end));
 					//will force the entry to cache or is effectively a no-op when already cached
 					rs.last();	
 				}
 			}
-			return result;
+			return collector;
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
@@ -581,7 +574,10 @@ public class LocalClient implements Client {
         return model.isVisible();
     }
 	
-	static OProperty<?> buildPropery(String propName, EdmType type, Object value, String invalidCharacterReplacement) throws TransformationException, SQLException, IOException {
+    static OProperty<?> buildPropery(String propName, EdmType type,
+            Object value, String invalidCharacterReplacement)
+            throws TransformationException, SQLException, IOException {
+        
 		if (!(type instanceof EdmSimpleType)) {
 			if (type instanceof EdmCollectionType) {
 				EdmCollectionType collectionType = (EdmCollectionType)type;
@@ -593,12 +589,13 @@ public class LocalClient implements Client {
 				int length = java.lang.reflect.Array.getLength(value);
 				for (int i = 0; i < length; i++) {
 					Object o = java.lang.reflect.Array.get(value, i);
-					OProperty p = buildPropery("x", componentType, o, invalidCharacterReplacement);
+					OProperty<?> p = buildPropery("x", componentType, o, invalidCharacterReplacement);
 					if (componentType instanceof EdmSimpleType) {
-						b.add(OSimpleObjects.create((EdmSimpleType) componentType, p.getValue()));
-					} else {
-						throw new AssertionError("Multi-dimensional arrays are not yet supported.");
-						//b.add((OCollection)p.getValue());
+						b.add(OSimpleObjects.create((EdmSimpleType<?>) componentType, p.getValue()));
+					} else if (componentType instanceof EdmCollectionType) {
+					    //Builder<OObject> cb = OCollections.newBuilder(componentType);
+					    b.add((OCollection<?>)p.getValue());
+					    //b.add(cb.build());
 					}
 				}
 				return OProperties.collection(propName, collectionType, b.build());

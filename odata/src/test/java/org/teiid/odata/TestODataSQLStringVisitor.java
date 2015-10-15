@@ -21,7 +21,7 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,6 +48,7 @@ import org.odata4j.producer.QueryInfo.Builder;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Insert;
@@ -61,6 +62,7 @@ public class TestODataSQLStringVisitor {
 	private void te(String in, String expected) {
 		CommonExpression expr = ExpressionParser.parse(in);
 		ODataSQLBuilder visitor = new ODataSQLBuilder(Mockito.mock(MetadataStore.class), false);
+		visitor.resultNode = new DocumentNode((Table)null, null);
 		visitor.visitNode(expr);
 		assertEquals(expected, visitor.getExpression().toString());
 	}
@@ -181,6 +183,7 @@ public class TestODataSQLStringVisitor {
 	public void testOrderby() {
 		List<OrderByExpression> expr = ExpressionParser.parseOrderBy("b desc, a");
 		ODataSQLBuilder visitor = new ODataSQLBuilder(Mockito.mock(MetadataStore.class), false);
+		visitor.resultNode = new DocumentNode((Table) null, null);
 		visitor.visitNode(expr.get(0));
 		assertEquals("ORDER BY b DESC", visitor.getOrderBy().toString());
 		visitor.visitNode(expr.get(1));
@@ -249,11 +252,11 @@ public class TestODataSQLStringVisitor {
 				"nw.Shippers", "ShipperID ge 10 and ShipperID lt 20", null,
 				null, -1, null, null);
 		testSelect(
-				"SELECT g0.CompanyName, g0.Phone, g0.ShipperID FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo' ORDER BY g0.ShipperID",
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo' ORDER BY g0.ShipperID",
 				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
 				null, -1, null, null);
 		testSelect(
-				"SELECT g0.CompanyName, g0.Phone, g0.ShipperID FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo' ORDER BY g0.CompanyName DESC, g0.Phone",
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo' ORDER BY g0.CompanyName DESC, g0.Phone",
 				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
 				"CompanyName desc, Phone", -1, null, null);
 		testSelect(
@@ -264,14 +267,14 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testNavigationalQuery() throws Exception {
 		testSelect(
-				"SELECT g1.EmployeeID, g1.OrderID, g1.CustomerID, g1.ShipVia FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID ORDER BY g1.OrderID",
+				"SELECT g1.OrderID, g1.CustomerID, g1.EmployeeID, g1.ShipVia FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID ORDER BY g1.OrderID",
 				"nw.Customers", null, "EmployeeID", null, -1, "nw.Orders", null);
 		testSelect(
-				"SELECT g2.UnitPrice, g2.OrderID, g2.ProductID FROM (nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN nw.OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12 ORDER BY g2.OrderID, g2.ProductID",
+				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN nw.OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12 ORDER BY g2.OrderID, g2.ProductID",
 				"nw.Customers", null, "UnitPrice", null, -1,
 				"nw.Orders(12)/nw.OrderDetails", null);
 		testSelect(
-				"SELECT g2.UnitPrice, g2.OrderID, g2.ProductID FROM (nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN nw.OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12) ORDER BY g2.OrderID, g2.ProductID",
+				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN nw.OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12) ORDER BY g2.OrderID, g2.ProductID",
 				"nw.Customers", null, "UnitPrice", null, -1,
 				"nw.Orders(12)/nw.OrderDetails", OEntityKey.create(33));
 	}
@@ -297,7 +300,7 @@ public class TestODataSQLStringVisitor {
 				null, -1, null, null);
 		
 		testSelect(
-				"SELECT g0.ContactName, g0.CustomerID FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1 ORDER BY g0.CustomerID",
+				"SELECT g0.CustomerID, g0.ContactName FROM nw.Customers AS g0 INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1 ORDER BY g0.CustomerID",
 				"nw.Customers", "nw.Orders/OrderID eq 1", "ContactName",
 				null, -1, null, null);
 		

@@ -21,98 +21,106 @@
  */
 package org.teiid.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
-
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.odata4j.core.NamedValue;
 import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OFunctionParameter;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
+import org.odata4j.core.OSimpleObject;
 import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmFunctionImport;
+import org.odata4j.edm.EdmFunctionParameter;
 import org.odata4j.edm.EdmProperty;
+import org.odata4j.exceptions.NotAcceptableException;
 import org.odata4j.exceptions.NotFoundException;
-import org.odata4j.expression.*;
+import org.odata4j.expression.AggregateAllFunction;
+import org.odata4j.expression.AggregateAnyFunction;
+import org.odata4j.expression.EntitySimpleProperty;
+import org.odata4j.expression.OrderByExpression;
 import org.odata4j.expression.OrderByExpression.Direction;
 import org.odata4j.producer.QueryInfo;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.Assertion;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.query.sql.lang.*;
+import org.teiid.odata.DocumentNode.ProjectedColumn;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.ExpressionCriteria;
+import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.odata.ODataTypeManager;
 
-public class ODataSQLBuilder extends ODataHierarchyVisitor {
+public class ODataSQLBuilder extends ODataExpressionVisitor {
 	private Query query = new Query();
 	private OrderBy orderBy = new OrderBy();
-	private Criteria criteria;
+	private Criteria where;
 	private MetadataStore metadata;
-	private ArrayList<SQLParam> params = new ArrayList<SQLParam>();
-	private boolean prepared = true;
-	private Stack<Expression> stack = new Stack<Expression>();
-	private GroupSymbol resultEntityGroup;
-	private Table resultEntityTable; // this is the original entity table for results
+	protected DocumentNode resultNode;
 	private FromClause fromCluse = null;
-	private HashMap<String, GroupSymbol> assosiatedTables = new HashMap<String, GroupSymbol>();
-	private LinkedHashMap<String, Boolean> projectedColumns = new LinkedHashMap<String, Boolean>();
-	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
-	private AtomicInteger groupCount = new AtomicInteger(1);
+	private HashMap<String, DocumentNode> assosiatedTables = new HashMap<String, DocumentNode>();
+	private AtomicInteger groupCount = new AtomicInteger(0);
 	private boolean distinct = false;
-	private boolean useLimit = true;
 
 	public ODataSQLBuilder(MetadataStore metadata, boolean prepared) {
+	    super(prepared);
 		this.metadata = metadata;
-		this.prepared = prepared;
 	}
 	
-	public void setUseLimit(boolean useLimit) {
-		this.useLimit = useLimit;
-	}
-
-	public Query selectString(String entityName, QueryInfo info, OEntityKey key, String navProperty, boolean countStar) {
+    public Query selectString(String entityName, QueryInfo info,
+            OEntityKey key, String navProperty, boolean countStar) {
 		Select select = new Select();
 
+		LinkedHashSet<String> $select = new LinkedHashSet<String>();		
 		if (info.select != null) {
 			for (EntitySimpleProperty property:info.select) {
-				this.projectedColumns.put(property.getPropertyName(), Boolean.TRUE);
+			    $select.add(property.getPropertyName());
 			}
 		}
 		
-		Table entityTable = findTable(entityName, metadata);
-		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol("g0", entityTable.getFullName());
-		this.assosiatedTables.put(entityTable.getFullName(), this.resultEntityGroup);
-		this.aliasTableNames.put("g0", entityTable.getFullName());
+		this.resultNode = buildDocumentNode(entityName);
+		this.assosiatedTables.put(this.resultNode.getEntityTable().getFullName(), this.resultNode);
 		
 		if (key != null) {
-			this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
+			this.where = buildEntityKeyCriteria(this.resultNode, key);
 		}
 		
-		this.fromCluse = new UnaryFromClause(this.resultEntityGroup);
+		this.fromCluse = new UnaryFromClause(this.resultNode.getEntityGroup());
 		
 		if (navProperty != null) {
 			String prop = null;
@@ -125,104 +133,75 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		        String[] propSplit = segment.split("\\(");
 		        prop = propSplit[0];
 
-		        Column column = findColumn(entityTable, prop);
+		        Column column = findColumn(this.resultNode.getEntityTable(), prop);
 		        if (column != null) {
-		        	this.projectedColumns.clear();
-		        	this.projectedColumns.put(column.getName(), Boolean.TRUE);
+		            if (!$select.isEmpty()) {
+		                throw new NotAcceptableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
+		            }
+		            $select.add(column.getName());
 		        	continue;
 		        }
 		        
 		        // find association table.
-	        	Table joinTable = findTable(prop, metadata);
-	        	if (joinTable == null) {
-	        		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16004, prop));
-	        	}
-	        	
-	        	boolean associationFound = false;
-	        	String aliasGroup = "g"+this.groupCount.getAndIncrement();
-	        	
-	        	for (ForeignKey fk:joinTable.getForeignKeys()) {
-	        		if (fk.getReferenceKey().getParent().equals(entityTable)) {
-
-	        			if(this.assosiatedTables.get(joinTable.getFullName()) == null) {
-		        			List<String> refColumns = fk.getReferenceColumns();
-		        			if (refColumns == null) {
-		        				refColumns = getColumnNames(entityTable.getPrimaryKey().getColumns());
-		        			}	  
-		        			addJoinTable(aliasGroup, JoinType.JOIN_INNER, joinTable, entityTable, refColumns, getColumnNames(fk.getColumns()));	        				
-	        			}
-	        			associationFound = true;
-	        			break;
-	        		}
-	        	}
-	        	
-	        	// if association not found; see at the other end of the reference
-	        	if (!associationFound) {
-	            	for (ForeignKey fk:entityTable.getForeignKeys()) {
-	            		if (fk.getReferenceKey().getParent().equals(joinTable)) {
-	            			if(this.assosiatedTables.get(joinTable.getFullName()) == null) {
-	            				List<String> refColumns = fk.getReferenceColumns();
-	            				if (refColumns == null) {
-	            					refColumns = getColumnNames(joinTable.getPrimaryKey().getColumns());
-	            				}    				
-	            				addJoinTable(aliasGroup, JoinType.JOIN_INNER, joinTable, entityTable, getColumnNames(fk.getColumns()), refColumns);    				
-	            			}
-		        			associationFound = true;
-		        			break;	            			
-	            		}
-	            	}	        		
-	        	}
-	        	
-	        	if (!associationFound) {
-	        		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16003, prop, resultEntityTable.getFullName()));
-	        	}
-    			
-    			entityTable = joinTable;
-    			this.resultEntityGroup = this.assosiatedTables.get(joinTable.getFullName());
-    			this.resultEntityTable = entityTable;	        	
+	        	DocumentNode joinNode = joinTable(this.resultNode, buildDocumentNode(prop));
+	            this.resultNode = joinNode;
 	        	
 	            if (propSplit.length > 1) {
 	                key = OEntityKey.parse("("+ propSplit[1]);
-	                if (this.criteria != null) {
-	                	this.criteria = new CompoundCriteria(CompoundCriteria.AND, this.criteria, buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key));
-	                }
-	                else {
-	                	this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
-	                }
+                    this.where = Criteria.combineCriteria(
+                            this.where,
+                            buildEntityKeyCriteria(this.resultNode, key));
 	            }
 			}
 		}
 		
+		if (info != null && info.expand != null && !info.expand.isEmpty()) {
+		    if (info.expand.size() > 1) {
+		        throw new UnsupportedOperationException("Only one $expand is suported"); //$NON-NLS-1$
+		    }
+            DocumentNode expandNode = joinTable(this.resultNode,
+                    buildDocumentNode(info.expand.get(0).getPropertyName()));
+		    this.resultNode.setExpandNode(expandNode);
+		}
+		
 		if (countStar) {
-			AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null);
+            AggregateSymbol aggregateSymbol = new AggregateSymbol(
+                    AggregateSymbol.Type.COUNT.name(), false, null);
 			select = new Select(Arrays.asList(aggregateSymbol));
 		}
 		else {
-			select = buildSelectColumns(this.projectedColumns, entityTable, this.resultEntityGroup);		
+            select = buildSelectColumns($select, this.resultNode);		
 		}
 		
 		if (info.filter != null) {
+			Assertion.assertTrue(this.isEmpty());
 			visitNode(info.filter);
+			Expression ex = this.getExpression();
+			if (!(ex instanceof Criteria)) {
+				ex = new ExpressionCriteria(ex);
+			}
+			this.where = Criteria.combineCriteria(this.where, (Criteria) ex);
 		}
 
 		if (!countStar) {
 			// order by
-			List<OrderByExpression> orderBy = info.orderBy;
-			if (orderBy != null && !orderBy.isEmpty()) {
+			if (info.orderBy != null && !info.orderBy.isEmpty()) {
 				for (OrderByExpression expr:info.orderBy) {
 					visitNode(expr);
 				}
 				query.setOrderBy(this.orderBy);
 			}
 			else {
-				KeyRecord record = resultEntityTable.getPrimaryKey();
+				KeyRecord record = this.resultNode.getEntityTable().getPrimaryKey();
 				if (record == null) {
 					// if PK is not available there MUST at least one unique key
-					record = resultEntityTable.getUniqueKeys().get(0);
+					record = this.resultNode.getEntityTable().getUniqueKeys().get(0);
 				}
 				// provide implicit ordering for cursor logic
 				for (Column column:record.getColumns()) {
-					OrderByExpression expr = org.odata4j.expression.Expression.orderBy(org.odata4j.expression.Expression.simpleProperty(column.getName()), Direction.ASCENDING);
+                    OrderByExpression expr = org.odata4j.expression.Expression
+                            .orderBy(org.odata4j.expression.Expression.simpleProperty(column.getName()),
+                                    Direction.ASCENDING);
 					visitNode(expr);
 				}
 				query.setOrderBy(this.orderBy);
@@ -234,67 +213,164 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		from.addClause(this.fromCluse);
 		query.setSelect(select);
 		query.setFrom(from);
-		query.setCriteria(this.criteria);
+		query.setCriteria(this.where);
 		return query;
 	}
-	
-	private GroupSymbol joinTable(String tableName, final String alias, final JoinType joinType) {
-		Table joinTable = findTable(tableName, metadata);
-    	if (joinTable == null ) {
-    		tableName = this.aliasTableNames.get(tableName);
-    		joinTable = findTable(tableName, metadata);
-    	}
-    	if (joinTable == null && alias != null) {
-    		tableName = this.aliasTableNames.get(alias);
-    		joinTable = findTable(tableName, metadata);
-    	}
-    	if (joinTable == null) {
-    		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16004, tableName));
-    	}
-    	
-    	String joinKey = (alias != null)?alias:joinTable.getFullName();
-    	String aliasGroup = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
-    	
-    	for (ForeignKey fk:this.resultEntityTable.getForeignKeys()) {
-    		if (fk.getReferenceKey().getParent().equals(joinTable)) {
-    			if(this.assosiatedTables.get(joinKey) == null) {
-    				List<String> refColumns = fk.getReferenceColumns();
-    				if (refColumns == null) {
-    					refColumns = getColumnNames(joinTable.getPrimaryKey().getColumns());
-    				}    				
-    				addJoinTable(aliasGroup, joinType, joinTable, this.resultEntityTable, getColumnNames(fk.getColumns()), refColumns);    				
-    			}
-    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getFullName());
-    		}
-    	}
-    	
-    	// if join direction is other way
-    	for (ForeignKey fk:joinTable.getForeignKeys()) {
-    		if (fk.getReferenceKey().getParent().equals(this.resultEntityTable)) {
-    			if(this.assosiatedTables.get(joinKey) == null) {
-    				List<String> refColumns = fk.getReferenceColumns();
-    				if (refColumns == null) {
-    					refColumns = getColumnNames(this.resultEntityTable.getPrimaryKey().getColumns());
-    				}    				
-    				addJoinTable(aliasGroup, joinType, joinTable, this.resultEntityTable, refColumns, getColumnNames(fk.getColumns()));
-    			}
-    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getFullName());
-    		}
-    	}
-    	return null;
-	}
 
-	private void addJoinTable(final String alias, final JoinType joinType,
-			final Table joinTable, final Table entityTable, List<String> pkColumns,
+    private DocumentNode buildDocumentNode(String name) {
+        String alias = "g"+ this.groupCount.getAndIncrement();
+        return buildDocumentNode(name, alias);
+    }
+    
+    private DocumentNode buildDocumentNode(String name, String alias) {
+        Table table = findTable(name, metadata);
+        if (table == null) {
+            throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16004, name));
+        }
+        return new DocumentNode(table, new GroupSymbol(alias, table.getFullName()));
+    }
+    
+
+    private DocumentNode joinTable(DocumentNode parentNode, DocumentNode joinNode) {
+        boolean associationFound = false;
+        
+        for (ForeignKey fk:joinNode.getEntityTable().getForeignKeys()) {
+        	if (fk.getReferenceKey().getParent().equals(parentNode.getEntityTable())) {
+        		if(this.assosiatedTables.get(joinNode.getEntityTable().getFullName()) == null) {
+        			List<String> refColumns = fk.getReferenceColumns();
+        			if (refColumns == null) {
+        				refColumns = getColumnNames(parentNode.getEntityTable().getPrimaryKey().getColumns());
+        			}	  
+                    addJoinTable(joinNode, JoinType.JOIN_INNER, 
+                            parentNode, refColumns,
+                            getColumnNames(fk.getColumns()));	        				
+        		}
+        		associationFound = true;
+        		break;
+        	}
+        }
+        
+        // if association not found; see at the other end of the reference
+        for (ForeignKey fk:parentNode.getEntityTable().getForeignKeys()) {
+            if (fk.getReferenceKey().getParent().equals(joinNode.getEntityTable())) {
+                if(this.assosiatedTables.get(joinNode.getEntityTable().getFullName()) == null) {
+                    List<String> refColumns = fk.getReferenceColumns();
+                    if (refColumns == null) {
+                        refColumns = getColumnNames(joinNode.getEntityTable().getPrimaryKey().getColumns());
+                    }                   
+                    addJoinTable(joinNode, JoinType.JOIN_INNER, 
+                            parentNode, getColumnNames(fk.getColumns()),
+                            refColumns);
+                }
+                associationFound = true;
+                break;
+            }
+        }
+        
+        if (!associationFound) {
+            throw new NotFoundException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID16003, joinNode.getEntityTable().getFullName(),
+                    parentNode.getEntityTable().getFullName()));
+        }
+        return joinNode;
+    }
+	
+    public Query callFunctionQuery(String procedureName,
+            EdmFunctionImport function, Map<String, OFunctionParameter> inputParams, QueryInfo info) {
+        
+        GroupSymbol gs = new GroupSymbol("g0");
+        Procedure proc = findProcedure(procedureName, this.metadata);
+        
+        this.resultNode = new DocumentNode(proc, gs);
+        
+        // handle $select
+        Select select = new Select();
+        int ordinal = 1;
+        if (info.select != null && !info.select.isEmpty()) {
+            for (EntitySimpleProperty property:info.select) {
+                for (Column column : proc.getResultSet().getColumns()) {
+                    if (column.getName().equals(property.getPropertyName())){
+                        this.resultNode.addProjectColumn(column.getName(), ordinal++, true, 
+                                ODataTypeManager.odataType(column.getRuntimeType()));
+                        select.addSymbol(new ElementSymbol(column.getName(), gs));
+                    }
+                }
+                
+            }
+        } else {
+            // empty projected column; means all
+            select.addSymbol(new MultipleElementSymbol(gs.getName()));
+        }
+
+        //handle $orderby
+        if (info.orderBy != null && !info.orderBy.isEmpty()) {
+            for (OrderByExpression expr:info.orderBy) {
+                visitNode(expr);
+            }
+            query.setOrderBy(this.orderBy);
+        }
+
+        // create a inline view from procedure
+        StoredProcedure procedure = storedProcedure(procedureName, function, inputParams);
+        SubqueryFromClause sfc = new SubqueryFromClause(gs, procedure);
+        sfc.setTable(true);        
+        
+        // handle $filter
+        if (info.filter != null) {
+            Assertion.assertTrue(this.isEmpty());
+            visitNode(info.filter);
+            Expression ex = this.getExpression();
+            if (!(ex instanceof Criteria)) {
+                ex = new ExpressionCriteria(ex);
+            }
+            this.where = Criteria.combineCriteria(this.where, (Criteria) ex);
+        }        
+        
+        From from = new From();
+        from.addClause(sfc);
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(this.where);
+        return query;        
+	}
+	
+    public StoredProcedure storedProcedure(String name,
+            EdmFunctionImport function,
+            Map<String, OFunctionParameter> inputParams) {
+        StoredProcedure procedure = new StoredProcedure();
+        procedure.setProcedureName(name);
+        
+        if (!inputParams.isEmpty()) {
+            for (EdmFunctionParameter edmFunctionParameter : function.getParameters()) {
+                OFunctionParameter param = inputParams.get(edmFunctionParameter.getName());
+                if (param == null) {
+                    continue;
+                }                
+                SPParameter spParam = new SPParameter(getParameters().size()+1, SPParameter.IN, 
+                        edmFunctionParameter.getName());
+                spParam.setExpression(new Reference(getParameters().size()));
+                procedure.setParameter(spParam);
+                
+                Object value = ((OSimpleObject<?>)(param.getValue())).getValue();
+                Integer sqlType = JDBCSQLTypeInfo.getSQLType(
+                        ODataTypeManager.teiidType(param.getType().getFullyQualifiedTypeName()));
+                getParameters().add(new SQLParam(ODataTypeManager.convertToTeiidRuntimeType(value), sqlType));
+            }
+        }
+        procedure.setDisplayNamedParameters(true);
+        return procedure;
+    }
+    
+	private void addJoinTable(final DocumentNode joinNode, final JoinType joinType,
+			final DocumentNode parentNode, List<String> pkColumns,
 			List<String> refColumns) {
-		
-		GroupSymbol joinGroup = new GroupSymbol(alias, joinTable.getFullName());
-		GroupSymbol entityGroup = this.assosiatedTables.get(entityTable.getFullName());
 		
 		List<Criteria> critList = new ArrayList<Criteria>();
 
 		for (int i = 0; i < refColumns.size(); i++) {
-			critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i), entityGroup), CompareCriteria.EQ, new ElementSymbol(refColumns.get(i), joinGroup)));
+            critList.add(new CompareCriteria(new ElementSymbol(
+                    pkColumns.get(i), parentNode.getEntityGroup()), CompareCriteria.EQ,
+                    new ElementSymbol(refColumns.get(i), joinNode.getEntityGroup())));
 		}         			
 		
 		Criteria crit = critList.get(0);
@@ -303,70 +379,106 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		}		        			
 		
 		if (this.fromCluse == null) {
-			this.fromCluse = new JoinPredicate(new UnaryFromClause(entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
-			
+            this.fromCluse = new JoinPredicate(
+                    new UnaryFromClause(parentNode.getEntityGroup()), new UnaryFromClause(
+                            joinNode.getEntityGroup()), JoinType.JOIN_INNER, crit);
 		}
 		else {
-			this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), joinType, crit);
+            this.fromCluse = new JoinPredicate(this.fromCluse,
+                    new UnaryFromClause(joinNode.getEntityGroup()), joinType,
+                    crit);
 		}
-		this.assosiatedTables.put(alias, joinGroup);
-		this.assosiatedTables.put(joinTable.getFullName(), joinGroup);
-		this.aliasTableNames.put(alias, joinTable.getFullName());
+		this.assosiatedTables.put(joinNode.getEntityTable().getFullName(), joinNode);
 	}
 
-	private Criteria buildEntityKeyCriteria(Table table, GroupSymbol entityGroup, OEntityKey entityKey) {
-		KeyRecord pk = table.getPrimaryKey();
+	private Criteria buildEntityKeyCriteria(DocumentNode entityNode, OEntityKey entityKey) {
+		KeyRecord pk = entityNode.getEntityTable().getPrimaryKey();
 		
 		if (entityKey.getKeyType() == OEntityKey.KeyType.SINGLE) {
 			if (pk.getColumns().size() != 1) {
-				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, table.getFullName(), entityKey));
+                throw new NotFoundException(ODataPlugin.Util.gs(
+                        ODataPlugin.Event.TEIID16015, entityNode.getEntityTable().getFullName(),
+                        entityKey));
 			}	
-			Column column = table.getPrimaryKey().getColumns().get(0);
-			return new CompareCriteria(new ElementSymbol(column.getName(), entityGroup), CompareCriteria.EQ, new Constant(entityKey.asSingleValue()));
+			Column column = entityNode.getEntityTable().getPrimaryKey().getColumns().get(0);
+            return new CompareCriteria(new ElementSymbol(column.getName(),
+                    entityNode.getEntityGroup()), CompareCriteria.EQ, new Constant(
+                    entityKey.asSingleValue()));
 		}
 
 		// complex (multi-keyed)
 		List<Criteria> critList = new ArrayList<Criteria>();
 		Set<NamedValue<?>> keys = entityKey.asComplexValue();
 		if (pk.getColumns().size() != keys.size()) {
-			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, table.getFullName(), entityKey));
+            throw new NotFoundException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID16015, entityNode.getEntityTable().getFullName(),
+                    entityKey));
 		}
 		for (NamedValue<?> key : keys) {
-			Column column = findColumn(table, key.getName());
-			critList.add(new CompareCriteria(new ElementSymbol(column.getName(), entityGroup), CompareCriteria.EQ, new Constant(key.getValue())));
+			Column column = findColumn(entityNode.getEntityTable(), key.getName());
+            critList.add(new CompareCriteria(new ElementSymbol(
+                    column.getName(), entityNode.getEntityGroup()), CompareCriteria.EQ,
+                    new Constant(key.getValue())));
 		}
 	
 		return new CompoundCriteria(CompoundCriteria.AND, critList);
 	}
 
-	private Select buildSelectColumns(HashMap<String, Boolean> selectColumns, Table table, GroupSymbol group) {
-		Select select = new Select();
+    private Select buildSelectColumns(Set<String> selectColumns,
+            DocumentNode parentNode) {
+        Select select = new Select();
+        int ordinal = 1;
 		if (!selectColumns.isEmpty()) {
 			// also add pk, fks for building the link keys
-			for (Column column:table.getPrimaryKey().getColumns()) {
-				selectColumns.put(column.getName(), (selectColumns.get(column.getName()) != null));
+			for (Column column:parentNode.getEntityTable().getPrimaryKey().getColumns()) {
+			    if (!parentNode.getProjectedColumns().containsKey(column.getName())) {
+                    parentNode.addProjectColumn(column.getName(), ordinal++,
+                            selectColumns.contains(column.getName()), 
+                            ODataTypeManager.odataType(column.getRuntimeType()));
+			    }
 			}
 			
-			for (ForeignKey fk:table.getForeignKeys()) {
-				for (Column column:fk.getColumns()) {
-					selectColumns.put(column.getName(), (selectColumns.get(column.getName()) != null));
+			for (ForeignKey fk:parentNode.getEntityTable().getForeignKeys()) {
+				for (Column column:fk.getColumns()) {				    
+	                if (!parentNode.getProjectedColumns().containsKey(column.getName())) {
+	                    parentNode.addProjectColumn(column.getName(), ordinal++,
+	                            selectColumns.contains(column.getName()), 
+	                            ODataTypeManager.odataType(column.getRuntimeType()));
+	                }
 				}
 			}
 			
 			// project all these.
-			for (String property:selectColumns.keySet()) {
-				Column column = findColumn(table, property);
-				if (column == null) {
-					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16005, property, table.getFullName()));
-				}
-				select.addSymbol(new ElementSymbol(column.getName(), group));
+			for (String property:selectColumns) {
+                Column column = findColumn(parentNode.getEntityTable(), property);
+                if (column == null) {
+                    throw new NotFoundException(ODataPlugin.Util.gs(
+                            ODataPlugin.Event.TEIID16005, property,
+                            parentNode.getEntityTable().getFullName()));
+                }
+                if (!parentNode.getProjectedColumns().containsKey(column.getName())) {
+                    parentNode.addProjectColumn(column.getName(), ordinal++,
+                            selectColumns.contains(column.getName()), 
+                            ODataTypeManager.odataType(column.getRuntimeType()));
+                }
 			}
+			
+			for (ProjectedColumn pc : parentNode.getProjectedColumns().values()) {
+			    select.addSymbol(new ElementSymbol(pc.name(), parentNode.getEntityGroup()));
+			}
+
 		} else {
-			for (Column c:table.getColumns()) {
-				select.addSymbol(new ElementSymbol(c.getName(), group));
-				selectColumns.put(c.getName(), Boolean.TRUE);
-			}
+		    //empty projected columns, means all 
+		    
+			//use select x.* to avoid selecting unselectable columns
+			//and possibly to exclude columns that the user is not entitled to
+			select.addSymbol(new MultipleElementSymbol(parentNode.getEntityGroup().getName()));			
 		}
+		
+        if (parentNode.getExpandNode() != null) {
+          //empty projected columns, means all 
+            select.addSymbol(new MultipleElementSymbol(parentNode.getExpandNode().getEntityGroup().getName()));
+        }
 		return select;
 	}
 
@@ -383,106 +495,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(Direction direction) {
-		Expression expr = stack.pop();
-		if (expr instanceof CompareCriteria) {
-			expr = ((CompareCriteria)expr).getLeftExpression();
-		}
+		Expression expr = getExpression();
 		this.orderBy.addVariable(expr, direction == Direction.ASCENDING);
-	}
-
-	@Override
-	public void visit(AddExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();
-		stack.push(new Function("+", new Expression[] {lhs, rhs})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(AndExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();
-		this.criteria = new CompoundCriteria(CompoundCriteria.AND, (Criteria)lhs, (Criteria)rhs);
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(BooleanLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.BOOLEAN));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(CastExpression expr) {
-		visitNode(expr.getExpression());
-		Expression rhs = new Constant(ODataTypeManager.teiidType(expr.getType()));
-		Expression lhs = stack.pop();
-		stack.push(new Function(CONVERT, new Expression[] {lhs, rhs})); 
-	}
-
-	@Override
-	public void visit(ConcatMethodCallExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		stack.push(new Function("CONCAT2", new Expression[] {lhs, rhs})); //$NON-NLS-1$	
-	}
-
-	@Override
-	public void visit(DateTimeLiteral expr) {
-		Timestamp timestamp = new Timestamp(expr.getValue().toDateTime().getMillis());
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(timestamp, Types.TIMESTAMP));
-		}
-		else {
-			stack.add(new Constant(timestamp)); 
-		}
-	}
-
-	@Override
-	public void visit(DateTimeOffsetLiteral expr) {
-		throw new UnsupportedOperationException();
-
-	}
-
-	@Override
-	public void visit(DecimalLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.DECIMAL));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(DivExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		stack.push(new Function("/", new Expression[] {lhs, rhs})); //$NON-NLS-1$			
-	}
-
-	@Override
-	public void visit(EndsWithMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		Expression target = stack.pop();
-		visitNode(expr.getValue());
-		Expression value = stack.pop();		
-		this.criteria = new CompareCriteria(new Function("ENDSWITH", new Expression[] {target, value}), CompareCriteria.EQ, new Constant(Boolean.TRUE));
-		stack.push(this.criteria);
 	}
 
 	@Override
@@ -490,7 +504,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		String property = expr.getPropertyName();
 		
 		if (property.indexOf('/') == -1) {
-			stack.push(new ElementSymbol(property, this.resultEntityGroup));
+		    setExpression(new ElementSymbol(property, this.resultNode.getEntityGroup()));
 			return;
 		}
 		
@@ -498,427 +512,54 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		// http://host/service.svc/Orders?$filter = Customer/ContactName ne 'Fred'
 		// we need to handle 'Customer/ContactName'
 		// only supporting one level deep for simplicity
-		String[] segments = property.split("/"); 
-		GroupSymbol joinGroup = joinTable(segments[0], null, JoinType.JOIN_INNER);
-		Table joinTable = findTable(joinGroup.getDefinition(), metadata);
-		Column column = findColumn(joinTable, segments[1]);
+		String[] segments = property.split("/");
+		DocumentNode joinNode = joinTable(this.resultNode, buildDocumentNode(segments[0]));
+		Column column = findColumn(joinNode.getEntityTable(), segments[1]);
 		if (column == null) {
-			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16005, segments[1], joinTable.getFullName()));
+            throw new NotFoundException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID16005, segments[1],
+                    joinNode.getEntityTable().getFullName()));
 		}
-		this.stack.push(new ElementSymbol(segments[1], joinGroup));
+		setExpression(new ElementSymbol(segments[1], joinNode.getEntityGroup()));
 	}
 
 	@Override
-	public void visit(EqExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();
-		if (rhs instanceof Constant && ((Constant)rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
-			this.criteria = new IsNullCriteria(lhs);
-		}
-		else {
-			this.criteria = new CompareCriteria(lhs, CompareCriteria.EQ, rhs);
-		}
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(GeExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.GE, rhs);
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(GtExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.GT, rhs);
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(GuidLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue().toString(), Types.VARCHAR));
-		}
-		else {
-			stack.add(new Constant(expr.getValue().toString())); 
-		}
-	}
-
-	@Override
-	public void visit(BinaryLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.BINARY));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(ByteLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.TINYINT));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(SByteLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.TINYINT));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(IndexOfMethodCallExpression expr) {
-		visitNode(expr.getValue());
-		visitNode(expr.getTarget());
-		Expression target = stack.pop();
-		Expression value = stack.pop();		
-		stack.push(new Function("LOCATE", new Expression[] {value, target})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(SingleLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.FLOAT));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(DoubleLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.DOUBLE));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(IntegralLiteral expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.INTEGER));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(Int64Literal expr) {
-		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); 
-			this.params.add(new SQLParam(expr.getValue(), Types.BIGINT));
-		}
-		else {
-			stack.add(new Constant(expr.getValue())); 
-		}
-	}
-
-	@Override
-	public void visit(IsofExpression expr) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void visit(LeExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.LE, rhs);
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(LengthMethodCallExpression expr) {
-		visitNode(expr.getTarget());	
-		stack.push(new Function("LENGTH", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(LtExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		this.criteria = new CompareCriteria(lhs, CompareCriteria.LT, rhs);
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(ModExpression expr) {
-		visitNode(expr.getLHS());	
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		stack.push(new Function("MOD", new Expression[] {lhs, rhs})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(MulExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();		
-		stack.push(new Function("*", new Expression[] {lhs, rhs})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(NeExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();
-		if (rhs instanceof Constant && ((Constant)rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
-			IsNullCriteria crit = new IsNullCriteria(lhs);
-			crit.setNegated(true);
-			this.criteria = crit;
-		}
-		else {
-			this.criteria = new CompareCriteria(lhs, CompareCriteria.NE, rhs);
-		}
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(NegateExpression expr) {
-		visitNode(expr.getExpression());
-		Expression ex = stack.pop();
-		stack.push(new Function(SourceSystemFunctions.MULTIPLY_OP, new Expression[] {new Constant(-1), ex})); 
-	}
-
-	@Override
-	public void visit(NotExpression expr) {
-		visitNode(expr.getExpression());
-		this.criteria = new NotCriteria(new ExpressionCriteria(stack.pop()));
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(NullLiteral expr) {
-		stack.push(new Constant(null));
-	}
-
-	@Override
-	public void visit(OrExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();
-		this.criteria = new CompoundCriteria(CompoundCriteria.OR, (Criteria)lhs, (Criteria)rhs);
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(ParenExpression expr) {
-		visitNode(expr.getExpression());
-	}
-
-	@Override
-	public void visit(BoolParenExpression expr) {
-		visitNode(expr.getExpression());
-	}
-
-	@Override
-	public void visit(ReplaceMethodCallExpression expr) {
-		List<Expression> expressions = new ArrayList<Expression>();
-		visitNode(expr.getTarget());
-		expressions.add(stack.pop());
-		visitNode(expr.getFind());
-		expressions.add(stack.pop());
-		visitNode(expr.getReplace());
-		expressions.add(stack.pop());
-		stack.push(new Function("REPLACE", expressions.toArray(new Expression[expressions.size()]))); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(StartsWithMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		Expression target = stack.pop();
-		visitNode(expr.getValue());
-		Expression value = stack.pop();		
-		this.criteria = new CompareCriteria(new Function("LOCATE", new Expression[] {value, target, new Constant(1)}), CompareCriteria.EQ, new Constant(1));
-		stack.push(this.criteria);
-	}
-
-	@Override
-	public void visit(StringLiteral expr) {
-		if (this.prepared) {
-			stack.push(new Reference(this.params.size()));
-			this.params.add(new SQLParam(expr.getValue(), Types.VARCHAR));
-		}
-		else {
-			stack.push(new Constant(expr.getValue()));
-		}
-	}
-
-	@Override
-	public void visit(SubExpression expr) {
-		visitNode(expr.getLHS());
-		visitNode(expr.getRHS());
-		Expression rhs = stack.pop();
-		Expression lhs = stack.pop();
-		stack.push(new Function("-", new Expression[] {lhs, rhs})); //$NON-NLS-1$		
-	}
-
-	@Override
-	public void visit(SubstringMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		List<Expression> expressions = new ArrayList<Expression>();
-		expressions.add(stack.pop());
-		if (expr.getStart() != null) {
-			visitNode(expr.getStart());
-			expressions.add(stack.pop());
-		}
-		if (expr.getLength() != null) {
-			visitNode(expr.getLength());
-			expressions.add(stack.pop());
-		}
-		stack.push(new Function("SUBSTRING", expressions.toArray(new Expression[expressions.size()]))); //$NON-NLS-1$		
-	}
-
-	@Override
-	public void visit(SubstringOfMethodCallExpression expr) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void visit(TimeLiteral expr) {
-		Time time = new Time(expr.getValue().toDateTimeToday().getMillis());
-		if (this.prepared) {
-			stack.push(new Reference(this.params.size()));
-			this.params.add(new SQLParam(time, Types.TIME));
-		}
-		else {
-			stack.push(new Constant(time));
-		}		
-	}
-
-	@Override
-	public void visit(ToLowerMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("LCASE", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(ToUpperMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("UCASE", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(TrimMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("TRIM", new Expression[] {new Constant("BOTH"), new Constant(' '), stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(YearMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("YEAR", new Expression[] {stack.pop()})); //$NON-NLS-1$		
-	}
-
-	@Override
-	public void visit(MonthMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("MONTH", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(DayMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("DAYOFMONTH", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(HourMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("HOUR", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(MinuteMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("MINUTE", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(SecondMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("SECOND", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(RoundMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("ROUND", new Expression[] {stack.pop(), new Constant(0)})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(FloorMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("FLOOR", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
-
-	@Override
-	public void visit(CeilingMethodCallExpression expr) {
-		visitNode(expr.getTarget());
-		stack.push(new Function("CEILING", new Expression[] {stack.pop()})); //$NON-NLS-1$
-	}
+    public GroupSymbol getDocumentGroup() {
+        return this.resultNode.getEntityGroup();
+    }
 
 	@Override
 	public void visit(AggregateAnyFunction expr) {
 		// http://host/service.svc/Orders?$filter=OrderLines/any(ol: ol/Quantity gt 10)
 		// select distinct orders.* from orders join orderlines on (key) where (orderlines.quantity > 10)
 		String joinTableName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
-		joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_INNER);
-		expr.getPredicate().visitThis(this);
+		final DocumentNode joinNode = buildDocumentNode(joinTableName, expr.getVariable());
+		joinTable(this.resultNode, joinNode);
+		//expr.getPredicate().visitThis(this);
+		ODataExpressionVisitor ev = new ODataExpressionVisitor(isPrepared()) {
+		    @Override
+		    public GroupSymbol getDocumentGroup() {
+		        return joinNode.getEntityGroup();
+		    }
+		};
+		expr.getPredicate().visitThis(ev);
+		setExpression(ev.getExpression());
 		this.distinct = true;
 	}
 
 	@Override
 	public void visit(AggregateAllFunction expr) {
-		//throw new UnsupportedOperationException("TODO");
 		// http://host/service.svc/Orders?$filter=OrderLines/all(ol: ol/Quantity gt 10)
 		// select * from orders where ALL (select quantity from orderlines where fk = pk) > 10
-		
 		String tblName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
 		Table joinTable = findTable(tblName, this.metadata);
 		if (joinTable == null) {
 			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16009, tblName));
 		}
-		GroupSymbol joinGroup = new GroupSymbol(expr.getVariable(),joinTable.getFullName());
-		
-		ODataAggregateAnyBuilder builder = new ODataAggregateAnyBuilder(expr,
-				this.resultEntityTable, this.resultEntityGroup, joinTable, joinGroup);
-		this.criteria = builder.getCriteria();
-		stack.push(criteria);
+		DocumentNode joinNode = buildDocumentNode(tblName, expr.getVariable());
+		ODataAggregateAnyBuilder builder = new ODataAggregateAnyBuilder(expr, this.resultNode, joinNode);
+		Criteria criteria = builder.getCriteria();
+		setExpression(criteria);
 	}
 	
 	private Table findTable(EdmEntitySet entity, MetadataStore store) {
@@ -949,49 +590,60 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		return result;
 	}
 
+    private Procedure findProcedure(String procedureName, MetadataStore store) {
+        int idx = procedureName.indexOf('.');
+        if (idx > 0) {
+            Schema s = store.getSchema(procedureName.substring(0, idx));
+            if (s != null) {
+                Procedure t = s.getProcedure(procedureName.substring(idx+1));
+                if (t != null) {
+                    return t;
+                }
+            }
+        }
+        Procedure result = null;
+        for (Schema s : store.getSchemaList()) {
+            Procedure t = s.getProcedures().get(procedureName);
+            if (t != null) {
+                if (result != null) {
+                    throw new NotFoundException(ODataPlugin.Util.gs(
+                            ODataPlugin.Event.TEIID16017, procedureName));
+                }
+                result = t;
+            }
+        }       
+        return result;
+    }	
 	private Column findColumn(Table table, String propertyName) {
 		return table.getColumnByName(propertyName);
 	}
 
-	public List<SQLParam> getParameters(){
-		return this.params;
-	}
-	
-	public Table getEntityTable() {
-		return this.resultEntityTable;
+	public DocumentNode getDocumentNode() {
+		return this.resultNode;
 	}	
-	
-	Expression getExpression() {
-		return stack.pop();
-	}
 	
 	OrderBy getOrderBy(){
 		return this.orderBy;
 	}
 	
-	LinkedHashMap<String, Boolean> getProjectedColumns(){
-		return this.projectedColumns;
-	}
-	
 	public Insert insert(EdmEntitySet entitySet, OEntity entity) {
 
 		Table entityTable = findTable(entitySet, this.metadata);
-		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol(entityTable.getFullName());
+		this.resultNode = new DocumentNode(entityTable, new GroupSymbol(entityTable.getFullName()));
 	    
 		List values = new ArrayList();
 		
 		Insert insert = new Insert();
-		insert.setGroup(this.resultEntityGroup);
+		insert.setGroup(this.resultNode.getEntityGroup());
 		
 		int i = 0;
 	    for (OProperty<?> prop : entity.getProperties()) {
 	      EdmProperty edmProp = entitySet.getType().findProperty(prop.getName());
 	      Column column = entityTable.getColumnByName(edmProp.getName());
-	      insert.addVariable(new ElementSymbol(column.getName(), this.resultEntityGroup));
+	      insert.addVariable(new ElementSymbol(column.getName(), this.resultNode.getEntityGroup()));
 	        
 	      values.add(new Reference(i++));
-	      this.params.add(asParam(prop, edmProp));
+	      getParameters().add(asParam(prop, edmProp));
 	    }
 	    
 	    insert.setValues(values);
@@ -999,12 +651,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	}
 	
 	//TODO: allow the generated key building.
-	public OEntityKey buildEntityKey(EdmEntitySet entitySet, OEntity entity, Map<String, Object> generatedKeys) {
+    public OEntityKey buildEntityKey(EdmEntitySet entitySet, OEntity entity,
+            Map<String, Object> generatedKeys) {
 		Table entityTable = findTable(entitySet, this.metadata);
 		KeyRecord pk = entityTable.getPrimaryKey();
 		List<OProperty<?>> props = new ArrayList<OProperty<?>>();
 		for (Column c:pk.getColumns()) {
-			OProperty prop = null;
+			OProperty<?> prop = null;
 			try {
 				prop = entity.getProperty(c.getName());
 			} catch (Exception e) {
@@ -1017,7 +670,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 						value = generatedKeys.values().iterator().next();
 					}					
 					if (value == null) {
-						throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16016, entity.getEntitySetName()));
+                        throw new NotFoundException(ODataPlugin.Util.gs(
+                                ODataPlugin.Event.TEIID16016,
+                                entity.getEntitySetName()));
 					}
 				}
 				prop = OProperties.simple(c.getName(),value);
@@ -1030,24 +685,22 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	public Delete delete(EdmEntitySet entitySet, OEntityKey entityKey) {
 		
 		Table entityTable = findTable(entitySet, this.metadata);
-		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol(entityTable.getFullName());
+		this.resultNode = new DocumentNode(entityTable, new GroupSymbol(entityTable.getFullName()));
 
 		Delete delete = new Delete();
-		delete.setGroup(this.resultEntityGroup);
-		delete.setCriteria(buildEntityKeyCriteria(entityTable, this.resultEntityGroup, entityKey));
+		delete.setGroup(this.resultNode.getEntityGroup());
+		delete.setCriteria(buildEntityKeyCriteria(this.resultNode, entityKey));
 		
 		return delete;
 	}
 
 	public Update update(EdmEntitySet entitySet, OEntity entity) {
 		Table entityTable = findTable(entitySet, this.metadata);
-		this.resultEntityTable = entityTable;
-		this.resultEntityGroup = new GroupSymbol(entityTable.getFullName());
+		this.resultNode = new DocumentNode(entityTable, new GroupSymbol(entityTable.getFullName()));
 		
 		Update update = new Update();
-		update.setGroup(this.resultEntityGroup);
-		update.setCriteria(buildEntityKeyCriteria(entityTable, this.resultEntityGroup, entity.getEntityKey()));
+		update.setGroup(this.resultNode.getEntityGroup());
+		update.setCriteria(buildEntityKeyCriteria(this.resultNode, entity.getEntityKey()));
 		
 		int i = 0;
 		for (OProperty<?> prop : entity.getProperties()) {
@@ -1060,15 +713,18 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 				}
 			}
 			if (add) {
-				update.addChange(new ElementSymbol(column.getName(),this.resultEntityGroup), new Reference(i++));
-				this.params.add(asParam(prop, edmProp));
+                update.addChange(new ElementSymbol(column.getName(),
+                        this.resultNode.getEntityGroup()), new Reference(i++));
+				getParameters().add(asParam(prop, edmProp));
 			}
 		}
 		return update;
 	}
 
 	private SQLParam asParam(OProperty<?> prop, EdmProperty edmProp) {
-		return new SQLParam(ODataTypeManager.convertToTeiidRuntimeType(prop.getValue()), JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(edmProp.getType().getFullyQualifiedTypeName())));
+        return new SQLParam(ODataTypeManager.convertToTeiidRuntimeType(prop
+                .getValue()), JDBCSQLTypeInfo.getSQLType(ODataTypeManager
+                .teiidType(edmProp.getType().getFullyQualifiedTypeName())));
 	}
 	
 	static List<String> getColumnNames(List<Column> columns){
