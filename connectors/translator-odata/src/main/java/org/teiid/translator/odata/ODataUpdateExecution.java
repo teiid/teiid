@@ -84,7 +84,7 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
 		else if(this.visitor.getMethod().equals("PUT")) { //$NON-NLS-1$
 			// UPDATE
 			Schema schema = visitor.getTable().getParent();
-			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
+			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata(schema));
 			BinaryWSProcedureExecution execution = executeDirect("GET", this.visitor.buildURL(), null, getDefaultHeaders()); //$NON-NLS-1$
 			if (execution.getResponseCode() == Status.OK.getStatusCode()) {
 				String etag = getHeader(execution, "ETag"); //$NON-NLS-1$
@@ -112,8 +112,8 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
 	}
 
 	private String buildPayload(String entitySet, final List<OProperty<?>> props, EdmDataServices edm) {
-		final EdmEntitySet ees = edm.getEdmEntitySet(entitySet);
-		
+	    // this is remove the teiid specific model name from the entity type name.
+		final EdmEntitySet ees = ODataEntitySchemaBuilder.removeModelName(edm.getEdmEntitySet(entitySet));
 	    Entry entry =  new Entry() {
 	        public String getUri() {
 	          return null;
