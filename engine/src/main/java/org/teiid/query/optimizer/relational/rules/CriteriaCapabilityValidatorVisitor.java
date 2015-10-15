@@ -54,6 +54,7 @@ import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -225,6 +226,28 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         } catch(TeiidComponentException e) {
             handleException(e);            
         }
+    }
+    
+    @Override
+    public void visit(OrderBy obj) {
+    	String collation = null;
+		try {
+			collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION_LOCALE, modelID, metadata, capFinder);
+		} catch(QueryMetadataException e) {
+            handleException(new TeiidComponentException(e));
+        } catch(TeiidComponentException e) {
+            handleException(e);            
+        }
+		CommandContext commandContext = CommandContext.getThreadLocalContext();
+		if (collation != null && commandContext != null && commandContext.getOptions().isRequireTeiidCollation() && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
+	        for (OrderByItem symbol : obj.getOrderByItems()) {
+	            if (symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.STRING) {
+	    	    	//we require the collation to match
+	        		markInvalid(obj, "source is not using the same collation as Teiid"); //$NON-NLS-1$
+	            	break;
+	            }
+	        }
+		}
     }
     
     public void visit(CaseExpression obj) {

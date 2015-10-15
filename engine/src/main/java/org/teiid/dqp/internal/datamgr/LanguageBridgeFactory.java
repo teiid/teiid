@@ -821,6 +821,7 @@ public class LanguageBridgeFactory {
                                 params,
                                 symbol.getType());
     	af.setCondition(translate(symbol.getCondition()));
+    	af.setOrderBy(translate(symbol.getOrderBy(), false));
     	return af;
     }
 

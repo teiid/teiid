@@ -50,6 +50,7 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     public void visit(AggregateFunction obj) {
         visitNodes(obj.getParameters());
         visitNode(obj.getCondition());
+        visitNode(obj.getOrderBy());
     }
     
     public void visit(BatchedUpdates obj) {
