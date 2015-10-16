@@ -105,7 +105,7 @@ public class TestODataSQLStringVisitor {
 	
 	@Test
 	public void testEndsWith() {
-		te("endswith(x, 'foo')", "ENDSWITH(x, 'foo') = TRUE");
+		te("endswith(x, 'foo')", "ENDSWITH('foo', x) = TRUE");
 	}	
 	
 	@Test
