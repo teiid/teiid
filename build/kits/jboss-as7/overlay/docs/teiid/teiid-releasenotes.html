@@ -347,13 +347,10 @@ temporary table access.
 
 <h2><a name="Other">Other Issues</a></h2>
 <ul>
-    <li>TEIID-1170 - correlated subqueries are not allowed in UPDATEs or DELETEs against internal Teiid tables (internal materialized views or temporary tables).
     <li>TEIID-1281 - Negative start indexing is not supported by DB2 and Derby databases.  Usage of the Teiid SUBSTRING against these sources should not use negative start values.
     <li>TEIID-1008 - Most versions of Oracle and MySQL do not support deeply nested correlated references.  There is currently no workaround for this issue.
 	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
 	as the first parameter value.  The workaround is to use nesting parens, e.g. call proc((identifier=value), ...), which clarifies that this is positional value.  This workaround will not be needed in later releases.
-	<li><a url="https://issues.jboss.org/browse/TEIID-1511">TEIID-1511</a> - When a VDB is deployed and undeployed a socket is left open, which may lead to "too manay open files". Check the defect comments for details.
-	<li>TEIID-2101 - Statement.setMaxRows is not used for cached result sets or when getting a result set from a CallableStatement procedure that returns parameters.
 	<li>TEIID-586 - Salesforce LIKE pushdown is case insensitive, while LIKE evaluated by Teiid is case sensitive unless an alternative collation is used.  Care should be taken to ensure consistent results 
 	if mixed case values are being searched.
 	<li>TEIID-2836 - Data from DB2 on z/OS in EBCDIC may not be represented correctly at runtime.  It is recommended that the values are converted to ASCII or another common character set.

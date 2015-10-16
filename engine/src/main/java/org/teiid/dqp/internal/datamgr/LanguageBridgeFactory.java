@@ -42,7 +42,6 @@ import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Select;
 import org.teiid.language.WindowSpecification;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
@@ -515,7 +514,7 @@ public class LanguageBridgeFactory {
 				if (condition == null) {
 					condition = new In(expr, translatedExpressionsSubList, criteria.isNegated()); 
 				} else {
-					condition = new AndOr(new In(expr, translatedExpressionsSubList, criteria.isNegated()), condition, criteria.isNegated()?AndOr.Operator.AND:AndOr.Operator.OR);
+					condition = new AndOr(condition, new In(expr, translatedExpressionsSubList, criteria.isNegated()), criteria.isNegated()?AndOr.Operator.AND:AndOr.Operator.OR);
 				}
         	}
         	return condition;

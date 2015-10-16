@@ -87,11 +87,16 @@ public class TestImpalaExecutionFactory {
         assertEquals("SELECT g1.e2 FROM g1 WHERE g1.e1 = 'a\\'b\\\\c'", sqlVisitor.toString());
     }
     
-    @Test public void testMultipleDistinctAggregatesl() {
+    @Test public void testMultipleDistinctAggregates() {
     	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
         Command obj = commandBuilder.getCommand("select count(distinct pm1.g1.e1), 1, count(distinct pm1.g1.e2), avg(distinct pm1.g1.e4) from pm1.g1");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
         sqlVisitor.append(obj);
         assertEquals("SELECT v0.c0, v0.c1, v1.c2, v2.c3 FROM (SELECT COUNT(DISTINCT g1.e1) AS c0, 1 AS c1 FROM g1) v0 CROSS JOIN (SELECT COUNT(DISTINCT g1.e2) AS c2 FROM g1) v1 CROSS JOIN (SELECT AVG(DISTINCT g1.e4) AS c3 FROM g1) v2", sqlVisitor.toString());
+        
+        obj = commandBuilder.getCommand("select count(distinct pm1.g1.e1), 1, count(distinct pm1.g1.e2), avg(distinct pm1.g1.e4) from pm1.g1 where pm1.g1.e3 = true");
+        sqlVisitor = impalaTranslator.getSQLConversionVisitor();
+        sqlVisitor.append(obj);
+        assertEquals("SELECT v0.c0, v0.c1, v1.c2, v2.c3 FROM (SELECT COUNT(DISTINCT g1.e1) AS c0, 1 AS c1 FROM g1 WHERE g1.e3 = true) v0 CROSS JOIN (SELECT COUNT(DISTINCT g1.e2) AS c2 FROM g1 WHERE g1.e3 = true) v1 CROSS JOIN (SELECT AVG(DISTINCT g1.e4) AS c3 FROM g1 WHERE g1.e3 = true) v2", sqlVisitor.toString());
     }
 }

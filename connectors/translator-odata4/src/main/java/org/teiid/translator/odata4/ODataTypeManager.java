@@ -22,13 +22,23 @@
 package org.teiid.translator.odata4;
 
 import java.lang.reflect.Array;
+import java.sql.Date;
+import java.sql.Time;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDecimal;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmPrimitiveTypeFactory;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
+import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
@@ -92,6 +102,9 @@ public class ODataTypeManager {
     } 
     
     public static EdmPrimitiveTypeKind odataType(String dataType) {
+        if (dataType.endsWith("[]")) {
+            dataType = dataType.substring(0, dataType.length()-2);
+        }        
         String type =  teiidTypes.get(dataType);
         if (type == null) {
             type = "Edm.String";
@@ -121,7 +134,8 @@ public class ODataTypeManager {
         }
     }   
     
-    public static Object convertTeiidInput(Object value, Class<?> expectedType) throws TranslatorException {
+    public static Object convertTeiidRuntimeType(Object value, String odataType,
+            Class<?> expectedType) throws TranslatorException {
         if (value == null) {
             return null;
         }
@@ -131,7 +145,7 @@ public class ODataTypeManager {
             Class<?> expectedArrayComponentType = expectedType.getComponentType();
             Object array = Array.newInstance(expectedArrayComponentType, values.size());                
             for (int i = 0; i < values.size(); i++) {
-                Object arrayItem = convertTeiidInput(values.get(i), expectedArrayComponentType);
+                Object arrayItem = convertTeiidRuntimeType(values.get(i), odataType, expectedArrayComponentType);
                 Array.set(array, i, arrayItem);
             }               
             return array;
@@ -140,6 +154,11 @@ public class ODataTypeManager {
         if (expectedType.isAssignableFrom(value.getClass())) {
             return value;
         } else {
+            
+            if (value instanceof String) {
+                return parseLiteral(odataType, (String)value);
+            }
+
             Transform transform = DataTypeManager.getTransform(value.getClass(), expectedType);
             if (transform != null) {
                 try {
@@ -150,5 +169,49 @@ public class ODataTypeManager {
             }
         }
         return value;
+    }
+    
+    public static Object parseLiteral(String odataType, String value)
+            throws TranslatorException {
+        EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
+                .valueOf(odataType.substring(4)));
+        
+        int maxLength = DataTypeManager.MAX_STRING_LENGTH;
+        if (primitiveType instanceof EdmBinary ||primitiveType instanceof EdmStream) {
+            maxLength = DataTypeManager.MAX_VARBINARY_BYTES;
+        }
+        
+        int precision = 9;
+        int scale = 3;
+        if (primitiveType instanceof EdmDecimal) {
+            precision = 38;
+            scale = 9;
+        }
+        
+        Class<?> expectedClass = primitiveType.getDefaultType();
+        
+        try {
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length()-1);
+            }
+            Object converted =  primitiveType.valueOfString(value,
+                    false,
+                    maxLength, 
+                    precision, 
+                    scale, 
+                    true, 
+                    expectedClass);
+            
+            if(primitiveType instanceof EdmTimeOfDay) {
+                Calendar ts =  (Calendar)converted;
+                return new Time(ts.getTimeInMillis());
+            } else if (primitiveType instanceof EdmDate) {
+                Calendar ts =  (Calendar)converted;
+                return new Date(ts.getTimeInMillis());
+            }
+            return converted;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TranslatorException(e);
+        }
     }    
 }

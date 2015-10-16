@@ -81,6 +81,7 @@ public class TestInCriteriaImpl {
         inCriteria.setNegated(true);
         AndOr and = (AndOr) lbf.translate(inCriteria);
         assertEquals(Operator.AND, and.getOperator());
+        assertEquals("300 NOT IN (100, 200) AND 300 NOT IN (300, 400)", and.toString());
     }
 
     @Test public void testGetRightExpressions() throws Exception {

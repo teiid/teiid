@@ -30,8 +30,22 @@ import java.util.Map;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
-import org.apache.olingo.commons.api.edm.provider.*;
-import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.apache.olingo.commons.api.edm.provider.CsdlAction;
+import org.apache.olingo.commons.api.edm.provider.CsdlActionImport;
+import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
+import org.apache.olingo.commons.api.edm.provider.CsdlEntityContainer;
+import org.apache.olingo.commons.api.edm.provider.CsdlEntitySet;
+import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunctionImport;
+import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
+import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
+import org.apache.olingo.commons.api.edm.provider.CsdlParameter;
+import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
+import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
+import org.apache.olingo.commons.api.edm.provider.CsdlReferentialConstraint;
+import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
+import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
@@ -47,7 +61,7 @@ import org.teiid.metadata.Table;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
 
-public class OData4EntitySchemaBuilder {
+public class ODataSchemaBuilder {
 
     public static CsdlSchema buildMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
         try {
@@ -74,7 +88,8 @@ public class OData4EntitySchemaBuilder {
         return edmSchemas.get(schemaName);
     }
 
-    static CsdlEntityType findEntityType(Map<String, CsdlSchema> edmSchemas, String schemaName, String enitityName) {
+    static CsdlEntityType findEntityType(Map<String, CsdlSchema> edmSchemas,
+            String schemaName, String enitityName) {
         CsdlSchema schema = findSchema(edmSchemas, schemaName);
         if (schema != null) {
             for (CsdlEntityType type : schema.getEntityTypes()) {
@@ -102,7 +117,8 @@ public class OData4EntitySchemaBuilder {
             // skip if the table does not have the PK or unique
             KeyRecord primaryKey = getIdentifier(table);
             if ( primaryKey == null) {
-                LogManager.logDetail(LogConstants.CTX_ODATA,ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017,table.getFullName()));
+                LogManager.logDetail(LogConstants.CTX_ODATA,
+                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16017,table.getFullName()));
                 continue;
             }
 
@@ -112,7 +128,8 @@ public class OData4EntitySchemaBuilder {
             // adding properties
             List<CsdlProperty> properties = new ArrayList<CsdlProperty>();
             for (Column c : table.getColumns()) {
-                properties.add(buildProperty(c, isPartOfPrimaryKey(table, c.getName())?false:(c.getNullType() == NullType.Nullable)));
+                properties.add(buildProperty(c, 
+                        isPartOfPrimaryKey(table, c.getName())?false:(c.getNullType() == NullType.Nullable)));
             }
             entityType.setProperties(properties);
             if (hasStream(properties)) {
@@ -181,7 +198,11 @@ public class OData4EntitySchemaBuilder {
                 || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
             property.setPrecision(c.getPrecision());
             property.setScale(c.getScale());
-        } else {
+        } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
+                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIME)) {
+            property.setPrecision(c.getPrecision() == 0?new Integer(4):c.getPrecision());
+        }
+        else {
             if (c.getDefaultValue() != null) {
                 property.setDefaultValue(c.getDefaultValue());
             }
@@ -300,7 +321,8 @@ public class OData4EntitySchemaBuilder {
         String refSchemaName = table.getParent().getName();
         
         CsdlNavigationProperty navigaton = new CsdlNavigationProperty();
-        navigaton.setName(table.getName()+"_"+fk.getName()).setType(new FullQualifiedName(refSchemaName, table.getName()));
+        navigaton.setName(table.getName() + "_" + fk.getName()).setType(
+                new FullQualifiedName(refSchemaName, table.getName()));
         
         ArrayList<CsdlReferentialConstraint> constrainsts = new ArrayList<CsdlReferentialConstraint>();
         for (int i = 0; i < fk.getColumns().size(); i++) {
@@ -420,7 +442,7 @@ public class OData4EntitySchemaBuilder {
 
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();
         for (ProcedureParameter pp : proc.getParameters()) {
-            SingletonPrimitiveType odataType = ODataTypeManager.odataType(pp.getRuntimeType());            
+            EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(pp.getRuntimeType());            
             if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) { //$NON-NLS-1$                
                 edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()));
                 continue;
@@ -440,7 +462,7 @@ public class OData4EntitySchemaBuilder {
             // to that of the REST service.
             List<Column> columns = returnColumns.getColumns();
             if (columns.size() == 1 && DataTypeManager.isLOB(columns.get(0).getJavaType())) {
-                SingletonPrimitiveType odataType = ODataTypeManager.odataType(columns.get(0).getRuntimeType());
+                EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(columns.get(0).getRuntimeType());
                 edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()));                
             }
             else {
@@ -459,7 +481,7 @@ public class OData4EntitySchemaBuilder {
     }
 
     private static CsdlParameter buildParameter(ProcedureParameter pp,
-            SingletonPrimitiveType odatatype) {
+            EdmPrimitiveTypeKind odatatype) {
         CsdlParameter param = new CsdlParameter();
         param.setName(pp.getName());
         param.setType(odatatype.getFullQualifiedName());
@@ -484,14 +506,17 @@ public class OData4EntitySchemaBuilder {
         return param;
     }
 
-    static void buildAction(String schemaName, Procedure proc, ArrayList<CsdlComplexType> complexTypes, ArrayList<CsdlAction> actions, ArrayList<CsdlActionImport> actionImports) {
+    static void buildAction(String schemaName, Procedure proc,
+            ArrayList<CsdlComplexType> complexTypes,
+            ArrayList<CsdlAction> actions,
+            ArrayList<CsdlActionImport> actionImports) {
         CsdlAction edmAction = new CsdlAction();
         edmAction.setName(proc.getName());
         edmAction.setBound(false);
 
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();        
         for (ProcedureParameter pp : proc.getParameters()) {
-            SingletonPrimitiveType odatatype = ODataTypeManager.odataType(pp.getRuntimeType());
+            EdmPrimitiveTypeKind odatatype = ODataTypeManager.odataType(pp.getRuntimeType());
             if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) { //$NON-NLS-1$                
                 edmAction.setReturnType(new CsdlReturnType().setType(odatatype.getFullQualifiedName()));
                 continue;
@@ -511,13 +536,15 @@ public class OData4EntitySchemaBuilder {
             // to that of the REST service.
             List<Column> columns = returnColumns.getColumns();
             if (columns.size() == 1 && DataTypeManager.isLOB(columns.get(0).getJavaType())) {
-                SingletonPrimitiveType odataType = ODataTypeManager.odataType(columns.get(0).getRuntimeType());
+                EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(columns.get(0).getRuntimeType());
                 edmAction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()));                
             }
             else {            
                 CsdlComplexType complexType = buildComplexType(proc, returnColumns);
                 complexTypes.add(complexType);
-                edmAction.setReturnType((new CsdlReturnType().setType(new FullQualifiedName(schemaName, complexType.getName())).setCollection(true)));
+                edmAction.setReturnType((new CsdlReturnType()
+                        .setType(new FullQualifiedName(schemaName, complexType
+                                .getName())).setCollection(true)));
             }
         }
 

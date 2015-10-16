@@ -22,107 +22,226 @@
 package org.teiid.olingo;
 
 import java.lang.reflect.Array;
+import java.sql.Date;
+import java.sql.Time;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.olingo.commons.api.edm.EdmParameter;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
+import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmBoolean;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmByte;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDecimal;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmDouble;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmGuid;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmInt16;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmInt32;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmInt64;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmSByte;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmSingle;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmPrimitiveTypeFactory;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
+import org.teiid.core.types.TransformationException;
 
 public class ODataTypeManager {
 
-    private static HashMap<String, SingletonPrimitiveType> teiidkeyed = new HashMap<String, SingletonPrimitiveType>();
-    private static HashMap<SingletonPrimitiveType, String> odatakeyed = new HashMap<SingletonPrimitiveType, String>();
+    private static HashMap<String, String> odataTypes = new HashMap<String, String>();
+    private static HashMap<String, String> teiidTypes = new HashMap<String, String>();
 
     static {
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING, EdmString.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BOOLEAN, EdmBoolean.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BYTE, EdmByte.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.SHORT, EdmInt16.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CHAR, EdmString.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.INTEGER, EdmInt32.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.LONG, EdmInt64.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, EdmInt64.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.FLOAT, EdmSingle.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DOUBLE, EdmDouble.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, EdmDecimal.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DATE, EdmDate.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIME, EdmTimeOfDay.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, EdmDateTimeOffset.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.OBJECT, EdmStream.getInstance()); // currently
-                                                                                              // problematic
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BLOB, EdmStream.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CLOB, EdmStream.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML, EdmStream.getInstance());
-        teiidkeyed.put(DataTypeManager.DefaultDataTypes.VARBINARY, EdmBinary.getInstance());
-
-        odatakeyed.put(EdmString.getInstance(), DataTypeManager.DefaultDataTypes.STRING);
-        odatakeyed.put(EdmBoolean.getInstance(), DataTypeManager.DefaultDataTypes.BOOLEAN);
-        odatakeyed.put(EdmByte.getInstance(), DataTypeManager.DefaultDataTypes.SHORT);
-        odatakeyed.put(EdmSByte.getInstance(), DataTypeManager.DefaultDataTypes.BYTE);
-        odatakeyed.put(EdmInt16.getInstance(), DataTypeManager.DefaultDataTypes.SHORT);
-        odatakeyed.put(EdmInt32.getInstance(), DataTypeManager.DefaultDataTypes.INTEGER);
-        odatakeyed.put(EdmInt64.getInstance(), DataTypeManager.DefaultDataTypes.LONG);
-        odatakeyed.put(EdmSingle.getInstance(), DataTypeManager.DefaultDataTypes.FLOAT);
-        odatakeyed.put(EdmDouble.getInstance(), DataTypeManager.DefaultDataTypes.DOUBLE);
-        odatakeyed.put(EdmDecimal.getInstance(), DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-        odatakeyed.put(EdmDate.getInstance(), DataTypeManager.DefaultDataTypes.DATE);
-        odatakeyed.put(EdmTimeOfDay.getInstance(), DataTypeManager.DefaultDataTypes.TIME);
-        odatakeyed.put(EdmDateTimeOffset.getInstance(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
-        odatakeyed.put(EdmStream.getInstance(), DataTypeManager.DefaultDataTypes.BLOB);
-        odatakeyed.put(EdmGuid.getInstance(), DataTypeManager.DefaultDataTypes.STRING);
-        odatakeyed.put(EdmBinary.getInstance(), DataTypeManager.DefaultDataTypes.VARBINARY); //$NON-NLS-1$
+        odataTypes.put("Edm.String", DataTypeManager.DefaultDataTypes.STRING);
+        odataTypes.put("Edm.Boolean", DataTypeManager.DefaultDataTypes.BOOLEAN);
+        odataTypes.put("Edm.Byte", DataTypeManager.DefaultDataTypes.SHORT);
+        odataTypes.put("Edm.SByte", DataTypeManager.DefaultDataTypes.BYTE);
+        odataTypes.put("Edm.Int16", DataTypeManager.DefaultDataTypes.SHORT);
+        odataTypes.put("Edm.Int32", DataTypeManager.DefaultDataTypes.INTEGER);
+        odataTypes.put("Edm.Int64", DataTypeManager.DefaultDataTypes.LONG);
+        odataTypes.put("Edm.Single", DataTypeManager.DefaultDataTypes.FLOAT);
+        odataTypes.put("Edm.Double", DataTypeManager.DefaultDataTypes.DOUBLE);
+        odataTypes.put("Edm.Decimal", DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
+        odataTypes.put("Edm.Date", DataTypeManager.DefaultDataTypes.DATE);
+        odataTypes.put("Edm.TimeOfDay", DataTypeManager.DefaultDataTypes.TIME);
+        odataTypes.put("Edm.DateTimeOffset", DataTypeManager.DefaultDataTypes.TIMESTAMP);
+        odataTypes.put("Edm.Stream", DataTypeManager.DefaultDataTypes.BLOB);
+        odataTypes.put("Edm.Guid", DataTypeManager.DefaultDataTypes.STRING);
+        odataTypes.put("Edm.Binary", DataTypeManager.DefaultDataTypes.VARBINARY); //$NON-NLS-1$
+        
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.STRING, "Edm.String");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.BOOLEAN, "Edm.Boolean");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.SHORT, "Edm.Byte");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.BYTE, "Edm.SByte");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.SHORT, "Edm.Int16");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.INTEGER, "Edm.Int32");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.LONG, "Edm.Int64");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.FLOAT, "Edm.Single");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.DOUBLE, "Edm.Double");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "Edm.Decimal");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.DATE, "Edm.Date");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.TIME, "Edm.TimeOfDay");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, "Edm.DateTimeOffset");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.BLOB, "Edm.Stream");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.CLOB, "Edm.Stream");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.XML, "Edm.Stream");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.VARBINARY, "Edm.Binary"); //$NON-NLS-1$
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.OBJECT, "Edm.Binary"); //$NON-NLS-1$
     }
-
+    
     public static String teiidType(SingletonPrimitiveType odataType, boolean array) {
-        String type =  odatakeyed.get(odataType);
+        String type =  odataType.getFullQualifiedName().getFullQualifiedNameAsString();
+        return teiidType(type, array);
+    }
+    
+    public static String teiidType(String odataType, boolean array) {
+        String type =  odataTypes.get(odataType);
+        if (type == null) {
+            type = DataTypeManager.DefaultDataTypes.STRING; // special case for enum type
+        }
         if (array) {
            type +="[]";
         }
         return type;
     }
-
-    public static SingletonPrimitiveType odataType(String teiidType) {
-        if (DataTypeManager.isArrayType(teiidType)) {
-            return odataType(DataTypeManager.getComponentType(teiidType));
+    
+    public static EdmPrimitiveTypeKind odataType(Class<?> teiidRuntimeTypeClass) {
+        String dataType = DataTypeManager.getDataTypeName(teiidRuntimeTypeClass);
+        return odataType(dataType);
+    } 
+    
+    public static EdmPrimitiveTypeKind odataType(String teiidRuntimeType) {
+        if (teiidRuntimeType.endsWith("[]")) {
+            teiidRuntimeType = teiidRuntimeType.substring(0, teiidRuntimeType.length()-2);
         }
-        return teiidkeyed.get(teiidType);
-    }
-
-    public static Object convertToTeiidRuntimeType(Class<?> type, Object value) {
+        String type =  teiidTypes.get(teiidRuntimeType);
+        if (type == null) {
+            type = "Edm.String";
+        }
+        return EdmPrimitiveTypeKind.valueOfFQN(type);
+    }    
+    
+    public static Object convertToTeiidRuntimeType(Class<?> type, Object value) throws TeiidException {
         if (value == null) {
             return null;
         }
-        if (DataTypeManager.getAllDataTypeClasses().contains(value.getClass())) {
+        if (type.isAssignableFrom(value.getClass())) {
             return value;
         }
         if (value instanceof UUID) {
             return value.toString();
         }
-        if (value instanceof List<?>) {
+        if (type.isArray() && value instanceof List<?>) {
             List<?> list = (List<?>)value;
+            Class<?> expectedArrayComponentType = type.getComponentType();
             Object array = Array.newInstance(type.getComponentType(), list.size());
             for (int i = 0; i < list.size(); i++) {
-                Array.set(array, i, list.get(i));
+                Object arrayItem = convertToTeiidRuntimeType(expectedArrayComponentType, list.get(i));
+                Array.set(array, i, arrayItem);
             }
             return array;
         }
+        
+        Transform transform = DataTypeManager.getTransform(value.getClass(), type);
+        if (transform != null) {
+            try {
+                value = transform.transform(value, type);
+            } catch (TransformationException e) {
+                throw new TeiidException(e);
+            }
+        }        
         return value;
     }
+    
+    public static Object parseLiteral(EdmParameter edmParameter, Class<?> runtimeType, String value)
+            throws TeiidException {
+        EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
+                .valueOf(edmParameter.getType()
+                        .getFullQualifiedName()
+                        .getFullQualifiedNameAsString().substring(4)));
+        
+        try {
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length()-1);
+            }
+            Object converted =  primitiveType.valueOfString(value, 
+                    edmParameter.isNullable(), 
+                    edmParameter.getMaxLength(), 
+                    edmParameter.getPrecision(), 
+                    edmParameter.getScale(), 
+                    true, 
+                    runtimeType);        
+            return converted;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TeiidException(e);
+        }
+    }
+    
+    public static Object parseLiteral(EdmProperty edmProperty, Class<?> runtimeType, String value)
+            throws TeiidException {
+        EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
+                .valueOf(edmProperty.getType()
+                        .getFullQualifiedName()
+                        .getFullQualifiedNameAsString().substring(4)));
+        
+        try {
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length()-1);
+            }
+            Object converted =  primitiveType.valueOfString(value, 
+                    edmProperty.isNullable(), 
+                    edmProperty.getMaxLength(), 
+                    edmProperty.getPrecision(), 
+                    edmProperty.getScale(), 
+                    true, 
+                    runtimeType);        
+            return converted;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TeiidException(e);
+        }
+    }
+    
+    public static Object parseLiteral(String odataType, String value)
+            throws TeiidException {
+        EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
+                .valueOf(odataType.substring(4)));
+        
+        int maxLength = DataTypeManager.MAX_STRING_LENGTH;
+        if (primitiveType instanceof EdmBinary ||primitiveType instanceof EdmStream) {
+            maxLength = DataTypeManager.MAX_VARBINARY_BYTES;
+        }
+        
+        int precision = 4;
+        int scale = 3;
+        if (primitiveType instanceof EdmDecimal) {
+            precision = 38;
+            scale = 9;
+        }
+        
+        Class<?> expectedClass = primitiveType.getDefaultType();
+        
+        try {
+            if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length()-1);
+            }
+            Object converted =  primitiveType.valueOfString(value,
+                    false,
+                    maxLength, 
+                    precision, 
+                    scale, 
+                    true, 
+                    expectedClass);
+            
+            if (primitiveType instanceof EdmTimeOfDay) {
+                Calendar ts =  (Calendar)converted;
+                return new Time(ts.getTimeInMillis());
+            } else if (primitiveType instanceof EdmDate) {
+                Calendar ts =  (Calendar)converted;
+                return new Date(ts.getTimeInMillis());
+            }
+            return converted;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TeiidException(e);
+        }
+    }    
 }

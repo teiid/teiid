@@ -51,7 +51,7 @@ public class OlingoBridge {
     
             OData odata = OData4Impl.newInstance();
             VDBMetaData vdb = client.getVDB();
-            CsdlSchema schema = OData4EntitySchemaBuilder.buildMetadata(vdb.getFullName(), teiidSchema);
+            CsdlSchema schema = ODataSchemaBuilder.buildMetadata(vdb.getFullName(), teiidSchema);
             SchemaBasedEdmProvider edmProvider = new SchemaBasedEdmProvider();
             edmProvider.addSchema(schema);
             ServiceMetadata metadata = odata.createServiceMetadata(edmProvider, Collections.<EdmxReference> emptyList());

@@ -44,7 +44,7 @@ import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
 import org.teiid.odata.api.SQLParameter;
-import org.teiid.olingo.LiteralParser;
+import org.teiid.olingo.ODataTypeManager;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.Constant;
@@ -62,7 +62,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
     private boolean collection;
     private final ArrayList<SQLParameter> params = new ArrayList<SQLParameter>();
 
-    static class ScopedTable extends EntityResource {
+    static class ScopedTable extends DocumentNode {
         private ForeignKey fk;
         
         public ScopedTable (Table table, EdmEntityType type, List<UriParameter> keys) {            
@@ -87,7 +87,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriResourceEntitySet info) {
-        Table table = EntityResource.findTable(info.getEntitySet(), this.metadata);
+        Table table = DocumentNode.findTable(info.getEntitySet(), this.metadata);
         EdmEntityType type = info.getEntitySet().getEntityType();
         List<UriParameter> keys = info.getKeyPredicates();
         this.updateTable = new ScopedTable(table, type, keys);
@@ -97,12 +97,12 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
     public void visit(UriResourceNavigation info) {
         EdmNavigationProperty property = info.getProperty();
         
-        this.referenceTable = new ScopedTable(EntityResource.findTable(property.getType(), 
+        this.referenceTable = new ScopedTable(DocumentNode.findTable(property.getType(), 
                 this.metadata), property.getType(),
                 info.getKeyPredicates());
         
         if (property.isCollection()) {
-            ForeignKey fk = EntityResource.joinFK(referenceTable.getTable(), this.updateTable.getTable());
+            ForeignKey fk = DocumentNode.joinFK(referenceTable.getTable(), this.updateTable.getTable());
             referenceTable.setFk(fk);
             
             ScopedTable temp = this.updateTable;
@@ -111,7 +111,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             this.collection = true;
         }
         else {
-            ForeignKey fk = EntityResource.joinFK(this.updateTable.getTable(), referenceTable.getTable());
+            ForeignKey fk = DocumentNode.joinFK(this.updateTable.getTable(), referenceTable.getTable());
             this.updateTable.setFk(fk);
         }
     }    
@@ -139,7 +139,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             Update update = new Update();
             update.setGroup(this.updateTable.getGroupSymbol());
             
-            List<String> columnNames = EntityResource.getColumnNames(this.updateTable.getFk().getColumns());
+            List<String> columnNames = DocumentNode.getColumnNames(this.updateTable.getFk().getColumns());
             for (int i = 0; i < columnNames.size(); i++) {
                 Column column = this.updateTable.getFk().getColumns().get(i);
                 String columnName = columnNames.get(i);
@@ -153,7 +153,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 if (!delete) {
                     UriParameter parameter = getParameter(this.updateTable.getFk().getReferenceColumns().get(i),
                             this.referenceTable.getKeyPredicates());
-                    value = LiteralParser.parseLiteral(edmProperty, column.getJavaType(), parameter.getText());
+                    value = ODataTypeManager.parseLiteral(edmProperty, column.getJavaType(), parameter.getText());
                 }
                 
                 if (prepared) {
@@ -170,7 +170,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 pk = this.updateTable.getTable().getUniqueKeys().get(0);
             }
             
-            Criteria criteria = EntityResource.buildEntityKeyCriteria(
+            Criteria criteria = DocumentNode.buildEntityKeyCriteria(
                     this.updateTable, null, this.metadata, null, null);
             update.setCriteria(criteria);
             
