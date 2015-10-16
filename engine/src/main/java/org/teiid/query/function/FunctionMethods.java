@@ -839,7 +839,7 @@ public final class FunctionMethods {
 	
 	// ================== Function = endsWith =====================
 
-	public static Object endsWith(String sub, String str) {
+	public static Object endsWith(String str, String sub) {
 		return str.endsWith(sub);
 	}	
 
