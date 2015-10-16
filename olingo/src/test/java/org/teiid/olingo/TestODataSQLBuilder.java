@@ -24,6 +24,7 @@ package org.teiid.olingo;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -49,6 +50,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.Client;
 import org.teiid.odata.api.CountResponse;
@@ -275,7 +277,12 @@ public class TestODataSQLBuilder {
     @Test
     public void test_$it_OverPrimitiveProperty() throws Exception {
         helpTest("/odata4/vdb/PM1/G3(e1='e1',e2=2)/e3?$filter=endswith($it, '.com')",
-                "SELECT g0.e1, g0.e2, CAST(g1.col AS string) AS e3 FROM PM1.G3 AS g0, TABLE(EXEC arrayiterate(g0.e3)) AS g1 WHERE ((g0.e1 = 'e1') AND (g0.e2 = 2)) AND (ENDSWITH(CAST(g1.col AS string), '.com') = TRUE) ORDER BY g0.e1, g0.e2");
+                "SELECT g0.e1, g0.e2, CAST(g1.col AS string) AS e3 "
+                + "FROM PM1.G3 AS g0, "
+                + "TABLE(EXEC arrayiterate(g0.e3)) AS g1 "
+                + "WHERE ((g0.e1 = 'e1') AND (g0.e2 = 2)) "
+                + "AND (ENDSWITH('.com', CAST(g1.col AS string)) = TRUE) "
+                + "ORDER BY g0.e1, g0.e2");
     }
         
     @Test
@@ -462,7 +469,7 @@ public class TestODataSQLBuilder {
 
     @Test
     public void testEndsWith() throws Exception {
-        te("endswith(e1, 'foo')", "ENDSWITH(g0.e1, 'foo') = TRUE");
+        te("endswith(e1, 'foo')", "ENDSWITH('foo', g0.e1) = TRUE");
     }
 
     @Test

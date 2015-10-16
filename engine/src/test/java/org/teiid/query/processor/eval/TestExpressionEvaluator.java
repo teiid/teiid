@@ -518,10 +518,5 @@ public class TestExpressionEvaluator {
     @Test public void testTimestampResolving() throws Exception {
     	assertEval("TIMESTAMPDIFF(SQL_TSI_YEAR, '2000-01-01', '2002-01-01')", "2");
 	}
-    
-    @Test public void testEndsWith() throws Exception {
-        // Test replace-first vs replace-all.
-        assertEval("endsWith('abc', 'c') = 'true'", "true");
-    }
 
 }

@@ -21,7 +21,8 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.SQLConstants.Reserved.CAST;
+import static org.teiid.language.SQLConstants.Reserved.CONVERT;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,8 +32,27 @@ import java.util.Stack;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
-import org.apache.olingo.server.api.uri.*;
-import org.apache.olingo.server.api.uri.queryoption.expression.*;
+import org.apache.olingo.server.api.uri.UriInfo;
+import org.apache.olingo.server.api.uri.UriInfoResource;
+import org.apache.olingo.server.api.uri.UriResourceCount;
+import org.apache.olingo.server.api.uri.UriResourceEntitySet;
+import org.apache.olingo.server.api.uri.UriResourceIt;
+import org.apache.olingo.server.api.uri.UriResourceLambdaAll;
+import org.apache.olingo.server.api.uri.UriResourceLambdaAny;
+import org.apache.olingo.server.api.uri.UriResourceLambdaVariable;
+import org.apache.olingo.server.api.uri.UriResourceNavigation;
+import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
+import org.apache.olingo.server.api.uri.UriResourceRoot;
+import org.apache.olingo.server.api.uri.queryoption.expression.Alias;
+import org.apache.olingo.server.api.uri.queryoption.expression.Binary;
+import org.apache.olingo.server.api.uri.queryoption.expression.Enumeration;
+import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
+import org.apache.olingo.server.api.uri.queryoption.expression.LambdaRef;
+import org.apache.olingo.server.api.uri.queryoption.expression.Literal;
+import org.apache.olingo.server.api.uri.queryoption.expression.Member;
+import org.apache.olingo.server.api.uri.queryoption.expression.Method;
+import org.apache.olingo.server.api.uri.queryoption.expression.TypeLiteral;
+import org.apache.olingo.server.api.uri.queryoption.expression.Unary;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
@@ -46,7 +66,21 @@ import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
+import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.NotCriteria;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
@@ -299,7 +333,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             this.stack.push(criteria);
             break;
         case ENDSWITH:
-            criteria = new CompareCriteria(new Function("ENDSWITH", new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(0), teiidExprs.get(1) }), CompareCriteria.EQ, new Constant(Boolean.TRUE));//$NON-NLS-1$
+            criteria = new CompareCriteria(new Function("ENDSWITH", new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(1), teiidExprs.get(0) }), CompareCriteria.EQ, new Constant(Boolean.TRUE));//$NON-NLS-1$
             this.stack.push(criteria);
             break;
         case LENGTH:
