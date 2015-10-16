@@ -110,6 +110,11 @@ public class TestODataSQLVistor {
     @Test
     public void testAddFilter() throws Exception {
     	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and (Quantity+2) > OrderID", "Order_Details?$filter=OrderID eq 1 and (cast(Quantity,'integer') add 2) gt OrderID&$select=UnitPrice");
+    }
+    
+    @Test
+    public void testEndsWithFilter() throws Exception {
+    	helpExecute("select CompanyName from Customers where endswith('k', CustomerID)", "Customers?$filter=endswith(CustomerID,'k') eq true&$select=CompanyName");
     } 
     
     @Test

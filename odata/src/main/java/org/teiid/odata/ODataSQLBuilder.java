@@ -477,7 +477,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		Expression target = stack.pop();
 		visitNode(expr.getValue());
 		Expression value = stack.pop();		
-		Criteria criteria = new CompareCriteria(new Function("ENDSWITH", new Expression[] {target, value}), CompareCriteria.EQ, new Constant(Boolean.TRUE));
+		Criteria criteria = new CompareCriteria(new Function("ENDSWITH", new Expression[] {value, target}), CompareCriteria.EQ, new Constant(Boolean.TRUE));
 		stack.push(criteria);
 	}
 
