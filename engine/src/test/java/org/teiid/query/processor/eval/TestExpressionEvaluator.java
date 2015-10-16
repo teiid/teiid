@@ -521,7 +521,7 @@ public class TestExpressionEvaluator {
     
     @Test public void testEndsWith() throws Exception {
         // Test replace-first vs replace-all.
-        assertEval("endsWith('abc', 'c') = 'true'", "true");
+        assertEval("endsWith('abc', 'c') = 't'", "true");
     }
 
 }
