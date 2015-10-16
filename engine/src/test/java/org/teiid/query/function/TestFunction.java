@@ -651,7 +651,7 @@ public class TestFunction {
     }
     
     @Test public void testEndsWith2() throws Exception {
-    	helpTestEndssWith("abab", "b", true); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestEndssWith("b", "abab", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testBitand() throws Exception {
