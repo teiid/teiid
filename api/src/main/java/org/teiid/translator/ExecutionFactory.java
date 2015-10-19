@@ -1301,4 +1301,12 @@ public class ExecutionFactory<F, C> {
 	public boolean useBindingsForDependentJoin() {
 		return true;
 	}
+	
+	/**
+	 * The required escape character or null if all are supported.
+	 * @return
+	 */
+	public Character getRequiredLikeEscape() {
+		return null;
+	}
 }

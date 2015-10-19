@@ -6607,6 +6607,25 @@ public class TestOptimizer {
 		TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT (v_0.c_0 + 1) FROM (SELECT g_0.intkey AS c_0 FROM y.smalla AS g_0 ORDER BY c_0 LIMIT 1) AS v_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
+	@Test public void testLikeEscapeRestriction() throws Exception {
+		String sql = "SELECT e2 FROM pm1.g1 where e1 like 'a%b' escape '!'"; //$NON-NLS-1$
+
+		BasicSourceCapabilities bsc = getTypicalCapabilities();
+		bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
+		TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE 'a%b'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+		
+		sql = "SELECT e2 FROM pm1.g1 where e1 like '!_a%b' escape '!'"; //$NON-NLS-1$
+
+		//TODO - when possible this should modify the match pattern to use the required escape
+		bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
+		TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+		
+		sql = "SELECT e2 FROM pm1.g1 where e1 like '\\_a%b' escape '\\'"; //$NON-NLS-1$
+		
+		bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
+		TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE '\\_a%b' ESCAPE '\\'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
 	public static final boolean DEBUG = false;
 
 }

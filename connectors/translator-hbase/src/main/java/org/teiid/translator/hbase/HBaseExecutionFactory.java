@@ -264,4 +264,9 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     	return processor;
     }
     
+    @Override
+    public Character getRequiredLikeEscape() {
+    	return '\\';
+    }
+    
 }

@@ -528,4 +528,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsCorrelatedSubqueryLimit() {
 		return delegate.supportsCorrelatedSubqueryLimit();
 	}
+	@Override
+	public Character getRequiredLikeEscape() {
+		return delegate.getRequiredLikeEscape();
+	}
 }

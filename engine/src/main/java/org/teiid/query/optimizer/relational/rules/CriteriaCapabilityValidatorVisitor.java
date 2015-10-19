@@ -423,6 +423,14 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             return;
         }
         
+        Character required = (Character) caps.getSourceProperty(Capability.REQUIRED_LIKE_ESCAPE);
+        if (required != null
+        		&& obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR
+            		&& !required.equals(obj.getEscapeChar())) {
+            markInvalid(obj, "Escape " + obj.getEscapeChar() + " is not supported by source. Escape " + required + " is required"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            return;
+        }
+        
         //check NOT
         if(obj.isNegated() && ! this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
         	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$

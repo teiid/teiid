@@ -158,6 +158,13 @@ public class TestSQLConversionVisitor {
         helpTest(sql, expected);
     }
     
+    @Test
+    public void testLikeEscape() throws TranslatorException {
+        String sql = "SELECT city FROM Customer where name like '\\_%' escape '\\'";
+        String expected = "SELECT \"Customer\".\"city\" FROM \"Customer\" WHERE \"Customer\".\"name\" LIKE '\\_%'";
+        helpTest(sql, expected);
+    }
+    
     private static TranslationUtility translationUtility = new TranslationUtility(TestHBaseUtil.queryMetadataInterface());
     
     private void helpTest(String sql, String expected) throws TranslatorException  {
