@@ -295,4 +295,9 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     	return super.translateCommand(command, context);
     }
     
+    @Override
+    public boolean supportsRowLimit() {
+    	return true;
+    }
+    
 }
