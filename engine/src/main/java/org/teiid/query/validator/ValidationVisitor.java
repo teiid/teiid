@@ -1184,6 +1184,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	} else if (aggregateFunction == Type.JSONARRAY_AGG) {
 				validateJSONValue(obj, aggExps[0]);
+        	} else if (obj.getType() == null) {
+        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.aggregate_type", obj), obj); //$NON-NLS-1$
         	}
         }
         if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExps[0].getType()))) {

@@ -1823,7 +1823,7 @@ public class TestValidator {
     
     @Test public void testInsertIntoVirtualWithQueryExpression() { 
         
-        QueryMetadataInterface qmi = RealMetadataFactory.example1(); 
+        QueryMetadataInterface qmi = RealMetadataFactory.example1Cached(); 
 
         String sql = "select * from vm1.g1 as x"; //$NON-NLS-1$
         
