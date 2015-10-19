@@ -165,6 +165,13 @@ public class TestSQLConversionVisitor {
         helpTest(sql, expected);
     }
     
+    @Test
+    public void testUnion() throws TranslatorException {
+        String sql = "SELECT city as c1 FROM Customer union SELECT name FROM Customer";
+        String expected = "SELECT DISTINCT c1 FROM (SELECT \"Customer\".\"city\" AS c1 FROM \"Customer\" UNION ALL SELECT \"Customer\".\"name\" FROM \"Customer\") AS x";
+        helpTest(sql, expected);
+    }
+    
     private static TranslationUtility translationUtility = new TranslationUtility(TestHBaseUtil.queryMetadataInterface());
     
     private void helpTest(String sql, String expected) throws TranslatorException  {
@@ -175,7 +182,7 @@ public class TestSQLConversionVisitor {
         ef.start();
         
         SQLConversionVisitor vistor = ef.getSQLConversionVisitor();
-        vistor.visitNode(command);
+        vistor.append(command);
                 
         assertEquals(expected, vistor.toString());
         
