@@ -293,12 +293,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		default:
 			result = new StatsFunction(function);
 		}
-	    if(aggSymbol.isDistinct()) {
-	    	SortingFilter filter = new SortingFilter(result, node.getBufferManager(), node.getConnectionID(), true);
-			List<ElementSymbol> elements = createSortSchema(result, inputTypes);
-			filter.setElements(elements);
-			result = filter;
-	    } else if (aggSymbol.getOrderBy() != null) {
+	    if (aggSymbol.getOrderBy() != null) {
 	    	int numOrderByItems = aggSymbol.getOrderBy().getOrderByItems().size();
 			List<OrderByItem> orderByItems = new ArrayList<OrderByItem>(numOrderByItems);
 			List<ElementSymbol> schema = createSortSchema(result, inputTypes);
@@ -313,11 +308,16 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 				newItem.setSymbol(element);
 				orderByItems.add(newItem);
 			}
-			SortingFilter filter = new SortingFilter(result, node.getBufferManager(), node.getConnectionID(), false);
+			SortingFilter filter = new SortingFilter(result, node.getBufferManager(), node.getConnectionID(), aggSymbol.isDistinct());
 			filter.setElements(schema);
 			filter.setSortItems(orderByItems);
 			result = filter;
-		}
+		} else if(aggSymbol.isDistinct()) {
+	    	SortingFilter filter = new SortingFilter(result, node.getBufferManager(), node.getConnectionID(), true);
+			List<ElementSymbol> elements = createSortSchema(result, inputTypes);
+			filter.setElements(elements);
+			result = filter;
+	    }
 		result.setArgIndexes(argIndexes);
 		if (aggSymbol.getCondition() != null) {
 			result.setConditionIndex(getIndex(aggSymbol.getCondition(), expressionIndexes));

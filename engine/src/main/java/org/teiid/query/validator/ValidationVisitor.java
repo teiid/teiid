@@ -23,15 +23,7 @@
 package org.teiid.query.validator;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import javax.script.Compilable;
 import javax.script.ScriptEngine;
@@ -1199,6 +1191,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.invalid_distinct", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	}
         }
+    	if (obj.isDistinct() && obj.getOrderBy() != null) {
+    		HashSet<Expression> args = new HashSet<Expression>(Arrays.asList(obj.getArgs()));
+    		for (OrderByItem item : obj.getOrderBy().getOrderByItems()) {
+    			if (!args.contains(item.getSymbol())) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.distinct_orderby_agg", obj), obj); //$NON-NLS-1$
+    				break;
+    			}
+    		}
+    	}
     	if (obj.getAggregateFunction() != Type.TEXTAGG) {
     		return;
     	}
