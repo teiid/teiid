@@ -58,7 +58,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
-public class EntityResource {
+public class DocumentNode {
     private Table table;
     private GroupSymbol groupSymbol;
     private EdmEntityType edmEntityType;
@@ -66,20 +66,20 @@ public class EntityResource {
     private FromClause fromClause;
     private Criteria criteria;
     private List<ProjectedColumn> projectedColumns = new ArrayList<ProjectedColumn>();
-    private List<EntityResource> sibilings = new ArrayList<EntityResource>();
-    private List<EntityResource> expands = new ArrayList<EntityResource>();
+    private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
+    private List<DocumentNode> expands = new ArrayList<DocumentNode>();
     private boolean distinct;
         
-    public static EntityResource build(EdmEntityType type,
+    public static DocumentNode build(EdmEntityType type,
             List<UriParameter> keyPredicates, MetadataStore metadata,
             UniqueNameGenerator nameGenerator, boolean useAlias,
             UriInfo uriInfo, URLParseService parseService)
             throws TeiidException {
-        EntityResource resource = new EntityResource();
+        DocumentNode resource = new DocumentNode();
         return build(resource, type, keyPredicates, metadata, nameGenerator, useAlias, uriInfo, parseService);
     }
     
-    public static EntityResource build(EntityResource resource,
+    public static DocumentNode build(DocumentNode resource,
             EdmEntityType type, List<UriParameter> keyPredicates,
             MetadataStore metadata, UniqueNameGenerator nameGenerator,
             boolean useAlias, UriInfo uriInfo, URLParseService parseService)
@@ -101,7 +101,7 @@ public class EntityResource {
         resource.setFromClause(new UnaryFromClause(gs));
         
         if (keyPredicates != null && !keyPredicates.isEmpty()) {
-            Criteria criteria = EntityResource.buildEntityKeyCriteria(resource,
+            Criteria criteria = DocumentNode.buildEntityKeyCriteria(resource,
                     uriInfo, metadata, nameGenerator, parseService);
             resource.setCriteria(criteria);
         }        
@@ -120,7 +120,7 @@ public class EntityResource {
         return findTable(entitySet.getEntityType(), store);
     }
 
-    static Criteria buildEntityKeyCriteria(EntityResource resource,
+    static Criteria buildEntityKeyCriteria(DocumentNode resource,
             UriInfo uriInfo, MetadataStore store,
             UniqueNameGenerator nameGenerator, URLParseService parseService)
             throws TeiidException {
@@ -170,10 +170,10 @@ public class EntityResource {
         }        
     }
     
-    public EntityResource() {
+    public DocumentNode() {
     }
     
-    public EntityResource(Table table, GroupSymbol gs, EdmEntityType type) {
+    public DocumentNode(Table table, GroupSymbol gs, EdmEntityType type) {
         this.table = table;
         this.groupSymbol = gs;
         this.edmEntityType = type;        
@@ -285,10 +285,10 @@ public class EntityResource {
     public List<ProjectedColumn> getAllProjectedColumns() {
         ArrayList<ProjectedColumn> columns = new ArrayList<ProjectedColumn>();
         columns.addAll(this.projectedColumns);
-        for (EntityResource er:this.sibilings) {
+        for (DocumentNode er:this.sibilings) {
             columns.addAll(er.getAllProjectedColumns());
         }
-        for(EntityResource er:this.expands) {
+        for(DocumentNode er:this.expands) {
             columns.addAll(er.getAllProjectedColumns());
         }
         
@@ -303,19 +303,19 @@ public class EntityResource {
         this.keyPredicates = keyPredicates;
     }
     
-    public void addSibiling(EntityResource resource) {
+    public void addSibiling(DocumentNode resource) {
         this.sibilings.add(resource);
     }
     
-    public List<EntityResource> getSibilings(){
+    public List<DocumentNode> getSibilings(){
         return this.sibilings;
     }
 
-    public void addExpand(EntityResource resource) {
+    public void addExpand(DocumentNode resource) {
         this.expands.add(resource);
     }
     
-    public List<EntityResource> getExpands(){
+    public List<DocumentNode> getExpands(){
         return this.expands;
     }
     
@@ -324,10 +324,10 @@ public class EntityResource {
         Select select = new Select();
         AtomicInteger ordinal = new AtomicInteger(1);
         addProjectedColumns(select, ordinal, getProjectedColumns());
-        for (EntityResource sibiling:this.sibilings) {
+        for (DocumentNode sibiling:this.sibilings) {
             addProjectedColumns(select, ordinal, sibiling.getProjectedColumns());
         }
-        for (EntityResource expand:this.expands) {
+        for (DocumentNode expand:this.expands) {
             addProjectedColumns(select, ordinal, expand.getProjectedColumns());
         }        
         select.setDistinct(this.distinct);
@@ -336,7 +336,7 @@ public class EntityResource {
         From from = new From();
         
         from.addClause(this.fromClause);
-        for (EntityResource sibiling:this.sibilings) {
+        for (DocumentNode sibiling:this.sibilings) {
             from.addClause(sibiling.getFromClause());
         }
         
@@ -355,7 +355,7 @@ public class EntityResource {
         }
     }
     
-    EntityResource joinTable(EntityResource joinResource, boolean isCollection, JoinType joinType) throws TeiidException {
+    DocumentNode joinTable(DocumentNode joinResource, boolean isCollection, JoinType joinType) throws TeiidException {
         ForeignKey fk = null;
         if (isCollection) {
             fk = joinFK(joinResource.getTable(), getTable());    
@@ -392,7 +392,7 @@ public class EntityResource {
         return null;
     }    
 
-    private static FromClause addJoinTable(final JoinType joinType, EntityResource from, EntityResource to) {
+    private static FromClause addJoinTable(final JoinType joinType, DocumentNode from, DocumentNode to) {
         Criteria crit = null;
         if (!joinType.equals(JoinType.JOIN_CROSS)) {
             crit = buildJoinCriteria(from, to);
@@ -403,17 +403,17 @@ public class EntityResource {
         return new JoinPredicate(to.getFromClause(), new UnaryFromClause(from.getGroupSymbol()), joinType, crit);
     }
 
-    static Criteria buildJoinCriteria(EntityResource from, EntityResource to) {
+    static Criteria buildJoinCriteria(DocumentNode from, DocumentNode to) {
         Criteria criteria = null;
         for (ForeignKey fk:from.getTable().getForeignKeys()) {
             if (fk.getReferenceKey().getParent().equals(to.getTable())) {
-                List<String> fkColumns = EntityResource.getColumnNames(fk.getColumns());
+                List<String> fkColumns = DocumentNode.getColumnNames(fk.getColumns());
                 if (fkColumns == null) {
-                    fkColumns = EntityResource.getColumnNames(from.getTable().getPrimaryKey().getColumns());
+                    fkColumns = DocumentNode.getColumnNames(from.getTable().getPrimaryKey().getColumns());
                 }                   
                 
-                List<String> pkColumns = EntityResource.getColumnNames(to.getTable().getPrimaryKey().getColumns());
-                criteria = EntityResource.buildJoinCriteria(
+                List<String> pkColumns = DocumentNode.getColumnNames(to.getTable().getPrimaryKey().getColumns());
+                criteria = DocumentNode.buildJoinCriteria(
                         from.getGroupSymbol(),
                         to.getGroupSymbol(), pkColumns, fkColumns);
             }

@@ -703,4 +703,10 @@ public class IntegrationTestDeployment {
 		s.executeQuery("select ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))");
 		s.executeQuery("select ST_AsText(ST_GeomFromGeoJSON('{\"coordinates\":[-48.23456,20.12345],\"type\":\"Point\"}'))");
 	}
+	
+	@Test(expected=AdminProcessingException.class) public void testAmbigiousDeployment() throws Exception {
+		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
+		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
+		admin.deploy("bqt2-1.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
+	}
 }

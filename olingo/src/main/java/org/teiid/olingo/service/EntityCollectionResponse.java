@@ -21,15 +21,21 @@
  */
 package org.teiid.olingo.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,30 +48,37 @@ import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.core.Encoder;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.odata.api.QueryResponse;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
 import org.teiid.olingo.ProjectedColumn;
 import org.teiid.query.sql.symbol.Symbol;
 
-public class EntityList extends EntityCollection implements QueryResponse {
+public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
     private final String invalidCharacterReplacement;
     private String nextToken;
     private Entity currentEntity;
-    private EntityResource resource;
+    private DocumentNode documentNode;
 
-    public EntityList(String invalidCharacterReplacement,
-            EntityResource resource) {
+    public EntityCollectionResponse(String invalidCharacterReplacement,
+            DocumentNode resource) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
-        this.resource = resource;
+        this.documentNode = resource;
     }
     
     @Override
@@ -74,50 +87,50 @@ public class EntityList extends EntityCollection implements QueryResponse {
         boolean add = true;
         
         if (this.currentEntity == null) {
-            entity = createEntity(rs, this.resource.getEdmEntityType(),
-                    this.resource.getAllProjectedColumns(),
-                    this.invalidCharacterReplacement);
+            entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
             this.currentEntity = entity;
-        }
-        else if(isSameRow(rs, this.resource.getAllProjectedColumns(),
-                this.resource.getEdmEntityType(), this.currentEntity)) {
-            entity = this.currentEntity;
-            add = false;
+        } else {
+            if(isSameRow(rs, this.documentNode, this.currentEntity)) {
+                entity = this.currentEntity;
+                add = false;
+            } else {
+                entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
+                this.currentEntity = entity;            
+            }
         }
         
-        if (this.resource.getExpands() != null && !this.resource.getExpands().isEmpty()) {
-            for (EntityResource resource : this.resource.getExpands()) {
-                ExpandResource expandResource = (ExpandResource)resource;
-                Entity expand = createEntity(rs, expandResource.getEdmEntityType(),
-                        expandResource.getProjectedColumns(),
-                        this.invalidCharacterReplacement);
+        if (this.documentNode.getExpands() != null && !this.documentNode.getExpands().isEmpty()) {
+            // right now it can do only one expand, when more than one this logic
+            // need to be re-done.
+            for (DocumentNode resource : this.documentNode.getExpands()) {
+                ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
+                Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement);
                 
-                Link link = entity.getNavigationLink(expandResource.getNavigationName());
-                if (expandResource.isCollection()) {
+                Link link = entity.getNavigationLink(expandNode.getNavigationName());
+                if (expandNode.isCollection()) {
                     if (link.getInlineEntitySet() == null) {
                         link.setInlineEntitySet(new EntityCollection());
                     }
-                    link.getInlineEntitySet().getEntities().add(expand);
+                    link.getInlineEntitySet().getEntities().add(expandEntity);
                 }
                 else {
-                    link.setInlineEntity(expand);  
+                    link.setInlineEntity(expandEntity);  
                 }   
             }
-        }
-        else if (!add) {
-            // this is property update incase of collection return 
-            updateEntity(rs, entity, this.resource.getEdmEntityType(),
-                    this.resource.getAllProjectedColumns(),
-                    this.invalidCharacterReplacement);
         }
         
         if (add) {
             getEntities().add(entity);
+        } else {
+            // this is property update incase of collection return 
+            updateEntity(rs, entity, this.documentNode, this.invalidCharacterReplacement);            
         }
     }
     
-    private boolean isSameRow(ResultSet rs, List<ProjectedColumn> projected,
-            EdmEntityType entityType, Entity other) throws SQLException {
+    private boolean isSameRow(ResultSet rs,  DocumentNode node, Entity other) throws SQLException {
+        
+        List<ProjectedColumn> projected = node.getAllProjectedColumns();
+        EdmEntityType entityType = node.getEdmEntityType();
         
         for (String name:entityType.getKeyPredicateNames()) {
             ProjectedColumn pc = getProjectedColumn(name, projected);
@@ -138,9 +151,11 @@ public class EntityList extends EntityCollection implements QueryResponse {
         return null;
     }
 
-    static Entity createEntity(ResultSet rs, EdmEntityType entityType,
-            List<ProjectedColumn> projected, String invalidChar)
+    static Entity createEntity(ResultSet rs, DocumentNode node, String invalidChar)
             throws SQLException {
+        
+        List<ProjectedColumn> projected = node.getAllProjectedColumns();
+        EdmEntityType entityType = node.getEdmEntityType();
         
         LinkedHashMap<String, Link> streamProperties = new LinkedHashMap<String, Link>();
         
@@ -208,9 +223,11 @@ public class EntityList extends EntityCollection implements QueryResponse {
         return entity;
     }    
     
-    private static void updateEntity(ResultSet rs, Entity entity, EdmEntityType entityType,
-            List<ProjectedColumn> projected, String invalidChar)
+    private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node, String invalidChar)
             throws SQLException {
+        
+        List<ProjectedColumn> projected = node.getAllProjectedColumns();
+        EdmEntityType entityType = node.getEdmEntityType();
         
         for (ProjectedColumn column: projected) {
 
@@ -310,7 +327,7 @@ public class EntityList extends EntityCollection implements QueryResponse {
                 ValueType.COLLECTION_PRIMITIVE, values);
     }
 
-    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
+/*    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
             Object value, String invalidCharacterReplacement)
             throws TransformationException, SQLException, IOException {
         if (value == null) {
@@ -336,7 +353,56 @@ public class EntityList extends EntityCollection implements QueryResponse {
         value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
         return value;
     }
+*/
+    
+    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
+            Object value, String invalidCharacterReplacement)
+            throws TransformationException, SQLException, IOException {
+        if (value == null) {
+            return null;
+        }
+                
+        Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
+        if (sourceType.isAssignableFrom(expectedType.getDefaultType())) {
+            return replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+        }
+        
+        if (expectedType instanceof EdmDate && sourceType == Date.class) {
+            return value;
+        } else if (expectedType instanceof EdmDateTimeOffset && sourceType == Timestamp.class){
+            return value;
+        } else if (expectedType instanceof EdmTimeOfDay && sourceType == Time.class){
+            return value;
+        } else if (expectedType instanceof EdmBinary) {
+            // there could be memory implications here, should have been modeled as EdmStream
+            LogManager.logDetail(LogConstants.CTX_ODATA, "Possible OOM when inlining the stream based values");
+            if (sourceType == ClobType.class) {
+                return ClobType.getString((Clob) value).getBytes();
+            }
+            if (sourceType == SQLXML.class) {
+                return ((SQLXML) value).getString().getBytes();
+            }
+            if (sourceType == BlobType.class) {
+                return ObjectConverterUtil.convertToByteArray(((Blob)value).getBinaryStream());
+            }
+            if (value instanceof Serializable) {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeObject(value);
+                oos.close();
+                bos.close();
+                return bos.toByteArray(); 
+            }
+        }
 
+        Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType, isArray));
+        if (sourceType != targetType) {
+            Transform t = DataTypeManager.getTransform(sourceType, targetType);
+            value = t != null ? t.transform(value, targetType) : value;
+        }
+        value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+        return value;
+    }    
     static Object replaceInvalidCharacters(EdmPrimitiveType expectedType,
             Object value, String invalidCharacterReplacement) {
         if (!(expectedType instanceof EdmString)  || invalidCharacterReplacement == null) {

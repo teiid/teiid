@@ -89,6 +89,13 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			return;
 		}
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+		
+		VDBMetaData other = this.vdbRepository.getVDB(deployment.getName(), deployment.getVersion());
+		if (other != null) {
+			String deploymentName = other.getPropertyValue(TranslatorUtil.DEPLOYMENT_NAME);
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50106, deployment, deploymentName));
+		}
+		
 		deployment.addProperty(TranslatorUtil.DEPLOYMENT_NAME, deploymentUnit.getName());
 		// check to see if there is old vdb already deployed.
         final ServiceController<?> controller = context.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));

@@ -223,7 +223,9 @@ public class BaseQueryExecution {
             if (!columnParent.equals(record)) {
                 colName = getName(columnParent)+"/"+column.getName();
             }
-            Object value = ODataTypeManager.convertTeiidInput(values.get(colName), expectedType[i]);                    
+            Object value = ODataTypeManager.convertTeiidRuntimeType(
+                    values.get(colName), ODataMetadataProcessor.getNativeType(column),
+                    expectedType[i]);                    
             results.add(value);
         }
         return results;
