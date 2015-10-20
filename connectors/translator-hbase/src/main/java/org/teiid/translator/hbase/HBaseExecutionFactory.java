@@ -36,6 +36,8 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.language.*;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -188,6 +190,12 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
      */
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof SubqueryIn) {
+    		SubqueryIn in = (SubqueryIn)obj;
+    		return Arrays.asList(new SubqueryComparison(in.getLeftExpression(), 
+    				in.isNegated()?Operator.NE:Operator.EQ, 
+    						in.isNegated()?Quantifier.ALL:Quantifier.SOME, in.getSubquery()));
+    	}
     	if (!(obj instanceof Literal)) {
     		return super.translate(obj, context);
     	}
