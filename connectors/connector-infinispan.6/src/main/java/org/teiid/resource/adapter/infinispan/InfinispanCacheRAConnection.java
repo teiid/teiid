@@ -72,16 +72,6 @@ public class InfinispanCacheRAConnection extends BasicConnection
 		return cacheWrapper.getAll();
 	}
 	
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getFirst(int)
-	 */
-	@Override
-	public Collection<Object> getFirst(int limit) {
-		return cacheWrapper.getFirst(limit);
-	}
 	
 	/**
 	 * {@inheritDoc}

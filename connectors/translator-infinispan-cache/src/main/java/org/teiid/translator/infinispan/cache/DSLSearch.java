@@ -41,7 +41,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.ObjectSelectVisitor;
+import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.SearchType;
 
 
@@ -95,7 +95,7 @@ public final class DSLSearch implements SearchType   {
 	}
 	
 	@Override
-	public List<Object> performSearch(ObjectSelectVisitor visitor,
+	public List<Object> performSearch(ObjectVisitor visitor,
 			ObjectConnection conn) throws TranslatorException {
 		
 		Condition where = visitor.getWhereCriteria();

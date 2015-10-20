@@ -1,2 +1,2 @@
-org.teiid.translator.object.ObjectExecutionFactory
+org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory
 

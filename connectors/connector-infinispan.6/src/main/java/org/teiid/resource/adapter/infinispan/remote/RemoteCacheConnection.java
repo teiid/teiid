@@ -116,25 +116,6 @@ public class RemoteCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> 
 //		}
 		return results;
 	}
-	
-	/**
-	 * Call to obtain all the objects from the cache
-	 * @param limit to the number objects to return
-	 * @return List of all the objects in the cache
-	 */
-	@Override
-	public Collection<Object> getFirst(int limit) {
-		Collection<Object> objs = new ArrayList<Object>();
-		@SuppressWarnings("rawtypes")
-		RemoteCache c = getCache();
-		
-		@SuppressWarnings("unused")
-		Map<?, ?> map = c.getBulk(limit);
-		for (Object k : c.keySet()) {
-			objs.add(c.get(k));
-		}
-		return objs;
-	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
