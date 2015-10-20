@@ -532,4 +532,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public Character getRequiredLikeEscape() {
 		return delegate.getRequiredLikeEscape();
 	}
+	@Override
+	public boolean supportsScalarSubqueryProjection() {
+		return delegate.supportsScalarSubqueryProjection();
+	}
 }

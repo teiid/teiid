@@ -300,4 +300,9 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+    @Override
+    public boolean supportsScalarSubqueryProjection() {
+    	return false; //not supported in the select clause
+    }
+    
 }

@@ -348,7 +348,8 @@ public interface SourceCapabilities {
         SUBQUERY_COMMON_TABLE_EXPRESSIONS,
         SUBQUERY_CORRELATED_LIMIT,
         NO_PROJECTION, 
-        REQUIRED_LIKE_ESCAPE;
+        REQUIRED_LIKE_ESCAPE, 
+        QUERY_SUBQUERIES_SCALAR_PROJECTION;
         
         private final String toString;
         

@@ -487,6 +487,7 @@ public class TestInsertProcessing {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
         
         TestOptimizer.helpPlan(sql, metadata, new String[] {"INSERT INTO Test_Insert (status) SELECT CASE WHEN (v_0.c_0 = '0') AND (v_0.c_1 > 0) THEN '4' ELSE v_0.c_0 END FROM (SELECT g_0.a AS c_0, (SELECT COUNT(*) FROM y.test_a AS g_1) AS c_1 FROM y.test_a AS g_0) AS v_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);

@@ -125,6 +125,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, srcCaps.supportsCompareCriteriaOrderedExclusive());
         tgtCaps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsSubqueryCommonTableExpressions());
         tgtCaps.setCapabilitySupport(Capability.SUBQUERY_CORRELATED_LIMIT, srcCaps.supportsCorrelatedSubqueryLimit());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, srcCaps.supportsScalarSubqueryProjection());
         if (srcCaps.supportsPartialFiltering()) {
         	//disable supports that could end up being not filterable
         	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);

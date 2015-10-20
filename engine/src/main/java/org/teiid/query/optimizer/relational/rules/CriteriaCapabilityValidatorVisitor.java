@@ -76,6 +76,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private TeiidComponentException exception;
     private boolean valid = true;
     private boolean isJoin;
+	private boolean isSelectClause;
 
     /**
      * @param iterator
@@ -548,7 +549,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     @Override
     public void visit(ScalarSubquery obj) {
     	try {    
-            if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
+    		if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
             		|| validateSubqueryPushdown(obj, modelID, metadata, capFinder, analysisRecord) == null) {
             	if (obj.getCommand().getCorrelatedReferences() == null && !FunctionCollectorVisitor.isNonDeterministic(obj.getCommand())) {
             		obj.setShouldEvaluate(true);
@@ -556,6 +557,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             		markInvalid(obj.getCommand(), !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)?
             				"Correlated ScalarSubquery is not supported":"Subquery cannot be pushed down"); //$NON-NLS-1$ //$NON-NLS-2$
             	}
+            } else if (this.isSelectClause && !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION)) {
+        		markInvalid(obj.getCommand(), "Correlated ScalarSubquery projection is not supported"); //$NON-NLS-1$
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -769,10 +772,10 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
-    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false);
+    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false, false);
     }
     
-    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin) throws QueryMetadataException, TeiidComponentException {
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin, boolean isSelectClause) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }
@@ -792,6 +795,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
         visitor.analysisRecord = analysisRecord;
         visitor.isJoin = isJoin;
+        visitor.isSelectClause = isSelectClause;
         //we use an array to represent multiple comparision attributes,
         //but we don't want that to inhibit pushdown as we'll account for that later
         //in criteria processing

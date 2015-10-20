@@ -1309,4 +1309,12 @@ public class ExecutionFactory<F, C> {
 	public Character getRequiredLikeEscape() {
 		return null;
 	}
+
+	/**
+	 * If a scalar subquery can be projected.
+	 * @return
+	 */
+	public boolean supportsScalarSubqueryProjection() {
+		return supportsScalarSubqueries();
+	}
 }
