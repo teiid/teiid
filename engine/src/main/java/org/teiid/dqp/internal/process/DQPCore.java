@@ -503,7 +503,7 @@ public class DQPCore implements DQP {
     	if (markCancelled) {
             logMMCommand(workItem, Event.CANCEL, null, null);
     	} else {
-    		LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
+    		LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.failed_to_cancel", requestID)); //$NON-NLS-1$
     	}
         return markCancelled;
     }

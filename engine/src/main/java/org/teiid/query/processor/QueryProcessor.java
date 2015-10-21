@@ -270,6 +270,7 @@ public class QueryProcessor implements BatchProducer {
      */
     public void requestCanceled() {
         this.requestCanceled = true;
+        this.context.requestCancelled();
     }
     
 	public BatchCollector createBatchCollector() throws TeiidComponentException {
