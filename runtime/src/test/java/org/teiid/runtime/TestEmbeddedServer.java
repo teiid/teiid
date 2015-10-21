@@ -1459,32 +1459,5 @@ public class TestEmbeddedServer {
 			assertEquals(rs.getInt(3), rs.getInt(4));
 		}
 	}
-	
-	@Test(expected=TeiidSQLException.class) public void testCancelSystemQuery() throws Exception {
-		EmbeddedConfiguration ec = new EmbeddedConfiguration();
-		es.start(ec);
-		ModelMetaData mmd = new ModelMetaData();
-		mmd.setName("x");
-		mmd.setModelType(Type.VIRTUAL);
-		mmd.addSourceMetadata("ddl", "create view v as select 1;");
-		es.deployVDB("x", mmd);
-		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
-		final Statement s = c.createStatement();
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(1000);
-					s.cancel();
-				} catch (InterruptedException e) {
-				} catch (SQLException e) {
-				}
-			}
-		};
-		t.start();
-		ResultSet rs = s.executeQuery("select count(*) from columns c, columns c1, columns c2, columns c3, columns c4");
-		rs.next();
-		fail();
-	}
 
 }
