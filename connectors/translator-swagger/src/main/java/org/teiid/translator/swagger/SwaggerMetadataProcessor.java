@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.ws;
+package org.teiid.translator.swagger;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -5,7 +5,7 @@
     </properties>
     
     <resources>
-        <resource-root path="translator-ws-${project.version}.jar" />
+        <resource-root path="translator-swagger-${project.version}.jar" />
         <!-- Insert resources here -->
     </resources>
 
@@ -16,7 +16,7 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid" />
-        <module name="javax.wsdl4j.api"/>
+        <module name="io.swagger.parser"/>
         <module name="org.springframework.spring" optional="true"/>  
     </dependencies>
 </module>

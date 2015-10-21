@@ -48,6 +48,8 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.swagger.SwaggerExecutionFactory;
+import org.teiid.translator.swagger.SwaggerProcedureExecution;
 
 @SuppressWarnings("nls")
 public class TestSwaggerMetadataProcessor {
@@ -55,7 +57,7 @@ public class TestSwaggerMetadataProcessor {
     @Test 
     public void testSwaggerMetadata() throws Exception {
         
-        WSExecutionFactory ef = new WSExecutionFactory();
+        SwaggerExecutionFactory ef = new SwaggerExecutionFactory();
         
         Properties props = new Properties();
 
@@ -86,7 +88,7 @@ public class TestSwaggerMetadataProcessor {
     @Test
     public void testSwaggerExecution() throws Exception {
         
-        WSExecutionFactory ef = new WSExecutionFactory();
+        SwaggerExecutionFactory ef = new SwaggerExecutionFactory();
         
         Properties props = new Properties();
 

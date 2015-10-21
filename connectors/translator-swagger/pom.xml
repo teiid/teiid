@@ -6,10 +6,10 @@
         <version>8.13.0.Alpha1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>translator-ws</artifactId>
+    <artifactId>translator-swagger</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
-    <name>Web service Translator</name>
-    <description>This translator provides access to Web Services.</description>
+    <name>Swagger Translator</name>
+    <description>This translator provides access Swagger based data sources.</description>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
@@ -38,10 +38,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-          <groupId>wsdl4j</groupId>
-          <artifactId>wsdl4j</artifactId>
-          <scope>provided</scope>
-        </dependency>     
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-parser</artifactId>
+        </dependency>        
     </dependencies>
 
     <build>

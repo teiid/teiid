@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.ws;
+package org.teiid.translator.swagger;
 
 import java.io.IOException;
 import java.sql.Blob;
@@ -52,7 +52,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
-import org.teiid.translator.ws.BinaryWSProcedureExecution.StreamingBlob;
 
 public class SwaggerProcedureExecution implements ProcedureExecution{
     
@@ -61,13 +60,13 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
     private Call procedure;
     private DataSource returnValue;
     private WSConnection conn;
-    WSExecutionFactory executionFactory;
+    SwaggerExecutionFactory executionFactory;
     Map<String, List<String>> customHeaders;
     Map<String, Object> responseContext = Collections.emptyMap();
     int responseCode = 200;
     private boolean useResponseContext;
 
-    public SwaggerProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
+    public SwaggerProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, SwaggerExecutionFactory executionFactory, WSConnection conn) {
         this.metadata = metadata;
         this.context = context;
         this.procedure = procedure;
@@ -93,63 +92,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
                                    this.procedure.getProcedureName(),
                                    arguments);
         
-        try {
-            Dispatch<DataSource> dispatch = this.conn.createDispatch(HTTPBinding.HTTP_BINDING, endpoint, DataSource.class, Mode.MESSAGE);
-
-            dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, method);
-            if (payload != null && !"POST".equalsIgnoreCase(method) && !"PUT".equalsIgnoreCase(method) && !"PATCH".equalsIgnoreCase(method)) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
-            }
-
-            Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
-            if (customHeaders != null) {
-                httpHeaders.putAll(customHeaders);
-            }
-            if (arguments.size() > 5
-                    //designer modeled the return value as an out, which will add an argument in the 5th position that is an out
-                    && this.procedure.getMetadataObject() != null
-                    && this.procedure.getMetadataObject().getParameters().get(0).getType() == Type.ReturnValue) {
-                Clob headers = (Clob)arguments.get(5).getArgumentValue().getValue();
-                if (headers != null) {
-                    BinaryWSProcedureExecution.parseHeader(httpHeaders, headers);
-                }
-            }
-            dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_HEADERS, httpHeaders);
-
-            DataSource ds = null;
-            if (payload instanceof String) {
-                ds = new InputStreamFactory.ClobInputStreamFactory(new ClobImpl((String)payload));
-            } else if (payload instanceof SQLXML) {
-                ds = new InputStreamFactory.SQLXMLInputStreamFactory((SQLXML)payload);
-            } else if (payload instanceof Clob) {
-                ds = new InputStreamFactory.ClobInputStreamFactory((Clob)payload);
-            } else if (payload instanceof Blob) {
-                ds = new InputStreamFactory.BlobInputStreamFactory((Blob)payload);
-            }
-
-            this.returnValue = dispatch.invoke(ds);
-            
-            Map<String, Object> rc = dispatch.getResponseContext();
-            this.responseCode = (Integer)rc.get(WSConnection.STATUS_CODE);
-            if (this.useResponseContext) {
-                //it's presumed that the caller will handle the response codes
-                this.responseContext = rc;
-            } else {
-                //TODO: may need to add logic around some 200/300 codes - cxf should at least be logging this
-                if (this.responseCode >= 400) {
-                    String message = conn.getStatusMessage(this.responseCode);
-                    throw new TranslatorException(WSExecutionFactory.Event.TEIID15005, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15005, this.responseCode, message));
-                }
-            }
-        } catch (WebServiceException e) {
-            throw new TranslatorException(e);
-        } catch (ParseException e) {
-            throw new TranslatorException(e);
-        } catch (IOException e) {
-            throw new TranslatorException(e);
-        } catch (SQLException e) {
-            throw new TranslatorException(e);
-        }
+   
         
     }
 
@@ -209,11 +152,11 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         Object result = this.returnValue;
-        try {
-            result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
-        } catch (IOException e) {
-            throw new TranslatorException(e);
-        }
+//        try {
+//            result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
+//        } catch (IOException e) {
+//            throw new TranslatorException(e);
+//        }
         return Arrays.asList(result/*, this.returnValue.getContentType()*/);
     }
     

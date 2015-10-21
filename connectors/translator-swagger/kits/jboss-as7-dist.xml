@@ -23,10 +23,18 @@
   
   <dependencySets>
       <dependencySet>
-          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/ws/main</outputDirectory>
+          <includes>
+              <include>io.swagger:swagger-parser</include>
+          </includes>
+          <outputDirectory>${jbossas-module-root}/io/swagger/parser/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <useTransitiveFiltering>false</useTransitiveFiltering>
+      </dependencySet>
+      <dependencySet>
+          <outputDirectory>${jbossas-module-root}/org/jboss/teiid/translator/swagger/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
           <includes>
-              <include>org.jboss.teiid.connectors:translator-ws</include>
+              <include>org.jboss.teiid.connectors:translator-swagger</include>
           </includes>
       </dependencySet>
   </dependencySets>
