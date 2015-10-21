@@ -21,17 +21,19 @@
  */
 package org.teiid.odata;
 
-import java.util.LinkedHashMap;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 import org.odata4j.edm.EdmDataServices;
-import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmType;
 import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.CountResponse;
 import org.odata4j.producer.QueryInfo;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.types.TransformationException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
@@ -43,7 +45,8 @@ public interface Client {
 	
 	BaseResponse executeCall(String sql, List<SQLParam> sqlParams, EdmType returnType);
 
-	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, QueryInfo queryInfo);
+    BaseResponse executeSQL(Query query, List<SQLParam> parameters,
+            QueryInfo queryInfo, EntityCollector<?> collector);
 	
 	CountResponse executeCount(Query query, List<SQLParam> parameters);
 	
@@ -55,4 +58,17 @@ public interface Client {
 interface UpdateResponse {
 	Map<String, Object> getGeneratedKeys();
 	int getUpdateCount();
+}
+
+interface EntityCollector<T> extends List<T>, BaseResponse {
+    T addRow(Object previous, ResultSet rs, String invalidCharacterReplacement)
+            throws TransformationException, SQLException, IOException;
+    
+    void setInlineCount(int count);
+    
+    void setSkipToken(String skipToken);
+    
+    void lastRow(Object last);
+
+    boolean isSameRow(Object previous, Object current);    
 }
