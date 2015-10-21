@@ -357,6 +357,12 @@ temporary table access.
 	<li>TEIID-2998 - Google spreadsheets containing all string data do not detect their row data and labels correctly on the Google backend.
 	<li>TEIID-3070 - Netty threads may inappropriately take up CPU resources.  This affects most EAP releases.  Upgrade the AS version of Netty to 3.6.10.Final to address this issue.
 	<li>TEIID-3289 - The timestamp to string conversion performed in MySQL will produce a string with all of the trailing zeros (up to 6) for the fractional seconds.  This differs from the expected Teiid/Java format.
+	<li>TEIID-3779 - There are a host of Phoenix issues that Teiid is currently not working around for HBase access.  If you hit any of these, please let us know so that we can work with the Phoenix community to get it resolved.  Generally Phoenix has issues with subquery evaluation and certain datatypes, such as char and timestamp.
+	  <ul>
+	    <li>TEIID-3772 TEIID-3769 TEIID-3766 are not likely to occur and generate an exception.  
+	    <li>TEIID-3774 is unlikely but can return inaccurate results. 
+	    <li>TEIID-3768 affects correlated subquery comparison using an aggregate of a char value and can return inaccurate results.
+	  </ul>   
 </ul>
 <h4>from 7.0</h4>
 <ul>
