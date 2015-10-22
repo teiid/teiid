@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -55,6 +56,7 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -223,8 +225,14 @@ public class RulePushLimit implements OptimizerRule {
             			NodeEditor.removeChildNode(limitNode.getParent(), limitNode);
             			limitNode.setProperty(NodeConstants.Info.OUTPUT_COLS, sourceNode.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
             			child.setProperty(NodeConstants.Info.OUTPUT_COLS, sourceNode.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS));
-            			//project the order through the source
-            			FrameUtil.convertNode(child, sourceNode.getGroups().iterator().next(), null, ((SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP)).asMap(), metadata, false);
+            			//project the order through the source - which needs to preserve the aliasing
+            			HashMap<ElementSymbol, Expression> symbolMap = new HashMap<ElementSymbol, Expression>();
+            			List<ElementSymbol> virtual = ((SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP)).getKeys();
+            			List<Expression> projected = (List<Expression>) NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
+            			for (int i = 0; i < virtual.size(); i++) {
+            				symbolMap.put(virtual.get(i), projected.get(i));
+            			}
+            			FrameUtil.convertNode(child, sourceNode.getGroups().iterator().next(), null, symbolMap, metadata, false);
             			sourceNode.getFirstChild().addAsParent(child);
             			child.addAsParent(limitNode);
             			//push again

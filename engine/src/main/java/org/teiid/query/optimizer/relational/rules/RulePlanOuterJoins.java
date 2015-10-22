@@ -209,4 +209,9 @@ public class RulePlanOuterJoins implements OptimizerRule {
     	return true;
     }
     
+    @Override
+    public String toString() {
+    	return "PlanOuterJoins"; //$NON-NLS-1$
+    }
+    
 }
