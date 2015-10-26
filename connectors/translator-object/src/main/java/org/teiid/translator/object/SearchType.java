@@ -48,6 +48,6 @@ public interface SearchType {
 	 * @return List of Objects impacted by the update
 	 * @throws TranslatorException
 	 */
-	List<Object> performSearch(ObjectSelectVisitor visitor, ObjectConnection conn) throws TranslatorException;	
+	List<Object> performSearch(ObjectVisitor visitor, ObjectConnection conn) throws TranslatorException;	
 		
 }
