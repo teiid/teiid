@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.odata4j.core.OEntities;
@@ -160,7 +160,7 @@ class EntityList extends ArrayList<OEntity> implements EntitiesResponse, EntityC
     private OEntity buildEntity(ResultSet rs, DocumentNode node, EdmEntitySet edmEntitySet, String invalidCharacterReplacement)
             throws TransformationException, SQLException, IOException {
         
-        HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
+        LinkedHashMap<String, OProperty<?>> properties = new LinkedHashMap<String, OProperty<?>>();
         if (node.getProjectedColumns().isEmpty()) {
             for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
                 Object value = rs.getObject(i+1);

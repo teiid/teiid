@@ -21,17 +21,9 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -692,7 +684,7 @@ public class TestODataIntegration extends BaseResourceTest {
 	                "{\n" + 
 	                "\"__metadata\" : {\n" + 
 	                "\"uri\" : \"http://localhost:8081/odata/northwind/vw.x('x')\", \"type\" : \"vw.x\"\n" + 
-	                "}, \"b\" : {\n" + 
+	                "}, \"a\" : \"x\", \"b\" : {\n" + 
 	                "\"results\" : [\n" + 
 	                "1, 2, 3\n" + 
 	                "]\n" + 
@@ -708,7 +700,7 @@ public class TestODataIntegration extends BaseResourceTest {
 	                "]\n" + 
 	                "}\n" + 
 	                "]\n" + 
-	                "}, \"a\" : \"x\"\n" + 
+	                "}\n" + 
 	                "}\n" + 
 	                "]\n" + 
 	                "}\n" + 
@@ -755,7 +747,8 @@ public class TestODataIntegration extends BaseResourceTest {
                     "</content>";
             assertTrue(response.getEntity().contains(expected));
             
-            expected = "<m:properties>" + 
+            expected = "<m:properties>" +
+                        "<d:a>x</d:a>" + 
                         "<d:b m:type=\"Collection(Edm.Int32)\">" + 
                             "<d:element>1</d:element>" + 
                             "<d:element>2</d:element>" + 
@@ -770,8 +763,7 @@ public class TestODataIntegration extends BaseResourceTest {
                                 "<d:element>c</d:element>" + 
                                 "<d:element>d</d:element>" + 
                             "</d:element>" + 
-                        "</d:c>" + 
-                        "<d:a>x</d:a>" + 
+                        "</d:c>" +
                     "</m:properties>";
             request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x"));
             response = request.get(String.class);
@@ -1423,10 +1415,10 @@ public class TestODataIntegration extends BaseResourceTest {
                     "{\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')\", \"type\" : \"m.x\"\n" + 
-                    "}, \"b\" : \"xb\", \"a\" : \"xa\", \"y\" : {\n" + 
+                    "}, \"a\" : \"xa\", \"b\" : \"xb\", \"y\" : {\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.y('xa')\", \"type\" : \"m.y\"\n" + 
-                    "}, \"b1\" : \"yb\", \"a1\" : \"xa\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"yb\"\n" + 
                     "}, \"z\" : {\n" + 
                     "\"__deferred\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')/z\"\n" + 
@@ -1435,10 +1427,10 @@ public class TestODataIntegration extends BaseResourceTest {
                     "}, {\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa1')\", \"type\" : \"m.x\"\n" + 
-                    "}, \"b\" : \"xb1\", \"a\" : \"xa1\", \"y\" : {\n" + 
+                    "}, \"a\" : \"xa1\", \"b\" : \"xb1\", \"y\" : {\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.y('xa1')\", \"type\" : \"m.y\"\n" + 
-                    "}, \"b1\" : \"yb1\", \"a1\" : \"xa1\"\n" + 
+                    "}, \"a1\" : \"xa1\", \"b1\" : \"yb1\"\n" + 
                     "}, \"z\" : {\n" + 
                     "\"__deferred\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa1')/z\"\n" + 
@@ -1447,10 +1439,10 @@ public class TestODataIntegration extends BaseResourceTest {
                     "}, {\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa2')\", \"type\" : \"m.x\"\n" + 
-                    "}, \"b\" : \"xb2\", \"a\" : \"xa2\", \"y\" : {\n" + 
+                    "}, \"a\" : \"xa2\", \"b\" : \"xb2\", \"y\" : {\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.y('xa2')\", \"type\" : \"m.y\"\n" + 
-                    "}, \"b1\" : \"yb2\", \"a1\" : \"xa2\"\n" + 
+                    "}, \"a1\" : \"xa2\", \"b1\" : \"yb2\"\n" + 
                     "}, \"z\" : {\n" + 
                     "\"__deferred\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa2')/z\"\n" + 
@@ -1473,7 +1465,7 @@ public class TestODataIntegration extends BaseResourceTest {
                     "{\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')\", \"type\" : \"m.x\"\n" + 
-                    "}, \"b\" : \"xb\", \"a\" : \"xa\", \"y\" : {\n" + 
+                    "}, \"a\" : \"xa\", \"b\" : \"xb\", \"y\" : {\n" + 
                     "\"__deferred\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')/y\"\n" + 
                     "}\n" +                     
@@ -1482,15 +1474,15 @@ public class TestODataIntegration extends BaseResourceTest {
                     "{\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.z('zb')\", \"type\" : \"m.z\"\n" + 
-                    "}, \"b1\" : \"zb\", \"a1\" : \"xa\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"zb\"\n" + 
                     "}, {\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.z('zb1')\", \"type\" : \"m.z\"\n" + 
-                    "}, \"b1\" : \"zb1\", \"a1\" : \"xa\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"zb1\"\n" + 
                     "}, {\n" + 
                     "\"__metadata\" : {\n" + 
                     "\"uri\" : \"http://localhost:8081/odata/northwind/m.z('zb2')\", \"type\" : \"m.z\"\n" + 
-                    "}, \"b1\" : \"zb2\", \"a1\" : \"xa\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"zb2\"\n" + 
                     "}\n" + 
                     "]\n" + 
                     "}\n" +
